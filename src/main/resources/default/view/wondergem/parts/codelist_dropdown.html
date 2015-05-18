@@ -1,0 +1,15 @@
+@args String span, String list, String name, String value, String labelKey, String helpKey, boolean required
+<div class="span@span control-group">
+    <label>@i18n(labelKey)</label>
+    <select name="@name" class="input-block-level">
+        @if (!required) {
+            <option value="" @if(value == null) {selected="selected"}></option>
+        }
+        @for(sirius.biz.codelists.CodeListEntry entry : codeLists.getEntries(list)) {
+            <option value="@entry.getCode()" @if(entry.getCode().equals(value)) {selected="selected"}>@entry.getValue()</option>
+        }
+    </select>
+    @if (helpKey != null) {
+        <span class="help-block checkbox-help">@i18n(helpKey)</span>
+    }
+</div>

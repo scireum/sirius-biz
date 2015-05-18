@@ -1,0 +1,199 @@
+//
+// Labels and badges
+// --------------------------------------------------
+
+
+// Base classes
+// inspired by semantic-ui.com
+.label {
+  display: inline-block;
+  vertical-align: middle;
+  margin: -0.25em 0.25em 0em;
+  padding: 0.5em 0.8em;
+  background-color: #B6B7BB;
+  border-color: #B6B7BB;
+  border-radius: @baseBorderRadius;
+  color: @white;
+  font-size: @baseFontSize * .8;
+  font-family: 'OpenSansRegular';
+  font-weight: normal;
+  line-height: 14px; // ensure proper line-height if floated
+  text-transform: uppercase;
+  vertical-align: baseline;
+  white-space: nowrap;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -ms-box-sizing: border-box;
+  box-sizing: border-box;
+  -webkit-transition: background 0.1s linear;
+  transition: background 0.1s linear;
+}
+// Set unique padding and border-radii
+.label {
+  .border-radius(3px);
+}
+
+// Label normal
+// overwrite first-child font-weight
+.label-normal {
+  font-family: 'OpenSansRegular';
+}
+
+// Empty labels/badges collapse
+.label {
+  &:empty {
+    display: none;
+  }
+}
+
+// Hover/focus state, but only for links
+a {
+  &.label:hover,
+  &.label:focus {
+    color: @white;
+    text-decoration: none;
+    cursor: pointer;
+  }
+}
+
+// Colors
+// Only give background-color difference to links (and to simplify, we don't qualifty with `a` but [href] attribute)
+.label {
+  // Important (red)
+  &-important         { background-color: @red; color: #FFFFFF;}
+  &-important[href]   { background-color: darken(@red, 10%); color: #FFFFFF;}
+  // Warnings (orange)
+  &-warning           { background-color: @yellow; color: #FFFFFF;}
+  &-warning[href]     { background-color: darken(@yellow, 10%); color: #FFFFFF;}
+  // Success (green)
+  &-success           { background-color: @green; color: #FFFFFF;}
+  &-success[href]     { background-color: darken(@green, 10%); color: #FFFFFF;}
+  // Info (turquoise)
+  &-info              { background-color: @blue; color: #FFFFFF;}
+  &-info[href]        { background-color: darken(@blue, 10%); color: #FFFFFF;}
+  // Inverse (black)
+  &-inverse           { background-color: @grayDark; color: #FFFFFF;}
+  &-inverse[href]     { background-color: darken(@grayDark, 10%); color: #FFFFFF;}
+}
+
+// Quick fix for labels/badges in buttons
+.btn {
+  .label {
+    position: relative;
+    top: -1px;
+  }
+}
+.btn-mini {
+  .label {
+    top: 0;
+  }
+}
+
+// Label-small
+.label.label-small {
+  font-size: 10.5px;
+}
+
+
+// get styles from semantic-ui.com
+// _______________________________
+
+
+/*-------------------
+       Ribbon
+--------------------*/
+
+.ribbon.label {
+   position: relative;
+   margin: 0em 0.2em;
+   left: -32px; /* IE Fallback */
+   left: -2rem;
+   padding-left: 32px; /* IE Fallback */
+   padding-left: 2rem;
+   border-radius: 0px 4px 4px 0px;
+   border-color: rgba(0, 0, 0, 0.15);
+ }
+
+.ribbon.label:after {
+  position: absolute;
+  content: "";
+  top: 100%;
+  left: 0%;
+  border-top: 0em solid transparent;
+  border-right-width: 1em;
+  border-right-color: inherit;
+  border-right-style: solid;
+  border-bottom: 1em solid transparent;
+  border-left: 0em solid transparent;
+  width: 0em;
+  height: 0em;
+}
+
+
+
+.ribbon.label.right {
+  position: relative;
+  float: right;
+  margin: 0em 0.2em;
+  right: auto;
+  left: 32px; /* IE Fallback */
+  left: 2rem;
+  padding-right: 32px; /* IE Fallback */
+  padding-right: 2rem;
+  border-radius: 4px 0px 0px 4px;
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+.ribbon.label.right:after {
+  position: absolute;
+  content: "";
+  top: 100%;
+  left: auto;
+  right: 0%;
+  border-top: 0em solid transparent;
+  border-left-width: 1em;
+  border-left-color: inherit;
+  border-left-style: solid;
+  border-bottom: 1em solid transparent;
+  border-right: 0em solid transparent;
+  width: 0em;
+  height: 0em;
+}
+
+
+
+/*-------------------
+       Circular
+--------------------*/
+
+.circular.labels .label,
+.circular.label {
+  min-height: 1em;
+  max-height: 2em;
+  padding: 0.5em !important;
+  line-height: 1em;
+  text-align: center;
+  border-radius: 80000px; /* IE Fallback */
+  border-radius: 500rem;
+}
+
+
+
+
+//
+// custom styles labels and circular badges
+// _______________________________________
+
+.circular.label.label-state {
+  padding: 0.3em 0.35em !important;
+}
+
+.circular.label.label-state.label-important {
+  padding-left: 0.65em !important;
+  padding-right: 0.65em !important;
+}
+
+.circular.label.label-state.label-warning {
+  padding-left: 0.65em !important;
+  padding-right: 0.65em !important;
+}

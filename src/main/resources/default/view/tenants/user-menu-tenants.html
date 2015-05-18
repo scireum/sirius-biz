@@ -1,0 +1,6 @@
+@if (user.getCurrentUser().hasPermission("permission-manage-tenants")) {
+    <li><a href="@prefix/tenants">@i18n("Model.tenant.plural")</a></li>
+}
+@if (user.getCurrentUser().hasPermission("permission-manage-user-accounts")) {
+    <li><a href="@prefix/user-accounts">@i18n("Model.userAccount.plural")</a></li>
+}

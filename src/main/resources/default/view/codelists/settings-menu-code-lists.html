@@ -1,0 +1,3 @@
+@if (user.getCurrentUser().hasPermission("permission-manage-code-lists")) {
+    <li><a href="@prefix/code-lists">@i18n("CodeList.plural")</a></li>
+}

@@ -1,0 +1,101 @@
+@*
+*  Made with all the love in the world
+*  by scireum in Remshalden, Germany
+*
+*  Copyright by scireum GmbH
+*  http://www.scireum.de - info@scireum.de
+*@
+@args oxomi.core.Admin admin
+@import oxomi.model.Salutation
+@extends(view.main.html, title: NLS.get("Admin.profile"))
+@section(breadcrumbs) {
+<li>
+    <a href="@prefix/profile">@i18n("Admin.profile")</a>
+</li>
+}
+
+
+<form action="@prefix/profile" method="post" id="profileFormInput">
+    <fieldset>
+        <div class="row">
+            <div class="span6">
+                <span class="legend legend-small">@i18n("Admin.profile")</span>
+                <div class="row">
+                    <div class="span2 control-group @user.signalFieldError("salutation")">
+                        <label>@i18n("PersonEntity.salutation")</label>
+                        <select name="salutation" style="width:100%" tabindex="1" autofocus="on">
+                            <option value="" @if (null == admin.getSalutation()) { selected="selected" }></option>
+                            @for(Salutation salutation : Salutation.values()) {
+                                <option value="@salutation.name()" @if (salutation == admin.getSalutation()) { selected="selected" }>@salutation.toString()</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="span2 control-group @user.signalFieldError("firstname")">
+                        <label>@i18n("PersonEntity.firstname")</label>
+                        <input name="firstname" type="text" value="@user.getFieldValue("firstname", admin.getFirstname())" class="input-block-level" tabindex="2"/>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="span4 control-group @user.signalFieldError("lastname")">
+                        <label>@i18n("PersonEntity.lastname")</label>
+                        <input name="lastname" type="text" value="@user.getFieldValue("lastname", admin.getLastname())" class="input-block-level" tabindex="3"/>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="span4 control-group @user.signalFieldError("phone")">
+                        <label>@i18n("PersonEntity.phone")</label>
+                        <input name="phone" type="text" value="@user.getFieldValue("phone", admin.getPhone())" class="input-block-level" tabindex="4"/>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="span4 control-group">
+                        <label>@i18n("PersonEntity.email")</label>
+                        <input name="email" type="text" readonly value="@admin.getEmail()" class="input-block-level" />
+                        <span class="help-block">@i18n("Admin.profile.email.help")</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="span4 control-group @user.signalFieldError("position")">
+                        <label>@i18n("PersonEntity.position")</label>
+                        <input name="position" type="text" value="@user.getFieldValue("position", admin.getPosition())" class="input-block-level" tabindex="5" />
+                        <span class="help-block">@i18n("Admin.position.help")</span>
+                    </div>
+                </div>
+            </div>
+            <div class="span4 offset1">
+                <div class="upload-container"></div>
+                  <script type="text/javascript">
+                     $('.upload-container').each(function (index) {
+                        imageUpload('@prefix/admin/@admin.getId()/image', this, '@admin.getImageUrl()', '@admin.getImageUrl()');
+                     });
+                  </script>
+                @if (admin.getImage().isFilled()) {
+                <a class="btn btn-block" href="@prefix/admin/@admin.getId()/delete-image">@i18n("PortalConfig.deleteImage")</a>
+                }
+                <span class="legend legend-small">@i18n("PersonEntity.security")</span>
+
+                <div class="control-group">
+                    <label>@i18n("PersonEntity.password")</label>
+                    <div>
+                        <a href="@prefix/profile/password" class="btn @if (Strings.isFilled(admin.getGeneratedPassword())) { btn-primary }" style="display: block" tabindex="7">
+                            @i18n("PersonEntity.password.set")
+                        </a>
+                    </div>
+                    @if (Strings.isFilled(admin.getGeneratedPassword())) {
+                        <span class="help-block checkbox-help">@i18n("PersonEntity.recommendToChangePassword")</span>
+                    }
+                </div>
+                @if (admin.getApiToken() != null) {
+                <div class="control-group">
+                    <label>@i18n("PersonEntity.apiToken")</label>
+                    <input type="text" value="@admin.getApiToken()" readonly class="input-block-level" tabindex="8" />
+                    <span class="help-block">@i18n("PersonEntity.apiToken")</span>
+                </div>
+                }
+        </div>
+    </fieldset>
+
+    <div class="form-actions">
+        <a onclick="$('#profileFormInput').submit()" class="btn btn-primary"><i class="icon-ok"></i> @i18n("NLS.save")</a>
+    </div>
+</form>

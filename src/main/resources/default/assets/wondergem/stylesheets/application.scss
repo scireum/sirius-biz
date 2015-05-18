@@ -1,0 +1,1890 @@
+$mainColor: #ff0000;
+.navbar .nav > li > a:focus,
+.navbar .nav > li > a:hover {
+  background-color: $mainColor;
+}
+
+// Active state, and it's :hover/:focus to override normal :hover/:focus
+.nav-tabs > .active > a,
+.nav-tabs > .active > a:hover,
+.nav-tabs > .active > a:focus {
+  background-color: $mainColor;
+}
+
+.nav-tabs > .active > a {
+  border: 1px solid $mainColor;
+}
+
+.nav-tabs > .active > a:hover {
+  background-color: $mainColor;
+  border: 1px solid $mainColor;
+}
+
+.nav-tabs > li > a:hover {
+  color: $mainColor;
+}
+
+.navbar-inner {
+  border: 3px solid $mainColor;
+}
+
+a {
+  color: $mainColor;
+}
+
+.input-append .active,
+.input-prepend .active {
+  //TODO
+  background-color: #ffffff;
+  border-color: $mainColor;
+}
+
+.control-group label .input-required:after {
+  color: $mainColor;
+}
+
+
+.dropdown-menu > li > a:hover,
+.dropdown-menu > li > a:focus,
+.dropdown-submenu:hover > a,
+.dropdown-submenu:focus > a,
+.dropdown-menu > .active > a,
+.dropdown-menu > .active > a:hover,
+.dropdown-menu > .active > a:focus {
+  background-color: $mainColor;
+  background-image: none;
+}
+
+.btn-primary {
+  background-color: $mainColor !important;
+  -webkit-box-shadow: 0 3px 0 0 $mainColor !important;
+  -moz-box-shadow: 0 3px 0 0 $mainColor !important;
+  box-shadow: 0 3px 0 0 $mainColor !important;
+}
+.btn-primary:hover {
+  color: #ffffff;
+  background-color: $mainColor;
+  -webkit-transition: $mainColor 1s ease-in-out;
+  -moz-transition: $mainColor 1s ease-in-out;
+  -o-transition: $mainColor 1s ease-in-out;
+  transition: $mainColor 1s ease-in-out;
+}
+
+.btn-link {
+  color: $mainColor;
+}
+
+.nav > li > a:hover,
+.nav > li > a:focus,
+.nav-list > .active > a,
+.nav-list > .active > a:hover,
+.nav-list > .active > a:focus,
+.nav-tabs > .active > a,
+.nav-tabs > .active > a:hover,
+.nav-tabs > .active > a:focus {
+  background-color: $mainColor;
+}
+
+.nav-tabs > .active > a {
+  border: 1px solid $mainColor;
+}
+.nav-tabs > .active > a:hover {
+  background-color: $mainColor;
+  border: 1px solid $mainColor;
+}
+.nav-tabs > li > a:hover {
+  color: $mainColor;
+}
+
+.nav-pills > .active > a,
+.nav-pills > .active > a:hover,
+.nav-pills > .active > a:focus {
+  background-color: $mainColor;
+}
+
+.nav .dropdown-toggle .caret {
+  border-top-color: $mainColor;
+  border-bottom-color: $mainColor;
+}
+
+.navbar-inner {
+  border: 3px solid $mainColor;
+}
+
+.navbar .nav li.dropdown.open > .dropdown-toggle,
+.navbar .nav li.dropdown.active > .dropdown-toggle,
+.navbar .nav li.dropdown.open.active > .dropdown-toggle,
+.navbar .nav > .active > a,
+.navbar .nav > .active > a:hover,
+.navbar .nav > .active > a:focus,
+.navbar .nav > li > a:focus,
+.navbar .nav > li > a:hover {
+  background-color: $mainColor;
+}
+
+.footer {
+  padding: 15px 0;
+  border-top: 3px solid $mainColor;
+  background-color: #43474A;
+  color: #E7E7E7;
+}
+
+
+body {
+  height: 100%;
+}
+
+.right, .table th.right, .table td.right  {
+  text-align: right;
+}
+
+// Wrapper for page content to push down footer
+.wrap {
+  min-height: 100%;
+  height: auto !important;
+  height: 100%;
+  //Negative indent footer by it's height
+  margin: 0 auto -15px;
+}
+
+// Set the fixed height of the footer here
+.push,
+.footer {
+  height: 15px;
+}
+
+// Fixes the margin set by .help-block for checkboxes
+.checkbox-help {
+  margin-top: 0;
+}
+
+// Removes the bottom margin of inline forms within wells
+.well .form-inline {
+  margin: 0;
+}
+
+// Used for thumbnails in tables or lists
+.list-thumbnail {
+  display: inline-block;
+  max-width: 140px;
+  max-height: 80px;
+}
+
+.list-thumbnail img {
+  max-height: 75px;
+  max-width: 135px;
+}
+
+// Forms within modal dialogs must not have margins
+.modal form {
+  margin: 0;
+}
+
+// Menu Logo
+// --------------------------------------------------
+// Vertically center the image given image height
+.navbar .brand {
+  padding-top: 13px;
+  padding-bottom: 14px;
+}
+
+.navbar .brand img {
+  width: 100px;
+}
+
+// Code
+// --------------------------------------------------
+
+// Code Output with prettypring
+pre.prettyprint {
+  padding: 19px;
+}
+
+pre.infotext {
+  margin-top: 10px;
+  background-color: #393939;
+  padding: 5px;
+  font-family: monospace;
+  color: #96c977;
+}
+
+.code-with-config-buttons {
+  margin: 10px 0;
+  font-family: monospace;
+}
+
+
+// Icons
+// --------------------------------------------------
+a i {
+  color: #5E6468;
+}
+
+a:hover i {
+  text-decoration: none;
+}
+
+a.btn i {
+  color: #ffffff;
+}
+
+
+//
+// Helpers
+// --------------------------------------------------
+
+// Break syllables
+// --------------------------------------------------
+
+.word-wrap {
+  word-wrap: break-word;
+  -webkit-hyphens: auto;
+  -moz-hyphens: auto;
+  -ms-hyphens: auto;
+  hyphens: auto;
+  display: block;
+}
+
+// same width as span in tables
+.table td.span1 .word-wrap, .table th.span1 .word-wrap {
+  width: 44px;
+}
+
+.table td.span2 .word-wrap, .table th.span2 .word-wrap {
+  width: 124px;
+}
+
+.table td.span3 .word-wrap, .table th.span3 .word-wrap {
+  width: 204px;
+}
+
+.table td.span4 .word-wrap, .table th.span4 .word-wrap {
+  width: 284px;
+}
+
+.table td.span5 .word-wrap, .table th.span5 .word-wrap {
+  width: 364px;
+}
+
+.table td.span6 .word-wrap, .table th.span6 .word-wrap {
+  width: 444px;
+}
+
+.table td.span7 .word-wrap, .table th.span7 .word-wrap {
+  width: 524px;
+}
+
+.table td.span8 .word-wrap, .table th.span8 .word-wrap {
+  width: 604px;
+}
+
+.table td.span9 .word-wrap, .table th.span9 .word-wrap {
+  width: 684px;
+}
+
+.table td.span10 .word-wrap, .table th.span10 .word-wrap {
+  width: 764px;
+}
+
+.table td.span11 .word-wrap, .table th.span11 .word-wrap {
+  width: 844px;
+}
+
+.table td.span12 .word-wrap, .table th.span12 .word-wrap {
+  width: 924px;
+}
+
+
+// Info-Line
+// --------------------------------------------------
+
+//An info-line is a name value pair used to output infos about an entity.
+.info-line {
+  margin-bottom: 5px;
+  clear: both;
+  border-bottom: 1px solid #dadbdb;
+  border-bottom: 1px solid rgba(98, 98, 98, 0.1);
+}
+
+.info-line:last-child {
+  border-bottom: none;
+}
+
+.info-line .name {
+  float: left;
+  font-weight: bold;
+  font-size: 11.9px;
+}
+
+.info-line .value {
+  float: right;
+  text-align: right;
+  font-size: 11.9px;
+}
+
+.collapse .info-line .span2 {
+  margin-left: 20px;
+}
+
+.collapse .info-line .span2:first-child {
+  margin-left: 30px;
+}
+
+.collapse .info-line {
+  clear: none;
+}
+
+// List with no dots
+.no-dots {
+  list-style-type: none;
+  margin-left: 0;
+}
+
+
+// Feature floating fix so we don't need heaps of whitespace
+.span4.feature {
+  float: none;
+  display: inline-block;
+  vertical-align: top;
+  margin-left: 18px;
+  margin-bottom: 10px;
+}
+
+@media (min-width: 1200px) {
+  .span4.feature {
+    margin-left: 28px;
+  }
+}
+
+.feature .help-block {
+  margin-bottom: 0;
+}
+
+// helper for ok icon
+.label-state i.icon-close {
+  font-size: 12px;
+}
+
+// Highlight for chosen input value
+input[type="radio"]:checked + span {
+  font-family: 'OpenSansSemibold';
+}
+
+// Helper for Texthighlights
+.highlight b {
+  color: #2b3037;
+}
+
+// Grid
+// --------------------------------------------------
+
+.span0-5 {
+  width: 30px;
+  margin-left: 20px;
+}
+
+.offset0-5 {
+  margin-left: 50px;
+}
+
+@media (min-width: 1200px) {
+  .span0-5 {
+    width: 35px;
+    margin-left: 30px;
+  }
+
+  .offset0-5 {
+    margin-left: 65px;
+  }
+}
+
+.span4-5 {
+  width: 340px;
+}
+
+@media (min-width: 1200px) {
+  .span4-5 {
+    width: 420px;
+  }
+}
+
+
+
+// --------------------------------------------------
+// COMPONENTS
+// --------------------------------------------------
+
+
+//
+// Footer
+// --------------------------------------------------
+
+.footer small:after {
+  content: "|";
+  padding: 0 0.2em;
+}
+
+.footer small:last-child:after {
+  content: " ";
+  padding: 0;
+}
+
+
+//
+// Wells
+// --------------------------------------------------
+.well .legend {
+  margin: -10px -10px 10px;
+  padding: 0 10px;
+  font-size: 16px;
+  font-family: 'OpenSansRegular';
+}
+
+.well-dashboard .legend, .well-portals .legend {
+  border-color: #ededed;
+}
+
+// well-dasbhoard, well-portals, well-galleries
+.well-dashboard, .well-portals, .well-galleries {
+  padding: 9px;
+}
+
+@media (min-width: 1200px) {
+  .well-dashboard, .well-portals, .well-galleries {
+    padding: 12px;
+  }
+}
+
+.well-dashboard .nav.nav-stacked {
+  margin-bottom: 0;
+}
+
+
+// Well catalog
+.video-info.well, .catalog-info .well {
+  padding: 0;
+}
+
+// Well admin
+.well-info.well-admin {
+  border: none;
+  margin-top: 20px;
+}
+
+// Wells Portals
+// --------------------------------------------------
+.well-portals {
+  height: 458px;
+}
+
+// portal-info has fixed height to align ribbons
+.well-portals .portal-info {
+  height: 185px;
+}
+
+.well-portals .ribbon.label, .well-galleries .ribbon.label, .well-badges .ribbon.label {
+  left: -22.4px;
+  left: -1.4rem;
+  padding-left: 22.4px;
+  padding-left: 1.4rem;
+}
+
+@media (min-width: 1200px) {
+  .well-portals .ribbon.label, .well-galleries .ribbon.label, .well-badges .ribbon.label {
+    left: -25.6px;
+    left: -1.6rem;
+    padding-left: 25.6px;
+    padding-left: 1.6rem;
+  }
+}
+
+.well-badges .ribbon.label {
+  left: -48px;
+  left: -3rem;
+  padding-left: 22.4px;
+  padding-left: 1.4rem;
+}
+
+
+@media (min-width: 1200px) {
+  .well-badges .ribbon.label {
+    left: -72px;
+    left: -4.5rem;
+    padding-left: 22.4px;
+    padding-left: 1.4rem;
+  }
+}
+
+
+
+
+
+//
+// Filters
+// --------------------------------------------------
+
+.filter-box .nav-list [class^="icon-"], .filter-box .nav-list [class*=" icon-"] {
+  float: left;
+  margin-right: 5px;
+  line-height: 18px;
+}
+
+.filter-box .nav-list > li > a {
+  display: block;
+  float: left;
+  width: 188px;
+}
+
+@media (min-width: 1200px) {
+  .filter-box .nav-list > li > a {
+    width: 238px;
+  }
+}
+
+.filter-box .nav-list > li {
+  clear: both;
+}
+
+.filter-title {
+  float: left;
+  display: block;
+  width: 77%;
+  margin-right: 5px;
+}
+
+.filter-title i {
+  float: left;
+  line-height: 18px;
+}
+
+.filter-title-inner {
+  float: left;
+  width: 80%;
+}
+
+@media (min-width: 1200px) {
+  .filter-title-inner {
+    width: 85%;
+  }
+}
+
+.filter-counter-wrapper {
+  display: block;
+  float: right;
+  width: 20%;
+}
+
+.filter-counter {
+  padding-left: 10px;
+  padding-right: 10px;
+  border-radius: 10px;
+  background-color: #B6B7BB;
+  color: #FFFFFF;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.15);
+}
+
+.nav-list > .active > a .filter-counter, .nav-list  a:hover .filter-counter  {
+  background-color: #5EB526;
+}
+
+
+//
+// Statistics
+// --------------------------------------------------
+
+.statistics-legend li {
+  height: 35px;
+  list-style-type: none;
+  display: inline-block;
+  padding: 2px 40px 2px 28px;
+}
+
+.statistics-legend li span.block {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+}
+
+.statistics-legend li p {
+  display: inline-block;
+  margin: 0;
+  vertical-align: 50%;
+}
+
+//
+// Pagination
+// --------------------------------------------------
+.pagination ul li input.jump-to {
+  float: left;
+  width: 90px;
+  text-align:center;
+  margin-bottom: 0;
+}
+
+//
+// Search Input
+// --------------------------------------------------
+#search .add-on {
+  margin-top: 0;
+  height: 17px;
+  line-height: 17px;
+  background-color: #949598;
+  border: 1px solid #949598;
+  border-left: none;
+  color: #FFFFFF;
+  box-shadow: 0 3px 0 0 #7F8084;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+#search input {
+  border-right: none;
+}
+
+#search .input-append .add-on:last-child, #search .input-append .btn:last-child, #search .input-append .btn-group:last-child > .dropdown-toggle {
+  border-radius: 0 4px 4px 0;
+}
+
+// Give user Feedback on hover
+#search .input-append .add-on:hover {
+  cursor: pointer;
+  background-color: #8C8D90;
+}
+
+
+
+
+// --------------------------------------------------
+// Sections / Views
+// --------------------------------------------------
+
+//
+// Login
+// --------------------------------------------------
+
+.form-signin {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 5px 5px 5px 5px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  margin: 20px auto;
+  max-width: 300px;
+  padding: 10px 20px 20px;
+}
+.form-signin input[type="text"], .form-signin input[type="password"] {
+  font-size: 16px;
+  height: auto;
+  margin-bottom: 15px;
+  padding: 7px 9px;
+}
+
+.jumbotron {
+  margin: 0 0 10px 0;
+  text-align: center;
+  background-color: #43474A;
+}
+
+.jumbotron .claim {
+  padding: 25px;
+  background-color: #5EB526;
+  color: #FFFFFF;
+}
+
+.jumbotron .claim p {
+  font-size: 20px;
+  line-height: 1.25;
+  text-align: center;
+  font-family: 'OpenSansLight';
+  margin-bottom: 0;
+}
+
+@media (min-width: 1200px) {
+  .login {
+    margin-bottom: 5%;
+  }
+}
+
+@media (min-width: 1900px) {
+  .login {
+    margin-top: 5%;
+  }
+}
+
+.login .login-btns {
+  margin-top: 30px;
+}
+
+.login .login-btns .btn {
+  margin-left: 15px;
+}
+
+#references {
+  margin-bottom: 20px;
+}
+
+#references .thumbnail {
+  height: 170px;
+  background-color: #ffffff;
+}
+
+#references .thumbnail .ribbon.label {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-left: 16px; /* IE Fallback */
+  margin-left: 1rem;
+  padding-left: 16px; /* IE Fallback */
+  padding-left: 1rem;
+}
+
+#references .span2 .provider-wrapper {
+  height: 140px;
+  width: 140px;
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+}
+
+#references .span2 .provider-wrapper img {
+  text-align: center;
+  width: auto;
+  max-width: 130px;
+  height: auto;
+  max-height: 130px;
+}
+
+@media (min-width: 1200px) {
+  #references .thumbnail {
+    height: 195px;
+  }
+  #references .thumbnail .ribbon.label {
+    margin-left: 1rem;
+    padding-left: 1rem;
+  }
+  #references .span2 .provider-wrapper {
+    height: 160px;
+    width: 160px;
+  }
+
+  #references .span2 .provider-wrapper img {
+    max-width: 160px;
+    max-height: 160px;
+  }
+}
+
+
+
+
+
+//
+// Alerts
+// --------------------------------------------------
+
+// Update Info
+// --------------------------------------------------
+.update-info {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: #e74c3c;
+  color: #ffffff;
+  text-align: center;
+}
+
+.update-info a {
+  color: #ffffff;
+}
+
+.update-info a:hover {
+  color: #E7E7E7;
+  text-decoration: none;
+}
+
+.update-info a.changelog {
+  font-family: 'OpenSansSemibold';
+  margin-left: 10px;
+}
+
+.update-info a.changelog:before {
+  font-family: 'icn-font';
+  content: "\e6de";
+  margin-right: 2px;
+}
+
+.update-info .close-update-info a {
+  font-size: 1.4em;
+}
+
+// Error Message
+// --------------------------------------------------
+
+td .error-code {
+  padding-top: 5px;
+  margin-top: 10px;
+  border-top: 1px solid #EDEDED;
+}
+
+// Start Alert
+// --------------------------------------------------
+
+#messageBox .alert {
+  margin-bottom: 0;
+}
+
+.container #messageBox .alert {
+  margin-bottom: 20px;
+}
+
+
+//
+// Avatar
+// --------------------------------------------------
+
+.avatar {
+  display: block;
+  height: 64px;
+  width: 64px;
+  margin-left: 10px;
+  background: #FFFFFF center;
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  -ms-border-radius: 50%;
+  border-radius: 50%;
+  image-rendering:optimizeQuality;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -ms-background-size: cover;
+  background-size: cover;
+}
+
+// helper for avatars that should be centered
+.align-center .avatar {
+  display: inline-block;
+  margin-left: 0;
+}
+
+
+//
+// Start
+// --------------------------------------------------
+
+
+// Dashboard Content Types
+// --------------------------------------------------
+.content-types-icons {
+  float: left;
+  width: 70px;
+  padding: 15px 10px;
+  text-align: center;
+}
+
+@media (min-width: 1200px) {
+  .content-types-icons {
+    padding: 15px 15px;
+  }
+}
+
+.content-types-icons i {
+  font-size: 33px;
+  display: block;
+}
+
+// Fix for IE to render Icons "properly"
+.content-types-icons i {
+  background-color: #FFFFFF;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Chroma(color='white') progid:DXImageTransform.Microsoft.Alpha(opacity=99)";
+  color: #5E6468;
+}
+
+// Dashboard Disabled Content Types
+// --------------------------------------------------
+.content-types-icons.inactive a[disabled] {
+  pointer-events: none;
+  cursor: default;
+  color: #d2d6d9;
+}
+
+.content-types-icons.inactive i {
+  color: #d2d6d9;
+}
+
+
+// well-dashboard
+// --------------------------------------------------
+.well-dashboard h4 {
+  font-size: 14px;
+  margin-bottom: 0;
+}
+
+
+// Dashboard-Job
+// --------------------------------------------------
+
+.well .job-dashboard .span1  {
+  margin-left: 15px;
+}
+
+@media (min-width: 1200px) {
+  .well .job-dashboard .span1  {
+    margin-left: 25px;
+  }
+}
+
+.well-dashboard .job-dashboard .job-body {
+  overflow: hidden;
+}
+
+.well-dashboard .job-dashboard .job-body .link {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.job-dashboard .ribbon.label {
+  left: -16px; /* IE Fallback */
+  left: -1rem;
+}
+
+@media (min-width: 1200px) {
+  .job-dashboard .ribbon.label {
+    left: -19.2px; /* IE Fallback */
+    left: -1.2rem;
+  }
+}
+
+.well-dashboard .partner, .well-dashboard .job-dashboard {
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #ededed;
+}
+
+// Dashboard Skip
+// --------------------------------------------------
+
+.well-dashboard.skip {
+  padding-bottom: 0;
+}
+
+.well-dashboard .skip-image {
+  margin-left: 18px;
+  margin-right: 20px;
+  height: 116px;
+}
+
+.well-dashboard .skip-image img {
+  width: 170px;
+}
+
+.well-dashboard.skip p {
+  font-family: 'OpenSansLight';
+  font-size: 18px;
+  line-height: 24px;
+}
+
+//
+// Documents
+// --------------------------------------------------
+
+// Documents New
+// --------------------------------------------------
+.catalog-template {
+  margin-bottom: 5px;
+}
+
+.catalog-template-type {
+  margin-left: 10px;
+}
+
+// Document Detail Page
+// --------------------------------------------------
+.catalog-preview {
+  margin-bottom: 10px;
+}
+
+// Document Pages
+.page {
+  margin-bottom: 30px;
+}
+
+.page .legend  {
+  line-height: 21px;
+}
+
+.page-links {
+  float: left;
+  margin-left: 15px;
+  font-size: 85%;
+}
+
+// Table of Contents
+// --------------------------------------------------
+input.pageField {
+  width: 50px;
+}
+
+#tocForm .row {
+  margin-left: 0;
+}
+
+#tocFilter label,
+#tocFilter input {
+  display: inline;
+  margin: 0;
+}
+
+div[class*="spacer"], #tocForm-pagenumber-heading {
+  min-height: 1px;
+  margin-left: 0;
+  float: left;
+}
+
+#tocForm-pagenumber-heading {
+  width: 814px;
+  text-align: right;
+}
+
+#tocForm .spacer0 {
+  width: 0;
+}
+#tocForm .spacer1 {
+  width: 90px;
+}
+
+#tocForm .spacer2 {
+  width: 180px;
+}
+
+#tocForm .spacer3 {
+  width: 270px;
+}
+
+#tocForm .spacer4 {
+  width: 360px;
+}
+
+#tocForm .spacer5 {
+  width: 450px;
+}
+
+#tocForm .spacer6 {
+  width: 540px;
+}
+
+#tocForm span.move-line-up-replacement,
+#tocForm span.move-line-down-replacement,
+#tocForm div.row span.move-entry-left,
+#tocForm div.row.level-0 span.containerl,
+#tocForm div.row span.move-entry-right {
+  display: none;
+  opacity: 0.0;
+}
+
+#tocForm div.row .input-append,
+#tocForm div.row .input-prepend {
+  font-size: 14px;
+  display: inline-block;
+  padding-top: 3px;
+}
+
+#tocForm div.row.first span.move-line-up-replacement,
+#tocForm div.row.last span.move-line-down-replacement {
+  display: inline-block;
+}
+
+#tocForm div.row.first a.move-line-up,
+#tocForm div.row.last a.move-line-down,
+#tocForm div.row.level-0 a.move-entry-left {
+  display: none;
+}
+
+#tocForm div.row input.nameField {
+  width: 250px;
+}
+
+#tocForm div.menu {
+  padding-top: 5px;
+}
+
+#tocForm div.menu .btn:first-of-type {
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+#tocForm div.row.level-0 span.move-entry-left {
+  display: inline;
+}
+
+#tocForm .input-append .add-on:hover {
+  cursor: pointer;
+  background-color: #8C8D90;
+}
+
+#tocForm .add-on {
+  margin-top: 0;
+  height: 17px;
+  line-height: 17px;
+  background-color: #949598;
+  border: 1px solid #949598;
+  border-left: none;
+  box-shadow: 0 3px 0 0 #9c9c9c;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+#tocForm .add-on a, #tocForm .add-on i {
+  color: #ffffff;
+}
+
+#tocForm .input-append a {
+  display: block;
+}
+
+#tocForm .input-append input {
+  border-right: none;
+}
+
+#tocForm .input-append .add-on {
+  border-radius: 0 2px 2px 0;
+}
+
+#tocForm .input-prepend .add-on {
+  border-radius: 2px 0 0 2px;
+}
+
+
+
+
+
+//
+// Videos
+// --------------------------------------------------
+.video-detail .video-container {
+  margin-bottom: 30px;
+}
+
+
+
+
+
+//
+// Galleries
+// --------------------------------------------------
+.gallery-main-link {
+  float: left;
+}
+
+.gallery-main-wrapper {
+  display: table-cell;
+  height: 150px;
+  width: 279px;
+  vertical-align: top;
+  margin-bottom: 10px;
+  background-position: center bottom;
+}
+
+@media (min-width: 1200px) {
+  .gallery-main-wrapper {
+    width: 339px;
+  }
+}
+
+.gallery-info {
+  margin: 15px 0;
+}
+
+.gallery-info .label {
+  margin-bottom: 5px;
+}
+
+.gallery-thumbs {
+  height: 70px;
+  width: 93px;
+  float: left;
+  background-size: 200px;
+  background: #ffffff no-repeat center center;
+}
+
+@media (min-width: 1200px) {
+  .gallery-thumbs {
+    width: 113px;
+  }
+}
+
+.well-galleries .ribbon {
+  margin-bottom: 15px;
+}
+
+.gallery-title {
+  background-color: #43474A;
+  background-color: rgba(67,71,74,0.8);
+  padding-left: 10px;
+}
+
+.gallery-detail .thumbnail {
+  background-color: #ffffff;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.gallery-detail .thumbnail-links {
+  padding: 10px;
+  text-align: left;
+}
+
+.gallery-detail .thumbnail-links .link,
+.galleries-links .link {
+  margin-right: 10px;
+}
+
+.gallery-detail .thumbnail-links .link.link-danger,
+.galleries-links .link.link-danger  {
+  margin-right: 0;
+}
+
+.gallery-detail .thumbnail-links .link i,
+.galleries-links .link i {
+  color: #5e6468;
+}
+
+.mapify-controls .mapify-btn {
+  margin-right: 0;
+}
+
+.mapify-superwrap {
+  margin-top: 20px;
+}
+
+
+
+
+//
+// Partnerships
+// --------------------------------------------------
+.admin {
+  margin-bottom: 20px;
+}
+
+.partner-box h4 {
+  margin-top: 0;
+  margin-bottom: 5px;
+}
+
+.partner-box .row {
+  margin-bottom: 0;
+}
+
+// make sure partner logo is not too large
+.partner-logo img {
+  max-height: 90px;
+}
+
+.partner-box .well {
+  height: 155px;
+}
+
+.partner-box.partner-request .well {
+  height: 130px;
+}
+
+.partner-box .partner-text {
+  min-height: 60px;
+}
+
+// fixing padding for badges in partnership overview
+#partnership-request-form .circular.label.label-state.label.label-important {
+  padding-left: 0.35em !important;
+  padding-right: 0.3em !important;
+}
+
+.partnership-partner {
+  margin-bottom: 20px;
+}
+
+// fixing padding for partner box on partner-detail page
+.well.partnership-partner {
+  padding: 5px;
+}
+
+@media (min-width: 1200px) {
+  .well.partnership-partner {
+    padding: 10px;
+  }
+}
+
+.well.partnership-partner .partner-text {
+  margin-left: 8px;
+}
+
+// fixing margin for ribbon on partner-detail page
+.partnership-partner .ribbon-spacing {
+  margin-left: 2.1rem;
+  margin-bottom: 10px;
+}
+
+@media (min-width: 1200px) {
+  .partnership-partner .ribbon-spacing {
+    margin-left: 2.4rem;
+  }
+}
+
+.partnership-partner .ribbon-spacing .ribbon.label {
+  padding-left: 1.2rem;
+  margin-right: 5px;
+}
+
+.partnership-partner .ribbon-spacing + .partner-age {
+  margin-left: 10px;
+}
+
+@media (min-width: 1200px) {
+  .partnership-partner .ribbon-spacing + .partner-age {
+    margin-left: 0;
+  }
+}
+
+.partner-box .age {
+  display: block;
+  margin-bottom: 10px;
+}
+
+// Address Info (in Leads and Partnerships)
+.address-info {
+  line-height: 125%;
+  color: #838a8f;
+}
+
+// Address Info Icons in proper Color
+.address-info i {
+  color: #5e6468;
+}
+
+
+//
+// Messages
+// --------------------------------------------------
+
+// Messages Global
+// --------------------------------------------------
+
+.messages .message .message-head {
+  margin-bottom: 5px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #CCCCCC;
+}
+
+.message .message-head h4, .admin .admin-head h4 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.message.message-dashboard .message-head h4 {
+  margin-bottom: 0;
+}
+
+.message .message-contact span, .admin .admin-contact span {
+  display: block;
+}
+
+.message-body p {
+  font-size: 18px;
+  line-height: 24px;
+  font-family: 'OpenSansLight';
+}
+
+
+
+// Messages Submit Btn
+// --------------------------------------------------
+
+.btn-message {
+  padding-left: 30px;
+  padding-right: 30px;
+}
+
+
+.input-message {
+  margin-bottom:0;
+  margin-right: 15px;
+  width:510px;
+}
+
+@media (min-width: 1200px) {
+  .input-message {
+    width:660px;
+  }
+}
+
+
+// Messages Start
+// --------------------------------------------------
+
+.message .user-info p {
+  font-size: 85%;
+  margin-bottom: 0;
+}
+
+.well-dashboard .incoming-message .message-info {
+  margin-left: 100px;
+}
+
+@media (min-width: 1200px) {
+  .well-dashboard .incoming-message .message-info {
+    margin-left: 130px;
+  }
+}
+
+.message-info a i {
+  color: #5eb526;
+}
+
+.message-info a:hover i {
+  color: #5e6468;
+}
+
+.well-dashboard .incoming-message .ribbon.label.right {
+  left: 2.5rem;
+}
+
+.well-dashboard .message {
+  border-bottom: 1px solid #ededed;
+  padding: 10px 10px 15px;
+}
+
+.well-dashboard .message.outgoing-message {
+  background-color: #f9f9f9;
+}
+
+
+.well-dashboard .message h4 {
+  display: inline;
+}
+
+.well-dashboard .message-head {
+  border-bottom: none;
+  margin-bottom: 5px;
+}
+
+.message.unread {
+  border-left: 3px solid #3498DB;
+}
+
+.well-dashboard .message-head .message-person {
+  width: 225px;
+  float: left;
+}
+
+@media (min-width: 1200px) {
+  .well-dashboard .message-head .message-person {
+    width: 310px;
+  }
+}
+
+.well-dashboard .message-head .message-meta {
+  width: 100px;
+  float: left;
+  margin-left: 10px;
+}
+
+.well-dashboard .reloading {
+  margin-top: 12px;
+  display: block;
+}
+
+#moremessageslink a{
+  cursor: pointer;
+}
+
+// if message has a subject add some margin to subject link
+.message-body small + small {
+  margin-left: 5px;
+}
+
+
+// Messages Details
+// --------------------------------------------------
+
+.messages .incoming-message {
+  text-align: left;
+  position:relative;
+  left: 0;
+}
+
+.messages .outgoing-message {
+  position:relative;
+  right:0;
+  text-align: right;
+}
+
+.message.incoming-message .message-person, .message .message-meta, .message .message-meta {
+  float: left;
+}
+
+.messages .outgoing-message .ribbon.label {
+  float: left;
+  left: -1.4rem;
+}
+
+.messages .message {
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.messages .message.incoming-message {
+  border-radius: 10px 10px 10px 0;
+  -moz-border-radius: 10px 10px 10px 0;
+  -webkit-border-radius: 10px 10px 10px 0;
+}
+
+.messages .message.outgoing-message {
+  border-radius: 10px 10px 0 10px;
+  -moz-border-radius: 10px 10px 0 10px;
+  -webkit-border-radius: 10px 10px 0 10px;
+}
+
+.messages .incoming-message .message-head .message-person {
+  width: 342px;
+}
+
+@media(min-width: 1200px) {
+  .messages .incoming-message .message-head .message-person {
+    width: 452px;
+  }
+}
+
+.messages .incoming-message .message-head .message-meta {
+  width: 100px;
+  margin-left: 10px;
+  text-align: right;
+}
+
+.messages .message.outgoing-message {
+  background-color: #e9eaea;
+  background-color: rgba(94, 99, 103, 0.08);
+  border: 1px solid #e9eaea;
+  border: 1px solid rgba(94, 99, 103, 0.08);
+}
+
+
+
+//
+// Leads
+// --------------------------------------------------
+
+// fixing padding for contact box on lead-contact page
+.well.lead-contact {
+  padding: 5px;
+}
+
+@media (min-width: 1200px) {
+  .well.lead-contact {
+    padding: 10px;
+  }
+}
+.lead-contact h4 {
+  margin-bottom: 5px;
+  margin-top: 0;
+}
+
+// Leads - Icons overwrite padding from bootstrap
+.leads .circular.label.label-state.label-important {
+  padding: 0.3em 0.35em !important;
+}
+
+
+
+
+//
+// Account
+// --------------------------------------------------
+.account {
+  font-family: 'OpenSansLight';
+}
+
+.account h2 {
+  margin-top: 0;
+}
+
+.account ul {
+  list-style-type: none;
+  margin-left: 0;
+}
+
+.account li {
+  font-size: 21px;
+  line-height: 30px;
+}
+
+.account .modal-body label:first-child {
+  font-family: 'OpenSansLight';
+}
+
+.account .badges .well {
+  text-align: center;
+  height: 289px;
+}
+
+.account .badges .well span, .account .badges .well a {
+  text-align: left;
+}
+
+.account .package-actions {
+  margin-top: 130px;
+}
+
+.account .package-actions .btn:first-child {
+  margin-bottom: 10px;
+}
+
+.account label:first-child {
+  font-family: 'OpenSansLight';
+}
+
+.feature-unavailable .lead {
+  font-family: 'OpenSansLight';
+}
+
+//
+// Error Pages
+// --------------------------------------------------
+.page-unavailable {
+  text-align: center;
+}
+.page-unavailable span, .page-unavailable p {
+  text-align: left;
+}
+
+
+// --------------------------------------------------
+// PLUGINS
+// --------------------------------------------------
+
+//
+// Chosen
+// --------------------------------------------------
+
+// Determines the layout of a dropdown enhanced by chosen
+.chosen-container-multi .chosen-choices {
+  border-radius: 4px 4px 4px 4px;
+  color: #555555;
+  border: 1px solid #CCCCCC;
+  background: #FFFFFF none;
+}
+
+// Determines the layout of a dropdown enhanced by chosen
+.chosen-container {
+  margin-bottom: 10px;
+}
+
+
+//
+// Colorpicker
+// --------------------------------------------------
+.pick-a-color.colorpicker-element .add-on i {
+  vertical-align: sub;
+}
+
+//
+// select2
+// --------------------------------------------------
+.select2 {
+  margin-bottom: 10px;
+}
+
+.select2-container.input-block-level {
+  margin-bottom: 10px;
+}
+
+.select2-container .select2-choice {
+  background-image: none;
+}
+
+// Icon to clear selection should be aligned properly
+.select2-container .select2-selection--single .select2-selection__rendered {
+  white-space: normal;
+}
+
+
+//
+// Password
+// --------------------------------------------------
+.password-security-info h4 {
+  padding: 10px 0;
+  margin: 0 0 10px 0;
+}
+
+.password-security-info .alert-success {
+  color: #468847;
+}
+
+
+// --------------------------------------------------
+// WIKI
+// --------------------------------------------------
+
+//
+// Help
+// --------------------------------------------------
+
+.help .breadcrumb {
+  padding-left: 0;
+}
+
+.help .help-headline {
+  color: #E7E7E7;
+  font-size: 21px;
+  font-family: 'OpenSansSemibold';
+  padding: 20px 15px;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.help .link, .help li {
+  font-family: 'OpenSansRegular';
+}
+
+.help .sub-nav i {
+  float: left;
+  line-height: 24px;
+}
+
+.help .carousel h5 {
+  margin-top: 5px;
+}
+
+.help .carousel-control {
+  left: 0;
+}
+
+.help .carousel-control.right {
+  left: auto;
+  right: 0;
+}
+
+.help .nav-list li li a {
+  padding: 3px 5px 3px 15px;
+  margin-right: -15px;
+  display: block;
+}
+
+.help .nav-list li li a.link:hover {
+  background-color: #5EB526;
+  color: #FFFFFF;
+}
+
+.help .nav-list .link:hover {
+  background-color: #5EB526;
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+.help .nav-list.nav-small-a a {
+  font-size: 12px;
+}
+
+.help .nav-list.nav-chapters li ul {
+  margin-left: 10px;
+}
+
+// 2nd level
+.help .nav-list .nav-list > li > a {
+  padding-left: 30px;
+}
+
+.help .nav-list .nav-list > li > a,
+.help .nav-list .nav-list .nav-header {
+  margin-left:  -30px;
+  margin-right: -30px;
+}
+
+.help .nav-list .icon-time .duration {
+  font-family: "OpenSansRegular";
+}
+
+.help p, .help .help-text li {
+  line-height: 27px;
+  font-size: 16px;
+  text-align: justify;
+  margin-bottom: 20px;
+}
+
+.help .help-text li .thumbnail {
+  margin-top: 10px;
+}
+
+.help h3 {
+  margin: 20px 0 5px;
+}
+
+.help h4 {
+  font-size: 16px;
+  margin-bottom: 0;
+}
+
+.help .well p {
+  margin-bottom: 0;
+}
+
+// content
+.help .table-small-text td {
+  font-size: 85%;
+}
+
+.help .nav-list i.icon-secondary {
+  color: #999;
+}
+
+.help .alert p:last-of-type {
+  margin-bottom: 0px;
+}
+
+.help td p {
+  font-size: 100%;
+  text-align: left;
+}
+
+.help td p:last-of-type {
+  margin-bottom: 0px;
+}
+
+.help td code {
+  font-size: 85%;
+}
+
+.help table table {
+  margin-left: 0px;
+}
+
+.help .prettyprint {
+  font-size: 12px;
+}
+
+.help a.one-line {
+  white-space: nowrap;
+}
+
+.help .legend-row {
+  margin-top: 15px;
+}
+
+.help .legend-row ul.legend-list {
+  margin-left: 0px;
+  list-style: none;
+}
+
+.help .legend-row ul.legend-list li {
+  display: inline;
+  margin-right: 15px;
+}
+
+.help h2 {
+  margin-top: 45px;
+}
+
+// Sidebar right hand side
+.help .sidebar h4 {
+  margin-bottom: 5px;
+}
+
+.help .sidebar p {
+  font-size: 85%;
+  line-height: 18px;
+  text-align: left;
+}
+
+.help .sidebar p:last-of-type {
+  margin-bottom: 0px;
+}

@@ -1,0 +1,65 @@
+@import sirius.biz.codelists.CodeList
+@args Page lists
+@extends(view.wondergem.template.html, title: NLS.get("CodeList.plural"))
+
+@section(breadcrumbs) {
+    <li>
+        <a href="/code-lists">@i18n("CodeList.plural")</a>
+    </li>
+}
+<span class="legend">@i18n("CodeList.plural")</span>
+
+<div class="well">
+    <div class="pull-left">
+        <form class="form-inline" action="@prefix/code-lists" method="get" id="search">
+            <div class="input-append">
+                <input type="text" name="query" value="@lists.getQuery()" placeholder="@i18n("NLS.searchkey")" autofocus />
+                <span class="add-on" onclick="$('#search').submit()"><i class="icon-search"></i></span>
+            </div>
+        </form>
+    </div>
+    <div class="pull-right">
+        <a class="btn btn-primary" href="@prefix/code-list/new">@i18n("Model.create")</a>
+        <a class="btn" href="@prefix/code-lists?@lists.createQueryString()"><i class="icon-refresh"></i></a>
+    </div>
+    <span class="clearfix"></span>
+</div>
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>
+            @i18n("CodeList.code")<br>
+            <small><span class="muted">@i18n("Model.id")</span></small>
+        </th>
+        <th>
+            @i18n("Model.name")
+        </th>
+        <th>
+            @i18n("Model.description")
+        </th>
+        <th class="span2" />
+    </tr>
+    </thead>
+    <tbody>
+    @for(CodeList list : lists.getItems()) {
+    <tr>
+        <td>
+            <a class="link" href="@prefix/code-list/@list.getId()">@list.getCode()</a><br />
+            <small class="muted">@list.getId()</small>
+        </td>
+        <td>
+            @list.getName()
+        </td>
+        <td>
+            @list.getDescription()
+        </td>
+        <td class="span2 align-center">
+            <i class="icon-remove"></i>&nbsp;<a class="link link-danger" href="@prefix/code-list/@list.getId()/delete?@lists.createQueryString()">@i18n("NLS.delete")</a>
+        </td>
+    </tr>
+    }
+    </tbody>
+</table>
+
+@invoke("view/wondergem/parts/pagination.html", lists, "code-lists")

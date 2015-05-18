@@ -1,0 +1,31 @@
+@args sirius.biz.model.TraceData trace
+
+@if (trace.getCreatedAt() != null) {
+    <span data-toggle="collapse" data-target="#infoboxDetail" class="btn pull-right"><i class="icon-info"></i></span>
+    <div class="clearfix"></div>
+    <div id="infoboxDetail" class="collapse">
+        <div class="well well-info well-admin">
+            <span class="legend">@i18n("Model.trace")</span>
+
+            <div class="info-line">
+                <div class="name"><strong>@i18n("TraceData.created")</strong></div>
+                <div class="value">
+                    @NLS.toUserString(trace.getCreatedAt())<br />
+                    @trace.getCreatedBy()<br />
+                    <span class="muted">@trace.getCreatedIn()</span>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="info-line">
+                <div class="name"><strong>@i18n("TraceData.changed")</strong></div>
+                <div class="value">
+                    @NLS.toUserString(trace.getChangedAt())<br />
+                    @trace.getChangedBy()<br />
+                    <span class="muted">@trace.getChangedIn()</span>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+}

@@ -1,0 +1,37 @@
+@*
+*  Made with all the love in the world
+*  by scireum in Remshalden, Germany
+*
+*  Copyright by scireum GmbH
+*  http://www.scireum.de - info@scireum.de
+*@
+@args sirius.biz.codelists.CodeList codeList, String page
+@extends(view.wondergem.template.html, title: NLS.get("CodeList"))
+@section(breadcrumbs) {
+    <li>
+        <a href="/code-lists">@i18n("CodeList.plural")</a>
+        <span class="divider">&@breadcrumbDivider;</span>
+    </li>
+    <li>
+        <a href="@prefix/code-list/new">@i18n("CodeList")</a>
+    </li>
+}
+
+<span class="legend">@i18n("CodeList")</span>
+
+<div class="row">
+    @if (!codeList.isNew()) {
+        <div class="span3">
+            <div class="well" style="padding:0;">
+                <ul class="nav nav-list sub-nav">
+                    <li @if(page == "details") { class="active" }><a href="@prefix/code-list/@codeList.getId()/details" class="link"><i class="icon-users"></i>&nbsp;@i18n("Model.details")</a></li>
+                    <li @if(page == "entries") { class="active" }><a href="@prefix/code-list/@codeList.getId()" class="link"><i class="icon-users"></i>&nbsp;@i18n("CodeListEntry.plural")</a></li>
+                </ul>
+            </div>
+            <a href="@prefix/code-lists" class="btn btn-block">@i18n("NLS.back")</a>
+        </div>
+    }
+    <div class="span8">
+        @render
+    </div>
+</div>

@@ -1,0 +1,17 @@
+@if(user.getCurrentUser().isLoggedIn()) {
+    <div class="navbar navbar-static-top">
+        <div class="navbar-inner">
+            <div class="container">
+                <a class="brand" href="@prefix/">
+                    <img src="@prefix/assets/images/menu_logo.png" border="0" style="max-height: 33px" />
+                </a>
+                <ul class="nav">
+                    @includeExtensions("view-menu-left")
+                </ul>
+                <ul class="nav pull-right">
+                    @includeExtensions("view-menu-right")
+                </ul>
+            </div>
+        </div>
+    </div>
+}

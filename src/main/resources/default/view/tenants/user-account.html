@@ -1,0 +1,34 @@
+@*
+*  Made with all the love in the world
+*  by scireum in Remshalden, Germany
+*
+*  Copyright by scireum GmbH
+*  http://www.scireum.de - info@scireum.de
+*@
+@args sirius.biz.tenants.UserAccount account, String page
+@extends(view.wondergem.template.html, title: NLS.get("Model.userAccount"))
+@section(breadcrumbs) {
+    <li>
+        <a href="@prefix/user-accounts">@i18n("Model.userAccount.plural")</a>
+        <span class="divider">&@breadcrumbDivider;</span>
+    </li>
+    <li>
+        <a href="@prefix/user-accounts/@account.getId()">@i18n("Model.userAccount")</a>
+    </li>
+}
+
+<span class="legend">@i18n("Model.userAccount")</span>
+<div class="row">
+    <div class="span3">
+        <div class="well" style="padding:0;">
+            <ul class="nav nav-list sub-nav">
+                <li @if(page == "details") { class="active" }><a href="@prefix/user-account/@account.getId()" class="link"><i class="icon-users"></i>&nbsp;@i18n("Model.details")</a></li>
+                @includeExtensions("view-user-account-sidebar", account, page)
+            </ul>
+        </div>
+        <a href="@prefix/user-accounts" class="btn btn-block">@i18n("NLS.back")</a>
+    </div>
+    <div class="span8">
+        @render
+    </div>
+</div>

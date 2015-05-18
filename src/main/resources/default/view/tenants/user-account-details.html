@@ -1,0 +1,74 @@
+@*
+*  Made with all the love in the world
+*  by scireum in Remshalden, Germany
+*
+*  Copyright by scireum GmbH
+*  http://www.scireum.de - info@scireum.de
+*@
+@import sirius.biz.tenants.UserAccount
+@args UserAccount account
+@extends(view.tenants.user-account.html, account, "details")
+
+<form action="@prefix/user-account/@account.getIdAsString()" method="post" id="editForm">
+    <div class="row">
+        @view.wondergem.parts.textfield(span:     "4",
+                                        name:     "email",
+                                        value:    account.getEmail(),
+                                        labelKey: "Model.email",
+                                        helpKey:  null,
+                                        required: true)
+        @view.wondergem.parts.textfield(span:     "4",
+                                        name:     "login_username",
+                                        value:    account.getLogin().getUsername(),
+                                        labelKey: "LoginData.username",
+                                        helpKey:  null,
+                                        required: true)
+    </div>
+    <div class="row">
+        @view.wondergem.parts.codelist_dropdown(span:     "4",
+                                                list:     "salutations",
+                                                name:     "person_salutation",
+                                                value:    account.getPerson().getSalutation(),
+                                                labelKey: "PersonData.salutation",
+                                                helpKey:  null,
+                                                required: false)
+        @view.wondergem.parts.textfield(span:     "4",
+                                        name:     "person_title",
+                                        value:    account.getPerson().getTitle(),
+                                        labelKey: "PersonData.title",
+                                        helpKey:  null,
+                                        required: false)
+    </div>
+    <div class="row">
+        @view.wondergem.parts.textfield(span:     "4",
+                                        name:     "person_firstname",
+                                        value:    account.getPerson().getFirstname(),
+                                        labelKey: "PersonData.firstname",
+                                        helpKey:  null,
+                                        required: false)
+        @view.wondergem.parts.textfield(span:     "4",
+                                        name:     "person_lastname",
+                                        value:    account.getPerson().getLastname(),
+                                        labelKey: "PersonData.lastname",
+                                        helpKey:  null,
+                                        required: false)
+    </div>
+    <span class="legend legend-small">@i18n("UserAccount.security")</span>
+    <div class="row">
+        @view.wondergem.parts.checkbox(span:     "4",
+                                       name:     "login_accountLocked",
+                                       value:    account.getLogin().isAccountLocked(),
+                                       labelKey: "LoginData.accountLocked",
+                                       helpKey:  null)
+        @if (Strings.isFilled(account.getLogin().getGeneratedPassword())) {
+            <div class="span4 control-group">
+                <label>@i18n("LoginData.generatedPassword")</label>
+                <input type="text" value="@account.getLogin().getGeneratedPassword()" readonly class="input-block-level" />
+            </div>
+        }
+    </div>
+    <div class="form-actions">
+        <a onclick="$('#editForm').submit()" class="btn btn-primary"><i class="icon-ok"></i> @i18n("NLS.save")</a>
+        @view.wondergem.parts.tracing.html(account.getTrace())
+    </div>
+</form>

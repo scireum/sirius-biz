@@ -1,0 +1,61 @@
+//
+// Wells
+// --------------------------------------------------
+
+
+// Base class
+.well {
+  min-height: 20px;
+  padding: 19px;
+  margin-bottom: 20px;
+  background-color: @white;
+  border: 1px solid darken(@white, 7%);
+  .border-radius(@baseBorderRadius);
+  blockquote {
+    border-color: #ddd;
+    border-color: rgba(0,0,0,.15);
+  }
+}
+
+// Sizes
+.well-large {
+  padding: 24px;
+  .border-radius(@borderRadiusLarge);
+}
+.well-small {
+  padding: 9px;
+  .border-radius(@borderRadiusSmall);
+}
+
+// Well-Info
+
+.well-info {
+  padding: 10px;
+  background-color: #e9eaea;
+  background-color: rgba(94, 99, 103, 0.08);
+  font-size: @fontSizeSmall;
+}
+
+.well-info legend {
+  border-bottom: 1px solid #dadbdb;
+  border-bottom: 1px solid rgba(98, 98, 98, 0.1);
+}
+
+.well-help {
+  padding: 10px;
+  background-color: #d9edf8;
+  background-color: rgba(142, 199, 234, 0.4);
+  border: 1px solid @infoBorder;
+  font-size: @fontSizeSmall;
+  line-height: @baseLineHeight * 0.85;
+  color: #4a697d;
+}
+
+.well-help p:last-child {
+  margin-bottom: 0;
+}
+
+// Well-Header
+.well-header {
+  background-color: #dedede;
+}

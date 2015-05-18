@@ -1,0 +1,55 @@
+@*
+*  Made with all the love in the world
+*  by scireum in Remshalden, Germany
+*
+*  Copyright by scireum GmbH
+*  http://www.scireum.de - info@scireum.de
+*@
+@args sirius.biz.tenants.Tenant tenant
+@extends(view.wondergem.template.html, title: NLS.get("Model.tenant"))
+@section(breadcrumbs) {
+    <li>
+        <a href="/tenants">@i18n("Model.tenant.plural")</a>
+        <span class="divider">&@breadcrumbDivider;</span>
+    </li>
+    <li>
+        <a href="@prefix/tenant/@tenant.getId()">@i18n("Model.tenant")</a>
+    </li>
+}
+
+<span class="legend">@i18n("Model.tenant")</span>
+
+<form action="@prefix/tenant/@tenant.getIdAsString()" method="post" id="editForm">
+    <fieldset>
+        <div class="row">
+            <div class="span8">
+                <div class="row">
+                    <div class="span4 control-group @user.signalFieldError("name")">
+                        <label>
+                            <span class="input-required">@i18n("Model.name")</span>
+                        </label>
+                        <div class="input-block-level">
+                            <input name="name" type="text" value="@user.getFieldValue("name", tenant.getName())" class="input-block-level" />
+                        </div>
+                    </div>
+                    <div class="span4 control-group @user.signalFieldError("accountNumber")">
+                        <label>
+                            <span class="input-required">@i18n("Tenant.accountNumber")</span>
+                        </label>
+                        <div class="input-block-level">
+                            <input name="accountNumber" type="text" value="@user.getFieldValue("accountNumber", tenant.getAccountNumber())" class="input-block-level" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+
+    @tenant.getTrace().getChangedAt()
+
+    <div class="form-actions">
+        <a onclick="$('#editForm').submit()" class="btn btn-primary"><i class="icon-ok"></i> @i18n("NLS.save")</a>
+        <a href="@prefix/tenants" class="btn">@i18n("NLS.back")</a>
+        @view.wondergem.parts.tracing.html(tenant.getTrace())
+    </div>
+</form>
