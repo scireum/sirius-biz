@@ -1,6 +1,6 @@
-# sirius-web
+# sirius-biz
 
-Provides a modern and scalable web server as SIRIUS module
+Provides a framework for building modern web based business applicatins.
 
 This is a module of the SIRIUS OpenSource project by scireum GmbH. For further information visit the project website: http://sirius-lib.net
 
@@ -9,11 +9,11 @@ To use this library in your own project include:
 ```
 <dependency>
     <groupId>com.scireum</groupId>
-    <artifactId>sirius-web</artifactId>
+    <artifactId>sirius-biz</artifactId>
     <version>PICK A VERSION</version>
 </dependency>
 ```
-An overview of all versions can be found here: https://oss.sonatype.org/content/groups/public/com/scireum/sirius-web/
+An overview of all versions can be found here: https://oss.sonatype.org/content/groups/public/com/scireum/sirius-biz/
 
 ## License
 
