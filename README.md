@@ -1,6 +1,6 @@
 # sirius-biz
 
-Provides a framework for building modern web based business applicatins.
+Provides a framework for building modern web based business applications.
 
 This is a module of the SIRIUS OpenSource project by scireum GmbH. For further information visit the project website: http://sirius-lib.net
 
