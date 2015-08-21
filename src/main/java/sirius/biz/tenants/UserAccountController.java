@@ -22,11 +22,10 @@ import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.xml.StructuredOutput;
 import sirius.web.controller.Controller;
-import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.http.session.ServerSession;
-import sirius.web.mails.MailService;
+import sirius.web.mails.Mails;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
@@ -129,7 +128,7 @@ public class UserAccountController extends BizController {
     }
 
     @Part
-    private MailService mails;
+    private Mails mails;
 
     @Routed("/user-account/:1/generate-password")
     @LoginRequired
@@ -160,9 +159,9 @@ public class UserAccountController extends BizController {
     public void forgotPassword(final WebContext ctx) {
         try {
             List<UserAccount> accounts = oma.select(UserAccount.class)
-                                      .eq(UserAccount.EMAIL, ctx.get("email").asString())
-                                      .limit(2)
-                                      .queryList();
+                                            .eq(UserAccount.EMAIL, ctx.get("email").asString())
+                                            .limit(2)
+                                            .queryList();
             if (accounts.isEmpty()) {
                 throw Exceptions.createHandled().withNLSKey("UserAccountController.noUserFoundForEmail").handle();
             } else if (accounts.size() > 1) {
@@ -186,7 +185,8 @@ public class UserAccountController extends BizController {
                                                  .set("password", account.getLogin().getGeneratedPassword())
                                                  .set("name", account.getPerson().getAddressableName())
                                                  .set("username", account.getLogin().getUsername())
-                                                 .set("url", getBaseUrl())).to(account.getEmail(), account.getPerson().toString())
+                                                 .set("url", getBaseUrl()))
+                         .to(account.getEmail(), account.getPerson().toString())
                          .send();
                 }
             }
@@ -225,6 +225,4 @@ public class UserAccountController extends BizController {
         ctx.getServerSession(false).ifPresent(ServerSession::invalidate);
         ctx.respondWith().redirectTemporarily("/");
     }
-
-
 }

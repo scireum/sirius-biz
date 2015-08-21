@@ -19,7 +19,7 @@ import sirius.mixing.Column;
 import sirius.mixing.annotations.BeforeSave;
 import sirius.mixing.annotations.Length;
 import sirius.mixing.annotations.Trim;
-import sirius.web.mails.MailService;
+import sirius.web.mails.Mails;
 
 /**
  * Created by aha on 07.05.15.
@@ -41,7 +41,7 @@ public class UserAccount extends TenantAware {
     public static final Column PERMISSIONS = Column.named("permissions");
 
     @Part
-    private static MailService ms;
+    private static Mails ms;
 
     @BeforeSave
     public void verifyData() {
