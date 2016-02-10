@@ -9,11 +9,11 @@
 package sirius.biz.codelists;
 
 import sirius.biz.web.BizController;
-import sirius.biz.web.DefaultRoute;
 import sirius.biz.web.PageHelper;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
+import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
@@ -35,8 +35,8 @@ public class CodeListController extends BizController {
     @Permission(MANAGE_CODELISTS)
     @Routed("/code-lists")
     public void codeLists(WebContext ctx) {
-        PageHelper<CodeList> ph = PageHelper.withQuery(oma.select(CodeList.class).orderAsc(CodeList.CODE))
-                                            .forCurrentTenant();
+        PageHelper<CodeList> ph =
+                PageHelper.withQuery(oma.select(CodeList.class).orderAsc(CodeList.CODE)).forCurrentTenant();
         ph.withContext(ctx);
         ph.withSearchFields(CodeList.CODE, CodeList.NAME, CodeList.DESCRIPTION);
         ctx.respondWith().template("view/codelists/code-lists.html", ph.asPage());
@@ -57,7 +57,7 @@ public class CodeListController extends BizController {
                 if (cl.isNew()) {
                     cl.getTenant().setValue(tenants.getRequiredTenant());
                 }
-                load(ctx, cl, CodeList.CODE, CodeList.NAME, CodeList.DESCRIPTION, CodeList.AUTO_FILL);
+                load(ctx, cl);
                 oma.update(cl);
                 showSavedMessage();
                 if (wasNew) {
@@ -114,8 +114,9 @@ public class CodeListController extends BizController {
                 }
                 cle.setPriority(ctx.get("priority").asInt(Priorized.DEFAULT_PRIORITY));
                 cle.setValue(ctx.get("value").isEmptyString() ? null : ctx.get("value").asString());
-                cle.setAdditionalValue(ctx.get("additionalValue").isEmptyString() ? null : ctx.get("additionalValue")
-                                                                                              .asString());
+                cle.setAdditionalValue(ctx.get("additionalValue").isEmptyString() ?
+                                       null :
+                                       ctx.get("additionalValue").asString());
                 cle.setDescription(ctx.get("description").isEmptyString() ? null : ctx.get("description").asString());
                 oma.update(cle);
                 showSavedMessage();
@@ -151,6 +152,4 @@ public class CodeListController extends BizController {
         }
         renderCodeList(ctx, cl);
     }
-
-
 }

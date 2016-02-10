@@ -53,7 +53,7 @@ public class TraceData extends Composite {
     private boolean silent;
 
     @BeforeSave
-    public void update() {
+    protected void update() {
         if (createdAt == null) {
             createdBy = UserContext.getCurrentUser().getUserName();
             createdAt = LocalDateTime.now();

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/sirius-web.iml" filepath="$PROJECT_DIR$/sirius-web.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sirius-biz.iml" filepath="$PROJECT_DIR$/sirius-biz.iml" />
     </modules>
   </component>
 </project>

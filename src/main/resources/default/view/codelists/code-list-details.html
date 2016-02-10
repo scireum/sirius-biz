@@ -8,37 +8,26 @@
 @args sirius.biz.codelists.CodeList codeList, Page entries
 @extends(view.codelists.code-list.html, page: "details")
 
-<form action="@prefix/code-list/@codeList.getIdAsString()" method="post" id="editForm">
-    <fieldset>
-        <div class="row">
-            @view.wondergem.parts.textfield(span:     "4",
-                                            name:     "code",
-                                            value:    codeList.getCode(),
-                                            labelKey: "CodeList.code",
-                                            helpKey:  null,
-                                            required: true)
-            @view.wondergem.parts.textfield(span:     "4",
-                                            name:     "name",
-                                            value:    codeList.getName(),
-                                            labelKey: "Model.name",
-                                            helpKey:  null,
-                                            required: true)
-        </div>
-        <div class="row">
-            @view.wondergem.parts.textfield(span:     "8",
-                                            name:     "description",
-                                            value:    codeList.getDescription(),
-                                            labelKey: "Model.description",
-                                            helpKey:  null,
-                                            required: false)
-        </div>
-    </fieldset>
-
-    <div class="form-actions">
-        <a onclick="$('#editForm').submit()" class="btn btn-primary"><i class="icon-ok"></i> @i18n("NLS.save")</a>
-        @if (codeList.isNew()) {
-            <a href="@prefix/code-lists" class="btn">@i18n("NLS.back")</a>
-        }
-        @view.wondergem.parts.tracing.html(codeList.getTrace())
+@editForm(("code-list/" + codeList.getIdAsString())) {
+    <div class="row">
+        @textfield(name:     "code",
+                   value:    codeList.getCode(),
+                   labelKey: "CodeList.code",
+                   required: true)
+        @textfield(name:     "name",
+                   value:    codeList.getName(),
+                   labelKey: "Model.name",
+                   required: true)
     </div>
-</form>
+    <div class="row">
+        @textfield(span:     "12",
+                   name:     "description",
+                   value:    codeList.getDescription(),
+                   labelKey: "Model.description")
+    </div>
+}
+
+@formBar() {
+    <a href="@prefix/code-lists" class="btn">@i18n("NLS.back")</a>
+    @tracing(codeList.getTrace())
+}

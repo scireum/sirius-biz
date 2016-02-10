@@ -8,14 +8,13 @@
 
 package sirius.biz.model;
 
-import sirius.biz.tenants.UserAccount;
 import sirius.mixing.Column;
 import sirius.mixing.Entity;
 
 /**
  * Created by aha on 08.05.15.
  */
-public class BizEntity extends Entity {
+public abstract class BizEntity extends Entity {
 
     public static final String NEW = "new";
 
@@ -32,5 +31,4 @@ public class BizEntity extends Entity {
     public TraceData getTrace() {
         return trace;
     }
-
 }

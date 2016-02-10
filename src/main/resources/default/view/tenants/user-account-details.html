@@ -6,69 +6,83 @@
 *  http://www.scireum.de - info@scireum.de
 *@
 @import sirius.biz.tenants.UserAccount
-@args UserAccount account
+@args UserAccount account, sirius.biz.tenants.UserAccountController controller
 @extends(view.tenants.user-account.html, account, "details")
 
 <form action="@prefix/user-account/@account.getIdAsString()" method="post" id="editForm">
     <div class="row">
-        @view.wondergem.parts.textfield(span:     "4",
-                                        name:     "email",
-                                        value:    account.getEmail(),
-                                        labelKey: "Model.email",
-                                        helpKey:  null,
-                                        required: true)
-        @view.wondergem.parts.textfield(span:     "4",
-                                        name:     "login_username",
-                                        value:    account.getLogin().getUsername(),
-                                        labelKey: "LoginData.username",
-                                        helpKey:  null,
-                                        required: true)
+        @view.parts.textfield(span:     "4",
+                              name:     "email",
+                              value:    account.getEmail(),
+                              labelKey: "Model.email",
+                              helpKey:  null,
+                              required: true)
+        @view.parts.textfield(span:     "4",
+                              name:     "login_username",
+                              value:    account.getLogin().getUsername(),
+                              labelKey: "LoginData.username",
+                              helpKey:  null,
+                              required: true)
     </div>
     <div class="row">
-        @view.wondergem.parts.codelist_dropdown(span:     "4",
-                                                list:     "salutations",
-                                                name:     "person_salutation",
-                                                value:    account.getPerson().getSalutation(),
-                                                labelKey: "PersonData.salutation",
-                                                helpKey:  null,
-                                                required: false)
-        @view.wondergem.parts.textfield(span:     "4",
-                                        name:     "person_title",
-                                        value:    account.getPerson().getTitle(),
-                                        labelKey: "PersonData.title",
-                                        helpKey:  null,
-                                        required: false)
+        @view.parts.codelist_dropdown(span:     "4",
+                                      list:     "salutations",
+                                      name:     "person_salutation",
+                                      value:    account.getPerson().getSalutation(),
+                                      labelKey: "PersonData.salutation",
+                                      helpKey:  null,
+                                      required: false)
+        @view.parts.textfield(span:     "4",
+                              name:     "person_title",
+                              value:    account.getPerson().getTitle(),
+                              labelKey: "PersonData.title",
+                              helpKey:  null,
+                              required: false)
     </div>
     <div class="row">
-        @view.wondergem.parts.textfield(span:     "4",
-                                        name:     "person_firstname",
-                                        value:    account.getPerson().getFirstname(),
-                                        labelKey: "PersonData.firstname",
-                                        helpKey:  null,
-                                        required: false)
-        @view.wondergem.parts.textfield(span:     "4",
-                                        name:     "person_lastname",
-                                        value:    account.getPerson().getLastname(),
-                                        labelKey: "PersonData.lastname",
-                                        helpKey:  null,
-                                        required: false)
+        @view.parts.textfield(span:     "4",
+                              name:     "person_firstname",
+                              value:    account.getPerson().getFirstname(),
+                              labelKey: "PersonData.firstname",
+                              helpKey:  null,
+                              required: false)
+        @view.parts.textfield(span:     "4",
+                              name:     "person_lastname",
+                              value:    account.getPerson().getLastname(),
+                              labelKey: "PersonData.lastname",
+                              helpKey:  null,
+                              required: false)
     </div>
-    <span class="legend legend-small">@i18n("UserAccount.security")</span>
+
+    @view.parts.subHeading(NLS.get("UserAccount.security"))
     <div class="row">
-        @view.wondergem.parts.checkbox(span:     "4",
-                                       name:     "login_accountLocked",
-                                       value:    account.getLogin().isAccountLocked(),
-                                       labelKey: "LoginData.accountLocked",
-                                       helpKey:  null)
+        @view.parts.checkbox(span:     "4",
+                             name:     "login_accountLocked",
+                             value:    account.getLogin().isAccountLocked(),
+                             labelKey: "LoginData.accountLocked",
+                             helpKey:  null)
         @if (Strings.isFilled(account.getLogin().getGeneratedPassword())) {
             <div class="span4 control-group">
                 <label>@i18n("LoginData.generatedPassword")</label>
-                <input type="text" value="@account.getLogin().getGeneratedPassword()" readonly class="input-block-level" />
+                <input type="text" value="@account.getLogin().getGeneratedPassword()" readonly="readonly" class="input-block-level" />
             </div>
         }
     </div>
+    @view.parts.subHeading(NLS.get("UserAccount.roles"))
+    <div class="row">
+        <div class="span4">
+            <span class="legend legend-small">@i18n("PersonEntity.permissionsSection")</span>
+            @for(String role : controller.getRoles()) {
+                <label class="checkbox">
+                    <input type="checkbox" name="roles" value="@role" @if (account.getPermissions().getPermissions().contains(role)) { checked="checked" } />
+                    @controller.getRoleName(role)
+                    <span class="help-block checkbox-help"> @controller.getRoleDescription(role)</span>
+                </label>
+            }
+        </div>
+    </div>
     <div class="form-actions">
-        <a onclick="$('#editForm').submit()" class="btn btn-primary"><i class="icon-ok"></i> @i18n("NLS.save")</a>
-        @view.wondergem.parts.tracing.html(account.getTrace())
+        @view.parts.formSaveButton()
+        @view.parts.tracing(account.getTrace())
     </div>
 </form>

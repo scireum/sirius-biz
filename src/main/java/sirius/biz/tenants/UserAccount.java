@@ -11,6 +11,7 @@ package sirius.biz.tenants;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
+import sirius.biz.web.Autoloaded;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -27,6 +28,7 @@ import sirius.web.mails.Mails;
 public class UserAccount extends TenantAware {
 
     @Trim
+    @Autoloaded
     @Length(length = 150)
     private String email;
     public static final Column EMAIL = Column.named("email");
@@ -44,7 +46,7 @@ public class UserAccount extends TenantAware {
     private static Mails ms;
 
     @BeforeSave
-    public void verifyData() {
+    protected void verifyData() {
         if (Strings.isFilled(email) && !ms.isValidMailAddress(email.trim(), null)) {
             throw Exceptions.createHandled().withNLSKey("Model.invalidEmail").set("value", email).handle();
         }

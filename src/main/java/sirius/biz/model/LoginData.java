@@ -11,6 +11,7 @@ package sirius.biz.model;
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
+import sirius.biz.web.Autoloaded;
 import sirius.kernel.commons.Strings;
 import sirius.mixing.Column;
 import sirius.mixing.Composite;
@@ -24,6 +25,7 @@ import java.time.LocalDateTime;
 public class LoginData extends Composite {
 
     @Trim
+    @Autoloaded
     @Length(length = 150)
     private String username;
     public static final Column USERNAME = Column.named("username");
@@ -51,6 +53,7 @@ public class LoginData extends Composite {
     private LocalDateTime lastLogin;
     public static final Column LAST_LOGIN = Column.named("lastLogin");
 
+    @Autoloaded
     private boolean accountLocked;
     public static final Column ACCOUNT_LOCKED = Column.named("accountLocked");
 
@@ -58,7 +61,7 @@ public class LoginData extends Composite {
     private String cleartextPassword;
 
     @BeforeSave
-    public void autofill() {
+    protected void autofill() {
         if (Strings.isEmpty(salt)) {
             this.salt = Strings.generateCode(20);
             this.passwordHash = null;
@@ -139,7 +142,6 @@ public class LoginData extends Composite {
     public void setCleartextPassword(String cleartextPassword) {
         this.cleartextPassword = cleartextPassword;
     }
-
 
     public String getUsername() {
         return username;

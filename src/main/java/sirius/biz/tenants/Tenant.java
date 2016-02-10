@@ -11,7 +11,7 @@ package sirius.biz.tenants;
 import sirius.biz.model.AddressData;
 import sirius.biz.model.BizEntity;
 import sirius.biz.model.PermissionData;
-import sirius.biz.model.TraceData;
+import sirius.biz.web.Autoloaded;
 import sirius.mixing.Column;
 import sirius.mixing.annotations.Length;
 import sirius.mixing.annotations.NullAllowed;
@@ -25,12 +25,14 @@ public class Tenant extends BizEntity {
 
     @Trim
     @Unique
+    @Autoloaded
     @Length(length = 255)
     private String name;
     public static final Column NAME = Column.named("name");
 
     @Trim
     @Unique
+    @Autoloaded
     @NullAllowed
     @Length(length = 50)
     private String accountNumber;

@@ -2,62 +2,51 @@
 @args CodeList codeList, Page entries
 @extends(view.codelists.code-list.html, page: "entries")
 
-<div class="well">
-    <div class="pull-left">
-        <form class="form-inline" action="@prefix/code-list/@codeList.getId()" method="get" id="search">
-            <div class="input-append">
-                <input type="text" name="query" value="@entries.getQuery()" placeholder="@i18n("NLS.searchkey")" autofocus />
-                <span class="add-on" onclick="$('#search').submit()"><i class="icon-search"></i></span>
-            </div>
-        </form>
-    </div>
-    <div class="pull-right">
-        <a class="btn btn-primary" href="#" onclick="createEntry()">@i18n("Model.create")</a>
-        <a class="btn" href="@prefix/code-list/@codeList.getId()?@entries.createQueryString()"><i class="icon-refresh"></i></a>
-    </div>
-    <span class="clearfix"></span>
-</div>
+@tableSearchHeader(entries, ("code-list/" + codeList.getId())) {
+    <a class="btn btn-primary" href="#" onclick="createEntry()">@i18n("Model.create")</a>
+}
+
 
 <table class="table table-striped">
     <thead>
-    <tr>
-        <th>
-            @i18n("CodeListEntry.code")<br>
-            <small><span class="muted">@i18n("Model.priority")</span></small>
-        </th>
-        <th>
-            @i18n("CodeListEntry.value")<br>
-            <small><span class="muted">@i18n("CodeListEntry.additionalValue")</span></small>
-        </th>
-        <th>
-            @i18n("Model.description")
-        </th>
-        <th class="span2" />
-    </tr>
+        <tr>
+            <th>
+                @i18n("CodeListEntry.code")<br>
+                <small class="muted">@i18n("Model.priority")</small>
+            </th>
+            <th>
+                @i18n("CodeListEntry.value")<br>
+                <small class="muted">@i18n("CodeListEntry.additionalValue")</small>
+            </th>
+            <th>
+                @i18n("Model.description")
+            </th>
+            <th class="col-md-2" />
+        </tr>
     </thead>
     <tbody>
-    @for(CodeListEntry entry : entries.getItems()) {
-    <tr>
-        <td>
-            <a href="#" onclick="editEntry('@entry.getCode().escapeString()', '@entry.getValue().escapeString()', '@entry.getAdditionalValue().escapeString()', '@entry.getDescription().escapeString()', @entry.getPriority())">@entry.getCode()</a><br />
-            <small class="muted">@entry.getPriority()</small>
-        </td>
-        <td>
-            @entry.getValue()<br />
-            <small class="muted">@entry.getAdditionalValue()</small>
-        </td>
-        <td>
-            @entry.getDescription()
-        </td>
-        <td class="span2 align-center">
-            <i class="icon-remove"></i>&nbsp;<a class="link link-danger" href="@prefix/code-list/@codeList.getId()/delete-entry/@entry.getId()?@entries.createQueryString()">@i18n("NLS.delete")</a>
-        </td>
-    </tr>
-    }
+        @for(CodeListEntry entry : entries.getItems()) {
+            <tr>
+                <td>
+                    <a href="#" onclick="editEntry('@entry.getCode().escapeString()', '@entry.getValue().escapeString()', '@entry.getAdditionalValue().escapeString()', '@entry.getDescription().escapeString()', @entry.getPriority())">@entry.getCode()</a><br />
+                    <small class="muted">@entry.getPriority()</small>
+                </td>
+                <td>
+                    @entry.getValue()<br />
+                    <small class="muted">@entry.getAdditionalValue()</small>
+                </td>
+                <td>
+                    @entry.getDescription()
+                </td>
+                <td class="col-md-2 align-center">
+                    @deleteLink(("code-list/ " +codeList.getId() + "/delete-entry/" + entry.getId() + "?" + entries.createQueryString()))
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
 
-@invoke("view/wondergem/parts/pagination.html", entries, ("code-list" + codeList.getId()))
+@pagination(entries, ("code-list" + codeList.getId()))
 
 <script type="text/javascript">
 
@@ -96,32 +85,26 @@
 
 </script>
 
-<div id="editEntry" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="delete" aria-hidden="true">
-    <form id="entryForm" action="@prefix/code-list/@codeList.getId()/entry" method="post">
-        <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-            <h3>@i18n("CodeListEntry")</h3>
+@modal(name: "editEntry", labelKey: "CodeListEntry") {
+    @modalBody() {
+        <div id="dlgMessageBox" style="display: none">
+            <div class="alert alert-danger"></div>
         </div>
-        <div class="modal-body">
-            <div id="dlgMessageBox" style="display: none">
-                <div class="alert alert-error"></div>
-            </div>
-            <fieldset>
-                <label>@i18n("CodeListEntry.code")</label>
-                <input type="text" name="code" id="code" class="input-block-level" />
-                <label>@i18n("CodeListEntry.value")</label>
-                <input type="text" name="value" id="value" class="input-block-level" />
-                <label>@i18n("CodeListEntry.additionalValue")</label>
-                <input type="text" name="additionalValue" id="additionalValue" class="input-block-level" />
-                <label>@i18n("Model.priority")</label>
-                <input type="text" name="priority" id="priority" class="input-block-level" />
-                <label>@i18n("Model.description")</label>
-                <input type="text" name="description" id="description" class="input-block-level" />
-            </fieldset>
-        </div>
-        <div class="modal-footer">
-            <a onclick="updateEntry()" class="btn btn-primary"><i class="icon-ok"></i> @i18n("NLS.save")</a>
-            <button class="btn" data-dismiss="modal" aria-hidden="true">@i18n("NLS.cancel")</button>
-        </div>
-    </form>
-</div>
+        <fieldset>
+            <label>@i18n("CodeListEntry.code")</label>
+            <input type="text" name="code" id="code" class="input-block-level" />
+            <label>@i18n("CodeListEntry.value")</label>
+            <input type="text" name="value" id="value" class="input-block-level" />
+            <label>@i18n("CodeListEntry.additionalValue")</label>
+            <input type="text" name="additionalValue" id="additionalValue" class="input-block-level" />
+            <label>@i18n("Model.priority")</label>
+            <input type="text" name="priority" id="priority" class="input-block-level" />
+            <label>@i18n("Model.description")</label>
+            <input type="text" name="description" id="description" class="input-block-level" />
+        </fieldset>
+    }
+
+    @modalFooter(cancelKey: "NLS.cancel") {
+        <a onclick="updateEntry()" class="btn btn-primary"><i class="icon-ok"></i> @i18n("NLS.save")</a>
+    }
+}

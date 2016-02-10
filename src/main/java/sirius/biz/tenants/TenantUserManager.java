@@ -20,7 +20,11 @@ import sirius.kernel.extensions.Extension;
 import sirius.kernel.health.Exceptions;
 import sirius.mixing.OMA;
 import sirius.web.http.WebContext;
-import sirius.web.security.*;
+import sirius.web.security.GenericUserManager;
+import sirius.web.security.ScopeInfo;
+import sirius.web.security.UserInfo;
+import sirius.web.security.UserManager;
+import sirius.web.security.UserManagerFactory;
 
 import javax.annotation.Nonnull;
 import java.time.LocalDateTime;
@@ -46,7 +50,6 @@ public class TenantUserManager extends GenericUserManager {
         public UserManager createManager(@Nonnull ScopeInfo scope, @Nonnull Extension config) {
             return new TenantUserManager(scope, config);
         }
-
     }
 
     @Part
@@ -66,9 +69,8 @@ public class TenantUserManager extends GenericUserManager {
         if (Strings.isEmpty(user)) {
             return null;
         }
-        Optional<UserAccount> optionalAccount = oma.select(UserAccount.class)
-                                                   .eq(UserAccount.LOGIN.inner(LoginData.USERNAME), user)
-                                                   .one();
+        Optional<UserAccount> optionalAccount =
+                oma.select(UserAccount.class).eq(UserAccount.LOGIN.inner(LoginData.USERNAME), user).one();
         if (optionalAccount.isPresent()) {
             if (optionalAccount.get().getLogin().isAccountLocked()) {
                 throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
@@ -76,17 +78,21 @@ public class TenantUserManager extends GenericUserManager {
             UserAccount account = optionalAccount.get();
             userAccountCache.put(account.getIdAsString(), account);
             rolesCache.remove(account.getIdAsString());
-            return new UserInfo(String.valueOf(account.getTenant().getId()),
-                                account.getTenant().getValue().getName(),
-                                String.valueOf(account.getId()),
-                                account.getLogin().getUsername(),
-                                account.getEmail(),
-                                "de",
-                                computeRoles(null, String.valueOf(account.getId())),
-                                this::getUserObject);
+            return asUser(account);
         } else {
             return null;
         }
+    }
+
+    public UserInfo asUser(UserAccount account) {
+        return new UserInfo(String.valueOf(account.getTenant().getId()),
+                            account.getTenant().getValue().getName(),
+                            account.getUniqueName(),
+                            account.getLogin().getUsername(),
+                            account.getEmail(),
+                            "de",
+                            computeRoles(null, String.valueOf(account.getUniqueName())),
+                            this::getUserObject);
     }
 
     @Override
@@ -124,7 +130,7 @@ public class TenantUserManager extends GenericUserManager {
     }
 
     protected UserAccount getUserById(String id) {
-        return userAccountCache.get(id, i -> oma.findOrFail(UserAccount.class, i));
+        return userAccountCache.get(id, i -> (UserAccount)oma.resolve(i).orElse(null));
     }
 
     @Override
@@ -143,7 +149,10 @@ public class TenantUserManager extends GenericUserManager {
             }
             roles.add(UserInfo.PERMISSION_LOGGED_IN);
             roles = transformRoles(roles, false);
+        } else {
+            return null;
         }
+
         rolesCache.put(userId, roles);
         return roles;
     }

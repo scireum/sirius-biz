@@ -10,10 +10,10 @@ package sirius.biz.tenants;
 
 import sirius.biz.model.AddressData;
 import sirius.biz.web.BizController;
-import sirius.biz.web.DefaultRoute;
 import sirius.biz.web.PageHelper;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
+import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
@@ -51,7 +51,7 @@ public class TenantController extends BizController {
         if (ctx.isPOST()) {
             try {
                 boolean wasNew = tenant.isNew();
-                load(ctx, tenant, Tenant.NAME, Tenant.ACCOUNT_NUMBER, Tenant.ADDRESS.inner(AddressData.STREET));
+                load(ctx, tenant);
                 oma.update(tenant);
                 showSavedMessage();
                 if (wasNew) {
@@ -64,5 +64,4 @@ public class TenantController extends BizController {
         }
         ctx.respondWith().template("view/tenants/tenant.html", tenant);
     }
-
 }

@@ -48,7 +48,7 @@ public class PermissionData extends Composite {
     }
 
     @BeforeSave
-    public void updatePermissionString() {
+    protected void updatePermissionString() {
         permissionString = Strings.join(getPermissions(), ",");
     }
 

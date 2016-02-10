@@ -20,6 +20,7 @@ import sirius.mixing.Entity;
 import sirius.mixing.OMA;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -28,7 +29,7 @@ import java.util.List;
 @Register(classes = CodeLists.class)
 public class CodeLists {
 
-    public String getValue(@Nonnull String codeList, @Nonnull String code) {
+    public String getValue(@Nonnull String codeList, @Nullable String code) {
         return getValue(tenants.getRequiredTenant(), codeList, code);
     }
 
@@ -38,7 +39,10 @@ public class CodeLists {
     @Part
     private Tenants tenants;
 
-    public String getValue(@Nonnull Tenant tenant, @Nonnull String codeList, @Nonnull String code) {
+    public String getValue(@Nonnull Tenant tenant, @Nonnull String codeList, @Nullable String code) {
+        if (Strings.isEmpty(code)) {
+            return null;
+        }
         return getValues(tenant, codeList, code).getFirst();
     }
 

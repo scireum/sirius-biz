@@ -10,6 +10,7 @@ package sirius.biz.web;
 
 import sirius.biz.codelists.CodeLists;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.templates.rythm.RythmExtension;
@@ -23,7 +24,7 @@ import java.util.function.Consumer;
 public class BizRythmExtension implements RythmExtension {
 
     @Part
-    private static CodeLists codeLists;
+    private CodeLists codeLists;
 
     @Override
     public void collectExtensionNames(Consumer<Tuple<String, Class<?>>> names) {

@@ -11,17 +11,16 @@ package sirius.biz.tenants;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PersonData;
 import sirius.biz.web.BizController;
-import sirius.biz.web.DefaultRoute;
 import sirius.biz.web.PageHelper;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
-import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
-import sirius.kernel.xml.StructuredOutput;
 import sirius.web.controller.Controller;
+import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.http.session.ServerSession;
@@ -29,7 +28,9 @@ import sirius.web.mails.Mails;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
+import sirius.web.services.JSONStructuredOutput;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,15 +71,11 @@ public class UserAccountController extends BizController {
                 if (wasNew) {
                     userAccount.getTenant().setValue(tenants.getRequiredTenant());
                 }
-                load(ctx,
-                     userAccount,
-                     UserAccount.EMAIL,
-                     UserAccount.PERSON.inner(PersonData.SALUTATION),
-                     UserAccount.PERSON.inner(PersonData.TITLE),
-                     UserAccount.PERSON.inner(PersonData.FIRSTNAME),
-                     UserAccount.PERSON.inner(PersonData.LASTNAME),
-                     UserAccount.LOGIN.inner(LoginData.USERNAME),
-                     UserAccount.LOGIN.inner(LoginData.ACCOUNT_LOCKED));
+                load(ctx, userAccount);
+                userAccount.getPermissions().getPermissions().clear();
+                for (String role : ctx.getParameters("roles")) {
+                    userAccount.getPermissions().getPermissions().add(role);
+                }
                 oma.update(userAccount);
                 showSavedMessage();
                 if (wasNew) {
@@ -90,7 +87,23 @@ public class UserAccountController extends BizController {
                 UserContext.handle(e);
             }
         }
-        ctx.respondWith().template("view/tenants/user-account-details.html", userAccount);
+
+        ctx.respondWith().template("view/tenants/user-account-details.html", userAccount, this);
+    }
+
+    @ConfigValue("security.roles")
+    private List<String> roles;
+
+    public List<String> getRoles() {
+        return Collections.unmodifiableList(roles);
+    }
+
+    public String getRoleName(String role) {
+        return NLS.get("Role." + role);
+    }
+
+    public String getRoleDescription(String role) {
+        return NLS.get("Role." + role + ".description");
     }
 
     @Routed("/user-account/:1/password")
@@ -155,56 +168,39 @@ public class UserAccountController extends BizController {
         accounts(ctx);
     }
 
-    @Routed("/forgotPassword")
-    public void forgotPassword(final WebContext ctx) {
-        try {
-            List<UserAccount> accounts = oma.select(UserAccount.class)
-                                            .eq(UserAccount.EMAIL, ctx.get("email").asString())
-                                            .limit(2)
-                                            .queryList();
-            if (accounts.isEmpty()) {
-                throw Exceptions.createHandled().withNLSKey("UserAccountController.noUserFoundForEmail").handle();
-            } else if (accounts.size() > 1) {
-                throw Exceptions.createHandled().withNLSKey("UserAccountController.tooManyUsersFoundForEmail").handle();
-            } else {
-                UserAccount account = accounts.get(0);
-                if (account.getLogin().isAccountLocked()) {
-                    throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
-                }
-                account.getLogin().setGeneratedPassword(Strings.generatePassword());
-                oma.update(account);
+    @Routed(value = "/forgotPassword", jsonCall = true)
+    public void forgotPassword(final WebContext ctx, JSONStructuredOutput out) {
+        List<UserAccount> accounts =
+                oma.select(UserAccount.class).eq(UserAccount.EMAIL, ctx.get("email").asString()).limit(2).queryList();
+        if (accounts.isEmpty()) {
+            throw Exceptions.createHandled().withNLSKey("UserAccountController.noUserFoundForEmail").handle();
+        }
 
-                if (Strings.isFilled(account.getEmail())) {
-                    mails.createEmail()
-                         .useMailTemplate("user-account-password",
-                                          Context.create()
-                                                 .set("reason",
-                                                      NLS.fmtr("UserAccountController.forgotPassword.reason")
-                                                         .set("ip", ctx.getRemoteIP().toString())
-                                                         .format())
-                                                 .set("password", account.getLogin().getGeneratedPassword())
-                                                 .set("name", account.getPerson().getAddressableName())
-                                                 .set("username", account.getLogin().getUsername())
-                                                 .set("url", getBaseUrl()))
-                         .to(account.getEmail(), account.getPerson().toString())
-                         .send();
-                }
-            }
+        if (accounts.size() > 1) {
+            throw Exceptions.createHandled().withNLSKey("UserAccountController.tooManyUsersFoundForEmail").handle();
+        }
 
-            StructuredOutput out = ctx.respondWith().json();
-            out.beginResult();
-            out.property("success", true);
-            out.endResult();
-        } catch (HandledException t) {
-            StructuredOutput out = ctx.respondWith().json();
-            out.beginResult();
-            out.property("error", t.getMessage());
-            out.endResult();
-        } catch (Throwable t) {
-            StructuredOutput out = ctx.respondWith().json();
-            out.beginResult();
-            out.property("error", Exceptions.handle(t));
-            out.endResult();
+        UserAccount account = accounts.get(0);
+        if (account.getLogin().isAccountLocked()) {
+            throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
+        }
+        account.getLogin().setGeneratedPassword(Strings.generatePassword());
+        oma.update(account);
+
+        if (Strings.isFilled(account.getEmail())) {
+            mails.createEmail()
+                 .useMailTemplate("user-account-password",
+                                  Context.create()
+                                         .set("reason",
+                                              NLS.fmtr("UserAccountController.forgotPassword.reason")
+                                                 .set("ip", ctx.getRemoteIP().toString())
+                                                 .format())
+                                         .set("password", account.getLogin().getGeneratedPassword())
+                                         .set("name", account.getPerson().getAddressableName())
+                                         .set("username", account.getLogin().getUsername())
+                                         .set("url", getBaseUrl()))
+                 .to(account.getEmail(), account.getPerson().toString())
+                 .send();
         }
     }
 

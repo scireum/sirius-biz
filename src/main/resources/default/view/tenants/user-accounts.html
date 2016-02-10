@@ -8,60 +8,46 @@
 @import sirius.biz.tenants.UserAccount
 @args Page accounts
 @extends(view.wondergem.template.html, title: NLS.get("Model.userAccount.plural"))
+
 @section(breadcrumbs) {
-    <li>
-        <a href="/user-accounts">@i18n("Model.userAccount.plural")</a>
-    </li>
+    @view.parts.breadcrumb("/user-accounts", NLS.get("Model.userAccount.plural"))
 }
+
 <span class="legend">@i18n("Model.userAccount.plural")</span>
 
-<div class="well">
-    <div class="pull-left">
-        <form class="form-inline" action="@prefix/user-accounts" method="get" id="search">
-            <div class="input-append">
-                <input type="text" name="query" value="@accounts.getQuery()" placeholder="@i18n("NLS.searchkey")" autofocus />
-                <span class="add-on" onclick="$('#search').submit()"><i class="icon-search"></i></span>
-            </div>
-        </form>
-    </div>
-    <div class="pull-right">
-        <a class="btn btn-primary" href="@prefix/user-account/new">@i18n("Model.create")</a>
-        <a class="btn" href="@prefix/user-accounts?accounts.createQueryString()"><i class="icon-refresh"></i></a>
-    </div>
-    <span class="clearfix"></span>
-</div>
+@view.parts.tableSearchHeader("/user-accounts", accounts) {
+    <a class="btn btn-primary" href="@prefix/user-account/new">@i18n("Model.create")</a>
+}
 
 <table class="table table-striped">
     <thead>
-    <tr>
-        <th>
-            @i18n("LoginData.username")<br />
-            <small><span class="muted">@i18n("Model.id")</span></small>
-        </th>
-        <th>
-            @i18n("Model.name")
-        </th>
-        <th>
-            @i18n("Model.email")
-        </th>
-        <th>
-            @i18n("LoginData.password")
-        </th>
-        <th class="right">
-            @i18n("LoginData.numberOfLogins")
-        </th>
-        <th class="right">
-            @i18n("LoginData.lastLogin")
-        </th>
-        <th class="span2"/>
-    </tr>
+        <tr>
+            <th>
+                @i18n("LoginData.username")<br />
+                <span class="table-details">@i18n("Model.id")</span>
+            </th>
+            <th>
+                @i18n("Model.name")
+            </th>
+            <th>
+                @i18n("Model.email")
+            </th>
+            <th>
+                @i18n("LoginData.password")
+            </th>
+            <th class="right">
+                @i18n("LoginData.lastLogin")
+                <span class="table-details">@i18n("LoginData.numberOfLogins")</span>
+            </th>
+            <th class="span2"/>
+        </tr>
     </thead>
     <tbody>
     @for(UserAccount account : accounts.getItems()) {
         <tr @if (account.getLogin().isAccountLocked()) { class="warning" }>
             <td class="title">
-                <a class="link" href="@prefix/user-account/@account.getId()">@account.getLogin().getUsername()</a><br />
-                <small class="muted">@account.getId()</small>
+                <a class="link" href="@prefix/user-account/@account.getId()">@account.getLogin().getUsername()</a>
+                <span class="table-details">@account.getId()</span>
             </td>
             <td>
                 @account.getPerson()
@@ -71,16 +57,14 @@
             </td>
             <td>
                 @if (Strings.isFilled(account.getLogin().getGeneratedPassword())) {
-                        @account.getLogin().getGeneratedPassword()<br />
+                        @account.getLogin().getGeneratedPassword()
                 }
                <i class="icon-double-angle-right"></i>&nbsp;<a href="@prefix/user-account/@account.getId()/password" class="link">@i18n("LoginData.password.set")</a> <br />
                <i class="icon-double-angle-right"></i>&nbsp;<a href="@prefix/user-account/@account.getId()/generate-password?@accounts.createQueryString()" class="link">@i18n("LoginData.password.generate")</a>
             </td>
             <td class="right">
-                @account.getLogin().getNumberOfLogins()
-            </td>
-            <td class="right">
                 @NLS.toUserString(account.getLogin().getLastLogin())
+                <br><span class="muted">@account.getLogin().getNumberOfLogins()</span>
             </td>
             <td class="span2 align-center">
                 <i class="icon-remove"></i>&nbsp;<a class="link link-danger" href="@prefix/user-account/@account.getId()/delete?@accounts.createQueryString()">@i18n("NLS.delete")</a>
@@ -90,5 +74,5 @@
     </tbody>
 </table>
 
-@invoke("view/wondergem/parts/pagination.html", accounts, "user-accounts")
+@invoke("view/parts/pagination.html", accounts, "user-accounts")
 

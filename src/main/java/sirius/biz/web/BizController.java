@@ -18,10 +18,10 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
-import sirius.mixing.Column;
 import sirius.mixing.Entity;
 import sirius.mixing.OMA;
 import sirius.mixing.Property;
+import sirius.web.controller.BasicController;
 import sirius.web.controller.Controller;
 import sirius.web.controller.Message;
 import sirius.web.http.WebContext;
@@ -37,7 +37,7 @@ import java.util.function.Consumer;
 /**
  * Created by aha on 08.05.15.
  */
-public class BizController implements Controller {
+public class BizController extends BasicController {
 
     @Part
     protected OMA oma;
@@ -47,57 +47,15 @@ public class BizController implements Controller {
 
     public static final Log LOG = Log.get("biz");
 
-
-    protected UserInfo getUser() {
-        return UserContext.getCurrentUser();
-    }
-
-    protected boolean hasPermission(String permission) {
-        return getUser().hasPermission(permission);
-    }
-
-    protected void assertPermission(String permission) {
-
-    }
-
     protected void assertTenant(TenantAware tenantAware) {
 
     }
 
-    protected void assertNotNull(Object obj) {
-
-    }
-
-    protected void assertNotNew(Object obj) {
-
-    }
-
-    protected Consumer<WebContext> defaultRoute;
-
-    public BizController() {
-        Optional<Method> defaultMethod = Arrays.stream(getClass().getDeclaredMethods())
-                                               .filter(m -> m.isAnnotationPresent(DefaultRoute.class))
-                                               .findFirst();
-        if (!defaultMethod.isPresent()) {
-            throw new IllegalStateException(Strings.apply("Controller %s has no default route!", getClass().getName()));
+    protected void assertNotNew(Entity obj) {
+        assertNotNull(obj);
+        if (obj.isNew()) {
+            //TODO
         }
-        this.defaultRoute = ctx -> {
-            try {
-                defaultMethod.get().invoke(this, ctx);
-            } catch (IllegalAccessException e) {
-                throw Exceptions.handle(e);
-            } catch (InvocationTargetException e) {
-                throw Exceptions.handle(e.getTargetException());
-            }
-        };
-    }
-
-    @Override
-    public void onError(WebContext ctx, HandledException error) {
-        if (error != null) {
-            UserContext.message(Message.error(error.getMessage()));
-        }
-        defaultRoute.accept(ctx);
     }
 
     @ConfigValue("product.baseUrl")
@@ -108,23 +66,25 @@ public class BizController implements Controller {
     }
 
 
-    public void showSavedMessage() {
-        UserContext.message(Message.info(NLS.get("BizController.changesSaved")));
-    }
-
-    public void showDeletedMessage() {
-        UserContext.message(Message.info(NLS.get("BizController.objectDeleted")));
-    }
-
-    protected void load(WebContext ctx, Entity entity, Column... columns) {
-        for (Column c : columns) {
-            Property property = entity.getDescriptor().getProperty(c);
-            if (property == null) {
-                throw new IllegalArgumentException(Strings.apply("Unknown property '%s' for type '%s'",
-                                                                 c,
-                                                                 entity.getClass().getName()));
+    protected void load(WebContext ctx, Entity entity) {
+        for (Property property : entity.getDescriptor().getProperties()) {
+            if (isAutoloaded(property)) {
+                if (ctx.hasParameter(property.getName())) {
+                    property.parseValue(entity, ctx.get(property.getName()));
+                }
             }
-            property.parseValue(entity, ctx.get(property.getName()));
+        }
+    }
+
+    private boolean isAutoloaded(Property property) {
+        Autoloaded autoloaded = property.getAnnotation(Autoloaded.class);
+        if (autoloaded == null) {
+            return false;
+        }
+        if (autoloaded.permissions().length > 0) {
+            return UserContext.getCurrentUser().hasPermissions(autoloaded.permissions());
+        } else {
+            return true;
         }
     }
 

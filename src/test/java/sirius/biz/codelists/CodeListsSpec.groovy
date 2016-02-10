@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists
 
+import sirius.biz.tenants.TenantsHelper
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
 
@@ -17,7 +18,12 @@ class CodeListsSpec extends BaseSpecification {
     private static CodeLists cl;
 
     def "get entries of a code list works"() {
-        cl.getEntries("test");
+        given:
+        TenantsHelper.installTestTenant();
+        when:
+        List<CodeListEntry> entries = cl.getEntries("test");
+        then:
+        entries.isEmpty();
     }
 
 }

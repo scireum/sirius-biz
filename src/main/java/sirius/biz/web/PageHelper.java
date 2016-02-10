@@ -60,13 +60,12 @@ public class PageHelper<E extends Entity> {
     }
 
 
-    @SuppressWarnings("unchecked")
-    public Page asPage() {
+    public Page<E> asPage() {
         if (ctx == null) {
             throw new IllegalStateException("no web context present");
         }
         Watch w = Watch.start();
-        Page result = new Page().withStart(1);
+        Page<E> result = new Page<E>().withStart(1);
         result.bindToRequest(ctx);
         if (searchFields != null && searchFields.length > 0) {
             baseQuery.where(Like.allWordsInAnyField(result.getQuery(), searchFields));

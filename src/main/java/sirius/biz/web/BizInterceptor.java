@@ -9,6 +9,7 @@
 package sirius.biz.web;
 
 import sirius.kernel.di.std.Register;
+import sirius.kernel.nls.NLS;
 import sirius.web.controller.Controller;
 import sirius.web.controller.Interceptor;
 import sirius.web.http.WebContext;
@@ -23,29 +24,24 @@ import java.lang.reflect.Method;
  */
 @Register
 public class BizInterceptor implements Interceptor {
+
     @Override
     public boolean before(WebContext ctx, Controller controller, Method method) throws Exception {
         return false;
     }
 
     @Override
-    public boolean beforePermissionError(String permission,
-                                         WebContext ctx,
-                                         Controller controller,
-                                         Method method) throws Exception {
+    public boolean beforePermissionError(String permission, WebContext ctx, Controller controller, Method method)
+            throws Exception {
         if (UserContext.getCurrentScope() != ScopeInfo.DEFAULT_SCOPE) {
             return false;
         }
         if (UserInfo.PERMISSION_LOGGED_IN.equals(permission)) {
-            if (ctx.getSessionValue("otp-user").isFilled()) {
-                //TODO
-                ctx.respondWith().template("view/wondergem/otp.html", ctx.getRequest().getUri());
-            } else {
-                ctx.respondWith().template("view/wondergem/login.html", ctx.getRequest().getUri());
-            }
+            ctx.respondWith().template("view/biz/login.html", ctx.getRequest().getUri());
         } else {
-            //TODO
-            ctx.respondWith().template("view/wondergem/permission-error.html", ctx.getRequest().getUri(), permission);
+            ctx.respondWith()
+               .template("view/wondergem/error.html",
+                         NLS.fmtr("BizInterceptor.missingPermission").set("permission", permission).format());
         }
         return true;
     }

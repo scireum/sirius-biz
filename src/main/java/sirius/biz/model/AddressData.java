@@ -8,6 +8,7 @@
 
 package sirius.biz.model;
 
+import sirius.biz.web.Autoloaded;
 import sirius.mixing.Column;
 import sirius.mixing.Composite;
 import sirius.mixing.annotations.Length;
@@ -21,24 +22,28 @@ public class AddressData extends Composite {
 
     @Trim
     @NullAllowed
+    @Autoloaded
     @Length(length = 255)
     private String street;
     public static final Column STREET = Column.named("street");
 
     @Trim
     @NullAllowed
+    @Autoloaded
     @Length(length = 8)
     private String zip;
     public static final Column ZIP = Column.named("zip");
 
     @Trim
     @NullAllowed
+    @Autoloaded
     @Length(length = 255)
     private String city;
     public static final Column CITY = Column.named("city");
 
     @Trim
     @NullAllowed
+    @Autoloaded
     @Length(length = 3)
     private String country;
     public static final Column COUNTRY = Column.named("country");
