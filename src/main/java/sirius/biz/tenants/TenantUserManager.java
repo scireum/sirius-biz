@@ -9,6 +9,7 @@
 package sirius.biz.tenants;
 
 import com.google.common.collect.Sets;
+import com.typesafe.config.Config;
 import sirius.biz.model.LoginData;
 import sirius.biz.web.BizController;
 import sirius.kernel.cache.Cache;
@@ -92,6 +93,7 @@ public class TenantUserManager extends GenericUserManager {
                             account.getEmail(),
                             "de",
                             computeRoles(null, String.valueOf(account.getUniqueName())),
+                            isSupportsUserConfig() ? this::getUserConfig : null,
                             this::getUserObject);
     }
 
@@ -129,8 +131,18 @@ public class TenantUserManager extends GenericUserManager {
         return getUserById(userInfo.getUserId());
     }
 
+    @Override
+    protected boolean isSupportsUserConfig() {
+        return false;
+    }
+
+    @Override
+    protected Config getUserConfig(UserInfo userInfo) {
+        return null;
+    }
+
     protected UserAccount getUserById(String id) {
-        return userAccountCache.get(id, i -> (UserAccount)oma.resolve(i).orElse(null));
+        return userAccountCache.get(id, i -> (UserAccount) oma.resolve(i).orElse(null));
     }
 
     @Override
