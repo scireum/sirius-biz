@@ -15,6 +15,7 @@ import sirius.biz.web.PageHelper;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
+import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -37,6 +38,7 @@ import java.util.Optional;
 /**
  * Created by aha on 07.05.15.
  */
+@Framework("tenants")
 @Register(classes = Controller.class)
 public class UserAccountController extends BizController {
 

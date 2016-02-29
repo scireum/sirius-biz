@@ -10,6 +10,7 @@ package sirius.biz.codelists;
 
 import sirius.biz.web.BizController;
 import sirius.biz.web.PageHelper;
+import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
@@ -25,6 +26,7 @@ import java.util.Optional;
 /**
  * Created by aha on 11.05.15.
  */
+@Framework("code-lists")
 @Register(classes = Controller.class)
 public class CodeListController extends BizController {
 

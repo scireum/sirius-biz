@@ -12,6 +12,7 @@ import sirius.biz.model.AddressData;
 import sirius.biz.model.BizEntity;
 import sirius.biz.model.PermissionData;
 import sirius.biz.web.Autoloaded;
+import sirius.kernel.di.std.Framework;
 import sirius.mixing.Column;
 import sirius.mixing.annotations.Length;
 import sirius.mixing.annotations.NullAllowed;
@@ -21,6 +22,7 @@ import sirius.mixing.annotations.Unique;
 /**
  * Created by aha on 07.05.15.
  */
+@Framework("tenants")
 public class Tenant extends BizEntity {
 
     @Trim

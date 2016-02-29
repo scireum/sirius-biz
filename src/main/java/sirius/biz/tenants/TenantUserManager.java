@@ -15,6 +15,8 @@ import sirius.biz.web.BizController;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
+import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.extensions.Extension;
@@ -39,10 +41,12 @@ public class TenantUserManager extends GenericUserManager {
 
     public static final String PERMISSION_SYSTEM_TENANT = "flag-system-tenant";
     private final String systemTenant;
+    private final String defaultSalt;
 
     /**
      * Creates a new user manager for the given scope and configuration.
      */
+    @Framework("tenants")
     @Register(name = "tenants")
     public static class Factory implements UserManagerFactory {
 
@@ -63,6 +67,7 @@ public class TenantUserManager extends GenericUserManager {
         super(scope, config);
         this.sessionStorage = SESSION_STORAGE_TYPE_CLIENT;
         this.systemTenant = config.get("system-tenant").asString();
+        this.defaultSalt = config.get("default-salt").asString("");
     }
 
     @Override
@@ -107,7 +112,8 @@ public class TenantUserManager extends GenericUserManager {
             return null;
         }
         LoginData loginData = result.getUserObject(UserAccount.class).getLogin();
-        if (LoginData.hashPassword(loginData.getSalt(), password).equals(loginData.getPasswordHash())) {
+        if (LoginData.hashPassword(Value.of(loginData.getSalt()).asString(defaultSalt), password)
+                     .equals(loginData.getPasswordHash())) {
             return result;
         }
         return null;

@@ -12,6 +12,7 @@ import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.Tenants;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.extensions.Extension;
@@ -26,6 +27,7 @@ import java.util.List;
 /**
  * Created by aha on 11.05.15.
  */
+@Framework("code-lists")
 @Register(classes = CodeLists.class)
 public class CodeLists {
 

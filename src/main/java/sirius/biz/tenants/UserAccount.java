@@ -14,6 +14,7 @@ import sirius.biz.model.PersonData;
 import sirius.biz.web.Autoloaded;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.mixing.Column;
@@ -25,6 +26,7 @@ import sirius.web.mails.Mails;
 /**
  * Created by aha on 07.05.15.
  */
+@Framework("tenants")
 public class UserAccount extends TenantAware {
 
     @Trim

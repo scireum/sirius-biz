@@ -62,15 +62,10 @@ public class LoginData extends Composite {
 
     @BeforeSave
     protected void autofill() {
-        if (Strings.isEmpty(salt)) {
-            this.salt = Strings.generateCode(20);
-            this.passwordHash = null;
-            this.generatedPassword = null;
-        }
-
         if (Strings.isFilled(cleartextPassword)) {
             cleartextPassword = cleartextPassword.trim();
             if (Strings.isFilled(cleartextPassword)) {
+                this.salt = Strings.generateCode(20);
                 this.passwordHash = hashPassword(salt, cleartextPassword);
                 this.generatedPassword = null;
             }
@@ -79,12 +74,14 @@ public class LoginData extends Composite {
             this.generatedPassword = Strings.generatePassword();
         }
         if (Strings.isFilled(generatedPassword)) {
+            this.salt = Strings.generateCode(20);
             this.passwordHash = hashPassword(salt, generatedPassword);
         }
     }
 
     public static String hashPassword(String salt, String password) {
-        return BaseEncoding.base64().encode(Hashing.md5().hashString(salt + password, Charsets.UTF_8).asBytes());
+        String hashInput = salt != null ? salt + password : password;
+        return BaseEncoding.base64().encode(Hashing.md5().hashString(hashInput, Charsets.UTF_8).asBytes());
     }
 
     public String getPasswordHash() {

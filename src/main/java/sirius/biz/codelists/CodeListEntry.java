@@ -9,6 +9,7 @@
 package sirius.biz.codelists;
 
 import sirius.biz.model.BizEntity;
+import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Priorized;
 import sirius.mixing.Column;
 import sirius.mixing.EntityRef;
@@ -20,6 +21,7 @@ import sirius.mixing.annotations.Unique;
 /**
  * Created by aha on 11.05.15.
  */
+@Framework("code-lists")
 public class CodeListEntry extends BizEntity {
 
     private final EntityRef<CodeList> codeList = EntityRef.on(CodeList.class, EntityRef.OnDelete.CASCADE);

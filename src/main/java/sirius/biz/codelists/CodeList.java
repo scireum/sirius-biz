@@ -10,6 +10,7 @@ package sirius.biz.codelists;
 
 import sirius.biz.tenants.TenantAware;
 import sirius.biz.web.Autoloaded;
+import sirius.kernel.di.std.Framework;
 import sirius.mixing.Column;
 import sirius.mixing.annotations.Length;
 import sirius.mixing.annotations.NullAllowed;
@@ -19,6 +20,7 @@ import sirius.mixing.annotations.Unique;
 /**
  * Created by aha on 11.05.15.
  */
+@Framework("code-lists")
 public class CodeList extends TenantAware {
 
     @Trim
