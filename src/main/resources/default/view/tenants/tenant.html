@@ -5,51 +5,59 @@
 *  Copyright by scireum GmbH
 *  http://www.scireum.de - info@scireum.de
 *@
-@args sirius.biz.tenants.Tenant tenant
-@extends(view.wondergem.template.html, title: NLS.get("Model.tenant"))
+@args sirius.biz.tenants.Tenant tenant, String page
+@extends(view.wondergem.template.html, title: (tenant.toString()))
+
+@section(head) {
+    <script src="/assets/wondergem/ace/ace.js" type="text/javascript"></script>
+}
+
 @section(breadcrumbs) {
     <li>
-        <a href="/tenants">@i18n("Model.tenant.plural")</a>
-        <span class="divider">&@breadcrumbDivider;</span>
+        <a href="@prefix/tenants">@i18n("Model.tenant.plural")</a>
     </li>
     <li>
-        <a href="@prefix/tenant/@tenant.getId()">@i18n("Model.tenant")</a>
+        <a href="@prefix/tenant/@tenant.getId()">@tenant</a>
     </li>
 }
 
-<span class="legend">@i18n("Model.tenant")</span>
+@pageHeader("Model.tenant")
 
-<form action="@prefix/tenant/@tenant.getIdAsString()" method="post" id="editForm">
-    <fieldset>
-        <div class="row">
-            <div class="span8">
-                <div class="row">
-                    <div class="span4 control-group @user.signalFieldError("name")">
-                        <label>
-                            <span class="input-required">@i18n("Model.name")</span>
-                        </label>
-                        <div class="input-block-level">
-                            <input name="name" type="text" value="@user.getFieldValue("name", tenant.getName())" class="input-block-level" />
-                        </div>
-                    </div>
-                    <div class="span4 control-group @user.signalFieldError("accountNumber")">
-                        <label>
-                            <span class="input-required">@i18n("Tenant.accountNumber")</span>
-                        </label>
-                        <div class="input-block-level">
-                            <input name="accountNumber" type="text" value="@user.getFieldValue("accountNumber", tenant.getAccountNumber())" class="input-block-level" />
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="row">
+    @if (!tenant.isNew()) {
+        <div class="col-md-3">
+            @navbox() {
+                <li class="nav-header">@i18n("Model.details")</li>
+                <li>
+                    @tenant.getName()
+                </li>
+                <li>
+                    @tenant.getAccountNumber()
+                </li>
+                <li class="nav-header">@i18n("Model.address")</li>
+                <li>
+                    @tenant.getAddress().getStreet()<br>
+                    @tenant.getAddress().getZip() @tenant.getAddress().getCity()
+                </li>
+                @includeExtensions("view-tenant-sidebar-infos", tenant, page)
+
+                <li class="nav-header"></li>
+                <li @if(page == "details") { class="active" }>
+                    <a href="@prefix/tenant/@tenant.getId()" class="link">
+                        @i18n("Model.details")
+                    </a>
+                </li>
+                <li @if(page == "config") { class="active" }>
+                    <a href="@prefix/tenant/@tenant.getId()/config" class="link">
+                        @i18n("Model.config")
+                    </a>
+            </li>
+                @includeExtensions("view-tenant-sidebar-menu", tenant, page)
+            }
+            <a href="@prefix/tenants" class="btn btn-block">@i18n("NLS.back")</a>
         </div>
-    </fieldset>
-
-    @tenant.getTrace().getChangedAt()
-
-    <div class="form-actions">
-        <a onclick="$('#editForm').submit()" class="btn btn-primary"><i class="icon-ok"></i> @i18n("NLS.save")</a>
-        <a href="@prefix/tenants" class="btn">@i18n("NLS.back")</a>
-        @view.wondergem.parts.tracing.html(tenant.getTrace())
+    }
+    <div class="@if (tenant.isNew()) { col-md-12 } else { col-md-9 }">
+        @render
     </div>
-</form>
+</div>

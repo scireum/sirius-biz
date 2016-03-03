@@ -8,14 +8,21 @@
 
 package sirius.biz.model;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import sirius.biz.web.Autoloaded;
+import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.health.Exceptions;
 import sirius.mixing.Column;
 import sirius.mixing.Composite;
+import sirius.mixing.Entity;
 import sirius.mixing.annotations.BeforeSave;
 import sirius.mixing.annotations.Length;
 import sirius.mixing.annotations.NullAllowed;
 import sirius.mixing.annotations.Transient;
 
+import javax.annotation.Nullable;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -24,13 +31,30 @@ import java.util.TreeSet;
  */
 public class PermissionData extends Composite {
 
+    @Transient
+    private final Entity parent;
+
+    public PermissionData(Entity parent) {
+        this.parent = parent;
+    }
+
+    @Autoloaded
     @NullAllowed
     @Length(length = 4096)
     private String permissionString;
     public static final Column PERMISSION_STRING = Column.named("permissionString");
 
+    @Autoloaded
+    @NullAllowed
+    @Length(length = 4096)
+    private String configString;
+    public static final Column CONFIG_STRING = Column.named("configString");
+
     @Transient
     private Set<String> permissions;
+
+    @Transient
+    private Config config;
 
     public Set<String> getPermissions() {
         if (permissions == null) {
@@ -47,9 +71,40 @@ public class PermissionData extends Composite {
         return permissions;
     }
 
+    @Nullable
+    public Config getConfig() {
+        if (config == null) {
+            if (Strings.isFilled(configString)) {
+                try {
+                    config = ConfigFactory.parseString(configString);
+                } catch (Exception e) {
+                    throw Exceptions.handle()
+                                    .to(BizController.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage("Cannot loag config of %s (%s): %s (%s)",
+                                                            parent,
+                                                            parent.getId())
+                                    .handle();
+                }
+            } else {
+                return null;
+            }
+        }
+
+        return config;
+    }
+
+    public String getConfigString() {
+        return configString;
+    }
+
+    public void setConfigString(String configString) {
+        this.configString = configString;
+        this.config = null;
+    }
+
     @BeforeSave
     protected void updatePermissionString() {
         permissionString = Strings.join(getPermissions(), ",");
     }
-
 }

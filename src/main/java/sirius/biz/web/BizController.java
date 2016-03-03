@@ -9,30 +9,26 @@
 package sirius.biz.web;
 
 import sirius.biz.model.BizEntity;
+import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantAware;
 import sirius.biz.tenants.Tenants;
-import sirius.kernel.commons.Strings;
+import sirius.biz.tenants.UserAccount;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
-import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
-import sirius.kernel.nls.NLS;
+import sirius.mixing.Column;
 import sirius.mixing.Entity;
 import sirius.mixing.OMA;
 import sirius.mixing.Property;
 import sirius.web.controller.BasicController;
-import sirius.web.controller.Controller;
-import sirius.web.controller.Message;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
-import sirius.web.security.UserInfo;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.function.Consumer;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created by aha on 08.05.15.
@@ -65,10 +61,20 @@ public class BizController extends BasicController {
         return baseUrl;
     }
 
-
     protected void load(WebContext ctx, Entity entity) {
         for (Property property : entity.getDescriptor().getProperties()) {
             if (isAutoloaded(property)) {
+                if (ctx.hasParameter(property.getName())) {
+                    property.parseValue(entity, ctx.get(property.getName()));
+                }
+            }
+        }
+    }
+
+    protected void load(WebContext ctx, Entity entity, Column... properties) {
+        Set<String> columnsSet = Arrays.asList(properties).stream().map(Column::getName).collect(Collectors.toSet());
+        for (Property property : entity.getDescriptor().getProperties()) {
+            if (columnsSet.contains(property.getName())) {
                 if (ctx.hasParameter(property.getName())) {
                     property.parseValue(entity, ctx.get(property.getName()));
                 }
@@ -129,5 +135,19 @@ public class BizController extends BasicController {
             }
             return e;
         });
+    }
+
+    protected UserAccount currentUser() {
+        if (!UserContext.getCurrentUser().isLoggedIn()) {
+            return null;
+        }
+        return UserContext.getCurrentUser().getUserObject(UserAccount.class);
+    }
+
+    protected Tenant currentTenant() {
+        if (!UserContext.getCurrentUser().isLoggedIn()) {
+            return null;
+        }
+        return currentUser().getTenant().getValue();
     }
 }

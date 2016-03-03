@@ -1,0 +1,70 @@
+@*
+*  Made with all the love in the world
+*  by scireum in Remshalden, Germany
+*
+*  Copyright by scireum GmbH
+*  http://www.scireum.de - info@scireum.de
+*@
+@args sirius.biz.tenants.Tenant tenant, sirius.biz.tenants.TenantController controller
+@extends(view.tenants.tenant.html, tenant, "details")
+
+@editForm(("tenant/" + tenant.getIdAsString())) {
+    <div class="row">
+        @textfield(span:     "8",
+                   name:     "name",
+                   value:    tenant.getName(),
+                   labelKey: "Model.name",
+                   required: true)
+        @textfield(span:     "4",
+                   name:     "accountNumber",
+                   value:    tenant.getAccountNumber(),
+                   labelKey: "Tenant.accountNumber")
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            @heading("Model.address")
+            <div class="row">
+                @textfield(span:     "12",
+                            name:     "address_street",
+                            value:    tenant.getAddress().getStreet(),
+                            labelKey: "AddressData.street")
+            </div>
+            <div class="row">
+                @textfield(span:     "2",
+                            name:     "address_zip",
+                            value:    tenant.getAddress().getZip(),
+                            labelKey: "AddressData.zip")
+                @textfield(span:     "6",
+                            name:     "address_city",
+                            value:    tenant.getAddress().getCity(),
+                            labelKey: "AddressData.city")
+                @codelistSelect(span:     "4",
+                                list:     "countries",
+                                name:     "address_country",
+                                value:    tenant.getAddress().getCountry(),
+                                labelKey: "AddressData.country")
+            </div>
+        </div>
+        <div class="col-md-4">
+            @if(!controller.getPermissions().isEmpty()) {
+                @heading("Tenant.permissions")
+                @for(String permission : controller.getPermissions()) {
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="permissions" value="@permission" @if (tenant.getPermissions().getPermissions().contains(permission)) { checked="checked" } />
+                            @controller.getPermissionName(permission)
+                            <span class="help-block checkbox-help">@controller.getPermissionDescription(permission)</span>
+                        </label>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    @includeExtensions("view-tenant-details", tenant)
+}
+
+@formBar() {
+    @tracing(tenant.getTrace())
+}

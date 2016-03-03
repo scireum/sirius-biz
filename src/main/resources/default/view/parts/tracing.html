@@ -1,31 +1,32 @@
 @args sirius.biz.model.TraceData trace
 
 @if (trace.getCreatedAt() != null) {
-    <span data-toggle="collapse" data-target="#infoboxDetail" class="btn pull-right"><i class="icon-info"></i></span>
+    <span data-toggle="collapse" data-target=".infobox" class="btn pull-right"><i class="fa fa-info"></i></span>
     <div class="clearfix"></div>
-    <div id="infoboxDetail" class="collapse">
-        <div class="well well-info well-admin">
-            <span class="legend">@i18n("Model.trace")</span>
-
-            <div class="info-line">
-                <div class="name"><strong>@i18n("TraceData.created")</strong></div>
-                <div class="value">
-                    @NLS.toUserString(trace.getCreatedAt())<br />
-                    @trace.getCreatedBy()<br />
-                    <span class="muted">@trace.getCreatedIn()</span>
+    <div class="infobox collapse">
+        <div class="well">
+            <span class="legend">@i18n("TraceData.infos")</span>
+            @renderBody()
+            <div class="row info-line">
+                <div class="col-md-4 name">
+                    @i18n("TraceData.created")
                 </div>
-                <div class="clearfix"></div>
-            </div>
-            <div class="info-line">
-                <div class="name"><strong>@i18n("TraceData.changed")</strong></div>
-                <div class="value">
-                    @NLS.toUserString(trace.getChangedAt())<br />
-                    @trace.getChangedBy()<br />
-                    <span class="muted">@trace.getChangedIn()</span>
+                <div class="col-md-8 value">
+                    <div>@NLS.toUserString(trace.getCreatedAt())</div>
+                    <div>@trace.getCreatedBy()</div>
+                    <div class="muted">@trace.getCreatedIn()</div>
                 </div>
-                <div class="clearfix"></div>
             </div>
-            <div class="clearfix"></div>
+            <div class="row info-line">
+                <div class="col-md-4 name">
+                    @i18n("TraceData.changed")
+                </div>
+                <div class="col-md-8 value">
+                    <div>@NLS.toUserString(trace.getChangedAt())</div>
+                    <div>@trace.getChangedBy()</div>
+                    <div class="muted">@trace.getChangedIn()</div>
+                </div>
+            </div>
         </div>
     </div>
 }

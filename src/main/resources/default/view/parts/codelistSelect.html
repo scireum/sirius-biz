@@ -1,0 +1,20 @@
+@*
+*  Made with all the love in the world
+*  by scireum in Remshalden, Germany
+*
+*  Copyright by scireum GmbH
+*  http://www.scireum.de - info@scireum.de
+*@
+@args String span, String list, String name, String value, String labelKey, String helpKey, boolean required, boolean adminonly
+
+@singleSelect(span: span,
+              name: name,
+              labelKey: labelKey,
+              helpKey: helpKey,
+              required: required,
+              adminonly: adminonly)
+{
+    @for(sirius.biz.codelists.CodeListEntry entry : codeLists.getEntries(list)) {
+        <option value="@entry.getCode()" @if(entry.getCode().equals(value)) {selected="selected"}>@entry.getValue()</option>
+    }
+}

@@ -12,8 +12,12 @@ import sirius.biz.model.AddressData;
 import sirius.biz.model.BizEntity;
 import sirius.biz.model.PermissionData;
 import sirius.biz.web.Autoloaded;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
+import sirius.kernel.nls.NLS;
 import sirius.mixing.Column;
+import sirius.mixing.annotations.BeforeDelete;
+import sirius.mixing.annotations.BeforeSave;
 import sirius.mixing.annotations.Length;
 import sirius.mixing.annotations.NullAllowed;
 import sirius.mixing.annotations.Trim;
@@ -43,8 +47,14 @@ public class Tenant extends BizEntity {
     private final AddressData address = new AddressData();
     public static final Column ADDRESS = Column.named("address");
 
-    private final PermissionData permissions = new PermissionData();
+    private final PermissionData permissions = new PermissionData(this);
     public static final Column PERMISSIONS = Column.named("permissions");
+
+    @BeforeSave
+    @BeforeDelete
+    protected void onModify() {
+        TenantUserManager.flushCacheForTenant(this);
+    }
 
     public String getName() {
         return name;
@@ -68,5 +78,14 @@ public class Tenant extends BizEntity {
 
     public PermissionData getPermissions() {
         return permissions;
+    }
+
+    @Override
+    public String toString() {
+        if (Strings.isFilled(name)) {
+            return name;
+        }
+
+        return NLS.get("Model.tenant");
     }
 }

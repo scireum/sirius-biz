@@ -6,77 +6,73 @@
  *  http://www.scireum.de - info@scireum.de
 *@
 @args String originalURL
-@extends(view.wondergem.template.html, title: "Login")
-
-@section(messages) {
-
-}
+@extends(view.wondergem.template.html, title: (NLS.get("Model.login")))
 
 @render(head) {
-<style>
-    .breadcrumb {
-        display: none;
-    }
-</style>
-}
-
-@section (header) {
-    <div id="messageBox">
-        @for(sirius.web.controller.Message msg : user.getMessages()) {
-            <div class="alert @msg.getType()" style="margin: 0px">
-                @msg.getMessage()
-                @if (msg.getAction() != null) {
-                    @if (msg.isActionJavascript()) {
-                        <a href="#" onclick="@msg.getAction()" class="link link-info">@msg.getActionLabel()</a>
-                    } else {
-                        <a href="@prefix/@msg.getAction()" class="link link-info">@msg.getActionLabel()</a>
-                    }
-                }
-            </div>
+    <style>
+        .breadcrumb {
+            display: none;
         }
-    </div>
-
-    <div class="jumbotron">
-        <div class="container header">
-            <div class="row login">
-                <div class="span4 offset2">
-                    <form class="form-signin" method="post" action="@originalURL">
-                        <img src="@prefix/assets/images/oxomi_logo.jpg" />
-                        <h2 class="form-signin-heading">Anmeldung</h2>
-                        <input class="input-block-level" name="user" value="@call.get("user").asString()" type="text" placeholder="eMail / Loginname" autofocus="on" autocomplete="off" />
-                        <input class="input-block-level" name="password" type="password" placeholder="Passwort" autocomplete="off" />
-                        <button class="btn btn-large btn-primary" type="submit">Anmelden</button>
-                        <a href="#forgotPassword" role="button" class="link" data-toggle="modal">@i18n("AdminController.forgotPassword")</a>
-                    </form>
-                </div>
-                <div class="clearfix"></div>
-            </div>
-        </div>
-
-        <div class="claim">
-            <div class="container">
-                <p>
-                    OXOMI ist die leistungsfähige Lösung für die Kommunikation von Produkt- und Marketinginformationen.<br />
-                    Vernetzt Verbände, Handel und Industrie.
-                </p>
-            </div>
-        </div>
-
-    </div>
+    </style>
 }
+
+<div class="col-md-offset-2 col-md-6">
+    <div class="well">
+        <form class="form-signin" method="post" action="@originalURL">
+            <div class="align-center" style="padding-bottom: 25px">
+                <img src="@prefix/assets/images/login_logo.png" />
+            </div>
+            <div class="row">
+                <div class="col-md-12 form-group">
+                    <input id="user"
+                           placeholder="@i18n("Model.login.user")"
+                           name="user"
+                           type="text"
+                           autofocus="autofocus"
+                           value="@call.get("user").asString()"
+                           class="form-control input-block-level" />
+                </div>
+                <div class="col-md-12 form-group">
+                    <input id="password"
+                           placeholder="@i18n("Model.login.password")"
+                           name="password"
+                           type="password"
+                           class="form-control input-block-level" />
+                </div>
+                <div class="col-md-12 form-group">
+                    <input type="checkbox" value="true" name="keepLogin" checked /> @i18n("Model.login.keepLogin")
+                </div>
+            </div>
+            <div>
+                <button class="btn btn-lg btn-primary" type="submit">@i18n("Model.login.login")</button>
+            </div>
+            <div class="align-right" style="margin-top:10px;">
+                <a href="#forgotPassword" role="button" class="link" data-toggle="modal"><small>@i18n("Model.login.forgotPassword")</small></a>
+            </div>
+        </form>
+    </div>
+</div>
 
 
 <script type="text/javascript">
 
+    $(document).ready(function() {
+        if ($('#user').val() != '') {
+            $('#password').focus();
+        } else {
+            $('#user').focus();
+        }
+    });
+
     function submitForgotPassword() {
-        var email = $('#email').val();
+        var email = $('*[name=email]').val();
 
         $('#forgotPassword').modal('hide')
-        $('#email').val('');
+        $('*[name=email]').val('');
 
         if (email == null || email == '') {
             clearMessages();
-            addError('@i18n("AdminController.emailRequired")');
+            addError('@i18n("Model.login.emailRequired")');
             return;
         }
 
@@ -86,9 +82,9 @@
                 function(json) {
                     clearMessages();
                     if (json.error) {
-                        addError(json.error);
+                        addError(json.message);
                     } else {
-                        addInfo('@i18n("AdminController.passwortReset")');
+                        addInfo('@i18n("Model.login.passwordResetted")');
                     }
                 }
         );
@@ -97,22 +93,16 @@
 
 </script>
 
-<div id="forgotPassword" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="delete" aria-hidden="true">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h3>@i18n("AdminController.forgotPassword")</h3>
-    </div>
-    <div class="modal-body">
-        <div class="alert alert-info">
-            @i18n("AdminController.forgotPassword.help")
-        </div>
+@modal(name: "forgotPassword", titleKey: "Model.login.forgotPassword") {
+    @modalBody(helpKey: "Model.login.forgotPassword.help") {
         <fieldset>
-            <label>@i18n("AdminController.email")</label>
-            <input type="text" name="email" id="email" class="input-block-level" />
+             @textfield(span:     "12",
+                        name:     "email",
+                        labelKey: "Model.email",
+                        required: true)
         </fieldset>
-    </div>
-    <div class="modal-footer">
-        <a onclick="submitForgotPassword()" class="btn btn-danger">@i18n("AdminController.resetPassword")</a>
-        <a href="#" class="btn" data-dismiss="modal" aria-hidden="true">@i18n("NLS.cancel")</a>
-    </div>
-</div>
+    }
+    @modalFooter(cancelKey: "NLS.cancel") {
+        <a onclick="submitForgotPassword()" class="btn btn-danger">@i18n("Model.login.resetPassword")</a>
+    }
+}

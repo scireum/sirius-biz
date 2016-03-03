@@ -130,7 +130,7 @@ public class CodeListController extends BizController {
     @LoginRequired
     @Permission(MANAGE_CODELISTS)
     @Routed("/code-list/:1/delete")
-    public void deleteCodeLis(WebContext ctx, String codeListId) {
+    public void deleteCodeList(WebContext ctx, String codeListId) {
         Optional<CodeList> cl = tryFindForTenant(CodeList.class, codeListId);
         if (cl.isPresent()) {
             oma.delete(cl.get());

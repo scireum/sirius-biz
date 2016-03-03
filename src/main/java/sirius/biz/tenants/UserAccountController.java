@@ -9,6 +9,7 @@
 package sirius.biz.tenants;
 
 import sirius.biz.model.LoginData;
+import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
 import sirius.biz.web.BizController;
 import sirius.biz.web.PageHelper;
@@ -91,6 +92,28 @@ public class UserAccountController extends BizController {
         }
 
         ctx.respondWith().template("view/tenants/user-account-details.html", userAccount, this);
+    }
+
+    @Routed("/user-account/:1/config")
+    @LoginRequired
+    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
+    public void tenantConfig(WebContext ctx, String accountId) {
+        UserAccount userAccount = findForTenant(UserAccount.class, accountId);
+        assertNotNew(userAccount);
+        ctx.respondWith().template("view/tenants/user-account-config.html", userAccount);
+    }
+
+    @Routed(value = "/user-account/:1/update", jsonCall = true)
+    @LoginRequired
+    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
+    public void tenantUpdate(WebContext ctx, JSONStructuredOutput out, String accountId) {
+        UserAccount userAccount = findForTenant(UserAccount.class, accountId);
+        assertNotNew(userAccount);
+        load(ctx, userAccount);
+        if (ctx.hasParameter(UserAccount.PERMISSIONS.inner(PermissionData.CONFIG_STRING).getName())) {
+            userAccount.getPermissions().getConfig();
+        }
+        oma.update(userAccount);
     }
 
     @ConfigValue("security.roles")

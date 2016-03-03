@@ -14,7 +14,7 @@
     <a class="btn btn-primary" href="@prefix/code-list/new">@i18n("Model.create")</a>
 }
 
-<table class="table table-striped">
+@table(lists) {
     <thead>
         <tr>
             <th>
@@ -34,7 +34,7 @@
         @for(CodeList list : lists.getItems()) {
             <tr>
                 <td>
-                    <a class="link" href="@prefix/code-list/@list.getId()">@list.getCode()</a><br />
+                    <a class="link" href="@prefix/code-list/@list.getId()">@list.getCode()</a><br>
                     <small class="muted">@list.getId()</small>
                 </td>
                 <td>
@@ -49,6 +49,6 @@
             </tr>
         }
     </tbody>
-</table>
+}
 
 @pagination(lists, "code-lists")

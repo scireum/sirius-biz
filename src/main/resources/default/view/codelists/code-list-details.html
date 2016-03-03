@@ -8,7 +8,7 @@
 @args sirius.biz.codelists.CodeList codeList, Page entries
 @extends(view.codelists.code-list.html, page: "details")
 
-@editForm(("code-list/" + codeList.getIdAsString())) {
+@editForm(("code-list/" + codeList.getIdAsString() + "/details")) {
     <div class="row">
         @textfield(name:     "code",
                    value:    codeList.getCode(),

@@ -17,7 +17,9 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.NLS;
 import sirius.mixing.Column;
+import sirius.mixing.annotations.BeforeDelete;
 import sirius.mixing.annotations.BeforeSave;
 import sirius.mixing.annotations.Length;
 import sirius.mixing.annotations.Trim;
@@ -41,7 +43,7 @@ public class UserAccount extends TenantAware {
     private final LoginData login = new LoginData();
     public static final Column LOGIN = Column.named("login");
 
-    private final PermissionData permissions = new PermissionData();
+    private final PermissionData permissions = new PermissionData(this);
     public static final Column PERMISSIONS = Column.named("permissions");
 
     @Part
@@ -52,6 +54,15 @@ public class UserAccount extends TenantAware {
         if (Strings.isFilled(email) && !ms.isValidMailAddress(email.trim(), null)) {
             throw Exceptions.createHandled().withNLSKey("Model.invalidEmail").set("value", email).handle();
         }
+        if (Strings.isEmpty(getLogin().getUsername())) {
+            getLogin().setUsername(getEmail());
+        }
+    }
+
+    @BeforeSave
+    @BeforeDelete
+    protected void onModify() {
+        TenantUserManager.flushCacheForUserAccount(this);
     }
 
     public int getMinPasswordLength() {
@@ -80,5 +91,17 @@ public class UserAccount extends TenantAware {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    @Override
+    public String toString() {
+        if (Strings.isFilled(getPerson().toString())) {
+            return getPerson().toString();
+        }
+        if (Strings.isFilled(getLogin().getUsername())) {
+            return getLogin().getUsername();
+        }
+
+        return NLS.get("Model.userAccount");
     }
 }

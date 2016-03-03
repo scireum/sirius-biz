@@ -7,30 +7,18 @@
         <a href="/tenants">@i18n("Model.tenant.plural")</a>
     </li>
 }
-<span class="legend">@i18n("Model.tenant.plural")</span>
+@pageHeader("Model.tenant.plural")
 
-<div class="well">
-    <div class="pull-left">
-        <form class="form-inline" action="@prefix/tenants" method="get" id="search">
-            <div class="input-append">
-                <input type="text" name="query" value="@tenants.getQuery()" placeholder="@i18n("NLS.searchkey")" autofocus />
-                <span class="add-on" onclick="$('#search').submit()"><i class="icon-search"></i></span>
-            </div>
-        </form>
-    </div>
-    <div class="pull-right">
-        <a class="btn btn-primary" href="@prefix/tenant/new">@i18n("Model.create")</a>
-        <a class="btn" href="@prefix/tenants?@tenants.createQueryString()"><i class="icon-refresh"></i></a>
-    </div>
-    <span class="clearfix"></span>
-</div>
+@tableSearchHeader(tenants, "tenants") {
+    <a class="btn btn-primary" href="@prefix/tenant/new">@i18n("Model.create")</a>
+}
 
-<table class="table table-striped">
+@table(tenants) {
     <thead>
     <tr>
         <th>
             @i18n("Model.name")<br>
-            <small><span class="muted">@i18n("Model.id")</span></small>
+            <small class="muted">@i18n("Model.id")</small>
         </th>
         <th>
             @i18n("Tenant.accountNumber")
@@ -39,14 +27,14 @@
             @i18n("AddressData.street")<br>
             @i18n("AddressData.zip") @i18n("AddressData.city")
         </th>
-        <th class="span2" />
+        <th />
     </tr>
     </thead>
     <tbody>
     @for(sirius.biz.tenants.Tenant tenant : tenants.getItems()) {
         <tr>
             <td>
-                <a class="link" href="@prefix/tenant/@tenant.getId()">@tenant.getName()</a><br />
+                <a class="link" href="@prefix/tenant/@tenant.getId()">@tenant.getName()</a><br>
                 <small class="muted">@tenant.getId()</small>
             </td>
             <td>
@@ -56,12 +44,12 @@
                 @tenant.getAddress().getStreet()<br>
                 @tenant.getAddress().getZip() @tenant.getAddress().getCity()
             </td>
-            <td class="span2 align-center">
-                <i class="icon-remove"></i> <a class="link link-danger" href="@prefix/tenant/@tenant.getId()/delete?@tenants.createQueryString()">@i18n("NLS.delete")</a>
+            <td class="col-md-2 align-center">
+                @deleteLink(("tenant/" + tenant.getId() + "/delete?" + tenants.createQueryString()))
             </td>
         </tr>
     }
     </tbody>
-</table>
+}
 
-@invoke("view/wondergem/parts/pagination.html", tenants, ("tenants"))
+@pagination(tenants, "tenants")

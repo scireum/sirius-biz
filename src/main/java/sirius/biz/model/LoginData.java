@@ -15,7 +15,12 @@ import sirius.biz.web.Autoloaded;
 import sirius.kernel.commons.Strings;
 import sirius.mixing.Column;
 import sirius.mixing.Composite;
-import sirius.mixing.annotations.*;
+import sirius.mixing.annotations.BeforeSave;
+import sirius.mixing.annotations.Length;
+import sirius.mixing.annotations.NullAllowed;
+import sirius.mixing.annotations.Transient;
+import sirius.mixing.annotations.Trim;
+import sirius.mixing.annotations.Unique;
 
 import java.time.LocalDateTime;
 
@@ -26,6 +31,7 @@ public class LoginData extends Composite {
 
     @Trim
     @Autoloaded
+    @Unique
     @Length(length = 150)
     private String username;
     public static final Column USERNAME = Column.named("username");
@@ -37,6 +43,11 @@ public class LoginData extends Composite {
 
     @Trim
     @Length(length = 50)
+    private String ucasePasswordHash;
+    public static final Column UCASE_PASSWORD_HASH = Column.named("ucasePasswordHash");
+
+    @Trim
+    @Length(length = 50)
     private String salt;
     public static final Column SALT = Column.named("salt");
 
@@ -45,6 +56,12 @@ public class LoginData extends Composite {
     @NullAllowed
     private String generatedPassword;
     public static final Column GENERATED_PASSWORD = Column.named("generatedPassword");
+
+    @Trim
+    @Length(length = 50)
+    @NullAllowed
+    private String apiToken;
+    public static final Column API_TOKEN = Column.named("apiToken");
 
     private int numberOfLogins;
     public static final Column NUMBER_OF_LOGINS = Column.named("numberOfLogins");
@@ -67,6 +84,7 @@ public class LoginData extends Composite {
             if (Strings.isFilled(cleartextPassword)) {
                 this.salt = Strings.generateCode(20);
                 this.passwordHash = hashPassword(salt, cleartextPassword);
+                this.ucasePasswordHash = hashPassword(salt, cleartextPassword.toUpperCase());
                 this.generatedPassword = null;
             }
         }
@@ -76,6 +94,7 @@ public class LoginData extends Composite {
         if (Strings.isFilled(generatedPassword)) {
             this.salt = Strings.generateCode(20);
             this.passwordHash = hashPassword(salt, generatedPassword);
+            this.ucasePasswordHash = hashPassword(salt, generatedPassword.toUpperCase());
         }
     }
 
@@ -148,4 +167,19 @@ public class LoginData extends Composite {
         this.username = username;
     }
 
+    public String getUcasePasswordHash() {
+        return ucasePasswordHash;
+    }
+
+    public void setUcasePasswordHash(String ucasePasswordHash) {
+        this.ucasePasswordHash = ucasePasswordHash;
+    }
+
+    public String getApiToken() {
+        return apiToken;
+    }
+
+    public void setApiToken(String apiToken) {
+        this.apiToken = apiToken;
+    }
 }

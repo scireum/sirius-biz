@@ -7,7 +7,7 @@
 }
 
 
-<table class="table table-striped">
+@table(entries) {
     <thead>
         <tr>
             <th>
@@ -39,23 +39,27 @@
                     @entry.getDescription()
                 </td>
                 <td class="col-md-2 align-center">
-                    @deleteLink(("code-list/ " +codeList.getId() + "/delete-entry/" + entry.getId() + "?" + entries.createQueryString()))
+                    @deleteLink(("code-list/" +codeList.getId() + "/delete-entry/" + entry.getId() + "?" + entries.createQueryString()))
                 </td>
             </tr>
         }
     </tbody>
-</table>
+}
 
 @pagination(entries, ("code-list" + codeList.getId()))
 
 <script type="text/javascript">
 
+    function field(name) {
+        return $('*[name='+name+']');
+    }
+
     function createEntry() {
-        $('#code').val('');
-        $('#value').val('');
-        $('#additionalValue').val('');
-        $('#description').val('');
-        $('#priority').val('');
+        field('code').val('');
+        field('value').val('');
+        field('additionalValue').val('');
+        field('description').val('');
+        field('priority').val('');
         $('#dlgMessageBox').hide();
 
         $('#editEntry').modal('show');
@@ -63,11 +67,11 @@
     }
 
     function editEntry(code, value, additionalValue, description, priority) {
-        $('#code').val(code);
-        $('#value').val(value);
-        $('#additionalValue').val(additionalValue);
-        $('#description').val(description);
-        $('#priority').val(priority);
+        field('code').val(code);
+        field('value').val(value);
+        field('additionalValue').val(additionalValue);
+        field('description').val(description);
+        field('priority').val(priority);
         $('#dlgMessageBox').hide();
 
         $('#editEntry').modal('show');
@@ -75,7 +79,7 @@
     }
 
     function updateEntry() {
-        if ($('#code').val() == '') {
+        if (field('code').val() == '') {
             $('#dlgMessageBox .alert').text('@i18n("CodeListController.codeMustBeFilled")');
             $('#dlgMessageBox').show();
         } else {
@@ -85,23 +89,33 @@
 
 </script>
 
-@modal(name: "editEntry", labelKey: "CodeListEntry") {
+@modal(name: "editEntry", titleKey: "CodeListEntry") {
     @modalBody() {
         <div id="dlgMessageBox" style="display: none">
             <div class="alert alert-danger"></div>
         </div>
-        <fieldset>
-            <label>@i18n("CodeListEntry.code")</label>
-            <input type="text" name="code" id="code" class="input-block-level" />
-            <label>@i18n("CodeListEntry.value")</label>
-            <input type="text" name="value" id="value" class="input-block-level" />
-            <label>@i18n("CodeListEntry.additionalValue")</label>
-            <input type="text" name="additionalValue" id="additionalValue" class="input-block-level" />
-            <label>@i18n("Model.priority")</label>
-            <input type="text" name="priority" id="priority" class="input-block-level" />
-            <label>@i18n("Model.description")</label>
-            <input type="text" name="description" id="description" class="input-block-level" />
-        </fieldset>
+
+        <form id="entryForm" action="@prefix/code-list/@codeList.getId()/entry" method="post">
+            <fieldset>
+                @textfield(span:     "6",
+                           name:     "code",
+                           labelKey: "CodeListEntry.code",
+                           required: true)
+                @textfield(span:     "6",
+                           name:     "priority",
+                           labelKey: "Model.priority")
+                @textfield(span:     "12",
+                           name:     "value",
+                           labelKey: "CodeListEntry.value")
+                @textfield(span:     "12",
+                           name:     "additionalValue",
+                           labelKey: "CodeListEntry.additionalValue")
+                @textarea(span:     "12",
+                          rows:     "5",
+                          name:     "description",
+                          labelKey: "Model.description")
+            </fieldset>
+        </form>
     }
 
     @modalFooter(cancelKey: "NLS.cancel") {
