@@ -24,13 +24,16 @@ import java.time.LocalDateTime;
  */
 public class TraceData extends Composite {
 
+    @NullAllowed
     @Length(length = 50)
     private String createdBy;
     public static final Column CREATED_BY = Column.named("createdBy");
 
+    @NullAllowed
     private LocalDateTime createdAt;
     public static final Column CREATED_AT = Column.named("createdAt");
 
+    @NullAllowed
     @Length(length = 150)
     private String createdIn;
     public static final Column CREATED_IN = Column.named("createdIn");

@@ -44,6 +44,7 @@ public class TenantUserManager extends GenericUserManager {
     private final String defaultSalt;
     private final boolean acceptApiTokens;
     private final boolean checkPasswordsCaseInsensitive;
+    private final boolean autocreateTenant;
 
     /**
      * Creates a new user manager for the given scope and configuration.
@@ -68,7 +69,7 @@ public class TenantUserManager extends GenericUserManager {
     private static Cache<String, Config> configCache = CacheManager.createCache("tenants-configs");
 
     public static void flushCacheForUserAccount(UserAccount account) {
-        rolesCache.remove(account.getIdAsString());
+        rolesCache.remove(account.getUniqueName());
         userAccountCache.remove(account.getIdAsString());
         configCache.remove(account.getIdAsString());
     }
@@ -85,6 +86,7 @@ public class TenantUserManager extends GenericUserManager {
         this.defaultSalt = config.get("default-salt").asString("");
         this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(true);
         this.checkPasswordsCaseInsensitive = config.get("check-passwords-case-insensitive").asBoolean(false);
+        this.autocreateTenant = config.get("autocreate-tenant").asBoolean(true);
     }
 
     @Override
@@ -96,35 +98,70 @@ public class TenantUserManager extends GenericUserManager {
         Optional<UserAccount> optionalAccount =
                 oma.select(UserAccount.class).eq(UserAccount.LOGIN.inner(LoginData.USERNAME), user).one();
 
-        if (optionalAccount.isPresent()) {
-            if (optionalAccount.get().getLogin().isAccountLocked()) {
-                throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
+        if (!optionalAccount.isPresent()) {
+            optionalAccount = createSystemTenantIfNonExistent();
+            if (!optionalAccount.isPresent()) {
+                return null;
             }
-            UserAccount account = optionalAccount.get();
-            Tenant tenant = account.getTenant().getValue();
-
-            UserAccount accountFromCache = userAccountCache.get(account.getIdAsString());
-            if (accountFromCache == null || account.getVersion() > accountFromCache.getVersion()) {
-                userAccountCache.put(account.getIdAsString(), account);
-                rolesCache.remove(account.getIdAsString());
-                configCache.remove(account.getIdAsString());
-            } else {
-                account = accountFromCache;
-            }
-            Tenant tenantFromCache = tenantsCache.get(tenant.getIdAsString());
-            if (tenantFromCache == null || tenant.getVersion() > tenantFromCache.getVersion()) {
-                tenantsCache.put(tenant.getIdAsString(), tenant);
-                rolesCache.remove(account.getIdAsString());
-                configCache.remove(account.getIdAsString());
-            } else {
-                tenant = tenantFromCache;
-            }
-            account.getTenant().setValue(tenant);
-
-            return asUser(account);
-        } else {
-            return null;
         }
+        if (optionalAccount.get().getLogin().isAccountLocked()) {
+            throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
+        }
+
+        UserAccount account = optionalAccount.get();
+        Tenant tenant = account.getTenant().getValue();
+
+        UserAccount accountFromCache = userAccountCache.get(account.getIdAsString());
+        if (accountFromCache == null || account.getVersion() > accountFromCache.getVersion()) {
+            userAccountCache.put(account.getIdAsString(), account);
+            rolesCache.remove(account.getUniqueName());
+            configCache.remove(account.getIdAsString());
+        } else {
+            account = accountFromCache;
+        }
+        Tenant tenantFromCache = tenantsCache.get(tenant.getIdAsString());
+        if (tenantFromCache == null || tenant.getVersion() > tenantFromCache.getVersion()) {
+            tenantsCache.put(tenant.getIdAsString(), tenant);
+
+            // We also need to re-compute the roles and config of the user
+            // as this is also determined by the tenant
+            rolesCache.remove(account.getUniqueName());
+            configCache.remove(account.getIdAsString());
+        } else {
+            tenant = tenantFromCache;
+        }
+        account.getTenant().setValue(tenant);
+
+        return asUser(account);
+    }
+
+    private Optional<UserAccount> createSystemTenantIfNonExistent() {
+        try {
+            if (autocreateTenant && !oma.select(Tenant.class).exists()) {
+                BizController.LOG.INFO("No tenant is present, creating system tenant....");
+                Tenant tenant = new Tenant();
+                tenant.setName("System Tenant");
+                oma.update(tenant);
+
+                BizController.LOG.INFO(
+                        "No user account is present, creating system / system - Please change the password now!");
+                UserAccount ua = new UserAccount();
+                ua.getTenant().setValue(oma.select(Tenant.class).orderAsc(Tenant.ID).queryFirst());
+                ua.getLogin().setUsername("system");
+                ua.getLogin().setCleartextPassword("system");
+                oma.update(ua);
+
+                return Optional.of(ua);
+            }
+        } catch (Throwable e) {
+            Exceptions.handle()
+                      .to(BizController.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Cannot initialize tenants or user accounts: %s (%s)")
+                      .handle();
+        }
+
+        return Optional.empty();
     }
 
     public UserInfo asUser(UserAccount account) {

@@ -38,11 +38,13 @@ public class LoginData extends Composite {
 
     @Trim
     @Length(length = 50)
+    @NullAllowed
     private String passwordHash;
     public static final Column PASSWORD_HASH = Column.named("passwordHash");
 
     @Trim
     @Length(length = 50)
+    @NullAllowed
     private String ucasePasswordHash;
     public static final Column UCASE_PASSWORD_HASH = Column.named("ucasePasswordHash");
 

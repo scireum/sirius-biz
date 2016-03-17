@@ -11,5 +11,5 @@ package sirius.biz.protocol;
 /**
  * Created by aha on 18.02.16.
  */
-public class ChangeLog {
+public class JournalEntry {
 }
