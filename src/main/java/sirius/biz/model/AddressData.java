@@ -30,7 +30,7 @@ public class AddressData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
-    @Length(length = 8)
+    @Length(length = 9)    // ToDo In Schweden braucht man das !
     private String zip;
     public static final Column ZIP = Column.named("zip");
 
