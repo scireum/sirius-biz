@@ -24,8 +24,8 @@ import java.util.Optional;
  * Created by aha on 11.05.15.
  */
 @Framework("tenants")
-@Register(classes = {Tenants.class, Initializable.class})
-public class Tenants implements Initializable {
+@Register(classes = Tenants.class)
+public class Tenants  {
 
     public Optional<UserAccount> getCurrentUser() {
         UserInfo user = UserContext.getCurrentUser();
@@ -73,30 +73,4 @@ public class Tenants implements Initializable {
     @Part
     private OMA oma;
 
-    @Override
-    public void initialize() throws Exception {
-        try {
-            if (!oma.select(Tenant.class).exists()) {
-                BizController.LOG.INFO("No tenant is present, creating system tenant....");
-                Tenant tenant = new Tenant();
-                tenant.setName("System Tenant");
-                oma.update(tenant);
-            }
-            if (!oma.select(UserAccount.class).exists()) {
-                BizController.LOG.INFO(
-                        "No user account is present, creating system / system - Please change the password now!");
-                UserAccount ua = new UserAccount();
-                ua.getTenant().setValue(oma.select(Tenant.class).orderAsc(Tenant.ID).queryFirst());
-                ua.getLogin().setUsername("system");
-                ua.getLogin().setCleartextPassword("system");
-                oma.update(ua);
-            }
-        } catch (Throwable e) {
-            Exceptions.handle()
-                      .to(BizController.LOG)
-                      .error(e)
-                      .withSystemErrorMessage("Cannot initialize tenants or user accounts: %s (%s)")
-                      .handle();
-        }
-    }
 }

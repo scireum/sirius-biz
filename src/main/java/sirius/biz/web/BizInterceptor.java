@@ -15,7 +15,6 @@ import sirius.web.controller.Interceptor;
 import sirius.web.http.WebContext;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
-import sirius.web.security.UserInfo;
 
 import java.lang.reflect.Method;
 
@@ -26,17 +25,23 @@ import java.lang.reflect.Method;
 public class BizInterceptor implements Interceptor {
 
     @Override
-    public boolean before(WebContext ctx, Controller controller, Method method) throws Exception {
+    public boolean before(WebContext ctx, boolean jsonCall, Controller controller, Method method) throws Exception {
         return false;
     }
 
     @Override
-    public boolean beforePermissionError(String permission, WebContext ctx, Controller controller, Method method)
-            throws Exception {
+    public boolean beforePermissionError(String permission,
+                                         WebContext ctx,
+                                         boolean jsonCall,
+                                         Controller controller,
+                                         Method method) throws Exception {
         if (UserContext.getCurrentScope() != ScopeInfo.DEFAULT_SCOPE) {
             return false;
         }
-        if (UserInfo.PERMISSION_LOGGED_IN.equals(permission)) {
+        if (jsonCall) {
+            return false;
+        }
+        if (!UserContext.getCurrentUser().isLoggedIn()) {
             ctx.respondWith().template("view/biz/login.html", ctx.getRequest().getUri());
         } else {
             ctx.respondWith()
