@@ -18,6 +18,8 @@ import sirius.mixing.annotations.Length;
 import sirius.mixing.annotations.NullAllowed;
 import sirius.mixing.annotations.Trim;
 
+import java.time.LocalDate;
+
 /**
  * Created by aha on 07.05.15.
  */
@@ -49,6 +51,16 @@ public class PersonData extends Composite {
     @NullAllowed
     private String lastname;
     public static final Column LASTNAME = Column.named("lastname");
+
+    @NullAllowed
+    @Autoloaded
+    private LocalDate birthday;
+    public static final Column BIRTHDAY = Column.named("birthdate");
+
+    @Autoloaded
+    private boolean offline = false;
+    public static final Column OFFLINE = Column.named("offline");
+
 
     @Part
     private static CodeLists codeLists;
@@ -105,5 +117,21 @@ public class PersonData extends Composite {
 
     public void setLastname(String lastname) {
         this.lastname = lastname;
+    }
+
+    public LocalDate getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(LocalDate birthday) {
+        this.birthday = birthday;
+    }
+
+    public boolean isOffline() {
+        return offline;
+    }
+
+    public void setOffline(boolean offline) {
+        this.offline = offline;
     }
 }

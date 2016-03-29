@@ -8,6 +8,7 @@
 
 package sirius.biz.model;
 
+import sirius.biz.web.Autoloaded;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -24,24 +25,28 @@ import sirius.web.mails.Mails;
 public class ContactData extends Composite
 {
     @NullAllowed
+    @Autoloaded
     @Length(length = 150)
     private String email;
     public static final Column EMAIL = Column.named("email");
 
 
     @NullAllowed
+    @Autoloaded
     @Length(length = 150)
     private String phone;
     public static final Column PHONE = Column.named("phone");
 
 
     @NullAllowed
+    @Autoloaded
     @Length(length = 150)
     private String fax;
     public static final Column FAX = Column.named("fax");
 
 
     @NullAllowed
+    @Autoloaded
     @Length(length = 150)
     private String mobile;
     public static final Column MOBILE = Column.named("mobile");
