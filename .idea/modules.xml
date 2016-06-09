@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/sirius-biz.iml" filepath="$PROJECT_DIR$/sirius-biz.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sirius-web.iml" filepath="$PROJECT_DIR$/sirius-web.iml" />
     </modules>
   </component>
 </project>
