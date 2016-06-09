@@ -17,8 +17,8 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.extensions.Extension;
 import sirius.kernel.extensions.Extensions;
-import sirius.mixing.Entity;
-import sirius.mixing.OMA;
+import sirius.db.mixing.Entity;
+import sirius.db.mixing.OMA;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

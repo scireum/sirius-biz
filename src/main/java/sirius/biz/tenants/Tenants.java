@@ -14,7 +14,7 @@ import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
-import sirius.mixing.OMA;
+import sirius.db.mixing.OMA;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 

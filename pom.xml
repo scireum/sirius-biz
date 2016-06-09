@@ -54,6 +54,11 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.35</version>
         </dependency>
+        <dependency>
+            <groupId>net.sf.jt400</groupId>
+            <artifactId>jt400</artifactId>
+            <version>6.7</version>
+        </dependency>
     </dependencies>
 
 </project>

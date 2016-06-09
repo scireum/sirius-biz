@@ -9,11 +9,11 @@
 package sirius.biz.model;
 
 import sirius.biz.web.Autoloaded;
-import sirius.mixing.Column;
-import sirius.mixing.Composite;
-import sirius.mixing.annotations.Length;
-import sirius.mixing.annotations.NullAllowed;
-import sirius.mixing.annotations.Trim;
+import sirius.db.mixing.Column;
+import sirius.db.mixing.Composite;
+import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.annotations.Trim;
 
 /**
  * Created by aha on 07.05.15.

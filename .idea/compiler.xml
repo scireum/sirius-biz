@@ -24,7 +24,7 @@
         <processorPath useClasspath="true" />
         <module name="sirius-web" />
       </profile>
-      <profile default="false" name="Annotation profile for sirius-biz" enabled="true">
+      <profile default="false" name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />

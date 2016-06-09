@@ -11,11 +11,11 @@ package sirius.biz.codelists;
 import sirius.biz.tenants.TenantAware;
 import sirius.biz.web.Autoloaded;
 import sirius.kernel.di.std.Framework;
-import sirius.mixing.Column;
-import sirius.mixing.annotations.Length;
-import sirius.mixing.annotations.NullAllowed;
-import sirius.mixing.annotations.Trim;
-import sirius.mixing.annotations.Unique;
+import sirius.db.mixing.Column;
+import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.annotations.Trim;
+import sirius.db.mixing.annotations.Unique;
 
 /**
  * Created by aha on 11.05.15.

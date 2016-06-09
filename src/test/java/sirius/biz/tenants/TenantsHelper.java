@@ -10,7 +10,7 @@ package sirius.biz.tenants;
 
 import sirius.biz.model.LoginData;
 import sirius.kernel.di.std.Part;
-import sirius.mixing.OMA;
+import sirius.db.mixing.OMA;
 import sirius.web.security.UserContext;
 
 /**

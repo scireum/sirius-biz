@@ -12,10 +12,10 @@ import sirius.biz.tenants.TenantAware;
 import sirius.biz.tenants.Tenants;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
-import sirius.mixing.Column;
-import sirius.mixing.Entity;
-import sirius.mixing.SmartQuery;
-import sirius.mixing.constraints.Like;
+import sirius.db.mixing.Column;
+import sirius.db.mixing.Entity;
+import sirius.db.mixing.SmartQuery;
+import sirius.db.mixing.constraints.Like;
 import sirius.web.controller.Page;
 import sirius.web.http.WebContext;
 

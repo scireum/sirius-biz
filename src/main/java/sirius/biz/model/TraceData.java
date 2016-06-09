@@ -8,13 +8,14 @@
 
 package sirius.biz.model;
 
+import sirius.biz.protocol.NoJournal;
 import sirius.kernel.async.TaskContext;
-import sirius.mixing.Column;
-import sirius.mixing.Composite;
-import sirius.mixing.annotations.BeforeSave;
-import sirius.mixing.annotations.Length;
-import sirius.mixing.annotations.NullAllowed;
-import sirius.mixing.annotations.Transient;
+import sirius.db.mixing.Column;
+import sirius.db.mixing.Composite;
+import sirius.db.mixing.annotations.BeforeSave;
+import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.annotations.Transient;
 import sirius.web.security.UserContext;
 
 import java.time.LocalDateTime;
@@ -24,29 +25,35 @@ import java.time.LocalDateTime;
  */
 public class TraceData extends Composite {
 
+    @NoJournal
     @NullAllowed
     @Length(length = 50)
     private String createdBy;
     public static final Column CREATED_BY = Column.named("createdBy");
 
+    @NoJournal
     @NullAllowed
     private LocalDateTime createdAt;
     public static final Column CREATED_AT = Column.named("createdAt");
 
+    @NoJournal
     @NullAllowed
     @Length(length = 150)
     private String createdIn;
     public static final Column CREATED_IN = Column.named("createdIn");
 
+    @NoJournal
     @NullAllowed
     @Length(length = 50)
     private String changedBy;
     public static final Column CHANGED_BY = Column.named("changedBy");
 
+    @NoJournal
     @NullAllowed
     private LocalDateTime changedAt;
     public static final Column CHANGED_AT = Column.named("changedAt");
 
+    @NoJournal
     @NullAllowed
     @Length(length = 150)
     private String changedIn;

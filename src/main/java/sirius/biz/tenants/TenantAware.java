@@ -10,8 +10,8 @@ package sirius.biz.tenants;
 
 import sirius.biz.model.BizEntity;
 import sirius.kernel.health.Exceptions;
-import sirius.mixing.Column;
-import sirius.mixing.EntityRef;
+import sirius.db.mixing.Column;
+import sirius.db.mixing.EntityRef;
 
 import java.util.function.Supplier;
 

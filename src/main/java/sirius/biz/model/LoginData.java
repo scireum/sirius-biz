@@ -13,14 +13,14 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import sirius.biz.web.Autoloaded;
 import sirius.kernel.commons.Strings;
-import sirius.mixing.Column;
-import sirius.mixing.Composite;
-import sirius.mixing.annotations.BeforeSave;
-import sirius.mixing.annotations.Length;
-import sirius.mixing.annotations.NullAllowed;
-import sirius.mixing.annotations.Transient;
-import sirius.mixing.annotations.Trim;
-import sirius.mixing.annotations.Unique;
+import sirius.db.mixing.Column;
+import sirius.db.mixing.Composite;
+import sirius.db.mixing.annotations.BeforeSave;
+import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.annotations.Transient;
+import sirius.db.mixing.annotations.Trim;
+import sirius.db.mixing.annotations.Unique;
 
 import java.time.LocalDateTime;
 

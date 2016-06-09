@@ -12,11 +12,11 @@ import sirius.biz.codelists.CodeLists;
 import sirius.biz.web.Autoloaded;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.Formatter;
-import sirius.mixing.Column;
-import sirius.mixing.Composite;
-import sirius.mixing.annotations.Length;
-import sirius.mixing.annotations.NullAllowed;
-import sirius.mixing.annotations.Trim;
+import sirius.db.mixing.Column;
+import sirius.db.mixing.Composite;
+import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.annotations.Trim;
 
 import java.time.LocalDate;
 

@@ -1,0 +1,66 @@
+package sirius.biz.i5;
+
+import com.google.common.collect.Maps;
+
+import javax.annotation.Nonnull;
+import java.util.Map;
+
+import static sirius.kernel.health.Exceptions.handle;
+
+/**
+ * Base class for all types which can automatically be transformed from and to byte arrays.
+ * <p>
+ * The {@link Transformer} for the given class will read all {@link Transform} annotations and determine
+ * which parts of the byte array belong to which Java field. It then converts them using the appropriate
+ * <tt>AS400...</tt> classes.
+ */
+public abstract class Transformable {
+
+    private static Map<Class<?>, Transformer> transformers = Maps.newConcurrentMap();
+
+    private static <T> Transformer getTransformer(@Nonnull Class<T> type) {
+        Transformer tx = transformers.get(type);
+        if (tx == null) {
+            tx = new Transformer(type);
+            transformers.put(type, tx);
+        }
+        return tx;
+    }
+
+    /**
+     * Tries for create a new instance of the given type by parsing the given byte array.
+     *
+     * @param type the type to be created
+     * @param <T>  the generic type for <tt>type</tt>
+     * @param data the byte array to parse
+     * @return a new instance of T filled with the data parsed from <tt>data</tt>
+     */
+    public static <T extends Transformable> T parse(@Nonnull Class<T> type, @Nonnull byte[] data) {
+        try {
+            Transformer tx = getTransformer(type);
+            T result = type.newInstance();
+            tx.fromBytes(result, data);
+
+            return result;
+        } catch (Throwable e) {
+            throw handle().to(I5Connector.LOG)
+                          .error(e)
+                          .withSystemErrorMessage("Cannot load data for '%s': %s (%s)", type.getName())
+                          .handle();
+        }
+    }
+
+    /**
+     * Transforms this object into a byte representation which can be sent to an i5.
+     *
+     * @param destination the byte array to fill
+     */
+    public void toBytes(byte[] destination) {
+        getTransformer(getClass()).toBytes(this, destination);
+    }
+
+    @Override
+    public String toString() {
+        return getTransformer(getClass()).asString(this);
+    }
+}

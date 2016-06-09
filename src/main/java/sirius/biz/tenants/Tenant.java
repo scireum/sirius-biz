@@ -15,13 +15,13 @@ import sirius.biz.web.Autoloaded;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.nls.NLS;
-import sirius.mixing.Column;
-import sirius.mixing.annotations.BeforeDelete;
-import sirius.mixing.annotations.BeforeSave;
-import sirius.mixing.annotations.Length;
-import sirius.mixing.annotations.NullAllowed;
-import sirius.mixing.annotations.Trim;
-import sirius.mixing.annotations.Unique;
+import sirius.db.mixing.Column;
+import sirius.db.mixing.annotations.BeforeDelete;
+import sirius.db.mixing.annotations.BeforeSave;
+import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.annotations.Trim;
+import sirius.db.mixing.annotations.Unique;
 
 /**
  * Created by aha on 07.05.15.

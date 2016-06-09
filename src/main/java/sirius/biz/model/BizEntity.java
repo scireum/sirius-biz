@@ -8,8 +8,8 @@
 
 package sirius.biz.model;
 
-import sirius.mixing.Column;
-import sirius.mixing.Entity;
+import sirius.db.mixing.Column;
+import sirius.db.mixing.Entity;
 
 /**
  * Created by aha on 08.05.15.
