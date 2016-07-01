@@ -1,0 +1,79 @@
+@*
+*  Made with all the love in the world
+*  by scireum in Remshalden, Germany
+*
+*  Copyright by scireum GmbH
+*  http://www.scireum.de - info@scireum.de
+*@
+@args sirius.biz.protocol.Incident incident
+@extends(view.wondergem.template.html, title: (NLS.get("Incident") + " (" + incident.getCategory()+ ")"))
+@section(breadcrumbs) {
+    <li>
+        <a href="@prefix/system/errors">@i18n("Incident.plural")</a>
+    </li>
+    <li>
+        <a href="@prefix/system/error/@incident.getId()">@i18n("Incident"): @incident.getCategory()</a>
+    </li>
+}
+
+@pageHeader() {
+    @NLS.get("Incident") (@incident.getCategory())
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="well">
+            <pre class="plain">@incident.getMessage()</pre>
+        </div>
+    </div>
+</div>
+<div class="row">
+    @textfield(labelKey: "Incident.lastOccurrence",
+               value: NLS.toUserString(incident.getLastOccurrence()),
+               readonly: true)
+    @textfield(labelKey: "Incident.numberOfOccurrences",
+               value: NLS.toUserString(incident.getNumberOfOccurrences()),
+               readonly: true)
+</div>
+<div class="row">
+    @textfield(labelKey: "Incident.firstOccurrence",
+               value: NLS.toUserString(incident.getFirstOccurrence()),
+               readonly: true)
+    @textfield(labelKey: "Incident.user",
+               value: incident.getUser(),
+               readonly: true)
+</div>
+<div class="row">
+    @textfield(labelKey: "Incident.category",
+               value: incident.getCategory(),
+               readonly: true)
+    @textfield(labelKey: "Incident.node",
+               value: incident.getNode(),
+               readonly: true)
+</div>
+<div class="row">
+    @textfield(labelKey: "Incident.location",
+               value: incident.getLocation(),
+               span: "12",
+               readonly: true)
+</div>
+<div class="row">
+    <div class="col-md-12">
+        @heading("Incident.mdc")
+        <div class="well">
+            <pre class="plain">@incident.getMdc()</pre>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        @heading("Incident.stack")
+        <div class="well">
+            <pre class="plain">@incident.getStack()</pre>
+        </div>
+    </div>
+</div>
+
+<div class="form-actions">
+    <a href="@prefix/system/errors" class="btn"><i class="icon-chevron-left"></i> @i18n("NLS.back")</a>
+</div>

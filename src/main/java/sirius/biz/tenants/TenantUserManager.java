@@ -12,6 +12,7 @@ import com.google.common.collect.Sets;
 import com.typesafe.config.Config;
 import sirius.biz.model.LoginData;
 import sirius.biz.web.BizController;
+import sirius.db.mixing.OMA;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Strings;
@@ -21,7 +22,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.extensions.Extension;
 import sirius.kernel.health.Exceptions;
-import sirius.db.mixing.OMA;
 import sirius.web.http.WebContext;
 import sirius.web.security.GenericUserManager;
 import sirius.web.security.ScopeInfo;
@@ -165,15 +165,16 @@ public class TenantUserManager extends GenericUserManager {
     }
 
     public UserInfo asUser(UserAccount account) {
-        return new UserInfo(String.valueOf(account.getTenant().getId()),
-                            account.getTenant().getValue().getName(),
-                            account.getUniqueName(),
-                            account.getLogin().getUsername(),
-                            account.getEmail(),
-                            "de",
-                            computeRoles(null, String.valueOf(account.getUniqueName())),
-                            ui -> getUserConfig(getScopeConfig(), ui),
-                            this::getUserObject);
+        return UserInfo.Builder.createUser(account.getUniqueName())
+                               .withUsername(account.getLogin().getUsername())
+                               .withTenantId(String.valueOf(account.getTenant().getId()))
+                               .withTenantName(account.getTenant().getValue().getName())
+                               .withEmail(account.getEmail())
+                               .withLang("de")
+                               .withPermissions(computeRoles(null, String.valueOf(account.getUniqueName())))
+                               .withConfigSupplier(ui -> getUserConfig(getScopeConfig(), ui))
+                               .withUserSupplier(this::getUserObject)
+                               .build();
     }
 
     @Override
@@ -211,9 +212,10 @@ public class TenantUserManager extends GenericUserManager {
         try {
             UserAccount account = (UserAccount) getUserObject(user);
             account.getTrace().setSilent(true);
+            account.getJournal().setSilent(true);
             account.getLogin().setNumberOfLogins(account.getLogin().getNumberOfLogins() + 1);
             account.getLogin().setLastLogin(LocalDateTime.now());
-            oma.update(account);
+            oma.override(account);
         } catch (Throwable e) {
             Exceptions.handle(BizController.LOG, e);
         }

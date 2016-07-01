@@ -1,0 +1,73 @@
+@*
+*  Made with all the love in the world
+*  by scireum in Remshalden, Germany
+*
+*  Copyright by scireum GmbH
+*  http://www.scireum.de - info@scireum.de
+*@
+@args oxomi.backend.MailProtocol mail
+@extends(view.wondergem.template.html, title: mail.getSubject())
+@section(breadcrumbs) {
+    <li>
+        <a href="/mails">@i18n("MailProtocol.list")</a>
+    </li>
+    <li>
+        <a href="@prefix/mail/@mail.getId()">@mail.getSubject()</a>
+    </li>
+}
+@pageHeader() {
+    @mail.getSubject()
+}
+
+<div class="row">
+    @textfield(labelKey: "MailProtocol.success",
+               value: NLS.toUserString(mail.isSuccess()),
+               readonly: true)
+    @textfield(labelKey: "MailProtocol.tod",
+               value: NLS.toUserString(mail.getTod()),
+               readonly: true)
+</div>
+<div class="row">
+    @textfield(labelKey: "MailProtocol.messageId",
+               value: mail.getMessageId(),
+               readonly: true)
+    @textfield(labelKey: "MailProtocol.mailExtension",
+               value: mail.getMailExtension(),
+               readonly: true)
+</div>
+<div class="row">
+    @textfield(labelKey: "MailProtocol.sender",
+               value: mail.getSender(),
+               readonly: true)
+    @textfield(labelKey: "MailProtocol.senderName",
+               value: mail.getSenderName(),
+               readonly: true)
+</div>
+<div class="row">
+    @textfield(labelKey: "MailProtocol.receiver",
+               value: mail.getReceiver(),
+               readonly: true)
+    @textfield(labelKey: "MailProtocol.receiverName",
+               value: mail.getReceiverName(),
+               readonly: true)
+</div>
+<div class="row">
+    <div class="col-md-12">
+        @heading("MailProtocol.text")
+        <div class="well">
+            <pre class="plain">@mail.getText()</pre>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        @heading("MailProtocol.html")
+        <div class="well">
+            <pre class="plain">@mail.getHtml()</pre>
+        </div>
+    </div>
+</div>
+
+<div class="form-actions">
+    <a href="@prefix/mails" class="btn"><i class="icon-chevron-left"></i> @i18n("NLS.back")</a>
+</div>

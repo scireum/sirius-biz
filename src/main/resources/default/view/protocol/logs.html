@@ -1,0 +1,66 @@
+@*
+*  Made with all the love in the world
+*  by scireum in Remshalden, Germany
+*
+*  Copyright by scireum GmbH
+*  http://www.scireum.de - info@scireum.de
+*@
+@import sirius.biz.tenants.UserAccount
+@args Page logs
+@extends(view.wondergem.template.html, title: NLS.get("LogEntry.plural"))
+
+@section(breadcrumbs) {
+    <li>
+        <a href="/system/logs">@i18n("LogEntry.plural")</a>
+    </li>
+}
+
+@pageHeader("LogEntry.plural")
+
+<div class="row">
+    <div class="col-md-3">
+        @filterbox(logs, "system/logs")
+    </div>
+    <div class="col-md-9">
+        @tableSearchHeader(logs, "system/logs")
+
+        @table(logs) {
+            <thead>
+                <tr>
+                    <th>
+                        <div class="row">
+                            <div class="col-md-2">@i18n("LogEntry.level")</div>
+                            <div class="col-md-3">@i18n("LogEntry.tod")</div>
+                            <div class="col-md-2">@i18n("LogEntry.category")</div>
+                            <div class="col-md-2">@i18n("LogEntry.user")</div>
+                            <div class="col-md-3">@i18n("LogEntry.node")</div>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            @for(sirius.biz.protocol.LogEntry msg : logs.getItems()) {
+                <tr>
+                    <td>
+                        <div class="row">
+                            <div class="col-md-2"><span class="label @msg.getLabelClass()">@msg.getLevel()</span></div>
+                            <div class="col-md-3 muted"><small>@NLS.toUserString(msg.getTod())</small></div>
+                            <div class="col-md-2">@msg.getCategory()</div>
+                            <div class="col-md-2 muted"><small>@msg.getUser()</small></div>
+                            <div class="col-md-3 muted"><small>@msg.getNode()</small></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <p />
+                                <pre class="plain" style="white-space: pre-wrap">@msg.getMessage()</pre>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        }
+
+        @pagination(logs, "system/logs")
+    </div>
+</div>

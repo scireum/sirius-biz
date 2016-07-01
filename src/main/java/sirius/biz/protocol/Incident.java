@@ -10,26 +10,31 @@ package sirius.biz.protocol;
 
 import sirius.db.mixing.Column;
 import sirius.db.mixing.Entity;
+import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
+import sirius.kernel.di.std.Framework;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 
 /**
  * Created by aha on 18.02.16.
  */
-public class StoredIncident extends Entity {
+@Framework(Protocols.FRAMEWORK_PROTOCOLS)
+public class Incident extends Entity {
 
     @Lob
     private String message;
     public static final Column MESSAGE = Column.named("message");
 
+    @Length(length = 255)
     private String category;
     public static final Column CATEGORY = Column.named("category");
 
+    @Length(length = 255)
     private String node;
     public static final Column NODE = Column.named("node");
 
+    @Length(length = 255)
     private String location;
     public static final Column LOCATION = Column.named("location");
 
@@ -50,6 +55,7 @@ public class StoredIncident extends Entity {
     private String mdc;
     public static final Column MDC = Column.named("mdc");
 
+    @Length(length = 255)
     private String user;
     public static final Column USER = Column.named("user");
 

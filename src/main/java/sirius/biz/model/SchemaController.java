@@ -9,12 +9,12 @@
 package sirius.biz.model;
 
 import sirius.biz.tenants.TenantUserManager;
+import sirius.db.mixing.Schema;
+import sirius.db.mixing.schema.SchemaUpdateAction;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
-import sirius.db.mixing.Schema;
-import sirius.db.mixing.schema.SchemaUpdateAction;
 import sirius.web.controller.BasicController;
 import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
@@ -24,11 +24,16 @@ import sirius.web.security.Permission;
 import sirius.web.services.JSONStructuredOutput;
 
 /**
- * Created by aha on 10.03.16.
+ * Provides the management GUI for schema changes as indicated by the {@link Schema} of mixing.
  */
 @Register(classes = Controller.class)
 public class SchemaController extends BasicController {
 
+    /**
+     * Renders the schema list view.
+     *
+     * @param ctx the current request
+     */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
     @DefaultRoute
     @Routed("/system/schema")
@@ -39,6 +44,12 @@ public class SchemaController extends BasicController {
     @Part
     private Schema schema;
 
+    /**
+     * Lists all required changes as JSON
+     *
+     * @param ctx the current request
+     * @param out the JSON response
+     */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
     @Routed(value = "/system/schema/api/list", jsonCall = true)
     public void changesList(WebContext ctx, JSONStructuredOutput out) {
@@ -58,6 +69,12 @@ public class SchemaController extends BasicController {
         out.endArray();
     }
 
+    /**
+     * Executes the given schema change.
+     *
+     * @param ctx the current request
+     * @param out the JSON response
+     */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
     @Routed(value = "/system/schema/api/execute", jsonCall = true)
     public void execute(WebContext ctx, JSONStructuredOutput out) {

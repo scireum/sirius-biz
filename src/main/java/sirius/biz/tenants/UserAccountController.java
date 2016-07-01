@@ -77,7 +77,12 @@ public class UserAccountController extends BizController {
                 load(ctx, userAccount);
                 userAccount.getPermissions().getPermissions().clear();
                 for (String role : ctx.getParameters("roles")) {
-                    userAccount.getPermissions().getPermissions().add(role);
+                    // Ensure that only real roles end up in the permissions list,
+                    // as roles, permissions and flags later end up in the same vector
+                    // therefore we don't want nothing else but user roles in this list
+                    if (getRoles().contains(role)) {
+                        userAccount.getPermissions().getPermissions().add(role);
+                    }
                 }
                 oma.update(userAccount);
                 showSavedMessage();

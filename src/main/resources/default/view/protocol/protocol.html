@@ -1,0 +1,71 @@
+@*
+*  Made with all the love in the world
+*  by scireum in Remshalden, Germany
+*
+*  Copyright by scireum GmbH
+*  http://www.scireum.de - info@scireum.de
+*@
+@args sirius.web.controller.Page protocol
+@extends(view.wondergem.template.html, title: NLS.get("JournalEntry.plural"))
+@section(breadcrumbs) {
+    <li>
+        <a href="@prefix/system/protocol">@i18n("JournalEntry.plural")</a>
+    </li>
+}
+
+@pageHeader("JournalEntry.plural")
+
+<div class="row">
+    <div class="col-md-3">
+        @filterbox(protocol, "system/protocol")
+    </div>
+    <div class="col-md-9">
+        @tableSearchHeader(protocol, "system/protocol")
+
+        @table(protocol) {
+            <thead>
+                <tr>
+                    <th>
+                        <div class="row">
+                            <div class="col-md-4">
+                                @i18n("JournalEntry.tod")<br>
+                                @i18n("JournalEntry.username")<br>
+                                <small>@i18n("JournalEntry.userId")</small>
+                            </div>
+                            <div class="col-md-4">@i18n("JournalEntry.targetName") <small>(@i18n("JournalEntry.targetId"))<br>@i18n("JournalEntry.targetType")</small></div>
+                            <div class="col-md-4">@i18n("JournalEntry.subsystem")</div>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+            @for(sirius.biz.protocol.JournalEntry msg : protocol.getItems()) {
+                <tr>
+                    <td>
+                        <div class="row">
+                            <div class="col-md-4">
+                                @NLS.toUserString(msg.getTod())
+                                <br>@msg.getUsername()
+                                <br><small>@msg.getUserId()</small>
+                            </div>
+                            <div class="col-md-4">
+                                @msg.getTargetName() <small>(@msg.getTargetId())
+                                <br>@msg.getTargetType()</small>
+                            </div>
+                            <div class="col-md-4">@msg.getSubsystem()</div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <p />
+                                <pre class="plain" style="white-space: pre-wrap">@msg.getChanges()</pre>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        }
+
+        @pagination(protocol, "protocol")
+    </div>
+</div>

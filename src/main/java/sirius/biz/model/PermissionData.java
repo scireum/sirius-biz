@@ -12,43 +12,60 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import sirius.biz.web.Autoloaded;
 import sirius.biz.web.BizController;
-import sirius.kernel.commons.Strings;
-import sirius.kernel.health.Exceptions;
 import sirius.db.mixing.Column;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Entity;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nullable;
 import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Created by aha on 08.05.15.
+ * Stores a set of permissions and optinally a custom configuration for an account or tenant which can be embedded into
+ * other entities or mixins.
  */
 public class PermissionData extends Composite {
 
+    /**
+     * Stores the associated user account or tenant for which the permissions and config is stored
+     */
     @Transient
     private final Entity parent;
 
+    /**
+     * Creates a new instance for the given parent.
+     *
+     * @param parent the parent entity which contains this composite.
+     */
     public PermissionData(Entity parent) {
         this.parent = parent;
     }
 
+    /**
+     * Contains all permissions as a single string, separated with commas.
+     */
+    public static final Column PERMISSION_STRING = Column.named("permissionString");
     @Autoloaded
     @NullAllowed
     @Length(length = 4096)
     private String permissionString;
-    public static final Column PERMISSION_STRING = Column.named("permissionString");
 
+    /**
+     * Contains a custom configuration which is added to the config of the current {@link
+     * sirius.web.security.ScopeInfo}.
+     */
+    public static final Column CONFIG_STRING = Column.named("configString");
     @Autoloaded
     @NullAllowed
-    @Length(length = 4096)
+    @Lob
     private String configString;
-    public static final Column CONFIG_STRING = Column.named("configString");
 
     @Transient
     private Set<String> permissions;
@@ -56,6 +73,13 @@ public class PermissionData extends Composite {
     @Transient
     private Config config;
 
+    /**
+     * Returns all granted permissions.
+     * <p>
+     * Note that this set can also be modified as the set will be written back to the database on save.
+     *
+     * @return the set of granted permissions
+     */
     public Set<String> getPermissions() {
         if (permissions == null) {
             permissions = new TreeSet<>();
@@ -71,6 +95,11 @@ public class PermissionData extends Composite {
         return permissions;
     }
 
+    /**
+     * Returns the parsed config for the associated entity.
+     *
+     * @return the parsed configuration
+     */
     @Nullable
     public Config getConfig() {
         if (config == null) {
@@ -94,10 +123,20 @@ public class PermissionData extends Composite {
         return config;
     }
 
+    /**
+     * Returns the raw config string.
+     *
+     * @return the raw custom configuration for the given entity
+     */
     public String getConfigString() {
         return configString;
     }
 
+    /**
+     * Sets the config string for the given entity.
+     *
+     * @param configString the configuration as string
+     */
     public void setConfigString(String configString) {
         this.configString = configString;
         this.config = null;

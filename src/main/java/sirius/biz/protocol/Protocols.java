@@ -18,7 +18,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.ExceptionHandler;
 import sirius.kernel.health.Exceptions;
-import sirius.kernel.health.Incident;
 import sirius.kernel.health.LogMessage;
 import sirius.kernel.health.LogTap;
 import sirius.kernel.nls.NLS;
@@ -31,29 +30,32 @@ import java.util.stream.Collectors;
 /**
  * Created by aha on 18.02.16.
  */
-@Register(classes = {Protocols.class, LogTap.class, ExceptionHandler.class})
+@Register(classes = {Protocols.class, LogTap.class, ExceptionHandler.class}, framework = Protocols.FRAMEWORK_PROTOCOLS)
 public class Protocols implements LogTap, ExceptionHandler {
+
+    public static final String FRAMEWORK_PROTOCOLS = "protocols";
+    public static final String PERMISSION_VIEW_PROTOCOLS = "permission-view-protocols";
 
     @Part
     private OMA oma;
 
     @Override
-    public void handle(Incident incident) throws Exception {
+    public void handle(sirius.kernel.health.Incident incident) throws Exception {
         try {
-            if (!oma.isReady() || Sirius.isStartedAsTest()) {
+            if (oma == null || !oma.isReady() || Sirius.isStartedAsTest()) {
                 return;
             }
             try {
                 LocalDate yesterday = LocalDate.now().minusDays(1);
-                StoredIncident si = null;
+                Incident si = null;
                 if (incident.getLocation() != null) {
-                    si = oma.select(StoredIncident.class)
-                            .eq(StoredIncident.LOCATION, incident.getLocation())
-                            .where(FieldOperator.on(StoredIncident.LAST_OCCURRENCE).greaterThan(yesterday))
+                    si = oma.select(Incident.class)
+                            .eq(Incident.LOCATION, incident.getLocation())
+                            .where(FieldOperator.on(Incident.LAST_OCCURRENCE).greaterThan(yesterday))
                             .queryFirst();
                 }
                 if (si == null) {
-                    si = new StoredIncident();
+                    si = new Incident();
                     si.setLocation(incident.getLocation());
                     si.setFirstOccurrence(LocalDateTime.now());
                 }
@@ -78,7 +80,11 @@ public class Protocols implements LogTap, ExceptionHandler {
 
     @Override
     public void handleLogMessage(LogMessage message) {
-        if (!oma.isReady() || !message.isReceiverWouldLog() || Sirius.isStartedAsTest()) {
+        if (oma == null
+            || message == null
+            || !oma.isReady()
+            || !message.isReceiverWouldLog()
+            || Sirius.isStartedAsTest()) {
             return;
         }
 

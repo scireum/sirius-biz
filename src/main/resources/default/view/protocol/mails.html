@@ -1,0 +1,76 @@
+@*
+*  Made with all the love in the world
+*  by scireum in Remshalden, Germany
+*
+*  Copyright by scireum GmbH
+*  http://www.scireum.de - info@scireum.de
+*@
+@args sirius.web.controller.Page mails
+@extends(view.wondergem.template.html, title: NLS.get("MailProtocol.list"))
+@section(breadcrumbs) {
+    <li>
+        <a href="/mails">@i18n("MailProtocol.list")</a>
+    </li>
+}
+
+@pageHeader("MailProtocol.list")
+
+<div class="row">
+    <div class="col-md-3">
+        @filterbox(mails, "mails")
+    </div>
+    <div class="col-md-9">
+        @tableSearchHeader(mails, "mails")
+
+        @table(mails) {
+            <thead>
+                <tr>
+                    <th>
+                        <div class="row">
+                            <div class="col-md-3">@i18n("MailProtocol.tod")</div>
+                            <div class="col-md-3">@i18n("MailProtocol.sender")</div>
+                            <div class="col-md-3">@i18n("MailProtocol.receiver")</div>
+                            <div class="col-md-3">
+                                @i18n("MailProtocol.node")<br>
+                                @i18n("MailProtocol.mailExtension")
+                            </div>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @for(oxomi.backend.MailProtocol i : mails.getItems()) {
+                    <tr>
+                        <td>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <span class="badge label-state @if (i.isSuccess()) { label-success } else { label-important }">
+                                        <i class="@if (i.isSuccess()) { fa fa-check } else { fa fa-exclamation }"></i>
+                                    </span>
+                                    <strong>
+                                        <small><a href="@prefix/mail/@i.getId()">@NLS.toUserString(i.getTod())</a></small>
+                                    </strong>
+                                </div>
+                                <div class="col-md-3">@i.getSender()</div>
+                                <div class="col-md-3">@i.getReceiver()</div>
+                                <div class="col-md-3">
+                                    @i.getNode()<br>
+                                    <small>@i.getMailExtension()</small>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 error-code">
+                                    <pre class="plain">
+                                        @i.getSubject()
+                                    </pre>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        }
+
+        @pagination(mails, "mails")
+    </div>
+</div>

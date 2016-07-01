@@ -94,8 +94,8 @@ public class BizController extends BasicController {
         }
     }
 
-    protected <E extends BizEntity> E find(Class<E> type, String id) {
-        if (BizEntity.NEW.equals(id)) {
+    protected <E extends Entity> E find(Class<E> type, String id) {
+        if (BizEntity.NEW.equals(id) && BizEntity.class.isAssignableFrom(type)) {
             try {
                 return type.newInstance();
             } catch (Throwable e) {
@@ -113,14 +113,14 @@ public class BizController extends BasicController {
         return result.get();
     }
 
-    protected <E extends BizEntity> Optional<E> tryFind(Class<E> type, String id) {
+    protected <E extends Entity> Optional<E> tryFind(Class<E> type, String id) {
         if (BizEntity.NEW.equals(id)) {
             return Optional.empty();
         }
         return oma.find(type, id);
     }
 
-    protected <E extends BizEntity> E findForTenant(Class<E> type, String id) {
+    protected <E extends Entity> E findForTenant(Class<E> type, String id) {
         E result = find(type, id);
         if (!result.isNew() && result instanceof TenantAware) {
             assertTenant((TenantAware) result);
@@ -128,7 +128,7 @@ public class BizController extends BasicController {
         return result;
     }
 
-    protected <E extends BizEntity> Optional<E> tryFindForTenant(Class<E> type, String id) {
+    protected <E extends Entity> Optional<E> tryFindForTenant(Class<E> type, String id) {
         return tryFind(type, id).map(e -> {
             if (e instanceof TenantAware) {
                 assertTenant((TenantAware) e);

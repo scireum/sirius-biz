@@ -9,128 +9,202 @@
 package sirius.biz.model;
 
 import sirius.biz.web.Autoloaded;
+import sirius.db.mixing.Column;
+import sirius.db.mixing.Composite;
+import sirius.db.mixing.annotations.BeforeSave;
+import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.annotations.Transient;
+import sirius.db.mixing.annotations.Trim;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
-import sirius.mixing.Column;
-import sirius.mixing.Composite;
-import sirius.mixing.annotations.BeforeSave;
-import sirius.mixing.annotations.Length;
-import sirius.mixing.annotations.NullAllowed;
+import sirius.kernel.nls.NLS;
 import sirius.web.mails.Mails;
 
+import java.util.regex.Pattern;
+
 /**
- * Created by gerhardhaufler on 04.03.16.
+ * Provides various contact information for a person or company which can be embedded into other entities or mixins.
  */
-public class ContactData extends Composite
-{
+public class ContactData extends Composite {
+
+    /**
+     * Validates a phone numer.
+     */
+    public static final Pattern VALID_PHONE_NUMBER =
+            Pattern.compile("\\+?\\d+( \\d+)*( */( *\\d+)+)?( *\\-( *\\d+)+)?");
+
+    @Transient
+    private boolean validatePhoneNumbers;
+
+    /**
+     * Creates a new instance.
+     *
+     * @param validatePhoneNumbers determines if phone numbers should be validated or not
+     */
+    public ContactData(boolean validatePhoneNumbers) {
+        this.validatePhoneNumbers = validatePhoneNumbers;
+    }
+
+    /**
+     * Contains an email address.
+     * <p>
+     * If the field is filled, it has to be a valid email address, otherwise an exception will be thrown.
+     */
+    public static final Column EMAIL = Column.named("email");
+    @Trim
     @NullAllowed
     @Autoloaded
     @Length(length = 150)
     private String email;
-    public static final Column EMAIL = Column.named("email");
 
-
+    /**
+     * Contains a phone number.
+     * <p>
+     * If the field is filled and <tt>validatePhoneNumbers</tt> is <tt>true</tt>, an exception is thrown
+     * if the phone number has an illegal format.
+     */
+    public static final Column PHONE = Column.named("phone");
+    @Trim
     @NullAllowed
     @Autoloaded
     @Length(length = 150)
     private String phone;
-    public static final Column PHONE = Column.named("phone");
 
-
+    /**
+     * Contains a fax number.
+     * <p>
+     * If the field is filled and <tt>validatePhoneNumbers</tt> is <tt>true</tt>, an exception is thrown
+     * if the fax number has an illegal format.
+     */
+    public static final Column FAX = Column.named("fax");
+    @Trim
     @NullAllowed
     @Autoloaded
     @Length(length = 150)
     private String fax;
-    public static final Column FAX = Column.named("fax");
 
-
+    /**
+     * Contains a mobile number.
+     * <p>
+     * If the field is filled and <tt>validatePhoneNumbers</tt> is <tt>true</tt>, an exception is thrown
+     * if the mobile phone number has an illegal format.
+     */
+    public static final Column MOBILE = Column.named("mobile");
+    @Trim
     @NullAllowed
     @Autoloaded
     @Length(length = 150)
     private String mobile;
-    public static final Column MOBILE = Column.named("mobile");
 
     @Part
     private static Mails mails;
 
     @BeforeSave
     protected void onSave() throws Exception {
-        // check the eMail-Adress
-        if(Strings.isFilled(this.getEmail())) {
-            this.setEmail(this.getEmail().trim());
-            if (!(mails.isValidMailAddress(this.getEmail(), null))) {
+        if (Strings.isFilled(email)) {
+            mails.failForInvalidEmail(email, null);
+        }
+        if (validatePhoneNumbers) {
+            if (Strings.isFilled(phone) && !VALID_PHONE_NUMBER.matcher(phone).matches()) {
                 throw Exceptions.createHandled()
-                                .withNLSKey("Model.invalidEmail").set("value", this.getEmail()).handle();
+                                .withNLSKey("ContactData.invalidPhone")
+                                .set("field", NLS.get("Model.phone"))
+                                .set("value", phone)
+                                .handle();
+            }
+            if (Strings.isFilled(fax) && !VALID_PHONE_NUMBER.matcher(fax).matches()) {
+                throw Exceptions.createHandled()
+                                .withNLSKey("ContactData.invalidPhone")
+                                .set("field", NLS.get("Model.fax"))
+                                .set("value", fax)
+                                .handle();
+            }
+            if (Strings.isFilled(mobile) && !VALID_PHONE_NUMBER.matcher(mobile).matches()) {
+                throw Exceptions.createHandled()
+                                .withNLSKey("ContactData.invalidPhone")
+                                .set("field", NLS.get("Model.mobile"))
+                                .set("value", mobile)
+                                .handle();
             }
         }
-        // normalize phone, fax and mobile Nr
-        this.setPhone(normalizePhoneNumber(this.getPhone()));
-        this.setFax(normalizePhoneNumber(this.getFax()));
-        this.setMobile(normalizePhoneNumber(this.getMobile()));
     }
 
-    private String normalizePhoneNumber(String number) {
-        if(Strings.isFilled(number)) {
-
-            number = number.replace(" ", "");
-            // (0) am Anfang durch 0 ersetzen
-            if(number.startsWith("(0)")) {
-                number = "0" + number.substring(3);
-            }
-            // (0 nach +49 o.ä. weglöschen
-            number = number.replace("(0", "");
-            // Aus +49 0049 machen
-            number = number.replace("+", "00");
-            // Alles außer Ziffern kommt raus.
-            number = number.replaceAll("[^\\d]", "");
-            // Ohne Ländervorwahl ist es Deutschland
-            if(number.startsWith("0") && !number.startsWith("00")) {
-                number = "0049" + number.substring(1);
-            }
-
-            // set "000" to "00"
-
-            for(int i=0; i<number.length()-1; i++)   {
-                if(!(number.substring(i, i+1).equals("0"))) {
-                    number = "00" + number.substring(i);
-                    break;
-                }
-            }
-
-        }
-        return number;
-    }
-
+    /**
+     * Returns the email address.
+     *
+     * @return the email address
+     */
     public String getEmail() {
         return email;
     }
 
+    /**
+     * Sets the email address.
+     *
+     * @param email the email address
+     */
     public void setEmail(String email) {
         this.email = email;
     }
 
+    /**
+     * Returns the phone number.
+     *
+     * @return the phone numner
+     */
     public String getPhone() {
         return phone;
     }
 
+    /**
+     * Sets the phone number.
+     *
+     * @param phone the phone number
+     */
     public void setPhone(String phone) {
         this.phone = phone;
     }
 
+    /**
+     * Returns the fax number.
+     *
+     * @return the fax number
+     */
     public String getFax() {
         return fax;
     }
 
+    /**
+     * Sets the fax number.
+     *
+     * @param fax the fax number
+     */
     public void setFax(String fax) {
         this.fax = fax;
     }
 
+    /**
+     * Returns the mobile number.
+     *
+     * @return the mobile number
+     */
     public String getMobile() {
         return mobile;
     }
 
+    /**
+     * Sets the mobile number.
+     *
+     * @param mobile the mobile number
+     */
     public void setMobile(String mobile) {
         this.mobile = mobile;
+    }
+
+    @Override
+    public String toString() {
+        return email + " / " + phone + " / " + fax + " / " + mobile;
     }
 }

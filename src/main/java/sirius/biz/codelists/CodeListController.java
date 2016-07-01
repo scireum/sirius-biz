@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists;
 
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.biz.web.PageHelper;
 import sirius.kernel.di.std.Framework;
@@ -23,29 +24,40 @@ import sirius.web.security.UserContext;
 
 import java.util.Optional;
 
-/**
- * Created by aha on 11.05.15.
- */
+
+
 @Framework("code-lists")
 @Register(classes = Controller.class)
 public class CodeListController extends BizController {
 
-    private static final String MANAGE_CODELISTS = "permission-manage-code-lists";
+    private static final String PERMISSION_MANAGE_CODELISTS = "permission-manage-code-lists";
 
+    /**
+     * Provides a list of all code lists.
+     *
+     * @param ctx the current request
+     */
     @DefaultRoute
     @LoginRequired
-    @Permission(MANAGE_CODELISTS)
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
+    @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-lists")
     public void codeLists(WebContext ctx) {
         PageHelper<CodeList> ph =
-                PageHelper.withQuery(oma.select(CodeList.class).orderAsc(CodeList.CODE)).forCurrentTenant();
+                PageHelper.withQuery(oma.select(CodeList.class).orderAsc(CodeList.CODE));
         ph.withContext(ctx);
         ph.withSearchFields(CodeList.CODE, CodeList.NAME, CodeList.DESCRIPTION);
         ctx.respondWith().template("view/codelists/code-lists.html", ph.asPage());
     }
 
+    /**
+     * Provides an editor for a code list.
+     *
+     * @param ctx the current request
+     */
     @LoginRequired
-    @Permission(MANAGE_CODELISTS)
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
+    @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1")
     public void codeList(WebContext ctx, String codeListId) {
         codeListHandler(ctx, codeListId, false);
@@ -56,9 +68,6 @@ public class CodeListController extends BizController {
         if (ctx.isPOST()) {
             try {
                 boolean wasNew = cl.isNew();
-                if (cl.isNew()) {
-                    cl.getTenant().setValue(tenants.getRequiredTenant());
-                }
                 load(ctx, cl);
                 oma.update(cl);
                 showSavedMessage();
@@ -77,8 +86,14 @@ public class CodeListController extends BizController {
         }
     }
 
+    /**
+     * Provides an editor for a code list.
+     *
+     * @param ctx the current request
+     */
     @LoginRequired
-    @Permission(MANAGE_CODELISTS)
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
+    @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/details")
     public void codeListDetails(WebContext ctx, String codeListId) {
         codeListHandler(ctx, codeListId, true);
@@ -96,8 +111,13 @@ public class CodeListController extends BizController {
         ctx.respondWith().template("view/codelists/code-list-entries.html", cl, ph.asPage());
     }
 
+    /**
+     * Provides an editor for a code list entry.
+     *
+     * @param ctx the current request
+     */
     @LoginRequired
-    @Permission(MANAGE_CODELISTS)
+    @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/entry")
     public void codeListEntry(WebContext ctx, String codeListId) {
         CodeList cl = findForTenant(CodeList.class, codeListId);
@@ -127,8 +147,13 @@ public class CodeListController extends BizController {
         renderCodeList(ctx, cl);
     }
 
+    /**
+     * Deletes a code list.
+     *
+     * @param ctx the current request
+     */
     @LoginRequired
-    @Permission(MANAGE_CODELISTS)
+    @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/delete")
     public void deleteCodeList(WebContext ctx, String codeListId) {
         Optional<CodeList> cl = tryFindForTenant(CodeList.class, codeListId);
@@ -139,8 +164,13 @@ public class CodeListController extends BizController {
         codeLists(ctx);
     }
 
+    /**
+     * Deletes a code list entry.
+     *
+     * @param ctx the current request
+     */
     @LoginRequired
-    @Permission(MANAGE_CODELISTS)
+    @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/delete-entry/:2")
     public void deleteCodeListEntry(WebContext ctx, String codeListId, String entryId) {
         CodeList cl = findForTenant(CodeList.class, codeListId);

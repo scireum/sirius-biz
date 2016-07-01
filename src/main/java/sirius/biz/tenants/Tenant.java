@@ -44,7 +44,7 @@ public class Tenant extends BizEntity {
     private String accountNumber;
     public static final Column ACCOUNT_NUMBER = Column.named("accountNumber");
 
-    private final AddressData address = new AddressData();
+    private final AddressData address = new AddressData(AddressData.Requirements.NONE, null);
     public static final Column ADDRESS = Column.named("address");
 
     private final PermissionData permissions = new PermissionData(this);

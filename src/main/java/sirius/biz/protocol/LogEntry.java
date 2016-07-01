@@ -8,39 +8,42 @@
 
 package sirius.biz.protocol;
 
+import sirius.db.mixing.Column;
 import sirius.db.mixing.Entity;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
+import sirius.kernel.di.std.Framework;
 
 import java.time.LocalDateTime;
 
 /**
  * Created by aha on 18.02.16.
  */
+@Framework(Protocols.FRAMEWORK_PROTOCOLS)
 public class LogEntry extends Entity {
 
     @Lob
     private String message;
-    public static final String MESSAGE = "message";
+    public static final Column MESSAGE = Column.named("message");
 
     @Length(length = 255)
     private String category;
-    public static final String CATEGORY = "category";
+    public static final Column CATEGORY = Column.named("category");
 
     @Length(length = 255)
     private String level;
-    public static final String LEVEL = "level";
+    public static final Column LEVEL = Column.named("level");
 
     @Length(length = 255)
     private String node;
-    public static final String NODE = "node";
+    public static final Column NODE = Column.named("node");
 
     private LocalDateTime tod = LocalDateTime.now();
-    public static final String TOD = "tod";
+    public static final Column TOD = Column.named("tod");
 
     @Length(length = 255)
     private String user;
-    public static final String USER = "user";
+    public static final Column USER = Column.named("user");
 
     public String getLabelClass() {
         if ("ERROR".equals(getLevel())) {

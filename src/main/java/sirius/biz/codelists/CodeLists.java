@@ -8,8 +8,8 @@
 
 package sirius.biz.codelists;
 
-import sirius.biz.tenants.Tenant;
-import sirius.biz.tenants.Tenants;
+import sirius.db.mixing.Entity;
+import sirius.db.mixing.OMA;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Framework;
@@ -17,39 +17,56 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.extensions.Extension;
 import sirius.kernel.extensions.Extensions;
-import sirius.db.mixing.Entity;
-import sirius.db.mixing.OMA;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
 /**
- * Created by aha on 11.05.15.
+ * Provides a framework to map string values (<tt>codes</tt>) to values defined by the user.
+ * <p>
+ * A code list is referenced by its unique name (code) and can be used to map codes to user defined texts. Additionally
+ * a second values (<tt>additionalValue</tt>) can be stored per code.
+ * <p>
+ * The required data is stored via {@link CodeList} and {@link CodeListEntry}. The {@link CodeListController} is used
+ * to provide an administration GUI for the user.
  */
 @Framework("code-lists")
 @Register(classes = CodeLists.class)
 public class CodeLists {
 
+    /**
+     * Returns the value from the given code list associated with the given code.
+     * <p>
+     * If no matching entry exists, the code itself will be returned.
+     *
+     * @param codeList the code list to search in
+     * @param code     the code to lookup
+     * @return the value associated with the code or the code itself if no value exists
+     */
+    @Nullable
     public String getValue(@Nonnull String codeList, @Nullable String code) {
-        return getValue(tenants.getRequiredTenant(), codeList, code);
+        if (Strings.isEmpty(code)) {
+            return null;
+        }
+        return getValues(codeList, code).getFirst();
     }
 
     @Part
     private OMA oma;
 
-    @Part
-    private Tenants tenants;
-
-    public String getValue(@Nonnull Tenant tenant, @Nonnull String codeList, @Nullable String code) {
-        if (Strings.isEmpty(code)) {
-            return null;
-        }
-        return getValues(tenant, codeList, code).getFirst();
-    }
-
-    public Tuple<String, String> getValues(@Nonnull Tenant tenant, @Nonnull String codeList, @Nonnull String code) {
-        CodeList cl = findOrCreateCodelist(tenant, codeList);
+    /**
+     * Returns the value and the additionalValue associated with the given code.
+     * <p>
+     * If no matching entry exists, the code itself will be returned as value and the additional value (the second of
+     * the tuple) will be <tt>null</tt>.
+     *
+     * @param codeList the code list to search in
+     * @param code     the code to lookup
+     * @return the value and the additional value associated with the given code, wrapped as tuple
+     */
+    public Tuple<String, String> getValues(@Nonnull String codeList, @Nonnull String code) {
+        CodeList cl = findOrCreateCodelist(codeList);
         CodeListEntry cle = oma.select(CodeListEntry.class)
                                .eq(CodeListEntry.CODE_LIST, cl)
                                .eq(CodeListEntry.CODE, code)
@@ -68,7 +85,7 @@ public class CodeLists {
         return Tuple.create(cle.getValue(), cle.getAdditionalValue());
     }
 
-    private CodeList findOrCreateCodelist(@Nonnull Tenant tenant, @Nonnull String codeList) {
+    private CodeList findOrCreateCodelist(@Nonnull String codeList) {
         if (Strings.isEmpty(codeList)) {
             throw new IllegalArgumentException("codeList must not be empty");
         }
@@ -83,24 +100,25 @@ public class CodeLists {
                 cl.setDescription(ext.get("description").asString());
                 cl.setAutofill(ext.get("autofill").asBoolean());
             }
-            cl.getTenant().setValue(tenant);
+
             oma.update(cl);
         }
 
         return cl;
     }
 
+    /**
+     * Returns all entries of a code list.
+     *
+     * @param codeList the code list to fetch entries from
+     * @return a list of all avilable entries in the given code list, sorted by priority
+     */
     public List<CodeListEntry> getEntries(@Nonnull String codeList) {
-        return getEntries(tenants.getRequiredTenant(), codeList);
-    }
-
-    public List<CodeListEntry> getEntries(@Nonnull Tenant tenant, @Nonnull String codeList) {
-        CodeList cl = findOrCreateCodelist(tenant, codeList);
+        CodeList cl = findOrCreateCodelist(codeList);
         return oma.select(CodeListEntry.class)
                   .eq(CodeListEntry.CODE_LIST, cl)
                   .orderAsc(CodeListEntry.PRIORITY)
                   .orderAsc(CodeListEntry.CODE)
                   .queryList();
     }
-
 }
