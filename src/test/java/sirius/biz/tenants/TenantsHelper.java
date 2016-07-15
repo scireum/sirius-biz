@@ -13,15 +13,16 @@ import sirius.kernel.di.std.Part;
 import sirius.db.mixing.OMA;
 import sirius.web.security.UserContext;
 
-/**
- * Created by aha on 30.11.15.
- */
 public class TenantsHelper {
+
     @Part
     private static OMA oma;
     
     @Part
     private static Tenants tenants;
+
+    private TenantsHelper() {
+    }
 
     public static void installTestTenant() {
         if (tenants.getCurrentTenant().isPresent()) {

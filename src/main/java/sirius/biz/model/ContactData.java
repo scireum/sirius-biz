@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 public class ContactData extends Composite {
 
     /**
-     * Validates a phone numer.
+     * Validates a phone numner.
      */
     public static final Pattern VALID_PHONE_NUMBER =
             Pattern.compile("\\+?\\d+( \\d+)*( */( *\\d+)+)?( *\\-( *\\d+)+)?");
@@ -56,7 +56,7 @@ public class ContactData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
-    @Length(length = 150)
+    @Length(150)
     private String email;
 
     /**
@@ -69,7 +69,7 @@ public class ContactData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
-    @Length(length = 150)
+    @Length(150)
     private String phone;
 
     /**
@@ -82,7 +82,7 @@ public class ContactData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
-    @Length(length = 150)
+    @Length(150)
     private String fax;
 
     /**
@@ -95,7 +95,7 @@ public class ContactData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
-    @Length(length = 150)
+    @Length(150)
     private String mobile;
 
     @Part
@@ -106,6 +106,7 @@ public class ContactData extends Composite {
         if (Strings.isFilled(email)) {
             mails.failForInvalidEmail(email, null);
         }
+
         if (validatePhoneNumbers) {
             if (Strings.isFilled(phone) && !VALID_PHONE_NUMBER.matcher(phone).matches()) {
                 throw Exceptions.createHandled()
@@ -131,74 +132,34 @@ public class ContactData extends Composite {
         }
     }
 
-    /**
-     * Returns the email address.
-     *
-     * @return the email address
-     */
     public String getEmail() {
         return email;
     }
 
-    /**
-     * Sets the email address.
-     *
-     * @param email the email address
-     */
     public void setEmail(String email) {
         this.email = email;
     }
 
-    /**
-     * Returns the phone number.
-     *
-     * @return the phone numner
-     */
     public String getPhone() {
         return phone;
     }
 
-    /**
-     * Sets the phone number.
-     *
-     * @param phone the phone number
-     */
     public void setPhone(String phone) {
         this.phone = phone;
     }
 
-    /**
-     * Returns the fax number.
-     *
-     * @return the fax number
-     */
     public String getFax() {
         return fax;
     }
 
-    /**
-     * Sets the fax number.
-     *
-     * @param fax the fax number
-     */
     public void setFax(String fax) {
         this.fax = fax;
     }
 
-    /**
-     * Returns the mobile number.
-     *
-     * @return the mobile number
-     */
     public String getMobile() {
         return mobile;
     }
 
-    /**
-     * Sets the mobile number.
-     *
-     * @param mobile the mobile number
-     */
     public void setMobile(String mobile) {
         this.mobile = mobile;
     }

@@ -12,52 +12,91 @@ import sirius.db.mixing.Column;
 import sirius.db.mixing.Entity;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
+import sirius.kernel.async.CallContext;
 import sirius.kernel.di.std.Framework;
 
 import java.time.LocalDateTime;
 
 /**
- * Created by aha on 18.02.16.
+ * Stores a recorded error in the database.
+ * <p>
+ * Incidents at the same location are grouped together for a certain timespan so that heavily re-occuring problems
+ * don't overload the system.
  */
 @Framework(Protocols.FRAMEWORK_PROTOCOLS)
 public class Incident extends Entity {
 
+    /**
+     * Contains the error message.
+     */
+    public static final Column MESSAGE = Column.named("message");
     @Lob
     private String message;
-    public static final Column MESSAGE = Column.named("message");
 
-    @Length(length = 255)
-    private String category;
+    /**
+     * Contains the logger category which recorded the error.
+     */
     public static final Column CATEGORY = Column.named("category");
+    @Length(255)
+    private String category;
 
-    @Length(length = 255)
-    private String node;
+    /**
+     * Contains the name of the server/node on which the error occured.
+     */
     public static final Column NODE = Column.named("node");
+    @Length(255)
+    private String node;
 
-    @Length(length = 255)
-    private String location;
+    /**
+     * Contains the location where the error occured.
+     * <p>
+     * This is only used to de-duplicate similar incidents. The real location can be found the the recorded {@link
+     * #stack}.
+     */
     public static final Column LOCATION = Column.named("location");
+    @Length(255)
+    private String location;
 
+    /**
+     * Contains the recorded stacktrace of the error or exception.
+     */
+    public static final Column STACK = Column.named("stack");
     @Lob
     private String stack;
-    public static final Column STACK = Column.named("stack");
 
-    private LocalDateTime firstOccurrence = LocalDateTime.now();
+    /**
+     * Contains the timestamp of the first occurrence.
+     */
     public static final Column FIRST_OCCURRENCE = Column.named("firstOccurrence");
+    private LocalDateTime firstOccurrence = LocalDateTime.now();
 
-    private LocalDateTime lastOccurrence = LocalDateTime.now();
+    /**
+     * Contains the timestamp of the last occurrence.
+     */
     public static final Column LAST_OCCURRENCE = Column.named("lastOccurrence");
+    private LocalDateTime lastOccurrence = LocalDateTime.now();
 
-    private int numberOfOccurrences = 0;
+    /**
+     * Contains the number of occurrences within the given time span.
+     */
     public static final Column NUMBER_OF_OCCURRENCES = Column.named("numberOfOccurrences");
+    private int numberOfOccurrences = 0;
 
+    /**
+     * Contains the recorded mapped diagnostic context.
+     *
+     * @see CallContext#getMDC()
+     */
+    public static final Column MDC = Column.named("mdc");
     @Lob
     private String mdc;
-    public static final Column MDC = Column.named("mdc");
 
-    @Length(length = 255)
-    private String user;
+    /**
+     * Contains the name of the user which was present when the error occured.
+     */
     public static final Column USER = Column.named("user");
+    @Length(255)
+    private String user;
 
     public String getMessage() {
         return message;

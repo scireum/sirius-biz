@@ -22,7 +22,7 @@ import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
 
 /**
- * Created by aha on 10.03.16.
+ * Provides a GUI for viewing the system journal recorded by {@link JournalData} / {@link JournalEntry}.
  */
 @Register(classes = Controller.class, framework = Protocols.FRAMEWORK_PROTOCOLS)
 public class ProtocolController extends BasicController {
@@ -30,6 +30,11 @@ public class ProtocolController extends BasicController {
     @Part
     private OMA oma;
 
+    /**
+     * Displays all changes on entities recorded by the protocol.
+     *
+     * @param ctx the current request
+     */
     @Permission(Protocols.PERMISSION_VIEW_PROTOCOLS)
     @DefaultRoute
     @Routed("/system/protocol")

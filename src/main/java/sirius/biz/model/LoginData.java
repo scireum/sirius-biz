@@ -40,7 +40,7 @@ public class LoginData extends Composite {
     @Trim
     @Autoloaded
     @Unique
-    @Length(length = 150)
+    @Length(150)
     private String username;
 
     /**
@@ -48,7 +48,7 @@ public class LoginData extends Composite {
      */
     public static final Column PASSWORD_HASH = Column.named("passwordHash");
     @Trim
-    @Length(length = 50)
+    @Length(50)
     @NullAllowed
     private String passwordHash;
 
@@ -59,7 +59,7 @@ public class LoginData extends Composite {
      */
     public static final Column UCASE_PASSWORD_HASH = Column.named("ucasePasswordHash");
     @Trim
-    @Length(length = 50)
+    @Length(50)
     @NullAllowed
     private String ucasePasswordHash;
 
@@ -69,7 +69,7 @@ public class LoginData extends Composite {
      */
     public static final Column SALT = Column.named("salt");
     @Trim
-    @Length(length = 50)
+    @Length(50)
     private String salt;
 
     /**
@@ -78,7 +78,7 @@ public class LoginData extends Composite {
      */
     public static final Column GENERATED_PASSWORD = Column.named("generatedPassword");
     @Trim
-    @Length(length = 50)
+    @Length(50)
     @NullAllowed
     private String generatedPassword;
 
@@ -87,7 +87,7 @@ public class LoginData extends Composite {
      */
     public static final Column API_TOKEN = Column.named("apiToken");
     @Trim
-    @Length(length = 50)
+    @Length(50)
     @NullAllowed
     private String apiToken;
 
@@ -150,107 +150,6 @@ public class LoginData extends Composite {
     }
 
     /**
-     * Returns the password hash.
-     *
-     * @return the password hash
-     */
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    /**
-     * Returns the password hash of the upper cased password.
-     *
-     * @return the password hash of the upper cased password
-     */
-    public String getUcasePasswordHash() {
-        return ucasePasswordHash;
-    }
-
-    /**
-     * Returns the salt which is used to compute the password hash.
-     *
-     * @return the salt used for hashing
-     */
-    public String getSalt() {
-        return salt;
-    }
-
-    /**
-     * Returns the generated password.
-     *
-     * @return the generated password
-     */
-    public String getGeneratedPassword() {
-        return generatedPassword;
-    }
-
-    /**
-     * Sets the generated password.
-     * <p>
-     * Note that a password is auto-generated if no password is present.
-     *
-     * @param generatedPassword the generated password
-     */
-    public void setGeneratedPassword(String generatedPassword) {
-        this.generatedPassword = generatedPassword;
-    }
-
-    /**
-     * Returns the number of successful login attempts.
-     *
-     * @return the number of logins of the associated user
-     */
-    public int getNumberOfLogins() {
-        return numberOfLogins;
-    }
-
-    /**
-     * Sets the number of logins.
-     *
-     * @param numberOfLogins the number of logins for this user
-     */
-    public void setNumberOfLogins(int numberOfLogins) {
-        this.numberOfLogins = numberOfLogins;
-    }
-
-    /**
-     * Returns the timestamp of the last login.
-     *
-     * @return the last login
-     */
-    public LocalDateTime getLastLogin() {
-        return lastLogin;
-    }
-
-    /**
-     * Sets the timestamp of the last login.
-     *
-     * @param lastLogin the last login of the user
-     */
-    public void setLastLogin(LocalDateTime lastLogin) {
-        this.lastLogin = lastLogin;
-    }
-
-    /**
-     * Determines if the account is locked.
-     *
-     * @return <tt>true</tt> if the user is not allowed to login anymore, <tt>false</tt> otherwise
-     */
-    public boolean isAccountLocked() {
-        return accountLocked;
-    }
-
-    /**
-     * Locks or unlocks the account.
-     *
-     * @param accountLocked <tt>true</tt> if the associated user must not login anymore, <tt>false</tt> otherwise
-     */
-    public void setAccountLocked(boolean accountLocked) {
-        this.accountLocked = accountLocked;
-    }
-
-    /**
      * Returns the currently set password in cleartext.
      * <p>
      * Note that this value is transient and therefore not saved to the database.
@@ -271,38 +170,62 @@ public class LoginData extends Composite {
         this.cleartextPassword = cleartextPassword;
     }
 
-    /**
-     * Returns the username used at login and to identify the user.
-     *
-     * @return the username of the associated account
-     */
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public String getUcasePasswordHash() {
+        return ucasePasswordHash;
+    }
+
+    public String getSalt() {
+        return salt;
+    }
+
+    public String getGeneratedPassword() {
+        return generatedPassword;
+    }
+
+    public void setGeneratedPassword(String generatedPassword) {
+        this.generatedPassword = generatedPassword;
+    }
+
+    public int getNumberOfLogins() {
+        return numberOfLogins;
+    }
+
+    public void setNumberOfLogins(int numberOfLogins) {
+        this.numberOfLogins = numberOfLogins;
+    }
+
+    public LocalDateTime getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
+    public boolean isAccountLocked() {
+        return accountLocked;
+    }
+
+    public void setAccountLocked(boolean accountLocked) {
+        this.accountLocked = accountLocked;
+    }
+
     public String getUsername() {
         return username;
     }
 
-    /**
-     * Sets the username used at login and to identify the user.
-     *
-     * @param username the username of the associated account
-     */
     public void setUsername(String username) {
         this.username = username;
     }
 
-    /**
-     * Returns the API token.
-     *
-     * @return the current API token of the associated account
-     */
     public String getApiToken() {
         return apiToken;
     }
 
-    /**
-     * Sets the API token.
-     *
-     * @param apiToken the API token of the associated account
-     */
     public void setApiToken(String apiToken) {
         this.apiToken = apiToken;
     }

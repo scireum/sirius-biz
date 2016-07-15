@@ -24,8 +24,9 @@ import sirius.web.security.UserContext;
 
 import java.util.Optional;
 
-
-
+/**
+ * Provides an editor GUI for managing code lists.
+ */
 @Framework("code-lists")
 @Register(classes = Controller.class)
 public class CodeListController extends BizController {
@@ -43,8 +44,7 @@ public class CodeListController extends BizController {
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-lists")
     public void codeLists(WebContext ctx) {
-        PageHelper<CodeList> ph =
-                PageHelper.withQuery(oma.select(CodeList.class).orderAsc(CodeList.CODE));
+        PageHelper<CodeList> ph = PageHelper.withQuery(oma.select(CodeList.class).orderAsc(CodeList.CODE));
         ph.withContext(ctx);
         ph.withSearchFields(CodeList.CODE, CodeList.NAME, CodeList.DESCRIPTION);
         ctx.respondWith().template("view/codelists/code-lists.html", ph.asPage());
@@ -114,7 +114,8 @@ public class CodeListController extends BizController {
     /**
      * Provides an editor for a code list entry.
      *
-     * @param ctx the current request
+     * @param ctx        the current request
+     * @param codeListId the code list of the entry
      */
     @LoginRequired
     @Permission(PERMISSION_MANAGE_CODELISTS)
@@ -150,7 +151,8 @@ public class CodeListController extends BizController {
     /**
      * Deletes a code list.
      *
-     * @param ctx the current request
+     * @param ctx        the current request
+     * @param codeListId the code list to delete
      */
     @LoginRequired
     @Permission(PERMISSION_MANAGE_CODELISTS)
@@ -167,7 +169,9 @@ public class CodeListController extends BizController {
     /**
      * Deletes a code list entry.
      *
-     * @param ctx the current request
+     * @param ctx        the current request
+     * @param codeListId the code list of the entry
+     * @param entryId    the entry to delete
      */
     @LoginRequired
     @Permission(PERMISSION_MANAGE_CODELISTS)

@@ -62,6 +62,7 @@ public class AddressData extends Composite {
      * Creates a new instance with the given requirement.
      *
      * @param requirements determines which fields are required in certain constellations
+     * @param fieldLabel   the name of the compund field which represents the address
      */
     public AddressData(Requirements requirements, @Nullable String fieldLabel) {
         this.requirements = requirements;
@@ -75,7 +76,7 @@ public class AddressData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
-    @Length(length = 255)
+    @Length(255)
     private String street;
 
     /**
@@ -85,7 +86,7 @@ public class AddressData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
-    @Length(length = 9)
+    @Length(9)
     private String zip;
 
     /**
@@ -95,7 +96,7 @@ public class AddressData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
-    @Length(length = 255)
+    @Length(255)
     private String city;
 
     /**
@@ -107,40 +108,8 @@ public class AddressData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
-    @Length(length = 3)
+    @Length(3)
     private String country;
-
-    public String getStreet() {
-        return street;
-    }
-
-    public void setStreet(String street) {
-        this.street = street;
-    }
-
-    public String getZip() {
-        return zip;
-    }
-
-    public void setZip(String zip) {
-        this.zip = zip;
-    }
-
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
-    }
 
     @Part
     private static CodeLists cls;
@@ -194,5 +163,37 @@ public class AddressData extends Composite {
                         .set("zip", zip)
                         .set("city", city)
                         .smartFormat();
+    }
+
+    public String getStreet() {
+        return street;
+    }
+
+    public void setStreet(String street) {
+        this.street = street;
+    }
+
+    public String getZip() {
+        return zip;
+    }
+
+    public void setZip(String zip) {
+        this.zip = zip;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
     }
 }

@@ -22,7 +22,7 @@ import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
 
 /**
- * Created by aha on 10.03.16.
+ * Provides a GUI for viewing incidents.
  */
 @Register(classes = Controller.class, framework = Protocols.FRAMEWORK_PROTOCOLS)
 public class IncidentsController extends BizController {
@@ -30,6 +30,11 @@ public class IncidentsController extends BizController {
     @Part
     private OMA oma;
 
+    /**
+     * Lists all recorded errors.
+     *
+     * @param ctx the current request
+     */
     @Permission(Protocols.PERMISSION_VIEW_PROTOCOLS)
     @DefaultRoute
     @Routed("/system/errors")
@@ -53,6 +58,12 @@ public class IncidentsController extends BizController {
         ctx.respondWith().template("view/protocol/errors.html", ph.asPage());
     }
 
+    /**
+     * Shows the details of the given error
+     *
+     * @param id  the ID of the {@link Incident} to show
+     * @param ctx the current request
+     */
     @Permission(Protocols.PERMISSION_VIEW_PROTOCOLS)
     @Routed("/system/error/:1")
     public void error(WebContext ctx, String id) {

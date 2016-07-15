@@ -22,7 +22,7 @@ import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
 
 /**
- * Created by aha on 10.03.16.
+ * Provides a GUI for viewing system logs.
  */
 @Register(classes = Controller.class, framework = Protocols.FRAMEWORK_PROTOCOLS)
 public class LogsController extends BasicController {
@@ -30,6 +30,11 @@ public class LogsController extends BasicController {
     @Part
     private OMA oma;
 
+    /**
+     * Lists all recorded log entries.
+     *
+     * @param ctx the current request
+     */
     @Permission(Protocols.PERMISSION_VIEW_PROTOCOLS)
     @DefaultRoute
     @Routed("/system/logs")

@@ -1,3 +1,11 @@
+/*
+ * Made with all the love in the world
+ * by scireum in Remshalden, Germany
+ *
+ * Copyright by scireum GmbH
+ * http://www.scireum.de - info@scireum.de
+ */
+
 package sirius.biz.i5;
 
 import com.ibm.as400.access.AS400;
@@ -107,12 +115,10 @@ class I5ConnectionPool implements PooledObjectFactory<I5Connection> {
 
     @Override
     public void activateObject(PooledObject<I5Connection> pooledObject) throws Exception {
-
     }
 
     @Override
     public void passivateObject(PooledObject<I5Connection> pooledObject) throws Exception {
-
     }
 
     /**

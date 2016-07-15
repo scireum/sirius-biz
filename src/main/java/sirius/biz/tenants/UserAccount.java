@@ -8,47 +8,64 @@
 
 package sirius.biz.tenants;
 
-import sirius.biz.protocol.JournalData;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
+import sirius.biz.protocol.JournalData;
 import sirius.biz.web.Autoloaded;
+import sirius.db.mixing.Column;
+import sirius.db.mixing.annotations.BeforeDelete;
+import sirius.db.mixing.annotations.BeforeSave;
+import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.Trim;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
-import sirius.db.mixing.Column;
-import sirius.db.mixing.annotations.BeforeDelete;
-import sirius.db.mixing.annotations.BeforeSave;
-import sirius.db.mixing.annotations.Length;
-import sirius.db.mixing.annotations.Trim;
 import sirius.web.mails.Mails;
 
 /**
- * Created by aha on 07.05.15.
+ * Represents a user account which can log into the system.
+ * <p>
+ * Serveral users are grouped together by their company, which is referred to as {@link Tenant}.
  */
 @Framework("tenants")
 public class UserAccount extends TenantAware {
 
+    /**
+     * Contains the email address of the user.
+     */
+    public static final Column EMAIL = Column.named("email");
     @Trim
     @Autoloaded
-    @Length(length = 150)
+    @Length(150)
     private String email;
-    public static final Column EMAIL = Column.named("email");
 
-    private final PersonData person = new PersonData();
+    /**
+     * Contains the personal information of the user.
+     */
     public static final Column PERSON = Column.named("person");
+    private final PersonData person = new PersonData();
 
-    private final LoginData login = new LoginData();
+    /**
+     * Contains the login data used to authenticate the user.
+     */
     public static final Column LOGIN = Column.named("login");
+    private final LoginData login = new LoginData();
 
-    private final PermissionData permissions = new PermissionData(this);
+    /**
+     * Contains the permissions granted to the user and the custom configuration.
+     */
     public static final Column PERMISSIONS = Column.named("permissions");
+    private final PermissionData permissions = new PermissionData(this);
 
-    private final JournalData journal = new JournalData(this);
+    /**
+     * Used to record changes on fields of the user.
+     */
     public static final Column JOURNAL = Column.named("journal");
+    private final JournalData journal = new JournalData(this);
 
     @Part
     private static Mails ms;
@@ -69,10 +86,20 @@ public class UserAccount extends TenantAware {
         TenantUserManager.flushCacheForUserAccount(this);
     }
 
+    /**
+     * Contains the minimal length of a password to be accepted.
+     *
+     * @return the minimal length of a password to be accepted
+     */
     public int getMinPasswordLength() {
         return Sirius.getConfig().getInt("security.passwordMinLength");
     }
 
+    /**
+     * Contains the minimal length of a sane password.
+     *
+     * @return the minimal length for a password to be considered sane / good / not totally unsafe
+     */
     public int getSanePasswordLength() {
         return Sirius.getConfig().getInt("security.passwordSaneLength");
     }

@@ -25,7 +25,6 @@ import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
-import sirius.web.http.session.ServerSession;
 import sirius.web.mails.Mails;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
@@ -37,14 +36,22 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Created by aha on 07.05.15.
+ * Provides a GUI for managing user accounts.
  */
 @Framework("tenants")
 @Register(classes = Controller.class)
 public class UserAccountController extends BizController {
 
+    /**
+     * The permission required to add, modify or delete accounts
+     */
     public static final String PERMISSION_MANAGE_USER_ACCOUNTS = "permission-manage-user-accounts";
 
+    /**
+     * Shows a list of all available users of the current tenant.
+     *
+     * @param ctx the current request
+     */
     @Routed("/user-accounts")
     @DefaultRoute
     @LoginRequired
@@ -63,6 +70,12 @@ public class UserAccountController extends BizController {
         ctx.respondWith().template("view/tenants/user-accounts.html", ph.asPage());
     }
 
+    /**
+     * Shows an editor for the given account.
+     *
+     * @param ctx       the current request
+     * @param accountId the {@link UserAccount} to edit
+     */
     @Routed("/user-account/:1")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
@@ -99,19 +112,32 @@ public class UserAccountController extends BizController {
         ctx.respondWith().template("view/tenants/user-account-details.html", userAccount, this);
     }
 
+    /**
+     * Shows an editor for the custom configuration of the given user.
+     *
+     * @param ctx       the current request
+     * @param accountId the id of the account which config will be edited
+     */
     @Routed("/user-account/:1/config")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
-    public void tenantConfig(WebContext ctx, String accountId) {
+    public void accountConfig(WebContext ctx, String accountId) {
         UserAccount userAccount = findForTenant(UserAccount.class, accountId);
         assertNotNew(userAccount);
         ctx.respondWith().template("view/tenants/user-account-config.html", userAccount);
     }
 
+    /**
+     * Provides a JSON API to change the settings of an account, including its configuration.
+     *
+     * @param ctx       the current request
+     * @param out       the JSON response being generated
+     * @param accountId the id of the account to update
+     */
     @Routed(value = "/user-account/:1/update", jsonCall = true)
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
-    public void tenantUpdate(WebContext ctx, JSONStructuredOutput out, String accountId) {
+    public void accountUpdate(WebContext ctx, JSONStructuredOutput out, String accountId) {
         UserAccount userAccount = findForTenant(UserAccount.class, accountId);
         assertNotNew(userAccount);
         load(ctx, userAccount);
@@ -124,18 +150,41 @@ public class UserAccountController extends BizController {
     @ConfigValue("security.roles")
     private List<String> roles;
 
+    /**
+     * Lists all roles which can be granted to a user.
+     *
+     * @return all roles which can be granted to a user
+     */
     public List<String> getRoles() {
         return Collections.unmodifiableList(roles);
     }
 
+    /**
+     * Returns the translated name of a role.
+     *
+     * @param role the role to translate
+     * @return a translated name for the given role
+     */
     public String getRoleName(String role) {
         return NLS.get("Role." + role);
     }
 
+    /**
+     * Returns a description of the role.
+     *
+     * @param role the role to fetch the description for
+     * @return the description of the given role
+     */
     public String getRoleDescription(String role) {
         return NLS.get("Role." + role + ".description");
     }
 
+    /**
+     * Shows an editor to change the password of an account.
+     *
+     * @param ctx the current request
+     * @param id  the account to change the password for
+     */
     @Routed("/user-account/:1/password")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
@@ -173,6 +222,12 @@ public class UserAccountController extends BizController {
     @Part
     private Mails mails;
 
+    /**
+     * Generates a new password for the given account and send a mail to the user.
+     *
+     * @param ctx the current request
+     * @param id  the account for which a password is to be created
+     */
     @Routed("/user-account/:1/generate-password")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
@@ -198,6 +253,12 @@ public class UserAccountController extends BizController {
         accounts(ctx);
     }
 
+    /**
+     * Provides a JSON API which re-sends the password to the account with the given email address.
+     *
+     * @param ctx the current request
+     * @param out the JSON response being generated
+     */
     @Routed(value = "/forgotPassword", jsonCall = true)
     public void forgotPassword(final WebContext ctx, JSONStructuredOutput out) {
         List<UserAccount> accounts =
@@ -234,8 +295,15 @@ public class UserAccountController extends BizController {
         }
     }
 
+    /**
+     * Deletes the given account.
+     *
+     * @param ctx the current request
+     * @param id  the account to delete
+     */
     @LoginRequired
     @Routed("/user-account/:1/delete")
+    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void deleteAdmin(final WebContext ctx, String id) {
         Optional<UserAccount> account = tryFindForTenant(UserAccount.class, id);
         if (account.isPresent()) {
@@ -245,10 +313,14 @@ public class UserAccountController extends BizController {
         accounts(ctx);
     }
 
+    /**
+     * Executes a logout for the current scope.
+     *
+     * @param ctx the current request
+     */
     @Routed("/logout")
     public void logout(WebContext ctx) {
-        ctx.clearSession();
-        ctx.getServerSession(false).ifPresent(ServerSession::invalidate);
+        UserContext.get().getUserManager().detachFromSession(getUser(), ctx);
         ctx.respondWith().redirectTemporarily("/");
     }
 }

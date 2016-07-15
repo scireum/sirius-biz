@@ -31,7 +31,7 @@ public class TraceData extends Composite {
     public static final Column CREATED_BY = Column.named("createdBy");
     @NoJournal
     @NullAllowed
-    @Length(length = 50)
+    @Length(50)
     private String createdBy;
 
     /**
@@ -48,7 +48,7 @@ public class TraceData extends Composite {
     public static final Column CREATED_IN = Column.named("createdIn");
     @NoJournal
     @NullAllowed
-    @Length(length = 150)
+    @Length(150)
     private String createdIn;
 
     /**
@@ -57,7 +57,7 @@ public class TraceData extends Composite {
     public static final Column CHANGED_BY = Column.named("changedBy");
     @NoJournal
     @NullAllowed
-    @Length(length = 50)
+    @Length(50)
     private String changedBy;
 
     /**
@@ -74,7 +74,7 @@ public class TraceData extends Composite {
     public static final Column CHANGED_IN = Column.named("changedIn");
     @NoJournal
     @NullAllowed
-    @Length(length = 150)
+    @Length(150)
     private String changedIn;
 
     @Transient
@@ -92,60 +92,6 @@ public class TraceData extends Composite {
             changedAt = LocalDateTime.now();
             changedIn = TaskContext.get().getSystemString();
         }
-    }
-
-    /**
-     * Returns the username which created the associated entity.
-     *
-     * @return the username of the user which created the associated entity
-     */
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    /**
-     * Returns the timestamp when the entity was created.
-     *
-     * @return the timestamp when the entity was created
-     */
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    /**
-     * Returns the system string, where the entity was created.
-     *
-     * @return the value of {@link TaskContext#getSystemString()} when the entity was created
-     */
-    public String getCreatedIn() {
-        return createdIn;
-    }
-
-    /**
-     * Returns the username which last changed the associated entity.
-     *
-     * @return the username of the user which last changed the associated entity
-     */
-    public String getChangedBy() {
-        return changedBy;
-    }
-
-    /**
-     * Returns the timestamp when the entity was last changed.
-     *
-     * @return the timestamp when the entity was last changed
-     */
-    public LocalDateTime getChangedAt() {
-        return changedAt;
-    }
-
-    /**
-     * Returns the system string, where the entity was last changed.
-     *
-     * @return the value of {@link TaskContext#getSystemString()} when the entity was last changed
-     */
-    public String getChangedIn() {
-        return changedIn;
     }
 
     /**
@@ -168,5 +114,29 @@ public class TraceData extends Composite {
      */
     public void setSilent(boolean silent) {
         this.silent = silent;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public String getCreatedIn() {
+        return createdIn;
+    }
+
+    public String getChangedBy() {
+        return changedBy;
+    }
+
+    public LocalDateTime getChangedAt() {
+        return changedAt;
+    }
+
+    public String getChangedIn() {
+        return changedIn;
     }
 }

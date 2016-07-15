@@ -27,7 +27,7 @@ public class PersonData extends Composite {
      * Contains a title.
      */
     public static final Column TITLE = Column.named("title");
-    @Length(length = 50)
+    @Length(50)
     @Trim
     @Autoloaded
     @NullAllowed
@@ -39,7 +39,7 @@ public class PersonData extends Composite {
      * It is expected to be one of the codes in the code list "salutations".
      */
     public static final Column SALUTATION = Column.named("salutation");
-    @Length(length = 20)
+    @Length(20)
     @Autoloaded
     @NullAllowed
     @Trim
@@ -49,7 +49,7 @@ public class PersonData extends Composite {
      * Contains the first name of the person.
      */
     public static final Column FIRSTNAME = Column.named("firstname");
-    @Length(length = 150)
+    @Length(150)
     @Trim
     @Autoloaded
     @NullAllowed
@@ -59,7 +59,7 @@ public class PersonData extends Composite {
      * Contains the last name of the person.
      */
     public static final Column LASTNAME = Column.named("lastname");
-    @Length(length = 150)
+    @Length(150)
     @Trim
     @Autoloaded
     @NullAllowed
@@ -107,74 +107,34 @@ public class PersonData extends Composite {
         return codeLists.getValue("salutations", salutation);
     }
 
-    /**
-     * Returns the title.
-     *
-     * @return the title
-     */
     public String getTitle() {
         return title;
     }
 
-    /**
-     * Sets the title.
-     *
-     * @param title the title to set
-     */
     public void setTitle(String title) {
         this.title = title;
     }
 
-    /**
-     * Returns the salutation.
-     *
-     * @return the salutation
-     */
     public String getSalutation() {
         return salutation;
     }
 
-    /**
-     * Sets the salutation.
-     *
-     * @param salutation the salutation to set
-     */
     public void setSalutation(String salutation) {
         this.salutation = salutation;
     }
 
-    /**
-     * Returns the firstname.
-     *
-     * @return the firstname
-     */
     public String getFirstname() {
         return firstname;
     }
 
-    /**
-     * Sets the firstname.
-     *
-     * @param firstname the firstname to set
-     */
     public void setFirstname(String firstname) {
         this.firstname = firstname;
     }
 
-    /**
-     * Returns the lastname.
-     *
-     * @return the lastname to set
-     */
     public String getLastname() {
         return lastname;
     }
 
-    /**
-     * Sets the lastname.
-     *
-     * @param lastname the lastname to set
-     */
     public void setLastname(String lastname) {
         this.lastname = lastname;
     }

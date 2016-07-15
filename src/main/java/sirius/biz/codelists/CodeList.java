@@ -31,7 +31,7 @@ public class CodeList extends BizEntity {
     public static final Column CODE = Column.named("code");
     @Trim
     @Autoloaded
-    @Length(length = 50)
+    @Length(50)
     @Unique
     private String code;
 
@@ -42,7 +42,7 @@ public class CodeList extends BizEntity {
     @Trim
     @Autoloaded
     @NullAllowed
-    @Length(length = 150)
+    @Length(150)
     private String name;
 
     /**
@@ -52,7 +52,7 @@ public class CodeList extends BizEntity {
     @Trim
     @Autoloaded
     @NullAllowed
-    @Length(length = 1024)
+    @Length(1024)
     private String description;
 
     /**
@@ -64,74 +64,34 @@ public class CodeList extends BizEntity {
     @Autoloaded
     private boolean autofill = true;
 
-    /**
-     * Returns the code of the code list
-     *
-     * @return the unqiue code of the list
-     */
     public String getCode() {
         return code;
     }
 
-    /**
-     * Sets the code of the code list
-     *
-     * @param code the qunique code of the list
-     */
     public void setCode(String code) {
         this.code = code;
     }
 
-    /**
-     * Returns the name of the code list
-     *
-     * @return the name of the list
-     */
     public String getName() {
         return name;
     }
 
-    /**
-     * Sets the name of the code list
-     *
-     * @param name the name of the code list
-     */
     public void setName(String name) {
         this.name = name;
     }
 
-    /**
-     * Returns the description of the code list
-     *
-     * @return the description of the code list
-     */
     public String getDescription() {
         return description;
     }
 
-    /**
-     * Sets the description of the code list
-     *
-     * @param description the description of the code list
-     */
     public void setDescription(String description) {
         this.description = description;
     }
 
-    /**
-     * Determines if the code list should auto fill itself
-     *
-     * @return <tt>true</tt> if unknown entries will be auto created, <tt>false</tt> otherwise
-     */
     public boolean isAutofill() {
         return autofill;
     }
 
-    /**
-     * Sets the auto fill behaviour
-     *
-     * @param autofill <tt>true</tt> if the code list should create unknown entries, <tt>false</tt> otherwise
-     */
     public void setAutofill(boolean autofill) {
         this.autofill = autofill;
     }

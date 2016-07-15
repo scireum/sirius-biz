@@ -35,11 +35,23 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Created by aha on 07.05.15.
+ * Provides a {@link UserManager} for {@link Tenant} and {@link UserAccount}.
+ * <p>
+ * The user managed can be installed by setting the <tt>manager</tt> property of the scope to <tt>tenants</tt>
+ * in the system config.
+ * <p>
+ * This is the default user manager for the default scope in <tt>sirius-biz</tt>.
  */
 public class TenantUserManager extends GenericUserManager {
 
+    /**
+     * This flag permission is granted to all users which belong to the system tenant.
+     * <p>
+     * The id of the system tenant can be set in the scope config. The system tenant usually is the administrative
+     * company which owns / runs the system.
+     */
     public static final String PERMISSION_SYSTEM_TENANT = "flag-system-tenant";
+
     private final String systemTenant;
     private final String defaultSalt;
     private final boolean acceptApiTokens;
@@ -68,12 +80,22 @@ public class TenantUserManager extends GenericUserManager {
     private static Cache<String, Tenant> tenantsCache = CacheManager.createCache("tenants-tenants");
     private static Cache<String, Config> configCache = CacheManager.createCache("tenants-configs");
 
+    /**
+     * Flushes all caches for the given account.
+     *
+     * @param account the account to flush
+     */
     public static void flushCacheForUserAccount(UserAccount account) {
         rolesCache.remove(account.getUniqueName());
         userAccountCache.remove(account.getIdAsString());
         configCache.remove(account.getIdAsString());
     }
 
+    /**
+     * Flushes all cahes for the given tenant.
+     *
+     * @param tenant the tenant to flush
+     */
     public static void flushCacheForTenant(Tenant tenant) {
         tenantsCache.remove(tenant.getIdAsString());
         configCache.clear();
@@ -164,7 +186,7 @@ public class TenantUserManager extends GenericUserManager {
         return Optional.empty();
     }
 
-    public UserInfo asUser(UserAccount account) {
+    protected UserInfo asUser(UserAccount account) {
         return UserInfo.Builder.createUser(account.getUniqueName())
                                .withUsername(account.getLogin().getUsername())
                                .withTenantId(String.valueOf(account.getTenant().getId()))

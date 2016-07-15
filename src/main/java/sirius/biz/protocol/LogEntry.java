@@ -17,34 +17,57 @@ import sirius.kernel.di.std.Framework;
 import java.time.LocalDateTime;
 
 /**
- * Created by aha on 18.02.16.
+ * Stores a log message in the database.
  */
 @Framework(Protocols.FRAMEWORK_PROTOCOLS)
 public class LogEntry extends Entity {
 
+    /**
+     * Contains the logged message.
+     */
+    public static final Column MESSAGE = Column.named("message");
     @Lob
     private String message;
-    public static final Column MESSAGE = Column.named("message");
 
-    @Length(length = 255)
-    private String category;
+    /**
+     * Contains the name of the logger which create the message.
+     */
     public static final Column CATEGORY = Column.named("category");
+    @Length(255)
+    private String category;
 
-    @Length(length = 255)
-    private String level;
+    /**
+     * Contains the log level of the message.
+     */
     public static final Column LEVEL = Column.named("level");
+    @Length(255)
+    private String level;
 
-    @Length(length = 255)
-    private String node;
+    /**
+     * Contains the name of the node on which the message was logged.
+     */
     public static final Column NODE = Column.named("node");
+    @Length(255)
+    private String node;
 
-    private LocalDateTime tod = LocalDateTime.now();
+    /**
+     * Contains the timestamp when the message was logged.
+     */
     public static final Column TOD = Column.named("tod");
+    private LocalDateTime tod = LocalDateTime.now();
 
-    @Length(length = 255)
-    private String user;
+    /**
+     * Contains the name of the user which was active when the message was logged.
+     */
     public static final Column USER = Column.named("user");
+    @Length(255)
+    private String user;
 
+    /**
+     * Returns a CSS class which can be used to style the HTML table displaying the entries.
+     *
+     * @return a CSS clas matching the log level of the entry
+     */
     public String getLabelClass() {
         if ("ERROR".equals(getLevel())) {
             return "label-important";

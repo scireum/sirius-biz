@@ -30,28 +30,56 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Created by aha on 07.05.15.
+ * Provides a GUI for managing tenants.
  */
 @Register(classes = Controller.class)
 public class TenantController extends BizController {
 
+    /**
+     * Contains the permission required to manage tenants.
+     */
     public static final String PERMISSION_MANAGE_TENANTS = "permission-manage-tenants";
 
+    /**
+     * Contains a list of all available features or permission which can be granted to a tenant.
+     */
     @ConfigValue("security.tenantPermissions")
     private List<String> permissions;
 
+    /**
+     * Returns all available features which can be assigned to a tenant.
+     *
+     * @return an unmodifyable list of all features available.
+     */
     public List<String> getPermissions() {
         return Collections.unmodifiableList(permissions);
     }
 
+    /**
+     * Returns a translated name of the given permission.
+     *
+     * @param role the permission or feature to translate
+     * @return a translated name for the permission
+     */
     public String getPermissionName(String role) {
         return NLS.get("TenantPermission." + role);
     }
 
+    /**
+     * Returns a translated description of the given permission.
+     *
+     * @param role the permission for which a description is requested
+     * @return the translated description of the permission
+     */
     public String getPermissionDescription(String role) {
         return NLS.getIfExists("TenantPermission." + role + ".description", NLS.getCurrentLang()).orElse("");
     }
 
+    /**
+     * Lists all tenants known to the system.
+     *
+     * @param ctx the current request
+     */
     @Routed("/tenants")
     @DefaultRoute
     @LoginRequired
@@ -67,6 +95,12 @@ public class TenantController extends BizController {
         ctx.respondWith().template("view/tenants/tenants.html", ph.asPage());
     }
 
+    /**
+     * Provides an editor for updating a tenant.
+     *
+     * @param ctx      the current request
+     * @param tenantId the id of the tenant to change
+     */
     @Routed("/tenant/:1")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
@@ -100,6 +134,13 @@ public class TenantController extends BizController {
         ctx.respondWith().template("view/tenants/tenant-details.html", tenant, this);
     }
 
+    /**
+     * Provides a JSON API to change the settings of a tenant, including its configuration.
+     *
+     * @param ctx      the current request
+     * @param out      the JSON response being generated
+     * @param tenantId the id of the tenant to update
+     */
     @Routed(value = "/tenant/:1/update", jsonCall = true)
     @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
@@ -113,6 +154,12 @@ public class TenantController extends BizController {
         oma.update(tenant);
     }
 
+    /**
+     * Provides an editor for changing the config of a tenant.
+     *
+     * @param ctx      the current request
+     * @param tenantId the id of the tenant to change
+     */
     @Routed("/tenant/:1/config")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
@@ -122,6 +169,12 @@ public class TenantController extends BizController {
         ctx.respondWith().template("view/tenants/tenant-config.html", tenant);
     }
 
+    /**
+     * Deletes the given tenant and returns the list of tenants.
+     *
+     * @param ctx      the current request
+     * @param tenantId the id of the tenant to delete
+     */
     @Routed("/tenant/:1/delete")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)

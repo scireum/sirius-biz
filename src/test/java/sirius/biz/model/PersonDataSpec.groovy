@@ -13,11 +13,15 @@ import sirius.biz.tenants.TenantsHelper
 import sirius.db.mixing.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
+import sirius.web.mails.Mails
 
 class PersonDataSpec extends BaseSpecification {
 
     @Part
     private static OMA oma;
+
+    @Part
+    private static Mails mail;
 
     @Part
     private static Tenants tenants;

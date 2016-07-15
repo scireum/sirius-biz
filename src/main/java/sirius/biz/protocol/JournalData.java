@@ -24,7 +24,13 @@ import sirius.web.security.UserContext;
 import java.time.LocalDateTime;
 
 /**
- * Created by aha on 22.03.16.
+ * Provides a hook which records all changed fields into the system journal which can be embedded into other entities
+ * or
+ * mixins.
+ * <p>
+ * To skip a field, a {@link NoJournal} annotation can be placed. To skip a record entirely, {@link
+ * #setSilent(boolean)}
+ * can be called before the update or delete.
  */
 public class JournalData extends Composite {
 
@@ -34,6 +40,11 @@ public class JournalData extends Composite {
     @Transient
     private Entity owner;
 
+    /**
+     * Creates a new instance for the given entity.
+     *
+     * @param owner the entity which fields are to be recorded.
+     */
     public JournalData(Entity owner) {
         this.owner = owner;
     }
@@ -93,14 +104,32 @@ public class JournalData extends Composite {
         }
     }
 
+    /**
+     * Determines if the next change should be skipped (not recorded).
+     *
+     * @return <tt>true</tt> if the next change should be skipped, <tt>false</tt> otherwise
+     */
     public boolean isSilent() {
         return silent;
     }
 
+    /**
+     * Sets the skip flag.
+     * <p>
+     * Calling this with <tt>true</tt>, will skip all changes performed on the referenced entity instance.
+     *
+     * @param silent <tt>true</tt> to skip the recording of all changes on the referenced entity instance,
+     *               <tt>false</tt> to re-enable.
+     */
     public void setSilent(boolean silent) {
         this.silent = silent;
     }
 
+    /**
+     * Determines if there are recordable changes in the referenced entity.
+     *
+     * @return <tt>true</tt> if at least one journaled field changed, <tt>false</tt> otherwise
+     */
     public boolean hasJournaledChanges() {
         if (silent) {
             return false;

@@ -54,7 +54,7 @@ public class PermissionData extends Composite {
     public static final Column PERMISSION_STRING = Column.named("permissionString");
     @Autoloaded
     @NullAllowed
-    @Length(length = 4096)
+    @Length(4096)
     private String permissionString;
 
     /**
@@ -124,18 +124,18 @@ public class PermissionData extends Composite {
     }
 
     /**
-     * Returns the raw config string.
+     * Returns the config as string.
      *
-     * @return the raw custom configuration for the given entity
+     * @return the individual config as string
      */
     public String getConfigString() {
         return configString;
     }
 
     /**
-     * Sets the config string for the given entity.
+     * Sets the config as string.
      *
-     * @param configString the configuration as string
+     * @param configString the individual config as string
      */
     public void setConfigString(String configString) {
         this.configString = configString;

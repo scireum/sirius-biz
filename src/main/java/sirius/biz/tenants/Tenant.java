@@ -12,9 +12,6 @@ import sirius.biz.model.AddressData;
 import sirius.biz.model.BizEntity;
 import sirius.biz.model.PermissionData;
 import sirius.biz.web.Autoloaded;
-import sirius.kernel.commons.Strings;
-import sirius.kernel.di.std.Framework;
-import sirius.kernel.nls.NLS;
 import sirius.db.mixing.Column;
 import sirius.db.mixing.annotations.BeforeDelete;
 import sirius.db.mixing.annotations.BeforeSave;
@@ -22,33 +19,50 @@ import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.annotations.Unique;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Framework;
+import sirius.kernel.nls.NLS;
 
 /**
- * Created by aha on 07.05.15.
+ * Represents a tenant using the system.
+ * <p>
+ * Helps to support multi tenancy for SaaS platforms.
  */
 @Framework("tenants")
 public class Tenant extends BizEntity {
 
+    /**
+     * Contains the name of the tenant.
+     */
+    public static final Column NAME = Column.named("name");
     @Trim
     @Unique
     @Autoloaded
-    @Length(length = 255)
+    @Length(255)
     private String name;
-    public static final Column NAME = Column.named("name");
 
+    /**
+     * Contains the customer number assigned to the tenant.
+     */
+    public static final Column ACCOUNT_NUMBER = Column.named("accountNumber");
     @Trim
     @Unique
     @Autoloaded
     @NullAllowed
-    @Length(length = 50)
+    @Length(50)
     private String accountNumber;
-    public static final Column ACCOUNT_NUMBER = Column.named("accountNumber");
 
-    private final AddressData address = new AddressData(AddressData.Requirements.NONE, null);
+    /**
+     * Contains the address of the tenant.
+     */
     public static final Column ADDRESS = Column.named("address");
+    private final AddressData address = new AddressData(AddressData.Requirements.NONE, null);
 
-    private final PermissionData permissions = new PermissionData(this);
+    /**
+     * Contains the features and individual config assigned to the tenant.
+     */
     public static final Column PERMISSIONS = Column.named("permissions");
+    private final PermissionData permissions = new PermissionData(this);
 
     @BeforeSave
     @BeforeDelete

@@ -28,12 +28,19 @@ import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 /**
- * Created by aha on 18.02.16.
+ * Adapter which records all log entries and incidents into the appropriate database entities.
  */
 @Register(classes = {Protocols.class, LogTap.class, ExceptionHandler.class}, framework = Protocols.FRAMEWORK_PROTOCOLS)
 public class Protocols implements LogTap, ExceptionHandler {
 
+    /**
+     * Names the framework which must be enabled to activate all protocol features.
+     */
     public static final String FRAMEWORK_PROTOCOLS = "protocols";
+
+    /**
+     * Names the permissions required to vide the protocol.
+     */
     public static final String PERMISSION_VIEW_PROTOCOLS = "permission-view-protocols";
 
     @Part
