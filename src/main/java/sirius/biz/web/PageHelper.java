@@ -34,7 +34,10 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
- * Created by aha on 08.05.15.
+ * Helper class to build a query, bind it to values given in a {@link WebContext} and create a resulting {@link Page}
+ * which can be used to render a resulting table and filter box.
+ *
+ * @param <E> the generic type of the entities being queries
  */
 public class PageHelper<E extends Entity> {
 
@@ -44,6 +47,13 @@ public class PageHelper<E extends Entity> {
     private Column[] searchFields;
     private List<Tuple<Facet, BiConsumer<Facet, SmartQuery<E>>>> facets = Lists.newArrayList();
 
+    /**
+     * Creates a new instance with the given base query.
+     *
+     * @param baseQuery the initial query to execute
+     * @param <E>       the generic entity type being queried
+     * @return a new instance operating on the given base query
+     */
     public static <E extends Entity> PageHelper<E> withQuery(SmartQuery<E> baseQuery) {
         PageHelper<E> result = new PageHelper<E>();
         result.baseQuery = baseQuery;
@@ -53,33 +63,73 @@ public class PageHelper<E extends Entity> {
     @Part
     private static Tenants tenants;
 
+    /**
+     * Filters the results to only contain entities which belong to the current tenant.
+     * <p>
+     * The entity type must extend {@link TenantAware} for this to work.
+     *
+     * @return the helper itself for fluent method calls
+     */
     public PageHelper<E> forCurrentTenant() {
         this.baseQuery.eq(TenantAware.TENANT, tenants.getRequiredTenant());
         return this;
     }
 
+    /**
+     * Attaches a web context to the helper, to fetch filter and pagination values from.
+     *
+     * @param ctx the request to attach
+     * @return the helper itself for fluent method calls
+     */
     public PageHelper<E> withContext(WebContext ctx) {
         this.ctx = ctx;
         return this;
     }
 
+    /**
+     * Specifies one or more search fields which will be searched if a <tt>query</tt>
+     * if given in the <tt>WebContext</tt>.
+     *
+     * @param searchFields the fields to search in
+     * @return the helper itself for fluent method calls
+     */
     public PageHelper<E> withSearchFields(Column... searchFields) {
         this.searchFields = searchFields;
         return this;
     }
 
     private PageHelper() {
-
     }
 
+    /**
+     * Adds a filter facet which will show distinct values of the given property.
+     *
+     * @param facet the facet to add
+     * @return the helper itself for fluent method calls
+     */
     public PageHelper<E> addFilterFacet(Facet facet) {
         return addFacet(facet, (f, q) -> q.eqIgnoreNull(Column.named(f.getName()), f.getValue()));
     }
 
+    /**
+     * Adds a filter facet which a custom filter implementation.
+     *
+     * @param facet  the facet to add
+     * @param filter the custom logic which determines how a filter value is applied to the query.
+     * @return the helper itself for fluent method calls
+     */
     public PageHelper<E> addFacet(Facet facet, BiConsumer<Facet, SmartQuery<E>> filter) {
         return addFacet(facet, filter, null);
     }
 
+    /**
+     * Adds a filter facet with custom filter implementation and a custom item computer.
+     *
+     * @param facet         the facet to add
+     * @param filter        the custom logic which determines how a filter value is applied to the query.
+     * @param itemsComputer the custom logic which determines the list of items in the filter
+     * @return the helper itself for fluent method calls
+     */
     public PageHelper<E> addFacet(Facet facet,
                                   BiConsumer<Facet, SmartQuery<E>> filter,
                                   BiConsumer<Facet, SmartQuery<E>> itemsComputer) {
@@ -94,6 +144,14 @@ public class PageHelper<E extends Entity> {
         return this;
     }
 
+    /**
+     * Adds a time series based filter which permits to filter on certain time ranges.
+     *
+     * @param name   the name of the field to filter on
+     * @param title  the title of the filter shown to the user
+     * @param ranges the ranges which are supported as filter values
+     * @return the helper itself for fluent method calls
+     */
     public PageHelper<E> addTimeFacet(String name, String title, DateRange... ranges) {
         Facet facet = new Facet(title, name, null, null);
         addFacet(facet, (f, q) -> {
@@ -110,6 +168,14 @@ public class PageHelper<E extends Entity> {
         return this;
     }
 
+    /**
+     * Adds a query based filter which uses the given query to determine which filter items are shown.
+     *
+     * @param name             the name of the field to filter on
+     * @param title            the title of the filter shown to the user
+     * @param queryTransformer used to generate the sub-query which determines which filter values to show
+     * @return the helper itself for fluent method calls
+     */
     public PageHelper<E> addQueryFacet(String name, String title, Function<SmartQuery<E>, SQLQuery> queryTransformer) {
         return addFacet(new Facet(title, name, null, null), (f, q) -> {
             if (Strings.isFilled(f.getValue())) {
@@ -127,6 +193,11 @@ public class PageHelper<E extends Entity> {
         });
     }
 
+    /**
+     * Wraps the given data into a {@link Page} which can be used to render a table, filterbox and support pagination.
+     *
+     * @return the given data wrapped as <tt>Page</tt>
+     */
     public Page<E> asPage() {
         Objects.requireNonNull(ctx);
         Watch w = Watch.start();
