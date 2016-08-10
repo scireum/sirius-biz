@@ -1,0 +1,70 @@
+@args Page page, String baseURL, String suggestionsUrl, String suggestions
+
+<div class="well">
+    <form class="form-inline" action="@prefix/@baseURL" method="post" id="search">
+        @for(sirius.web.controller.Facet f : page.getFacets()) {
+        @if (f.getValue() != null) {
+        <input type="hidden" name="@f.getName()" value="@f.getValue()" />
+        }
+        }
+        <input name="suggestions" id="suggestions" type="hidden" value=""></input>
+        <div class="row">
+            <div class="col-md-8">
+                <div id="magicsuggest" class="form-control" style="display: block;width: 100%;"></div>
+            </div>
+            <div class="col-md-4">
+                <div class="pull-left">
+                    <a class="btn btn-default" href="#" onclick="$('#search').submit()"><i class="fa fa-search"></i></a>
+                </div>
+                <div class="pull-right">
+                <span>
+                    @renderBody()
+                </span>
+                    <a class="btn btn-default" href="@prefix/@baseURL?@page.createQueryString()"><i class="fa fa-refresh"></i></a>
+                </div>
+            </div>
+        </div>
+    </form>
+    <script type="text/javascript">
+        var reloadTimer = 0;
+        $(document).ready(function() {
+            var ms = $('#magicsuggest').magicSuggest({
+                data: '@prefix/@suggestionsUrl',
+                displayField: 'name',
+                valueField: 'value',
+                typeDelay: 500,
+                placeholder: '@i18n("NLS.searchkey")',
+                noSuggestionText: '',
+                highlight: false,
+                hideTrigger: true,
+                toggleOnClick: true,
+                maxDropHeight: 200,
+                autoSelect: false,
+                selectFirst: true,
+                mode: 'remote',
+                selectionRenderer: function(data) {
+                    if (typeof data.value == 'string') {
+                        return '<span class="suggestion-query">' + data.name + '</span>';
+                    } else {
+                        return '<span class="' + data.value.css + '">' + data.value.name + '</span>';
+                    }
+                },
+                renderer: function(data) {
+                    return '<span class="' + data.value.css + '">' + data.value.name + '</span>';
+                }
+            });
+            @raw() {
+                ms.setSelection(@suggestions);
+            }
+            $(ms).on('selectionchange', function(e,m) {
+                clearTimeout(reloadTimer);
+                $('#suggestions').val(JSON.stringify(this.getValue()));
+                reloadTimer = setTimeout(function() {
+                    $('#search').submit();
+                }, 800);
+            });
+            $('#magicsuggest input').focus();
+        });
+    </script>
+    <div class="clearfix"></div>
+</div>

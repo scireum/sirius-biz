@@ -1,0 +1,37 @@
+@import sirius.biz.jobs.JobDescription
+@args Page jobs
+@extends(view.wondergem.template.html, title: NLS.get("JobsController.jobs"))
+
+@section(breadcrumbs) {
+    <li>
+       <a href="/jobs">@i18n("JobsController.jobs")</a>
+    </li>
+}
+@pageHeader("JobsController.jobs")
+
+@tableSearchHeader(jobs, "jobs") {
+}
+
+@table(jobs) {
+    <thead>
+    <tr>
+        <th>
+            @i18n("JobDescription.title")
+        </th>
+        <th />
+    </tr>
+    </thead>
+    <tbody>
+    @for(JobDescription job : jobs.getItems()) {
+        <tr>
+            <td>
+                <a class="link" href="@prefix/job/run/@job.getFactory()/@job.getName()">@job.getTitle()</a><br>
+                <small class="muted">@job.getDescription()</small>
+            </td>
+            <td class="col-md-2 align-center">
+            </td>
+        </tr>
+    }
+    </tbody>
+}
+

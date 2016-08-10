@@ -41,6 +41,7 @@ public class LoginData extends Composite {
     @Autoloaded
     @Unique
     @Length(150)
+    @NullAllowed
     private String username;
 
     /**

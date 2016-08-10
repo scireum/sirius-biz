@@ -136,7 +136,7 @@ public class PageHelper<E extends Entity> {
         Objects.requireNonNull(baseQuery);
         Objects.requireNonNull(ctx);
 
-        facet.withValue(ctx.get(facet.getName()).asString());
+        facet.withValue(ctx.get(facet.getName()).asString(null));
         filter.accept(facet, baseQuery);
 
         facets.add(Tuple.create(facet, itemsComputer));

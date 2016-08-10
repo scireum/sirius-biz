@@ -9,15 +9,15 @@
 package sirius.biz.tenants;
 
 import sirius.biz.model.LoginData;
-import sirius.kernel.di.std.Part;
 import sirius.db.mixing.OMA;
+import sirius.kernel.di.std.Part;
 import sirius.web.security.UserContext;
 
 public class TenantsHelper {
 
     @Part
     private static OMA oma;
-    
+
     @Part
     private static Tenants tenants;
 
@@ -44,7 +44,7 @@ public class TenantsHelper {
             user.setEmail("test@test.test");
             oma.update(user);
         }
-        UserContext.get().setCurrentUser(((TenantUserManager) UserContext.get().getUserManager()).asUser(user));
+        UserContext.get().setCurrentUser(((TenantUserManager) UserContext.get().getUserManager()).asUser(user, null));
     }
 
     public static void clearCurrentUser() {

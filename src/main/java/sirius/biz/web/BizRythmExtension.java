@@ -17,7 +17,7 @@ import sirius.web.templates.rythm.RythmExtension;
 import java.util.function.Consumer;
 
 /**
- * Created by aha on 11.05.15.
+ * Makes central frameworks available in rythm without any import or reference.
  */
 @Register
 public class BizRythmExtension implements RythmExtension {

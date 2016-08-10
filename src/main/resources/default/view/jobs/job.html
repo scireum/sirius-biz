@@ -1,0 +1,30 @@
+@import sirius.biz.jobs.JobDescription
+@args JobDescription job
+@extends(view.wondergem.template.html, title: (NLS.get("JobsController.job")+": " + job.getTitle()))
+
+@section(breadcrumbs) {
+    <li>
+       <a href="/jobs">@i18n("JobsController.jobs")</a>
+       <a href="/job/run/@job.getFactory()/@job.getName()">@i18n("JobsController.job"): job.getTitle()</a>
+    </li>
+}
+@pageHeader() {
+    @i18n("JobsController.job"): job.getTitle()
+}
+
+@editForm(("job/run/" + job.getFactory() + "/" + job.getName())) {
+<div class="row">
+    @textfield(span:     "8",
+                name:     "name",
+                value:    job.getName(),
+                labelKey: "Model.name",
+                required: true)
+</div>
+}
+
+<div class="form-actions">
+    <a onclick="$('#editForm').submit()" class="btn btn-primary">
+        <i class="fa fa-check"></i> @i18n("JobsController.execute")
+    </a>
+    <a href="@prefix/jobs" class="btn">@i18n("NLS.back")</a>
+</div>

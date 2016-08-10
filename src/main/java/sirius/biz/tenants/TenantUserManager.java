@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.typesafe.config.Config;
 import sirius.biz.model.LoginData;
@@ -30,7 +31,10 @@ import sirius.web.security.UserManager;
 import sirius.web.security.UserManagerFactory;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -51,6 +55,12 @@ public class TenantUserManager extends GenericUserManager {
      * company which owns / runs the system.
      */
     public static final String PERMISSION_SYSTEM_TENANT = "flag-system-tenant";
+
+    //TODO
+    public static final String PERMISSION_SPY_USER = "flag-spy-user";
+
+    //TODO
+    public static final String TENANT_SPY_ID_SUFFIX = "-tenant-spy-id";
 
     private final String systemTenant;
     private final String defaultSalt;
@@ -112,6 +122,54 @@ public class TenantUserManager extends GenericUserManager {
     }
 
     @Override
+    protected UserInfo findUserInSession(WebContext ctx) {
+        UserInfo rootUser = super.findUserInSession(ctx);
+        if (rootUser != null && rootUser != defaultUser) {
+            String spyId = ctx.getSessionValue(scope.getScopeId() + "-spy-id").asString();
+            if (Strings.isFilled(spyId)) {
+                UserAccount spyUser = fetchAccount(spyId, null);
+                if (spyUser != null) {
+                    List<String> extraRoles = Lists.newArrayList();
+                    extraRoles.add(PERMISSION_SPY_USER);
+                    if (rootUser.hasPermission(PERMISSION_SYSTEM_TENANT)) {
+                        extraRoles.add(PERMISSION_SYSTEM_TENANT);
+                    }
+                    return asUser(spyUser, extraRoles);
+                }
+            }
+
+            String tenantSpyId = ctx.getSessionValue(scope.getScopeId() + TENANT_SPY_ID_SUFFIX).asString();
+            if (Strings.isFilled(tenantSpyId)) {
+                Tenant tenant = tenantsCache.get(tenantSpyId, i -> oma.find(Tenant.class, i).orElse(null));
+                if (tenant != null) {
+                    // Copy all relevant data into a new object (outside of the cache)...
+                    UserAccount currentUser = rootUser.getUserObject(UserAccount.class);
+                    UserAccount modifiedUser = new UserAccount();
+                    modifiedUser.setId(currentUser.getId());
+                    modifiedUser.getLogin().setUsername(currentUser.getLogin().getUsername());
+                    modifiedUser.setEmail(currentUser.getEmail());
+                    modifiedUser.getPermissions().setConfigString(currentUser.getPermissions().getConfigString());
+                    modifiedUser.getPermissions()
+                                .getPermissions()
+                                .addAll(currentUser.getPermissions().getPermissions());
+
+                    // And overwrite with the new tenant...
+                    modifiedUser.getTenant().setValue(tenant);
+
+                    List<String> extraRoles = Lists.newArrayList();
+                    extraRoles.add(PERMISSION_SPY_USER);
+                    if (rootUser.hasPermission(PERMISSION_SYSTEM_TENANT)) {
+                        extraRoles.add(PERMISSION_SYSTEM_TENANT);
+                    }
+                    return asUser(modifiedUser, extraRoles);
+                }
+            }
+        }
+
+        return rootUser;
+    }
+
+    @Override
     protected UserInfo findUserByName(WebContext webContext, String user) {
         if (Strings.isEmpty(user)) {
             return null;
@@ -130,31 +188,60 @@ public class TenantUserManager extends GenericUserManager {
             throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
         }
 
-        UserAccount account = optionalAccount.get();
-        Tenant tenant = account.getTenant().getValue();
+        UserAccount account = fetchAccount(optionalAccount.get().getIdAsString(), optionalAccount.get());
+        if (account == null) {
+            return null;
+        }
+        return asUser(account, null);
+    }
 
-        UserAccount accountFromCache = userAccountCache.get(account.getIdAsString());
-        if (accountFromCache == null || account.getVersion() > accountFromCache.getVersion()) {
-            userAccountCache.put(account.getIdAsString(), account);
-            rolesCache.remove(account.getUniqueName());
-            configCache.remove(account.getIdAsString());
+    /**
+     * Tries to fetch the requested account from the cache.
+     * <p>
+     * If a new account from the database is present (during login) this can be passed in as <tt>accountFromDB</tt>. If
+     * not, the value can be left <tt>null</tt> and a lookup will be performed if necessary. This ensures, that the
+     * cache is updated if a stale entry is detected during login.
+     *
+     * @param accountId     the id of the account to fetch
+     * @param accountFromDB a fresh version from the database to check cache integrity
+     * @return the most current version from the cache to re-use computed fields if possible
+     */
+    @Nullable
+    private UserAccount fetchAccount(@Nonnull String accountId, @Nullable UserAccount accountFromDB) {
+        UserAccount account;
+        UserAccount accountFromCache = userAccountCache.get(accountId);
+        if (accountFromCache == null || (accountFromDB != null
+                                         && accountFromDB.getVersion() > accountFromCache.getVersion())) {
+            if (accountFromDB == null) {
+                accountFromDB = oma.find(UserAccount.class, accountId).orElse(null);
+                if (accountFromDB == null) {
+                    return null;
+                }
+            }
+            userAccountCache.put(accountFromDB.getIdAsString(), accountFromDB);
+            rolesCache.remove(accountFromDB.getUniqueName());
+            configCache.remove(accountFromDB.getIdAsString());
+            account = accountFromDB;
         } else {
             account = accountFromCache;
         }
-        Tenant tenantFromCache = tenantsCache.get(tenant.getIdAsString());
-        if (tenantFromCache == null || tenant.getVersion() > tenantFromCache.getVersion()) {
-            tenantsCache.put(tenant.getIdAsString(), tenant);
+        Tenant tenantFromCache = tenantsCache.get(String.valueOf(account.getTenant().getId()));
+        if (tenantFromCache == null || (accountFromDB != null
+                                        && accountFromDB.getTenant().getValue().getVersion()
+                                           > tenantFromCache.getVersion())) {
+            tenantsCache.put(accountFromDB.getTenant().getValue().getIdAsString(),
+                             accountFromDB.getTenant().getValue());
 
             // We also need to re-compute the roles and config of the user
             // as this is also determined by the tenant
             rolesCache.remove(account.getUniqueName());
             configCache.remove(account.getIdAsString());
+            account.getTenant().setValue(accountFromDB.getTenant().getValue());
         } else {
-            tenant = tenantFromCache;
+            account.getTenant().setValue(tenantFromCache);
         }
-        account.getTenant().setValue(tenant);
 
-        return asUser(account);
+        return account;
     }
 
     private Optional<UserAccount> createSystemTenantIfNonExistent() {
@@ -186,16 +273,22 @@ public class TenantUserManager extends GenericUserManager {
         return Optional.empty();
     }
 
-    protected UserInfo asUser(UserAccount account) {
+    protected UserInfo asUser(UserAccount account, List<String> extraRoles) {
+        Set<String> roles = computeRoles(null, String.valueOf(account.getUniqueName()));
+        if (extraRoles != null) {
+            // Make a copy so that we do not modify the cached set...
+            roles = Sets.newTreeSet(roles);
+            roles.addAll(extraRoles);
+        }
         return UserInfo.Builder.createUser(account.getUniqueName())
                                .withUsername(account.getLogin().getUsername())
                                .withTenantId(String.valueOf(account.getTenant().getId()))
                                .withTenantName(account.getTenant().getValue().getName())
                                .withEmail(account.getEmail())
                                .withLang("de")
-                               .withPermissions(computeRoles(null, String.valueOf(account.getUniqueName())))
+                               .withPermissions(roles)
                                .withConfigSupplier(ui -> getUserConfig(getScopeConfig(), ui))
-                               .withUserSupplier(this::getUserObject)
+                               .withUserSupplier(u -> account)
                                .build();
     }
 
@@ -280,24 +373,31 @@ public class TenantUserManager extends GenericUserManager {
         return user != null && !user.getLogin().isAccountLocked();
     }
 
+    private Set<String> computeRoles(UserAccount user, Tenant tenant) {
+        Set<String> roles = Sets.newTreeSet();
+        roles.addAll(user.getPermissions().getPermissions());
+        roles.addAll(tenant.getPermissions().getPermissions());
+        if (Strings.areEqual(systemTenant, String.valueOf(tenant.getId()))) {
+            roles.add(PERMISSION_SYSTEM_TENANT);
+        }
+        roles.add(UserInfo.PERMISSION_LOGGED_IN);
+        roles = transformRoles(roles, false);
+        return roles;
+    }
+
     @Override
     protected Set<String> computeRoles(WebContext ctx, String userId) {
         Set<String> cachedRoles = rolesCache.get(userId);
         if (cachedRoles != null) {
             return cachedRoles;
         }
-        Set<String> roles = Sets.newTreeSet();
+
         UserAccount user = getUserById(userId);
+        Set<String> roles;
         if (user != null) {
-            roles.addAll(user.getPermissions().getPermissions());
-            roles.addAll(user.getTenant().getValue().getPermissions().getPermissions());
-            if (Strings.areEqual(systemTenant, String.valueOf(user.getTenant().getId()))) {
-                roles.add(PERMISSION_SYSTEM_TENANT);
-            }
-            roles.add(UserInfo.PERMISSION_LOGGED_IN);
-            roles = transformRoles(roles, false);
+            roles = computeRoles(user, user.getTenant().getValue());
         } else {
-            return null;
+            roles = Collections.emptySet();
         }
 
         rolesCache.put(userId, roles);

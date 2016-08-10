@@ -4,3 +4,7 @@
 @if (user.getCurrentUser().hasPermission("permission-manage-user-accounts")) {
     <li><a href="@prefix/user-accounts">@i18n("Model.userAccount.plural")</a></li>
 }
+@if (user.getCurrentUser().hasPermission("permission-select-tenant") || user.getCurrentUser().hasPermission("flag-spy-user")) {
+    <li class="divider"></li>
+    <li><a href="@prefix/tenants/select">@i18n("Tenant.select")</a></li>
+}

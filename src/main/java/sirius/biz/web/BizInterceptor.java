@@ -19,7 +19,7 @@ import sirius.web.security.UserContext;
 import java.lang.reflect.Method;
 
 /**
- * Created by aha on 08.05.15.
+ * Redirects unauthorized calls to the wondergem login page (for the default scope).
  */
 @Register
 public class BizInterceptor implements Interceptor {

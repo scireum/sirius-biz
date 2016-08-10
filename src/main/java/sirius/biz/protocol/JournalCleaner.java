@@ -47,8 +47,6 @@ public class JournalCleaner implements EveryDay {
         oma.select(LogEntry.class).where(FieldOperator.on(LogEntry.TOD).lessThan(limit)).delete();
 
         limit = LocalDateTime.now().minusSeconds(keepIncidents.getSeconds());
-        oma.select(Incident.class)
-           .where(FieldOperator.on(Incident.LAST_OCCURRENCE).lessThan(limit))
-           .delete();
+        oma.select(Incident.class).where(FieldOperator.on(Incident.LAST_OCCURRENCE).lessThan(limit)).delete();
     }
 }

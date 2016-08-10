@@ -15,6 +15,7 @@ import sirius.biz.tenants.Tenants;
 import sirius.biz.tenants.UserAccount;
 import sirius.db.mixing.Column;
 import sirius.db.mixing.Entity;
+import sirius.db.mixing.EntityRef;
 import sirius.db.mixing.OMA;
 import sirius.db.mixing.Property;
 import sirius.kernel.di.std.ConfigValue;
@@ -26,6 +27,7 @@ import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -63,6 +65,27 @@ public class BizController extends BasicController {
 
         if (currentTenant().getId() != tenantAware.getTenant().getId()) {
             throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
+        }
+    }
+
+    /**
+     * Enusures or establishes a parent child relation.
+     * <p>
+     * For new entities (owner), the given reference is initialized with the given entity. For existing entities
+     * it is verified, that the given reference points to the given entity.
+     *
+     * @param owner  the entity which contains the reference
+     * @param ref    the reference which is either filled or verified that it points to <tt>entity</tt>
+     * @param entity the entity the reference must point to
+     * @throws sirius.kernel.health.HandledException if the tenants do no match
+     */
+    protected <E extends Entity> void setOrVerify(Entity owner, EntityRef<E> ref, E entity) {
+        if (!Objects.equals(ref.getId(), entity.getId())) {
+            if (owner.isNew()) {
+                ref.setValue(entity);
+            } else {
+                throw Exceptions.createHandled().withNLSKey("BizController.invalidReference").handle();
+            }
         }
     }
 
@@ -116,7 +139,7 @@ public class BizController extends BasicController {
      * @param properties the list of properties to transfer
      */
     protected void load(WebContext ctx, Entity entity, Column... properties) {
-        Set<String> columnsSet = Arrays.asList(properties).stream().map(Column::getName).collect(Collectors.toSet());
+        Set<String> columnsSet = Arrays.stream(properties).map(Column::getName).collect(Collectors.toSet());
         for (Property property : entity.getDescriptor().getProperties()) {
             if (columnsSet.contains(property.getName())) {
                 if (ctx.hasParameter(property.getName())) {

@@ -12,6 +12,9 @@ import sirius.biz.model.AddressData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.web.BizController;
 import sirius.biz.web.PageHelper;
+import sirius.db.mixing.SmartQuery;
+import sirius.db.mixing.constraints.Exists;
+import sirius.db.mixing.constraints.FieldOperator;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -39,6 +42,11 @@ public class TenantController extends BizController {
      * Contains the permission required to manage tenants.
      */
     public static final String PERMISSION_MANAGE_TENANTS = "permission-manage-tenants";
+
+    /**
+     * Contains the permission required to switch the tenant.
+     */
+    public static final String PERMISSION_SELECT_TENANT = "permission-select-tenant";
 
     /**
      * Contains a list of all available features or permission which can be granted to a tenant.
@@ -93,6 +101,67 @@ public class TenantController extends BizController {
                             Tenant.ADDRESS.inner(AddressData.CITY));
 
         ctx.respondWith().template("view/tenants/tenants.html", ph.asPage());
+    }
+
+    /**
+     * Lists all tenants known to the system.
+     *
+     * @param ctx the current request
+     */
+    @Routed("/tenants/select")
+    @DefaultRoute
+    @LoginRequired
+    @Permission(PERMISSION_SELECT_TENANT)
+    public void selectTenants(WebContext ctx) {
+        SmartQuery<Tenant> baseQuery = oma.select(Tenant.class).orderAsc(Tenant.NAME);
+        if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+            baseQuery.where(Exists.matchingIn(Tenant.ID, TenantRelation.class, TenantRelation.TO_TENANT)
+                                  .where(FieldOperator.on(TenantRelation.FROM_TENANT).eq(getUser().getTenantId()))
+                                  .where(FieldOperator.on(TenantRelation.SUPPORT_ENABLED).eq(true)));
+        }
+        PageHelper<Tenant> ph = PageHelper.withQuery(baseQuery);
+        ph.withContext(ctx);
+        ph.withSearchFields(Tenant.NAME,
+                            Tenant.ACCOUNT_NUMBER,
+                            Tenant.ADDRESS.inner(AddressData.STREET),
+                            Tenant.ADDRESS.inner(AddressData.CITY));
+
+        ctx.respondWith().template("view/tenants/select_tenant.html", ph.asPage());
+    }
+
+    @ConfigValue("product.wondergemRoot")
+    private String wondergemRoot;
+
+    @LoginRequired
+    @Routed("/tenants/select/:1")
+    public void selectTenant(final WebContext ctx, String id) {
+        if ("main".equals(id)) {
+            ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
+                                null);
+            ctx.respondWith().redirectTemporarily("/tenants/select");
+            return;
+        }
+
+        assertPermission(PERMISSION_SELECT_TENANT);
+
+        SmartQuery<Tenant> baseQuery = oma.select(Tenant.class).eq(Tenant.ID, id);
+        if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+            baseQuery.where(Exists.matchingIn(Tenant.ID, TenantRelation.class, TenantRelation.TO_TENANT)
+                                  .where(FieldOperator.on(TenantRelation.FROM_TENANT).eq(getUser().getTenantId()))
+                                  .where(FieldOperator.on(TenantRelation.SUPPORT_ENABLED).eq(true)));
+        }
+
+        Tenant tenant = baseQuery.queryFirst();
+        if (tenant == null) {
+            //TODO error
+            selectTenants(ctx);
+            return;
+        }
+
+        ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
+                            tenant.getIdAsString());
+
+        ctx.respondWith().redirectTemporarily(ctx.get("goto").asString(wondergemRoot));
     }
 
     /**

@@ -1,0 +1,53 @@
+@import sirius.biz.tenants.Tenant
+@args Page tenants
+@extends(view.wondergem.template.html, title: NLS.get("Tenant.select"))
+
+@section(breadcrumbs) {
+    <li>
+        <a href="/tenants">@i18n("Tenant.select")</a>
+    </li>
+}
+@pageHeader("Tenant.select")
+
+@tableSearchHeader(tenants, "tenants/select") {
+    @if (user.getCurrentUser().hasPermission("flag-spy-user")) {
+        <a class="btn btn-primary" href="@prefix/tenants/select/main">@i18n("Tenant.selectMain")</a>
+    }
+}
+
+@table(tenants) {
+    <thead>
+    <tr>
+        <th>
+            @i18n("Model.name")<br>
+            <small class="muted">@i18n("Model.id")</small>
+        </th>
+        <th>
+            @i18n("Tenant.accountNumber")
+        </th>
+        <th>
+            @i18n("AddressData.street")<br>
+            @i18n("AddressData.zip") @i18n("AddressData.city")
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+    @for(sirius.biz.tenants.Tenant tenant : tenants.getItems()) {
+        <tr>
+            <td>
+                <a class="link" href="@prefix/tenants/select/@tenant.getId()">@tenant.getName()</a><br>
+                <small class="muted">@tenant.getId()</small>
+            </td>
+            <td>
+                @tenant.getAccountNumber()
+            </td>
+            <td>
+                @tenant.getAddress().getStreet()<br>
+                @tenant.getAddress().getZip() @tenant.getAddress().getCity()
+            </td>
+        </tr>
+    }
+    </tbody>
+}
+
+@pagination(tenants, "tenants/select")

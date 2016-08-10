@@ -78,6 +78,12 @@ public class UserAccount extends TenantAware {
         if (Strings.isEmpty(getLogin().getUsername())) {
             getLogin().setUsername(getEmail());
         }
+        if (Strings.isEmpty(getLogin().getUsername())) {
+            throw Exceptions.createHandled()
+                            .withNLSKey("Property.fieldNotNullable")
+                            .set("field", NLS.get("LoginData.username"))
+                            .handle();
+        }
     }
 
     @BeforeSave
