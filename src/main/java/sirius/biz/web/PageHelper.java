@@ -20,6 +20,7 @@ import sirius.db.mixing.constraints.Like;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -28,6 +29,7 @@ import sirius.web.controller.Page;
 import sirius.web.http.WebContext;
 
 import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -184,9 +186,12 @@ public class PageHelper<E extends Entity> {
         }, (f, q) -> {
             try {
                 SQLQuery qry = queryTransformer.apply(q);
-                qry.iterateAll(r -> f.addItem(r.getValue(r.getFieldNames().get(0)).asString(),
-                                              r.getValue(r.getFieldNames().get(1)).asString(),
-                                              -1), new Limit(0, 100));
+                qry.iterateAll(r -> {
+                    Iterator<Tuple<String, Object>> iter = r.getFieldsList().iterator();
+                    f.addItem(Value.of(iter.next().getSecond()).asString(),
+                              Value.of(iter.next().getSecond()).asString(),
+                              -1);
+                }, new Limit(0, 100));
             } catch (SQLException e) {
                 Exceptions.handle(OMA.LOG, e);
             }
