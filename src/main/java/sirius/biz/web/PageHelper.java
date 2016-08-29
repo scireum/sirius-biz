@@ -188,9 +188,15 @@ public class PageHelper<E extends Entity> {
                 SQLQuery qry = queryTransformer.apply(q);
                 qry.iterateAll(r -> {
                     Iterator<Tuple<String, Object>> iter = r.getFieldsList().iterator();
-                    f.addItem(Value.of(iter.next().getSecond()).asString(),
-                              Value.of(iter.next().getSecond()).asString(),
-                              -1);
+                    if (!iter.hasNext()) {
+                        return;
+                    }
+                    String key = Value.of(iter.next().getSecond()).asString();
+                    String label = key;
+                    if (iter.hasNext()) {
+                        label = Value.of(iter.next().getSecond()).asString();
+                    }
+                    f.addItem(key, label, -1);
                 }, new Limit(0, 100));
             } catch (SQLException e) {
                 Exceptions.handle(OMA.LOG, e);
