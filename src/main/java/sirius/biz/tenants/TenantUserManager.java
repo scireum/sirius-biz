@@ -56,11 +56,28 @@ public class TenantUserManager extends GenericUserManager {
      */
     public static final String PERMISSION_SYSTEM_TENANT = "flag-system-tenant";
 
-    //TODO
+    /**
+     * This flag indicates that the current user either has taken control over another tenant or use account.
+     */
     public static final String PERMISSION_SPY_USER = "flag-spy-user";
 
-    //TODO
+    /**
+     * If a session-value named {@code UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX}
+     * is present, the user will belong to the given tenant and not to his own one.
+     * <p>
+     * This is used by support and administrative tasks. Beware, that the id is not checked, so the one who installs the
+     * ID has to verify that the user is allowed to switch to this tenant.
+     */
     public static final String TENANT_SPY_ID_SUFFIX = "-tenant-spy-id";
+
+    /**
+     * If a session-value named {@code UserContext.getCurrentUser().getUserId() + TenantUserManager.SPY_ID_SUFFIX}
+     * is present, the user with the given ID will be used, instead of the current one.
+     * <p>
+     * This is used by support and administrative tasks. Beware, that the id is not checked, so the one who installs the
+     * ID has to verify that the user is allowed to become this user.
+     */
+    private static final String SPY_ID_SUFFIX = "-spy-id";
 
     private final String systemTenant;
     private final String defaultSalt;
@@ -125,7 +142,7 @@ public class TenantUserManager extends GenericUserManager {
     protected UserInfo findUserInSession(WebContext ctx) {
         UserInfo rootUser = super.findUserInSession(ctx);
         if (rootUser != null && rootUser != defaultUser) {
-            String spyId = ctx.getSessionValue(scope.getScopeId() + "-spy-id").asString();
+            String spyId = ctx.getSessionValue(scope.getScopeId() + SPY_ID_SUFFIX).asString();
             if (Strings.isFilled(spyId)) {
                 UserAccount spyUser = fetchAccount(spyId, null);
                 if (spyUser != null) {
@@ -326,6 +343,11 @@ public class TenantUserManager extends GenericUserManager {
     protected void recordUserLogin(WebContext ctx, UserInfo user) {
         try {
             UserAccount account = (UserAccount) getUserObject(user);
+            // This should never happen (other than manually changed or tampered database data).
+            // However, this would lead to an endless recursion, so we skip right here....
+            if (account.getTrace().getCreatedAt() == null) {
+                return;
+            }
             account.getTrace().setSilent(true);
             account.getJournal().setSilent(true);
             account.getLogin().setNumberOfLogins(account.getLogin().getNumberOfLogins() + 1);
