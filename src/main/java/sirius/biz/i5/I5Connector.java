@@ -58,7 +58,7 @@ public class I5Connector implements Lifecycle {
         Tuple<String, String> key = Tuple.create(configName, tenantName);
         I5ConnectionPool pool = pools.computeIfAbsent(key, k -> {
             Extension ext = Extensions.getExtension("i5", k.getFirst());
-            if (ext.isDefault()) {
+            if (ext == null || ext.isDefault()) {
                 throw Exceptions.handle()
                                 .to(LOG)
                                 .withSystemErrorMessage(
