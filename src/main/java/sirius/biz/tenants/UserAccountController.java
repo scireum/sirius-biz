@@ -313,6 +313,9 @@ public class UserAccountController extends BizController {
         accounts(ctx);
     }
 
+    @ConfigValue("product.wondergemRoot")
+    private String wondergemRoot;
+
     /**
      * Executes a logout for the current scope.
      *
@@ -321,6 +324,6 @@ public class UserAccountController extends BizController {
     @Routed("/logout")
     public void logout(WebContext ctx) {
         UserContext.get().getUserManager().detachFromSession(getUser(), ctx);
-        ctx.respondWith().redirectTemporarily("/");
+        ctx.respondWith().redirectTemporarily(wondergemRoot);
     }
 }
