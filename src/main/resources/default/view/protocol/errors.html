@@ -5,7 +5,7 @@
 *  Copyright by scireum GmbH
 *  http://www.scireum.de - info@scireum.de
 *@
-@args sirius.web.controller.Page errors
+@args sirius.web.controller.Page errors, long total
 @extends(view.wondergem.template.html, title: NLS.get("Incident.plural"))
 @section(breadcrumbs) {
     <li>
@@ -18,6 +18,9 @@
 <div class="row">
     <div class="col-md-3">
         @filterbox(errors, "system/errors")
+        @navbox("Incident.totalIncidents") {
+            @total
+        }
     </div>
     <div class="col-md-9">
         @tableSearchHeader(errors, "system/errors")
