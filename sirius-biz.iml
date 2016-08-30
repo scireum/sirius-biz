@@ -12,7 +12,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: com.scireum:sirius-web:3.3" level="project" />
+    <orderEntry type="library" name="Maven: com.scireum:sirius-web:3.4" level="project" />
     <orderEntry type="library" name="Maven: com.scireum:sirius-kernel:2.13" level="project" />
     <orderEntry type="library" name="Maven: com.scireum:sirius-ipl:1.3" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-all:4.0.34.Final" level="project" />
@@ -58,7 +58,7 @@
     <orderEntry type="library" name="Maven: org.apache.ftpserver:ftplet-api:1.0.6" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.5.2" level="project" />
     <orderEntry type="library" name="Maven: org.apache.mina:mina-core:2.0.4" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.scireum:sirius-web:test-jar:tests:3.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.scireum:sirius-web:test-jar:tests:3.3.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.scireum:sirius-db:test-jar:tests:1.0-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.scireum:sirius-kernel:test-jar:tests:2.13" level="project" />
     <orderEntry type="library" name="Maven: com.typesafe:config:1.0.2" level="project" />
