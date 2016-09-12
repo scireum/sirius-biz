@@ -13,6 +13,7 @@ import com.google.common.collect.Sets;
 import com.typesafe.config.Config;
 import sirius.biz.model.LoginData;
 import sirius.biz.web.BizController;
+import sirius.db.mixing.Entity;
 import sirius.db.mixing.OMA;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
@@ -62,10 +63,12 @@ public class TenantUserManager extends GenericUserManager {
     public static final String PERMISSION_SPY_USER = "flag-spy-user";
 
     /**
-     * If a session-value named {@code UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX}
+     * If a session-value named {@code UserContext.getCurrentScope().getScopeId() +
+     * TenantUserManager.TENANT_SPY_ID_SUFFIX}
      * is present, the user will belong to the given tenant and not to his own one.
      * <p>
-     * This is used by support and administrative tasks. Beware, that the id is not checked, so the one who installs the
+     * This is used by support and administrative tasks. Beware, that the id is not checked, so the one who installs
+     * the
      * ID has to verify that the user is allowed to switch to this tenant.
      */
     public static final String TENANT_SPY_ID_SUFFIX = "-tenant-spy-id";
@@ -205,7 +208,24 @@ public class TenantUserManager extends GenericUserManager {
             throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
         }
 
-        UserAccount account = fetchAccount(optionalAccount.get().getIdAsString(), optionalAccount.get());
+        UserAccount account = fetchAccount(optionalAccount.get().getUniqueName(), optionalAccount.get());
+        if (account == null) {
+            return null;
+        }
+        return asUser(account, null);
+    }
+
+    /**
+     * Tries to find a {@link UserInfo} for the given unique object name of a {@link UserAccount}.
+     *
+     * @param accountId the unique object name of an <tt>UserAccount</tt> to resolve into a <tt>UserInfo</tt>
+     * @return the <tt>UserInfo</tt> representing the given account (will utilize caches if available) or <tt>null</tt>
+     * if no such user exists
+     * @see Entity#getUniqueName()
+     */
+    @Nullable
+    public UserInfo findUserByUserId(String accountId) {
+        UserAccount account = fetchAccount(accountId, null);
         if (account == null) {
             return null;
         }
@@ -230,35 +250,54 @@ public class TenantUserManager extends GenericUserManager {
         if (accountFromCache == null || (accountFromDB != null
                                          && accountFromDB.getVersion() > accountFromCache.getVersion())) {
             if (accountFromDB == null) {
-                accountFromDB = oma.find(UserAccount.class, accountId).orElse(null);
+                accountFromDB = (UserAccount) oma.resolve(accountId).orElse(null);
                 if (accountFromDB == null) {
                     return null;
                 }
             }
-            userAccountCache.put(accountFromDB.getIdAsString(), accountFromDB);
+            userAccountCache.put(accountFromDB.getUniqueName(), accountFromDB);
             rolesCache.remove(accountFromDB.getUniqueName());
-            configCache.remove(accountFromDB.getIdAsString());
+            configCache.remove(accountFromDB.getUniqueName());
             account = accountFromDB;
         } else {
             account = accountFromCache;
         }
+        fetchTenant(account, accountFromDB);
+
+        return account;
+    }
+
+    private Tenant fetchTenant(UserAccount account, @Nullable UserAccount accountFromDB) {
         Tenant tenantFromCache = tenantsCache.get(String.valueOf(account.getTenant().getId()));
-        if (tenantFromCache == null || (accountFromDB != null
-                                        && accountFromDB.getTenant().getValue().getVersion()
-                                           > tenantFromCache.getVersion())) {
-            tenantsCache.put(accountFromDB.getTenant().getValue().getIdAsString(),
-                             accountFromDB.getTenant().getValue());
+
+        // if we found a tenant and no database object is present - we don't need
+        // to check for updates or changes, just return the cached value.
+        if (tenantFromCache != null && accountFromDB == null) {
+            return tenantFromCache;
+        }
+
+        // ...otherwise, let's check if our cached instance is stil up to date
+        Tenant tenantFromDB = oma.find(Tenant.class, account.getTenant().getId())
+                                 .orElseThrow(() -> new IllegalStateException(Strings.apply(
+                                         "Tenant %s for UserAccount %s vanished!",
+                                         account.getTenant().getId(),
+                                         account.getId())));
+
+        // Only actually use the instance from the database if we either have no cached value
+        // or if it is outdated. Otherwise the cached instance is preferred, because it might contain
+        // useful pre-computed values...
+        if (tenantFromCache == null || tenantFromDB.getVersion() > tenantFromCache.getVersion()) {
+            tenantsCache.put(tenantFromDB.getIdAsString(), tenantFromDB);
 
             // We also need to re-compute the roles and config of the user
             // as this is also determined by the tenant
             rolesCache.remove(account.getUniqueName());
-            configCache.remove(account.getIdAsString());
-            account.getTenant().setValue(accountFromDB.getTenant().getValue());
-        } else {
-            account.getTenant().setValue(tenantFromCache);
+            configCache.remove(account.getUniqueName());
+
+            return tenantFromDB;
         }
 
-        return account;
+        return tenantFromCache;
     }
 
     private Optional<UserAccount> createSystemTenantIfNonExistent() {
@@ -360,7 +399,7 @@ public class TenantUserManager extends GenericUserManager {
 
     @Override
     protected Object getUserObject(UserInfo userInfo) {
-        return getUserById(userInfo.getUserId());
+        return fetchAccount(userInfo.getUserId(), null);
     }
 
     @Override
@@ -385,13 +424,9 @@ public class TenantUserManager extends GenericUserManager {
         });
     }
 
-    protected UserAccount getUserById(String id) {
-        return userAccountCache.get(id, i -> (UserAccount) oma.resolve(i).orElse(null));
-    }
-
     @Override
     protected boolean isUserStillValid(String userId) {
-        UserAccount user = getUserById(userId);
+        UserAccount user = fetchAccount(userId, null);
         return user != null && !user.getLogin().isAccountLocked();
     }
 
@@ -414,7 +449,7 @@ public class TenantUserManager extends GenericUserManager {
             return cachedRoles;
         }
 
-        UserAccount user = getUserById(userId);
+        UserAccount user = fetchAccount(userId, null);
         Set<String> roles;
         if (user != null) {
             roles = computeRoles(user, user.getTenant().getValue());
