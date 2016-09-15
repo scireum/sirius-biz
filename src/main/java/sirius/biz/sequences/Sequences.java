@@ -37,7 +37,7 @@ public class Sequences {
     private OMA oma;
 
     /**
-     * Returns the next value in the givrn sequence.
+     * Returns the next value in the given sequence.
      * <p>
      * Note that this method doesn't use locks or transactions. It rather utilizes optimistic locking, which scales
      * extremely well. However, the algorithm used is not intended for extreme parallel usage. In such scenarios,
