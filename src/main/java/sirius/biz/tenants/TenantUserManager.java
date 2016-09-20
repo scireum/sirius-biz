@@ -262,7 +262,7 @@ public class TenantUserManager extends GenericUserManager {
         } else {
             account = accountFromCache;
         }
-        fetchTenant(account, accountFromDB);
+        account.getTenant().setValue(fetchTenant(account, accountFromDB));
 
         return account;
     }
