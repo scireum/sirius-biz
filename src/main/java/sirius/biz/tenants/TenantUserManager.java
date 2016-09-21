@@ -190,7 +190,7 @@ public class TenantUserManager extends GenericUserManager {
     }
 
     @Override
-    protected UserInfo findUserByName(WebContext webContext, String user) {
+    public UserInfo findUserByName(@Nullable WebContext ctx, String user) {
         if (Strings.isEmpty(user)) {
             return null;
         }
@@ -262,7 +262,7 @@ public class TenantUserManager extends GenericUserManager {
         } else {
             account = accountFromCache;
         }
-        fetchTenant(account, accountFromDB);
+        account.getTenant().setValue(fetchTenant(account, accountFromDB));
 
         return account;
     }
@@ -349,12 +349,12 @@ public class TenantUserManager extends GenericUserManager {
     }
 
     @Override
-    protected UserInfo findUserByCredentials(WebContext webContext, String user, String password) {
+    public UserInfo findUserByCredentials(@Nullable WebContext ctx, String user, String password) {
         if (Strings.isEmpty(password)) {
             return null;
         }
 
-        UserInfo result = findUserByName(webContext, user);
+        UserInfo result = findUserByName(ctx, user);
         if (result == null) {
             return null;
         }
