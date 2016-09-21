@@ -84,7 +84,7 @@ public class Sequences {
                 }
 
                 // Block a short random amount of time to resolve conflicts with other waiting threads
-                Wait.randomMillis(50, 50);
+                Wait.randomMillis(50, 100);
             }
 
             throw Exceptions.handle()
