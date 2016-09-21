@@ -20,10 +20,10 @@ import sirius.kernel.health.Log;
 import java.sql.SQLException;
 
 /**
- * Provides a facility to generate unique consequtive numbers.
+ * Provides a facility to generate unique consecutive numbers.
  * <p>
- * For each seaquence name, a call to {@link #generateId(String)} will return a unique number. The initial or next
- * number being returned can be sepcified by {@link #setCounterValue(String, long, boolean)}.
+ * For each sequence name, a call to {@link #generateId(String)} will return a unique number. The initial or next
+ * number being returned can be specified by {@link #setCounterValue(String, long, boolean)}.
  * <p>
  * Note that these sequences are global and not tenant aware. Therefore care must be taken to generate unique names for
  * sequences. A viable option is to use {@link Entity#getUniqueName()} of the entity which utilizes the generator.
@@ -122,29 +122,18 @@ public class Sequences {
         try {
             // Select the current value which will be returned if all goes well....
             if (oma.select(SequenceCounter.class).eq(SequenceCounter.NAME, sequence).exists()) {
-                if (force) {
-                    int updatedRows = oma.getDatabase()
-                                         .createQuery("UPDATE sequencecounter "
-                                                      + "SET nextValue = ${value} "
-                                                      + "WHERE name = ${name}")
-                                         .set("name", sequence)
-                                         .set("value", nextValue)
-                                         .executeUpdate();
-                    if (updatedRows == 1) {
-                        return;
-                    }
-                } else {
-                    int updatedRows = oma.getDatabase()
-                                         .createQuery("UPDATE sequencecounter "
-                                                      + "SET nextValue = ${value} "
-                                                      + "WHERE name = ${name} "
-                                                      + "  AND nextValue <= ${value}")
-                                         .set("name", sequence)
-                                         .set("value", nextValue)
-                                         .executeUpdate();
-                    if (updatedRows == 1) {
-                        return;
-                    }
+                String sql = "UPDATE sequencecounter " + "SET nextValue = ${value} " + "WHERE name = ${name}";
+                if (!force) {
+                    sql += "  AND nextValue <= ${value}";
+                }
+
+                int updatedRows = oma.getDatabase()
+                                     .createQuery(sql)
+                                     .set("name", sequence)
+                                     .set("value", nextValue)
+                                     .executeUpdate();
+                if (updatedRows == 1) {
+                    return;
                 }
             } else {
                 try {
