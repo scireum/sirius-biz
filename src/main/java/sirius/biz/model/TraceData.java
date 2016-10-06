@@ -82,12 +82,12 @@ public class TraceData extends Composite {
 
     @BeforeSave
     protected void update() {
-        if (createdAt == null) {
-            createdBy = UserContext.getCurrentUser().getUserName();
-            createdAt = LocalDateTime.now();
-            createdIn = TaskContext.get().getSystemString();
-        }
         if (!silent) {
+            if (createdAt == null) {
+                createdBy = UserContext.getCurrentUser().getUserName();
+                createdAt = LocalDateTime.now();
+                createdIn = TaskContext.get().getSystemString();
+            }
             changedBy = UserContext.getCurrentUser().getUserName();
             changedAt = LocalDateTime.now();
             changedIn = TaskContext.get().getSystemString();
