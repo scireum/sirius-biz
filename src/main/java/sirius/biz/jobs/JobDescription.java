@@ -16,6 +16,8 @@ import sirius.web.tasks.ManagedTaskContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -43,15 +45,25 @@ public abstract class JobDescription implements Priorized, Named {
         return null;
     }
 
-    public abstract void collectPermissions(Consumer<String> permissions);
+    public List<String> getPermissions() {
+        return Collections.emptyList();
+    }
 
-    public abstract void collectParameters(Consumer<JobParameterDescription> parameterCollector);
+    public void collectParameters(Consumer<JobParameterDescription> parameterCollector) {
 
-    public abstract boolean verifyParameters(Context parameters);
+    }
+
+    public boolean verifyParameters(Context parameters) {
+        return true;
+    }
 
     @Nonnull
     public String getPreferredExecutor() {
         return Tasks.DEFAULT;
+    }
+
+    public boolean isEditable() {
+        return false;
     }
 
     public abstract void execute(Context parameters, ManagedTaskContext task);

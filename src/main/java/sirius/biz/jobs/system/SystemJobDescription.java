@@ -8,14 +8,15 @@
 
 package sirius.biz.jobs.system;
 
+import com.google.common.collect.Lists;
 import sirius.biz.jobs.JobDescription;
 import sirius.kernel.nls.NLS;
 import sirius.web.security.Permissions;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 /**
  * Created by aha on 22.07.16.
@@ -43,7 +44,7 @@ public abstract class SystemJobDescription extends JobDescription {
     }
 
     @Override
-    public void collectPermissions(Consumer<String> permissions) {
-        requiredPermissions.forEach(permissions);
+    public List<String> getPermissions() {
+        return Lists.newArrayList(requiredPermissions);
     }
 }

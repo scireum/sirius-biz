@@ -23,6 +23,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.web.security.UserContext;
+import sirius.web.security.UserInfo;
 import sirius.web.tasks.ManagedTaskContext;
 import sirius.web.tasks.ManagedTasks;
 
@@ -34,6 +35,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by aha on 22.07.16.
@@ -42,6 +44,8 @@ import java.util.Optional;
 public class Jobs {
 
     public static final Log LOG = Log.get("jobs");
+    public static final String PERMISSION_EXECUTE_JOBS = "permission-execute-jobs";
+    public static final String FEATURE_PROVIDE_JOBS = "feature-provide-jobs";
 
     @Parts(JobsFactory.class)
     private Collection<JobsFactory> factories;
@@ -64,7 +68,11 @@ public class Jobs {
     public List<JobDescription> findJobs(@Nullable String query) {
         List<JobDescription> result = Lists.newArrayList();
         for (JobsFactory factory : factories) {
-            factory.collectJobs(query, result::add);
+            factory.collectJobs(query, descriptor -> {
+                if (hasRequiredPermissions(descriptor)) {
+                    result.add(descriptor);
+                }
+            });
         }
 
         Collections.sort(result,
@@ -72,9 +80,28 @@ public class Jobs {
         return result;
     }
 
+    private boolean hasRequiredPermissions(JobDescription descriptor) {
+        UserInfo userInfo = UserContext.getCurrentUser();
+        if (!userInfo.hasPermission(PERMISSION_EXECUTE_JOBS)) {
+            return false;
+        }
+        for (String permission : descriptor.getPermissions()) {
+            if (!userInfo.hasPermission(permission)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public JobDescription resolve(String factory, String name) {
         JobsFactory jobsFactory = ctx.findPart(factory, JobsFactory.class);
-        return jobsFactory.resolve(name);
+        JobDescription jobDescription = jobsFactory.resolve(name);
+        if (hasRequiredPermissions(jobDescription)) {
+            return jobDescription;
+        } else {
+            return null;
+        }
     }
 
     public String execute(JobDescription job, sirius.kernel.commons.Context context) {
@@ -85,6 +112,29 @@ public class Jobs {
     }
 
     private void executeInOwnThread(JobDescription job, ManagedTaskContext mtc, sirius.kernel.commons.Context context) {
+        JobProtocol protocol = prepareProtocol(job, context);
+        try {
+            job.execute(context, mtc);
+        } catch (Throwable e) {
+            mtc.log(Exceptions.handle(LOG, e).getMessage());
+            mtc.markErroneous();
+        } finally {
+            completeProtocol(mtc, protocol);
+            deleteOldLogs(job.getFactory(), job.getName());
+        }
+    }
+
+    private void completeProtocol(ManagedTaskContext mtc, JobProtocol protocol) {
+        StringBuilder sb = new StringBuilder();
+        mtc.getLastLogs().forEach(e -> sb.append(e).append("\n"));
+        protocol.setJobLog(sb.toString());
+        protocol.setDurationInSeconds(TimeUnit.MILLISECONDS.toSeconds(CallContext.getCurrent()
+                                                                                 .getWatch()
+                                                                                 .elapsedMillis()));
+        oma.update(protocol);
+    }
+
+    private JobProtocol prepareProtocol(JobDescription job, sirius.kernel.commons.Context context) {
         JobProtocol protocol = new JobProtocol();
         protocol.setJob(job.getName());
         protocol.setFactory(job.getFactory());
@@ -97,16 +147,7 @@ public class Jobs {
         protocol.setSuccessful(true);
         protocol.setJobTitle(job.getTaskTitle(context));
         oma.update(protocol);
-        try {
-            job.execute(context, mtc);
-        } catch (Throwable e) {
-            mtc.log(Exceptions.handle(LOG, e).getMessage());
-            mtc.markErroneous();
-        } finally {
-            protocol.setDurationInSeconds(CallContext.getCurrent().getWatch().elapsedMillis() / 1000);
-            oma.update(protocol);
-            deleteOldLogs(job.getFactory(), job.getName());
-        }
+        return protocol;
     }
 
     private void deleteOldLogs(String factory, String name) {
