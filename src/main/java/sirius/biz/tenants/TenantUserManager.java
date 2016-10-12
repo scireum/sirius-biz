@@ -160,33 +160,67 @@ public class TenantUserManager extends GenericUserManager {
 
             String tenantSpyId = ctx.getSessionValue(scope.getScopeId() + TENANT_SPY_ID_SUFFIX).asString();
             if (Strings.isFilled(tenantSpyId)) {
-                Tenant tenant = tenantsCache.get(tenantSpyId, i -> oma.find(Tenant.class, i).orElse(null));
-                if (tenant != null) {
-                    // Copy all relevant data into a new object (outside of the cache)...
-                    UserAccount currentUser = rootUser.getUserObject(UserAccount.class);
-                    UserAccount modifiedUser = new UserAccount();
-                    modifiedUser.setId(currentUser.getId());
-                    modifiedUser.getLogin().setUsername(currentUser.getLogin().getUsername());
-                    modifiedUser.setEmail(currentUser.getEmail());
-                    modifiedUser.getPermissions().setConfigString(currentUser.getPermissions().getConfigString());
-                    modifiedUser.getPermissions()
-                                .getPermissions()
-                                .addAll(currentUser.getPermissions().getPermissions());
-
-                    // And overwrite with the new tenant...
-                    modifiedUser.getTenant().setValue(tenant);
-
-                    List<String> extraRoles = Lists.newArrayList();
-                    extraRoles.add(PERMISSION_SPY_USER);
-                    if (rootUser.hasPermission(PERMISSION_SYSTEM_TENANT)) {
-                        extraRoles.add(PERMISSION_SYSTEM_TENANT);
-                    }
-                    return asUser(modifiedUser, extraRoles);
-                }
+                return createUserWithTenant(rootUser, tenantSpyId);
             }
         }
 
         return rootUser;
+    }
+
+    /**
+     * Creates a copy of the given <tt>UserInfo</tt> with a new tenant id.
+     * <p>
+     * As a user can switch to other tenants, we must be able to create a "fake" user info, which contains the given
+     * tenant data.
+     *
+     * @param originalUser the user which is actually logged in
+     * @param tenantId     the id of the tenant to become
+     * @return a new user object, with the original user data but a modified tenant id and object
+     */
+    public UserInfo createUserWithTenant(UserInfo originalUser, String tenantId) {
+        if (Strings.isEmpty(tenantId) || Strings.areEqual(originalUser.getTenantId(), tenantId)) {
+            return originalUser;
+        }
+        Tenant tenant = tenantsCache.get(tenantId, i -> oma.find(Tenant.class, i).orElse(null));
+        if (tenant == null) {
+            return originalUser;
+        }
+
+        // Copy all relevant data into a new object (outside of the cache)...
+        UserAccount currentUser = originalUser.getUserObject(UserAccount.class);
+        UserAccount modifiedUser = new UserAccount();
+        modifiedUser.setId(currentUser.getId());
+        modifiedUser.getLogin().setUsername(currentUser.getLogin().getUsername());
+        modifiedUser.setEmail(currentUser.getEmail());
+        modifiedUser.getPermissions().setConfigString(currentUser.getPermissions().getConfigString());
+        modifiedUser.getPermissions().getPermissions().addAll(currentUser.getPermissions().getPermissions());
+
+        // And overwrite with the new tenant...
+        modifiedUser.getTenant().setValue(tenant);
+
+        List<String> extraRoles = Lists.newArrayList();
+        extraRoles.add(PERMISSION_SPY_USER);
+        if (originalUser.hasPermission(PERMISSION_SYSTEM_TENANT)) {
+            extraRoles.add(PERMISSION_SYSTEM_TENANT);
+        }
+
+        return asUser(modifiedUser, extraRoles);
+    }
+
+    public String getOriginalTenantId(WebContext ctx) {
+        return ctx.getSessionValue(this.scope.getScopeId() + "-tenant-id").asString();
+    }
+
+    @Override
+    public void attachToSession(@Nonnull UserInfo user, @Nonnull WebContext ctx) {
+        // If we're being a spy user (pretending to have a different user id or tenant),
+        // there is no need to update the session data - it would rather be error prone
+        // as we would screw up the session data with the user data being spyed.
+        if (user.hasPermission(PERMISSION_SPY_USER)) {
+            return;
+        }
+
+        super.attachToSession(user, ctx);
     }
 
     @Override
@@ -306,6 +340,7 @@ public class TenantUserManager extends GenericUserManager {
                 BizController.LOG.INFO("No tenant is present, creating system tenant....");
                 Tenant tenant = new Tenant();
                 tenant.setName("System Tenant");
+                tenant.getTrace().setSilent(true);
                 oma.update(tenant);
 
                 BizController.LOG.INFO(
@@ -314,6 +349,7 @@ public class TenantUserManager extends GenericUserManager {
                 ua.getTenant().setValue(oma.select(Tenant.class).orderAsc(Tenant.ID).queryFirst());
                 ua.getLogin().setUsername("system");
                 ua.getLogin().setCleartextPassword("system");
+                ua.getTrace().setSilent(true);
                 oma.update(ua);
 
                 return Optional.of(ua);

@@ -13,6 +13,7 @@ import sirius.biz.model.BizEntity;
 import sirius.biz.model.PermissionData;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Column;
+import sirius.db.mixing.EntityRef;
 import sirius.db.mixing.annotations.BeforeDelete;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
@@ -30,6 +31,28 @@ import sirius.kernel.nls.NLS;
  */
 @Framework("tenants")
 public class Tenant extends BizEntity {
+
+    /**
+     * Contains the parent tenant of this tenant.
+     */
+    public static final Column PARENT = Column.named("parent");
+    @Autoloaded
+    @NullAllowed
+    private final EntityRef<Tenant> parent = EntityRef.on(Tenant.class, EntityRef.OnDelete.SET_NULL);
+
+    /**
+     * Determines if the parent tenant can become this tenant by calling "/tenants/select".
+     */
+    public static final Column PARENT_CAN_ACCESS = Column.named("parentCanAccess");
+    @Autoloaded
+    private boolean parentCanAccess = false;
+
+    /**
+     * Determines if this tenant can become its tenant by calling "/tenants/select".
+     */
+    public static final Column CAN_ACCESS_PARENT = Column.named("canAccessParent");
+    @Autoloaded
+    private boolean canAccessParent = false;
 
     /**
      * Contains the name of the tenant.
@@ -92,6 +115,26 @@ public class Tenant extends BizEntity {
 
     public PermissionData getPermissions() {
         return permissions;
+    }
+
+    public EntityRef<Tenant> getParent() {
+        return parent;
+    }
+
+    public boolean isParentCanAccess() {
+        return parentCanAccess;
+    }
+
+    public void setParentCanAccess(boolean parentCanAccess) {
+        this.parentCanAccess = parentCanAccess;
+    }
+
+    public boolean isCanAccessParent() {
+        return canAccessParent;
+    }
+
+    public void setCanAccessParent(boolean canAccessParent) {
+        this.canAccessParent = canAccessParent;
     }
 
     @Override

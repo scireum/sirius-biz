@@ -5,24 +5,23 @@
 *  Copyright by scireum GmbH
 *  http://www.scireum.de - info@scireum.de
 *@
-@args sirius.biz.tenants.Tenant tenant, sirius.biz.tenants.TenantController controller
+@args sirius.biz.tenants.Tenant tenant, sirius.biz.tenants.TenantController controller, List tenants
 @extends(view.tenants.tenant.html, tenant, "details")
 
 @editForm(("tenant/" + tenant.getIdAsString())) {
     <div class="row">
-        @textfield(span:     "8",
-                   name:     "name",
-                   value:    tenant.getName(),
-                   labelKey: "Model.name",
-                   required: true)
-        @textfield(span:     "4",
-                   name:     "accountNumber",
-                   value:    tenant.getAccountNumber(),
-                   labelKey: "Tenant.accountNumber")
-    </div>
-
-    <div class="row">
         <div class="col-md-8">
+            <div class="row">
+                @textfield(span:     "12",
+                    name:     "name",
+                    value:    tenant.getName(),
+                    labelKey: "Model.name",
+                    required: true)
+                @textfield(span:     "12",
+                    name:     "accountNumber",
+                    value:    tenant.getAccountNumber(),
+                    labelKey: "Tenant.accountNumber")
+            </div>
             @heading("Model.address")
             <div class="row">
                 @textfield(span:     "12",
@@ -47,6 +46,27 @@
             </div>
         </div>
         <div class="col-md-4">
+            <div class="row">
+                @singleSelect(span:     "12",
+                              name:     "parent",
+                              labelKey: "Tenant.parent",
+                              helpKey: "Tenant.parent.help") {
+                        <option value="" @if(tenant.getParent().isEmpty()) {selected="selected"}></option>
+                        @for(sirius.biz.tenants.Tenant t : tenants) {
+                         <option value="@t.getId()" @if(tenant.getParent().is(t)) {selected="selected"}>@t.getName()</option>
+                        }
+                }
+                @checkbox(span:     "12",
+                        name:     "parentCanAccess",
+                        value:    tenant.isParentCanAccess(),
+                        labelKey: "Tenant.parentCanAccess",
+                        helpKey: "Tenant.parentCanAccess.help")
+                @checkbox(span:     "12",
+                        name:     "canAccessParent",
+                        value:    tenant.isCanAccessParent(),
+                        labelKey: "Tenant.canAccessParent",
+                        helpKey: "Tenant.canAccessParent.help")
+            </div>
             @if(!controller.getPermissions().isEmpty()) {
                 @heading("Tenant.permissions")
                 @for(String permission : controller.getPermissions()) {

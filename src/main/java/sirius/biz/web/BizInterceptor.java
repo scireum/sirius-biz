@@ -42,7 +42,7 @@ public class BizInterceptor implements Interceptor {
             return false;
         }
         if (!UserContext.getCurrentUser().isLoggedIn()) {
-            ctx.respondWith().template("view/biz/login.html", ctx.getRequest().getUri());
+            ctx.respondWith().template("view/biz/login.html", ctx.getRequest().uri());
         } else {
             ctx.respondWith()
                .template("view/wondergem/error.html",
