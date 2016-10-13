@@ -4,8 +4,10 @@
 
 @section(breadcrumbs) {
     <li>
-       <a href="/jobs">@i18n("JobsController.jobs")</a>
-       <a href="/job/run/@job.getFactory()/@job.getName()">@i18n("JobsController.job"): job.getTitle()</a>
+        <a href="/jobs">@i18n("JobsController.jobs")</a>
+    </li>
+    <li>
+       <a href="/job/@job.getFactory()/@job.getName()/run">@i18n("JobsController.job"): job.getTitle()</a>
     </li>
 }
 @pageHeader() {

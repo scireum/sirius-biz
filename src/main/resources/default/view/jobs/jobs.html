@@ -25,10 +25,17 @@
     @for(JobDescription job : jobs.getItems()) {
         <tr>
             <td>
-                <a class="link" href="@prefix/job/run/@job.getFactory()/@job.getName()">@job.getTitle()</a><br>
+                <a class="link" href="@prefix/job/@job.getFactory()/@job.getName()/run">@job.getTitle()</a><br>
                 <small class="muted">@job.getDescription()</small>
             </td>
             <td class="col-md-2 align-center">
+                @if (job.isEditable()) {
+                    <a class="link" href="@prefix/job/@job.getFactory()/@job.getName()/edit">@i18n("NLS.edit")</a><br>
+                }
+                <a class="link" href="@prefix/job/@job.getFactory()/@job.getName()/logs">@i18n("JobsController.logs")</a><br>
+                @if (job.isEditable()) {
+                    @deleteLink(("job/" + job.getFactory() + "/" + job.getName() + "/delete"))
+                }
             </td>
         </tr>
     }
