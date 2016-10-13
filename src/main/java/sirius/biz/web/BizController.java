@@ -18,6 +18,7 @@ import sirius.db.mixing.Entity;
 import sirius.db.mixing.EntityRef;
 import sirius.db.mixing.OMA;
 import sirius.db.mixing.Property;
+import sirius.db.mixing.properties.BooleanProperty;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -123,12 +124,31 @@ public class BizController extends BasicController {
      */
     protected void load(WebContext ctx, Entity entity) {
         for (Property property : entity.getDescriptor().getProperties()) {
-            if (isAutoloaded(property)) {
-                if (ctx.hasParameter(property.getName())) {
-                    property.parseValue(entity, ctx.get(property.getName()));
-                }
+            if (shouldAutoload(ctx, property)) {
+                property.parseValue(entity, ctx.get(property.getName()));
             }
         }
+    }
+
+    private boolean shouldAutoload(WebContext ctx, Property property) {
+        if (!isAutoloaded(property)) {
+            return false;
+        }
+
+        // If the parameter is present in the request we're good to go
+        if (ctx.hasParameter(property.getName())) {
+            return true;
+        }
+
+        // If the property is a boolean one, it will most probably handled
+        // by a checkbox. As an unchecked checkbox will not submit any value
+        // we still process this property, which is then considered to be
+        // false (matching the unchecked checkbox).
+        if (property instanceof BooleanProperty) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -138,13 +158,12 @@ public class BizController extends BasicController {
      * @param entity     the entity to fill
      * @param properties the list of properties to transfer
      */
+
     protected void load(WebContext ctx, Entity entity, Column... properties) {
         Set<String> columnsSet = Arrays.stream(properties).map(Column::getName).collect(Collectors.toSet());
         for (Property property : entity.getDescriptor().getProperties()) {
             if (columnsSet.contains(property.getName())) {
-                if (ctx.hasParameter(property.getName())) {
-                    property.parseValue(entity, ctx.get(property.getName()));
-                }
+                property.parseValue(entity, ctx.get(property.getName()));
             }
         }
     }
