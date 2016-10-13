@@ -144,11 +144,7 @@ public class BizController extends BasicController {
         // by a checkbox. As an unchecked checkbox will not submit any value
         // we still process this property, which is then considered to be
         // false (matching the unchecked checkbox).
-        if (property instanceof BooleanProperty) {
-            return true;
-        }
-
-        return false;
+        return property instanceof BooleanProperty;
     }
 
     /**
