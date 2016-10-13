@@ -260,17 +260,17 @@ public class TenantController extends BizController {
     private SmartQuery<Tenant> queryPossibleTenants(WebContext ctx) {
         String tenantId = ((TenantUserManager) UserContext.get().getUserManager()).getOriginalTenantId(ctx);
         Optional<Tenant> originalTenant = oma.find(Tenant.class, tenantId);
-        if (!originalTenant.isPresent()) {
+        if (originalTenant.isPresent()) {
+            SmartQuery<Tenant> baseQuery = oma.select(Tenant.class);
+            if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+                baseQuery.where(Or.of(And.of(FieldOperator.on(Tenant.PARENT).eq(tenantId),
+                                             FieldOperator.on(Tenant.PARENT_CAN_ACCESS).eq(true)),
+                                      And.of(FieldOperator.on(Tenant.ID).eq(originalTenant.get().getParent().getId()),
+                                             FieldOperator.on(Tenant.CAN_ACCESS_PARENT).eq(true))));
+            }
+            return baseQuery;
+        } else {
             throw Exceptions.createHandled().withSystemErrorMessage("Cannot determine current tenant!").handle();
         }
-
-        SmartQuery<Tenant> baseQuery = oma.select(Tenant.class);
-        if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
-            baseQuery.where(Or.of(And.of(FieldOperator.on(Tenant.PARENT).eq(tenantId),
-                                         FieldOperator.on(Tenant.PARENT_CAN_ACCESS).eq(true)),
-                                  And.of(FieldOperator.on(Tenant.ID).eq(originalTenant.get().getParent().getId()),
-                                         FieldOperator.on(Tenant.CAN_ACCESS_PARENT).eq(true))));
-        }
-        return baseQuery;
     }
 }
