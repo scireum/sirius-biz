@@ -11,9 +11,11 @@ package sirius.biz.statistics;
 import sirius.db.mixing.Column;
 import sirius.db.mixing.Entity;
 import sirius.db.mixing.annotations.Length;
+import sirius.kernel.di.std.Framework;
 
 import java.time.LocalDate;
 
+@Framework("statistics")
 public class StatisticValue extends Entity {
 
     public static final Column EVENT = Column.named("event");

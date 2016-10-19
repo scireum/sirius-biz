@@ -13,6 +13,7 @@ import sirius.db.mixing.constraints.FieldOperator;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Wait;
+import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -35,6 +36,7 @@ import java.time.LocalDateTime;
  * however that acquiring a lock causes at last one SQL statement to be executed, therefore these locks are more
  * expensive than {@link java.util.concurrent.locks.ReentrantLock} or the like.
  */
+@Framework("locks")
 @Register(classes = {Locks.class, MetricProvider.class})
 public class Locks implements MetricProvider {
 

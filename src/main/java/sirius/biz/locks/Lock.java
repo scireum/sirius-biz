@@ -13,9 +13,11 @@ import sirius.db.mixing.Entity;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Unique;
+import sirius.kernel.di.std.Framework;
 
 import java.time.LocalDateTime;
 
+@Framework("locks")
 @Index(name = "unique_name", columns = "name", unique = true)
 public class Lock extends Entity {
 
