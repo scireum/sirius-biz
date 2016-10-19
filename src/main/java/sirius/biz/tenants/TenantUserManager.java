@@ -12,6 +12,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.typesafe.config.Config;
 import sirius.biz.model.LoginData;
+import sirius.biz.statistics.AggregationLevel;
+import sirius.biz.statistics.StatisticalEvent;
+import sirius.biz.statistics.Statistics;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.Entity;
 import sirius.db.mixing.OMA;
@@ -104,6 +107,12 @@ public class TenantUserManager extends GenericUserManager {
 
     @Part
     private static OMA oma;
+
+    @Part
+    private static Statistics statistics;
+
+    private static final StatisticalEvent LOGGED_IN_EVENT =
+            StatisticalEvent.create("useraccount-login", AggregationLevel.MONTHS);
 
     private static Cache<String, Set<String>> rolesCache = CacheManager.createCache("tenants-roles");
     private static Cache<String, UserAccount> userAccountCache = CacheManager.createCache("tenants-users");
@@ -351,6 +360,9 @@ public class TenantUserManager extends GenericUserManager {
                 ua.getLogin().setUsername("system");
                 ua.getLogin().setCleartextPassword("system");
                 ua.getTrace().setSilent(true);
+                // This should be enough to grant us more roles via the UI
+                ua.getPermissions().getPermissions().add("administrator");
+                ua.getPermissions().getPermissions().add("user-administrator");
                 oma.update(ua);
 
                 return Optional.of(ua);
@@ -419,6 +431,9 @@ public class TenantUserManager extends GenericUserManager {
     protected void recordUserLogin(WebContext ctx, UserInfo user) {
         try {
             UserAccount account = (UserAccount) getUserObject(user);
+
+            statistics.incrementStatistic(LOGGED_IN_EVENT, account.getUniqueName());
+
             // This should never happen (other than manually changed or tampered database data).
             // However, this would lead to an endless recursion, so we skip right here....
             if (account.getTrace().getCreatedAt() == null) {

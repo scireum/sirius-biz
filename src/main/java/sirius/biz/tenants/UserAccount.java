@@ -12,6 +12,7 @@ import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
 import sirius.biz.protocol.JournalData;
+import sirius.biz.statistics.Statistics;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Column;
 import sirius.db.mixing.annotations.BeforeDelete;
@@ -70,6 +71,9 @@ public class UserAccount extends TenantAware {
     @Part
     private static Mails ms;
 
+    @Part
+    private static Statistics statistics;
+
     @BeforeSave
     protected void verifyData() {
         if (Strings.isFilled(email) && !ms.isValidMailAddress(email.trim(), null)) {
@@ -87,8 +91,13 @@ public class UserAccount extends TenantAware {
     }
 
     @BeforeSave
-    @BeforeDelete
     protected void onModify() {
+        TenantUserManager.flushCacheForUserAccount(this);
+    }
+
+    @BeforeDelete
+    protected void onDelete() {
+        statistics.deleteStatistic(getUniqueName());
         TenantUserManager.flushCacheForUserAccount(this);
     }
 
