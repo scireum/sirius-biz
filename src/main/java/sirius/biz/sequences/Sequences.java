@@ -13,6 +13,7 @@ import sirius.db.mixing.OMA;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
@@ -29,6 +30,7 @@ import java.sql.SQLException;
  * sequences. A viable option is to use {@link Entity#getUniqueName()} of the entity which utilizes the generator.
  */
 @Framework("sequences")
+@Register(classes = Sequences.class)
 public class Sequences {
 
     public static final Log LOG = Log.get("sequences");
@@ -71,10 +73,10 @@ public class Sequences {
                 }
 
                 int numRowsChanged = oma.getDatabase()
-                                        .createQuery("UPDATE sequencecounter "
-                                                     + "SET nextValue = nextValue + 1 "
+                                        .createQuery(" UPDATE sequencecounter "
+                                                     + "  SET nextValue = nextValue + 1 "
                                                      + "WHERE name = ${name} "
-                                                     + "      AND nextValue = ${value}")
+                                                     + "  AND nextValue = ${value}")
                                         .set("name", sequence)
                                         .set("value", result.getNextValue())
                                         .executeUpdate();
@@ -122,7 +124,7 @@ public class Sequences {
         try {
             // Select the current value which will be returned if all goes well....
             if (oma.select(SequenceCounter.class).eq(SequenceCounter.NAME, sequence).exists()) {
-                String sql = "UPDATE sequencecounter " + "SET nextValue = ${value} " + "WHERE name = ${name}";
+                String sql = "UPDATE sequencecounter SET nextValue = ${value} WHERE name = ${name}";
                 if (!force) {
                     sql += "  AND nextValue <= ${value}";
                 }
