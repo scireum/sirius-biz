@@ -347,6 +347,7 @@ public class TenantUserManager extends GenericUserManager {
                         "No user account is present, creating system / system - Please change the password now!");
                 UserAccount ua = new UserAccount();
                 ua.getTenant().setValue(oma.select(Tenant.class).orderAsc(Tenant.ID).queryFirst());
+                ua.setEmail("system@localhost.local");
                 ua.getLogin().setUsername("system");
                 ua.getLogin().setCleartextPassword("system");
                 ua.getTrace().setSilent(true);
