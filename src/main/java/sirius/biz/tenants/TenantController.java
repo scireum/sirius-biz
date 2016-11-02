@@ -269,10 +269,10 @@ public class TenantController extends BizController {
                                           FieldOperator.on(Tenant.ID).eq(originalTenant.get().getParent().getId())));
                 } else {
                     baseQuery.where(And.of(FieldOperator.on(Tenant.PARENT).eq(tenantId),
-                                           FieldOperator.on(Tenant.PARENT_CAN_ACCESS).eq(true)),
-                                    FieldOperator.on(Tenant.ID).eq(originalTenant.get().getParent().getId()));
+                                           FieldOperator.on(Tenant.PARENT_CAN_ACCESS).eq(true)));
                 }
-            } return baseQuery;
+            }
+            return baseQuery;
         } else {
             throw Exceptions.createHandled().withSystemErrorMessage("Cannot determine current tenant!").handle();
         }
