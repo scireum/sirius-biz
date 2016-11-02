@@ -8,14 +8,22 @@
 
 package sirius.biz.tenants
 
+import sirius.db.mixing.OMA
 import sirius.kernel.BaseSpecification
+import sirius.kernel.di.std.Part
 import sirius.web.security.UserContext
 import sirius.web.security.UserInfo
 
-/**
- * Created by aha on 30.11.15.
- */
+import java.time.Duration
+
 class TenantsSpec extends BaseSpecification {
+
+    @Part
+    private static OMA oma;
+
+    def setupSpec() {
+        oma.getReadyFuture().await(Duration.ofSeconds(60));
+    }
 
     def "installTestTenant works"() {
         when:
