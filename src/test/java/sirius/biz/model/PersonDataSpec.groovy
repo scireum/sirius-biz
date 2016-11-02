@@ -15,6 +15,8 @@ import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
 import sirius.web.mails.Mails
 
+import java.time.Duration
+
 class PersonDataSpec extends BaseSpecification {
 
     @Part
@@ -25,6 +27,10 @@ class PersonDataSpec extends BaseSpecification {
 
     @Part
     private static Tenants tenants;
+
+    def setupSpec() {
+        oma.getReadyFuture().await(Duration.ofSeconds(60));
+    }
 
     def "ContactData test @beforeSave"() {
         given:
