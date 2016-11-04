@@ -263,10 +263,14 @@ public class TenantController extends BizController {
         if (originalTenant.isPresent()) {
             SmartQuery<Tenant> baseQuery = oma.select(Tenant.class);
             if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
-                baseQuery.where(Or.of(And.of(FieldOperator.on(Tenant.PARENT).eq(tenantId),
-                                             FieldOperator.on(Tenant.PARENT_CAN_ACCESS).eq(true)),
-                                      And.of(FieldOperator.on(Tenant.ID).eq(originalTenant.get().getParent().getId()),
-                                             FieldOperator.on(Tenant.CAN_ACCESS_PARENT).eq(true))));
+                if (originalTenant.get().isCanAccessParent()) {
+                    baseQuery.where(Or.of(And.of(FieldOperator.on(Tenant.PARENT).eq(tenantId),
+                                                 FieldOperator.on(Tenant.PARENT_CAN_ACCESS).eq(true)),
+                                          FieldOperator.on(Tenant.ID).eq(originalTenant.get().getParent().getId())));
+                } else {
+                    baseQuery.where(And.of(FieldOperator.on(Tenant.PARENT).eq(tenantId),
+                                           FieldOperator.on(Tenant.PARENT_CAN_ACCESS).eq(true)));
+                }
             }
             return baseQuery;
         } else {
