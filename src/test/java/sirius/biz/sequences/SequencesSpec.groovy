@@ -8,12 +8,13 @@
 
 package sirius.biz.sequences
 
-import sirius.db.mixing.Schema
+import sirius.db.mixing.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
 import sirius.kernel.health.HandledException
 
 import java.time.Duration
+import java.util.concurrent.ThreadLocalRandom
 
 class SequencesSpec extends BaseSpecification {
 
@@ -21,46 +22,51 @@ class SequencesSpec extends BaseSpecification {
     private static Sequences sequences;
 
     @Part
-    private static Schema schema;
+    private static OMA oma;
 
-    def "a sequence creates consecutive numbers when used serially"() {
-        given:
-        schema.getReadyFuture().await(Duration.ofSeconds(45));
-        when:
-        int value1 = sequences.generateId("test")
-        then:
-        sequences.generateId("test") == value1 + 1
+    def setupSpec() {
+        oma.getReadyFuture().await(Duration.ofSeconds(60));
     }
 
-    def "a sequence can be set to used a new next value"() {
-        given:
-        schema.getReadyFuture().await(Duration.ofSeconds(45));
+    def "a new sequence is automatically created"() {
         when:
-        sequences.setCounterValue("test", 1000, true)
+        String value = sequences.generateId(String.valueOf(ThreadLocalRandom.current().nextLong()));
         then:
-        sequences.generateId("test") == 1000
+        value == "1"
     }
 
-    def "a sequence  cannot re-issue used numbers without being forced"() {
-        given:
-        schema.getReadyFuture().await(Duration.ofSeconds(45));
+    def "a sequence is incremented by generate id"() {
         when:
-        sequences.setCounterValue("test", 5000, true)
-        and:
-        sequences.setCounterValue("test", 1000, false)
+        String value = sequences.generateId("test");
+        String value1 = sequences.generateId("test");
         then:
-        thrown HandledException
+        Integer.parseInt(value) == Integer.parseInt(value1) - 1
     }
 
-    def "a sequence can re-issue used numbers when being forced"() {
-        given:
-        schema.getReadyFuture().await(Duration.ofSeconds(45));
+    def "a new next value can be set"() {
         when:
-        sequences.setCounterValue("test", 5000, true)
-        and:
-        sequences.setCounterValue("test", 1000, true)
+        sequences.setCounterValue("test", 1000, false);
+        String value = sequences.generateId("test");
         then:
-        notThrown HandledException
+        "1000" == value
+    }
+
+    def "a cannot be set to a lower value"() {
+        when:
+        String value = sequences.generateId("test");
+        sequences.generateId("test");
+        sequences.setCounterValue("test", Integer.parseInt(value), false);
+        then:
+        thrown(HandledException)
+    }
+
+    def "a can be set to a lower value when force is true"() {
+        when:
+        String value = sequences.generateId("test");
+        sequences.generateId("test");
+        sequences.setCounterValue("test", Integer.parseInt(value), true);
+        then:
+        notThrown(HandledException)
     }
 
 }
