@@ -6,9 +6,8 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.sequecnes
+package sirius.biz.sequences
 
-import sirius.biz.sequences.Sequences
 import sirius.db.mixing.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part

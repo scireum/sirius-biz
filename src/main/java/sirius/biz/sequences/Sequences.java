@@ -73,10 +73,10 @@ public class Sequences {
                 }
 
                 int numRowsChanged = oma.getDatabase()
-                                        .createQuery("UPDATE sequencecounter "
-                                                     + "SET nextValue = nextValue + 1 "
+                                        .createQuery(" UPDATE sequencecounter "
+                                                     + "  SET nextValue = nextValue + 1 "
                                                      + "WHERE name = ${name} "
-                                                     + "      AND nextValue = ${value}")
+                                                     + "  AND nextValue = ${value}")
                                         .set("name", sequence)
                                         .set("value", result.getNextValue())
                                         .executeUpdate();
