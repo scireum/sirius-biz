@@ -66,7 +66,6 @@ public class Locks implements MetricProvider {
             int waitInMillis = 500;
             do {
                 try {
-                    oma.select(Lock.class).queryList();
                     oma.getDatabase()
                        .insertRow("lock",
                                   Context.create()
