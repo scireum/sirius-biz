@@ -9,12 +9,11 @@
 package sirius.biz.web;
 
 import sirius.biz.codelists.CodeLists;
-import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.templates.rythm.RythmExtension;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /**
  * Makes central frameworks available in rythm without any import or reference.
@@ -26,12 +25,12 @@ public class BizRythmExtension implements RythmExtension {
     private CodeLists codeLists;
 
     @Override
-    public void collectExtensionNames(Consumer<Tuple<String, Class<?>>> names) {
-        names.accept(Tuple.create("codeLists", CodeLists.class));
+    public void collectExtensionNames(BiConsumer<String, Class<?>> names) {
+        names.accept("codeLists", CodeLists.class);
     }
 
     @Override
-    public void collectExtensionValues(Consumer<Tuple<String, Object>> values) {
-        values.accept(Tuple.create("codeLists", codeLists));
+    public void collectExtensionValues(BiConsumer<String, Object> values) {
+        values.accept("codeLists", codeLists);
     }
 }
