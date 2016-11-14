@@ -57,6 +57,8 @@ public class AddressData extends Composite {
     private final Requirements requirements;
     @Transient
     private String fieldLabel;
+    @Transient
+    private boolean verifyZip;
 
     /**
      * Creates a new instance with the given requirement.
@@ -65,8 +67,20 @@ public class AddressData extends Composite {
      * @param fieldLabel   the name of the compund field which represents the address
      */
     public AddressData(Requirements requirements, @Nullable String fieldLabel) {
+        this(requirements, fieldLabel, false);
+    }
+
+    /**
+     * Creates a new instance with the given requirement.
+     *
+     * @param requirements determines which fields are required in certain constellations
+     * @param fieldLabel   the name of the compund field which represents the address
+     * @param verifyZip    determines if the given ZIP code should be verified using the countries code list
+     */
+    public AddressData(Requirements requirements, @Nullable String fieldLabel, boolean verifyZip) {
         this.requirements = requirements;
         this.fieldLabel = Strings.isEmpty(fieldLabel) ? NLS.get("Model.address") : fieldLabel;
+        this.verifyZip = verifyZip;
     }
 
     /**
@@ -138,7 +152,7 @@ public class AddressData extends Composite {
             }
         }
 
-        if (Strings.isFilled(country)) {
+        if (verifyZip && Strings.isFilled(country)) {
             String zipRegEx = cls.getValues("country", country).getSecond();
             if (Strings.isFilled(zipRegEx)) {
                 try {
