@@ -36,4 +36,13 @@ class CodeListsSpec extends BaseSpecification {
         entries.isEmpty();
     }
 
+    def "auto-creating a list and values works"() {
+        given:
+        TenantsHelper.installTestTenant();
+        when:
+        String value = cl.getValue("test", "testCode");
+        then:
+        value == "testCode"
+    }
+
 }

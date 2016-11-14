@@ -8,6 +8,7 @@
 
 package sirius.biz.locks
 
+import sirius.db.mixing.OMA
 import sirius.db.mixing.Schema
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
@@ -22,9 +23,14 @@ class LocksSpec extends BaseSpecification {
     @Part
     private static Schema schema;
 
+    @Part
+    private static OMA oma;
+
+    def setupSpec() {
+        oma.getReadyFuture().await(Duration.ofSeconds(60));
+    }
+
     def "an acquired lock cannot be locked again unless it has been released"() {
-        given:
-        schema.getReadyFuture().await(Duration.ofSeconds(45));
         when:
         locks.tryLock("test", null);
         then:
