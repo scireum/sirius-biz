@@ -9,6 +9,7 @@
 package sirius.biz.locks;
 
 import sirius.db.mixing.OMA;
+import sirius.db.mixing.Schema;
 import sirius.db.mixing.constraints.FieldOperator;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Context;
@@ -45,6 +46,9 @@ public class Locks implements MetricProvider {
     @Part
     private OMA oma;
 
+    @Part
+    private Schema schema;
+
     public static final Log LOG = Log.get("locks");
 
     /**
@@ -67,12 +71,12 @@ public class Locks implements MetricProvider {
             do {
                 try {
                     oma.getDatabase()
-                       .insertRow("lock",
+                       .insertRow(schema.getDescriptor(ManagedLock.class).getTableName(),
                                   Context.create()
-                                         .set(Lock.NAME.getName(), lockName)
-                                         .set(Lock.OWNER.getName(), CallContext.getNodeName())
-                                         .set(Lock.THREAD.getName(), Thread.currentThread().getName())
-                                         .set(Lock.ACQUIRED.getName(), Instant.now().toEpochMilli()));
+                                         .set(ManagedLock.NAME.getName(), lockName)
+                                         .set(ManagedLock.OWNER.getName(), CallContext.getNodeName())
+                                         .set(ManagedLock.THREAD.getName(), Thread.currentThread().getName())
+                                         .set(ManagedLock.ACQUIRED.getName(), Instant.now().toEpochMilli()));
                     return true;
                 } catch (SQLIntegrityConstraintViolationException e) {
                     // Lock is locked - retry if possible :-(
@@ -120,7 +124,7 @@ public class Locks implements MetricProvider {
      * @return <tt>true</tt> if the lock is currently active, <tt>false</tt> otherwise
      */
     public boolean isLocked(@Nonnull String lock) {
-        return oma.select(Lock.class).where(FieldOperator.on(Lock.NAME).eq(lock)).exists();
+        return oma.select(ManagedLock.class).where(FieldOperator.on(ManagedLock.NAME).eq(lock)).exists();
     }
 
     /**
@@ -143,12 +147,12 @@ public class Locks implements MetricProvider {
         try {
             if (force) {
                 oma.getDatabase()
-                   .createQuery("DELETE FROM lock WHERE name = ${name}")
+                   .createQuery("DELETE FROM managedlock WHERE name = ${name}")
                    .set("name", lock)
                    .executeUpdate();
             } else {
                 oma.getDatabase()
-                   .createQuery("DELETE FROM lock WHERE name = ${name} AND owner = ${owner}")
+                   .createQuery("DELETE FROM managedlock WHERE name = ${name} AND owner = ${owner}")
                    .set("name", lock)
                    .set("owner", CallContext.getNodeName())
                    .executeUpdate();
@@ -160,9 +164,9 @@ public class Locks implements MetricProvider {
 
     @Override
     public void gather(MetricsCollector collector) {
-        long numberOfLocks = oma.select(Lock.class).count();
-        long numberOfLongRunningLocks = oma.select(Lock.class)
-                                           .where(FieldOperator.on(Lock.ACQUIRED)
+        long numberOfLocks = oma.select(ManagedLock.class).count();
+        long numberOfLongRunningLocks = oma.select(ManagedLock.class)
+                                           .where(FieldOperator.on(ManagedLock.ACQUIRED)
                                                                .lessThan(LocalDateTime.now()
                                                                                       .minus(LONG_RUNNING_LOGS_THRESHOLD)))
                                            .count();

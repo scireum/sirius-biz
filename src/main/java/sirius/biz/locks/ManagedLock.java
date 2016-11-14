@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 
 @Framework("locks")
 @Index(name = "unique_name", columns = "name", unique = true)
-public class Lock extends Entity {
+public class ManagedLock extends Entity {
 
     public static final Column NAME = Column.named("name");
     @Unique

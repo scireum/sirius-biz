@@ -31,7 +31,7 @@ public class LocksCommand implements Command {
     public void execute(Output output, String... params) throws Exception {
         output.apply("%-20s %-20s %-20s %-20s", "NAME", "OWNER", "THREAD", "ACQUIRED");
         output.separator();
-        oma.select(Lock.class).orderAsc(Lock.ACQUIRED).iterateAll(lock -> {
+        oma.select(ManagedLock.class).orderAsc(ManagedLock.ACQUIRED).iterateAll(lock -> {
             output.apply("%-20s %-20s %-20s %-20s",
                          lock.getName(),
                          lock.getOwner(),
