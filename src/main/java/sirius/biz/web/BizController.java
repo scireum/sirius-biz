@@ -177,6 +177,31 @@ public class BizController extends BasicController {
     }
 
     /**
+     * Reads all autoloaded fields of the given entity from the given context and stores the updated entity in the
+     * database.
+     * <p>
+     * If all goes well, an appropriate message is shown, otherwise an error message is displayed.
+     * <p>
+     * If the given request (ctx) isn't a POST, nothing will happen.
+     *
+     * @param ctx    the request to read the parameters from
+     * @param entity the entity to fill and save
+     */
+    protected void save(WebContext ctx, Entity entity) {
+        if (!ctx.isPOST()) {
+            return;
+        }
+
+        try {
+            load(ctx, entity);
+            oma.update(entity);
+            showSavedMessage();
+        } catch (Exception e) {
+            UserContext.handle(e);
+        }
+    }
+
+    /**
      * Tries to find an entity of the given type with the given id.
      * <p>
      * Note, if <tt>new</tt> is given as id, a new entity is created. This permits many editors to create a
