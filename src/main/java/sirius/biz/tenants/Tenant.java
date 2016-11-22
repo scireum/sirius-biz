@@ -20,6 +20,7 @@ import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.annotations.Unique;
+import sirius.db.mixing.annotations.Versioned;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.nls.NLS;
@@ -30,6 +31,7 @@ import sirius.kernel.nls.NLS;
  * Helps to support multi tenancy for SaaS platforms.
  */
 @Framework("tenants")
+@Versioned
 public class Tenant extends BizEntity {
 
     /**

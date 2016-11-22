@@ -8,7 +8,6 @@
 
 package sirius.biz.model;
 
-import sirius.biz.codelists.CodeLists;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Column;
 import sirius.db.mixing.Composite;
@@ -18,14 +17,11 @@ import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.Formatter;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 /**
  * Provides a street address which can be embedded into other entities or mixins.
@@ -54,11 +50,9 @@ public class AddressData extends Composite {
     }
 
     @Transient
-    private final Requirements requirements;
+    protected final Requirements requirements;
     @Transient
-    private String fieldLabel;
-    @Transient
-    private boolean verifyZip;
+    protected String fieldLabel;
 
     /**
      * Creates a new instance with the given requirement.
@@ -67,20 +61,8 @@ public class AddressData extends Composite {
      * @param fieldLabel   the name of the compund field which represents the address
      */
     public AddressData(Requirements requirements, @Nullable String fieldLabel) {
-        this(requirements, fieldLabel, false);
-    }
-
-    /**
-     * Creates a new instance with the given requirement.
-     *
-     * @param requirements determines which fields are required in certain constellations
-     * @param fieldLabel   the name of the compund field which represents the address
-     * @param verifyZip    determines if the given ZIP code should be verified using the countries code list
-     */
-    public AddressData(Requirements requirements, @Nullable String fieldLabel, boolean verifyZip) {
         this.requirements = requirements;
         this.fieldLabel = Strings.isEmpty(fieldLabel) ? NLS.get("Model.address") : fieldLabel;
-        this.verifyZip = verifyZip;
     }
 
     /**
@@ -113,30 +95,13 @@ public class AddressData extends Composite {
     @Length(255)
     private String city;
 
-    /**
-     * Contains the country code.
-     * <p>
-     * Note that a code list "country" exists which enumerates possible countries.
-     */
-    public static final Column COUNTRY = Column.named("country");
-    @Trim
-    @NullAllowed
-    @Autoloaded
-    @Length(3)
-    private String country;
-
-    @Part
-    private static CodeLists cls;
-
     @BeforeSave
     protected void onSave() {
         if (requirements == Requirements.NONE) {
             return;
         }
-        boolean allEmpty =
-                Strings.isEmpty(street) && Strings.isEmpty(zip) && Strings.isEmpty(city) && Strings.isEmpty(country);
-        boolean oneEmpty =
-                Strings.isEmpty(street) || Strings.isEmpty(zip) || Strings.isEmpty(city) || Strings.isEmpty(country);
+        boolean allEmpty = areAllFieldsEmpty();
+        boolean oneEmpty = isAnyFieldEmpty();
         if (oneEmpty) {
             if (requirements == Requirements.FULL_ADDRESS) {
                 throw Exceptions.createHandled()
@@ -151,23 +116,14 @@ public class AddressData extends Composite {
                                 .handle();
             }
         }
+    }
 
-        if (verifyZip && Strings.isFilled(country)) {
-            String zipRegEx = cls.getValues("country", country).getSecond();
-            if (Strings.isFilled(zipRegEx)) {
-                try {
-                    if (!Pattern.compile(zipRegEx).matcher(zip).matches()) {
-                        throw Exceptions.createHandled()
-                                        .withNLSKey("AddressData.badZip")
-                                        .set("name", fieldLabel)
-                                        .set("zip", zip)
-                                        .handle();
-                    }
-                } catch (PatternSyntaxException e) {
-                    Exceptions.handle(e);
-                }
-            }
-        }
+    protected boolean isAnyFieldEmpty() {
+        return Strings.isEmpty(street) || Strings.isEmpty(zip) || Strings.isEmpty(city);
+    }
+
+    protected boolean areAllFieldsEmpty() {
+        return Strings.isEmpty(street) && Strings.isEmpty(zip) && Strings.isEmpty(city);
     }
 
     @Override
@@ -201,13 +157,5 @@ public class AddressData extends Composite {
 
     public void setCity(String city) {
         this.city = city;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
     }
 }
