@@ -168,6 +168,16 @@ public class TenantController extends BizController {
         if (ctx.hasParameter(Tenant.PERMISSIONS.inner(PermissionData.CONFIG_STRING).getName())) {
             tenant.getPermissions().getConfig();
         }
+        tenant.getPermissions().getPermissions().clear();
+        for (String permission : ctx.getParameters("permissions")) {
+            // Ensure that only real roles end up in the permissions list,
+            // as roles, permissions and flags later end up in the same vector
+            // therefore we don't want nothing else but tenant permissions in this list
+            if (getPermissions().contains(permission)) {
+                tenant.getPermissions().getPermissions().add(permission);
+            }
+        }
+
         oma.update(tenant);
     }
 
