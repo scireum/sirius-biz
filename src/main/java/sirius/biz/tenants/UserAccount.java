@@ -19,6 +19,7 @@ import sirius.db.mixing.annotations.BeforeDelete;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Trim;
+import sirius.db.mixing.annotations.Versioned;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
@@ -33,6 +34,7 @@ import sirius.web.mails.Mails;
  * Serveral users are grouped together by their company, which is referred to as {@link Tenant}.
  */
 @Framework("tenants")
+@Versioned
 public class UserAccount extends TenantAware {
 
     /**
