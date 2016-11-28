@@ -126,8 +126,8 @@ public class TenantUserManager extends GenericUserManager {
      */
     public static void flushCacheForUserAccount(UserAccount account) {
         rolesCache.remove(account.getUniqueName());
-        userAccountCache.remove(account.getIdAsString());
-        configCache.remove(account.getIdAsString());
+        userAccountCache.remove(account.getUniqueName());
+        configCache.remove(account.getUniqueName());
     }
 
     /**
