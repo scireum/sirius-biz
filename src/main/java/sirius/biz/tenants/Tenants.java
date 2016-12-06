@@ -10,6 +10,8 @@ package sirius.biz.tenants;
 
 import sirius.biz.web.BizController;
 import sirius.db.mixing.OMA;
+import sirius.kernel.cache.Cache;
+import sirius.kernel.cache.CacheManager;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -31,6 +33,8 @@ public class Tenants {
 
     @Part
     private OMA oma;
+
+    private Cache<Long, Boolean> tenantsWithChildren = CacheManager.createCache("tenants-children");
 
     /**
      * Returns the current user as {@link UserAccount} which is logged in.
@@ -107,5 +111,25 @@ public class Tenants {
      */
     public boolean hasTenant() {
         return getCurrentTenant().isPresent();
+    }
+
+    /**
+     * Determines if the tenant with the given ID has child tenants.
+     * <p>
+     * This call utilizes a cache, therefore a lookup if quite fast and cheap.
+     *
+     * @param tenantId the id of the tenant to check if there are children
+     * @return <tt>true</tt> if the given tenant has children, <tt>false</tt> if there are no children, or if the tenant
+     * id is unknown.
+     */
+    public boolean hasChildTenants(long tenantId) {
+        return tenantsWithChildren.get(tenantId, id -> oma.select(Tenant.class).eq(Tenant.PARENT, tenantId).exists());
+    }
+
+    /**
+     * Flushes the cache which determines if a tenant has children or not.
+     */
+    protected void flushTenantChildrenCache() {
+        tenantsWithChildren.clear();
     }
 }

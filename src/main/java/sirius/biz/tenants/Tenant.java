@@ -11,6 +11,7 @@ package sirius.biz.tenants;
 import sirius.biz.model.AddressData;
 import sirius.biz.model.BizEntity;
 import sirius.biz.model.PermissionData;
+import sirius.biz.protocol.JournalData;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Column;
 import sirius.db.mixing.EntityRef;
@@ -23,6 +24,7 @@ import sirius.db.mixing.annotations.Unique;
 import sirius.db.mixing.annotations.Versioned;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
 /**
@@ -89,10 +91,22 @@ public class Tenant extends BizEntity {
     public static final Column PERMISSIONS = Column.named("permissions");
     private final PermissionData permissions = new PermissionData(this);
 
+    /**
+     * Used to record changes on fields of the tenant.
+     */
+    public static final Column JOURNAL = Column.named("journal");
+    private final JournalData journal = new JournalData(this);
+
+    @Part
+    private static Tenants tenants;
+
     @BeforeSave
     @BeforeDelete
     protected void onModify() {
-        TenantUserManager.flushCacheForTenant(this);
+        if (journal.hasJournaledChanges()) {
+            TenantUserManager.flushCacheForTenant(this);
+            tenants.flushTenantChildrenCache();
+        }
     }
 
     public String getName() {
