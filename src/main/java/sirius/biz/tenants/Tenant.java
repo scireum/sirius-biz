@@ -8,8 +8,8 @@
 
 package sirius.biz.tenants;
 
-import sirius.biz.model.AddressData;
 import sirius.biz.model.BizEntity;
+import sirius.biz.model.InternationalAddressData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.web.Autoloaded;
@@ -83,7 +83,8 @@ public class Tenant extends BizEntity {
      * Contains the address of the tenant.
      */
     public static final Column ADDRESS = Column.named("address");
-    private final AddressData address = new AddressData(AddressData.Requirements.NONE, null);
+    private final InternationalAddressData address =
+            new InternationalAddressData(InternationalAddressData.Requirements.NONE, null);
 
     /**
      * Contains the features and individual config assigned to the tenant.
@@ -125,7 +126,7 @@ public class Tenant extends BizEntity {
         this.accountNumber = accountNumber;
     }
 
-    public AddressData getAddress() {
+    public InternationalAddressData getAddress() {
         return address;
     }
 
