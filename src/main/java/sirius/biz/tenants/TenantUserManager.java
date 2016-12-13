@@ -378,7 +378,7 @@ public class TenantUserManager extends GenericUserManager {
     }
 
     protected UserInfo asUser(UserAccount account, List<String> extraRoles) {
-        Set<String> roles = computeRoles(null, account.getIdAsString());
+        Set<String> roles = computeRoles(null, account.getUniqueName());
         if (extraRoles != null) {
             // Make a copy so that we do not modify the cached set...
             roles = Sets.newTreeSet(roles);
