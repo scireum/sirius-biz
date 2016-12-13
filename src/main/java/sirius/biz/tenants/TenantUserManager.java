@@ -207,13 +207,12 @@ public class TenantUserManager extends GenericUserManager {
         // And overwrite with the new tenant...
         modifiedUser.getTenant().setValue(tenant);
 
-        List<String> extraRoles = Lists.newArrayList();
-        extraRoles.add(PERMISSION_SPY_USER);
+        Set<String> roles = computeRoles(modifiedUser, tenant);
+        roles.add(PERMISSION_SPY_USER);
         if (originalUser.hasPermission(PERMISSION_SYSTEM_TENANT)) {
-            extraRoles.add(PERMISSION_SYSTEM_TENANT);
+            roles.add(PERMISSION_SYSTEM_TENANT);
         }
-
-        return asUser(modifiedUser, extraRoles);
+        return asUserWithRoles(modifiedUser, roles);
     }
 
     public String getOriginalTenantId(WebContext ctx) {
@@ -379,12 +378,16 @@ public class TenantUserManager extends GenericUserManager {
     }
 
     protected UserInfo asUser(UserAccount account, List<String> extraRoles) {
-        Set<String> roles = computeRoles(null, String.valueOf(account.getUniqueName()));
+        Set<String> roles = computeRoles(null, account.getUniqueName());
         if (extraRoles != null) {
             // Make a copy so that we do not modify the cached set...
             roles = Sets.newTreeSet(roles);
             roles.addAll(extraRoles);
         }
+        return asUserWithRoles(account, roles);
+    }
+
+    private UserInfo asUserWithRoles(UserAccount account, Set<String> roles) {
         return UserInfo.Builder.createUser(account.getUniqueName())
                                .withUsername(account.getLogin().getUsername())
                                .withTenantId(String.valueOf(account.getTenant().getId()))
