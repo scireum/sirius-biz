@@ -207,11 +207,8 @@ public class TenantUserManager extends GenericUserManager {
         // And overwrite with the new tenant...
         modifiedUser.getTenant().setValue(tenant);
 
-        Set<String> roles = computeRoles(modifiedUser, tenant);
+        Set<String> roles = computeRoles(modifiedUser, tenant, originalUser.hasPermission(PERMISSION_SYSTEM_TENANT));
         roles.add(PERMISSION_SPY_USER);
-        if (originalUser.hasPermission(PERMISSION_SYSTEM_TENANT)) {
-            roles.add(PERMISSION_SYSTEM_TENANT);
-        }
         return asUserWithRoles(modifiedUser, roles);
     }
 
@@ -485,11 +482,11 @@ public class TenantUserManager extends GenericUserManager {
         return user != null && !user.getLogin().isAccountLocked();
     }
 
-    private Set<String> computeRoles(UserAccount user, Tenant tenant) {
+    private Set<String> computeRoles(UserAccount user, Tenant tenant, boolean isSystemTenant) {
         Set<String> roles = Sets.newTreeSet();
         roles.addAll(user.getPermissions().getPermissions());
         roles.addAll(tenant.getPermissions().getPermissions());
-        if (Strings.areEqual(systemTenant, String.valueOf(tenant.getId()))) {
+        if (isSystemTenant) {
             roles.add(PERMISSION_SYSTEM_TENANT);
         }
         roles.add(UserInfo.PERMISSION_LOGGED_IN);
@@ -507,7 +504,9 @@ public class TenantUserManager extends GenericUserManager {
         UserAccount user = fetchAccount(userId, null);
         Set<String> roles;
         if (user != null) {
-            roles = computeRoles(user, user.getTenant().getValue());
+            roles = computeRoles(user,
+                                 user.getTenant().getValue(),
+                                 Strings.areEqual(systemTenant, String.valueOf(user.getTenant().getValue().getId())));
         } else {
             roles = Collections.emptySet();
         }
