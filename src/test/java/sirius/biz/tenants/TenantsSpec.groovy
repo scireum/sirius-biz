@@ -19,15 +19,15 @@ import java.time.Duration
 class TenantsSpec extends BaseSpecification {
 
     @Part
-    private static OMA oma;
+    private static OMA oma
 
     def setupSpec() {
-        oma.getReadyFuture().await(Duration.ofSeconds(60));
+        oma.getReadyFuture().await(Duration.ofSeconds(60))
     }
 
     def "installTestTenant works"() {
         when:
-        TenantsHelper.installTestTenant();
+        TenantsHelper.installTestTenant()
         then:
         UserContext.get().getUser().hasPermission(UserInfo.PERMISSION_LOGGED_IN)
     }

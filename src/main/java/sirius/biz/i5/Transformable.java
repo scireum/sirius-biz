@@ -27,12 +27,7 @@ public abstract class Transformable {
     private static Map<Class<?>, Transformer> transformers = Maps.newConcurrentMap();
 
     private static <T> Transformer getTransformer(@Nonnull Class<T> type) {
-        Transformer tx = transformers.get(type);
-        if (tx == null) {
-            tx = new Transformer(type);
-            transformers.put(type, tx);
-        }
-        return tx;
+        return transformers.computeIfAbsent(type, k -> new Transformer(type));
     }
 
     /**

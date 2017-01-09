@@ -18,20 +18,20 @@ import java.time.LocalDate
 class StatisticsSpec extends BaseSpecification {
 
     @Part
-    private static Statistics statistics;
+    private static Statistics statistics
 
     @Part
-    private static Schema schema;
+    private static Schema schema
 
     def "statistics are incremented and aggregated as expected"() {
         given:
-        schema.getReadyFuture().await(Duration.ofSeconds(45));
+        schema.getReadyFuture().await(Duration.ofSeconds(45))
         and:
-        StatisticalEvent evt = StatisticalEvent.create("test", AggregationLevel.DAYS);
+        StatisticalEvent evt = StatisticalEvent.create("test", AggregationLevel.DAYS)
         when:
-        statistics.incrementStatistic(evt, "test");
+        statistics.incrementStatistic(evt, "test")
         and:
-        statistics.commitStatistics();
+        statistics.commitStatistics()
         then:
         statistics.getStatisticValue(evt, AggregationLevel.DAYS, "test", LocalDate.now()) == 1
         and:
@@ -44,36 +44,36 @@ class StatisticsSpec extends BaseSpecification {
 
     def "statistics can be incremented several times"() {
         given:
-        schema.getReadyFuture().await(Duration.ofSeconds(45));
+        schema.getReadyFuture().await(Duration.ofSeconds(45))
         and:
-        StatisticalEvent evt = StatisticalEvent.create("test1", AggregationLevel.DAYS);
+        StatisticalEvent evt = StatisticalEvent.create("test1", AggregationLevel.DAYS)
         when:
-        statistics.addStatistic(evt, "test1", 2);
+        statistics.addStatistic(evt, "test1", 2)
         and:
-        statistics.commitStatistics();
+        statistics.commitStatistics()
         and:
-        statistics.addStatistic(evt, "test1", 2);
+        statistics.addStatistic(evt, "test1", 2)
         and:
-        statistics.incrementStatistic(evt, "test1");
+        statistics.incrementStatistic(evt, "test1")
         and:
-        statistics.commitStatistics();
+        statistics.commitStatistics()
         then:
         statistics.getStatisticValue(evt, AggregationLevel.DAYS, "test1", LocalDate.now()) == 5
     }
 
     def "statistics are deleted correctly"() {
         given:
-        schema.getReadyFuture().await(Duration.ofSeconds(45));
+        schema.getReadyFuture().await(Duration.ofSeconds(45))
         and:
-        StatisticalEvent evt = StatisticalEvent.create("test2", AggregationLevel.DAYS);
+        StatisticalEvent evt = StatisticalEvent.create("test2", AggregationLevel.DAYS)
         when:
-        statistics.addStatistic(evt, "test2", 2);
+        statistics.addStatistic(evt, "test2", 2)
         and:
-        statistics.commitStatistics();
+        statistics.commitStatistics()
         and:
         statistics.deleteStatistic("test2")
         and:
-        statistics.commitStatistics();
+        statistics.commitStatistics()
         then:
         statistics.getStatisticValue(evt, AggregationLevel.DAYS, "test2", LocalDate.now()) == 0
     }

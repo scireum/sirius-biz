@@ -20,33 +20,33 @@ import java.time.Duration
 class PersonDataSpec extends BaseSpecification {
 
     @Part
-    private static OMA oma;
+    private static OMA oma
 
     @Part
-    private static Mails mail;
+    private static Mails mail
 
     @Part
-    private static Tenants tenants;
+    private static Tenants tenants
 
     def setupSpec() {
-        oma.getReadyFuture().await(Duration.ofSeconds(60));
+        oma.getReadyFuture().await(Duration.ofSeconds(60))
     }
 
     def "ContactData test @beforeSave"() {
         given:
-        TenantsHelper.installTestTenant();
+        TenantsHelper.installTestTenant()
         when:
-        PersonData p1 = new PersonData();
+        PersonData p1 = new PersonData()
         p1.setSalutation("Herr")
-        p1.setFirstname("<Firstname1>");
-        p1.setLastname("<Lastname1>");
-        p1.setTitle("<Title1>");
+        p1.setFirstname("<Firstname1>")
+        p1.setLastname("<Lastname1>")
+        p1.setTitle("<Title1>")
         then:
-        p1.getAddressableName() == "Herr <Title1> <Lastname1>";
+        p1.getAddressableName() == "Herr <Title1> <Lastname1>"
         and:
-        p1.getSalutation() == "Herr";
+        p1.getSalutation() == "Herr"
         and:
-        p1.getTitle() == "<Title1>";
+        p1.getTitle() == "<Title1>"
     }
 
 }

@@ -356,7 +356,6 @@ public class Statistics extends BackgroundLoop implements Lifecycle, MetricProvi
 
     @Override
     public void awaitTermination() {
-
     }
 
     @Nonnull

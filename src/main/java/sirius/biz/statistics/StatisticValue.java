@@ -15,24 +15,44 @@ import sirius.kernel.di.std.Framework;
 
 import java.time.LocalDate;
 
+/**
+ * Represents a statictical value stored per event, timestamp and aggregation level.
+ *
+ * @see Statistics
+ */
 @Framework("statistics")
 public class StatisticValue extends Entity {
 
+    /**
+     * Contains the event name of this statistic value.
+     */
     public static final Column EVENT = Column.named("event");
     @Length(50)
     private String event;
 
+    /**
+     * Coontains the ID of the object for which the statistic value is recorded.
+     */
     public static final Column OBJECT_ID = Column.named("objectId");
     @Length(50)
     private String objectId;
 
+    /**
+     * Contains the timestamp of the statistic value.
+     */
     public static final Column TOD = Column.named("tod");
     private LocalDate tod;
 
+    /**
+     * Contains the aggregation level of the statistic value.
+     */
     @Length(15)
     public static final Column LEVEL = Column.named("level");
     private AggregationLevel level;
 
+    /**
+     * Contains the actual value.
+     */
     public static final Column STATISTIC_VALUE = Column.named("statisticValue");
     private long statisticValue = 0L;
 

@@ -38,6 +38,7 @@ public class StatisticalEvent {
      * @param name                   the unique name of the event stored in the database
      * @param finestAggregationLevel the lowes aggregation level used by this event. Higher levels will be computed
      *                               automatically.
+     * @return the created event
      * @see Statistics#addStatistic(StatisticalEvent, String, int)
      * @see Statistics#incrementStatistic(StatisticalEvent, String)
      */
