@@ -53,7 +53,8 @@ public class CodeListController extends BizController {
     /**
      * Provides an editor for a code list.
      *
-     * @param ctx the current request
+     * @param ctx        the current request
+     * @param codeListId the id of the code list
      */
     @LoginRequired
     @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
@@ -89,7 +90,8 @@ public class CodeListController extends BizController {
     /**
      * Provides an editor for a code list.
      *
-     * @param ctx the current request
+     * @param ctx        the current request
+     * @param codeListId the id of the code list
      */
     @LoginRequired
     @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)

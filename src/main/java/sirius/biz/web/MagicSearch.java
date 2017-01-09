@@ -29,7 +29,11 @@ import java.util.function.Consumer;
  */
 public class MagicSearch {
 
+    /**
+     * Defines the value used to represent suggested queries.
+     */
     public static final String TYPE_QUERY = "query";
+
     private List<Suggestion> suggestions;
 
     private MagicSearch() {

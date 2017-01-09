@@ -20,7 +20,6 @@ import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +43,7 @@ public class Transformer {
                 result.add(field);
             }
         }
-        Collections.sort(result, Comparator.comparingInt(f -> f.getAnnotation(Transform.class).position()));
+        result.sort(Comparator.comparingInt(f -> f.getAnnotation(Transform.class).position()));
         for (Field field : result) {
             transforms.put(field, field.getAnnotation(Transform.class));
         }

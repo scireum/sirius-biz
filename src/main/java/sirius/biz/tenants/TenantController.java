@@ -241,6 +241,12 @@ public class TenantController extends BizController {
     @ConfigValue("product.wondergemRoot")
     private String wondergemRoot;
 
+    /**
+     * Makes the current user belong to the given tenant.
+     *
+     * @param ctx the current request
+     * @param id  the id of the tenant to switch to
+     */
     @LoginRequired
     @Routed("/tenants/select/:1")
     public void selectTenant(final WebContext ctx, String id) {

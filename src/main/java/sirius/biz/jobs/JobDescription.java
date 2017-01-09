@@ -50,7 +50,6 @@ public abstract class JobDescription implements Priorized, Named {
     }
 
     public void collectParameters(Consumer<JobParameterDescription> parameterCollector) {
-
     }
 
     public boolean verifyParameters(Context parameters) {

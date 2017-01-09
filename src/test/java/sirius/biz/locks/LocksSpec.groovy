@@ -18,27 +18,27 @@ import java.time.Duration
 class LocksSpec extends BaseSpecification {
 
     @Part
-    private static Locks locks;
+    private static Locks locks
 
     @Part
-    private static Schema schema;
+    private static Schema schema
 
     @Part
-    private static OMA oma;
+    private static OMA oma
 
     def setupSpec() {
-        oma.getReadyFuture().await(Duration.ofSeconds(60));
+        oma.getReadyFuture().await(Duration.ofSeconds(60))
     }
 
     def "an acquired lock cannot be locked again unless it has been released"() {
         when:
-        locks.tryLock("test", null);
+        locks.tryLock("test", null)
         then:
-        locks.tryLock("test", null) == false;
+        locks.tryLock("test", null) == false
         and:
-        locks.unlock("test");
-        locks.tryLock("test", null) == true;
-        locks.unlock("test");
+        locks.unlock("test")
+        locks.tryLock("test", null) == true
+        locks.unlock("test")
     }
 
 }

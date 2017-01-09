@@ -26,7 +26,6 @@ import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -110,7 +109,7 @@ public class JobsController extends BizController {
     public List<JobParameterDescription> fetchParameterDescriptions(JobDescription job) {
         List<JobParameterDescription> params = Lists.newArrayList();
         job.collectParameters(params::add);
-        Collections.sort(params, Comparator.comparingInt(JobParameterDescription::getPriority));
+        params.sort(Comparator.comparingInt(JobParameterDescription::getPriority));
         return params;
     }
 }

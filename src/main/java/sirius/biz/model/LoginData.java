@@ -166,6 +166,8 @@ public class LoginData extends Composite {
      * <p>
      * Note that this value is transient and therefore not saved to the database. This field only exists for
      * convenience, as it can be filled and the associated entity can be save. All hashes will be updated accordingly.
+     *
+     * @param cleartextPassword the password as clear text
      */
     public void setCleartextPassword(String cleartextPassword) {
         this.cleartextPassword = cleartextPassword;

@@ -27,12 +27,15 @@ public @interface Transform {
     /**
      * Byte position in the record. This has to be filled correctly, as the order of fields in a Java class is
      * undetermined.
+     *
+     * @return the byte position on the record
      */
     int position();
 
     /**
      * AS400 target type.
      *
+     * @return the target type as defined by jt400
      * @see AS400Text
      * @see AS400ZonedDecimal
      * @see AS400Bin4
@@ -41,11 +44,15 @@ public @interface Transform {
 
     /**
      * Length in the byte array.
+     *
+     * @return the length in bytes
      */
     int length() default 0;
 
     /**
      * Number of decimal places for AS400ZonedDecimal
+     *
+     * @return the number of decimal places
      */
     int decimal() default 0;
 }

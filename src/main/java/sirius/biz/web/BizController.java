@@ -78,6 +78,7 @@ public class BizController extends BasicController {
      * @param owner  the entity which contains the reference
      * @param ref    the reference which is either filled or verified that it points to <tt>entity</tt>
      * @param entity the entity the reference must point to
+     * @param <E>    the generic type the the entity being referenced
      * @throws sirius.kernel.health.HandledException if the tenants do no match
      */
     protected <E extends Entity> void setOrVerify(Entity owner, EntityRef<E> ref, E entity) {
