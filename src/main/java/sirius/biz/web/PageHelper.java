@@ -212,7 +212,7 @@ public class PageHelper<E extends Entity> {
     public Page<E> asPage() {
         Objects.requireNonNull(ctx);
         Watch w = Watch.start();
-        Page<E> result = new Page<E>().withStart(1);
+        Page<E> result = new Page<E>().withStart(1).withPageSize(PAGE_SIZE);
         result.bindToRequest(ctx);
         if (searchFields != null && searchFields.length > 0) {
             baseQuery.where(Like.allWordsInAnyField(result.getQuery(), searchFields));
