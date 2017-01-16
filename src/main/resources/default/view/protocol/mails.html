@@ -6,62 +6,62 @@
 *  http://www.scireum.de - info@scireum.de
 *@
 @args sirius.web.controller.Page mails
-@extends(view.wondergem.template.html, title: NLS.get("MailProtocol.list"))
+@extends(view.wondergem.template.html, title: NLS.get("MailLogEntry.plural"))
 @section(breadcrumbs) {
     <li>
-        <a href="/mails">@i18n("MailProtocol.list")</a>
+        <a href="/mails">@i18n("MailLogEntry.plural")</a>
     </li>
 }
 
-@pageHeader("MailProtocol.list")
+@pageHeader("MailLogEntry.plural")
 
 <div class="row">
     <div class="col-md-3">
-        @filterbox(mails, "mails")
+        @filterbox(mails, "system/mails")
     </div>
     <div class="col-md-9">
-        @tableSearchHeader(mails, "mails")
+        @tableSearchHeader(mails, "system/mails")
 
         @table(mails) {
             <thead>
                 <tr>
                     <th>
                         <div class="row">
-                            <div class="col-md-3">@i18n("MailProtocol.tod")</div>
-                            <div class="col-md-3">@i18n("MailProtocol.sender")</div>
-                            <div class="col-md-3">@i18n("MailProtocol.receiver")</div>
+                            <div class="col-md-3">@i18n("MailLogEntry.tod")</div>
+                            <div class="col-md-3">@i18n("MailLogEntry.sender")</div>
+                            <div class="col-md-3">@i18n("MailLogEntry.receiver")</div>
                             <div class="col-md-3">
-                                @i18n("MailProtocol.node")<br>
-                                @i18n("MailProtocol.mailExtension")
+                                @i18n("MailLogEntry.node")<br>
+                                @i18n("MailLogEntry.mailExtension")
                             </div>
                         </div>
                     </th>
                 </tr>
             </thead>
             <tbody>
-                @for(oxomi.backend.MailProtocol i : mails.getItems()) {
+                @for(sirius.biz.protocol.MailLogEntry mail : mails.getItems()) {
                     <tr>
                         <td>
                             <div class="row">
                                 <div class="col-md-3">
-                                    <span class="badge label-state @if (i.isSuccess()) { label-success } else { label-important }">
-                                        <i class="@if (i.isSuccess()) { fa fa-check } else { fa fa-exclamation }"></i>
+                                    <span class="badge label-state @if (mail.isSuccess()) { label-success } else { label-important }">
+                                        <i class="@if (mail.isSuccess()) { fa fa-check } else { fa fa-exclamation }"></i>
                                     </span>
                                     <strong>
-                                        <small><a href="@prefix/mail/@i.getId()">@NLS.toUserString(i.getTod())</a></small>
+                                        <small><a href="/system/mail/@mail.getId()">@NLS.toUserString(mail.getTod())</a></small>
                                     </strong>
                                 </div>
-                                <div class="col-md-3">@i.getSender()</div>
-                                <div class="col-md-3">@i.getReceiver()</div>
+                                <div class="col-md-3">@mail.getSender()</div>
+                                <div class="col-md-3">@mail.getReceiver()</div>
                                 <div class="col-md-3">
-                                    @i.getNode()<br>
-                                    <small>@i.getMailExtension()</small>
+                                    @mail.getNode()<br>
+                                    <small>@mail.getMailExtension()</small>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-12 error-code">
                                     <pre class="plain">
-                                        @i.getSubject()
+                                        @mail.getSubject()
                                     </pre>
                                 </div>
                             </div>
@@ -71,6 +71,6 @@
             </tbody>
         }
 
-        @pagination(mails, "mails")
+        @pagination(mails, "system/mails")
     </div>
 </div>

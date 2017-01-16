@@ -19,6 +19,7 @@ import sirius.db.mixing.EntityRef;
 import sirius.db.mixing.OMA;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.properties.BooleanProperty;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -106,6 +107,7 @@ public class BizController extends BasicController {
 
     @ConfigValue("product.baseUrl")
     private String baseUrl;
+    private static boolean baseUrlChecked;
 
     /**
      * Returns the base URL of this instance.
@@ -113,6 +115,12 @@ public class BizController extends BasicController {
      * @return the base URL like <tt>http://www.mydomain.stuff</tt>
      */
     protected String getBaseUrl() {
+        if (!baseUrlChecked) {
+            baseUrlChecked = true;
+            if (Strings.isEmpty(baseUrl)) {
+                LOG.WARN("product.baseUrl is not filled. Please update the system configuration!");
+            }
+        }
         return baseUrl;
     }
 

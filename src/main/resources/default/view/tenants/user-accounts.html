@@ -35,7 +35,8 @@
                 @i18n("Model.email")
             </th>
             <th>
-                @i18n("LoginData.password")
+                @i18n("LoginData.password")<br>
+                <span class="muted">@i18n("LoginData.generatedPassword")</span>
             </th>
             <th class="align-right">
                 @i18n("LoginData.lastLogin")<br>
@@ -58,15 +59,15 @@
                 @account.getEmail()
             </td>
             <td>
-                @if (Strings.isFilled(account.getLogin().getGeneratedPassword())) {
-                        @account.getLogin().getGeneratedPassword()
-                }
                 <a href="@prefix/user-account/@account.getId()/password" class="link">
                     <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.set")
                 </a><br>
                <a href="@prefix/user-account/@account.getId()/generate-password?@accounts.createQueryString()" class="link">
                    <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generate")
                </a>
+                @if (Strings.isFilled(account.getLogin().getGeneratedPassword())) {
+                    <br><span class="muted">@account.getLogin().getGeneratedPassword()</span>
+                }
             </td>
             <td class="align-right">
                 @NLS.toUserString(account.getLogin().getLastLogin())<br>

@@ -5,14 +5,14 @@
 *  Copyright by scireum GmbH
 *  http://www.scireum.de - info@scireum.de
 *@
-@args oxomi.backend.MailProtocol mail
+@args sirius.biz.protocol.MailLogEntry mail
 @extends(view.wondergem.template.html, title: mail.getSubject())
 @section(breadcrumbs) {
     <li>
-        <a href="/mails">@i18n("MailProtocol.list")</a>
+        <a href="/system/mails">@i18n("MailLogEntry.plural")</a>
     </li>
     <li>
-        <a href="@prefix/mail/@mail.getId()">@mail.getSubject()</a>
+        <a href="/system/mail/@mail.getId()">@mail.getSubject()</a>
     </li>
 }
 @pageHeader() {
@@ -20,40 +20,40 @@
 }
 
 <div class="row">
-    @textfield(labelKey: "MailProtocol.success",
+    @textfield(labelKey: "MailLogEntry.success",
                value: NLS.toUserString(mail.isSuccess()),
                readonly: true)
-    @textfield(labelKey: "MailProtocol.tod",
+    @textfield(labelKey: "MailLogEntry.tod",
                value: NLS.toUserString(mail.getTod()),
                readonly: true)
 </div>
 <div class="row">
-    @textfield(labelKey: "MailProtocol.messageId",
+    @textfield(labelKey: "MailLogEntry.messageId",
                value: mail.getMessageId(),
                readonly: true)
-    @textfield(labelKey: "MailProtocol.mailExtension",
+    @textfield(labelKey: "MailLogEntry.mailExtension",
                value: mail.getMailExtension(),
                readonly: true)
 </div>
 <div class="row">
-    @textfield(labelKey: "MailProtocol.sender",
+    @textfield(labelKey: "MailLogEntry.sender",
                value: mail.getSender(),
                readonly: true)
-    @textfield(labelKey: "MailProtocol.senderName",
+    @textfield(labelKey: "MailLogEntry.senderName",
                value: mail.getSenderName(),
                readonly: true)
 </div>
 <div class="row">
-    @textfield(labelKey: "MailProtocol.receiver",
+    @textfield(labelKey: "MailLogEntry.receiver",
                value: mail.getReceiver(),
                readonly: true)
-    @textfield(labelKey: "MailProtocol.receiverName",
+    @textfield(labelKey: "MailLogEntry.receiverName",
                value: mail.getReceiverName(),
                readonly: true)
 </div>
 <div class="row">
     <div class="col-md-12">
-        @heading("MailProtocol.text")
+        @heading("MailLogEntry.text")
         <div class="well">
             <pre class="plain">@mail.getText()</pre>
         </div>
@@ -61,7 +61,7 @@
 </div>
 <div class="row">
     <div class="col-md-12">
-        @heading("MailProtocol.html")
+        @heading("MailLogEntry.html")
         <div class="well">
             <pre class="plain">@mail.getHtml()</pre>
         </div>
@@ -69,5 +69,5 @@
 </div>
 
 <div class="form-actions">
-    <a href="@prefix/mails" class="btn"><i class="icon-chevron-left"></i> @i18n("NLS.back")</a>
+    <a href="/system/mails" class="btn"><i class="icon-chevron-left"></i> @i18n("NLS.back")</a>
 </div>

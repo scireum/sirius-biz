@@ -8,6 +8,7 @@
 
 package sirius.biz.protocol;
 
+import org.apache.log4j.Level;
 import sirius.db.mixing.OMA;
 import sirius.db.mixing.OptimisticLockException;
 import sirius.db.mixing.constraints.FieldOperator;
@@ -21,6 +22,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.LogMessage;
 import sirius.kernel.health.LogTap;
 import sirius.kernel.nls.NLS;
+import sirius.web.mails.MailLog;
 import sirius.web.security.UserContext;
 
 import java.time.LocalDate;
@@ -28,10 +30,11 @@ import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 /**
- * Adapter which records all log entries and incidents into the appropriate database entities.
+ * Adapter which records all log entries and incidents and mails into the appropriate database entities.
  */
-@Register(classes = {Protocols.class, LogTap.class, ExceptionHandler.class}, framework = Protocols.FRAMEWORK_PROTOCOLS)
-public class Protocols implements LogTap, ExceptionHandler {
+@Register(classes = {Protocols.class, LogTap.class, ExceptionHandler.class, MailLog.class},
+        framework = Protocols.FRAMEWORK_PROTOCOLS)
+public class Protocols implements LogTap, ExceptionHandler, MailLog {
 
     /**
      * Names the framework which must be enabled to activate all protocol features.
@@ -91,7 +94,8 @@ public class Protocols implements LogTap, ExceptionHandler {
             || message == null
             || !oma.isReady()
             || !message.isReceiverWouldLog()
-            || Sirius.isStartedAsTest()) {
+            || Sirius.isStartedAsTest()
+            || Sirius.isDev() && message.getLogLevel().toInt() <= Level.INFO.toInt()) {
             return;
         }
 
@@ -104,5 +108,41 @@ public class Protocols implements LogTap, ExceptionHandler {
         entry.setUser(UserContext.getCurrentUser().getUserName());
 
         oma.update(entry);
+    }
+
+    @Override
+    public void logSentMail(boolean success,
+                            String messageId,
+                            String sender,
+                            String senderName,
+                            String receiver,
+                            String receiverName,
+                            String subject,
+                            String text,
+                            String html,
+                            String mailExtension) {
+        if (oma == null || !oma.isReady() || Sirius.isStartedAsTest()) {
+            return;
+        }
+
+        try {
+            MailLogEntry msg = new MailLogEntry();
+            msg.setTod(LocalDateTime.now());
+            msg.setMessageId(messageId);
+            msg.setSender(sender);
+            msg.setSenderName(senderName);
+            msg.setReceiver(receiver);
+            msg.setReceiverName(receiverName);
+            msg.setSubject(subject);
+            msg.setText(text);
+            msg.setHtml(html);
+            msg.setSuccess(success);
+            msg.setNode(CallContext.getNodeName());
+            msg.setMailExtension(mailExtension);
+
+            oma.update(msg);
+        } catch (Throwable e) {
+            Exceptions.handle(e);
+        }
     }
 }

@@ -25,29 +25,23 @@ import sirius.web.security.Permission;
  * Provides a GUI for viewing system logs.
  */
 @Register(classes = Controller.class, framework = Protocols.FRAMEWORK_PROTOCOLS)
-public class LogsController extends BizController {
+public class MailsController extends BizController {
 
     @Part
     private OMA oma;
 
     /**
-     * Lists all recorded log entries.
+     * Lists all recorded mail entries.
      *
      * @param ctx the current request
      */
     @Permission(Protocols.PERMISSION_VIEW_PROTOCOLS)
     @DefaultRoute
-    @Routed("/system/logs")
-    public void logs(WebContext ctx) {
-        PageHelper<LogEntry> ph = PageHelper.withQuery(oma.select(LogEntry.class).orderDesc(LogEntry.TOD));
+    @Routed("/system/mails")
+    public void mails(final WebContext ctx) {
+        PageHelper<MailLogEntry> ph = PageHelper.withQuery(oma.select(MailLogEntry.class).orderDesc(MailLogEntry.TOD));
         ph.withContext(ctx);
-        ph.addQueryFacet(LogEntry.CATEGORY.getName(),
-                         NLS.get("LogEntry.category"),
-                         q -> q.copy().distinctFields(LogEntry.CATEGORY, LogEntry.CATEGORY).asSQLQuery());
-        ph.addQueryFacet(LogEntry.LEVEL.getName(),
-                         NLS.get("LogEntry.level"),
-                         q -> q.copy().distinctFields(LogEntry.LEVEL, LogEntry.LEVEL).asSQLQuery());
-        ph.addTimeFacet(LogEntry.TOD.getName(),
+        ph.addTimeFacet(MailLogEntry.TOD.getName(),
                         NLS.get("LogEntry.tod"),
                         DateRange.lastFiveMinutes(),
                         DateRange.lastFiveteenMinutes(),
@@ -56,8 +50,19 @@ public class LogsController extends BizController {
                         DateRange.yesterday(),
                         DateRange.thisWeek(),
                         DateRange.lastWeek());
-        ph.withSearchFields(LogEntry.CATEGORY, LogEntry.LEVEL, LogEntry.MESSAGE);
+        ph.withSearchFields(MailLogEntry.SUBJECT,
+                            MailLogEntry.SENDER,
+                            MailLogEntry.SENDER_NAME,
+                            MailLogEntry.RECEIVER,
+                            MailLogEntry.RECEIVER_NAME);
 
-        ctx.respondWith().template("view/protocol/logs.html", ph.asPage());
+        ctx.respondWith().template("view/protocol/mails.html", ph.asPage());
+    }
+
+    @Permission(Protocols.PERMISSION_VIEW_PROTOCOLS)
+    @Routed("/system/mail/:1")
+    public void mail(final WebContext ctx, String id) {
+        MailLogEntry mailLogEntry = find(MailLogEntry.class, id);
+        ctx.respondWith().template("view/protocol/mail.html", mailLogEntry);
     }
 }
