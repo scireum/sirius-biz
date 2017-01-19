@@ -12,6 +12,7 @@ import sirius.db.mixing.Composite;
 import sirius.db.mixing.Entity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Property;
+import sirius.db.mixing.Schema;
 import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.AfterSave;
 import sirius.db.mixing.annotations.Transient;
@@ -51,7 +52,7 @@ public class JournalData extends Composite {
 
     @AfterSave
     protected void onSave() {
-        if (silent || !Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_PROTOCOLS)) {
+        if (silent) {
             return;
         }
 
@@ -68,36 +69,40 @@ public class JournalData extends Composite {
             }
 
             if (changes.length() > 0) {
-                JournalEntry entry = new JournalEntry();
-                entry.setTod(LocalDateTime.now());
-                entry.setChanges(changes.toString());
-                entry.setTargetId(owner.getId());
-                entry.setTargetName(owner.toString());
-                entry.setTargetType(descriptor.getType().getName());
-                entry.setSubsystem(TaskContext.get().getSystemString());
-                entry.setUserId(UserContext.getCurrentUser().getUserId());
-                entry.setUsername(UserContext.getCurrentUser().getUserName());
-                oma.update(entry);
+                addJournalEntry(owner, changes.toString());
             }
         } catch (Throwable e) {
             Exceptions.handle(e);
         }
     }
 
+    /**
+     * Adds an entry to the journal of the given entity.
+     *
+     * @param entity  the entity to write a journal entry for
+     * @param changes the entry to add to the journal
+     */
+    public static void addJournalEntry(Entity entity, String changes) {
+        if (!Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_PROTOCOLS)) {
+            return;
+        }
+        JournalEntry entry = new JournalEntry();
+        entry.setTod(LocalDateTime.now());
+        entry.setChanges(changes);
+        entry.setTargetId(entity.getId());
+        entry.setTargetName(entity.toString());
+        entry.setTargetType(Schema.getNameForType(entity.getClass()));
+        entry.setSubsystem(TaskContext.get().getSystemString());
+        entry.setUserId(UserContext.getCurrentUser().getUserId());
+        entry.setUsername(UserContext.getCurrentUser().getUserName());
+        oma.update(entry);
+    }
+
     @AfterDelete
     protected void onDelete() {
-        if (!silent && Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_PROTOCOLS)) {
+        if (!silent) {
             try {
-                JournalEntry entry = new JournalEntry();
-                entry.setTod(LocalDateTime.now());
-                entry.setChanges("Entity has been deleted.");
-                entry.setTargetId(owner.getId());
-                entry.setTargetName(owner.toString());
-                entry.setTargetType(owner.getDescriptor().getType().getName());
-                entry.setSubsystem(TaskContext.get().getSystemString());
-                entry.setUserId(UserContext.getCurrentUser().getUserId());
-                entry.setUsername(UserContext.getCurrentUser().getUserName());
-                oma.update(entry);
+                addJournalEntry(owner, "Entity has been deleted.");
             } catch (Throwable e) {
                 Exceptions.handle(e);
             }

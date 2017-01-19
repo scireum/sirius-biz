@@ -1,13 +1,13 @@
 @import sirius.biz.tenants.Tenant
 @args Page tenants
-@extends(view.wondergem.template.html, title: NLS.get("Model.tenant.plural"))
+@extends(view.wondergem.template.html, title: NLS.get("Tenant.plural"))
 
 @section(breadcrumbs) {
     <li>
-        <a href="/tenants">@i18n("Model.tenant.plural")</a>
+        <a href="/tenants">@i18n("Tenant.plural")</a>
     </li>
 }
-@pageHeader("Model.tenant.plural")
+@pageHeader("Tenant.plural")
 
 @tableSearchHeader(tenants, "tenants") {
     <a class="btn btn-primary" href="@prefix/tenant/new">@i18n("Model.create")</a>
