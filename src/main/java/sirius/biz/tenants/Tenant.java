@@ -12,6 +12,7 @@ import sirius.biz.model.BizEntity;
 import sirius.biz.model.InternationalAddressData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.protocol.JournalData;
+import sirius.biz.protocol.Journaled;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Column;
 import sirius.db.mixing.EntityRef;
@@ -34,7 +35,7 @@ import sirius.kernel.nls.NLS;
  */
 @Framework("tenants")
 @Versioned
-public class Tenant extends BizEntity {
+public class Tenant extends BizEntity implements Journaled {
 
     /**
      * Contains the parent tenant of this tenant.
@@ -152,6 +153,11 @@ public class Tenant extends BizEntity {
 
     public void setCanAccessParent(boolean canAccessParent) {
         this.canAccessParent = canAccessParent;
+    }
+
+    @Override
+    public JournalData getJournal() {
+        return journal;
     }
 
     @Override

@@ -12,6 +12,7 @@ import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
 import sirius.biz.protocol.JournalData;
+import sirius.biz.protocol.Journaled;
 import sirius.biz.statistics.Statistics;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Column;
@@ -35,7 +36,7 @@ import sirius.web.mails.Mails;
  */
 @Framework("tenants")
 @Versioned
-public class UserAccount extends TenantAware {
+public class UserAccount extends TenantAware implements Journaled {
 
     /**
      * Contains the email address of the user.
@@ -141,6 +142,7 @@ public class UserAccount extends TenantAware {
         this.email = email;
     }
 
+    @Override
     public JournalData getJournal() {
         return journal;
     }

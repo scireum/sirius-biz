@@ -7,15 +7,15 @@
 *@
 @import sirius.biz.tenants.UserAccount
 @args Page accounts
-@extends(view.wondergem.template.html, title: NLS.get("Model.userAccount.plural"))
+@extends(view.wondergem.template.html, title: NLS.get("UserAccount.plural"))
 
 @section(breadcrumbs) {
     <li>
-        <a href="/user-accounts">@i18n("Model.userAccount.plural")</a>
+        <a href="/user-accounts">@i18n("UserAccount.plural")</a>
     </li>
 }
 
-@pageHeader("Model.userAccount.plural")
+@pageHeader("UserAccount.plural")
 
 @tableSearchHeader(accounts, "user-accounts") {
     <a class="btn btn-primary" href="@prefix/user-account/new">@i18n("Model.create")</a>
