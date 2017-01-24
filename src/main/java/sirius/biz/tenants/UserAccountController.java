@@ -81,35 +81,27 @@ public class UserAccountController extends BizController {
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void account(WebContext ctx, String accountId) {
         UserAccount userAccount = findForTenant(UserAccount.class, accountId);
-        if (ctx.isPOST()) {
-            try {
-                boolean wasNew = userAccount.isNew();
-                if (wasNew) {
-                    userAccount.getTenant().setValue(tenants.getRequiredTenant());
-                }
-                load(ctx, userAccount);
-                userAccount.getPermissions().getPermissions().clear();
-                for (String role : ctx.getParameters("roles")) {
-                    // Ensure that only real roles end up in the permissions list,
-                    // as roles, permissions and flags later end up in the same vector
-                    // therefore we don't want nothing else but user roles in this list
-                    if (getRoles().contains(role)) {
-                        userAccount.getPermissions().getPermissions().add(role);
-                    }
-                }
-                oma.update(userAccount);
-                showSavedMessage();
-                if (wasNew) {
-                    ctx.respondWith()
-                       .redirectTemporarily(WebContext.getContextPrefix() + "/user-account/" + userAccount.getId());
-                    return;
-                }
-            } catch (Throwable e) {
-                UserContext.handle(e);
-            }
-        }
 
-        ctx.respondWith().template("view/tenants/user-account-details.html", userAccount, this);
+        boolean requestHandled = prepareSave(ctx).editAfterCreate()
+                                                 .withAfterCreateURI("/user-account/${id}")
+                                                 .withAfterSaveURI("/user-accounts")
+                                                 .withPreSaveHandler((isNew) -> {
+                                                     userAccount.getPermissions().getPermissions().clear();
+                                                     for (String role : ctx.getParameters("roles")) {
+                                                         // Ensure that only real roles end up in the permissions list,
+                                                         // as roles, permissions and flags later end up in the same vector
+                                                         // therefore we don't want nothing else but user roles in this list
+                                                         if (getRoles().contains(role)) {
+                                                             userAccount.getPermissions().getPermissions().add(role);
+                                                         }
+                                                     }
+                                                 })
+                                                 .saveEntity(userAccount);
+
+        if (!requestHandled) {
+            validate(userAccount);
+            ctx.respondWith().template("view/tenants/user-account-details.html", userAccount, this);
+        }
     }
 
     /**

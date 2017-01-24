@@ -116,39 +116,33 @@ public class TenantController extends BizController {
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void tenant(WebContext ctx, String tenantId) {
         Tenant tenant = find(Tenant.class, tenantId);
-        if (ctx.isPOST()) {
-            try {
-                boolean wasNew = tenant.isNew();
-                load(ctx, tenant);
 
-                tenant.getPermissions().getPermissions().clear();
-                for (String permission : ctx.getParameters("permissions")) {
-                    // Ensure that only real permissions end up in the permissions list,
-                    // as roles, permissions and flags later end up in the same vector
-                    // therefore we don't want nothing else but tenant permissions in this list
-                    if (getPermissions().contains(permission)) {
-                        tenant.getPermissions().getPermissions().add(permission);
-                    }
+        SaveHelper saveHelper =
+                prepareSave(ctx).editAfterCreate().withAfterCreateURI("/tenant/${id}").withAfterSaveURI("/tenants");
+        saveHelper.withPreSaveHandler((isNew) -> {
+            tenant.getPermissions().getPermissions().clear();
+            for (String permission : ctx.getParameters("permissions")) {
+                // Ensure that only real permissions end up in the permissions list,
+                // as roles, permissions and flags later end up in the same vector
+                // therefore we don't want nothing else but tenant permissions in this list
+                if (getPermissions().contains(permission)) {
+                    tenant.getPermissions().getPermissions().add(permission);
                 }
-
-                oma.update(tenant);
-                showSavedMessage();
-                if (wasNew) {
-                    ctx.respondWith().redirectTemporarily(WebContext.getContextPrefix() + "/tenant/" + tenant.getId());
-                    return;
-                }
-            } catch (Throwable e) {
-                UserContext.handle(e);
             }
+        });
+        boolean requestHandled = saveHelper.saveEntity(tenant);
+
+        if (!requestHandled) {
+            validate(tenant);
+            ctx.respondWith()
+               .template("view/tenants/tenant-details.html",
+                         tenant,
+                         this,
+                         oma.select(Tenant.class)
+                            .orderAsc(Tenant.NAME)
+                            .where(FieldOperator.on(Tenant.ID).notEqual(tenant.getId()))
+                            .queryList());
         }
-        ctx.respondWith()
-           .template("view/tenants/tenant-details.html",
-                     tenant,
-                     this,
-                     oma.select(Tenant.class)
-                        .orderAsc(Tenant.NAME)
-                        .where(FieldOperator.on(Tenant.ID).notEqual(tenant.getId()))
-                        .queryList());
     }
 
     /**
