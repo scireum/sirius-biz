@@ -6,10 +6,10 @@
     <parent>
         <groupId>com.scireum</groupId>
         <artifactId>sirius-parent</artifactId>
-        <version>3.6</version>
+        <version>3.7.1</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
-    <version>1.7</version>
+    <version>1.8</version>
     <packaging>jar</packaging>
 
     <name>SIRIUS biz</name>
@@ -21,12 +21,12 @@
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-web</artifactId>
-            <version>5.3.5</version>
+            <version>5.6</version>
         </dependency>
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-db</artifactId>
-            <version>1.8</version>
+            <version>1.11</version>
         </dependency>
 
         <dependency>
@@ -37,32 +37,32 @@
         <dependency>
             <groupId>net.sf.jt400</groupId>
             <artifactId>jt400</artifactId>
-            <version>6.7</version>
+            <version>9.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.ftpserver</groupId>
             <artifactId>ftpserver-core</artifactId>
-            <version>1.0.6</version>
+            <version>1.1.0</version>
         </dependency>
 
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-web</artifactId>
-            <version>[5.3.4,)</version>
+            <version>5.6</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-db</artifactId>
-            <version>[1.7.1,)</version>
+            <version>1.11</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-kernel</artifactId>
-            <version>[3.3.3,)</version>
+            <version>3.5</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

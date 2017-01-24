@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Sirius" pattern="file:src/main/java//*||file:src/main/resources/*.properties" />
+</component>
