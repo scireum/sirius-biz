@@ -20,7 +20,6 @@ import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
-import sirius.web.security.UserContext;
 
 import java.util.Optional;
 
@@ -64,29 +63,6 @@ public class CodeListController extends BizController {
         codeListHandler(ctx, codeListId, false);
     }
 
-    private void codeListHandler(WebContext ctx, String codeListId, boolean forceDetails) {
-        CodeList cl = findForTenant(CodeList.class, codeListId);
-        if (ctx.isPOST()) {
-            try {
-                boolean wasNew = cl.isNew();
-                load(ctx, cl);
-                oma.update(cl);
-                showSavedMessage();
-                if (wasNew) {
-                    ctx.respondWith().redirectTemporarily(WebContext.getContextPrefix() + "/code-list/" + cl.getId());
-                    return;
-                }
-            } catch (Throwable e) {
-                UserContext.handle(e);
-            }
-        }
-        if (cl.isNew() || forceDetails) {
-            ctx.respondWith().template("view/codelists/code-list-details.html", cl);
-        } else {
-            renderCodeList(ctx, cl);
-        }
-    }
-
     /**
      * Provides an editor for a code list.
      *
@@ -99,6 +75,20 @@ public class CodeListController extends BizController {
     @Routed("/code-list/:1/details")
     public void codeListDetails(WebContext ctx, String codeListId) {
         codeListHandler(ctx, codeListId, true);
+    }
+
+    private void codeListHandler(WebContext ctx, String codeListId, boolean forceDetails) {
+        CodeList cl = findForTenant(CodeList.class, codeListId);
+
+        if (cl.isNew() || forceDetails) {
+            boolean requestHandled =
+                    prepareSave(ctx).editAfterCreate().withAfterCreateURI("/code-list/${id}/details").saveEntity(cl);
+            if (!requestHandled) {
+                ctx.respondWith().template("view/codelists/code-list-details.html", cl);
+            }
+        } else {
+            renderCodeList(ctx, cl);
+        }
     }
 
     private void renderCodeList(WebContext ctx, CodeList cl) {

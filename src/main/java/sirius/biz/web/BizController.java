@@ -24,7 +24,9 @@ import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
+import sirius.kernel.nls.Formatter;
 import sirius.web.controller.BasicController;
+import sirius.web.controller.Message;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
@@ -32,6 +34,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -139,6 +142,22 @@ public class BizController extends BasicController {
         }
     }
 
+    /**
+     * Reads the given properties from the given request and populates the given entity.
+     *
+     * @param ctx        the request to read parameters from
+     * @param entity     the entity to fill
+     * @param properties the list of properties to transfer
+     */
+    protected void load(WebContext ctx, Entity entity, Column... properties) {
+        Set<String> columnsSet = Arrays.stream(properties).map(Column::getName).collect(Collectors.toSet());
+        for (Property property : entity.getDescriptor().getProperties()) {
+            if (columnsSet.contains(property.getName())) {
+                property.parseValue(entity, ctx.get(property.getName()));
+            }
+        }
+    }
+
     private boolean shouldAutoload(WebContext ctx, Property property) {
         if (!isAutoloaded(property)) {
             return false;
@@ -156,23 +175,6 @@ public class BizController extends BasicController {
         return property instanceof BooleanProperty;
     }
 
-    /**
-     * Reads the given properties from the given request and populates the given entity.
-     *
-     * @param ctx        the request to read parameters from
-     * @param entity     the entity to fill
-     * @param properties the list of properties to transfer
-     */
-
-    protected void load(WebContext ctx, Entity entity, Column... properties) {
-        Set<String> columnsSet = Arrays.stream(properties).map(Column::getName).collect(Collectors.toSet());
-        for (Property property : entity.getDescriptor().getProperties()) {
-            if (columnsSet.contains(property.getName())) {
-                property.parseValue(entity, ctx.get(property.getName()));
-            }
-        }
-    }
-
     private boolean isAutoloaded(Property property) {
         Autoloaded autoloaded = property.getAnnotation(Autoloaded.class);
         if (autoloaded == null) {
@@ -186,27 +188,154 @@ public class BizController extends BasicController {
     }
 
     /**
-     * Reads all autoloaded fields of the given entity from the given context and stores the updated entity in the
+     * Provides a fluent API to control the process and user routing while creating or updating an entity in the
      * database.
-     * <p>
-     * If all goes well, an appropriate message is shown, otherwise an error message is displayed.
-     * <p>
-     * If the given request (ctx) isn't a POST, nothing will happen.
-     *
-     * @param ctx    the request to read the parameters from
-     * @param entity the entity to fill and save
      */
-    protected void save(WebContext ctx, Entity entity) {
-        if (!ctx.isPOST()) {
-            return;
+    public class SaveHelper {
+
+        private WebContext ctx;
+        private boolean editAfterCreate;
+        private Consumer<Boolean> preSaveHandler;
+        private Consumer<Boolean> postSaveHandler;
+        private String createdURI;
+        private String afterSaveURI;
+
+        private SaveHelper(WebContext ctx) {
+            this.ctx = ctx;
         }
 
-        try {
-            load(ctx, entity);
-            oma.update(entity);
-            showSavedMessage();
-        } catch (Exception e) {
-            UserContext.handle(e);
+        /**
+         * Determines that once the entity was saved, the user should remain in the editor of the entity and not return
+         * to the previous view.
+         * <p>
+         * This will either cause {@link #saveEntity(BizEntity)} to return <tt>false</tt>, so that the invoking
+         * controller method will render the editor template or it will redirect the user to the <tt>createdURI</tt>
+         * if given via {@link #withAfterCreateURI(String)} and if the entity was new.
+         *
+         * @return the helper itself for fluent method calls
+         */
+        public SaveHelper editAfterCreate() {
+            this.editAfterCreate = true;
+            return this;
+        }
+
+        /**
+         * Installs a pre save handler which is invoked just before the entity is persisted into the database.
+         *
+         * @param preSaveHandler a consumer which is supplied with a boolean flag, indicating if the entity was new.
+         *                       The handler can be used to modify the entity before it is saved.
+         * @return the helper itself for fluent method calls
+         */
+        public SaveHelper withPreSaveHandler(Consumer<Boolean> preSaveHandler) {
+            this.preSaveHandler = preSaveHandler;
+            return this;
+        }
+
+        /**
+         * Installs a post save handler which is invoked just aafter the entity was persisted into the database.
+         *
+         * @param postSaveHandler a consumer which is supplied with a boolean flag, indicating if the entiy was new.
+         *                        The
+         *                        handler can be used to modify the entity or related entities after it was created in
+         *                        the database.
+         * @return the helper itself for fluent method calls
+         */
+        public SaveHelper withPostSaveHandler(Consumer<Boolean> postSaveHandler) {
+            this.postSaveHandler = postSaveHandler;
+            return this;
+        }
+
+        /**
+         * Used to supply a URL to which the user is redirected if a new entity was created.
+         * <p>
+         * As new entities are often created using a placeholder URL like <tt>/entity/new</tt>, we must
+         * redirect to the canonical URL like <tt>/entity/128</tt> if a new entity was created.
+         * <p>
+         * Note that the redirect is only performed if {@link #editAfterCreate()} was invoked or if the
+         * newly created entity has validation warnings.
+         *
+         * @param createdURI the URI to redirect to where <tt>${id}</tt> is replaced with the actual id of the entity
+         * @return the helper itself for fluent method calls
+         */
+        public SaveHelper withAfterCreateURI(String createdURI) {
+            this.createdURI = createdURI;
+            return this;
+        }
+
+        /**
+         * Used to supply a URL to which the user is redirected if an entity was successfully saved.
+         * <p>
+         * Once an entity was successfully saved and has no validation warnings, the user will be redirected
+         * to the given URL.
+         *
+         * @param afterSaveURI the list or base URL to return to, after an entity was successfully edited.
+         * @return the helper itself for fluent method calls
+         */
+        public SaveHelper withAfterSaveURI(String afterSaveURI) {
+            this.afterSaveURI = afterSaveURI;
+            return this;
+        }
+
+        /**
+         * Applies the configured save login on the given entity.
+         *
+         * @param entity the entity to update and save
+         * @return <tt>true</tt> if the request was handled (the user was redirected), <tt>false</tt> otherwise
+         */
+        public boolean saveEntity(BizEntity entity) {
+            if (!ctx.isPOST()) {
+                return false;
+            }
+
+            try {
+                boolean wasNew = entity.isNew();
+                if (preSaveHandler != null) {
+                    preSaveHandler.accept(wasNew);
+                }
+                load(ctx, entity);
+                oma.update(entity);
+                if (postSaveHandler != null) {
+                    postSaveHandler.accept(wasNew);
+                }
+
+                if (!oma.hasValidationWarnings(entity) && Strings.isFilled(afterSaveURI) && !editAfterCreate) {
+                    ctx.respondWith().redirectToGet(afterSaveURI);
+                    return true;
+                }
+
+                if (wasNew && Strings.isFilled(createdURI)) {
+                    ctx.respondWith()
+                       .redirectToGet(Formatter.create(createdURI).set("id", entity.getIdAsString()).format());
+                    return true;
+                }
+
+                showSavedMessage();
+            } catch (Throwable e) {
+                UserContext.handle(e);
+            }
+
+            return false;
+        }
+    }
+
+    /**
+     * Creates a {@link SaveHelper} with provides a fluent API to save an entity into the database.
+     *
+     * @param ctx the current request
+     * @return a helper used to configure the save process
+     */
+    protected SaveHelper prepareSave(WebContext ctx) {
+        return new SaveHelper(ctx);
+    }
+
+    /**
+     * Performs a validation and reports all warnings via the {@link UserContext}.
+     *
+     * @param entity the entity to validate
+     */
+    protected void validate(Entity entity) {
+        for (String warning : oma.validate(entity)) {
+            UserContext.message(Message.warn(warning));
         }
     }
 
@@ -272,8 +401,12 @@ public class BizController extends BasicController {
      */
     protected <E extends Entity> E findForTenant(Class<E> type, String id) {
         E result = find(type, id);
-        if (!result.isNew() && result instanceof TenantAware) {
-            assertTenant((TenantAware) result);
+        if (result instanceof TenantAware) {
+            if (result.isNew()) {
+                ((TenantAware) result).getTenant().setValue(currentTenant());
+            } else {
+                assertTenant((TenantAware) result);
+            }
         }
         return result;
     }
