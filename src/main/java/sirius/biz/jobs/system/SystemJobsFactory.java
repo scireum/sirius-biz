@@ -12,7 +12,7 @@ import sirius.biz.jobs.JobDescription;
 import sirius.biz.jobs.JobsFactory;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
-import sirius.kernel.di.std.Context;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.di.std.Register;
 
@@ -33,7 +33,7 @@ public class SystemJobsFactory implements JobsFactory {
     @Parts(SystemJobDescription.class)
     private Collection<SystemJobDescription> jobs;
 
-    @Context
+    @Part
     private GlobalContext ctx;
 
     @Override

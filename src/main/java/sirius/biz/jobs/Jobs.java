@@ -16,7 +16,6 @@ import sirius.db.mixing.SmartQuery;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.ConfigValue;
-import sirius.kernel.di.std.Context;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.di.std.Register;
@@ -49,7 +48,7 @@ public class Jobs {
     @Parts(JobsFactory.class)
     private Collection<JobsFactory> factories;
 
-    @Context
+    @Part
     private GlobalContext ctx;
 
     @Part

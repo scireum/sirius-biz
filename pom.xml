@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.scireum</groupId>
         <artifactId>sirius-parent</artifactId>
-        <version>3.7.1</version>
+        <version>3.8.2</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
     <version>1.8.1</version>
@@ -21,12 +21,12 @@
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-web</artifactId>
-            <version>5.6</version>
+            <version>6.3</version>
         </dependency>
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-db</artifactId>
-            <version>1.11</version>
+            <version>1.12.1</version>
         </dependency>
 
         <dependency>
@@ -48,21 +48,21 @@
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-web</artifactId>
-            <version>5.6</version>
+            <version>6.3</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-db</artifactId>
-            <version>1.11</version>
+            <version>1.12.1</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-kernel</artifactId>
-            <version>3.5</version>
+            <version>4.0.1</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

@@ -9,7 +9,7 @@
 package sirius.biz.jobs;
 
 import sirius.kernel.di.GlobalContext;
-import sirius.kernel.di.std.Context;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 
 /**
@@ -52,7 +52,7 @@ public class JobParameterDescription {
         return required;
     }
 
-    @Context
+    @Part
     private static GlobalContext ctx;
 
     public ParameterHandler getParameterHandler() {
