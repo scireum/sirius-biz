@@ -194,7 +194,6 @@ public class BizController extends BasicController {
     public class SaveHelper {
 
         private WebContext ctx;
-        private boolean editAfterCreate;
         private Consumer<Boolean> preSaveHandler;
         private Consumer<Boolean> postSaveHandler;
         private String createdURI;
@@ -205,17 +204,14 @@ public class BizController extends BasicController {
         }
 
         /**
-         * Determines that once the entity was saved, the user should remain in the editor of the entity and not return
-         * to the previous view.
-         * <p>
-         * This will either cause {@link #saveEntity(BizEntity)} to return <tt>false</tt>, so that the invoking
-         * controller method will render the editor template or it will redirect the user to the <tt>createdURI</tt>
-         * if given via {@link #withAfterCreateURI(String)} and if the entity was new.
+         * Determination to which Site a user is redirected is now determined automaticly. If a SaveHelper got an
+         * createdURI and the Entity isNew the User will be rediret to the createdURI. If the entity is not new or there
+         * is no createdURI the User will be redirected to the afterSaveURI.
          *
          * @return the helper itself for fluent method calls
          */
+        @Deprecated
         public SaveHelper editAfterCreate() {
-            this.editAfterCreate = true;
             return this;
         }
 
@@ -251,8 +247,8 @@ public class BizController extends BasicController {
          * As new entities are often created using a placeholder URL like <tt>/entity/new</tt>, we must
          * redirect to the canonical URL like <tt>/entity/128</tt> if a new entity was created.
          * <p>
-         * Note that the redirect is only performed if {@link #editAfterCreate()} was invoked or if the
-         * newly created entity has validation warnings.
+         * Note that the redirect is only performed if the newly created entity has validation warnings or the Entity is
+         * new.
          *
          * @param createdURI the URI to redirect to where <tt>${id}</tt> is replaced with the actual id of the entity
          * @return the helper itself for fluent method calls
@@ -265,7 +261,7 @@ public class BizController extends BasicController {
         /**
          * Used to supply a URL to which the user is redirected if an entity was successfully saved.
          * <p>
-         * Once an entity was successfully saved and has no validation warnings, the user will be redirected
+         * Once an entity was successfully saved is not new and has no validation warnings, the user will be redirected
          * to the given URL.
          *
          * @param afterSaveURI the list or base URL to return to, after an entity was successfully edited.
@@ -298,22 +294,20 @@ public class BizController extends BasicController {
                     postSaveHandler.accept(wasNew);
                 }
 
-                if (!oma.hasValidationWarnings(entity) && Strings.isFilled(afterSaveURI) && !editAfterCreate) {
-                    ctx.respondWith().redirectToGet(afterSaveURI);
-                    return true;
-                }
-
                 if (wasNew && Strings.isFilled(createdURI)) {
                     ctx.respondWith()
                        .redirectToGet(Formatter.create(createdURI).set("id", entity.getIdAsString()).format());
                     return true;
                 }
 
+                if (!oma.hasValidationWarnings(entity) && Strings.isFilled(afterSaveURI)) {
+                    ctx.respondWith().redirectToGet(afterSaveURI);
+                    return true;
+                }
                 showSavedMessage();
             } catch (Throwable e) {
                 UserContext.handle(e);
             }
-
             return false;
         }
     }
