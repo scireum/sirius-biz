@@ -13,6 +13,7 @@ import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
 import sirius.biz.web.BizController;
 import sirius.biz.web.PageHelper;
+import sirius.db.mixing.constraints.Like;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
@@ -21,6 +22,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
@@ -34,6 +36,7 @@ import sirius.web.services.JSONStructuredOutput;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Provides a GUI for managing user accounts.
@@ -82,8 +85,7 @@ public class UserAccountController extends BizController {
     public void account(WebContext ctx, String accountId) {
         UserAccount userAccount = findForTenant(UserAccount.class, accountId);
 
-        boolean requestHandled = prepareSave(ctx).editAfterCreate()
-                                                 .withAfterCreateURI("/user-account/${id}")
+        boolean requestHandled = prepareSave(ctx).withAfterCreateURI("/user-account/${id}")
                                                  .withAfterSaveURI("/user-accounts")
                                                  .withPreSaveHandler((isNew) -> {
                                                      userAccount.getPermissions().getPermissions().clear();
@@ -317,5 +319,38 @@ public class UserAccountController extends BizController {
     public void logout(WebContext ctx) {
         UserContext.get().getUserManager().detachFromSession(getUser(), ctx);
         ctx.respondWith().redirectTemporarily(wondergemRoot);
+    }
+
+    /**
+     * Autocompletion for UserAccounts.
+     * Only accepts UserAccounts which belong to the current Tenant.
+     *
+     * @param ctx the current request
+     */
+    @Routed("/user-accounts/autocomplete")
+    public void customersAutocomplete(final WebContext ctx) {
+        AutocompleteHelper.handle(ctx, (query, result) -> {
+            AtomicBoolean directMatch = new AtomicBoolean(false);
+            oma.select(UserAccount.class)
+               .eq(UserAccount.TENANT, currentTenant().getId())
+               .where(Like.allWordsInAnyField(query,
+                                              UserAccount.EMAIL,
+                                              UserAccount.LOGIN.inner(LoginData.USERNAME),
+                                              UserAccount.PERSON.inner(PersonData.FIRSTNAME),
+                                              UserAccount.PERSON.inner(PersonData.LASTNAME)))
+               .limit(10)
+               .iterateAll(userAccount -> {
+                   {
+                       if (Strings.areEqual(query, userAccount.getLogin().getUsername()) || Strings.areEqual(query,
+                                                                                                             userAccount
+                                                                                                                     .getEmail())) {
+                           directMatch.set(true);
+                       }
+                   }
+                   result.accept(new AutocompleteHelper.Completion(userAccount.getIdAsString(),
+                                                                   userAccount.toString(),
+                                                                   userAccount.toString()));
+               });
+        });
     }
 }
