@@ -37,6 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * Provides a GUI for managing user accounts.
@@ -49,6 +50,15 @@ public class UserAccountController extends BizController {
      * The permission required to add, modify or delete accounts
      */
     public static final String PERMISSION_MANAGE_USER_ACCOUNTS = "permission-manage-user-accounts";
+
+    @Part
+    private Mails mails;
+
+    @ConfigValue("product.wondergemRoot")
+    private String wondergemRoot;
+
+    @ConfigValue("security.roles")
+    private List<String> roles;
 
     /**
      * Shows a list of all available users of the current tenant.
@@ -87,7 +97,7 @@ public class UserAccountController extends BizController {
 
         boolean requestHandled = prepareSave(ctx).withAfterCreateURI("/user-account/${id}")
                                                  .withAfterSaveURI("/user-accounts")
-                                                 .withPreSaveHandler((isNew) -> {
+                                                 .withPreSaveHandler(isNew -> {
                                                      userAccount.getPermissions().getPermissions().clear();
                                                      for (String role : ctx.getParameters("roles")) {
                                                          // Ensure that only real roles end up in the permissions list,
@@ -140,9 +150,6 @@ public class UserAccountController extends BizController {
         }
         oma.update(userAccount);
     }
-
-    @ConfigValue("security.roles")
-    private List<String> roles;
 
     /**
      * Lists all roles which can be granted to a user.
@@ -206,15 +213,12 @@ public class UserAccountController extends BizController {
                 showSavedMessage();
                 accounts(ctx);
                 return;
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 UserContext.handle(e);
             }
         }
         ctx.respondWith().template("view/tenants/user-account-password.html", userAccount);
     }
-
-    @Part
-    private Mails mails;
 
     /**
      * Generates a new password for the given account and send a mail to the user.
@@ -307,9 +311,6 @@ public class UserAccountController extends BizController {
         accounts(ctx);
     }
 
-    @ConfigValue("product.wondergemRoot")
-    private String wondergemRoot;
-
     /**
      * Executes a logout for the current scope.
      *
@@ -339,18 +340,26 @@ public class UserAccountController extends BizController {
                                               UserAccount.PERSON.inner(PersonData.FIRSTNAME),
                                               UserAccount.PERSON.inner(PersonData.LASTNAME)))
                .limit(10)
-               .iterateAll(userAccount -> {
-                   {
-                       if (Strings.areEqual(query, userAccount.getLogin().getUsername()) || Strings.areEqual(query,
-                                                                                                             userAccount
-                                                                                                                     .getEmail())) {
-                           directMatch.set(true);
-                       }
-                   }
-                   result.accept(new AutocompleteHelper.Completion(userAccount.getIdAsString(),
-                                                                   userAccount.toString(),
-                                                                   userAccount.toString()));
-               });
+
+               .iterateAll(getUserAccountConsumer(query, result, directMatch));
         });
+    }
+
+    private void checkDirectMatch(UserAccount userAccount, String query, AtomicBoolean directMatch) {
+        if (Strings.areEqual(query, userAccount.getLogin().getUsername()) || Strings.areEqual(query,
+                                                                                              userAccount.getEmail())) {
+            directMatch.set(true);
+        }
+    }
+
+    private Consumer<UserAccount> getUserAccountConsumer(String query,
+                                                         Consumer<AutocompleteHelper.Completion> result,
+                                                         AtomicBoolean directMatch) {
+        return userAccount -> {
+            checkDirectMatch(userAccount, query, directMatch);
+            result.accept(new AutocompleteHelper.Completion(userAccount.getIdAsString(),
+                                                            userAccount.toString(),
+                                                            userAccount.toString()));
+        };
     }
 }
