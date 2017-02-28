@@ -13,6 +13,7 @@ import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
 import sirius.biz.web.BizController;
 import sirius.biz.web.PageHelper;
+import sirius.db.mixing.constraints.Like;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
@@ -21,6 +22,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
@@ -34,6 +36,8 @@ import sirius.web.services.JSONStructuredOutput;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * Provides a GUI for managing user accounts.
@@ -46,6 +50,15 @@ public class UserAccountController extends BizController {
      * The permission required to add, modify or delete accounts
      */
     public static final String PERMISSION_MANAGE_USER_ACCOUNTS = "permission-manage-user-accounts";
+
+    @Part
+    private Mails mails;
+
+    @ConfigValue("product.wondergemRoot")
+    private String wondergemRoot;
+
+    @ConfigValue("security.roles")
+    private List<String> roles;
 
     /**
      * Shows a list of all available users of the current tenant.
@@ -82,10 +95,9 @@ public class UserAccountController extends BizController {
     public void account(WebContext ctx, String accountId) {
         UserAccount userAccount = findForTenant(UserAccount.class, accountId);
 
-        boolean requestHandled = prepareSave(ctx).editAfterCreate()
-                                                 .withAfterCreateURI("/user-account/${id}")
+        boolean requestHandled = prepareSave(ctx).withAfterCreateURI("/user-account/${id}")
                                                  .withAfterSaveURI("/user-accounts")
-                                                 .withPreSaveHandler((isNew) -> {
+                                                 .withPreSaveHandler(isNew -> {
                                                      userAccount.getPermissions().getPermissions().clear();
                                                      for (String role : ctx.getParameters("roles")) {
                                                          // Ensure that only real roles end up in the permissions list,
@@ -138,9 +150,6 @@ public class UserAccountController extends BizController {
         }
         oma.update(userAccount);
     }
-
-    @ConfigValue("security.roles")
-    private List<String> roles;
 
     /**
      * Lists all roles which can be granted to a user.
@@ -204,15 +213,12 @@ public class UserAccountController extends BizController {
                 showSavedMessage();
                 accounts(ctx);
                 return;
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 UserContext.handle(e);
             }
         }
         ctx.respondWith().template("view/tenants/user-account-password.html", userAccount);
     }
-
-    @Part
-    private Mails mails;
 
     /**
      * Generates a new password for the given account and send a mail to the user.
@@ -305,9 +311,6 @@ public class UserAccountController extends BizController {
         accounts(ctx);
     }
 
-    @ConfigValue("product.wondergemRoot")
-    private String wondergemRoot;
-
     /**
      * Executes a logout for the current scope.
      *
@@ -317,5 +320,46 @@ public class UserAccountController extends BizController {
     public void logout(WebContext ctx) {
         UserContext.get().getUserManager().detachFromSession(getUser(), ctx);
         ctx.respondWith().redirectTemporarily(wondergemRoot);
+    }
+
+    /**
+     * Autocompletion for UserAccounts.
+     * Only accepts UserAccounts which belong to the current Tenant.
+     *
+     * @param ctx the current request
+     */
+    @Routed("/user-accounts/autocomplete")
+    public void customersAutocomplete(final WebContext ctx) {
+        AutocompleteHelper.handle(ctx, (query, result) -> {
+            AtomicBoolean directMatch = new AtomicBoolean(false);
+            oma.select(UserAccount.class)
+               .eq(UserAccount.TENANT, currentTenant().getId())
+               .where(Like.allWordsInAnyField(query,
+                                              UserAccount.EMAIL,
+                                              UserAccount.LOGIN.inner(LoginData.USERNAME),
+                                              UserAccount.PERSON.inner(PersonData.FIRSTNAME),
+                                              UserAccount.PERSON.inner(PersonData.LASTNAME)))
+               .limit(10)
+
+               .iterateAll(getUserAccountConsumer(query, result, directMatch));
+        });
+    }
+
+    private void checkDirectMatch(UserAccount userAccount, String query, AtomicBoolean directMatch) {
+        if (Strings.areEqual(query, userAccount.getLogin().getUsername()) || Strings.areEqual(query,
+                                                                                              userAccount.getEmail())) {
+            directMatch.set(true);
+        }
+    }
+
+    private Consumer<UserAccount> getUserAccountConsumer(String query,
+                                                         Consumer<AutocompleteHelper.Completion> result,
+                                                         AtomicBoolean directMatch) {
+        return userAccount -> {
+            checkDirectMatch(userAccount, query, directMatch);
+            result.accept(new AutocompleteHelper.Completion(userAccount.getIdAsString(),
+                                                            userAccount.toString(),
+                                                            userAccount.toString()));
+        };
     }
 }
