@@ -82,7 +82,7 @@ public class CodeListController extends BizController {
 
         if (cl.isNew() || forceDetails) {
             boolean requestHandled =
-                    prepareSave(ctx).editAfterCreate().withAfterCreateURI("/code-list/${id}/details").saveEntity(cl);
+                    prepareSave(ctx).withAfterCreateURI("/code-list/${id}/details").saveEntity(cl);
             if (!requestHandled) {
                 ctx.respondWith().template("view/codelists/code-list-details.html", cl);
             }

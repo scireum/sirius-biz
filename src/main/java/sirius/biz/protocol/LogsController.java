@@ -11,8 +11,6 @@ package sirius.biz.protocol;
 import sirius.biz.web.BizController;
 import sirius.biz.web.DateRange;
 import sirius.biz.web.PageHelper;
-import sirius.db.mixing.OMA;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Controller;
@@ -26,9 +24,6 @@ import sirius.web.security.Permission;
  */
 @Register(classes = Controller.class, framework = Protocols.FRAMEWORK_PROTOCOLS)
 public class LogsController extends BizController {
-
-    @Part
-    private OMA oma;
 
     /**
      * Lists all recorded log entries.

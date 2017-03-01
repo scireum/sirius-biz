@@ -29,6 +29,9 @@ import sirius.web.services.JSONStructuredOutput;
 @Register(classes = Controller.class)
 public class SchemaController extends BasicController {
 
+    @Part
+    private Schema schema;
+
     /**
      * Renders the schema list view.
      *
@@ -40,9 +43,6 @@ public class SchemaController extends BasicController {
     public void changes(WebContext ctx) {
         ctx.respondWith().template("view/model/schema.html");
     }
-
-    @Part
-    private Schema schema;
 
     /**
      * Lists all required changes as JSON

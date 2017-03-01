@@ -56,6 +56,9 @@ public class TenantController extends BizController {
     @ConfigValue("security.tenantPermissions")
     private List<String> permissions;
 
+    @ConfigValue("product.wondergemRoot")
+    private String wondergemRoot;
+
     /**
      * Returns all available features which can be assigned to a tenant.
      *
@@ -118,8 +121,8 @@ public class TenantController extends BizController {
         Tenant tenant = find(Tenant.class, tenantId);
 
         SaveHelper saveHelper =
-                prepareSave(ctx).editAfterCreate().withAfterCreateURI("/tenant/${id}").withAfterSaveURI("/tenants");
-        saveHelper.withPreSaveHandler((isNew) -> {
+                prepareSave(ctx).withAfterCreateURI("/tenant/${id}").withAfterSaveURI("/tenants");
+        saveHelper.withPreSaveHandler(isNew -> {
             tenant.getPermissions().getPermissions().clear();
             for (String permission : ctx.getParameters("permissions")) {
                 // Ensure that only real permissions end up in the permissions list,
@@ -130,8 +133,8 @@ public class TenantController extends BizController {
                 }
             }
         });
-        boolean requestHandled = saveHelper.saveEntity(tenant);
 
+        boolean requestHandled = saveHelper.saveEntity(tenant);
         if (!requestHandled) {
             validate(tenant);
             ctx.respondWith()
@@ -231,9 +234,6 @@ public class TenantController extends BizController {
 
         ctx.respondWith().template("view/tenants/select-tenant.html", ph.asPage());
     }
-
-    @ConfigValue("product.wondergemRoot")
-    private String wondergemRoot;
 
     /**
      * Makes the current user belong to the given tenant.
