@@ -9,7 +9,7 @@
         <version>3.8.2</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
-    <version>1.8.3</version>
+    <version>1.9</version>
     <packaging>jar</packaging>
 
     <name>SIRIUS biz</name>
@@ -21,12 +21,12 @@
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-web</artifactId>
-            <version>6.3</version>
+            <version>6.8</version>
         </dependency>
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-db</artifactId>
-            <version>1.12.1</version>
+            <version>1.13.1</version>
         </dependency>
 
         <dependency>
@@ -48,21 +48,21 @@
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-web</artifactId>
-            <version>6.3</version>
+            <version>6.8</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-db</artifactId>
-            <version>1.12.1</version>
+            <version>1.13.1</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-kernel</artifactId>
-            <version>4.0.1</version>
+            <version>4.1</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
