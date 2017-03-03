@@ -278,7 +278,7 @@ public class BizController extends BasicController {
          * @param entity the entity to update and save
          * @return <tt>true</tt> if the request was handled (the user was redirected), <tt>false</tt> otherwise
          */
-        public boolean saveEntity(BizEntity entity) {
+        public boolean saveEntity(Entity entity) {
             if (!ctx.isPOST()) {
                 return false;
             }
@@ -346,7 +346,7 @@ public class BizController extends BasicController {
      * @throws sirius.kernel.health.HandledException if either the id is unknown or a new instance cannot be created
      */
     protected <E extends Entity> E find(Class<E> type, String id) {
-        if (BizEntity.NEW.equals(id) && BizEntity.class.isAssignableFrom(type)) {
+        if (Entity.NEW.equals(id) && Entity.class.isAssignableFrom(type)) {
             try {
                 return type.newInstance();
             } catch (Throwable e) {
@@ -375,7 +375,7 @@ public class BizController extends BasicController {
      * or if the id was <tt>new</tt>
      */
     protected <E extends Entity> Optional<E> tryFind(Class<E> type, String id) {
-        if (BizEntity.NEW.equals(id)) {
+        if (Entity.NEW.equals(id)) {
             return Optional.empty();
         }
         return oma.find(type, id);
