@@ -1,0 +1,28 @@
+@*
+*  Made with all the love in the world
+*  by scireum in Remshalden, Germany
+*
+*  Copyright by scireum GmbH
+*  http://www.scireum.de - info@scireum.de
+*@
+
+@*
+* This is a default template that could be rendered in the template body
+* replace key and value with your own values
+* <div class="row info-line">
+*    <div class="col-md-4 name">
+*        key
+*    </div>
+*    <div class="col-md-8 value">
+*        <div>value</div>
+*    </div>
+* </div>
+*@
+
+@args String title
+<div class="well">
+    @if (Strings.isFilled(title)){
+        <span class="legend">@title</span>
+    }
+    @renderBody()
+</div>
