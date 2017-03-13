@@ -86,7 +86,7 @@ public class TenantsHelper {
      * @param request the request to perform as test user and tenant
      */
     public static void installBackendUser(TestRequest request) {
-        request.setSessionValue("default-tenant-id", getTestTenant().getUniqueName());
+        request.setSessionValue("default-tenant-id", getTestTenant().getId());
         request.setSessionValue("default-tenant-name", getTestTenant().getName());
         request.setSessionValue("default-user-id", getTestUser().getUniqueName());
         request.setSessionValue("default-user-name", getTestUser().getEmail());
