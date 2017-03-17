@@ -49,17 +49,12 @@ public class TenantsHelper {
             return;
         }
 
-        setupTestTenant();
         UserContext.get()
-                   .setCurrentUser(((TenantUserManager) UserContext.get().getUserManager()).asUser(testUser, null));
+                   .setCurrentUser(((TenantUserManager) UserContext.get().getUserManager()).asUser(getTestUser(), null));
     }
 
     private static void setupTestTenant() {
         oma.getReadyFuture().await(Duration.ofSeconds(60));
-
-        if (testTenant != null) {
-            return;
-        }
 
         testTenant = oma.select(Tenant.class).eq(Tenant.NAME, "Test").queryFirst();
         if (testTenant == null) {
@@ -68,11 +63,15 @@ public class TenantsHelper {
             testTenant.getPermissions().getPermissions().addAll(features);
             oma.update(testTenant);
         }
+    }
+
+    private static void setupTestUser() {
+        oma.getReadyFuture().await(Duration.ofSeconds(60));
 
         testUser = oma.select(UserAccount.class).eq(UserAccount.LOGIN.inner(LoginData.USERNAME), "test").queryFirst();
         if (testUser == null) {
             testUser = new UserAccount();
-            testUser.getTenant().setValue(testTenant);
+            testUser.getTenant().setValue(getTestTenant());
             testUser.getLogin().setUsername("test");
             testUser.getLogin().setCleartextPassword("test");
             testUser.getPermissions().getPermissions().addAll(roles);
@@ -87,16 +86,44 @@ public class TenantsHelper {
      * @param request the request to perform as test user and tenant
      */
     public static void installBackendUser(TestRequest request) {
-        setupTestTenant();
-        request.setSessionValue("default-tenant-id", testTenant.getUniqueName());
-        request.setSessionValue("default-tenant-name", testTenant.getName());
-        request.setSessionValue("default-user-id", testUser.getUniqueName());
-        request.setSessionValue("default-user-name", testUser.getEmail());
-        request.setSessionValue("default-user-email", testUser.getEmail());
+        request.setSessionValue("default-tenant-id", getTestTenant().getId());
+        request.setSessionValue("default-tenant-name", getTestTenant().getName());
+        request.setSessionValue("default-user-id", getTestUser().getUniqueName());
+        request.setSessionValue("default-user-name", getTestUser().getEmail());
+        request.setSessionValue("default-user-email", getTestUser().getEmail());
         request.setSessionValue("default-user-lang", "de");
     }
 
     public static void clearCurrentUser() {
         UserContext.get().setCurrentUser(null);
+    }
+
+    /**
+     * Returns a sample {@link Tenant} for testing or creates one if doesn't exist.
+     * Do not use this tenant for test in which you delete or change him since this might have effects on other tests.
+     *
+     * @return Tenant for tests
+     */
+    public static Tenant getTestTenant() {
+        if (testTenant != null) {
+            return testTenant;
+        }
+        setupTestTenant();
+        return testTenant;
+    }
+
+    /**
+     * Returns a sample {@link UserAccount} for testing or creates one if doesn't exist.
+     * Do not use this UserAccount for test in which you delete or change him since this might have effects on other
+     * tests.
+     *
+     * @return UserAccount for tests
+     */
+    public static UserAccount getTestUser() {
+        if (testUser != null) {
+            return testUser;
+        }
+        setupTestUser();
+        return testUser;
     }
 }

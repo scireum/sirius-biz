@@ -25,6 +25,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.NLS;
 import sirius.web.controller.Facet;
 import sirius.web.controller.Page;
 import sirius.web.http.WebContext;
@@ -210,6 +211,23 @@ public class PageHelper<E extends Entity> {
                 Exceptions.handle(OMA.LOG, e);
             }
         });
+    }
+
+    /**
+     * Adds a boolean based filter which permits to filter on boolean values.
+     *
+     * @param name  the name of the field to filter on
+     * @param title the title of the filter shown to the user
+     * @return the helper itself for fluent method calls
+     */
+    public PageHelper<E> addBooleanFacet(String name, String title) {
+        Objects.requireNonNull(ctx);
+
+        Facet facet = new Facet(title, name, ctx.get(name).asString(), null);
+        facet.addItem("true", NLS.get("NLS.yes"), -1);
+        facet.addItem("false", NLS.get("NLS.no"), -1);
+
+        return addFacet(facet, (f, q) -> q.eqIgnoreNull(Column.named(f.getName()), Value.of(f.getValue()).asBoolean()));
     }
 
     /**
