@@ -98,19 +98,27 @@ public class I5Connection {
      *
      * @param pgm    the name of the program to call
      * @param params the parameters to pass
-     * @throws Exception in case on a communication or execution error
      */
-    public void call(String pgm, ProgramParameter... params) throws Exception {
+    public void call(String pgm, ProgramParameter... params) {
         Watch w = Watch.start();
         lastUse = System.currentTimeMillis();
         try {
             ProgramCall p = new ProgramCall(i5, pgm, params);
-            if (I5Connector.LOG.isFINE()) {
-                I5Connector.LOG.FINE("PGM: " + pgm);
-                I5Connector.LOG.FINE("JOB-ID: " + p.getServerJob());
-                I5Connector.LOG.FINE("JOB-NAME: " + p.getServerJob().getName());
+            String currentJob;
+            try {
+                if (I5Connector.LOG.isFINE()) {
+                    I5Connector.LOG.FINE("PGM: " + pgm);
+                    I5Connector.LOG.FINE("JOB-ID: " + p.getServerJob());
+                    I5Connector.LOG.FINE("JOB-NAME: " + p.getServerJob().getName());
+                }
+                currentJob = pgm + "/" + p.getServerJob() + " / " + p.getServerJob().getName();
+            } catch (Exception e) {
+                throw Exceptions.handle()
+                                .to(I5Connector.LOG)
+                                .error(e)
+                                .withSystemErrorMessage("Error while calling i5")
+                                .handle();
             }
-            String currentJob = pgm + "/" + p.getServerJob() + " / " + p.getServerJob().getName();
             lastJob = currentJob;
 
             AtomicBoolean success = new AtomicBoolean();
@@ -136,7 +144,15 @@ public class I5Connection {
                                 .withSystemErrorMessage("Error while executing '%s': %s", currentJob, err.toString())
                                 .handle();
             }
-            pool.i5Connector.callUtilization.addValue(p.getServerJob().getCPUUsed());
+            try {
+                pool.i5Connector.callUtilization.addValue(p.getServerJob().getCPUUsed());
+            } catch (Exception e) {
+                throw Exceptions.handle()
+                                .to(I5Connector.LOG)
+                                .error(e)
+                                .withSystemErrorMessage("Error while executing '%s'", currentJob)
+                                .handle();
+            }
             if (I5Connector.LOG.isFINE()) {
                 StringBuilder sb = new StringBuilder();
                 for (ProgramParameter param : params) {
