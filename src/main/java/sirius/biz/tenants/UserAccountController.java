@@ -36,8 +36,6 @@ import sirius.web.services.JSONStructuredOutput;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 /**
  * Provides a GUI for managing user accounts.
@@ -324,14 +322,14 @@ public class UserAccountController extends BizController {
 
     /**
      * Autocompletion for UserAccounts.
+     * <p>
      * Only accepts UserAccounts which belong to the current Tenant.
      *
      * @param ctx the current request
      */
     @Routed("/user-accounts/autocomplete")
-    public void customersAutocomplete(final WebContext ctx) {
+    public void usersAutocomplete(final WebContext ctx) {
         AutocompleteHelper.handle(ctx, (query, result) -> {
-            AtomicBoolean directMatch = new AtomicBoolean(false);
             oma.select(UserAccount.class)
                .eq(UserAccount.TENANT, currentTenant().getId())
                .where(Like.allWordsInAnyField(query,
@@ -341,25 +339,11 @@ public class UserAccountController extends BizController {
                                               UserAccount.PERSON.inner(PersonData.LASTNAME)))
                .limit(10)
 
-               .iterateAll(getUserAccountConsumer(query, result, directMatch));
+               .iterateAll(userAccount -> {
+                   result.accept(new AutocompleteHelper.Completion(userAccount.getIdAsString(),
+                                                                   userAccount.toString(),
+                                                                   userAccount.toString()));
+               });
         });
-    }
-
-    private void checkDirectMatch(UserAccount userAccount, String query, AtomicBoolean directMatch) {
-        if (Strings.areEqual(query, userAccount.getLogin().getUsername()) || Strings.areEqual(query,
-                                                                                              userAccount.getEmail())) {
-            directMatch.set(true);
-        }
-    }
-
-    private Consumer<UserAccount> getUserAccountConsumer(String query,
-                                                         Consumer<AutocompleteHelper.Completion> result,
-                                                         AtomicBoolean directMatch) {
-        return userAccount -> {
-            checkDirectMatch(userAccount, query, directMatch);
-            result.accept(new AutocompleteHelper.Completion(userAccount.getIdAsString(),
-                                                            userAccount.toString(),
-                                                            userAccount.toString()));
-        };
     }
 }
