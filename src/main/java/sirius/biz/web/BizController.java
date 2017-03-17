@@ -349,7 +349,7 @@ public class BizController extends BasicController {
         if (BizEntity.NEW.equals(id) && BizEntity.class.isAssignableFrom(type)) {
             try {
                 return type.newInstance();
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 throw Exceptions.handle()
                                 .to(LOG)
                                 .error(e)
