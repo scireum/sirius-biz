@@ -43,7 +43,9 @@ public class ProtocolController extends BasicController {
         ph.withContext(ctx);
         ph.addQueryFacet(JournalEntry.TARGET_TYPE.getName(),
                          NLS.get("JournalEntry.targetType"),
-                         q -> q.copy().distinctFields(JournalEntry.TARGET_TYPE, JournalEntry.TARGET_TYPE).asSQLQuery());
+                         q -> oma.select(JournalEntry.class)
+                                 .distinctFields(JournalEntry.TARGET_TYPE, JournalEntry.TARGET_TYPE)
+                                 .asSQLQuery());
         ph.addTimeFacet(JournalEntry.TOD.getName(),
                         NLS.get("JournalEntry.tod"),
                         DateRange.lastFiveMinutes(),

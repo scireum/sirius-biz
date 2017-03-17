@@ -10,6 +10,7 @@ package sirius.biz.protocol;
 
 import sirius.db.mixing.Column;
 import sirius.db.mixing.Entity;
+import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
 import sirius.kernel.di.std.Framework;
@@ -20,6 +21,9 @@ import java.time.LocalDateTime;
  * Stores a log message in the database.
  */
 @Framework(Protocols.FRAMEWORK_PROTOCOLS)
+@Index(name = "category_idx", columns = "category")
+@Index(name = "level_idx", columns = "level")
+@Index(name = "tod_idx", columns = "tod")
 public class LogEntry extends Entity {
 
     /**

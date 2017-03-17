@@ -43,7 +43,9 @@ public class IncidentsController extends BizController {
         ph.withContext(ctx);
         ph.addQueryFacet(Incident.CATEGORY.getName(),
                          NLS.get("Incident.category"),
-                         q -> q.copy().distinctFields(LogEntry.CATEGORY, LogEntry.CATEGORY).asSQLQuery());
+                         q -> oma.select(Incident.class)
+                                 .distinctFields(Incident.CATEGORY, Incident.CATEGORY)
+                                 .asSQLQuery());
         ph.addTimeFacet(Incident.LAST_OCCURRENCE.getName(),
                         NLS.get("Incident.lastOccurrence"),
                         DateRange.lastFiveMinutes(),

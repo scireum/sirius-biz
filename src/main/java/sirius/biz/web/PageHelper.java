@@ -13,6 +13,7 @@ import sirius.biz.tenants.TenantAware;
 import sirius.biz.tenants.Tenants;
 import sirius.db.jdbc.SQLQuery;
 import sirius.db.mixing.Column;
+import sirius.db.mixing.Constraint;
 import sirius.db.mixing.Entity;
 import sirius.db.mixing.OMA;
 import sirius.db.mixing.SmartQuery;
@@ -27,6 +28,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.web.controller.Facet;
 import sirius.web.controller.Page;
 import sirius.web.http.WebContext;
+import sirius.web.security.UserContext;
 
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -47,6 +49,7 @@ public class PageHelper<E extends Entity> {
     private WebContext ctx;
     private SmartQuery<E> baseQuery;
     private Column[] searchFields;
+    private boolean advancedSearch;
     private List<Tuple<Facet, BiConsumer<Facet, SmartQuery<E>>>> facets = Lists.newArrayList();
 
     /**
@@ -97,6 +100,11 @@ public class PageHelper<E extends Entity> {
      */
     public PageHelper<E> withSearchFields(Column... searchFields) {
         this.searchFields = searchFields;
+        return this;
+    }
+
+    public PageHelper<E> enableAdvancedSearch() {
+        this.advancedSearch = true;
         return this;
     }
 
@@ -214,8 +222,17 @@ public class PageHelper<E extends Entity> {
         Watch w = Watch.start();
         Page<E> result = new Page<E>().withStart(1).withPageSize(PAGE_SIZE);
         result.bindToRequest(ctx);
-        if (searchFields != null && searchFields.length > 0) {
-            baseQuery.where(Like.allWordsInAnyField(result.getQuery(), searchFields));
+
+        if (advancedSearch) {
+            QueryCompiler compiler = new QueryCompiler(baseQuery.getEntityDescriptor(), result.getQuery(), searchFields);
+            Constraint constraint = compiler.compile();
+            if (constraint != null) {
+                baseQuery.where(constraint);
+            }
+        } else {
+            if (searchFields != null && searchFields.length > 0) {
+                baseQuery.where(Like.allWordsInAnyField(result.getQuery(), searchFields));
+            }
         }
 
         for (Tuple<Facet, BiConsumer<Facet, SmartQuery<E>>> f : facets) {
@@ -225,12 +242,18 @@ public class PageHelper<E extends Entity> {
             result.addFacet(f.getFirst());
         }
 
-        List<E> items = baseQuery.skip(result.getStart() - 1).limit(PAGE_SIZE + 1).queryList();
-        if (items.size() > PAGE_SIZE) {
-            result.withHasMore(true);
-            items.remove(items.size() - 1);
+        try {
+            List<E> items = baseQuery.skip(result.getStart() - 1).limit(PAGE_SIZE + 1).queryList();
+            if (items.size() > PAGE_SIZE) {
+                result.withHasMore(true);
+                items.remove(items.size() - 1);
+            }
+            result.withDuration(w.duration());
+            result.withItems(items);
+        } catch (Throwable e) {
+            UserContext.handle(e);
         }
-        result.withDuration(w.duration());
-        return result.withItems(items);
+
+        return result;
     }
 }
