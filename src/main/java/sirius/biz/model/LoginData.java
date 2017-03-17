@@ -20,7 +20,6 @@ import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
-import sirius.db.mixing.annotations.Unique;
 import sirius.kernel.commons.Strings;
 
 import java.time.LocalDateTime;
@@ -28,6 +27,9 @@ import java.time.LocalDateTime;
 /**
  * Stores a username and encrypted password along with some trace data to support logins which can be embedded into
  * other entities or mixins.
+ * <p>
+ * Note that no uniqueness constraint is placed on the username as the context of unqiueness has to be decided by the
+ * outsie class.
  * <p>
  * An example of an actual user is {@link sirius.biz.tenants.UserAccount}.
  */
@@ -39,7 +41,6 @@ public class LoginData extends Composite {
     public static final Column USERNAME = Column.named("username");
     @Trim
     @Autoloaded
-    @Unique
     @Length(150)
     @NullAllowed
     private String username;

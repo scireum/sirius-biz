@@ -18,6 +18,7 @@ import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Column;
 import sirius.db.mixing.annotations.BeforeDelete;
 import sirius.db.mixing.annotations.BeforeSave;
+import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.annotations.Versioned;
@@ -36,6 +37,7 @@ import sirius.web.mails.Mails;
  */
 @Framework("tenants")
 @Versioned
+@Index(name = "index_username", columns = "login_username", unique = true)
 public class UserAccount extends TenantAware implements Journaled {
 
     /**
@@ -91,6 +93,8 @@ public class UserAccount extends TenantAware implements Journaled {
                             .set("field", NLS.get("LoginData.username"))
                             .handle();
         }
+
+        assertUnique(LOGIN.inner(LoginData.USERNAME), getLogin().getUsername());
     }
 
     @BeforeSave
