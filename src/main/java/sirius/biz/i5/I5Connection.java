@@ -104,21 +104,7 @@ public class I5Connection {
         lastUse = System.currentTimeMillis();
         try {
             ProgramCall p = new ProgramCall(i5, pgm, params);
-            String currentJob;
-            try {
-                if (I5Connector.LOG.isFINE()) {
-                    I5Connector.LOG.FINE("PGM: " + pgm);
-                    I5Connector.LOG.FINE("JOB-ID: " + p.getServerJob());
-                    I5Connector.LOG.FINE("JOB-NAME: " + p.getServerJob().getName());
-                }
-                currentJob = pgm + "/" + p.getServerJob() + " / " + p.getServerJob().getName();
-            } catch (Exception e) {
-                throw Exceptions.handle()
-                                .to(I5Connector.LOG)
-                                .error(e)
-                                .withSystemErrorMessage("Error while calling i5")
-                                .handle();
-            }
+            String currentJob = getCurrentJob(pgm, p);
             lastJob = currentJob;
 
             AtomicBoolean success = new AtomicBoolean();
@@ -144,15 +130,7 @@ public class I5Connection {
                                 .withSystemErrorMessage("Error while executing '%s': %s", currentJob, err.toString())
                                 .handle();
             }
-            try {
-                pool.i5Connector.callUtilization.addValue(p.getServerJob().getCPUUsed());
-            } catch (Exception e) {
-                throw Exceptions.handle()
-                                .to(I5Connector.LOG)
-                                .error(e)
-                                .withSystemErrorMessage("Error while executing '%s'", currentJob)
-                                .handle();
-            }
+            collectCPUUsed(p, currentJob);
             if (I5Connector.LOG.isFINE()) {
                 StringBuilder sb = new StringBuilder();
                 for (ProgramParameter param : params) {
@@ -168,6 +146,35 @@ public class I5Connection {
             w.submitMicroTiming("i5", "I5Connection.call#" + pgm);
             pool.i5Connector.calls.inc();
             pool.i5Connector.callDuration.addValue(w.elapsedMillis());
+        }
+    }
+
+    private String getCurrentJob(String pgm, ProgramCall p) {
+        try {
+            if (I5Connector.LOG.isFINE()) {
+                I5Connector.LOG.FINE("PGM: " + pgm);
+                I5Connector.LOG.FINE("JOB-ID: " + p.getServerJob());
+                I5Connector.LOG.FINE("JOB-NAME: " + p.getServerJob().getName());
+            }
+            return pgm + "/" + p.getServerJob() + " / " + p.getServerJob().getName();
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .to(I5Connector.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Error while calling i5: %s (%s)")
+                            .handle();
+        }
+    }
+
+    private void collectCPUUsed(ProgramCall p, String currentJob) {
+        try {
+            pool.i5Connector.callUtilization.addValue(p.getServerJob().getCPUUsed());
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .to(I5Connector.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Error while executing '%s': %s (%s)", currentJob)
+                            .handle();
         }
     }
 
