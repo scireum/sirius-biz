@@ -13,10 +13,16 @@ import sirius.db.mixing.EntityDescriptor;
 import sirius.kernel.di.std.Named;
 
 /**
- * Created by aha on 27.01.17.
+ * Compiles a tag value provided by a {@link QueryTag} into a {@link Constraint}.
  */
 public interface QueryTagHandler extends Named {
 
+    /**
+     * Computes the constraint.
+     *
+     * @param descriptor the entity for which the constraint is to be created
+     * @param tagValue   the value to filter on
+     * @return a constraint representing the given filter
+     */
     Constraint generateConstraint(EntityDescriptor descriptor, String tagValue);
-
 }

@@ -1,0 +1,287 @@
+@args Page page, String baseURL, String suggestionsName
+
+<div class="well advancedSearchBox">
+    <form action="@baseURL" method="post" id="search">
+        <div class="row">
+            <div class="col-md-8">
+                <input name="query" id="searchField" type="text" value="@page.getQuery()"></input>
+            </div>
+            <div class="col-md-4">
+                <div class="pull-right">
+                <span>
+                    @renderBody()
+                </span>
+                <a class="btn btn-default" href="@prefix/@baseURL?@page.createQueryString()"><i class="fa fa-refresh"></i></a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    function makeHybrid() {
+        var $input = $(this);
+        var $container = $('<div class="form-control" style="position: relative;"></div>');
+        $container.parent().css('position', 'relative');
+        $container.insertAfter($input);
+        $input.hide();
+
+        function parseValue(data) {
+            $container.html();
+
+            while (true) {
+                var nextIndex = data.indexOf('::');
+                if (nextIndex < 0) {
+                    break;
+                }
+                if (nextIndex > 0) {
+                    var plainText = $.trim(data.substring(0, nextIndex));
+                    if (plainText != '') {
+                        var field = makeInput(plainText);
+                        $container.append(field);
+                        fixWidth(field);
+                    }
+                    data = data.substring(nextIndex);
+                }
+
+                nextIndex = data.indexOf('::', 2);
+                var tag = data.substring(0, nextIndex + 2);
+                $container.append(makeTag(tag));
+                data = data.substring(nextIndex + 2);
+            }
+            data = $.trim(data);
+            var field = makeInput(data);
+            $container.append(field);
+            fixWidth(field);
+            field.focus();
+        }
+
+        function makeTag(data) {
+            var contents = /::([^:]+):([^:]+):([^:]+):(.*)/.exec(data.substring(0, data.length - 2));
+            return $('<span>').text(contents[4]).addClass(contents[1]).addClass(contents[2]).data('content', data);
+        }
+
+        function makeInput(text) {
+            return $('<input type="text" />').val(text).keydown(handleKeyDown).blur(function () {
+                clearTimeout(acTimer);
+                if ($popup != null) {
+                    $popup.hide();
+                }
+
+                updateOutput();
+            }).keyup(handleKeyUp);
+        }
+
+        var acTimer = 0;
+        var $popup = null;
+
+        function handleKeyUp(event) {
+            if (event.keyCode == 38 || event.keyCode == 40) {
+                return;
+            }
+
+            var $field = $(this);
+            var caret = $field[0].selectionStart;
+            var text = $field.val();
+            var termStart = caret;
+            while (termStart > 0 && text.substring(termStart - 1, termStart) != ' ') {
+                termStart--;
+            }
+            var prolog = $.trim(text.substring(0, termStart));
+            var searchTerm = text.substring(termStart, caret);
+            var epilog = $.trim(text.substring(caret));
+
+            if (event.keyCode == 13) {
+                if ($popup != null && $popup.is(":visible")) {
+                    var $selected = $('.selected', $popup);
+                    if ($selected.length > 0) {
+                        if (prolog.length > 0) {
+                            var newField = makeInput(prolog);
+                            newField.insertBefore($field);
+                            fixWidth(newField);
+                        }
+                        makeTag($selected.data('tag')).insertBefore($field);
+                        $field.val(epilog);
+                        $field[0].selectionStart = 0;
+                        $field[0].selectionEnd = 0;
+                        $popup.hide();
+                        event.preventDefault();
+                        return;
+                    }
+                }
+                updateOutput();
+                $('#search').submit();
+                return;
+            }
+
+            if ($popup != null) {
+                $popup.hide();
+            }
+            clearTimeout(acTimer);
+            acTimer = setTimeout(function () {
+                if (searchTerm != '') {
+                    fetchCompletions(searchTerm);
+                }
+            }, 150);
+
+            fixWidth($field);
+        }
+
+        function handleKeyDown(event) {
+            var $field = $(this);
+            var caret = $field[0].selectionStart;
+            var text = $field.val();
+
+            if (event.keyCode == 27 && $popup != null) {
+                clearTimeout(acTimer);
+                $popup.hide();
+                event.preventDefault();
+                return;
+            }
+
+            if (event.keyCode == 39 && caret == text.length) {
+                var right = $field.nextAll('input').first();
+                if (right.length > 0) {
+                    right.focus();
+                    right[0].selectionStart = 0;
+                    right[0].selectionEnd = 0;
+                    event.preventDefault();
+                }
+
+                return;
+            }
+
+            if (event.keyCode == 37 && caret == 0) {
+                var left = $field.prevAll('input').first();
+                if (left.length > 0) {
+                    left.focus();
+                    left[0].selectionStart = left.val().length;
+                    left[0].selectionEnd = left.val().length;
+                    event.preventDefault();
+                }
+
+                return;
+            }
+
+            if (event.keyCode == 8 && caret == 0) {
+                $field.prev('span').remove();
+                event.preventDefault();
+                var left = $field.prev('input');
+                if (left.length == 0) {
+                    return;
+                }
+                left.focus();
+                caret = left.val().length;
+                if (text != '') {
+                    left.val(left.val() + text);
+                }
+                left[0].selectionStart = caret;
+                left[0].selectionEnd = caret;
+                $field.remove();
+
+                return;
+            }
+
+            if (event.keyCode == 46 && caret == text.length) {
+                $field.next('span').remove();
+                event.preventDefault();
+                var right = $field.next('input');
+                if (right.length == 0) {
+                    return;
+                }
+                if (right.val().length > 0) {
+                    $field.val(text + right.val());
+                }
+                $field[0].selectionStart = caret;
+                $field[0].selectionEnd = caret;
+                right.remove();
+
+                return;
+            }
+
+            if (event.keyCode == 38 && $popup != null && $popup.is(":visible")) {
+                var $selected = $('.selected', $popup);
+                $selected.removeClass('selected');
+                if ($selected.prev().length > 0) {
+                    $selected.prev().addClass('selected');
+                }
+                event.preventDefault();
+                return;
+            }
+
+            if (event.keyCode == 40 && $popup != null && $popup.is(":visible")) {
+                var $selected = $('.selected', $popup);
+                if ($selected.length == 0) {
+                    $('div', $popup).first().addClass('selected');
+                } else if ($selected.next().length > 0) {
+                    $selected.removeClass('selected');
+                    $selected.next().addClass('selected');
+                }
+                event.preventDefault();
+                return;
+            }
+        }
+
+        function fixWidth(field) {
+            var $widthEstimate = $('<span class="measure-width"></span>');
+            $widthEstimate.appendTo($('body'));
+            $widthEstimate.text(field.val() + 'w');
+            field.width($widthEstimate.width());
+            $widthEstimate.remove();
+        }
+
+        function fetchCompletions(searchTerm) {
+            if ($popup == null) {
+                $popup = $('<div class="advancedSearchPopup"></div>').insertAfter($container);
+                $popup.css('position', 'absolute');
+                $popup.css('left', $container.position().left + 'px');
+                $popup.css('top', ($container.position().top + $container.outerHeight()) + 'px');
+                $popup.css('width', $container.outerWidth() + 'px');
+            }
+            $popup.hide();
+            $.getJSON('/system/search/suggestions/@suggestionsName', {query: searchTerm}, function (json) {
+                if (json.suggestions != null && json.suggestions.length > 0) {
+                    $popup.html('');
+                    for (var i = 0; i < json.suggestions.length; i++) {
+                        var result = json.suggestions[i];
+                        $('<div data-tag="' + result.value + '">' + result.name + '</div>').appendTo($popup);
+                    }
+                    $popup.show();
+                }
+            });
+        }
+
+        function updateOutput() {
+            var result = '';
+            $('*', $container).each(function () {
+                if (result != '') {
+                    result += ' ';
+                }
+                var $this = $(this);
+                if ($this.is('span')) {
+                    result += $this.data('content');
+                } else if ($this.is('input')) {
+                    result += $this.val();
+                }
+            });
+
+            $input.val(result);
+        }
+
+        parseValue($input.val());
+
+        $container.click(function (e) {
+            if (e.target.tagName != 'INPUT') {
+                var last = $('input', $container).last();
+                last.focus();
+                if (last.length > 0) {
+                    last[0].selectionStart = last.val().length;
+                    last[0].selectionEnd = last.val().length;
+                }
+            }
+        });
+    }
+
+    $(function () {
+        $('#searchField').each(makeHybrid);
+    });
+</script>

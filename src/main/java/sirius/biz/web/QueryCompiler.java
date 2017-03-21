@@ -29,11 +29,13 @@ import java.io.StringReader;
 import java.util.List;
 
 /**
- * Created by aha on 27.01.17.
+ * Parses an SQL like query and compiles it into a {@link Constraint}.
+ * <p>
+ * It also provides support for {@link QueryTag}s embedded in the given query.
  */
 class QueryCompiler {
+
     private EntityDescriptor descriptor;
-    private final String query;
     private final Column[] searchFields;
     private final LookaheadReader reader;
 
@@ -42,7 +44,6 @@ class QueryCompiler {
 
     QueryCompiler(EntityDescriptor descriptor, String query, Column... searchFields) {
         this.descriptor = descriptor;
-        this.query = query;
         this.searchFields = searchFields;
         this.reader = new LookaheadReader(new StringReader(query));
     }
@@ -54,7 +55,6 @@ class QueryCompiler {
     }
 
     public Constraint compile() {
-
         return parseOR();
     }
 
@@ -84,7 +84,6 @@ class QueryCompiler {
         if (constraints.isEmpty()) {
             return null;
         } else {
-            System.out.println(constraints);
             return Or.of(constraints);
         }
     }
@@ -203,15 +202,11 @@ class QueryCompiler {
     }
 
     private enum Operation {
-        EQ, NE, LT, LTEQ, GT, GTEQ;
+        EQ, NE, LT, LTEQ, GT, GTEQ
     }
 
     private Operation readOp() {
-        if (reader.current().is('!') && reader.next().is('=')) {
-            reader.consume(2);
-            return Operation.NE;
-        }
-        if (reader.current().is('<') && reader.next().is('>')) {
+        if (isNotEqual()) {
             reader.consume(2);
             return Operation.NE;
         }
@@ -239,6 +234,14 @@ class QueryCompiler {
         }
     }
 
+    private boolean isNotEqual() {
+        if (reader.current().is('!') && reader.next().is('=')) {
+            return true;
+        }
+
+        return reader.current().is('<') && reader.next().is('>');
+    }
+
     private String readToken() {
         StringBuilder token = new StringBuilder();
         while (!reader.current().isEndOfInput()
@@ -262,7 +265,7 @@ class QueryCompiler {
 
         QueryTag queryTag = QueryTag.parse(tag.toString());
         if (queryTag.getType() != null && Strings.isFilled(queryTag.getValue())) {
-            QueryTagHandler handler =ctx.getPart(queryTag.getType(), QueryTagHandler.class);
+            QueryTagHandler handler = ctx.getPart(queryTag.getType(), QueryTagHandler.class);
             if (handler != null) {
                 return handler.generateConstraint(descriptor, queryTag.getValue());
             }
@@ -282,9 +285,13 @@ class QueryCompiler {
     }
 
     private boolean isAtOperator() {
-        return reader.current().is('=')
-               || reader.current().is('!') && reader.next().is('=')
-               || reader.current().is('<')
-               || reader.current().is('>');
+        if (reader.current().is('=')) {
+            return true;
+        }
+        if (reader.current().is('!') && reader.next().is('=')) {
+            return true;
+        }
+
+        return reader.current().is('<') || reader.current().is('>');
     }
 }

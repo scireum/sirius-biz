@@ -53,6 +53,12 @@ public class PageHelper<E extends Entity> {
     private boolean advancedSearch;
     private List<Tuple<Facet, BiConsumer<Facet, SmartQuery<E>>>> facets = Lists.newArrayList();
 
+    @Part
+    private static Tenants tenants;
+
+    private PageHelper() {
+    }
+
     /**
      * Creates a new instance with the given base query.
      *
@@ -61,13 +67,10 @@ public class PageHelper<E extends Entity> {
      * @return a new instance operating on the given base query
      */
     public static <E extends Entity> PageHelper<E> withQuery(SmartQuery<E> baseQuery) {
-        PageHelper<E> result = new PageHelper<E>();
+        PageHelper<E> result = new PageHelper<>();
         result.baseQuery = baseQuery;
         return result;
     }
-
-    @Part
-    private static Tenants tenants;
 
     /**
      * Filters the results to only contain entities which belong to the current tenant.
@@ -104,12 +107,14 @@ public class PageHelper<E extends Entity> {
         return this;
     }
 
+    /**
+     * Enables the {@link QueryCompiler} which supports SQL like queries and {@link QueryTag}s.
+     *
+     * @return the helper itself for fluent method calls
+     */
     public PageHelper<E> enableAdvancedSearch() {
         this.advancedSearch = true;
         return this;
-    }
-
-    private PageHelper() {
     }
 
     /**
@@ -242,7 +247,8 @@ public class PageHelper<E extends Entity> {
         result.bindToRequest(ctx);
 
         if (advancedSearch) {
-            QueryCompiler compiler = new QueryCompiler(baseQuery.getEntityDescriptor(), result.getQuery(), searchFields);
+            QueryCompiler compiler =
+                    new QueryCompiler(baseQuery.getEntityDescriptor(), result.getQuery(), searchFields);
             Constraint constraint = compiler.compile();
             if (constraint != null) {
                 baseQuery.where(constraint);
@@ -268,7 +274,7 @@ public class PageHelper<E extends Entity> {
             }
             result.withDuration(w.duration());
             result.withItems(items);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             UserContext.handle(e);
         }
 
