@@ -1,6 +1,6 @@
 @args Page page, String baseURL, String suggestionsName
 
-<div class="well advancedSearchBox">
+<div class="well taggedSearchBox">
     <form action="@baseURL" method="post" id="search">
         <div class="row">
             <div class="col-md-8">
@@ -231,7 +231,7 @@
 
         function fetchCompletions(searchTerm) {
             if ($popup == null) {
-                $popup = $('<div class="advancedSearchPopup"></div>').insertAfter($container);
+                $popup = $('<div class="taggedSearchPopup"></div>').insertAfter($container);
                 $popup.css('position', 'absolute');
                 $popup.css('left', $container.position().left + 'px');
                 $popup.css('top', ($container.position().top + $container.outerHeight()) + 'px');
