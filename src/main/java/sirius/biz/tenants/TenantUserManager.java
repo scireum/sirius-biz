@@ -61,9 +61,19 @@ public class TenantUserManager extends GenericUserManager {
     public static final String PERMISSION_SYSTEM_TENANT = "flag-system-tenant";
 
     /**
-     * This flag indicates that the current user either has taken control over another tenant or use account.
+     * This flag indicates that the current user either has taken control over another tenant or uses account.
      */
     public static final String PERMISSION_SPY_USER = "flag-spy-user";
+
+    /**
+     * Contains the permission required to switch the user account.
+     */
+    public static final String PERMISSION_SELECT_USER_ACCOUNT = "permission-select-user-account";
+
+    /**
+     * Contains the permission required to switch the tenant.
+     */
+    public static final String PERMISSION_SELECT_TENANT = "permission-select-tenant";
 
     /**
      * If a session-value named {@code UserContext.getCurrentScope().getScopeId() +
@@ -83,7 +93,7 @@ public class TenantUserManager extends GenericUserManager {
      * This is used by support and administrative tasks. Beware, that the id is not checked, so the one who installs the
      * ID has to verify that the user is allowed to become this user.
      */
-    private static final String SPY_ID_SUFFIX = "-spy-id";
+    public static final String SPY_ID_SUFFIX = "-spy-id";
 
     private final String systemTenant;
     private final String defaultSalt;
@@ -180,6 +190,7 @@ public class TenantUserManager extends GenericUserManager {
         }
         List<String> extraRoles = Lists.newArrayList();
         extraRoles.add(PERMISSION_SPY_USER);
+        extraRoles.add(PERMISSION_SELECT_USER_ACCOUNT);
         if (rootUser.hasPermission(PERMISSION_SYSTEM_TENANT)) {
             extraRoles.add(PERMISSION_SYSTEM_TENANT);
         }
@@ -219,6 +230,7 @@ public class TenantUserManager extends GenericUserManager {
 
         Set<String> roles = computeRoles(modifiedUser, tenant, originalUser.hasPermission(PERMISSION_SYSTEM_TENANT));
         roles.add(PERMISSION_SPY_USER);
+        roles.add(PERMISSION_SELECT_TENANT);
         return asUserWithRoles(modifiedUser, roles);
     }
 
