@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
  * other entities or mixins.
  * <p>
  * Note that no uniqueness constraint is placed on the username as the context of unqiueness has to be decided by the
- * outsie class.
+ * outside class.
  * <p>
  * An example of an actual user is {@link sirius.biz.tenants.UserAccount}.
  */

@@ -83,8 +83,8 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.spockframework:spock-core:0.7-groovy-2.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit-dep:4.10" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.codehaus.groovy:groovy-all:2.0.5" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: cglib:cglib:3.2.4" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.ow2.asm:asm:5.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: cglib:cglib:3.2.5" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.ow2.asm:asm:5.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.apache.ant:ant:1.9.6" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.apache.ant:ant-launcher:1.9.6" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.objenesis:objenesis:2.5.1" level="project" />

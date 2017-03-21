@@ -35,6 +35,10 @@ import java.util.List;
  */
 class QueryCompiler {
 
+    private enum Operation {
+        EQ, NE, LT, LTEQ, GT, GTEQ
+    }
+
     private EntityDescriptor descriptor;
     private final Column[] searchFields;
     private final LookaheadReader reader;
@@ -165,12 +169,7 @@ class QueryCompiler {
             }
             reader.consume();
         } else {
-            while (!reader.current().isEndOfInput()
-                   && !reader.current().is(')')
-                   && !reader.current().isWhitepace()
-                   && !isAtOperator()) {
-                result.append(reader.consume());
-            }
+            return readToken();
         }
 
         return result.toString();
@@ -199,10 +198,6 @@ class QueryCompiler {
         }
 
         return effectiveDescriptor.findProperty(path[path.length - 1]);
-    }
-
-    private enum Operation {
-        EQ, NE, LT, LTEQ, GT, GTEQ
     }
 
     private Operation readOp() {
