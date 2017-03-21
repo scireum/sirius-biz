@@ -14,7 +14,6 @@ import sirius.db.mixing.constraints.FieldOperator;
 import sirius.kernel.Lifecycle;
 import sirius.kernel.async.BackgroundLoop;
 import sirius.kernel.commons.Context;
-import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -103,7 +102,6 @@ public class Statistics extends BackgroundLoop implements Lifecycle, MetricProvi
     }
 
     protected void commitStatistics() {
-        Watch w = Watch.start();
         final List<RecordedEvent> copy;
         synchronized (this) {
             copy = Lists.newArrayList(todoQueue);
@@ -356,6 +354,7 @@ public class Statistics extends BackgroundLoop implements Lifecycle, MetricProvi
 
     @Override
     public void awaitTermination() {
+        // Nothing to do here
     }
 
     @Nonnull

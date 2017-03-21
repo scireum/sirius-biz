@@ -73,7 +73,7 @@ class I5ConnectionPool implements PooledObjectFactory<I5Connection> {
             w.submitMicroTiming("UPOS", "I5ConnectionPool.makeObject");
             openConnections.add(new WeakReference<I5Connection>(result));
             return new DefaultPooledObject<>(result);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw Exceptions.handle()
                             .to(I5Connector.LOG)
                             .error(e)
@@ -86,13 +86,9 @@ class I5ConnectionPool implements PooledObjectFactory<I5Connection> {
     public void destroyObject(PooledObject<I5Connection> pooledObject) throws Exception {
         if (pooledObject != null && pooledObject.getObject() != null) {
             try {
-                try {
-                    openConnections.remove(new WeakReference<I5Connection>(pooledObject.getObject()));
-                } catch (Throwable t) {
-                    I5Connector.LOG.WARN(t);
-                }
+                removeFromOpenConnections(pooledObject);
                 pooledObject.getObject().release();
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 throw Exceptions.handle()
                                 .to(I5Connector.LOG)
                                 .error(e)
@@ -101,6 +97,14 @@ class I5ConnectionPool implements PooledObjectFactory<I5Connection> {
                                                         username)
                                 .handle();
             }
+        }
+    }
+
+    private void removeFromOpenConnections(PooledObject<I5Connection> pooledObject) {
+        try {
+            openConnections.remove(new WeakReference<I5Connection>(pooledObject.getObject()));
+        } catch (Exception t) {
+            I5Connector.LOG.WARN(t);
         }
     }
 
@@ -115,10 +119,12 @@ class I5ConnectionPool implements PooledObjectFactory<I5Connection> {
 
     @Override
     public void activateObject(PooledObject<I5Connection> pooledObject) throws Exception {
+        // Nothing to do
     }
 
     @Override
     public void passivateObject(PooledObject<I5Connection> pooledObject) throws Exception {
+        // Nothing to do
     }
 
     /**
@@ -127,7 +133,7 @@ class I5ConnectionPool implements PooledObjectFactory<I5Connection> {
     void release() {
         try {
             connectionPool.close();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             Exceptions.handle()
                       .to(I5Connector.LOG)
                       .error(e)
@@ -149,7 +155,7 @@ class I5ConnectionPool implements PooledObjectFactory<I5Connection> {
             I5Connection result = connectionPool.borrowObject();
             result.borrowed = true;
             return result;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw Exceptions.handle()
                             .to(I5Connector.LOG)
                             .error(e)
@@ -167,7 +173,7 @@ class I5ConnectionPool implements PooledObjectFactory<I5Connection> {
         try {
             con.borrowed = false;
             connectionPool.returnObject(con);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             Exceptions.handle()
                       .to(I5Connector.LOG)
                       .error(e)

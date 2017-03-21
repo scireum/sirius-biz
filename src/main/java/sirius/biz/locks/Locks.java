@@ -69,28 +69,35 @@ public class Locks implements MetricProvider {
             long timeout = acquireTimeout == null ? 0 : Instant.now().plus(acquireTimeout).toEpochMilli();
             int waitInMillis = 500;
             do {
-                try {
-                    oma.getDatabase()
-                       .insertRow(schema.getDescriptor(ManagedLock.class).getTableName(),
-                                  Context.create()
-                                         .set(ManagedLock.NAME.getName(), lockName)
-                                         .set(ManagedLock.OWNER.getName(), CallContext.getNodeName())
-                                         .set(ManagedLock.THREAD.getName(), Thread.currentThread().getName())
-                                         .set(ManagedLock.ACQUIRED.getName(), Instant.now().toEpochMilli()));
+                if (insertLock(lockName)) {
                     return true;
-                } catch (SQLIntegrityConstraintViolationException e) {
-                    // Lock is locked - retry if possible :-(
-                    Exceptions.ignore(e);
-                } catch (SQLException e) {
-                    throw Exceptions.handle(LOG, e);
                 }
                 Wait.millis(waitInMillis);
                 waitInMillis = Math.min(1500, waitInMillis + 500);
             } while (System.currentTimeMillis() < timeout);
             return false;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             Exceptions.handle(LOG, e);
             return false;
+        }
+    }
+
+    private boolean insertLock(@Nonnull String lockName) {
+        try {
+            oma.getDatabase()
+               .insertRow(schema.getDescriptor(ManagedLock.class).getTableName(),
+                          Context.create()
+                                 .set(ManagedLock.NAME.getName(), lockName)
+                                 .set(ManagedLock.OWNER.getName(), CallContext.getNodeName())
+                                 .set(ManagedLock.THREAD.getName(), Thread.currentThread().getName())
+                                 .set(ManagedLock.ACQUIRED.getName(), Instant.now().toEpochMilli()));
+            return true;
+        } catch (SQLIntegrityConstraintViolationException e) {
+            // Lock is locked - retry if possible :-(
+            Exceptions.ignore(e);
+            return false;
+        } catch (SQLException e) {
+            throw Exceptions.handle(LOG, e);
         }
     }
 

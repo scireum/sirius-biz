@@ -45,7 +45,7 @@ public abstract class Transformable {
             tx.fromBytes(result, data);
 
             return result;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw handle().to(I5Connector.LOG)
                           .error(e)
                           .withSystemErrorMessage("Cannot load data for '%s': %s (%s)", type.getName())

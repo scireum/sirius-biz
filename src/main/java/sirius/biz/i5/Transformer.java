@@ -104,7 +104,7 @@ public class Transformer {
                                                     object.getClass().getName(),
                                                     field.getName())
                             .handle();
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             throw Exceptions.handle()
                             .to(I5Connector.LOG)
                             .error(ex)
@@ -151,7 +151,7 @@ public class Transformer {
                                                     object.getClass().getName(),
                                                     field.getName())
                             .handle();
-        } catch (Throwable ex) {
+        } catch (Exception ex) {
             throw Exceptions.handle()
                             .to(I5Connector.LOG)
                             .error(ex)
@@ -177,7 +177,7 @@ public class Transformer {
                 sb.append(": ");
                 sb.append(e.getKey().get(transformable));
                 sb.append("\n");
-            } catch (Throwable t) {
+            } catch (Exception t) {
                 Exceptions.ignore(t);
             }
         }
