@@ -8,7 +8,6 @@
 
 package sirius.biz.web;
 
-import sirius.biz.model.BizEntity;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantAware;
 import sirius.biz.tenants.Tenants;
@@ -51,6 +50,10 @@ public class BizController extends BasicController {
 
     @Part
     protected Tenants tenants;
+
+    @ConfigValue("product.baseUrl")
+    private String baseUrl;
+    private static boolean baseUrlChecked;
 
     /**
      * Contains the central logger for biz-relatet messages.
@@ -107,10 +110,6 @@ public class BizController extends BasicController {
             throw Exceptions.createHandled().withNLSKey("BizController.mustNotBeNew").handle();
         }
     }
-
-    @ConfigValue("product.baseUrl")
-    private String baseUrl;
-    private static boolean baseUrlChecked;
 
     /**
      * Returns the base URL of this instance.
@@ -204,18 +203,6 @@ public class BizController extends BasicController {
         }
 
         /**
-         * Determination to which Site a user is redirected is now determined automaticly. If a SaveHelper got an
-         * createdURI and the Entity isNew the User will be rediret to the createdURI. If the entity is not new or there
-         * is no createdURI the User will be redirected to the afterSaveURI.
-         *
-         * @return the helper itself for fluent method calls
-         */
-        @Deprecated
-        public SaveHelper editAfterCreate() {
-            return this;
-        }
-
-        /**
          * Installs a pre save handler which is invoked just before the entity is persisted into the database.
          *
          * @param preSaveHandler a consumer which is supplied with a boolean flag, indicating if the entity was new.
@@ -305,7 +292,7 @@ public class BizController extends BasicController {
                     return true;
                 }
                 showSavedMessage();
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 UserContext.handle(e);
             }
             return false;
@@ -349,7 +336,7 @@ public class BizController extends BasicController {
         if (Entity.NEW.equals(id) && Entity.class.isAssignableFrom(type)) {
             try {
                 return type.newInstance();
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 throw Exceptions.handle()
                                 .to(LOG)
                                 .error(e)

@@ -10,6 +10,7 @@ package sirius.biz.protocol;
 
 import sirius.db.mixing.Column;
 import sirius.db.mixing.Entity;
+import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
 import sirius.kernel.async.CallContext;
@@ -24,6 +25,7 @@ import java.time.LocalDateTime;
  * don't overload the system.
  */
 @Framework(Protocols.FRAMEWORK_PROTOCOLS)
+@Index(name = "category_idx", columns = "category")
 public class Incident extends Entity {
 
     /**

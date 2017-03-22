@@ -35,7 +35,7 @@ public class BizInterceptor implements Interceptor {
                                          boolean jsonCall,
                                          Controller controller,
                                          Method method) throws Exception {
-        if (UserContext.getCurrentScope() != ScopeInfo.DEFAULT_SCOPE) {
+        if (!ScopeInfo.DEFAULT_SCOPE.equals(UserContext.getCurrentScope())) {
             return false;
         }
         if (jsonCall) {

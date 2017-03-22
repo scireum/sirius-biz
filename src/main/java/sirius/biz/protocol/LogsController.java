@@ -36,12 +36,13 @@ public class LogsController extends BizController {
     public void logs(WebContext ctx) {
         PageHelper<LogEntry> ph = PageHelper.withQuery(oma.select(LogEntry.class).orderDesc(LogEntry.TOD));
         ph.withContext(ctx);
+        ph.enableAdvancedSearch();
         ph.addQueryFacet(LogEntry.CATEGORY.getName(),
                          NLS.get("LogEntry.category"),
-                         q -> q.copy().distinctFields(LogEntry.CATEGORY, LogEntry.CATEGORY).asSQLQuery());
+                         q -> oma.select(LogEntry.class).distinctFields(LogEntry.CATEGORY, LogEntry.CATEGORY).asSQLQuery());
         ph.addQueryFacet(LogEntry.LEVEL.getName(),
                          NLS.get("LogEntry.level"),
-                         q -> q.copy().distinctFields(LogEntry.LEVEL, LogEntry.LEVEL).asSQLQuery());
+                         q -> oma.select(LogEntry.class).distinctFields(LogEntry.LEVEL, LogEntry.LEVEL).asSQLQuery());
         ph.addTimeFacet(LogEntry.TOD.getName(),
                         NLS.get("LogEntry.tod"),
                         DateRange.lastFiveMinutes(),

@@ -46,11 +46,6 @@ public class TenantController extends BizController {
     public static final String PERMISSION_MANAGE_TENANTS = "permission-manage-tenants";
 
     /**
-     * Contains the permission required to switch the tenant.
-     */
-    public static final String PERMISSION_SELECT_TENANT = "permission-select-tenant";
-
-    /**
      * Contains a list of all available features or permission which can be granted to a tenant.
      */
     @ConfigValue("security.tenantPermissions")
@@ -222,7 +217,7 @@ public class TenantController extends BizController {
     @Routed("/tenants/select")
     @DefaultRoute
     @LoginRequired
-    @Permission(PERMISSION_SELECT_TENANT)
+    @Permission(TenantUserManager.PERMISSION_SELECT_TENANT)
     public void selectTenants(WebContext ctx) {
         SmartQuery<Tenant> baseQuery = queryPossibleTenants(ctx).orderAsc(Tenant.NAME);
         PageHelper<Tenant> ph = PageHelper.withQuery(baseQuery);
@@ -232,7 +227,11 @@ public class TenantController extends BizController {
                             Tenant.ADDRESS.inner(AddressData.STREET),
                             Tenant.ADDRESS.inner(AddressData.CITY));
 
-        ctx.respondWith().template("view/tenants/select-tenant.html", ph.asPage());
+        ctx.respondWith().template("view/tenants/select-tenant.html", ph.asPage(), isCurrentlySpying(ctx));
+    }
+
+    private boolean isCurrentlySpying(WebContext ctx) {
+        return ctx.getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX).isFilled();
     }
 
     /**
@@ -251,7 +250,7 @@ public class TenantController extends BizController {
             return;
         }
 
-        assertPermission(PERMISSION_SELECT_TENANT);
+        assertPermission(TenantUserManager.PERMISSION_SELECT_TENANT);
 
         SmartQuery<Tenant> baseQuery = queryPossibleTenants(ctx).eq(Tenant.ID, id);
 

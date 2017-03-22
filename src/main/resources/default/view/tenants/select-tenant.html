@@ -1,16 +1,16 @@
-@import sirius.biz.tenants.Tenant
+@import sirius.biz.tenants.Tenant, boolean isSpy
 @args Page tenants
 @extends(view.wondergem.template.html, title: NLS.get("Tenant.select"))
 
 @section(breadcrumbs) {
     <li>
-        <a href="/tenants">@i18n("Tenant.select")</a>
+        <a href="/tenants/select">@i18n("Tenant.select")</a>
     </li>
 }
 @pageHeader("Tenant.select")
 
 @tableSearchHeader(tenants, "tenants/select") {
-    @if (user.getCurrentUser().hasPermission("flag-spy-user")) {
+    @if (isSpy) {
         <a class="btn btn-primary" href="@prefix/tenants/select/main">@i18n("Tenant.selectMain")</a>
     }
 }

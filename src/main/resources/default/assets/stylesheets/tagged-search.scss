@@ -1,0 +1,47 @@
+/*!
+ * Made with all the love in the world
+ * by scireum in Remshalden, Germany
+ *
+ * Copyright by scireum GmbH
+ * http://www.scireum.de - info@scireum.de
+ */
+
+.taggedSearch {
+  .tag {
+    display: inline-block;
+    min-width: 10px;
+    padding: 3px 7px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    background-color: #777;
+    border-radius: 10px;
+    margin: 0px 4px;
+  }
+
+  input {
+    border: none;
+  }
+
+  .form-control {
+    padding: 4px 8px;
+  }
+
+  .taggedSearchPopup {
+    border: 1px solid grey;
+    background-color: white;
+
+    div {
+      padding: 3px;
+
+      &.selected {
+        background-color: #000055;
+        color: white;
+      }
+    }
+  }
+}

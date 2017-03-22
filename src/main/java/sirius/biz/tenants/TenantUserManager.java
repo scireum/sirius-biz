@@ -61,9 +61,19 @@ public class TenantUserManager extends GenericUserManager {
     public static final String PERMISSION_SYSTEM_TENANT = "flag-system-tenant";
 
     /**
-     * This flag indicates that the current user either has taken control over another tenant or use account.
+     * This flag indicates that the current user either has taken control over another tenant or uses account.
      */
     public static final String PERMISSION_SPY_USER = "flag-spy-user";
+
+    /**
+     * Contains the permission required to switch the user account.
+     */
+    public static final String PERMISSION_SELECT_USER_ACCOUNT = "permission-select-user-account";
+
+    /**
+     * Contains the permission required to switch the tenant.
+     */
+    public static final String PERMISSION_SELECT_TENANT = "permission-select-tenant";
 
     /**
      * If a session-value named {@code UserContext.getCurrentScope().getScopeId() +
@@ -83,27 +93,13 @@ public class TenantUserManager extends GenericUserManager {
      * This is used by support and administrative tasks. Beware, that the id is not checked, so the one who installs the
      * ID has to verify that the user is allowed to become this user.
      */
-    private static final String SPY_ID_SUFFIX = "-spy-id";
+    public static final String SPY_ID_SUFFIX = "-spy-id";
 
     private final String systemTenant;
     private final String defaultSalt;
     private final boolean acceptApiTokens;
     private final boolean checkPasswordsCaseInsensitive;
     private final boolean autocreateTenant;
-
-    /**
-     * Creates a new user manager for the given scope and configuration.
-     */
-    @Framework("tenants")
-    @Register(name = "tenants")
-    public static class Factory implements UserManagerFactory {
-
-        @Nonnull
-        @Override
-        public UserManager createManager(@Nonnull ScopeInfo scope, @Nonnull Extension config) {
-            return new TenantUserManager(scope, config);
-        }
-    }
 
     @Part
     private static OMA oma;
@@ -118,6 +114,30 @@ public class TenantUserManager extends GenericUserManager {
     private static Cache<String, UserAccount> userAccountCache = CacheManager.createCache("tenants-users");
     private static Cache<String, Tenant> tenantsCache = CacheManager.createCache("tenants-tenants");
     private static Cache<String, Config> configCache = CacheManager.createCache("tenants-configs");
+
+    protected TenantUserManager(ScopeInfo scope, Extension config) {
+        super(scope, config);
+        this.sessionStorage = SESSION_STORAGE_TYPE_CLIENT;
+        this.systemTenant = config.get("system-tenant").asString();
+        this.defaultSalt = config.get("default-salt").asString("");
+        this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(true);
+        this.checkPasswordsCaseInsensitive = config.get("check-passwords-case-insensitive").asBoolean(false);
+        this.autocreateTenant = config.get("autocreate-tenant").asBoolean(true);
+    }
+
+    /**
+     * Creates a new user manager for the given scope and configuration.
+     */
+    @Framework("tenants")
+    @Register(name = "tenants")
+    public static class Factory implements UserManagerFactory {
+
+        @Nonnull
+        @Override
+        public UserManager createManager(@Nonnull ScopeInfo scope, @Nonnull Extension config) {
+            return new TenantUserManager(scope, config);
+        }
+    }
 
     /**
      * Flushes all caches for the given account.
@@ -140,40 +160,41 @@ public class TenantUserManager extends GenericUserManager {
         configCache.clear();
     }
 
-    protected TenantUserManager(ScopeInfo scope, Extension config) {
-        super(scope, config);
-        this.sessionStorage = SESSION_STORAGE_TYPE_CLIENT;
-        this.systemTenant = config.get("system-tenant").asString();
-        this.defaultSalt = config.get("default-salt").asString("");
-        this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(true);
-        this.checkPasswordsCaseInsensitive = config.get("check-passwords-case-insensitive").asBoolean(false);
-        this.autocreateTenant = config.get("autocreate-tenant").asBoolean(true);
-    }
-
     @Override
     protected UserInfo findUserInSession(WebContext ctx) {
         UserInfo rootUser = super.findUserInSession(ctx);
-        if (rootUser != null && rootUser != defaultUser) {
-            String spyId = ctx.getSessionValue(scope.getScopeId() + SPY_ID_SUFFIX).asString();
-            if (Strings.isFilled(spyId)) {
-                UserAccount spyUser = fetchAccount(spyId, null);
-                if (spyUser != null) {
-                    List<String> extraRoles = Lists.newArrayList();
-                    extraRoles.add(PERMISSION_SPY_USER);
-                    if (rootUser.hasPermission(PERMISSION_SYSTEM_TENANT)) {
-                        extraRoles.add(PERMISSION_SYSTEM_TENANT);
-                    }
-                    return asUser(spyUser, extraRoles);
-                }
-            }
+        if (rootUser == null || defaultUser.equals(rootUser)) {
+            return rootUser;
+        }
 
-            String tenantSpyId = ctx.getSessionValue(scope.getScopeId() + TENANT_SPY_ID_SUFFIX).asString();
-            if (Strings.isFilled(tenantSpyId)) {
-                return createUserWithTenant(rootUser, tenantSpyId);
+        String spyId = ctx.getSessionValue(scope.getScopeId() + SPY_ID_SUFFIX).asString();
+        if (Strings.isFilled(spyId)) {
+            UserInfo spy = becomeSpyUser(spyId, rootUser);
+            if (spy != null) {
+                return spy;
             }
         }
 
+        String tenantSpyId = ctx.getSessionValue(scope.getScopeId() + TENANT_SPY_ID_SUFFIX).asString();
+        if (Strings.isFilled(tenantSpyId)) {
+            return createUserWithTenant(rootUser, tenantSpyId);
+        }
+
         return rootUser;
+    }
+
+    private UserInfo becomeSpyUser(String spyId, UserInfo rootUser) {
+        UserAccount spyUser = fetchAccount(spyId, null);
+        if (spyUser == null) {
+            return null;
+        }
+        List<String> extraRoles = Lists.newArrayList();
+        extraRoles.add(PERMISSION_SPY_USER);
+        extraRoles.add(PERMISSION_SELECT_USER_ACCOUNT);
+        if (rootUser.hasPermission(PERMISSION_SYSTEM_TENANT)) {
+            extraRoles.add(PERMISSION_SYSTEM_TENANT);
+        }
+        return asUser(spyUser, extraRoles);
     }
 
     /**
@@ -209,6 +230,7 @@ public class TenantUserManager extends GenericUserManager {
 
         Set<String> roles = computeRoles(modifiedUser, tenant, originalUser.hasPermission(PERMISSION_SYSTEM_TENANT));
         roles.add(PERMISSION_SPY_USER);
+        roles.add(PERMISSION_SELECT_TENANT);
         return asUserWithRoles(modifiedUser, roles);
     }
 
@@ -278,13 +300,14 @@ public class TenantUserManager extends GenericUserManager {
      * not, the value can be left <tt>null</tt> and a lookup will be performed if necessary. This ensures, that the
      * cache is updated if a stale entry is detected during login.
      *
-     * @param accountId     the id of the account to fetch
-     * @param accountFromDB a fresh version from the database to check cache integrity
+     * @param accountId    the id of the account to fetch
+     * @param givenAccount a fresh version from the database to check cache integrity
      * @return the most current version from the cache to re-use computed fields if possible
      */
     @Nullable
-    private UserAccount fetchAccount(@Nonnull String accountId, @Nullable UserAccount accountFromDB) {
+    private UserAccount fetchAccount(@Nonnull String accountId, @Nullable UserAccount givenAccount) {
         UserAccount account;
+        UserAccount accountFromDB = givenAccount;
         UserAccount accountFromCache = userAccountCache.get(accountId);
         if (accountFromCache == null || (accountFromDB != null
                                          && accountFromDB.getVersion() > accountFromCache.getVersion())) {
@@ -363,7 +386,7 @@ public class TenantUserManager extends GenericUserManager {
 
                 return Optional.of(ua);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             Exceptions.handle()
                       .to(BizController.LOG)
                       .error(e)
@@ -444,7 +467,7 @@ public class TenantUserManager extends GenericUserManager {
             account.getLogin().setNumberOfLogins(account.getLogin().getNumberOfLogins() + 1);
             account.getLogin().setLastLogin(LocalDateTime.now());
             oma.override(account);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             Exceptions.handle(BizController.LOG, e);
         }
     }

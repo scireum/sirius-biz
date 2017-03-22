@@ -13,6 +13,8 @@ import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
 import sirius.biz.web.BizController;
 import sirius.biz.web.PageHelper;
+import sirius.db.mixing.Entity;
+import sirius.db.mixing.SmartQuery;
 import sirius.db.mixing.constraints.Like;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
@@ -25,6 +27,7 @@ import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
+import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.mails.Mails;
@@ -36,8 +39,6 @@ import sirius.web.services.JSONStructuredOutput;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 /**
  * Provides a GUI for managing user accounts.
@@ -324,14 +325,14 @@ public class UserAccountController extends BizController {
 
     /**
      * Autocompletion for UserAccounts.
+     * <p>
      * Only accepts UserAccounts which belong to the current Tenant.
      *
      * @param ctx the current request
      */
     @Routed("/user-accounts/autocomplete")
-    public void customersAutocomplete(final WebContext ctx) {
+    public void usersAutocomplete(final WebContext ctx) {
         AutocompleteHelper.handle(ctx, (query, result) -> {
-            AtomicBoolean directMatch = new AtomicBoolean(false);
             oma.select(UserAccount.class)
                .eq(UserAccount.TENANT, currentTenant().getId())
                .where(Like.allWordsInAnyField(query,
@@ -341,25 +342,86 @@ public class UserAccountController extends BizController {
                                               UserAccount.PERSON.inner(PersonData.LASTNAME)))
                .limit(10)
 
-               .iterateAll(getUserAccountConsumer(query, result, directMatch));
+               .iterateAll(userAccount -> {
+                   result.accept(new AutocompleteHelper.Completion(userAccount.getIdAsString(),
+                                                                   userAccount.toString(),
+                                                                   userAccount.toString()));
+               });
         });
     }
 
-    private void checkDirectMatch(UserAccount userAccount, String query, AtomicBoolean directMatch) {
-        if (Strings.areEqual(query, userAccount.getLogin().getUsername()) || Strings.areEqual(query,
-                                                                                              userAccount.getEmail())) {
-            directMatch.set(true);
+    /**
+     * Lists all users which the current user can "become" (switch to).
+     *
+     * @param ctx the current request
+     */
+    @Routed("/user-accounts/select")
+    @DefaultRoute
+    @LoginRequired
+    @Permission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT)
+    public void selectUserAccounts(WebContext ctx) {
+        SmartQuery<UserAccount> baseQuery = oma.select(UserAccount.class)
+                                               .orderAsc(UserAccount.PERSON.inner(PersonData.LASTNAME))
+                                               .orderAsc(UserAccount.PERSON.inner(PersonData.FIRSTNAME));
+        if (!UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+            baseQuery.eq(UserAccount.TENANT, currentTenant());
         }
+
+        baseQuery.fields(Entity.ID,
+                         UserAccount.PERSON.inner(PersonData.LASTNAME),
+                         UserAccount.PERSON.inner(PersonData.FIRSTNAME),
+                         UserAccount.LOGIN.inner(LoginData.USERNAME),
+                         UserAccount.TENANT.join(Tenant.NAME),
+                         UserAccount.TENANT.join(Tenant.ACCOUNT_NUMBER));
+
+        PageHelper<UserAccount> ph = PageHelper.withQuery(baseQuery);
+        ph.withContext(ctx);
+        ph.withSearchFields(UserAccount.PERSON.inner(PersonData.LASTNAME),
+                            UserAccount.PERSON.inner(PersonData.FIRSTNAME),
+                            UserAccount.LOGIN.inner(LoginData.USERNAME),
+                            UserAccount.EMAIL,
+                            UserAccount.TENANT.join(Tenant.NAME),
+                            UserAccount.TENANT.join(Tenant.ACCOUNT_NUMBER));
+
+        ctx.respondWith()
+           .template("view/tenants/select-user-account.html",
+                     ph.asPage(), isCurrentlySpying(ctx));
     }
 
-    private Consumer<UserAccount> getUserAccountConsumer(String query,
-                                                         Consumer<AutocompleteHelper.Completion> result,
-                                                         AtomicBoolean directMatch) {
-        return userAccount -> {
-            checkDirectMatch(userAccount, query, directMatch);
-            result.accept(new AutocompleteHelper.Completion(userAccount.getIdAsString(),
-                                                            userAccount.toString(),
-                                                            userAccount.toString()));
-        };
+    private boolean isCurrentlySpying(WebContext ctx) {
+        return ctx.getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX)
+           .isFilled();
+    }
+
+    /**
+     * Makes the current user belong to the given tenant.
+     *
+     * @param ctx the current request
+     * @param id  the id of the tenant to switch to
+     */
+    @LoginRequired
+    @Routed("/user-accounts/select/:1")
+    public void selectUserAccount(final WebContext ctx, String id) {
+        if ("main".equals(id)) {
+            ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX, null);
+            ctx.respondWith().redirectTemporarily("/user-accounts/select");
+            return;
+        }
+
+        assertPermission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT);
+
+        UserAccount user = oma.find(UserAccount.class, id).orElse(null);
+        if (user == null) {
+            UserContext.get().addMessage(Message.error(NLS.get("UserAccountController.cannotBecomeUser")));
+            selectUserAccounts(ctx);
+        } else {
+            if (!UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+                assertTenant(user);
+            }
+
+            ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
+                                user.getUniqueName());
+            ctx.respondWith().redirectTemporarily(ctx.get("goto").asString(wondergemRoot));
+        }
     }
 }

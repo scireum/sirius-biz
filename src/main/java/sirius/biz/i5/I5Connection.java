@@ -18,13 +18,13 @@ import com.ibm.as400.access.ProgramParameter;
 import sirius.kernel.async.Operation;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Represents a connection to an IBM AS400 also known as i5.
@@ -43,7 +43,7 @@ public class I5Connection {
     public void release() {
         try {
             i5.disconnectAllServices();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw Exceptions.handle()
                             .to(I5Connector.LOG)
                             .error(e)
@@ -64,7 +64,7 @@ public class I5Connection {
             }
 
             pool.initConnection(this);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw Exceptions.handle()
                             .to(I5Connector.LOG)
                             .error(e)
@@ -107,19 +107,34 @@ public class I5Connection {
             String currentJob = getCurrentJob(pgm, p);
             lastJob = currentJob;
 
-            AtomicBoolean success = new AtomicBoolean();
-            Operation.cover("i5", () -> currentJob, Duration.ofMinutes(1), () -> {
-                try {
-                    success.set(p.run());
-                } catch (Throwable t) {
-                    throw Exceptions.handle()
-                                    .to(I5Connector.LOG)
-                                    .error(t)
-                                    .withSystemErrorMessage("Error while executing '%s': %s (%s)", currentJob)
-                                    .handle();
-                }
-            });
-            if (!success.get()) {
+            executeProgramCall(p, currentJob);
+
+            collectCPUUsed(p, pgm);
+            if (I5Connector.LOG.isFINE()) {
+                logProgramOutput(pgm, params);
+            }
+        } finally {
+            w.submitMicroTiming("i5", "I5Connection.call#" + pgm);
+            pool.i5Connector.calls.inc();
+            pool.i5Connector.callDuration.addValue(w.elapsedMillis());
+        }
+    }
+
+    private void logProgramOutput(String pgm, ProgramParameter[] params) {
+        StringBuilder sb = new StringBuilder();
+        for (ProgramParameter param : params) {
+            if (param.getOutputDataLength() > 0) {
+                sb.append("[");
+                sb.append(new String(param.getOutputData()));
+                sb.append("]\n");
+            }
+        }
+        I5Connector.LOG.FINE("i5-Call OUTPUT: " + pgm + " - " + sb);
+    }
+
+    private void executeProgramCall(ProgramCall p, String currentJob) {
+        try (Operation op = new Operation(() -> currentJob, Duration.ofMinutes(1))) {
+            if (!p.run()) {
                 StringBuilder err = new StringBuilder();
                 for (AS400Message msg : p.getMessageList()) {
                     err.append(msg.getText());
@@ -130,22 +145,14 @@ public class I5Connection {
                                 .withSystemErrorMessage("Error while executing '%s': %s", currentJob, err.toString())
                                 .handle();
             }
-            collectCPUUsed(p, currentJob);
-            if (I5Connector.LOG.isFINE()) {
-                StringBuilder sb = new StringBuilder();
-                for (ProgramParameter param : params) {
-                    if (param.getOutputDataLength() > 0) {
-                        sb.append("[");
-                        sb.append(new String(param.getOutputData()));
-                        sb.append("]\n");
-                    }
-                }
-                I5Connector.LOG.FINE("i5-Call OUTPUT: " + pgm + " - " + sb);
-            }
-        } finally {
-            w.submitMicroTiming("i5", "I5Connection.call#" + pgm);
-            pool.i5Connector.calls.inc();
-            pool.i5Connector.callDuration.addValue(w.elapsedMillis());
+        } catch (HandledException t) {
+            throw t;
+        } catch (Exception t) {
+            throw Exceptions.handle()
+                            .to(I5Connector.LOG)
+                            .error(t)
+                            .withSystemErrorMessage("Error while executing '%s': %s (%s)", currentJob)
+                            .handle();
         }
     }
 
@@ -190,12 +197,10 @@ public class I5Connection {
     public List<DataQueueEntry> readQueue(String queue, int timeoutSeconds) throws Exception {
         List<DataQueueEntry> result = Lists.newArrayList();
         DataQueue q = new DataQueue(i5, queue);
-        if (q != null) {
-            DataQueueEntry entry = q.read(timeoutSeconds);
-            while (entry != null) {
-                result.add(entry);
-                entry = q.read(timeoutSeconds);
-            }
+        DataQueueEntry entry = q.read(timeoutSeconds);
+        while (entry != null) {
+            result.add(entry);
+            entry = q.read(timeoutSeconds);
         }
 
         return result;

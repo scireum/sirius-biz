@@ -55,47 +55,50 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             if (oma == null || !oma.isReady() || Sirius.isStartedAsTest()) {
                 return;
             }
-            try {
-                LocalDate yesterday = LocalDate.now().minusDays(1);
-                Incident si = null;
-                if (incident.getLocation() != null) {
-                    si = oma.select(Incident.class)
-                            .eq(Incident.LOCATION, incident.getLocation())
-                            .where(FieldOperator.on(Incident.LAST_OCCURRENCE).greaterThan(yesterday))
-                            .queryFirst();
-                }
-                if (si == null) {
-                    si = new Incident();
-                    si.setLocation(incident.getLocation());
-                    si.setFirstOccurrence(LocalDateTime.now());
-                }
-                si.setNumberOfOccurrences(si.getNumberOfOccurrences() + 1);
-                si.setNode(CallContext.getNodeName());
-
-                si.setMdc(incident.getMDC().stream().map(Tuple::toString).collect(Collectors.joining("\n")));
-                si.setUser(UserContext.getCurrentUser().getUserName());
-                si.setMessage(incident.getException().getMessage());
-                si.setStack(NLS.toUserString(incident.getException()));
-                si.setCategory(incident.getCategory());
-                si.setLastOccurrence(LocalDateTime.now());
-
-                oma.tryUpdate(si);
-            } catch (OptimisticLockException e) {
-                Exceptions.ignore(e);
-            }
-        } catch (Throwable e) {
+            storeIncident(incident);
+        } catch (Exception e) {
             Exceptions.handle(e);
+        }
+    }
+
+    private void storeIncident(sirius.kernel.health.Incident incident) {
+        try {
+            LocalDate yesterday = LocalDate.now().minusDays(1);
+            Incident si = null;
+            if (incident.getLocation() != null) {
+                si = oma.select(Incident.class)
+                        .eq(Incident.LOCATION, incident.getLocation())
+                        .where(FieldOperator.on(Incident.LAST_OCCURRENCE).greaterThan(yesterday))
+                        .queryFirst();
+            }
+            if (si == null) {
+                si = new Incident();
+                si.setLocation(incident.getLocation());
+                si.setFirstOccurrence(LocalDateTime.now());
+            }
+            si.setNumberOfOccurrences(si.getNumberOfOccurrences() + 1);
+            si.setNode(CallContext.getNodeName());
+
+            si.setMdc(incident.getMDC().stream().map(Tuple::toString).collect(Collectors.joining("\n")));
+            si.setUser(UserContext.getCurrentUser().getUserName());
+            si.setMessage(incident.getException().getMessage());
+            si.setStack(NLS.toUserString(incident.getException()));
+            si.setCategory(incident.getCategory());
+            si.setLastOccurrence(LocalDateTime.now());
+
+            oma.tryUpdate(si);
+        } catch (OptimisticLockException e) {
+            Exceptions.ignore(e);
         }
     }
 
     @Override
     public void handleLogMessage(LogMessage message) {
-        if (oma == null
-            || message == null
-            || !oma.isReady()
-            || !message.isReceiverWouldLog()
-            || Sirius.isStartedAsTest()
-            || Sirius.isDev() && message.getLogLevel().toInt() <= Level.INFO.toInt()) {
+        if (oma == null || !oma.isReady() || message == null || shouldNotLog(message)) {
+            return;
+        }
+
+        if (!message.isReceiverWouldLog()) {
             return;
         }
 
@@ -108,6 +111,10 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
         entry.setUser(UserContext.getCurrentUser().getUserName());
 
         oma.update(entry);
+    }
+
+    private boolean shouldNotLog(LogMessage message) {
+        return Sirius.isStartedAsTest() || Sirius.isDev() && message.getLogLevel().toInt() <= Level.INFO.toInt();
     }
 
     @Override
@@ -141,7 +148,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             msg.setMailExtension(mailExtension);
 
             oma.update(msg);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             Exceptions.handle(e);
         }
     }

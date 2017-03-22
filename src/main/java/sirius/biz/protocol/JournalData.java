@@ -71,7 +71,7 @@ public class JournalData extends Composite {
             if (changes.length() > 0) {
                 addJournalEntry(owner, changes.toString());
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             Exceptions.handle(e);
         }
     }
@@ -103,7 +103,7 @@ public class JournalData extends Composite {
         if (!silent) {
             try {
                 addJournalEntry(owner, "Entity has been deleted.");
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 Exceptions.handle(e);
             }
         }
