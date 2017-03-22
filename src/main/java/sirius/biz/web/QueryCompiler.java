@@ -67,6 +67,10 @@ class QueryCompiler {
                                                                                  && reader.next().is('|'));
     }
 
+    private boolean isAtBinaryAND(LookaheadReader reader) {
+        return reader.current().is('&') && reader.next().is('&');
+    }
+
     private boolean isAtAND(LookaheadReader reader) {
         return reader.current().is('a', 'A') && reader.next().is('n', 'N') && reader.next(2).is('d', 'D');
     }
@@ -105,6 +109,9 @@ class QueryCompiler {
             }
             if (isAtAND(reader)) {
                 reader.consume(3);
+            }
+            if (isAtBinaryAND(reader)) {
+                reader.consume(2);
             }
         }
 
@@ -283,6 +290,7 @@ class QueryCompiler {
         if (reader.current().is('=')) {
             return true;
         }
+
         if (reader.current().is('!') && reader.next().is('=')) {
             return true;
         }

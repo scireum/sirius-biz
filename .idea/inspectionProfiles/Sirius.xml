@@ -125,7 +125,7 @@
     <inspection_tool class="BigDecimalEquals" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="BigDecimalLegacyMethod" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="BindingAnnotationWithoutInject" enabled="false" level="WARNING" enabled_by_default="false" />
-    <inspection_tool class="BooleanVariableAlwaysNegated" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="BooleanMethodIsAlwaysInverted" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="BoundFieldAssignment" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="BvConfigDomInspection" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="BvConstraintMappingsInspection" enabled="false" level="ERROR" enabled_by_default="false" />
@@ -628,6 +628,7 @@
       <option name="loggerClassName" value="org.apache.log4j.Logger,org.slf4j.LoggerFactory,org.apache.commons.logging.LogFactory,java.util.logging.Logger" />
       <option name="loggerFactoryMethodName" value="getLogger,getLogger,getLog,getLogger" />
     </inspection_tool>
+    <inspection_tool class="LongLiteralsEndingWithLowercaseL" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="LoopConditionNotUpdatedInsideLoop" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoreIterators" value="false" />
     </inspection_tool>
@@ -724,7 +725,6 @@
     <inspection_tool class="OneButtonGroup" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="OneWayWebMethod" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="OperationOnCollection" enabled="false" level="WARNING" enabled_by_default="false" />
-    <inspection_tool class="OptionalUsedAsFieldOrParameterType" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="OverlyStrongTypeCast" enabled="false" level="WARNING" enabled_by_default="false">
       <option name="ignoreInMatchingInstanceof" value="true" />
     </inspection_tool>
@@ -1016,7 +1016,7 @@
     <inspection_tool class="osmorcMisspelledHeaderName" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="osmorcNonOsgiMavenDependency" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="osmorcUnregisteredActivator" enabled="false" level="ERROR" enabled_by_default="false" />
-    <inspection_tool class="unused" enabled="true" level="WARNING" enabled_by_default="true" klass="packageLocal" inner_class="protected" field="protected" method="private">
+    <inspection_tool class="unused" enabled="false" level="WARNING" enabled_by_default="false">
       <option name="LOCAL_VARIABLE" value="true" />
       <option name="FIELD" value="true" />
       <option name="METHOD" value="true" />
@@ -1028,5 +1028,6 @@
       <option name="ADD_SERVLET_TO_ENTRIES" value="true" />
       <option name="ADD_NONJAVA_TO_ENTRIES" value="true" />
     </inspection_tool>
+    <inspection_tool class="OptionalUsedAsFieldOrParameterType" enabled="false" level="WARNING" enabled_by_default="false" />
   </profile>
 </component>
