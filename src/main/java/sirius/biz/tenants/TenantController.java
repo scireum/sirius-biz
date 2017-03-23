@@ -215,7 +215,6 @@ public class TenantController extends BizController {
      * @param ctx the current request
      */
     @Routed("/tenants/select")
-    @DefaultRoute
     @LoginRequired
     @Permission(TenantUserManager.PERMISSION_SELECT_TENANT)
     public void selectTenants(WebContext ctx) {

@@ -356,7 +356,6 @@ public class UserAccountController extends BizController {
      * @param ctx the current request
      */
     @Routed("/user-accounts/select")
-    @DefaultRoute
     @LoginRequired
     @Permission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT)
     public void selectUserAccounts(WebContext ctx) {
