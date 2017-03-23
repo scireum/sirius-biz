@@ -374,6 +374,6 @@ public class Statistics extends BackgroundLoop implements Lifecycle, MetricProvi
                                      "statistics-updates",
                                      "Statistics Updated",
                                      statisticUpdates.getCount(),
-                                     "1/min");
+                                     "/min");
     }
 }
