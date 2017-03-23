@@ -52,6 +52,14 @@ public class UserAccountController extends BizController {
      */
     public static final String PERMISSION_MANAGE_USER_ACCOUNTS = "permission-manage-user-accounts";
 
+    private static final String PARAM_PASSWORD = "password";
+    private static final String PARAM_CONFIRMATION = "confirmation";
+    private static final String PARAM_NAME = "name";
+    private static final String PARAM_USERNAME = "username";
+    private static final String PARAM_URL = "url";
+    private static final String PARAM_EMAIL = "email";
+    private static final String PARAM_REASON = "reason";
+
     @Part
     private Mails mails;
 
@@ -196,17 +204,17 @@ public class UserAccountController extends BizController {
 
         if (ctx.isPOST()) {
             try {
-                String password = ctx.get("password").asString();
-                String confirmation = ctx.get("confirmation").asString();
+                String password = ctx.get(PARAM_PASSWORD).asString();
+                String confirmation = ctx.get(PARAM_CONFIRMATION).asString();
                 if (Strings.isEmpty(password) || password.length() < userAccount.getMinPasswordLength()) {
-                    UserContext.setFieldError("password", null);
+                    UserContext.setFieldError(PARAM_PASSWORD, null);
                     throw Exceptions.createHandled()
                                     .withNLSKey("Model.password.minLengthError")
                                     .set("minChars", userAccount.getMinPasswordLength())
                                     .handle();
                 }
                 if (!Strings.areEqual(password, confirmation)) {
-                    UserContext.setFieldError("confirmation", null);
+                    UserContext.setFieldError(PARAM_CONFIRMATION, null);
                     throw Exceptions.createHandled().withNLSKey("Model.password.confirmationMismatch").handle();
                 }
                 userAccount.getLogin().setCleartextPassword(password);
@@ -241,10 +249,10 @@ public class UserAccountController extends BizController {
             mails.createEmail()
                  .useMailTemplate("user-account-password",
                                   Context.create()
-                                         .set("password", userAccount.getLogin().getGeneratedPassword())
-                                         .set("name", userAccount.getPerson().getAddressableName())
-                                         .set("username", userAccount.getLogin().getUsername())
-                                         .set("url", getBaseUrl()))
+                                         .set(PARAM_PASSWORD, userAccount.getLogin().getGeneratedPassword())
+                                         .set(PARAM_NAME, userAccount.getPerson().getAddressableName())
+                                         .set(PARAM_USERNAME, userAccount.getLogin().getUsername())
+                                         .set(PARAM_URL, getBaseUrl()))
                  .to(userAccount.getEmail(), userAccount.getPerson().toString())
                  .send();
         }
@@ -261,7 +269,7 @@ public class UserAccountController extends BizController {
     @Routed(value = "/forgotPassword", jsonCall = true)
     public void forgotPassword(final WebContext ctx, JSONStructuredOutput out) {
         List<UserAccount> accounts =
-                oma.select(UserAccount.class).eq(UserAccount.EMAIL, ctx.get("email").asString()).limit(2).queryList();
+                oma.select(UserAccount.class).eq(UserAccount.EMAIL, ctx.get(PARAM_EMAIL).asString()).limit(2).queryList();
         if (accounts.isEmpty()) {
             throw Exceptions.createHandled().withNLSKey("UserAccountController.noUserFoundForEmail").handle();
         }
@@ -281,14 +289,14 @@ public class UserAccountController extends BizController {
             mails.createEmail()
                  .useMailTemplate("user-account-password",
                                   Context.create()
-                                         .set("reason",
+                                         .set(PARAM_REASON,
                                               NLS.fmtr("UserAccountController.forgotPassword.reason")
                                                  .set("ip", ctx.getRemoteIP().toString())
                                                  .format())
-                                         .set("password", account.getLogin().getGeneratedPassword())
-                                         .set("name", account.getPerson().getAddressableName())
-                                         .set("username", account.getLogin().getUsername())
-                                         .set("url", getBaseUrl()))
+                                         .set(PARAM_PASSWORD, account.getLogin().getGeneratedPassword())
+                                         .set(PARAM_NAME, account.getPerson().getAddressableName())
+                                         .set(PARAM_USERNAME, account.getLogin().getUsername())
+                                         .set(PARAM_URL, getBaseUrl()))
                  .to(account.getEmail(), account.getPerson().toString())
                  .send();
         }
@@ -356,7 +364,6 @@ public class UserAccountController extends BizController {
      * @param ctx the current request
      */
     @Routed("/user-accounts/select")
-    @DefaultRoute
     @LoginRequired
     @Permission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT)
     public void selectUserAccounts(WebContext ctx) {
