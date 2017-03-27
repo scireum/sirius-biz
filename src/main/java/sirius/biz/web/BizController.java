@@ -292,6 +292,8 @@ public class BizController extends BasicController {
                     return true;
                 }
                 showSavedMessage();
+            } catch (IllegalArgumentException e) {
+                UserContext.message(new Message(e.getMessage(), null, Message.ERROR));
             } catch (Exception e) {
                 UserContext.handle(e);
             }
