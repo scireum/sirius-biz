@@ -134,11 +134,13 @@ public class BizController extends BasicController {
      * @see Autoloaded
      */
     protected void load(WebContext ctx, Entity entity) {
-        for (Property property : entity.getDescriptor().getProperties()) {
-            if (shouldAutoload(ctx, property)) {
-                property.parseValue(entity, ctx.get(property.getName()));
-            }
-        }
+        Set<String> columns = entity.getDescriptor()
+                                    .getProperties()
+                                    .stream()
+                                    .filter(property -> shouldAutoload(ctx, property))
+                                    .map(Property::getName)
+                                    .collect(Collectors.toSet());
+        load(ctx, entity, columns);
     }
 
     /**
@@ -150,10 +152,29 @@ public class BizController extends BasicController {
      */
     protected void load(WebContext ctx, Entity entity, Column... properties) {
         Set<String> columnsSet = Arrays.stream(properties).map(Column::getName).collect(Collectors.toSet());
+        load(ctx, entity, columnsSet);
+    }
+
+    private void load(WebContext ctx, Entity entity, Set<String> properties) {
+        boolean hasError = false;
+
         for (Property property : entity.getDescriptor().getProperties()) {
-            if (columnsSet.contains(property.getName())) {
-                property.parseValue(entity, ctx.get(property.getName()));
+            String propertyName = property.getName();
+
+            if (properties.contains(propertyName)) {
+                try {
+                    property.parseValue(entity, ctx.get(propertyName));
+                } catch (IllegalArgumentException e) {
+                    UserContext.setFieldError(propertyName, ctx.get(propertyName));
+                    UserContext.setErrorMessage(propertyName, e.getMessage());
+
+                    hasError = true;
+                }
             }
+        }
+
+        if (hasError) {
+            throw Exceptions.createHandled().withNLSKey("BizController.illegalArgument").handle();
         }
     }
 
@@ -292,8 +313,6 @@ public class BizController extends BasicController {
                     return true;
                 }
                 showSavedMessage();
-            } catch (IllegalArgumentException e) {
-                UserContext.message(new Message(e.getMessage(), null, Message.ERROR));
             } catch (Exception e) {
                 UserContext.handle(e);
             }
