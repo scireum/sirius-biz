@@ -22,6 +22,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.Formatter;
 import sirius.web.controller.BasicController;
@@ -30,6 +31,7 @@ import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -134,12 +136,12 @@ public class BizController extends BasicController {
      * @see Autoloaded
      */
     protected void load(WebContext ctx, Entity entity) {
-        Set<String> columns = entity.getDescriptor()
+        List<String> columns = entity.getDescriptor()
                                     .getProperties()
                                     .stream()
                                     .filter(property -> shouldAutoload(ctx, property))
                                     .map(Property::getName)
-                                    .collect(Collectors.toSet());
+                                    .collect(Collectors.toList());
         load(ctx, entity, columns);
     }
 
@@ -151,11 +153,11 @@ public class BizController extends BasicController {
      * @param properties the list of properties to transfer
      */
     protected void load(WebContext ctx, Entity entity, Column... properties) {
-        Set<String> columnsSet = Arrays.stream(properties).map(Column::getName).collect(Collectors.toSet());
+        List<String> columnsSet = Arrays.stream(properties).map(Column::getName).collect(Collectors.toList());
         load(ctx, entity, columnsSet);
     }
 
-    private void load(WebContext ctx, Entity entity, Set<String> properties) {
+    private void load(WebContext ctx, Entity entity, List<String> properties) {
         boolean hasError = false;
 
         for (Property property : entity.getDescriptor().getProperties()) {
@@ -164,7 +166,7 @@ public class BizController extends BasicController {
             if (properties.contains(propertyName)) {
                 try {
                     property.parseValue(entity, ctx.get(propertyName));
-                } catch (IllegalArgumentException e) {
+                } catch (HandledException e) {
                     UserContext.setFieldError(propertyName, ctx.get(propertyName));
                     UserContext.setErrorMessage(propertyName, e.getMessage());
 
