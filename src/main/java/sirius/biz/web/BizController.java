@@ -30,13 +30,9 @@ import sirius.web.controller.Message;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * Base class for all controllers which operate on entities.
@@ -136,12 +132,13 @@ public class BizController extends BasicController {
      * @see Autoloaded
      */
     protected void load(WebContext ctx, Entity entity) {
-        List<String> columns = entity.getDescriptor()
-                                    .getProperties()
-                                    .stream()
-                                    .filter(property -> shouldAutoload(ctx, property))
-                                    .map(Property::getName)
-                                    .collect(Collectors.toList());
+        Column[] columns = (Column[]) entity.getDescriptor()
+                                            .getProperties()
+                                            .stream()
+                                            .filter(property -> shouldAutoload(ctx, property))
+                                            .map(Property::getColumnName)
+                                            .map(Column::named)
+                                            .toArray();
         load(ctx, entity, columns);
     }
 
@@ -153,25 +150,19 @@ public class BizController extends BasicController {
      * @param properties the list of properties to transfer
      */
     protected void load(WebContext ctx, Entity entity, Column... properties) {
-        List<String> columnsSet = Arrays.stream(properties).map(Column::getName).collect(Collectors.toList());
-        load(ctx, entity, columnsSet);
-    }
-
-    private void load(WebContext ctx, Entity entity, List<String> properties) {
         boolean hasError = false;
 
-        for (Property property : entity.getDescriptor().getProperties()) {
+        for (Column columnProperty : properties) {
+            Property property = entity.getDescriptor().getProperty(columnProperty);
             String propertyName = property.getName();
 
-            if (properties.contains(propertyName)) {
-                try {
-                    property.parseValue(entity, ctx.get(propertyName));
-                } catch (HandledException e) {
-                    UserContext.setFieldError(propertyName, ctx.get(propertyName));
-                    UserContext.setErrorMessage(propertyName, e.getMessage());
+            try {
+                property.parseValue(entity, ctx.get(propertyName));
+            } catch (HandledException e) {
+                UserContext.setFieldError(propertyName, ctx.get(propertyName));
+                UserContext.setErrorMessage(propertyName, e.getMessage());
 
-                    hasError = true;
-                }
+                hasError = true;
             }
         }
 
