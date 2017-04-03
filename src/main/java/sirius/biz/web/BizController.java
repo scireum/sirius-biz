@@ -30,9 +30,12 @@ import sirius.web.controller.Message;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Base class for all controllers which operate on entities.
@@ -132,13 +135,15 @@ public class BizController extends BasicController {
      * @see Autoloaded
      */
     protected void load(WebContext ctx, Entity entity) {
-        Column[] columns = (Column[]) entity.getDescriptor()
-                                            .getProperties()
-                                            .stream()
-                                            .filter(property -> shouldAutoload(ctx, property))
-                                            .map(Property::getColumnName)
-                                            .map(Column::named)
-                                            .toArray();
+        List<Column> columns = entity.getDescriptor()
+                                     .getProperties()
+                                     .stream()
+                                     .filter(property -> shouldAutoload(ctx, property))
+                                     .map((Property property) -> {
+                                         return Column.named(property.getName());
+                                     })
+                                     .collect(Collectors.toList());
+
         load(ctx, entity, columns);
     }
 
@@ -150,6 +155,10 @@ public class BizController extends BasicController {
      * @param properties the list of properties to transfer
      */
     protected void load(WebContext ctx, Entity entity, Column... properties) {
+        load(ctx, entity, Arrays.asList(properties));
+    }
+
+    protected void load(WebContext ctx, Entity entity, List<Column> properties) {
         boolean hasError = false;
 
         for (Column columnProperty : properties) {
