@@ -22,6 +22,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.Formatter;
 import sirius.web.controller.BasicController;
@@ -30,9 +31,9 @@ import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -134,11 +135,16 @@ public class BizController extends BasicController {
      * @see Autoloaded
      */
     protected void load(WebContext ctx, Entity entity) {
-        for (Property property : entity.getDescriptor().getProperties()) {
-            if (shouldAutoload(ctx, property)) {
-                property.parseValue(entity, ctx.get(property.getName()));
-            }
-        }
+        List<Column> columns = entity.getDescriptor()
+                                     .getProperties()
+                                     .stream()
+                                     .filter(property -> shouldAutoload(ctx, property))
+                                     .map((Property property) -> {
+                                         return Column.named(property.getName());
+                                     })
+                                     .collect(Collectors.toList());
+
+        load(ctx, entity, columns);
     }
 
     /**
@@ -149,11 +155,28 @@ public class BizController extends BasicController {
      * @param properties the list of properties to transfer
      */
     protected void load(WebContext ctx, Entity entity, Column... properties) {
-        Set<String> columnsSet = Arrays.stream(properties).map(Column::getName).collect(Collectors.toSet());
-        for (Property property : entity.getDescriptor().getProperties()) {
-            if (columnsSet.contains(property.getName())) {
-                property.parseValue(entity, ctx.get(property.getName()));
+        load(ctx, entity, Arrays.asList(properties));
+    }
+
+    protected void load(WebContext ctx, Entity entity, List<Column> properties) {
+        boolean hasError = false;
+
+        for (Column columnProperty : properties) {
+            Property property = entity.getDescriptor().getProperty(columnProperty);
+            String propertyName = property.getName();
+
+            try {
+                property.parseValue(entity, ctx.get(propertyName));
+            } catch (HandledException e) {
+                UserContext.setFieldError(propertyName, ctx.get(propertyName));
+                UserContext.setErrorMessage(propertyName, e.getMessage());
+
+                hasError = true;
             }
+        }
+
+        if (hasError) {
+            throw Exceptions.createHandled().withNLSKey("BizController.illegalArgument").handle();
         }
     }
 
