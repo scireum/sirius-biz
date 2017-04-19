@@ -10,13 +10,13 @@ package sirius.biz.codelists;
 
 import sirius.db.mixing.Entity;
 import sirius.db.mixing.OMA;
+import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.extensions.Extension;
-import sirius.kernel.extensions.Extensions;
+import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -91,7 +91,7 @@ public class CodeLists {
         }
         CodeList cl = oma.select(CodeList.class).fields(Entity.ID).eq(CodeList.CODE, codeList).queryFirst();
         if (cl == null) {
-            Extension ext = Extensions.getExtension("code-lists", codeList);
+            Extension ext = Sirius.getSettings().getExtension("code-lists", codeList);
             cl = new CodeList();
             cl.setCode(codeList);
             cl.setName(codeList);

@@ -114,7 +114,7 @@ public class UserAccount extends TenantAware implements Journaled {
      * @return the minimal length of a password to be accepted
      */
     public int getMinPasswordLength() {
-        return Sirius.getConfig().getInt("security.passwordMinLength");
+        return Sirius.getSettings().getInt("security.passwordMinLength");
     }
 
     /**
@@ -123,7 +123,7 @@ public class UserAccount extends TenantAware implements Journaled {
      * @return the minimal length for a password to be considered sane / good / not totally unsafe
      */
     public int getSanePasswordLength() {
-        return Sirius.getConfig().getInt("security.passwordSaneLength");
+        return Sirius.getSettings().getInt("security.passwordSaneLength");
     }
 
     public PersonData getPerson() {

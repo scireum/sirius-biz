@@ -10,14 +10,14 @@ package sirius.biz.i5;
 
 import com.google.common.collect.Maps;
 import sirius.kernel.Lifecycle;
+import sirius.kernel.Sirius;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.extensions.Extension;
-import sirius.kernel.extensions.Extensions;
 import sirius.kernel.health.Average;
 import sirius.kernel.health.Counter;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
+import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -57,7 +57,7 @@ public class I5Connector implements Lifecycle {
                                       @Nullable Consumer<I5Connection> setup) {
         Tuple<String, String> key = Tuple.create(configName, tenantName);
         I5ConnectionPool pool = pools.computeIfAbsent(key, k -> {
-            Extension ext = Extensions.getExtension("i5", k.getFirst());
+            Extension ext = Sirius.getSettings().getExtension("i5", k.getFirst());
             if (ext == null || ext.isDefault()) {
                 throw Exceptions.handle()
                                 .to(LOG)

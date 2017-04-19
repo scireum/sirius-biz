@@ -14,8 +14,8 @@ import org.apache.commons.pool2.PooledObjectFactory;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import sirius.kernel.commons.Watch;
-import sirius.kernel.extensions.Extension;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.settings.Extension;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
