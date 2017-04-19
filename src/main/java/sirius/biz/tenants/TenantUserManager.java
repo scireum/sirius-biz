@@ -25,14 +25,15 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.extensions.Extension;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.settings.Extension;
 import sirius.web.http.WebContext;
 import sirius.web.security.GenericUserManager;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserInfo;
 import sirius.web.security.UserManager;
 import sirius.web.security.UserManagerFactory;
+import sirius.web.security.UserSettings;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -113,7 +114,7 @@ public class TenantUserManager extends GenericUserManager {
     private static Cache<String, Set<String>> rolesCache = CacheManager.createCache("tenants-roles");
     private static Cache<String, UserAccount> userAccountCache = CacheManager.createCache("tenants-users");
     private static Cache<String, Tenant> tenantsCache = CacheManager.createCache("tenants-tenants");
-    private static Cache<String, Config> configCache = CacheManager.createCache("tenants-configs");
+    private static Cache<String, UserSettings> configCache = CacheManager.createCache("tenants-configs");
 
     protected TenantUserManager(ScopeInfo scope, Extension config) {
         super(scope, config);
@@ -415,7 +416,7 @@ public class TenantUserManager extends GenericUserManager {
                                .withEmail(account.getEmail())
                                .withLang("de")
                                .withPermissions(roles)
-                               .withConfigSupplier(ui -> getUserConfig(getScopeConfig(), ui))
+                               .withSettingsSupplier(ui -> getUserSettings(getScopeSettings(), ui))
                                .withUserSupplier(u -> account)
                                .build();
     }
@@ -478,16 +479,16 @@ public class TenantUserManager extends GenericUserManager {
     }
 
     @Override
-    protected Config getUserConfig(Config config, UserInfo userInfo) {
+    protected UserSettings getUserSettings(UserSettings scopeSettings, UserInfo userInfo) {
         UserAccount user = userInfo.getUserObject(UserAccount.class);
         if (user.getPermissions().getConfig() == null) {
             if (user.getTenant().getValue().getPermissions().getConfig() == null) {
-                return config;
+                return scopeSettings;
             }
         }
 
         return configCache.get(userInfo.getUserId(), i -> {
-            Config cfg = config;
+            Config cfg = scopeSettings.getConfig();
             if (user.getTenant().getValue().getPermissions().getConfig() != null) {
                 cfg = user.getTenant().getValue().getPermissions().getConfig().withFallback(cfg);
             }
@@ -495,7 +496,7 @@ public class TenantUserManager extends GenericUserManager {
                 cfg = user.getPermissions().getConfig().withFallback(cfg);
             }
 
-            return cfg;
+            return new UserSettings(cfg);
         });
     }
 

@@ -1,3 +1,5 @@
 target
 workspace.xml
 .idea/libraries
+.idea/sonarlint
+data
