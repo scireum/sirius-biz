@@ -29,6 +29,9 @@ import java.util.regex.PatternSyntaxException;
  */
 public class InternationalAddressData extends AddressData {
 
+    @Part
+    private static CodeLists cls;
+
     @Transient
     private boolean verifyZip;
 
@@ -43,9 +46,6 @@ public class InternationalAddressData extends AddressData {
     @Autoloaded
     @Length(3)
     private String country;
-
-    @Part
-    private static CodeLists cls;
 
     /**
      * Creates a new instance with the given requirement.
