@@ -33,6 +33,21 @@ public class InternationalAddressData extends AddressData {
     private boolean verifyZip;
 
     /**
+     * Contains the country code.
+     * <p>
+     * Note that a code list "country" exists which enumerates possible countries.
+     */
+    public static final Column COUNTRY = Column.named("country");
+    @Trim
+    @NullAllowed
+    @Autoloaded
+    @Length(3)
+    private String country;
+
+    @Part
+    private static CodeLists cls;
+
+    /**
      * Creates a new instance with the given requirement.
      *
      * @param requirements determines which fields are required in certain constellations
@@ -54,29 +69,20 @@ public class InternationalAddressData extends AddressData {
         this.verifyZip = verifyZip;
     }
 
-    /**
-     * Contains the country code.
-     * <p>
-     * Note that a code list "country" exists which enumerates possible countries.
-     */
-    public static final Column COUNTRY = Column.named("country");
-    @Trim
-    @NullAllowed
-    @Autoloaded
-    @Length(3)
-    private String country;
-
-    @Part
-    private static CodeLists cls;
-
     @Override
-    protected boolean areAllFieldsEmpty() {
+    public boolean areAllFieldsEmpty() {
         return super.areAllFieldsEmpty() && Strings.isEmpty(country);
     }
 
     @Override
-    protected boolean isAnyFieldEmpty() {
+    public boolean isAnyFieldEmpty() {
         return super.isAnyFieldEmpty() || Strings.isEmpty(country);
+    }
+
+    @Override
+    public void clear() {
+        super.clear();
+        country = null;
     }
 
     @BeforeSave

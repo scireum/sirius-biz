@@ -55,17 +55,6 @@ public class AddressData extends Composite {
     protected String fieldLabel;
 
     /**
-     * Creates a new instance with the given requirement.
-     *
-     * @param requirements determines which fields are required in certain constellations
-     * @param fieldLabel   the name of the compund field which represents the address
-     */
-    public AddressData(Requirements requirements, @Nullable String fieldLabel) {
-        this.requirements = requirements;
-        this.fieldLabel = Strings.isEmpty(fieldLabel) ? NLS.get("Model.address") : fieldLabel;
-    }
-
-    /**
      * Contains the street and street number.
      */
     public static final Column STREET = Column.named("street");
@@ -95,6 +84,17 @@ public class AddressData extends Composite {
     @Length(255)
     private String city;
 
+    /**
+     * Creates a new instance with the given requirement.
+     *
+     * @param requirements determines which fields are required in certain constellations
+     * @param fieldLabel   the name of the compund field which represents the address
+     */
+    public AddressData(Requirements requirements, @Nullable String fieldLabel) {
+        this.requirements = requirements;
+        this.fieldLabel = Strings.isEmpty(fieldLabel) ? NLS.get("Model.address") : fieldLabel;
+    }
+
     @BeforeSave
     protected void onSave() {
         if (requirements == Requirements.NONE) {
@@ -118,12 +118,31 @@ public class AddressData extends Composite {
         }
     }
 
-    protected boolean isAnyFieldEmpty() {
+    /**
+     * Determines if at least one field in the address is filled.
+     *
+     * @return <tt>true</tt> if at least one field is filled, <tt>false</tt> otherwise
+     */
+    public boolean isAnyFieldEmpty() {
         return Strings.isEmpty(street) || Strings.isEmpty(zip) || Strings.isEmpty(city);
     }
 
-    protected boolean areAllFieldsEmpty() {
+    /**
+     * Determines if all fields are empty.
+     *
+     * @return <tt>true</tt> all fields are empty, <tt>false</tt> otherwise
+     */
+    public boolean areAllFieldsEmpty() {
         return Strings.isEmpty(street) && Strings.isEmpty(zip) && Strings.isEmpty(city);
+    }
+
+    /**
+     * Sets all fields to <tt>null</tt>.
+     */
+    public void clear() {
+        street = null;
+        zip = null;
+        city = null;
     }
 
     @Override
