@@ -22,6 +22,7 @@ import sirius.kernel.nls.Formatter;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
 
 /**
  * Provides a street address which can be embedded into other entities or mixins.
@@ -152,6 +153,29 @@ public class AddressData extends Composite {
                         .set("zip", zip)
                         .set("city", city)
                         .smartFormat();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof AddressData)) {
+            return false;
+        }
+
+        return Strings.areEqual(street, ((AddressData) obj).street)
+               && Strings.areEqual(zip,
+                                   ((AddressData) obj).zip)
+               && Strings.areEqual(city, ((AddressData) obj).city);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(street, zip, city);
     }
 
     public String getStreet() {

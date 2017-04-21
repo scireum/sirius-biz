@@ -21,6 +21,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -103,6 +104,30 @@ public class InternationalAddressData extends AddressData {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+
+        if (!(obj instanceof InternationalAddressData)) {
+            return false;
+        }
+
+        return Strings.areEqual(country, ((InternationalAddressData) obj).country);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getStreet(), getZip(), getCity(), getCountry());
     }
 
     public String getCountry() {
