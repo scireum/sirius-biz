@@ -119,9 +119,9 @@ public class AddressData extends Composite {
     }
 
     /**
-     * Determines if at least one field in the address is filled.
+     * Determines if at least one field in the address is empty.
      *
-     * @return <tt>true</tt> if at least one field is filled, <tt>false</tt> otherwise
+     * @return <tt>true</tt> if at least one field is empty, <tt>false</tt> otherwise
      */
     public boolean isAnyFieldEmpty() {
         return Strings.isEmpty(street) || Strings.isEmpty(zip) || Strings.isEmpty(city);
