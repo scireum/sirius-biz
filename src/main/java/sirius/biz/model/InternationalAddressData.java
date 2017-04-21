@@ -29,8 +29,23 @@ import java.util.regex.PatternSyntaxException;
  */
 public class InternationalAddressData extends AddressData {
 
+    @Part
+    private static CodeLists cls;
+
     @Transient
     private boolean verifyZip;
+
+    /**
+     * Contains the country code.
+     * <p>
+     * Note that a code list "country" exists which enumerates possible countries.
+     */
+    public static final Column COUNTRY = Column.named("country");
+    @Trim
+    @NullAllowed
+    @Autoloaded
+    @Length(3)
+    private String country;
 
     /**
      * Creates a new instance with the given requirement.
@@ -54,29 +69,20 @@ public class InternationalAddressData extends AddressData {
         this.verifyZip = verifyZip;
     }
 
-    /**
-     * Contains the country code.
-     * <p>
-     * Note that a code list "country" exists which enumerates possible countries.
-     */
-    public static final Column COUNTRY = Column.named("country");
-    @Trim
-    @NullAllowed
-    @Autoloaded
-    @Length(3)
-    private String country;
-
-    @Part
-    private static CodeLists cls;
-
     @Override
-    protected boolean areAllFieldsEmpty() {
+    public boolean areAllFieldsEmpty() {
         return super.areAllFieldsEmpty() && Strings.isEmpty(country);
     }
 
     @Override
-    protected boolean isAnyFieldEmpty() {
+    public boolean isAnyFieldEmpty() {
         return super.isAnyFieldEmpty() || Strings.isEmpty(country);
+    }
+
+    @Override
+    public void clear() {
+        super.clear();
+        country = null;
     }
 
     @BeforeSave
