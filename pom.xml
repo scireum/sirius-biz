@@ -9,7 +9,7 @@
         <version>3.10</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
-    <version>3.2</version>
+    <version>3.3</version>
     <packaging>jar</packaging>
 
     <name>SIRIUS biz</name>

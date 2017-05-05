@@ -221,6 +221,8 @@ public class BizController extends BasicController {
         private String createdURI;
         private String afterSaveURI;
 
+        private List<Column> columns;
+
         private SaveHelper(WebContext ctx) {
             this.ctx = ctx;
         }
@@ -248,6 +250,19 @@ public class BizController extends BasicController {
          */
         public SaveHelper withPostSaveHandler(Consumer<Boolean> postSaveHandler) {
             this.postSaveHandler = postSaveHandler;
+            return this;
+        }
+
+        /**
+         * Specifies what columns should be loaded from the request context
+         * <p>
+         * if not set all marked as {@link Autoloaded} properties of the entity are loaded
+         *
+         * @param columns array of {@link Column} objects
+         * @return the helper itself for fluent method calls
+         */
+        public SaveHelper withColumns(Column... columns) {
+            this.columns = Arrays.asList(columns);
             return this;
         }
 
@@ -298,7 +313,12 @@ public class BizController extends BasicController {
                 if (preSaveHandler != null) {
                     preSaveHandler.accept(wasNew);
                 }
-                load(ctx, entity);
+
+                if (columns != null && !columns.isEmpty()) {
+                    load(ctx, entity, columns);
+                } else {
+                    load(ctx, entity);
+                }
                 oma.update(entity);
                 if (postSaveHandler != null) {
                     postSaveHandler.accept(wasNew);
