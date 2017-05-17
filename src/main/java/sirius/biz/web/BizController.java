@@ -17,6 +17,7 @@ import sirius.db.mixing.Entity;
 import sirius.db.mixing.EntityRef;
 import sirius.db.mixing.OMA;
 import sirius.db.mixing.Property;
+import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.properties.BooleanProperty;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
@@ -73,6 +74,24 @@ public class BizController extends BasicController {
         }
 
         if (currentTenant().getId() != tenantAware.getTenant().getId()) {
+            throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
+        }
+    }
+
+    /**
+     * Ensures that the tenant of the current user matches the tenant of the given referenced object.
+     * <p>
+     * Will also check if the referenced object is null and if null is allowed.
+     *
+     * @param entity       source object holding the reference
+     * @param tenantAware  reference object of the actual tenant aware object
+     * @param tenantColumn Column of the tenantAware {@link EntityRef}
+     */
+    protected void assertTenant(Entity entity, EntityRef<? extends TenantAware> tenantAware, Column tenantColumn) {
+
+        if (tenantAware.isFilled()) {
+            assertTenant(tenantAware.getValue());
+        } else if (entity.getDescriptor().getProperty(tenantColumn).getAnnotation(NullAllowed.class) == null) {
             throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
         }
     }
@@ -217,6 +236,7 @@ public class BizController extends BasicController {
 
         private WebContext ctx;
         private Consumer<Boolean> preSaveHandler;
+        private Consumer<Entity> onSaveHandler;
         private Consumer<Boolean> postSaveHandler;
         private String createdURI;
         private String afterSaveURI;
@@ -240,7 +260,20 @@ public class BizController extends BasicController {
         }
 
         /**
-         * Installs a post save handler which is invoked just aafter the entity was persisted into the database.
+         * Installs a on save handler which is invoked befor the object is saved but after the request data is loaded
+         * into the entity.
+         *
+         * @param onSaveHandler a consumer which is supplied the entity to save. The Handler can be used to execute
+         *                      additional beforeSaveChecks.
+         * @return the helper itself for fluent method calls
+         */
+        public SaveHelper withOnSaveHandler(Consumer<Entity> onSaveHandler) {
+            this.onSaveHandler = onSaveHandler;
+            return this;
+        }
+
+        /**
+         * Installs a post save handler which is invoked just after the entity was persisted into the database.
          *
          * @param postSaveHandler a consumer which is supplied with a boolean flag, indicating if the entiy was new.
          *                        The
@@ -319,6 +352,11 @@ public class BizController extends BasicController {
                 } else {
                     load(ctx, entity);
                 }
+
+                if (onSaveHandler != null) {
+                    onSaveHandler.accept(entity);
+                }
+
                 oma.update(entity);
                 if (postSaveHandler != null) {
                     postSaveHandler.accept(wasNew);
