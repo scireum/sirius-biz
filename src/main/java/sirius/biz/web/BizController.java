@@ -68,6 +68,10 @@ public class BizController extends BasicController {
      * @throws sirius.kernel.health.HandledException if the tenants do no match
      */
     protected void assertTenant(TenantAware tenantAware) {
+        if (tenantAware == null) {
+            return;
+        }
+
         if (currentTenant() == null && tenantAware.getTenant().getId() != null) {
             throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
         }
@@ -240,7 +244,7 @@ public class BizController extends BasicController {
         }
 
         /**
-         * Installs a post save handler which is invoked just aafter the entity was persisted into the database.
+         * Installs a post save handler which is invoked just after the entity was persisted into the database.
          *
          * @param postSaveHandler a consumer which is supplied with a boolean flag, indicating if the entiy was new.
          *                        The
@@ -310,15 +314,17 @@ public class BizController extends BasicController {
 
             try {
                 boolean wasNew = entity.isNew();
-                if (preSaveHandler != null) {
-                    preSaveHandler.accept(wasNew);
-                }
 
                 if (columns != null && !columns.isEmpty()) {
                     load(ctx, entity, columns);
                 } else {
                     load(ctx, entity);
                 }
+
+                if (preSaveHandler != null) {
+                    preSaveHandler.accept(wasNew);
+                }
+
                 oma.update(entity);
                 if (postSaveHandler != null) {
                     postSaveHandler.accept(wasNew);
