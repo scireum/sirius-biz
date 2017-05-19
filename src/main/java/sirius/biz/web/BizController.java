@@ -82,6 +82,22 @@ public class BizController extends BasicController {
     }
 
     /**
+     * Checks if the tenant aware entity belongs to the current tenant or to its parent tenant.
+     *
+     * @param tenantAware {@link TenantAware} entity to be asserted
+     */
+    protected void assertTenantOrParentTenant(TenantAware tenantAware) {
+        if (tenantAware == null) {
+            return;
+        }
+
+        if (!tenantAware.getTenant().is(currentTenant())
+            && tenantAware.getTenant().getId() != currentTenant().getParent().getId()) {
+            throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
+        }
+    }
+
+    /**
      * Enusures or establishes a parent child relation.
      * <p>
      * For new entities (owner), the given reference is initialized with the given entity. For existing entities
