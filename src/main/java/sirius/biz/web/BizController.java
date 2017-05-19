@@ -91,8 +91,8 @@ public class BizController extends BasicController {
             return;
         }
 
-        if (!tenantAware.getTenant().is(currentTenant()) && !tenantAware.getTenant()
-                                                                        .is(currentTenant().getParent().getValue())) {
+        if (!tenantAware.getTenant().is(currentTenant())
+            && tenantAware.getTenant().getId() != currentTenant().getParent().getId()) {
             throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
         }
     }
