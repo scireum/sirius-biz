@@ -80,11 +80,6 @@ public class TenantUserManager extends GenericUserManager {
     public static final String PERMISSION_SELECT_USER_ACCOUNT = "permission-select-user-account";
 
     /**
-     * Contains the permission required to manage the user accounts.
-     */
-    public static final String PERMISSION_MANAGE_USER_ACCOUNTS = "permission-manage-user-accounts";
-
-    /**
      * Contains the permission required to switch the tenant.
      */
     public static final String PERMISSION_SELECT_TENANT = "permission-select-tenant";
