@@ -62,6 +62,14 @@ public class TenantUserManager extends GenericUserManager {
     public static final String PERMISSION_SYSTEM_TENANT = "flag-system-tenant";
 
     /**
+     * Contains the permission required to manage the system.
+     * <p>
+     * If this permission is granted for user accounts that belong to the system tenant, the PERMISSION_SYSTEM_TENANT
+     * flag is added to the users roles
+     */
+    public static final String PERMISSION_MANAGE_SYSTEM = "permission-manage-system";
+
+    /**
      * This flag indicates that the current user either has taken control over another tenant or uses account.
      */
     public static final String PERMISSION_SPY_USER = "flag-spy-user";
@@ -510,12 +518,13 @@ public class TenantUserManager extends GenericUserManager {
         Set<String> roles = Sets.newTreeSet();
         roles.addAll(user.getPermissions().getPermissions());
         roles.addAll(tenant.getPermissions().getPermissions());
-        if (isSystemTenant) {
-            roles.add(PERMISSION_SYSTEM_TENANT);
-        }
         roles.add(UserInfo.PERMISSION_LOGGED_IN);
-        roles = transformRoles(roles, false);
-        return roles;
+        Set<String> transformedRoles = transformRoles(roles, false);
+        if (isSystemTenant && transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
+            roles.add(PERMISSION_SYSTEM_TENANT);
+            return transformRoles(roles, false);
+        }
+        return transformedRoles;
     }
 
     @Override
