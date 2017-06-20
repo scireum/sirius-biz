@@ -37,21 +37,21 @@ public class LogEntry extends Entity {
      * Contains the name of the logger which create the message.
      */
     public static final Column CATEGORY = Column.named("category");
-    @Length(255)
+    @Length(50)
     private String category;
 
     /**
      * Contains the log level of the message.
      */
     public static final Column LEVEL = Column.named("level");
-    @Length(255)
+    @Length(50)
     private String level;
 
     /**
      * Contains the name of the node on which the message was logged.
      */
     public static final Column NODE = Column.named("node");
-    @Length(255)
+    @Length(50)
     private String node;
 
     /**
