@@ -242,7 +242,7 @@ public class BizController extends BasicController {
         private String afterSaveURI;
 
         private List<Column> columns;
-        boolean autoload = true;
+        private boolean autoload = true;
 
         private SaveHelper(WebContext ctx) {
             this.ctx = ctx;
