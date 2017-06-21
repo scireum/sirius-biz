@@ -331,10 +331,9 @@ public class BizController extends BasicController {
             try {
                 boolean wasNew = entity.isNew();
 
+                load(ctx, entity);
                 if (columns != null && !columns.isEmpty()) {
                     load(ctx, entity, columns);
-                } else {
-                    load(ctx, entity);
                 }
 
                 if (preSaveHandler != null) {
