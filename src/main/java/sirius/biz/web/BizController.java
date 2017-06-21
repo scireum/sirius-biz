@@ -242,6 +242,7 @@ public class BizController extends BasicController {
         private String afterSaveURI;
 
         private List<Column> columns;
+        boolean autoload = true;
 
         private SaveHelper(WebContext ctx) {
             this.ctx = ctx;
@@ -318,6 +319,16 @@ public class BizController extends BasicController {
         }
 
         /**
+         * Disables the automatically loading process of all entity properties annotated with {@link Autoloaded}.
+         *
+         * @return the helper itself for fluent method calls
+         */
+        public SaveHelper disableAutoload() {
+            this.autoload = false;
+            return this;
+        }
+
+        /**
          * Applies the configured save login on the given entity.
          *
          * @param entity the entity to update and save
@@ -331,7 +342,10 @@ public class BizController extends BasicController {
             try {
                 boolean wasNew = entity.isNew();
 
-                load(ctx, entity);
+                if (autoload) {
+                    load(ctx, entity);
+                }
+
                 if (columns != null && !columns.isEmpty()) {
                     load(ctx, entity, columns);
                 }
