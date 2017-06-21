@@ -21,27 +21,46 @@
     </li>
 }
 
-@pageHeader("Model.tenant")
+@pageHeader(){
+    @i18n("Model.tenant") : @tenant.getName()
+    <small>@tenant.getAccountNumber()</small>
+}
 
 <div class="row">
     @if (!tenant.isNew()) {
         <div class="col-md-3">
-            @navbox() {
-                <li class="nav-header">@i18n("Model.details")</li>
-                <li>
-                    @tenant.getName()
-                </li>
-                <li>
-                    @tenant.getAccountNumber()
-                </li>
-                <li class="nav-header">@i18n("Model.address")</li>
-                <li>
-                    @tenant.getAddress().getStreet()<br>
-                    @tenant.getAddress().getZip() @tenant.getAddress().getCity()
-                </li>
-                @includeExtensions("view-tenant-sidebar-infos", tenant, page)
+            @infobox(NLS.get("Model.details")){
+                <div class="row info-line">
+                    <div class="col-md-4 name">
+                        @i18n("AddressData.street")
+                    </div>
+                    <div class="col-md-8 value">
+                        <div>@tenant.getAddress().getStreet()</div>
+                    </div>
+                </div>
+                <div class="row info-line">
+                    <div class="col-md-4 name">
+                        @i18n("AddressData.zip")
+                    </div>
+                    <div class="col-md-8 value">
+                        <div>@tenant.getAddress().getZip()</div>
+                    </div>
+                </div>
+                <div class="row info-line">
+                    <div class="col-md-4 name">
+                        @i18n("AddressData.city")
+                    </div>
+                    <div class="col-md-8 value">
+                        <div>@tenant.getAddress().getCity()</div>
+                    </div>
+                </div>
 
-                <li class="nav-header"></li>
+            @includeExtensions("view-tenant-sidebar-infos", tenant, page)
+
+            }
+
+            @navbox() {
+                <li class="nav-header">@i18n("Model.links")</li>
                 <li @if(page == "details") { class="active" }>
                     <a href="@prefix/tenant/@tenant.getId()" class="link">
                         @i18n("Model.details")
