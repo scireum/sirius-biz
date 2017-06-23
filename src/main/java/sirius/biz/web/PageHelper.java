@@ -232,7 +232,12 @@ public class PageHelper<E extends Entity> {
         facet.addItem("true", NLS.get("NLS.yes"), -1);
         facet.addItem("false", NLS.get("NLS.no"), -1);
 
-        return addFacet(facet, (f, q) -> q.eqIgnoreNull(Column.named(f.getName()), Value.of(f.getValue()).asBoolean()));
+        return addFacet(facet, (f, q) -> {
+            Value filterValue = Value.of(f.getValue());
+            if (filterValue.isFilled()) {
+                q.eq(Column.named(f.getName()), filterValue.asBoolean());
+            }
+        });
     }
 
     /**
