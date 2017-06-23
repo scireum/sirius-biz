@@ -233,9 +233,9 @@ public class PageHelper<E extends Entity> {
         facet.addItem("false", NLS.get("NLS.no"), -1);
 
         return addFacet(facet, (f, q) -> {
-            Value isUsed = Value.of(f.getValue());
-            if (isUsed.isFilled()) {
-                q.eqIgnoreNull(Column.named(f.getName()), isUsed.asBoolean());
+            Value filterValue = Value.of(f.getValue());
+            if (filterValue.isFilled()) {
+                q.eq(Column.named(f.getName()), filterValue.asBoolean());
             }
         });
     }
