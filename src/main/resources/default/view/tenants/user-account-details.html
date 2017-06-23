@@ -15,10 +15,12 @@
         @textfield(name:     "email",
                    value:    account.getEmail(),
                    labelKey: "Model.email",
-                   required: true)
+                   required: true,
+                   helpKey:  "UserAccount.email.help")
         @textfield(name:     "login_username",
                    value:    account.getLogin().getUsername(),
-                   labelKey: "LoginData.username")
+                   labelKey: "LoginData.username",
+                   helpKey:  "UserAccount.username.help")
     </div>
     <div class="row">
         @codelistSelect(list:     "salutations",
