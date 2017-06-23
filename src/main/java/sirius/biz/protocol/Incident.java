@@ -39,14 +39,14 @@ public class Incident extends Entity {
      * Contains the logger category which recorded the error.
      */
     public static final Column CATEGORY = Column.named("category");
-    @Length(255)
+    @Length(50)
     private String category;
 
     /**
      * Contains the name of the server/node on which the error occured.
      */
     public static final Column NODE = Column.named("node");
-    @Length(255)
+    @Length(50)
     private String node;
 
     /**
