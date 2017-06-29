@@ -268,8 +268,10 @@ public class UserAccountController extends BizController {
      */
     @Routed(value = "/forgotPassword", jsonCall = true)
     public void forgotPassword(final WebContext ctx, JSONStructuredOutput out) {
-        List<UserAccount> accounts =
-                oma.select(UserAccount.class).eq(UserAccount.EMAIL, ctx.get(PARAM_EMAIL).asString()).limit(2).queryList();
+        List<UserAccount> accounts = oma.select(UserAccount.class)
+                                        .eq(UserAccount.EMAIL, ctx.get(PARAM_EMAIL).asString())
+                                        .limit(2)
+                                        .queryList();
         if (accounts.isEmpty()) {
             throw Exceptions.createHandled().withNLSKey("UserAccountController.noUserFoundForEmail").handle();
         }
@@ -390,14 +392,12 @@ public class UserAccountController extends BizController {
                             UserAccount.TENANT.join(Tenant.NAME),
                             UserAccount.TENANT.join(Tenant.ACCOUNT_NUMBER));
 
-        ctx.respondWith()
-           .template("view/tenants/select-user-account.html",
-                     ph.asPage(), isCurrentlySpying(ctx));
+        ctx.respondWith().template("view/tenants/select-user-account.html", ph.asPage(), isCurrentlySpying(ctx));
     }
 
     private boolean isCurrentlySpying(WebContext ctx) {
         return ctx.getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX)
-           .isFilled();
+                  .isFilled();
     }
 
     /**
