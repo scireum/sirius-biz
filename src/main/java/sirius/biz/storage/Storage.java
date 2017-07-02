@@ -220,6 +220,19 @@ public class Storage {
                   .queryFirst();
     }
 
+    /**
+     * Creates a new object which was specifically created for a referenced entity.
+     * <p>
+     * Such objects will be invisible to the user and also be automatically deleted if the referencing entity is
+     * deleted.
+     *
+     * @param tenant     the tenant owning the object
+     * @param bucketName the bucket in which the object is placed
+     * @param reference  the reference for which the object was created
+     * @param name       the name or path of the object to be created
+     * @return the newly created object which has {@link VirtualObject#TEMPORARY} set to <tt>true</tt>. Therefore the
+     * referencing entity must be saved to set this flag to <tt>false</tt> via {@link StoredObjectRefProperty}.
+     */
     protected VirtualObject createObjectWithReference(Tenant tenant, String bucketName, String reference, String name) {
         VirtualObject result = new VirtualObject();
         result.getTenant().setValue(tenant);
@@ -232,7 +245,17 @@ public class Storage {
         return result;
     }
 
-    protected void deleteReferencedObjects(String reference, String excludedObjectKey) {
+    /**
+     * Deletes all automatically created objects except the given one.
+     * <p>
+     * Removes automatically created object ({@link #createObjectWithReference(Tenant, String, String, String)})
+     * if the reference is updated or the referencing entity is deleted.
+     *
+     * @param reference         the reference (field+id of the entity) being referenced
+     * @param excludedObjectKey if the reference is just changed, the new object is excluded, to just delete the old
+     *                          objects
+     */
+    protected void deleteReferencedObjects(String reference, @Nullable String excludedObjectKey) {
         if (Strings.isEmpty(reference)) {
             return;
         }
@@ -244,6 +267,15 @@ public class Storage {
         qry.delete();
     }
 
+    /**
+     * If an object is created using {@link #createObjectWithReference(Tenant, String, String, String)} it is marked
+     * as an temporary upload up until the referencing entity is saved.
+     * <p>
+     * The {@link StoredObjectRef} and its {@link StoredObjectRefProperty} will then invoke this method to make
+     * the object permanently stored.
+     *
+     * @param objectKey the object to mark as permanent
+     */
     protected void markAsUsed(String objectKey) {
         try {
             oma.getDatabase()

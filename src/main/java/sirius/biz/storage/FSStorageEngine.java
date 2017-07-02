@@ -42,12 +42,16 @@ public class FSStorageEngine implements PhysicalStorageEngine {
                 try {
                     root.mkdirs();
                 } catch (Exception e) {
-                    //TODO
-                    Exceptions.handle(e);
+                    Exceptions.handle(Storage.LOG, e);
                 }
             } else {
                 if (!root.isDirectory()) {
-                    //TODO
+                    Exceptions.handle()
+                              .to(Storage.LOG)
+                              .withSystemErrorMessage(
+                                      "The given base path '%s' for the object storage isn't a directory.",
+                                      baseDir)
+                              .handle();
                 }
             }
         }

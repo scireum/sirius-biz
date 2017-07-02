@@ -86,7 +86,10 @@ public class VirtualObject extends TenantAware implements StoredObject {
     private String fileExtension;
 
     /**
-     * Contains a reference to another entity, if this object belongs to one.
+     * Contains a reference to another entity, if this object was specifically created for a reference.
+     * <p>
+     * When an object is uploaded / created for a reference, the field name and object name is placed here. This makes
+     * the object invisible in the UI and also automatically deletes it if the referencing object is deleted.
      */
     public static final Column REFERENCE = Column.named("reference");
     @Length(255)
