@@ -14,6 +14,7 @@ import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.OMA;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.PropertyFactory;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -60,8 +61,8 @@ public class StoredObjectRefProperty extends Property {
     private static Storage storage;
 
     private StoredObjectRefProperty(@Nonnull EntityDescriptor descriptor,
-                                      @Nonnull AccessPath accessPath,
-                                      @Nonnull Field field) {
+                                    @Nonnull AccessPath accessPath,
+                                    @Nonnull Field field) {
         super(descriptor, accessPath, field);
     }
 
@@ -88,14 +89,14 @@ public class StoredObjectRefProperty extends Property {
     @SuppressWarnings("unchecked")
     @Override
     public Object transformValue(Value value) {
-        throw new UnsupportedOperationException(
-                "As we cannot safely determine the tenant, we cannot lookup a matching StoredObject");
+        return value.get();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected void setValueToField(Object value, Object target) {
         StoredObjectRef ref = getStoredObjectRef(target);
+        initializeReference((Entity) target, ref);
         if (value == null || value instanceof StoredObject) {
             ref.setObject((StoredObject) value);
         } else {
@@ -117,16 +118,27 @@ public class StoredObjectRefProperty extends Property {
     @Override
     protected void onAfterSave(Entity entity) {
         StoredObjectRef ref = getStoredObjectRef(entity);
-        if (ref.changed) {
-            String reference = field.getName() + ":" + entity.getUniqueName();
-            storage.deleteReferencedObjects(reference, ref.getKey());
-            storage.markAsUsed(ref.getKey());
+        initializeReference(entity, ref);
+        if (ref.changed && Strings.isFilled(ref.reference)) {
+            storage.deleteReferencedObjects(ref.reference, ref.getKey());
+            storage.markAsUsed(ref.reference, ref.getKey());
             ref.changed = false;
+        }
+    }
+
+    private void initializeReference(Entity entity, StoredObjectRef ref) {
+        if (entity.isNew()) {
+            ref.reference = null;
+        } else {
+            ref.reference = field.getName() + ":" + entity.getUniqueName();
         }
     }
 
     @Override
     protected void onAfterDelete(Entity entity) {
-        storage.deleteReferencedObjects(field.getName() + ":" + entity.getUniqueName(), null);
+        StoredObjectRef ref = getStoredObjectRef(entity);
+        if (Strings.isFilled(ref.reference)) {
+            storage.deleteReferencedObjects(ref.reference, null);
+        }
     }
 }

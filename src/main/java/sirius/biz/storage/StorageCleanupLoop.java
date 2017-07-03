@@ -26,7 +26,7 @@ import java.util.List;
  * A bucket can specify a max age for its objects. Older objects are automatically deleted by the system (vis this
  * loop).
  */
-@Register
+@Register(classes = BackgroundLoop.class)
 public class StorageCleanupLoop extends BackgroundLoop {
 
     @Part

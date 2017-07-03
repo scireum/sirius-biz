@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 @Register(classes = Controller.class)
 public class StorageController extends BizController {
 
+    public static final String NO_REFERENCE = "-";
     @Part
     private Storage storage;
 
@@ -267,10 +268,8 @@ public class StorageController extends BizController {
             if (bucket == null) {
                 handleAccessError(bucketName);
             }
-//            Hier auf reference - reagieren -> nur bucket upload...
             String name = ctx.get("filename").asString(ctx.get("qqfile").asString());
-            //TODO be smart here!!!
-            file = storage.createObjectWithReference(currentTenant(), bucketName, reference, name);
+            file = storage.createObjectWithReference(currentTenant(), bucketName, NO_REFERENCE.equals(reference) ? null : reference, name);
             try {
                 ctx.markAsLongCall();
                 storage.updateFile(file,
@@ -283,6 +282,7 @@ public class StorageController extends BizController {
             }
 
             out.property("fileId", file.getObjectKey());
+            out.property("url", file.prepareURL().buildURL());
         } catch (Exception e) {
             storage.delete(file);
             throw Exceptions.createHandled().error(e).handle();

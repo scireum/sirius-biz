@@ -186,7 +186,7 @@ public class UserAccount extends TenantAware implements Journaled {
 
     @Override
     public String toString() {
-        if (Strings.isFilled(getPerson().toString())) {
+        if (Strings.isFilled(getPerson().getFirstname()) || Strings.isFilled(getPerson().getLastname())) {
             return getPerson().toString();
         }
         if (Strings.isFilled(getLogin().getUsername())) {

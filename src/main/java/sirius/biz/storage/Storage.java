@@ -274,12 +274,15 @@ public class Storage {
      * The {@link StoredObjectRef} and its {@link StoredObjectRefProperty} will then invoke this method to make
      * the object permanently stored.
      *
+     * @param reference the reference to attach to the object if it was newly created
      * @param objectKey the object to mark as permanent
      */
-    protected void markAsUsed(String objectKey) {
+    protected void markAsUsed(String reference, String objectKey) {
         try {
             oma.getDatabase()
-               .createQuery("UPDATE virtualobject SET temporary = 0 WHERE objectKey=${objectKey}")
+               .createQuery(
+                       "UPDATE virtualobject SET reference=${reference}, temporary = 0 WHERE objectKey=${objectKey} AND temporary=1")
+               .set("reference", reference)
                .set("objectKey", objectKey)
                .executeUpdate();
         } catch (SQLException e) {
@@ -341,6 +344,7 @@ public class Storage {
                            long size) {
         VirtualObject object = (VirtualObject) file;
         String newPhysicalKey = keyGen.generateId();
+        String oldPhysicalKey = object.getPhysicalKey();
         try {
             PhysicalStorageEngine engine = getStorageEngine(object.getBucket());
             // Store new file
@@ -357,7 +361,7 @@ public class Storage {
             // Delete all (now outdated) versions
             oma.select(VirtualObjectVersion.class).eq(VirtualObjectVersion.VIRTUAL_OBJECT, object).delete();
             // Delete old file
-            engine.deletePhysicalObject(object.getBucket(), object.getPhysicalKey());
+            engine.deletePhysicalObject(object.getBucket(), oldPhysicalKey);
         } catch (IOException e) {
             throw Exceptions.handle().to(LOG).error(e).withNLSKey("Storage.uploadFailed").handle();
         }

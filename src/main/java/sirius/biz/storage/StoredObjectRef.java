@@ -28,6 +28,7 @@ public class StoredObjectRef {
     private StoredObject object;
     private String key;
     protected boolean changed;
+    protected String reference;
 
     @Part
     private static Storage storage;
@@ -176,5 +177,14 @@ public class StoredObjectRef {
      */
     public boolean isSupportsURL() {
         return supportsURL;
+    }
+
+    /**
+     * Returns the effective reference used for {@link VirtualObject#REFERENCE}.
+     *
+     * @return the reference to use or an empty string of the owning object has not been saved yet.
+     */
+    public String getReference() {
+        return reference;
     }
 }

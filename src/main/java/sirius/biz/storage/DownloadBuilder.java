@@ -36,8 +36,9 @@ public class DownloadBuilder {
 
     /**
      * Creates a new builder with a direct reference to the storage and the object key.
-     *  @param storage   the storage implementation
-     * @param bucket
+     *
+     * @param storage   the storage implementation
+     * @param bucket    the bucket in which the object is placed
      * @param objectKey the object key to download
      */
     protected DownloadBuilder(Storage storage, String bucket, String objectKey) {
