@@ -57,6 +57,7 @@ public class UserAccountController extends BizController {
     private static final String PARAM_NAME = "name";
     private static final String PARAM_USERNAME = "username";
     private static final String PARAM_URL = "url";
+    private static final String PARAM_ROOT = "root";
     private static final String PARAM_EMAIL = "email";
     private static final String PARAM_REASON = "reason";
 
@@ -252,7 +253,8 @@ public class UserAccountController extends BizController {
                                          .set(PARAM_PASSWORD, userAccount.getLogin().getGeneratedPassword())
                                          .set(PARAM_NAME, userAccount.getPerson().getAddressableName())
                                          .set(PARAM_USERNAME, userAccount.getLogin().getUsername())
-                                         .set(PARAM_URL, getBaseUrl()))
+                                         .set(PARAM_URL, getBaseUrl())
+                                         .set(PARAM_ROOT, wondergemRoot))
                  .to(userAccount.getEmail(), userAccount.getPerson().toString())
                  .send();
         }
@@ -268,8 +270,10 @@ public class UserAccountController extends BizController {
      */
     @Routed(value = "/forgotPassword", jsonCall = true)
     public void forgotPassword(final WebContext ctx, JSONStructuredOutput out) {
-        List<UserAccount> accounts =
-                oma.select(UserAccount.class).eq(UserAccount.EMAIL, ctx.get(PARAM_EMAIL).asString()).limit(2).queryList();
+        List<UserAccount> accounts = oma.select(UserAccount.class)
+                                        .eq(UserAccount.EMAIL, ctx.get(PARAM_EMAIL).asString())
+                                        .limit(2)
+                                        .queryList();
         if (accounts.isEmpty()) {
             throw Exceptions.createHandled().withNLSKey("UserAccountController.noUserFoundForEmail").handle();
         }
@@ -296,7 +300,8 @@ public class UserAccountController extends BizController {
                                          .set(PARAM_PASSWORD, account.getLogin().getGeneratedPassword())
                                          .set(PARAM_NAME, account.getPerson().getAddressableName())
                                          .set(PARAM_USERNAME, account.getLogin().getUsername())
-                                         .set(PARAM_URL, getBaseUrl()))
+                                         .set(PARAM_URL, getBaseUrl())
+                                         .set(PARAM_ROOT, wondergemRoot))
                  .to(account.getEmail(), account.getPerson().toString())
                  .send();
         }
@@ -390,14 +395,12 @@ public class UserAccountController extends BizController {
                             UserAccount.TENANT.join(Tenant.NAME),
                             UserAccount.TENANT.join(Tenant.ACCOUNT_NUMBER));
 
-        ctx.respondWith()
-           .template("view/tenants/select-user-account.html",
-                     ph.asPage(), isCurrentlySpying(ctx));
+        ctx.respondWith().template("view/tenants/select-user-account.html", ph.asPage(), isCurrentlySpying(ctx));
     }
 
     private boolean isCurrentlySpying(WebContext ctx) {
         return ctx.getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX)
-           .isFilled();
+                  .isFilled();
     }
 
     /**

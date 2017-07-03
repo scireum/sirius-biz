@@ -15,6 +15,7 @@ import sirius.db.mixing.Composite;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.Formatter;
 
@@ -76,6 +77,9 @@ public class PersonData extends Composite {
      * @return a short string (salutation, title and last name) used to address the person
      */
     public String getAddressableName() {
+        if (Strings.isEmpty(lastname)) {
+            return "";
+        }
         return Formatter.create("[${salutation} ][${title} ]${lastname}")
                         .set("salutation", getTranslatedSalutation())
                         .set("title", title)
