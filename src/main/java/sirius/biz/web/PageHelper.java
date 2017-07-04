@@ -247,7 +247,7 @@ public class PageHelper<E extends Entity> {
      * @param pageSize the number of items shown per page
      * @return the helper itself for fluent method calls
      */
-    public PageHelper<E> setPageSize(int pageSize) {
+    public PageHelper<E> withPageSize(int pageSize) {
         this.pageSize = pageSize;
         return this;
     }
