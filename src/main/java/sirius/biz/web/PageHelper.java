@@ -46,13 +46,13 @@ import java.util.function.Function;
  */
 public class PageHelper<E extends Entity> {
 
-    private static final int PAGE_SIZE = 50;
+    private static final int DEFAULT_PAGE_SIZE = 50;
     private WebContext ctx;
     private SmartQuery<E> baseQuery;
     private Column[] searchFields;
     private boolean advancedSearch;
     private List<Tuple<Facet, BiConsumer<Facet, SmartQuery<E>>>> facets = Lists.newArrayList();
-    private int pageSize = PAGE_SIZE;
+    private int pageSize = DEFAULT_PAGE_SIZE;
 
     @Part
     private static Tenants tenants;
