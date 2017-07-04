@@ -46,12 +46,13 @@ import java.util.function.Function;
  */
 public class PageHelper<E extends Entity> {
 
-    private static final int PAGE_SIZE = 50;
+    private static final int DEFAULT_PAGE_SIZE = 50;
     private WebContext ctx;
     private SmartQuery<E> baseQuery;
     private Column[] searchFields;
     private boolean advancedSearch;
     private List<Tuple<Facet, BiConsumer<Facet, SmartQuery<E>>>> facets = Lists.newArrayList();
+    private int pageSize = DEFAULT_PAGE_SIZE;
 
     @Part
     private static Tenants tenants;
@@ -241,6 +242,17 @@ public class PageHelper<E extends Entity> {
     }
 
     /**
+     * Specifies the number of items shown on the page that gets rendered using this pageHelper.
+     *
+     * @param pageSize the number of items shown per page
+     * @return the helper itself for fluent method calls
+     */
+    public PageHelper<E> withPageSize(int pageSize) {
+        this.pageSize = pageSize;
+        return this;
+    }
+
+    /**
      * Wraps the given data into a {@link Page} which can be used to render a table, filterbox and support pagination.
      *
      * @return the given data wrapped as <tt>Page</tt>
@@ -248,7 +260,7 @@ public class PageHelper<E extends Entity> {
     public Page<E> asPage() {
         Objects.requireNonNull(ctx);
         Watch w = Watch.start();
-        Page<E> result = new Page<E>().withStart(1).withPageSize(PAGE_SIZE);
+        Page<E> result = new Page<E>().withStart(1).withPageSize(pageSize);
         result.bindToRequest(ctx);
 
         if (advancedSearch) {
@@ -272,8 +284,8 @@ public class PageHelper<E extends Entity> {
         }
 
         try {
-            List<E> items = baseQuery.skip(result.getStart() - 1).limit(PAGE_SIZE + 1).queryList();
-            if (items.size() > PAGE_SIZE) {
+            List<E> items = baseQuery.skip(result.getStart() - 1).limit(pageSize + 1).queryList();
+            if (items.size() > pageSize) {
                 result.withHasMore(true);
                 items.remove(items.size() - 1);
             }
