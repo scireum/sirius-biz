@@ -9,8 +9,12 @@
         </a>
         <ul class="dropdown-menu">
             @includeExtensions("view-user-menu")
+            @if (user.getCurrentUser().hasPermission("permission-manage-files")) {
+                <li class="divider"></li>
+                <li><a href="/storage">@i18n("StorageController.buckets")</a></li>
+            }
             <li class="divider"></li>
-            <li><a href="@prefix/logout">@i18n("UserAccountController.logout")</a></li>
+            <li><a href="/logout">@i18n("UserAccountController.logout")</a></li>
         </ul>
     </li>
 }

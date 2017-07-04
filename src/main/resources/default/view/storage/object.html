@@ -1,0 +1,107 @@
+@args sirius.biz.storage.BucketInfo bucket, sirius.biz.storage.VirtualObject object, List versions
+@extends(view.wondergem.template.html, title: bucket.getName())
+
+@section(breadcrumbs) {
+    <li>
+        <a href="/storage">@i18n("StorageController.buckets")</a>
+    </li>
+    <li>
+        <a href="/storage/bucket/@bucket.getName()">@bucket.getName()</a>
+    </li>
+    <li>
+        <a href="/storage/object/@object.getObjectKey()">@object.getObjectKey()</a>
+    </li>
+}
+
+@pageHeader() {
+    @bucket.getName(): @object.getObjectKey()
+}
+
+<div class="row">
+    <div class="col-md-3">
+        @navbox() {
+            @if (object.isImage()) {
+                <li class="nav-header"></li>
+                <li>
+                    <span class="thumbnail">
+                        <img src="@object.prepareURL().buildURL()" style="max-height: 150px" />
+                    </span>
+                </li>
+            }
+            <li class="nav-header">@i18n("VirtualObject.fileSize")</li>
+            <li>
+                @NLS.formatSize(object.getFileSize())
+            </li>
+            <li class="nav-header">@i18n("VirtualObject.physicalKey")</li>
+            <li>
+                @object.getPhysicalKey()
+            </li>
+            <li class="nav-header"></li>
+            <li>
+                <a href="@object.prepareURL().asDownload(object.getFilename()).buildURL()" class="link">
+                    @i18n("VirtualObject.download")
+                </a>
+            </li>
+            @if (bucket.isCanEdit()) {
+                <li>
+                    <a href="storage/rename/@object.getObjectKey()" class="link">
+                        @i18n("VirtualObject.rename")
+                    </a>
+                </li>
+                @if (Strings.isFilled(object.getReference())) {
+                    <li>
+                        <a href="storage/unreference/@object.getObjectKey()" class="link">
+                            @i18n("VirtualObject.unreference")
+                        </a>
+                    </li>
+                }
+            }
+        }
+
+        @subHeading("VirtualObject.replaceContents")
+        @fileUpload(uploadUrl: ("/storage/replace/" + object.getObjectKey()))
+
+        <a href="/storage/bucket/@bucket.getName()" class="btn btn-block">@i18n("NLS.back")</a>
+    </div>
+    <div class="col-md-9">
+        @subHeading("VirtualObject.versions")
+        @table(versions) {
+            <thead>
+                <tr>
+                    <th>
+                        @i18n("Model.name")<br>
+                        <small class="muted">@i18n("Model.id")</small>
+                    </th>
+                    <th class="align-right">
+                        @i18n("TraceData.created")<br>
+                        <small class="muted">@i18n("VirtualObject.fileSize")</small>
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @for(sirius.biz.storage.VirtualObjectVersion version : versions) {
+                <tr>
+                    <td>
+                        @if (Strings.isFilled(version.getPhysicalKey())) {
+                            <a class="link" href="@object.prepareURL().withVersion(version.getVersionKey()).buildURL()">@version.getVersionKey()</a><br>
+                        } else {
+                            @version.getVersionKey()<br>
+                        }
+                        <small class="muted">@version.getPhysicalKey()</small>
+                    </td>
+                    <td class="align-right">
+                        @NLS.toUserString(version.getCreatedDate())
+                        @if (Strings.isFilled(version.getPhysicalKey())) {
+                            <br><small class="muted">@NLS.formatSize(version.getFileSize())</small>
+                        }
+                    </td>
+                    <td class="col-md-2 align-center">
+                        @deleteLink(("storage/delete-version/" + object.getObjectKey() + "/" + version.getId()))
+                    </td>
+                </tr>
+            }
+            </tbody>
+        }
+    </div>
+</div>

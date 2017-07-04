@@ -1,0 +1,74 @@
+@*
+*  Made with all the love in the world
+*  by scireum in Remshalden, Germany
+*
+*  Copyright by scireum GmbH
+*  http://www.scireum.de - info@scireum.de
+*@
+@args sirius.biz.storage.StoredObjectRef objectRef, String span, String name, String labelKey, String helpKey, boolean optional, boolean strict, boolean forceFullWidth
+
+
+@{
+    String localId = String.valueOf(call.generateLocalId());
+}
+
+<div class="col-md-@(span == null || span == "" ? 6 : span)  form-group">
+    @if (Strings.isFilled(labelKey)) {
+        <label>@i18n(labelKey)</label>
+    }
+
+    <select name="@name" class="form-control @user.signalFieldError(name)" id="select-@localId"
+        @if (strict) {
+            data-strict="true"
+        }
+        @if (optional) {
+            data-optional="true"
+        }
+        @if (forceFullWidth) {
+            style="width: 100%;"
+        }
+
+        @if (objectRef != null) {
+            data-autocomplete="storage/autocomplete/@objectRef.getBucket()">
+        }
+        @if (objectRef != null && objectRef.isFilled()) {
+            @if (objectRef.isURL()) {
+                <option value="@objectRef.getKey()">@objectRef.getKey()</option>
+            } else {
+                <option value="@objectRef.getKey()">@objectRef.getObject()</option>
+            }
+        }
+    </select>
+    <input type="file" id="upload-@localId" style="display:none;" />
+
+    @if (Strings.isFilled(helpKey)) {
+        <span class="help-block">@i18n(helpKey)</span>
+    }
+    <a onclick="$('#upload-@localId').click()" class="link pointer" style="cursor: pointer">@i18n("StorageController.uploadFile")</a>
+</div>
+
+<script type="text/javascript">
+    $(function() {
+        $('#upload-@localId').on('change', function(event) {
+              if (event.target.files && event.target.files.length > 0) {
+                  var formData = new FormData();
+                  var file = event.target.files[0];
+                  formData.append('file', file, file.name);
+                  var xhr = new XMLHttpRequest();
+                  @if (Strings.isFilled(objectRef.getReference())) {
+                    xhr.open('POST', '/storage/upload-reference/@objectRef.getBucket()/@objectRef.getReference()?filename=' + encodeURIComponent(file.name), true);
+                  } else {
+                    xhr.open('POST', '/storage/upload-reference/@objectRef.getBucket()/-?filename=' + encodeURIComponent(file.name), true);
+                  }
+                  xhr.onload = function () {
+                      if (xhr.status === 200) {
+                          var jsonResponse = JSON.parse(xhr.responseText);
+                          var newState = new Option(file.name, jsonResponse.fileId, true, true);
+                          $('#select-@localId').append(newState).trigger('change');
+                      }
+                  };
+                  xhr.send(file);
+              }
+        });
+    });
+</script>

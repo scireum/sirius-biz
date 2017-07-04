@@ -30,6 +30,8 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.mails.Mails;
 
+import java.util.Optional;
+
 /**
  * Represents a user account which can log into the system.
  * <p>
@@ -81,13 +83,20 @@ public class UserAccount extends TenantAware implements Journaled {
 
     @BeforeSave
     protected void verifyData() {
-        if (Strings.isFilled(email) && !ms.isValidMailAddress(email.trim(), null)) {
-            throw Exceptions.createHandled().withNLSKey("Model.invalidEmail").set("value", email).handle();
+        if (Strings.isFilled(email)) {
+            if (ms.isValidMailAddress(email.trim(), null)) {
+                email = email.toLowerCase();
+            } else {
+                throw Exceptions.createHandled().withNLSKey("Model.invalidEmail").set("value", email).handle();
+            }
         }
+
         if (Strings.isEmpty(getLogin().getUsername())) {
             getLogin().setUsername(getEmail());
         }
-        if (Strings.isEmpty(getLogin().getUsername())) {
+        if (Strings.isFilled(getLogin().getUsername())) {
+            getLogin().setUsername(getLogin().getUsername().toLowerCase());
+        } else {
             throw Exceptions.createHandled()
                             .withNLSKey("Property.fieldNotNullable")
                             .set("field", NLS.get("LoginData.username"))
@@ -126,6 +135,30 @@ public class UserAccount extends TenantAware implements Journaled {
         return Sirius.getSettings().getInt("security.passwordSaneLength");
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <A> Optional<A> tryAs(Class<A> adapterType) {
+        // The TenantUserManager redirects all calls for "Transformable" from "UserInfo" to its manager object.
+        // As the Tenant is requested often, we provide a shortcut for "user.as(UserAccount.class).getTenant().getValue()"
+        // in the form of "user.as(Tenant.class)"
+        if (Tenant.class == adapterType) {
+            return Optional.ofNullable((A) getTenant().getValue());
+        }
+        return super.tryAs(adapterType);
+    }
+
+    @Override
+    public boolean is(Class<?> type) {
+        // The TenantUserManager redirects all calls for "Transformable" from "UserInfo" to its manager object.
+        // As the Tenant is requested often, we provide a shortcut for "user.as(UserAccount.class).getTenant().getValue()"
+        // in the form of "user.as(Tenant.class)"
+        if (Tenant.class == type) {
+            return true;
+        }
+
+        return super.is(type);
+    }
+
     public PersonData getPerson() {
         return person;
     }
@@ -153,7 +186,7 @@ public class UserAccount extends TenantAware implements Journaled {
 
     @Override
     public String toString() {
-        if (Strings.isFilled(getPerson().toString())) {
+        if (Strings.isFilled(getPerson().getFirstname()) || Strings.isFilled(getPerson().getLastname())) {
             return getPerson().toString();
         }
         if (Strings.isFilled(getLogin().getUsername())) {

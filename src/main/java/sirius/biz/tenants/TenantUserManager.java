@@ -266,7 +266,7 @@ public class TenantUserManager extends GenericUserManager {
         }
 
         Optional<UserAccount> optionalAccount =
-                oma.select(UserAccount.class).eq(UserAccount.LOGIN.inner(LoginData.USERNAME), user).one();
+                oma.select(UserAccount.class).eq(UserAccount.LOGIN.inner(LoginData.USERNAME), user.toLowerCase()).one();
 
         if (!optionalAccount.isPresent()) {
             optionalAccount = createSystemTenantIfNonExistent();
