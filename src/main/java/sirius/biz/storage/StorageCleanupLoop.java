@@ -48,8 +48,10 @@ public class StorageCleanupLoop extends BackgroundLoop {
 
     @Override
     protected void doWork() throws Exception {
-        cleanupTemporaryUploads();
-        cleanupBuckets();
+        if (oma.isReady()) {
+            cleanupTemporaryUploads();
+            cleanupBuckets();
+        }
     }
 
     /**
