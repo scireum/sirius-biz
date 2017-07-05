@@ -117,7 +117,7 @@ public class VirtualObject extends TenantAware implements StoredObject {
 
     @BeforeSave
     protected void ensureUniquenessOfPath() {
-        if (Strings.isEmpty(reference)) {
+        if (Strings.isEmpty(reference) && !temporary) {
             assertUnique(PATH, getPath(), TENANT, BUCKET);
         }
     }
