@@ -269,7 +269,7 @@ public class StorageController extends BizController {
                 handleAccessError(bucketName);
             }
             String name = ctx.get("filename").asString(ctx.get("qqfile").asString());
-            file = storage.createObjectWithReference(currentTenant(), bucketName, NO_REFERENCE.equals(reference) ? null : reference, name);
+            file = storage.createTemporaryObject(currentTenant(), bucketName, NO_REFERENCE.equals(reference) ? null : reference, name);
             try {
                 ctx.markAsLongCall();
                 storage.updateFile(file,

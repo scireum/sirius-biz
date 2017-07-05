@@ -221,25 +221,28 @@ public class Storage {
     }
 
     /**
-     * Creates a new object which was specifically created for a referenced entity.
+     * Creates a new temporary object to be used in a {@link StoredObjectRef}.
      * <p>
      * Such objects will be invisible to the user and also be automatically deleted if the referencing entity is
-     * deleted.
+     * deleted. It is made permanent as soon as the referencing entity is saved.
      *
      * @param tenant     the tenant owning the object
      * @param bucketName the bucket in which the object is placed
      * @param reference  the reference for which the object was created
-     * @param name       the name or path of the object to be created
+     * @param path       the path of the object to be created
      * @return the newly created object which has {@link VirtualObject#TEMPORARY} set to <tt>true</tt>. Therefore the
      * referencing entity must be saved to set this flag to <tt>false</tt> via {@link StoredObjectRefProperty}.
      */
-    protected VirtualObject createObjectWithReference(Tenant tenant, String bucketName, String reference, String name) {
+    public StoredObject createTemporaryObject(Tenant tenant,
+                                              String bucketName,
+                                              @Nullable String reference,
+                                              @Nullable String path) {
         VirtualObject result = new VirtualObject();
         result.getTenant().setValue(tenant);
         result.setBucket(bucketName);
         result.setReference(reference);
         result.setTemporary(true);
-        result.setPath(normalizePath(name));
+        result.setPath(normalizePath(path));
 
         oma.update(result);
         return result;
@@ -248,7 +251,7 @@ public class Storage {
     /**
      * Deletes all automatically created objects except the given one.
      * <p>
-     * Removes automatically created object ({@link #createObjectWithReference(Tenant, String, String, String)})
+     * Removes automatically created object ({@link #createTemporaryObject(Tenant, String, String, String)})
      * if the reference is updated or the referencing entity is deleted.
      *
      * @param reference         the reference (field+id of the entity) being referenced
@@ -268,7 +271,7 @@ public class Storage {
     }
 
     /**
-     * If an object is created using {@link #createObjectWithReference(Tenant, String, String, String)} it is marked
+     * If an object is created using {@link #createTemporaryObject(Tenant, String, String, String)} it is marked
      * as an temporary upload up until the referencing entity is saved.
      * <p>
      * The {@link StoredObjectRef} and its {@link StoredObjectRefProperty} will then invoke this method to make
