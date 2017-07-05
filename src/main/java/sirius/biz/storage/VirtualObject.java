@@ -71,9 +71,12 @@ public class VirtualObject extends TenantAware implements StoredObject {
 
     /**
      * Contains the virtual path of the object.
+     * <p>
+     * The length is shorten than a UNIX path (255 chars) to permit proper indexing in the database (the max key length
+     * in MySQL is typically 767 bytes).
      */
     public static final Column PATH = Column.named("path");
-    @Length(512)
+    @Length(200)
     @NullAllowed
     private String path;
 
