@@ -73,7 +73,7 @@ public class VirtualObject extends TenantAware implements StoredObject {
      * Contains the virtual path of the object.
      */
     public static final Column PATH = Column.named("path");
-    @Length(512)
+    @Length(255)
     @NullAllowed
     private String path;
 
