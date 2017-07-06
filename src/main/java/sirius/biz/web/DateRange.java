@@ -16,6 +16,7 @@ import sirius.kernel.nls.NLS;
 import javax.annotation.Nullable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.WeekFields;
 import java.util.Locale;
 
@@ -29,6 +30,7 @@ public class DateRange {
     private final String name;
     private final LocalDateTime from;
     private final LocalDateTime until;
+    private boolean useLocalDate;
 
     /**
      * Creates a date range filtering on the last five minutes.
@@ -197,7 +199,7 @@ public class DateRange {
      * range
      *
      * @param key   the unique name of the ranged used as filter value
-     * @param name  the trnaslated name shown to the user
+     * @param name  the translated name shown to the user
      * @param from  the lower limit (including) of the range
      * @param until the upper limit (including) of the range
      */
@@ -208,16 +210,31 @@ public class DateRange {
         this.until = until;
     }
 
+    /**
+     * Can be used if the {@link DateRange} should be used on a database field of type {@link LocalDate} and not {@link
+     * LocalDateTime}.
+     *
+     * @return the DateRange object itself for fluent method calls
+     */
+    public DateRange useLocalDate() {
+        useLocalDate = true;
+        return this;
+    }
+
     protected String getKey() {
         return key;
     }
 
     protected void applyTo(String field, SmartQuery<?> qry) {
         if (from != null) {
-            qry.where(FieldOperator.on(Column.named(field)).greaterOrEqual(from));
+            qry.where(FieldOperator.on(Column.named(field)).greaterOrEqual(useLocalDate ? from.toLocalDate() : from));
         }
         if (until != null) {
-            qry.where(FieldOperator.on(Column.named(field)).lessOrEqual(until));
+            FieldOperator untilFilter = FieldOperator.on(Column.named(field));
+            untilFilter = useLocalDate ?
+                          untilFilter.lessThan(until.toLocalDate().plusDays(1)) :
+                          untilFilter.lessOrEqual(until);
+            qry.where(untilFilter);
         }
     }
 
