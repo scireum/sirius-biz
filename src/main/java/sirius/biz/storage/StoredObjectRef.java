@@ -83,7 +83,7 @@ public class StoredObjectRef {
             }
             this.key = null;
         } else {
-            if (Strings.isFilled(this.key) && !Strings.areEqual(this.key, object.getObjectKey())) {
+            if (!Strings.areEqual(this.key, object.getObjectKey())) {
                 this.changed = true;
             }
             this.key = object.getObjectKey();
