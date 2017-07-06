@@ -16,6 +16,7 @@ import sirius.kernel.nls.NLS;
 import javax.annotation.Nullable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.WeekFields;
 import java.util.Locale;
 
@@ -29,6 +30,8 @@ public class DateRange {
     private final String name;
     private final LocalDateTime from;
     private final LocalDateTime until;
+    private LocalDate fromWithoutTime;
+    private LocalDate untilWithoutTime;
 
     /**
      * Creates a date range filtering on the last five minutes.
@@ -197,7 +200,7 @@ public class DateRange {
      * range
      *
      * @param key   the unique name of the ranged used as filter value
-     * @param name  the trnaslated name shown to the user
+     * @param name  the translated name shown to the user
      * @param from  the lower limit (including) of the range
      * @param until the upper limit (including) of the range
      */
@@ -206,6 +209,45 @@ public class DateRange {
         this.name = name;
         this.from = from;
         this.until = until;
+        this.fromWithoutTime = null;
+        this.untilWithoutTime = null;
+    }
+
+    /**
+     * Creates a new DateRange with the given unique key, translated (shown) name and two dates specifying the
+     * range
+     *
+     * @param key   the unique name of the ranged used as filter value
+     * @param name  the translated name shown to the user
+     * @param from  the lower limit (including) of the range
+     * @param until the upper limit (exluding) of the range
+     */
+    public DateRange(String key, String name, @Nullable LocalDate from, @Nullable LocalDate until) {
+        this.key = key;
+        this.name = name;
+        this.from = null;
+        this.until = null;
+        this.fromWithoutTime = from;
+        this.untilWithoutTime = until;
+    }
+
+    /**
+     * Can be used if the {@link DateRange} should be used on a database field of type {@link LocalDate} and not {@link
+     * LocalDateTime}.
+     *
+     * @return the DateRange object itself for fluent method calls
+     */
+    public DateRange useLocalDate() {
+        if (fromWithoutTime == null && untilWithoutTime == null) {
+            initLocalDate();
+        }
+
+        return this;
+    }
+
+    private void initLocalDate() {
+        fromWithoutTime = LocalDate.from(from);
+        untilWithoutTime = LocalDate.from(until).plusDays(1);
     }
 
     protected String getKey() {
@@ -213,11 +255,20 @@ public class DateRange {
     }
 
     protected void applyTo(String field, SmartQuery<?> qry) {
-        if (from != null) {
-            qry.where(FieldOperator.on(Column.named(field)).greaterOrEqual(from));
-        }
-        if (until != null) {
-            qry.where(FieldOperator.on(Column.named(field)).lessOrEqual(until));
+        if (fromWithoutTime == null && untilWithoutTime == null) {
+            if (from != null) {
+                qry.where(FieldOperator.on(Column.named(field)).greaterOrEqual(from));
+            }
+            if (until != null) {
+                qry.where(FieldOperator.on(Column.named(field)).lessOrEqual(until));
+            }
+        } else {
+            if (fromWithoutTime != null) {
+                qry.where(FieldOperator.on(Column.named(field)).greaterOrEqual(fromWithoutTime));
+            }
+            if (untilWithoutTime != null) {
+                qry.where(FieldOperator.on(Column.named(field)).lessThan(untilWithoutTime));
+            }
         }
     }
 
