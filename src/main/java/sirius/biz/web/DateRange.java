@@ -30,8 +30,7 @@ public class DateRange {
     private final String name;
     private final LocalDateTime from;
     private final LocalDateTime until;
-    private LocalDate fromWithoutTime;
-    private LocalDate untilWithoutTime;
+    private boolean useLocalDate;
 
     /**
      * Creates a date range filtering on the last five minutes.
@@ -209,26 +208,6 @@ public class DateRange {
         this.name = name;
         this.from = from;
         this.until = until;
-        this.fromWithoutTime = null;
-        this.untilWithoutTime = null;
-    }
-
-    /**
-     * Creates a new DateRange with the given unique key, translated (shown) name and two dates specifying the
-     * range
-     *
-     * @param key   the unique name of the ranged used as filter value
-     * @param name  the translated name shown to the user
-     * @param from  the lower limit (including) of the range
-     * @param until the upper limit (exluding) of the range
-     */
-    public DateRange(String key, String name, @Nullable LocalDate from, @Nullable LocalDate until) {
-        this.key = key;
-        this.name = name;
-        this.from = null;
-        this.until = null;
-        this.fromWithoutTime = from;
-        this.untilWithoutTime = until;
     }
 
     /**
@@ -238,16 +217,8 @@ public class DateRange {
      * @return the DateRange object itself for fluent method calls
      */
     public DateRange useLocalDate() {
-        if (fromWithoutTime == null && untilWithoutTime == null) {
-            initLocalDate();
-        }
-
+        useLocalDate = true;
         return this;
-    }
-
-    private void initLocalDate() {
-        fromWithoutTime = LocalDate.from(from);
-        untilWithoutTime = LocalDate.from(until).plusDays(1);
     }
 
     protected String getKey() {
@@ -255,20 +226,15 @@ public class DateRange {
     }
 
     protected void applyTo(String field, SmartQuery<?> qry) {
-        if (fromWithoutTime == null && untilWithoutTime == null) {
-            if (from != null) {
-                qry.where(FieldOperator.on(Column.named(field)).greaterOrEqual(from));
-            }
-            if (until != null) {
-                qry.where(FieldOperator.on(Column.named(field)).lessOrEqual(until));
-            }
-        } else {
-            if (fromWithoutTime != null) {
-                qry.where(FieldOperator.on(Column.named(field)).greaterOrEqual(fromWithoutTime));
-            }
-            if (untilWithoutTime != null) {
-                qry.where(FieldOperator.on(Column.named(field)).lessThan(untilWithoutTime));
-            }
+        if (from != null) {
+            qry.where(FieldOperator.on(Column.named(field)).greaterOrEqual(useLocalDate ? from.toLocalDate() : from));
+        }
+        if (until != null) {
+            FieldOperator untilFilter = FieldOperator.on(Column.named(field));
+            untilFilter = useLocalDate ?
+                          untilFilter.lessThan(until.toLocalDate().plusDays(1)) :
+                          untilFilter.lessOrEqual(until);
+            qry.where(untilFilter);
         }
     }
 
