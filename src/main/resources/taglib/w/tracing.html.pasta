@@ -1,0 +1,41 @@
+<i:arg name="trace" type="sirius.biz.model.TraceData"/>
+<i:pragma name="description" value="Renders a trace button and the trace information for a TracedEntity"/>
+
+<i:if test="trace.getCreatedAt() != null">
+    <span data-toggle="collapse" data-target=".infobox" class="btn pull-right"><i class="fa fa-info"></i></span>
+
+    <div class="clearfix"></div>
+
+    <div class="infobox collapse">
+        <div class="well">
+            <span class="legend">@i18n("TraceData.infos")</span>
+
+            <i:render name="body"/>
+
+            <div class="row info-line">
+                <div class="col-md-4 name">
+                    @i18n("TraceData.created")
+                </div>
+                <div class="col-md-8 value">
+                    <div>@toUserString(trace.getCreatedAt())</div>
+                    <div>@trace.getCreatedBy()</div>
+                    <div class="muted">@trace.getCreatedIn()</div>
+                </div>
+            </div>
+
+            <div class="row info-line">
+                <div class="col-md-4 name">
+                    @i18n("TraceData.changed")
+                </div>
+                <div class="col-md-8 value">
+                    <div>@toUserString(trace.getChangedAt())</div>
+                    <div>@trace.getChangedBy()</div>
+                    <div class="muted">@trace.getChangedIn()</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</i:if>
+
+
