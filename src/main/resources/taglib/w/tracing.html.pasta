@@ -1,4 +1,5 @@
 <i:arg name="trace" type="sirius.biz.model.TraceData"/>
+<i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders a trace button and the trace information for a TracedEntity"/>
 
 <i:if test="trace.getCreatedAt() != null">
