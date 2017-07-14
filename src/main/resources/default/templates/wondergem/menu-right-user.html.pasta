@@ -1,0 +1,15 @@
+<i:local name="username" value="@user.getCurrentUser().getUserName()"/>
+<i:local name="tenantname"
+         value="@(isFilled(user.getCurrentUser().getTenantName()) ? apply(' (%s)', user.getCurrentUser().getTenantName()) : '')"/>
+
+
+<w:menuDropdown title="@(username + tenantname)" permission="flag-logged-in">
+    <i:extensions name="templates-user-menu"/>
+
+    <w:permission permission="permission-manage-files">
+        <w:menuItem titleKey="StorageController.buckets" url="/storage"/>
+    </w:permission>
+
+    <li class="divider"></li>
+    <w:menuItem titleKey="UserAccountController.logout" url="/logout"/>
+</w:menuDropdown>
