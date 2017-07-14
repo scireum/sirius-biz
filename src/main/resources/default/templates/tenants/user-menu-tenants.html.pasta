@@ -1,0 +1,11 @@
+<w:menuItem titleKey="Tenant.plural" url="/tenants" permission="permission-manage-tenants"/>
+<w:menuItem titleKey="UserAccount.plural" url="/user-accounts" permission="permission-manage-user-accounts"/>
+
+<li class="divider"></li>
+
+<w:menuItem titleKey="Tenant.select" url="/tenants/select" permission="permission-select-tenant"/>
+<w:menuItem titleKey="UserAccount.select" url="/user-accounts/select" permission="permission-select-user-account"/>
+
+<w:permission permission="permission-select-tenant,permission-select-user-account">
+    <li class="divider"></li>
+</w:permission>
