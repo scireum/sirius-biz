@@ -122,7 +122,7 @@ public class UserAccountController extends BizController {
 
         if (!requestHandled) {
             validate(userAccount);
-            ctx.respondWith().template("view/tenants/user-account-details.html", userAccount, this);
+            ctx.respondWith().template("/templates/tenants/user-account-details.html.pasta", userAccount);
         }
     }
 

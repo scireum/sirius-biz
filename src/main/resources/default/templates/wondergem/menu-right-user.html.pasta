@@ -1,15 +1,9 @@
-<i:local name="username" value="@user.getCurrentUser().getUserName()"/>
-<i:local name="tenantname"
-         value="@(isFilled(user.getCurrentUser().getTenantName()) ? apply(' (%s)', user.getCurrentUser().getTenantName()) : '')"/>
-
-
-<w:menuDropdown title="@(username + tenantname)" permission="flag-logged-in">
+<w:menuDropdown title="@format('${user}[ (${tenant})]').set('user', user.getCurrentUser().getUserName()).set('tenant', user.getCurrentUser().getTenantName()).smartFormat()" permission="flag-logged-in">
     <i:extensions name="templates-user-menu"/>
 
-    <w:permission permission="permission-manage-files">
-        <w:menuItem titleKey="StorageController.buckets" url="/storage"/>
-    </w:permission>
+    <w:menuItem titleKey="StorageController.buckets" url="/storage" permission="permission-manage-files" />
 
     <li class="divider"></li>
+
     <w:menuItem titleKey="UserAccountController.logout" url="/logout"/>
 </w:menuDropdown>
