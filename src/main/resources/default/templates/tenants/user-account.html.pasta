@@ -1,0 +1,51 @@
+<i:arg type="sirius.biz.tenants.UserAccount" name="account" />
+<i:arg type="String" name="page" />
+
+<w:page title="@account.toString()">
+    <i:block name="head">
+        <script src="/assets/wondergem/ace/ace.js" type="text/javascript"></script>
+    </i:block>
+
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/user-accounts">@i18n("UserAccount.plural")</a>
+        </li>
+        <li>
+            <a href="/user-account/@account.getId()">@account</a>
+        </li>
+
+        <i:render name="breadcrumbs" />
+    </i:block>
+
+    <w:pageHader titleKey="Model.userAccount" />
+    <div class="row">
+        <i:if test="!account.isNew()">
+            <div class="col-md-3">
+                <w:navbox>
+                    <li class="nav-header">@i18n("Model.details")</li>
+                    <li>
+                        <b>@account.getLogin().getUsername()</b>
+                    </li>
+                    <li>
+                        @account.getPerson()
+                    </li>
+                    <li>
+                        @account.getEmail()
+                    </li>
+                    <i:extensions name="template-user-account-sidebar-infos" account="account" page="page" />
+
+                    <li class="nav-header"></li>
+                    <w:navbox-link labelKey="Model.details" url="@apply('/user-account/%s', account.getId())" active="page == 'details'" icon="icon-users" />
+                    <w:navbox-link labelKey="Model.config" url="@apply('/user-account/%s/config', account.getId())" active="page == 'config'" icon="icon-users" />
+                    <i:extensions name="template-user-account-sidebar-menu" account="account" page="page" />
+                </w:navbox>
+
+                <a href="/user-accounts" class="btn btn-block">@i18n("NLS.back")</a>
+            </div>
+        </i:if>
+
+        <div class="@if (account.isNew()) { col-md-12 } else { col-md-9 }">
+            <i:render name="body" />
+        </div>
+    </div>
+</w:page>
