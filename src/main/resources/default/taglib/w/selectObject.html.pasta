@@ -1,20 +1,22 @@
 <i:arg name="name" type="String" />
-<i:arg name="objectRef" type="sirius.biz.storage.StoredObjectRef" default="" />
-<i:arg name="span" type="String" default="'6'" />
+<i:arg name="objectRef" type="sirius.biz.storage.StoredObjectRef" />
+<i:arg name="span" type="int" default="6" />
 <i:arg name="labelKey" type="String" default="" />
+<i:arg name="label" type="String" default="@i18n(labelKey)" />
 <i:arg name="helpKey" type="String" default="" />
+<i:arg name="help" type="String" default="@i18n(helpKey)" />
 <i:arg name="optional" type="boolean" default="false" />
 <i:arg name="strict" type="boolean" default="false" />
 <i:arg name="forceFullWidth" type="boolean" default="false" />
 
-<i:pragma name="inline" value="true"/>
-<i:pragma name="description" value="Renders a selection for a file in the storage and offers an upload"/>
+<i:pragma name="inline" value="true" />
+<i:pragma name="description" value="Renders a selection for a file in the storage and offers an upload" />
 
 <i:local name="localId" value="call.generateLocalId()" />
 
 <div class="col-md-@span form-group">
-    <i:if test="isFilled(labelKey)">
-        <label>@i18n(labelKey)</label>
+    <i:if test="isFilled(label)">
+        <label>@i18n(label)</label>
     </i:if>
 
     <select name="@name" class="form-control @user.signalFieldError(name)" id="select-@localId"
@@ -43,8 +45,8 @@
     </select>
     <input type="file" id="upload-@localId" style="display:none;" />
 
-    <i:if test="isFilled(helpKey)">
-        <span class="help-block">@i18n(helpKey)</span>
+    <i:if test="isFilled(help)">
+        <span class="help-block">@i18n(help)</span>
     </i:if>
 
     <a onclick="$('#upload-@localId').click()" class="link pointer" style="cursor: pointer">@i18n("StorageController.uploadFile")</a>
@@ -60,9 +62,9 @@
                 var xhr = new XMLHttpRequest();
             <i:if test="isFilled(objectRef.getReference())">
                     xhr.open('POST', '@apply("/storage/upload-reference/%s/%s/?filename=", objectRef.getBucket(), objectRef.getReference())' + encodeURIComponent(file.name), true);
-            <i:else>
-                xhr.open('POST', '@apply("/storage/upload-reference/%s/-?filename=", objectRef.getBucket())' + encodeURIComponent(file.name), true);
-            </i:else>
+                <i:else>
+                    xhr.open('POST', '@apply("/storage/upload-reference/%s/-?filename=", objectRef.getBucket())' + encodeURIComponent(file.name), true);
+                </i:else>
             </i:if>
 
                 xhr.onload = function () {
