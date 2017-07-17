@@ -60,13 +60,7 @@
                 var file = event.target.files[0];
                 formData.append('file', file, file.name);
                 var xhr = new XMLHttpRequest();
-            <i:if test="isFilled(objectRef.getReference())">
-                    xhr.open('POST', '@apply("/storage/upload-reference/%s/%s/?filename=", objectRef.getBucket(), objectRef.getReference())' + encodeURIComponent(file.name), true);
-                <i:else>
-                    xhr.open('POST', '@apply("/storage/upload-reference/%s/-?filename=", objectRef.getBucket())' + encodeURIComponent(file.name), true);
-                </i:else>
-            </i:if>
-
+                xhr.open('POST', '/storage/upload-reference/@objectRef.getBucket()/@(objectRef.getReference() | '-')/?filename=' + encodeURIComponent(file.name), true);
                 xhr.onload = function () {
                     if (xhr.status === 200) {
                         var jsonResponse = JSON.parse(xhr.responseText);
