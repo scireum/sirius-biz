@@ -7,6 +7,9 @@
 <i:arg name="strict" type="boolean" default="false" />
 <i:arg name="forceFullWidth" type="boolean" default="false" />
 
+<i:pragma name="inline" value="true"/>
+<i:pragma name="description" value="Renders a selection for a file in the storage and offers an upload"/>
+
 <i:local name="localId" value="call.generateLocalId()" />
 
 <div class="col-md-@span form-group">
