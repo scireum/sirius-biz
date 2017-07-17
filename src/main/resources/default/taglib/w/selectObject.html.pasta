@@ -1,0 +1,76 @@
+<i:arg name="name" type="String" />
+<i:arg name="objectRef" type="sirius.biz.storage.StoredObjectRef" default="" />
+<i:arg name="span" type="String" default="'6'" />
+<i:arg name="labelKey" type="String" default="" />
+<i:arg name="helpKey" type="String" default="" />
+<i:arg name="optional" type="boolean" default="false" />
+<i:arg name="strict" type="boolean" default="false" />
+<i:arg name="forceFullWidth" type="boolean" default="false" />
+
+<i:local name="localId" value="call.generateLocalId()" />
+
+<div class="col-md-@span form-group">
+    <i:if test="isFilled(labelKey)">
+        <label>@i18n(labelKey)</label>
+    </i:if>
+
+    <select name="@name" class="form-control @user.signalFieldError(name)" id="select-@localId"
+            @if (strict) {
+            data-strict="true"
+            }
+            @if (optional) {
+            data-optional="true"
+            }
+            @if (forceFullWidth) {
+            style="width: 100%;"
+            }
+
+            @if (objectRef != null) {
+            data-autocomplete="/storage/autocomplete/@objectRef.getBucket()"
+            }
+    >
+        <i:if test="objectRef != null && objectRef.isFilled()">
+            <i:if test="objectRef.isURL()">
+                <option value="@objectRef.getKey()">@objectRef.getKey()</option>
+                <i:else>
+                    <option value="@objectRef.getKey()">@objectRef.getObject()</option>
+                </i:else>
+            </i:if>
+        </i:if>
+    </select>
+    <input type="file" id="upload-@localId" style="display:none;" />
+
+    <i:if test="isFilled(helpKey)">
+        <span class="help-block">@i18n(helpKey)</span>
+    </i:if>
+
+    <a onclick="$('#upload-@localId').click()" class="link pointer" style="cursor: pointer">@i18n("StorageController.uploadFile")</a>
+</div>
+
+<script type="text/javascript">
+    $(function() {
+        $('#upload-@localId').on('change', function(event) {
+            if (event.target.files && event.target.files.length > 0) {
+                var formData = new FormData();
+                var file = event.target.files[0];
+                formData.append('file', file, file.name);
+                var xhr = new XMLHttpRequest();
+            <i:if test="isFilled(objectRef.getReference())">
+                    xhr.open('POST', '@apply("/storage/upload-reference/%s/%s/?filename=", objectRef.getBucket(), objectRef.getReference())' + encodeURIComponent(file.name), true);
+            <i:else>
+                xhr.open('POST', '@apply("/storage/upload-reference/%s/-?filename=", objectRef.getBucket())' + encodeURIComponent(file.name), true);
+            </i:else>
+            </i:if>
+
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        var jsonResponse = JSON.parse(xhr.responseText);
+                        var newState = new Option(file.name, jsonResponse.fileId, true, true);
+                        $('#select-@localId').append(newState).trigger('change');
+                    }
+                };
+                xhr.send(file);
+            }
+        });
+    });
+</script>
