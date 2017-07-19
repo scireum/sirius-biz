@@ -1,6 +1,9 @@
 <w:menuDropdown title="@format('${user}[ (${tenant})]').set('user', user.getCurrentUser().getUserName()).set('tenant', user.getCurrentUser().getTenantName()).smartFormat()" permission="flag-logged-in">
     <i:extensions name="templates-user-menu"/>
 
+    <w:permission permission="permission-manage-files">
+        <li class="divider"></li>
+    </w:permission>
     <w:menuItem titleKey="StorageController.buckets" url="/storage" permission="permission-manage-files" />
 
     <li class="divider"></li>

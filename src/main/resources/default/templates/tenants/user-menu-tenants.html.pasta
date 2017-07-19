@@ -1,5 +1,8 @@
 <w:menuItem titleKey="Tenant.plural" url="/tenants" permission="permission-manage-tenants"/>
 <w:menuItem titleKey="UserAccount.plural" url="/user-accounts" permission="permission-manage-user-accounts"/>
+<li class="divider"></li>
+<w:menuItem titleKey="ProfileController.myProfile" url="/profile" />
+<w:menuItem titleKey="Model.password.set" url="/profile/password" permission="permission-manage-user-accounts"/>
 
 <w:permission permission="permission-select-tenant,permission-select-user-account">
     <li class="divider"></li>

@@ -1,0 +1,51 @@
+<i:arg name="userAccount" type="sirius.biz.tenants.UserAccount"/>
+
+<w:page titleKey="ProfileController.myProfile">
+    <w:pageHeader titleKey="ProfileController.userProfile" />
+
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/profile">@i18n("ProfileController.myProfile")</a>
+        </li>
+    </i:block>
+
+    <w:editForm url="/profile">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="row">
+                    <w:textfield span="12"
+                                 name="email"
+                                 value="@userAccount.getEmail()"
+                                 labelKey="Model.email"
+                                 readonly="true"/>
+                </div>
+                <div class="row">
+                    <w:codelistSelect
+                            span="6"
+                            name="person_salutation"
+                            value="@userAccount.getPerson().getSalutation()"
+                            labelKey="PersonData.salutation"
+                            list="salutations"
+                            optional="true"/>
+                    <w:textfield span="6"
+                                 name="person_title"
+                                 value="@userAccount.getPerson().getTitle()"
+                                 labelKey="PersonData.title"/>
+                </div>
+                <div class="row">
+                    <w:textfield span="6"
+                                 name="person_firstname"
+                                 value="@userAccount.getPerson().getFirstname()"
+                                 labelKey="PersonData.firstname"/>
+                    <w:textfield span="6"
+                                 name="person_lastname"
+                                 value="@userAccount.getPerson().getLastname()"
+                                 labelKey="PersonData.lastname"/>
+                </div>
+            </div>
+        </div>
+
+    </w:editForm>
+
+    <w:formBar/>
+</w:page>
