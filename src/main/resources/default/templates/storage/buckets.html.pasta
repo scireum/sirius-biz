@@ -1,0 +1,38 @@
+<i:arg type="List" name="buckets"/>
+
+<w:page titleKey="StorageController.buckets">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/storage">@i18n("StorageController.buckets")</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader titleKey="StorageController.buckets"/>
+
+    <w:table data="buckets">
+        <thead>
+        <tr>
+            <th>
+                @i18n("Model.name")<br>
+                <small class="muted">@i18n("Model.description")</small>
+            </th>
+            <th class="align-right">
+                @i18n("BucketInfo.numberOfObjects")
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <i:for type="sirius.biz.storage.BucketInfo" var="bucket" items="buckets">
+            <tr>
+                <td>
+                    <a class="link" href="/storage/bucket/@bucket.getName()">@bucket.getName()</a><br>
+                    <small class="muted">@bucket.getDescription()</small>
+                </td>
+                <td class="align-right">
+                    @bucket.getNumberOfObjects()
+                </td>
+            </tr>
+        </i:for>
+        </tbody>
+    </w:table>
+</w:page>

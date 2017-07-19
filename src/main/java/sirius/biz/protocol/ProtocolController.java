@@ -57,6 +57,6 @@ public class ProtocolController extends BasicController {
                         DateRange.lastWeek());
         ph.withSearchFields(JournalEntry.CHANGES, JournalEntry.TARGET_NAME, JournalEntry.USERNAME);
 
-        ctx.respondWith().template("view/protocol/protocol.html", ph.asPage());
+        ctx.respondWith().template("templates/protocol/protocol.html.pasta", ph.asPage());
     }
 }

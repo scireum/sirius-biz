@@ -46,7 +46,7 @@ import java.util.function.Function;
  */
 public class PageHelper<E extends Entity> {
 
-    private static final int DEFAULT_PAGE_SIZE = 50;
+    private static final int DEFAULT_PAGE_SIZE = 25;
     private WebContext ctx;
     private SmartQuery<E> baseQuery;
     private Column[] searchFields;

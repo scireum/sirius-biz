@@ -1,0 +1,71 @@
+<i:arg type="Page" name="mails"/>
+
+<w:page titleKey="MailLogEntry.plural">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/system/mails">@i18n("MailLogEntry.plural")</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader titleKey="MailLogEntry.plural"/>
+
+    <div class="row">
+        <div class="col-md-3">
+            <w:filterbox page="mails" baseUrl="/system/mails"/>
+        </div>
+        <div class="col-md-9">
+            <w:tableSearchHeader page="mails" baseUrl="/system/mails"/>
+
+            <w:table data="mails">
+                <thead>
+                <tr>
+                    <th>
+                        <div class="row">
+                            <div class="col-md-3">@i18n("MailLogEntry.tod")</div>
+                            <div class="col-md-3">@i18n("MailLogEntry.sender")</div>
+                            <div class="col-md-3">@i18n("MailLogEntry.receiver")</div>
+                            <div class="col-md-3">
+                                @i18n("MailLogEntry.node")<br>
+                                @i18n("MailLogEntry.mailExtension")
+                            </div>
+                        </div>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <i:for type="sirius.biz.protocol.MailLogEntry" var="mail" items="mails.getItems()">
+                    <tr>
+                        <td>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <span class="badge label-state @if (mail.isSuccess()) { label-success } else { label-important }">
+                                        <i class="@if (mail.isSuccess()) { fa fa-check } else { fa fa-exclamation }"></i>
+                                    </span>
+                                    <strong>
+                                        <small><a href="/system/mail/@mail.getId()">@toUserString(mail.getTod())</a>
+                                        </small>
+                                    </strong>
+                                </div>
+                                <div class="col-md-3">@mail.getSender()</div>
+                                <div class="col-md-3">@mail.getReceiver()</div>
+                                <div class="col-md-3">
+                                    @mail.getNode()<br>
+                                    <small>@mail.getMailExtension()</small>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 error-code">
+                                    <pre class="plain">@mail.getSubject()</pre>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </i:for>
+                </tbody>
+            </w:table>
+
+            <w:pagination page="mails" baseUrl="system/mails"/>
+        </div>
+    </div>
+
+</w:page>

@@ -1,0 +1,72 @@
+<i:arg type="Page" name="errors"/>
+<i:arg type="int" name="total"/>
+
+<w:page titleKey="Incident.plural">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/system/errors">@i18n("Incident.plural")</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader titleKey="Incident.plural"/>
+
+    <div class="row">
+        <div class="col-md-3">
+            <w:filterbox page="errors" baseUrl="/system/errors"/>
+
+            <w:navbox labelKey="Incident.totalIncidents">
+                @total
+            </w:navbox>
+        </div>
+        <div class="col-md-9">
+            <w:tableSearchHeader page="errors" baseUrl="/system/errors"/>
+
+            <w:table data="errors">
+                <thead>
+                <tr>
+                    <th>
+                        <div class="row">
+                            <div class="col-md-4">@i18n("Incident.lastOccurrence")</div>
+                            <div class="col-md-4">@i18n("Incident.numberOfOccurrences")</div>
+                            <div class="col-md-4">@i18n("Incident.user")</div>
+                        </div>
+                        <div class="row">
+                            <div class="muted col-md-4">@i18n("Incident.firstOccurrence")</div>
+                            <div class="muted col-md-4">@i18n("Incident.category")</div>
+                            <div class="muted col-md-4">@i18n("Incident.node")</div>
+                        </div>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <i:for type="sirius.biz.protocol.Incident" var="i" items="errors.getItems()">
+                    <tr>
+                        <td>
+                            <div class="row">
+                                <div class="col-md-4"><a href="/system/error/@i.getId()">@toUserString(i.getLastOccurrence())</a>
+                                </div>
+                                <div class="col-md-4">@i.getNumberOfOccurrences()</div>
+                                <div class="col-md-4">@i.getUser()</div>
+                            </div>
+                            <div class="row">
+                                <div class="muted col-md-4">@toUserString(i.getFirstOccurrence())</div>
+                                <div class="muted col-md-4">@i.getCategory()</div>
+                                <div class="muted col-md-4">@i.getNode()</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 error-code">
+                                    <p/>
+                                    <pre class="plain">@i.getMessage()</pre>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </i:for>
+                </tbody>
+            </w:table>
+
+            <w:pagination page="errors" baseUrl="/system/errors"/>
+        </div>
+    </div>
+
+</w:page>

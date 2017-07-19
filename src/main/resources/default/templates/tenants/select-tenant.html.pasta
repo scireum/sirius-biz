@@ -1,0 +1,55 @@
+<i:arg type="Page" name="tenants"/>
+<i:arg type="boolean" name="isSpy"/>
+
+<w:page titleKey="Tenant.select">
+    <i:block name="render">
+        <li>
+            <a href="/tenants/select">@i18n("Tenant.select")</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader labelKey="Tenant.select"/>
+
+    <w:tableSearchHeader page="tenants" baseUrl="/tenants/select">
+        <i:if test="isSpy">
+            <a class="btn btn-primary" href="/tenants/select/main">@i18n("Tenant.selectMain")</a>
+        </i:if>
+    </w:tableSearchHeader>
+
+    <w:table data="tenants">
+        <thead>
+        <tr>
+            <th>
+                @i18n("Model.name")<br>
+                <small class="muted">@i18n("Model.id")</small>
+            </th>
+            <th>
+                @i18n("Tenant.accountNumber")
+            </th>
+            <th>
+                @i18n("AddressData.street")<br>
+                @i18n("AddressData.zip") @i18n("AddressData.city")
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants.getItems()">
+            <tr>
+                <td>
+                    <a class="link" href="/tenants/select/@tenant.getId()">@tenant.getName()</a><br>
+                    <small class="muted">@tenant.getId()</small>
+                </td>
+                <td>
+                    @tenant.getAccountNumber()
+                </td>
+                <td>
+                    @tenant.getAddress().getStreet()<br>
+                    @tenant.getAddress().getZip() @tenant.getAddress().getCity()
+                </td>
+            </tr>
+        </i:for>
+        </tbody>
+    </w:table>
+
+    <w:pagination page="tenants" baseUrl="/tenants/select" />
+</w:page>

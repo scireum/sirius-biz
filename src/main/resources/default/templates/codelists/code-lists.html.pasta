@@ -1,0 +1,54 @@
+<i:arg type="Page" name="lists"/>
+<w:page titleKey="CodeList.plural">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/code-lists">@i18n("CodeList.plural")</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader titleKey="CodeList.plural"/>
+
+    <w:tableSearchHeader page="lists" baseUrl="/code-lists">
+        <a class="btn btn-primary" href="/code-list/new">@i18n("Model.create")</a>
+    </w:tableSearchHeader>
+
+    <w:table data="lists">
+        <thead>
+        <tr>
+            <th>
+                @i18n("Model.code")<br>
+                <small class="muted">@i18n("Model.id")</small>
+            </th>
+            <th>
+                @i18n("Model.name")
+            </th>
+            <th>
+                @i18n("Model.description")
+            </th>
+            <th class="col-md-2"/>
+        </tr>
+        </thead>
+        <tbody>
+        <i:for type="sirius.biz.codelists.CodeList" var="list" items="lists.getItems()">
+            <tr>
+                <td>
+                    <a class="link" href="/code-list/@list.getId()">@list.getCode()</a><br>
+                    <small class="muted">@list.getId()</small>
+                </td>
+                <td>
+                    @list.getName()
+                </td>
+                <td>
+                    @list.getDescription()
+                </td>
+                <td class="col-md-2 align-center">
+                    <w:deleteLink url="@apply('/code-list/%s/delete?%s', list.getId(), lists.createQueryString())"/>
+                </td>
+            </tr>
+        </i:for>
+        </tbody>
+    </w:table>
+
+    <w:pagination page="lists" baseUrl="/code-lists" />
+
+</w:page>

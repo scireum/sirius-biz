@@ -1,0 +1,67 @@
+<i:arg type="sirius.biz.tenants.Tenant" name="tenant"/>
+<i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
+<i:arg type="List" name="tenants"/>
+
+<i:invoke template="/templates/tenants/tenant.html.pasta" tenant="tenant" page="details">
+    <w:editForm url="@apply('/tenant/%s',  tenant.getIdAsString())">
+        <div class="row">
+            <w:textfield span="12" name="name" value="@tenant.getName()" labelKey="Model.name" required="true"/>
+            <w:textfield span="12" name="accountNumber" value="@tenant.getAccountNumber()"
+                         labelKey="Tenant.accountNumber" required="true"/>
+        </div>
+        <w:heading labelKey="Model.address"/>
+        <div class="row">
+            <w:textfield span="12" name="address_street" value="@tenant.getAddress().getStreet()"
+                         labelKey="AddressData.street"/>
+        </div>
+        <div class="row">
+            <w:textfield span="2" name="address_zip" value="@tenant.getAddress().getZip()"
+                         labelKey="AddressData.zip"/>
+            <w:textfield name="address_city" value="@tenant.getAddress().getCity()" labelKey="AddressData.city"/>
+            <w:codelistSelect span="4" list="countries" name="address_country" value="@tenant.getAddress().getCountry()"
+                              labelKey="InternationalAddressData.country"/>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <w:heading labelKey="Tenant.administration"/>
+                <div class="row">
+
+                    <w:singleSelect span="12" name="parent" labelKey="Tenant.parent" helpKey="Tenant.parent.help">
+                        <option value="" @if(tenant.getParent().isEmpty()) {selected="selected" }></option>
+                        <i:for type="sirius.biz.tenants.Tenant" var="t" items="tenants">
+                            <option value="@t.getId()" @if(tenant.getParent().is(t)) {selected="selected" }>
+                                @t.getName()
+                            </option>
+                        </i:for>
+                    </w:singleSelect>
+                    <w:checkbox span="12" name="parentCanAccess" value="tenant.isParentCanAccess()"
+                                labelKey="Tenant.parentCanAccess" helpKey="Tenant.parentCanAccess.help"/>
+                    <w:checkbox span="12" name="canAccessParent" value="tenant.isCanAccessParent()"
+                                labelKey="Tenant.canAccessParent" helpKey="Tenant.canAccessParent.help"/>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <i:if test="!controller.getPermissions().isEmpty()">
+                    <w:heading labelKey="Tenant.permissions"/>
+                    <i:for type="String" var="permission" items="controller.getPermissions()">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" name="permissions" value="@permission"
+                                       @if (tenant.getPermissions().getPermissions().contains(permission)) {
+                                       checked="checked" }/>
+                                @controller.getPermissionName(permission)
+                                <span class="help-block checkbox-help">@controller.getPermissionDescription(permission)</span>
+                            </label>
+                        </div>
+                    </i:for>
+                </i:if>
+            </div>
+        </div>
+
+        <w:extensions name="template-tenant-details" tenant="tenant"/>
+    </w:editForm>
+
+    <w:formBar>
+        <w:tracing trace="tenant.getTrace()"/>
+    </w:formBar>
+</i:invoke>

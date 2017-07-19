@@ -1,0 +1,112 @@
+<i:arg type="sirius.biz.codelists.CodeList" name="codeList" />
+<i:arg type="Page" name="entries" />
+
+<i:invoke template="templates/codelists/code-list.html.pasta" codeList="codeList" page="entries" inline="true">
+    <w:tableSearchHeader page="entries" baseUrl="@apply('/codelist/%s', codeList.getId())">
+        <a class="btn btn-primary" href="#" onclick="createEntry()">@i18n("Model.create")</a>
+    </w:tableSearchHeader>
+
+    <w:table data="entries">
+        <thead>
+        <tr>
+            <th>
+                @i18n("Model.code")<br>
+                <small class="muted">@i18n("Model.priority")</small>
+            </th>
+            <th>
+                @i18n("CodeListEntry.value")<br>
+                <small class="muted">@i18n("CodeListEntry.additionalValue")</small>
+            </th>
+            <th>
+                @i18n("Model.description")
+            </th>
+            <th class="col-md-2" />
+        </tr>
+        </thead>
+        <tbody>
+        <i:for type="sirius.biz.codelists.CodeListEntry" var="entry" items="entries.getItems()">
+            <tr>
+                <td>
+                    <a href="#" onclick="editEntry('@entry.getCode()', '@entry.getValue()', '@entry.getAdditionalValue()', '@entry.getDescription()', @entry.getPriority())">@entry.getCode()</a><br>
+                    <small class="muted">@entry.getPriority()</small>
+                </td>
+                <td>
+                    @entry.getValue()<br />
+                    <small class="muted">@entry.getAdditionalValue()</small>
+                </td>
+                <td>
+                    @entry.getDescription()
+                </td>
+                <td class="col-md-2 align-center">
+                    <w:deleteLink url="@apply('/code-list/%s/delete-entry/%s', codeList.getId(), entry.getId())" page="entries" />
+                </td>
+            </tr>
+        </i:for>
+        </tbody>
+    </w:table>
+
+    <w:pagination page="entries" baseUrl="@apply('/code-list/%s', codeList.getId())" />
+
+    <script type="text/javascript">
+
+        function field(name) {
+            return $('*[name='+name+']');
+        }
+
+        function createEntry() {
+            field('code').val('');
+            field('value').val('');
+            field('additionalValue').val('');
+            field('description').val('');
+            field('priority').val('');
+            $('#dlgMessageBox').hide();
+
+            $('#editEntry').modal('show');
+            $('#code').focus();
+        }
+
+        function editEntry(code, value, additionalValue, description, priority) {
+            field('code').val(code);
+            field('value').val(value);
+            field('additionalValue').val(additionalValue);
+            field('description').val(description);
+            field('priority').val(priority);
+            $('#dlgMessageBox').hide();
+
+            $('#editEntry').modal('show');
+            $('#code').focus();
+        }
+
+        function updateEntry() {
+            if (field('code').val() == '') {
+                $('#dlgMessageBox .alert').text('@i18n("CodeListController.codeMustBeFilled")');
+                $('#dlgMessageBox').show();
+            } else {
+                $('#entryForm').submit();
+            }
+        }
+
+    </script>
+
+    <w:modal name="editEntry" titleKey="Model.codeListEntry">
+        <w:modalBody>
+            <div id="dlgMessageBox" style="display: none">
+                <div class="alert alert-danger"></div>
+            </div>
+
+            <form id="entryForm" action="/code-list/@codeList.getId()/entry" method="post">
+                <fieldset>
+                    <w:textfield name="code" value="" labelKey="Model.code" required="true" />
+                    <w:textfield name="priority" value="" labelKey="Model.priority" />
+                    <w:textfield span="12" name="value" value="" labelKey="CodeListEntry.value" />
+                    <w:textfield span="12" name="additionalValue" value="" labelKey="CodeListEntry.additionalValue" />
+                    <w:textarea span="12" rows="5" name="description" value="" labelKey="Model.description" />
+                </fieldset>
+            </form>
+        </w:modalBody>
+        <w:modalFooter cancelKey="NLS.cancel">
+            <a onclick="updateEntry()" class="btn btn-primary"><i class="icon-ok"></i> @i18n("NLS.save")</a>
+        </w:modalFooter>
+    </w:modal>
+</i:invoke>
+

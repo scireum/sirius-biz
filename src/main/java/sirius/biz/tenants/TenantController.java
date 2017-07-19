@@ -100,7 +100,7 @@ public class TenantController extends BizController {
                             Tenant.ADDRESS.inner(AddressData.STREET),
                             Tenant.ADDRESS.inner(AddressData.CITY));
 
-        ctx.respondWith().template("view/tenants/tenants.html", ph.asPage());
+        ctx.respondWith().template("templates/tenants/tenants.html.pasta", ph.asPage());
     }
 
     /**
@@ -133,7 +133,7 @@ public class TenantController extends BizController {
         if (!requestHandled) {
             validate(tenant);
             ctx.respondWith()
-               .template("view/tenants/tenant-details.html",
+               .template("templates/tenants/tenant-details.html.pasta",
                          tenant,
                          this,
                          oma.select(Tenant.class)
@@ -185,7 +185,7 @@ public class TenantController extends BizController {
     public void tenantConfig(WebContext ctx, String tenantId) {
         Tenant tenant = find(Tenant.class, tenantId);
         assertNotNew(tenant);
-        ctx.respondWith().template("view/tenants/tenant-config.html", tenant);
+        ctx.respondWith().template("templates/tenants/tenant-config.html.pasta", tenant);
     }
 
     /**
@@ -226,7 +226,7 @@ public class TenantController extends BizController {
                             Tenant.ADDRESS.inner(AddressData.STREET),
                             Tenant.ADDRESS.inner(AddressData.CITY));
 
-        ctx.respondWith().template("view/tenants/select-tenant.html", ph.asPage(), isCurrentlySpying(ctx));
+        ctx.respondWith().template("templates/tenants/select-tenant.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
     }
 
     private boolean isCurrentlySpying(WebContext ctx) {

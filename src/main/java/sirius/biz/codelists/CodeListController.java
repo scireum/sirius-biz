@@ -46,7 +46,7 @@ public class CodeListController extends BizController {
         PageHelper<CodeList> ph = PageHelper.withQuery(oma.select(CodeList.class).orderAsc(CodeList.CODE));
         ph.withContext(ctx);
         ph.withSearchFields(CodeList.CODE, CodeList.NAME, CodeList.DESCRIPTION);
-        ctx.respondWith().template("view/codelists/code-lists.html", ph.asPage());
+        ctx.respondWith().template("templates/codelists/code-lists.html.pasta", ph.asPage());
     }
 
     /**
@@ -84,7 +84,7 @@ public class CodeListController extends BizController {
             boolean requestHandled =
                     prepareSave(ctx).withAfterCreateURI("/code-list/${id}/details").saveEntity(cl);
             if (!requestHandled) {
-                ctx.respondWith().template("view/codelists/code-list-details.html", cl);
+                ctx.respondWith().template("templates/codelists/code-list-details.html.pasta", cl);
             }
         } else {
             renderCodeList(ctx, cl);
@@ -100,7 +100,7 @@ public class CodeListController extends BizController {
                             CodeListEntry.VALUE,
                             CodeListEntry.ADDITIONAL_VALUE,
                             CodeListEntry.DESCRIPTION);
-        ctx.respondWith().template("view/codelists/code-list-entries.html", cl, ph.asPage());
+        ctx.respondWith().template("templates/codelists/code-list-entries.html.pasta", cl, ph.asPage());
     }
 
     /**

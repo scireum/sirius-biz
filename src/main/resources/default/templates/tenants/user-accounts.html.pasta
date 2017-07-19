@@ -1,0 +1,79 @@
+<i:arg type="Page" name="accounts"/>
+
+<w:page titleKey="UserAccount.plural">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/user-accounts">@i18n("UserAccount.plural")</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader titleKey="UserAccount.plural"/>
+
+    <w:tableSearchHeader page="accounts" baseUrl="/user-accounts">
+        <a class="btn btn-primary" href="/user-account/new">@i18n("Model.create")</a>
+    </w:tableSearchHeader>
+
+    <w:table data="accounts">
+        <thead>
+        <tr>
+            <th>
+                @i18n("LoginData.username")<br>
+                <span class="muted">@i18n("Model.id")</span>
+            </th>
+            <th>
+                @i18n("Model.name")
+            </th>
+            <th>
+                @i18n("Model.email")
+            </th>
+            <th>
+                @i18n("LoginData.password")<br>
+                <span class="muted">@i18n("LoginData.generatedPassword")</span>
+            </th>
+            <th class="align-right">
+                @i18n("LoginData.lastLogin")<br>
+                <span class="muted">@i18n("LoginData.numberOfLogins")</span>
+            </th>
+            <th/>
+        </tr>
+        </thead>
+        <tbody>
+        <i:for type="sirius.biz.tenants.UserAccount" var="account" items="accounts.getItems()">
+            <tr @if (account.getLogin().isAccountLocked()) { class="warning" }>
+                <td>
+                    <a class="link"
+                       href="/user-account/@account.getId()">@account.getLogin().getUsername()</a><br>
+                    <span class="muted">@account.getId()</span>
+                </td>
+                <td>
+                    @account.getPerson()
+                </td>
+                <td>
+                    @account.getEmail()
+                </td>
+                <td>
+                    <a href="/user-account/@account.getId()/password" class="link">
+                        <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.set")
+                    </a><br>
+                    <a href="/user-account/@account.getId()/generate-password?@accounts.createQueryString()"
+                       class="link">
+                        <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generate")
+                    </a>
+                    <i:if test="isFilled(account.getLogin().getGeneratedPassword())">
+                        <br><span class="muted">@account.getLogin().getGeneratedPassword()</span>
+                    </i:if>
+                </td>
+                <td class="align-right">
+                    @toUserString(account.getLogin().getLastLogin())<br>
+                    <span class="muted">@account.getLogin().getNumberOfLogins()</span>
+                </td>
+                <td class="col-md-2 align-center">
+                    <w:deleteLink url="@apply('/user-account/%s/delete', account.getId())" page="accounts"/>
+                </td>
+            </tr>
+        </i:for>
+        </tbody>
+    </w:table>
+
+    <w:pagination page="accounts" baseUrl="/user-accounts"/>
+</w:page>

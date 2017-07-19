@@ -1,0 +1,45 @@
+<i:arg type="Page" name="jobs"/>
+
+<w:page titleKey="JobsController.jobs">
+
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/jobs">@i18n("JobsController.jobs")</a>
+        </li>
+    </i:block>
+
+    <w:pageHader titleKey="JobsController.jobs" />
+    <w:tableSearchHeader page="jobs" baseUrl="/jobs">
+
+    </w:tableSearchHeader>
+
+    <w:table data="jobs">
+        <thead>
+        <tr>
+            <th>
+                @i18n("JobDescription.title")
+            </th>
+            <th />
+        </tr>
+        </thead>
+        <tbody>
+        <i:for type="sirius.biz.jobs.JobDescription" var="job" items="jobs.getItems()">
+            <tr>
+                <td>
+                    <a class="link" href="/job/@job.getFactory()/@job.getName()/run">@job.getTitle()</a><br>
+                    <small class="muted">@job.getDescription()</small>
+                </td>
+                <td class="col-md-2 align-center">
+                    <i:if test="job.isEditable()">
+                        <a class="link" href="/job/@job.getFactory()/@job.getName()/edit">@i18n("NLS.edit")</a><br>
+                    </i:if>
+                    <a class="link" href="/job/@job.getFactory()/@job.getName()/logs">@i18n("JobsController.logs")</a>
+                    <i:if test="job.isEditable()">
+                        <br><w:deleteLink url="@apply('/job/%s/%s/delete', job.getFactory(), job.getName())" page="jobs" />
+                    </i:if>
+                </td>
+            </tr>
+        </i:for>
+        </tbody>
+    </w:table>
+</w:page>

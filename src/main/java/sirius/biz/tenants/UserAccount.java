@@ -186,7 +186,7 @@ public class UserAccount extends TenantAware implements Journaled {
 
     @Override
     public String toString() {
-        if (Strings.isFilled(getPerson().getFirstname()) || Strings.isFilled(getPerson().getLastname())) {
+        if (hasName()) {
             return getPerson().toString();
         }
         if (Strings.isFilled(getLogin().getUsername())) {
@@ -194,5 +194,14 @@ public class UserAccount extends TenantAware implements Journaled {
         }
 
         return NLS.get("Model.userAccount");
+    }
+
+    /**
+     * Determines if the user has a real name.
+     *
+     * @return <tt>true</tt> if a real name was provided, <tt>false</tt> otherwise
+     */
+    public boolean hasName() {
+        return Strings.isFilled(getPerson().getLastname());
     }
 }

@@ -41,7 +41,7 @@ public class SchemaController extends BasicController {
     @DefaultRoute
     @Routed("/system/schema")
     public void changes(WebContext ctx) {
-        ctx.respondWith().template("view/model/schema.html");
+        ctx.respondWith().template("templates/model/schema.html.pasta");
     }
 
     /**

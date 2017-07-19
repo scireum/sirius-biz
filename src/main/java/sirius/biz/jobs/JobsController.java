@@ -41,7 +41,7 @@ public class JobsController extends BizController {
         Page<JobDescription> page = new Page<>();
         page.bindToRequest(ctx);
         page.withItems(jobs.findJobs(page.getQuery()));
-        ctx.respondWith().template("view/jobs/jobs.html", page);
+        ctx.respondWith().template("templates/jobs/jobs.html.pasta", page);
     }
 
     @Routed("/job/:1/:2/run")
@@ -69,7 +69,7 @@ public class JobsController extends BizController {
                 UserContext.handle(e);
             }
         }
-        ctx.respondWith().template("view/jobs/job.html", job);
+        ctx.respondWith().template("templates/jobs/job.html.pasta", job);
     }
 
     @Routed("/job/:1/:2/logs")
@@ -84,7 +84,7 @@ public class JobsController extends BizController {
         PageHelper<JobProtocol> ph = PageHelper.withQuery(baseQuery);
         ph.withContext(ctx);
         ph.withSearchFields(JobProtocol.JOB_TITLE, JobProtocol.USER_NAME);
-        ctx.respondWith().template("view/jobs/protocols.html", ph);
+        ctx.respondWith().template("templates/jobs/protocols.html.pasta", ph);
     }
 
     public boolean loadParameters(WebContext ctx, List<JobParameterDescription> params, Context context) {

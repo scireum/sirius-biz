@@ -1,0 +1,60 @@
+<i:arg type="sirius.biz.protocol.Incident" name="incident" />
+
+<w:page title="@apply('%s (%s)', i18n('Model.incident'), incident.getCategory())">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/system/errors">@i18n("Incident.plural")</a>
+        </li>
+        <li>
+            <a href="/system/error/@incident.getId()">@i18n("Model.incident"): @incident.getCategory()</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader>
+        @i18n("Model.incident") (@incident.getCategory())
+    </w:pageHeader>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="well">
+                <pre class="plain">@incident.getMessage()</pre>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <w:textfield name="" labelKey="Incident.lastOccurrence" value="@toUserString(incident.getLastOccurrence())" readonly="true" />
+        <w:textfield name="" labelKey="Incident.numberOfOccurrences" value="@toUserString(incident.getNumberOfOccurrences())" readonly="true" />
+    </div>
+    <div class="row">
+        <w:textfield name="" labelKey="Incident.firstOccurrence" value="@toUserString(incident.getFirstOccurrence())" readonly="true" />
+        <w:textfield name="" labelKey="Incident.user" value="@incident.getUser()" readonly="true" />
+    </div>
+    <div class="row">
+        <w:textfield name="" labelKey="Incident.category" value="@incident.getCategory()" readonly="true" />
+        <w:textfield name="" labelKey="Incident.node" value="@incident.getNode()" readonly="true" />
+    </div>
+    <div class="row">
+        <w:textfield span="12" name="" labelKey="Incident.location" value="@incident.getLocation()" readonly="true" />
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <w:heading labelKey="Incident.mdc" />
+            <div class="well">
+                <pre class="plain">@incident.getMdc()</pre>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <w:heading labelKey="Incident.stack" />
+            <div class="well">
+                <pre class="plain">@incident.getStack()</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <a href="/system/errors" class="btn"><i class="icon-chevron-left"></i> @i18n("NLS.back")</a>
+    </div>
+
+</w:page>

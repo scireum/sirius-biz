@@ -1,0 +1,54 @@
+<i:arg type="Page" name="users"/>
+<i:arg type="boolean" name="isSpy"/>
+
+<w:page titleKey="UserAccount.select">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/user-accounts/select">@i18n("UserAccount.select")</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader titleKey="UserAccount.select"/>
+
+    <w:tableSearchHeader page="users" baseUrl="/user-accounts/select">
+        <i:if test="isSpy">
+            <a class="btn btn-primary" href="/user-accounts/select/main">@i18n("UserAccount.selectMain")</a>
+        </i:if>
+    </w:tableSearchHeader>
+
+    <w:table data="users">
+        <thead>
+        <tr>
+            <th>
+                @i18n("Model.name")<br>
+                <small class="muted">@i18n("LoginData.username")</small>
+            </th>
+            <th>
+                @i18n("Model.tenant")<br>
+                @i18n("Tenant.accountNumber")
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <i:for type="sirius.biz.tenants.UserAccount" var="user" items="users.getItems()">
+            <tr>
+                <td>
+                    <i:if test="user.hasName()">
+                        <a class="link" href="/user-accounts/select/@user.getId()">@user.getPerson()</a><br>
+                        <small class="muted">@user.getLogin().getUsername()</small>
+                        <i:else>
+                            <a class="link" href="/user-accounts/select/@user.getId()">@user.getLogin().getUsername()</a>
+                        </i:else>
+                    </i:if>
+                </td>
+                <td>
+                    @user.getTenant().getValue().as(sirius.biz.tenants.Tenant.class).getName()<br>
+                    @user.getTenant().getValue().as(sirius.biz.tenants.Tenant.class).getAccountNumber()
+                </td>
+            </tr>
+        </i:for>
+        </tbody>
+    </w:table>
+
+    <w:pagination page="users" baseUrl="/user-accounts/select" />
+</w:page>

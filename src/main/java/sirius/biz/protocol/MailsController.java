@@ -42,7 +42,7 @@ public class MailsController extends BizController {
         PageHelper<MailLogEntry> ph = PageHelper.withQuery(oma.select(MailLogEntry.class).orderDesc(MailLogEntry.TOD));
         ph.withContext(ctx);
         ph.addTimeFacet(MailLogEntry.TOD.getName(),
-                        NLS.get("LogEntry.tod"),
+                        NLS.get("MailLogEntry.tod"),
                         DateRange.lastFiveMinutes(),
                         DateRange.lastFiveteenMinutes(),
                         DateRange.lastTwoHours(),
@@ -56,13 +56,13 @@ public class MailsController extends BizController {
                             MailLogEntry.RECEIVER,
                             MailLogEntry.RECEIVER_NAME);
 
-        ctx.respondWith().template("view/protocol/mails.html", ph.asPage());
+        ctx.respondWith().template("templates/protocol/mails.html.pasta", ph.asPage());
     }
 
     @Permission(Protocols.PERMISSION_VIEW_PROTOCOLS)
     @Routed("/system/mail/:1")
     public void mail(final WebContext ctx, String id) {
         MailLogEntry mailLogEntry = find(MailLogEntry.class, id);
-        ctx.respondWith().template("view/protocol/mail.html", mailLogEntry);
+        ctx.respondWith().template("templates/protocol/mail.html.pasta", mailLogEntry);
     }
 }

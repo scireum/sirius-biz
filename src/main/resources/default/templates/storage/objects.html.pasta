@@ -1,0 +1,71 @@
+<i:arg type="sirius.biz.storage.BucketInfo" name="bucket"/>
+<i:arg type="Page" name="objects"/>
+
+<w:page title="@bucket.getName()">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/storage">@i18n("StorageController.buckets")</a>
+        </li>
+        <li>
+            <a href="/storage/bucket/@bucket.getName()">@bucket.getName()</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader>
+        @i18n("StorageController.objects"): @bucket.getName()
+    </w:pageHeader>
+
+
+    <div class="row">
+        <div class="col-md-3">
+            <i:if test="bucket.isCanCreate()">
+                <w:fileUpload uploadUrl="@apply('/storage/upload/%s', bucket.getName())"/>
+            </i:if>
+        </div>
+        <div class="col-md-9">
+            <w:tableSearchHeader page="objects" baseUrl="@apply('/storage/bucket/%s', bucket.getName())"/>
+
+            <w:table data="objects">
+                <thead>
+                <tr>
+                    <th>
+                        @i18n("Model.name")<br>
+                        <small class="muted">@i18n("Model.id")</small>
+                    </th>
+                    <th class="align-right">
+                        @i18n("TraceData.changed")<br>
+                        <small class="muted">@i18n("VirtualObject.fileSize")</small>
+                    </th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <i:for type="sirius.biz.storage.VirtualObject" var="object" items="objects.getItems()">
+                    <tr>
+                        <td>
+                            <a class="link" href="@object.prepareURL().asDownload(object.getFilename()).buildURL()">@object.getPath()</a><br>
+                            <small class="muted">@object.getObjectKey()</small>
+                        </td>
+                        <td class="align-right">
+                            @toUserString(object.getTrace().getChangedAt())<br>
+                            <small class="muted">@formatSize(object.getFileSize())</small>
+                        </td>
+                        <td class="col-md-2 align-left">
+                            <a class="link" href="/storage/object/@object.getBucket()/@object.getObjectKey()">
+                                <i class="fa fa-pencil"></i> @i18n("Model.details")
+                            </a>
+
+                            <i:if test="bucket.isCanDelete()">
+                                <br>
+                                <w:deleteLink url="@apply('/storage/delete/%s', object.getObjectKey())" page="objects" />
+                            </i:if>
+                        </td>
+                    </tr>
+                </i:for>
+                </tbody>
+            </w:table>
+
+            <w:pagination page="objects" baseUrl="@apply('/storage/bucket/%s', bucket.getName())" />
+        </div>
+    </div>
+</w:page>

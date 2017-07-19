@@ -56,7 +56,7 @@ public class StorageController extends BizController {
     public void listBuckets(WebContext ctx) {
         UserInfo currentUser = UserContext.getCurrentUser();
         ctx.respondWith()
-           .template("view/storage/buckets.html",
+           .template("templates/storage/buckets.html.pasta",
                      storage.getBuckets()
                             .stream()
                             .filter(bucket -> currentUser.hasPermission(bucket.getPermission()))
@@ -86,7 +86,7 @@ public class StorageController extends BizController {
 
         PageHelper<VirtualObject> pageHelper = PageHelper.withQuery(baseQuery).withContext(ctx).forCurrentTenant();
 
-        ctx.respondWith().template("view/storage/objects.html", bucket, pageHelper.asPage());
+        ctx.respondWith().template("templates/storage/objects.html.pasta", bucket, pageHelper.asPage());
     }
 
     private boolean isBucketUnaccessible(BucketInfo bucket) {
@@ -184,7 +184,7 @@ public class StorageController extends BizController {
         }
 
         ctx.respondWith()
-           .template("view/storage/object.html",
+           .template("templates/storage/object.html.pasta",
                      bucket,
                      object,
                      oma.select(VirtualObjectVersion.class)

@@ -21,23 +21,22 @@
     <div class="row">
         <i:if test="!account.isNew()">
             <div class="col-md-3">
-                <w:navbox>
-                    <li class="nav-header">@i18n("Model.details")</li>
-                    <li>
-                        <b>@account.getLogin().getUsername()</b>
-                    </li>
-                    <li>
-                        @account.getPerson()
-                    </li>
-                    <li>
-                        @account.getEmail()
-                    </li>
-                    <i:extensions name="template-user-account-sidebar-infos" account="account" page="page" />
+                <w:infobox titleKey="Model.details">
+                    <w:infoboxElement labelKey="LoginData.username" value="@account.getLogin().getUsername()"/>
+                    <i:if test="account.hasName()">
+                        <w:infoboxElement labelKey="Model.name" value="@account.getPerson()"/>
+                    </i:if>
+                    <w:infoboxElement labelKey="Model.email" value="@account.getEmail()"/>
 
-                    <li class="nav-header"></li>
-                    <w:navbox-link labelKey="Model.details" url="@apply('/user-account/%s', account.getId())" active="page == 'details'" icon="icon-users" />
-                    <w:navbox-link labelKey="Model.config" url="@apply('/user-account/%s/config', account.getId())" active="page == 'config'" icon="icon-users" />
-                    <i:extensions name="template-user-account-sidebar-menu" account="account" page="page" />
+                    <w:extensions name="template-user-account-sidebar-infos" account="account" page="page"/>
+                </w:infobox>
+
+
+                <w:navbox labelKey="Model.links">
+                    <w:navboxLink labelKey="Model.details" url="@apply('/user-account/%s', account.getId())" active="page == 'details'" icon="icon-users" />
+                    <w:navboxLink labelKey="Model.config" url="@apply('/user-account/%s/config', account.getId())" active="page == 'config'" icon="icon-users" />
+
+                    <w:extensions name="template-user-account-sidebar-menu" account="account" page="page"/>
                 </w:navbox>
 
                 <a href="/user-accounts" class="btn btn-block">@i18n("NLS.back")</a>

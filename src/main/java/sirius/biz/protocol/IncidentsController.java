@@ -11,8 +11,6 @@ package sirius.biz.protocol;
 import sirius.biz.web.BizController;
 import sirius.biz.web.DateRange;
 import sirius.biz.web.PageHelper;
-import sirius.db.mixing.OMA;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Controller;
@@ -26,9 +24,6 @@ import sirius.web.security.Permission;
  */
 @Register(classes = Controller.class, framework = Protocols.FRAMEWORK_PROTOCOLS)
 public class IncidentsController extends BizController {
-
-    @Part
-    private OMA oma;
 
     /**
      * Lists all recorded errors.
@@ -57,7 +52,7 @@ public class IncidentsController extends BizController {
                         DateRange.lastWeek());
         ph.withSearchFields(Incident.CATEGORY, Incident.MESSAGE);
 
-        ctx.respondWith().template("view/protocol/errors.html", ph.asPage(), oma.select(Incident.class).count());
+        ctx.respondWith().template("templates/protocol/errors.html.pasta", ph.asPage(), (int)oma.select(Incident.class).count());
     }
 
     /**
@@ -70,6 +65,6 @@ public class IncidentsController extends BizController {
     @Routed("/system/error/:1")
     public void error(WebContext ctx, String id) {
         Incident incident = find(Incident.class, id);
-        ctx.respondWith().template("view/protocol/error.html", incident);
+        ctx.respondWith().template("templates/protocol/error.html.pasta", incident);
     }
 }

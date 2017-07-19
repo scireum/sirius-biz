@@ -1,0 +1,51 @@
+<i:arg type="sirius.biz.tenants.Tenant" name="tenant"/>
+<i:arg type="String" name="page"/>
+
+<w:page title="@tenant.toString()">
+    <i:block name="head">
+        <script src="/assets/wondergem/ace/ace.js" type="text/javascript"></script>
+    </i:block>
+
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/tenants">@i18n("Tenant.plural")</a>
+        </li>
+        <li>
+            <a href="/tenant/@tenant.getId()">@tenant</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader>
+        @i18n("Model.tenant"): @tenant.getName()
+        <small>@tenant.getAccountNumber()</small>
+    </w:pageHeader>
+
+    <div class="row">
+        <i:if test="!tenant.isNew()">
+            <div class="col-md-3">
+                <w:infobox titleKey="Model.details">
+                    <w:infoboxElement labelKey="Tenant.accountNumber" value="@tenant.getAccountNumber()"/>
+                    <w:infoboxElement labelKey="AddressData.street" value="@tenant.getAddress().getStreet()"/>
+                    <w:infoboxElement labelKey="AddressData.zip" value="@tenant.getAddress().getZip()"/>
+                    <w:infoboxElement labelKey="AddressData.city" value="@tenant.getAddress().getCity()"/>
+
+                    <w:extensions name="template-tenant-sidebar-infos" tenant="tenant" page="page"/>
+                </w:infobox>
+
+
+                <w:navbox labelKey="Model.links">
+                    <w:navboxLink labelKey="Model.details" url="@apply('/tenant/%s', tenant.getId())"
+                                  active="page == 'details'"/>
+                    <w:navboxLink labelKey="Model.config" url="@apply('/tenant/%s/config', tenant.getId())"
+                                  active="page == 'config'"/>
+
+                    <w:extensions name="template-tenant-sidebar-menu" tenant="tenant" page="page"/>
+                </w:navbox>
+            </div>
+        </i:if>
+        <div class="@if (tenant.isNew()) { col-md-12 } else { col-md-9 }">
+            <i:render name="body"/>
+        </div>
+    </div>
+</w:page>
+

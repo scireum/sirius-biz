@@ -1,18 +1,63 @@
-<i:arg type="sirius.biz.tenants.UserAccount" name="account" />
+<i:arg type="sirius.biz.tenants.UserAccount" name="account"/>
+<i:arg type="sirius.biz.tenants.UserAccountController" name="controller"/>
 
 <i:invoke template="/templates/tenants/user-account.html.pasta" account="account" page="details">
-    <w:editForm url="@apply('user-account/%s', account.getIdAsString())">
+    <w:editForm url="@apply('/user-account/%s', account.getIdAsString())">
 
         <div class="row">
-            <w:textfield name="email" value="@account.getEmail()" labelKey="Model.email" required="true" helpKey="UserAccount.email.help" />
-            <w:textfield name="login_username" value="@account.getLogin().getUsername()" labelKey="LoginData.username" helpKey="UserAccount.username.help" />
+            <w:textfield name="email" value="@account.getEmail()" labelKey="Model.email" required="true"
+                         helpKey="UserAccount.email.help"/>
+            <w:textfield name="login_username" value="@account.getLogin().getUsername()" labelKey="LoginData.username"
+                         helpKey="UserAccount.username.help"/>
         </div>
 
-        <i:extensions name="template-user-account-details" account="account" />
+        <div class="row">
+            <w:codelistSelect name="person_salutation" list="salutations" value="@account.getPerson().getSalutation()"
+                              labelKey="PersonData.salutation"/>
+            <w:textfield name="person_title" value="@account.getPerson().getTitle()" labelKey="PersonData.title"/>
+        </div>
+        <div class="row">
+            <w:textfield name="person_firstname" value="@account.getPerson().getFirstname()"
+                         labelKey="PersonData.firstname"/>
+            <w:textfield name="person_lastname" value="@account.getPerson().getLastname()"
+                         labelKey="PersonData.lastname"/>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <w:heading labelKey="UserAccount.security"/>
+                <div class="row">
+                    <w:checkbox span="12" name="login_accountLocked" value="account.getLogin().isAccountLocked()"
+                                labelKey="LoginData.accountLocked"/>
+                </div>
+                <div class="row">
+                    <i:if test="isFilled(account.getLogin().getGeneratedPassword())">
+                        <w:textfield span="12" name="generatedPassword"
+                                     value="@account.getLogin().getGeneratedPassword()"
+                                     labelKey="LoginData.generatedPassword" readonly="true"/>
+                    </i:if>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <w:heading labelKey="UserAccount.roles"/>
+                <i:for type="String" var="role" items="controller.getRoles()">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="roles" value="@role"
+                                   @if (account.getPermissions().getPermissions().contains(role)) { checked="checked"
+                                   }/>
+                            @controller.getRoleName(role)
+                            <span class="help-block checkbox-help"> @controller.getRoleDescription(role)</span>
+                        </label>
+                    </div>
+                </i:for>
+            </div>
+        </div>
+
+        <i:extensions name="template-user-account-details" account="account"/>
     </w:editForm>
 
     <w:formBar>
-        <w:tracing trace="account.getTrace()" />
+        <w:tracing trace="account.getTrace()"/>
     </w:formBar>
 </i:invoke>
 

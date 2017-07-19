@@ -54,6 +54,6 @@ public class LogsController extends BizController {
                         DateRange.lastWeek());
         ph.withSearchFields(LogEntry.CATEGORY, LogEntry.LEVEL, LogEntry.MESSAGE);
 
-        ctx.respondWith().template("view/protocol/logs.html", ph.asPage());
+        ctx.respondWith().template("templates/protocol/logs.html.pasta", ph.asPage());
     }
 }

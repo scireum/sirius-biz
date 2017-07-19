@@ -1,0 +1,37 @@
+<i:arg type="sirius.biz.codelists.CodeList" name="codeList"/>
+<i:arg type="String" name="page"/>
+
+<w:page titleKey="Model.codeList">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/code-lists">@i18n("CodeList.plural")</a>
+        </li>
+        <li>
+            <a href="/code-list/@codeList.getIdAsString()">@i18n("Model.codeList")</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader>@codeList.toString()</w:pageHeader>
+
+    <i:if test="!codeList.isNew()">
+        <div class="col-md-3">
+            <w:navbox labelKey="Model.details">
+                <li>
+                    @codeList.getName() (@codeList.getCode())
+                </li>
+                <li class="small muted">@codeList.getDescription()</li>
+                <li class="nav-header"></li>
+                <w:navboxLink labelKey="Model.details"
+                              url="@apply('/code-list/%s/details', codeList.getId())"
+                              active="page == 'details'"/>
+                <w:navboxLink labelKey="CodeListEntry.plural"
+                              url="@apply('/code-list/%s', codeList.getId())"
+                              active="page == 'entries'"/>
+            </w:navbox>
+            <a href="/code-lists" class="btn btn-block">@i18n("NLS.back")</a>
+        </div>
+    </i:if>
+    <div class="col-md-9">
+        <i:render name="body" />
+    </div>
+</w:page>

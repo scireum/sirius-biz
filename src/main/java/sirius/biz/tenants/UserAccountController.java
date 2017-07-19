@@ -90,7 +90,7 @@ public class UserAccountController extends BizController {
                             UserAccount.PERSON.inner(PersonData.FIRSTNAME),
                             UserAccount.PERSON.inner(PersonData.LASTNAME));
 
-        ctx.respondWith().template("view/tenants/user-accounts.html", ph.asPage());
+        ctx.respondWith().template("templates/tenants/user-accounts.html.pasta", ph.asPage());
     }
 
     /**
@@ -122,7 +122,7 @@ public class UserAccountController extends BizController {
 
         if (!requestHandled) {
             validate(userAccount);
-            ctx.respondWith().template("/templates/tenants/user-account-details.html.pasta", userAccount);
+            ctx.respondWith().template("templates/tenants/user-account-details.html.pasta", userAccount, this);
         }
     }
 
@@ -138,7 +138,7 @@ public class UserAccountController extends BizController {
     public void accountConfig(WebContext ctx, String accountId) {
         UserAccount userAccount = findForTenant(UserAccount.class, accountId);
         assertNotNew(userAccount);
-        ctx.respondWith().template("view/tenants/user-account-config.html", userAccount);
+        ctx.respondWith().template("templates/tenants/user-account-config.html.pasta", userAccount);
     }
 
     /**
@@ -227,7 +227,7 @@ public class UserAccountController extends BizController {
                 UserContext.handle(e);
             }
         }
-        ctx.respondWith().template("view/tenants/user-account-password.html", userAccount);
+        ctx.respondWith().template("templates/tenants/user-account-password.html.pasta", userAccount);
     }
 
     /**
@@ -245,7 +245,12 @@ public class UserAccountController extends BizController {
 
         userAccount.getLogin().setGeneratedPassword(Strings.generatePassword());
         oma.update(userAccount);
-        showSavedMessage();
+
+        UserContext.
+                           message(Message.info(NLS.fmtr("UserAccountConroller.passwordGenerated")
+                                                   .set("email", userAccount.getEmail())
+                                                   .format()));
+
         if (Strings.isFilled(userAccount.getEmail())) {
             mails.createEmail()
                  .useMailTemplate("user-account-password",
@@ -395,7 +400,8 @@ public class UserAccountController extends BizController {
                             UserAccount.TENANT.join(Tenant.NAME),
                             UserAccount.TENANT.join(Tenant.ACCOUNT_NUMBER));
 
-        ctx.respondWith().template("view/tenants/select-user-account.html", ph.asPage(), isCurrentlySpying(ctx));
+        ctx.respondWith()
+           .template("templates/tenants/select-user-account.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
     }
 
     private boolean isCurrentlySpying(WebContext ctx) {

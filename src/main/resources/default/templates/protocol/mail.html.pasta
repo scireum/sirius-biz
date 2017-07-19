@@ -1,0 +1,51 @@
+<i:arg type="sirius.biz.protocol.MailLogEntry" name="mail" />
+
+<w:page title="@mail.getSubject()">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/system/mails">@i18n("MailLogEntry.plural")</a>
+        </li>
+        <li>
+            <a href="/system/mail/@mail.getId()">@mail.getSubject()</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader title="@mail.getSubject()" />
+
+    <div class="row">
+        <w:textfield name="" value="@toUserString(mail.isSuccess())" labelKey="MailLogEntry.success" readonly="true" />
+        <w:textfield name="" value="@toUserString(mail.getTod())" labelKey="MailLogEntry.tod" readonly="true" />
+    </div>
+    <div class="row">
+        <w:textfield name="" value="@mail.getMessageId()" labelKey="MailLogEntry.messageId" readonly="true" />
+        <w:textfield name="" value="@mail.getMailExtension()" labelKey="MailLogEntry.mailExtension" readonly="true" />
+    </div>
+    <div class="row">
+        <w:textfield name="" value="@mail.getSender()" labelKey="MailLogEntry.sender" readonly="true" />
+        <w:textfield name="" value="@mail.getSenderName()" labelKey="MailLogEntry.senderName" readonly="true" />
+    </div>
+    <div class="row">
+        <w:textfield name="" value="@mail.getReceiver()" labelKey="MailLogEntry.receiver" readonly="true" />
+        <w:textfield name="" value="@mail.getReceiverName()" labelKey="MailLogEntry.receiverName" readonly="true" />
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <w:heading labelKey="MailLogEntry.text" />
+            <div class="well">
+                <pre class="plain">@mail.getText()</pre>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <w:heading labelKey="MailLogEntry.html" />
+            <div class="well">
+                <pre class="plain">@mail.getHtml()</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <a href="/system/mails" class="btn"><i class="icon-chevron-left"></i> @i18n("NLS.back")</a>
+    </div>
+</w:page>

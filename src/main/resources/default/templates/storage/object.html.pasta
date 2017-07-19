@@ -1,0 +1,117 @@
+<i:arg type="sirius.biz.storage.BucketInfo" name="bucket"/>
+<i:arg type="sirius.biz.storage.VirtualObject" name="object"/>
+<i:arg type="List" name="versions"/>
+
+<w:page title="@apply('%s: %s', bucket.getName(), object.getObjectKey())">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/storage">@i18n("StorageController.buckets")</a>
+        </li>
+        <li>
+            <a href="/storage/bucket/@bucket.getName()">@bucket.getName()</a>
+        </li>
+        <li>
+            <a href="/storage/object/@object.getObjectKey()">@object.getObjectKey()</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader>
+        @bucket.getName(): @object.getObjectKey()
+    </w:pageHeader>
+
+    <div class="row">
+        <div class="col-md-3">
+            <w:navbox>
+                <i:if test="object.isImage()">
+                    <li class="nav-header"></li>
+                    <li>
+                        <span class="thumbnail">
+                            <img src="@object.prepareURL().buildURL()" style="max-height: 150px"/>
+                        </span>
+                    </li>
+                </i:if>
+                <li class="nav-header">@i18n("VirtualObject.fileSize")</li>
+                <li>
+                    @formatSize(object.getFileSize())
+                </li>
+                <li class="nav-header">@i18n("VirtualObject.physicalKey")</li>
+                <li>
+                    @object.getPhysicalKey()
+                </li>
+                <li class="nav-header"></li>
+                <li>
+                    <a href="@object.prepareURL().asDownload(object.getFilename()).buildURL()" class="link">
+                        @i18n("VirtualObject.download")
+                    </a>
+                </li>
+                <i:if test="bucket.isCanEdit()">
+                    <li>
+                        <a href="storage/rename/@object.getObjectKey()" class="link">
+                            @i18n("VirtualObject.rename")
+                        </a>
+                    </li>
+                    <i:if test="isFilled(object.getReference())">
+                        <li>
+                            <a href="storage/unreference/@object.getObjectKey()" class="link">
+                                @i18n("VirtualObject.unreference")
+                            </a>
+                        </li>
+                    </i:if>
+                </i:if>
+            </w:navbox>
+
+            <w:subHeading labelKey="VirtualObject.replaceContents"/>
+
+            <w:fileUpload uploadUrl="@apply('/storage/replace/%s',object.getObjectKey())"/>
+
+            <a href="/storage/bucket/@bucket.getName()" class="btn btn-block">@i18n("NLS.back")</a>
+            <p></p>
+        </div>
+        <div class="col-md-9">
+            <w:subHeading labelKey="VirtualObject.versions"/>
+
+            <w:table data="versions">
+                <thead>
+                <tr>
+                    <th>
+                        @i18n("Model.name")<br>
+                        <small class="muted">@i18n("Model.id")</small>
+                    </th>
+                    <th class="align-right">
+                        @i18n("TraceData.created")<br>
+                        <small class="muted">@i18n("VirtualObject.fileSize")</small>
+                    </th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <i:for type="sirius.biz.storage.VirtualObjectVersion" var="version" items="versions">
+                    <tr>
+                        <td>
+                            <i:if test="isFilled(version.getPhysicalKey())">
+                                <a class="link"
+                                   href="@object.prepareURL().withVersion(version.getVersionKey()).buildURL()">@version.getVersionKey()</a><br>
+                                <i:else>
+                                    @version.getVersionKey()<br>
+                                </i:else>
+                            </i:if>
+                            <small class="muted">@version.getPhysicalKey()</small>
+                        </td>
+                        <td class="align-right">
+                            @toUserString(version.getCreatedDate())
+                            <i:if test="isFilled(version.getPhysicalKey())">
+                                <br>
+                                <small class="muted">@formatSize(version.getFileSize())</small>
+                            </i:if>
+                        </td>
+                        <td class="col-md-2 align-center">
+                            <w:deleteLink
+                                    url="@apply('/storage/delete-version/%s/%s', object.getObjectKey(), version.getId())"/>
+                        </td>
+                    </tr>
+                </i:for>
+                </tbody>
+            </w:table>
+        </div>
+    </div>
+</w:page>
