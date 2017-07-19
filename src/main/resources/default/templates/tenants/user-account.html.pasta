@@ -35,8 +35,8 @@
                     <i:extensions name="template-user-account-sidebar-infos" account="account" page="page" />
 
                     <li class="nav-header"></li>
-                    <w:navbox-link labelKey="Model.details" url="@apply('/user-account/%s', account.getId())" active="page == 'details'" icon="icon-users" />
-                    <w:navbox-link labelKey="Model.config" url="@apply('/user-account/%s/config', account.getId())" active="page == 'config'" icon="icon-users" />
+                    <w:navboxLink labelKey="Model.details" url="@apply('/user-account/%s', account.getId())" active="page == 'details'" icon="icon-users" />
+                    <w:navboxLink labelKey="Model.config" url="@apply('/user-account/%s/config', account.getId())" active="page == 'config'" icon="icon-users" />
                     <i:extensions name="template-user-account-sidebar-menu" account="account" page="page" />
                 </w:navbox>
 
