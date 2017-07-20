@@ -28,15 +28,15 @@
                     </i:if>
                     <w:infoboxElement labelKey="Model.email" value="@account.getEmail()"/>
 
-                    <i:extensions name="template-user-account-sidebar-infos" account="account" page="page"/>
+                    <i:extensions name="templates-user-account-sidebar-infos" account="account" page="page"/>
                 </w:infobox>
 
 
                 <w:navbox labelKey="Model.links">
-                    <w:navboxLink labelKey="Model.details" url="@apply('/user-account/%s', account.getId())" active="page == 'details'" icon="icon-users" />
-                    <w:navboxLink labelKey="Model.config" url="@apply('/user-account/%s/config', account.getId())" active="page == 'config'" icon="icon-users" />
+                    <w:navboxLink labelKey="Model.details" url="@apply('/user-account/%s', account.getId())" active="page == 'details'"/>
+                    <w:navboxLink labelKey="Model.config" url="@apply('/user-account/%s/config', account.getId())" active="page == 'config'"/>
 
-                    <i:extensions name="template-user-account-sidebar-menu" account="account" page="page"/>
+                    <i:extensions name="templates-user-account-sidebar-menu" account="account" page="page"/>
                 </w:navbox>
 
                 <a href="/user-accounts" class="btn btn-block">@i18n("NLS.back")</a>

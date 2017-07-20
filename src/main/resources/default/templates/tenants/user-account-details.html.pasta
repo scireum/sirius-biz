@@ -53,7 +53,7 @@
             </div>
         </div>
 
-        <i:extensions name="template-user-account-details" account="account"/>
+        <i:extensions name="templates-user-account-details" account="account"/>
     </w:editForm>
 
     <w:formBar>
