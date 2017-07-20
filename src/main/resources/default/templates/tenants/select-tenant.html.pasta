@@ -8,7 +8,7 @@
         </li>
     </i:block>
 
-    <w:pageHeader labelKey="Tenant.select"/>
+    <w:pageHeader titleKey="Tenant.select"/>
 
     <w:tableSearchHeader page="tenants" baseUrl="/tenants/select">
         <i:if test="isSpy">
