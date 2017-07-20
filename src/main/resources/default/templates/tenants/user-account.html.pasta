@@ -28,7 +28,7 @@
                     </i:if>
                     <w:infoboxElement labelKey="Model.email" value="@account.getEmail()"/>
 
-                    <w:extensions name="template-user-account-sidebar-infos" account="account" page="page"/>
+                    <i:extensions name="template-user-account-sidebar-infos" account="account" page="page"/>
                 </w:infobox>
 
 
@@ -36,7 +36,7 @@
                     <w:navboxLink labelKey="Model.details" url="@apply('/user-account/%s', account.getId())" active="page == 'details'" icon="icon-users" />
                     <w:navboxLink labelKey="Model.config" url="@apply('/user-account/%s/config', account.getId())" active="page == 'config'" icon="icon-users" />
 
-                    <w:extensions name="template-user-account-sidebar-menu" account="account" page="page"/>
+                    <i:extensions name="template-user-account-sidebar-menu" account="account" page="page"/>
                 </w:navbox>
 
                 <a href="/user-accounts" class="btn btn-block">@i18n("NLS.back")</a>

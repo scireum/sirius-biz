@@ -58,7 +58,7 @@
             </div>
         </div>
 
-        <w:extensions name="template-tenant-details" tenant="tenant"/>
+        <i:extensions name="template-tenant-details" tenant="tenant"/>
     </w:editForm>
 
     <w:formBar>
