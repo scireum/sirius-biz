@@ -29,7 +29,7 @@
                     <w:infoboxElement labelKey="AddressData.zip" value="@tenant.getAddress().getZip()"/>
                     <w:infoboxElement labelKey="AddressData.city" value="@tenant.getAddress().getCity()"/>
 
-                    <i:extensions name="template-tenant-sidebar-infos" tenant="tenant" page="page"/>
+                    <i:extensions name="templates-tenant-sidebar-infos" tenant="tenant" page="page"/>
                 </w:infobox>
 
 
@@ -39,7 +39,7 @@
                     <w:navboxLink labelKey="Model.config" url="@apply('/tenant/%s/config', tenant.getId())"
                                   active="page == 'config'"/>
 
-                    <i:extensions name="template-tenant-sidebar-menu" tenant="tenant" page="page"/>
+                    <i:extensions name="templates-tenant-sidebar-menu" tenant="tenant" page="page"/>
                 </w:navbox>
             </div>
         </i:if>
