@@ -43,8 +43,7 @@ public class ProfileController extends BizController {
         boolean requestHandled = prepareSave(ctx).saveEntity(userAccount);
 
         if (!requestHandled) {
-            ctx.respondWith()
-               .template("/templates/tenants/profile.html.pasta", userAccount);
+            ctx.respondWith().template("/templates/tenants/profile.html.pasta", userAccount);
         }
     }
 
@@ -71,14 +70,16 @@ public class ProfileController extends BizController {
                                     .set("minChars", userAccount.getMinPasswordLength())
                                     .handle();
                 }
+
                 if (!Strings.areEqual(password, confirmation)) {
                     UserContext.setFieldError(PARAM_CONFIRMATION, null);
                     throw Exceptions.createHandled().withNLSKey("Model.password.confirmationMismatch").handle();
                 }
+
                 userAccount.getLogin().setCleartextPassword(password);
                 oma.update(userAccount);
                 showSavedMessage();
-                profile(ctx);
+                ctx.respondWith().template("/templates/tenants/profile.html.pasta", userAccount);
                 return;
             } catch (Exception e) {
                 UserContext.handle(e);
@@ -87,6 +88,5 @@ public class ProfileController extends BizController {
 
         ctx.respondWith().template("/templates/tenants/profile-change-password.html.pasta", userAccount);
     }
-
 }
 

@@ -45,6 +45,22 @@
             </div>
         </div>
 
+        <div class="row">
+            <div class="col-md-8">
+                <w:heading labelKey="ProfileController.security"/>
+
+                <div class="row">
+                    <div class='col-md-6 form-group'>
+                        <label>
+                            <span>
+                                @i18n("LoginData.password")
+                            </span>
+                        </label>
+                        <a href="/profile/password" class="btn btn-block">@i18n("Model.password.set")</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </w:editForm>
 
     <w:formBar/>
