@@ -22,7 +22,7 @@
     <orderEntry type="library" scope="TEST" name="Maven: com.scireum:sirius-web:test-jar:tests:8.0" level="project" />
     <orderEntry type="library" name="Maven: com.scireum:sirius-web:8.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.scireum:sirius-web:test-jar:tests:8.0" level="project" />
-    <orderEntry type="library" name="Maven: com.scireum:sirius-kernel:7.0" level="project" />
+    <orderEntry type="library" name="Maven: com.scireum:sirius-kernel:6.11" level="project" />
     <orderEntry type="library" name="Maven: com.typesafe:config:1.3.1" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:21.0" level="project" />
     <orderEntry type="library" name="Maven: log4j:log4j:1.2.17" level="project" />
@@ -78,7 +78,7 @@
     <orderEntry type="library" name="Maven: org.apache.ftpserver:ftplet-api:1.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.21" level="project" />
     <orderEntry type="library" name="Maven: org.apache.mina:mina-core:2.0.16" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.scireum:sirius-web:test-jar:tests:9.0-RC1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.scireum:sirius-web:test-jar:tests:9.0-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.scireum:sirius-db:test-jar:tests:3.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.scireum:sirius-kernel:test-jar:tests:7.0" level="project" />
     <orderEntry type="library" name="Maven: com.amazonaws:aws-java-sdk-s3:1.10.12" level="project" />
