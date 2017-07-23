@@ -8,7 +8,6 @@
 
 package sirius.biz.locks;
 
-import sirius.db.mixing.OMA;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.console.Command;
@@ -25,13 +24,18 @@ import javax.annotation.Nonnull;
 public class LocksCommand implements Command {
 
     @Part
-    private OMA oma;
+    private Locks locks;
 
     @Override
     public void execute(Output output, String... params) throws Exception {
+        if (params.length > 0) {
+            output.apply("Unlocking: %s", params[0]);
+            locks.unlock(params[0], true);
+        }
+        output.line("Use locks <name> to forcefully unlock a lock.");
         output.apply("%-20s %-20s %-20s %-20s", "NAME", "OWNER", "THREAD", "ACQUIRED");
         output.separator();
-        oma.select(ManagedLock.class).orderAsc(ManagedLock.ACQUIRED).iterateAll(lock -> {
+        locks.getLocks().forEach(lock -> {
             output.apply("%-20s %-20s %-20s %-20s",
                          lock.getName(),
                          lock.getOwner(),
