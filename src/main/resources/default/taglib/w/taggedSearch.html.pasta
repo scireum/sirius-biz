@@ -15,7 +15,6 @@
                 <div class="pull-right">
                 <span>
                     <i:render name="body" />
-                    @renderBody()
                 </span>
                 <a class="btn btn-default" href="@baseUrl?@page.createQueryString()"><i class="fa fa-refresh"></i></a>
                 </div>
