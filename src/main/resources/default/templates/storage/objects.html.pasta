@@ -57,7 +57,7 @@
 
                             <i:if test="bucket.isCanDelete()">
                                 <br>
-                                <w:deleteLink url="@apply('/storage/delete/%s', object.getObjectKey())" page="objects" />
+                                <w:deleteLink url="@apply('/storage/delete/%s/%s', bucket.getName(), object.getObjectKey())" page="objects" />
                             </i:if>
                         </td>
                     </tr>
