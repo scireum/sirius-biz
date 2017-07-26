@@ -24,10 +24,7 @@
                             <div class="col-md-3">@i18n("MailLogEntry.tod")</div>
                             <div class="col-md-3">@i18n("MailLogEntry.sender")</div>
                             <div class="col-md-3">@i18n("MailLogEntry.receiver")</div>
-                            <div class="col-md-3">
-                                @i18n("MailLogEntry.node")<br>
-                                @i18n("MailLogEntry.mailExtension")
-                            </div>
+                            <div class="col-md-3">@i18n("MailLogEntry.node")</div>
                         </div>
                     </th>
                 </tr>
@@ -48,10 +45,7 @@
                                 </div>
                                 <div class="col-md-3">@mail.getSender()</div>
                                 <div class="col-md-3">@mail.getReceiver()</div>
-                                <div class="col-md-3">
-                                    @mail.getNode()<br>
-                                    <small>@mail.getMailExtension()</small>
-                                </div>
+                                <div class="col-md-3">@mail.getNode()</div>
                             </div>
                             <div class="row">
                                 <div class="col-md-12 error-code">

@@ -126,8 +126,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
                             String receiverName,
                             String subject,
                             String text,
-                            String html,
-                            String mailExtension) {
+                            String html) {
         if (oma == null || !oma.isReady() || Sirius.isStartedAsTest()) {
             return;
         }
@@ -145,7 +144,6 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             msg.setHtml(html);
             msg.setSuccess(success);
             msg.setNode(CallContext.getNodeName());
-            msg.setMailExtension(mailExtension);
 
             oma.update(msg);
         } catch (Exception e) {

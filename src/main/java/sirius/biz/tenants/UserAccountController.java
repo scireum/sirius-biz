@@ -246,21 +246,22 @@ public class UserAccountController extends BizController {
         userAccount.getLogin().setGeneratedPassword(Strings.generatePassword());
         oma.update(userAccount);
 
-        UserContext.
-                           message(Message.info(NLS.fmtr("UserAccountConroller.passwordGenerated")
-                                                   .set("email", userAccount.getEmail())
-                                                   .format()));
+        UserContext.message(Message.info(NLS.fmtr("UserAccountConroller.passwordGenerated")
+                                            .set("email", userAccount.getEmail())
+                                            .format()));
 
         if (Strings.isFilled(userAccount.getEmail())) {
+            Context context = Context.create()
+                                     .set(PARAM_PASSWORD, userAccount.getLogin().getGeneratedPassword())
+                                     .set(PARAM_NAME, userAccount.getPerson().getAddressableName())
+                                     .set(PARAM_USERNAME, userAccount.getLogin().getUsername())
+                                     .set(PARAM_URL, getBaseUrl())
+                                     .set(PARAM_ROOT, wondergemRoot);
             mails.createEmail()
-                 .useMailTemplate("user-account-password",
-                                  Context.create()
-                                         .set(PARAM_PASSWORD, userAccount.getLogin().getGeneratedPassword())
-                                         .set(PARAM_NAME, userAccount.getPerson().getAddressableName())
-                                         .set(PARAM_USERNAME, userAccount.getLogin().getUsername())
-                                         .set(PARAM_URL, getBaseUrl())
-                                         .set(PARAM_ROOT, wondergemRoot))
                  .to(userAccount.getEmail(), userAccount.getPerson().toString())
+                 .subject(NLS.get("mail-password.subject"))
+                 .textTemplate("mail/useraccount/password.pasta", context)
+                 .htmlTemplate("mail/useraccount/password.html.pasta", context)
                  .send();
         }
 
@@ -295,19 +296,21 @@ public class UserAccountController extends BizController {
         oma.update(account);
 
         if (Strings.isFilled(account.getEmail())) {
+            Context context = Context.create()
+                                     .set(PARAM_REASON,
+                                          NLS.fmtr("UserAccountController.forgotPassword.reason")
+                                             .set("ip", ctx.getRemoteIP().toString())
+                                             .format())
+                                     .set(PARAM_PASSWORD, account.getLogin().getGeneratedPassword())
+                                     .set(PARAM_NAME, account.getPerson().getAddressableName())
+                                     .set(PARAM_USERNAME, account.getLogin().getUsername())
+                                     .set(PARAM_URL, getBaseUrl())
+                                     .set(PARAM_ROOT, wondergemRoot);
             mails.createEmail()
-                 .useMailTemplate("user-account-password",
-                                  Context.create()
-                                         .set(PARAM_REASON,
-                                              NLS.fmtr("UserAccountController.forgotPassword.reason")
-                                                 .set("ip", ctx.getRemoteIP().toString())
-                                                 .format())
-                                         .set(PARAM_PASSWORD, account.getLogin().getGeneratedPassword())
-                                         .set(PARAM_NAME, account.getPerson().getAddressableName())
-                                         .set(PARAM_USERNAME, account.getLogin().getUsername())
-                                         .set(PARAM_URL, getBaseUrl())
-                                         .set(PARAM_ROOT, wondergemRoot))
                  .to(account.getEmail(), account.getPerson().toString())
+                 .subject(NLS.get("mail-password.subject"))
+                 .textTemplate("mail/useraccount/password.pasta", context)
+                 .htmlTemplate("mail/useraccount/password.html.pasta", context)
                  .send();
         }
     }

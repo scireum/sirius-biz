@@ -17,8 +17,7 @@
         <w:textfield name="" value="@toUserString(mail.getTod())" labelKey="MailLogEntry.tod" readonly="true" />
     </div>
     <div class="row">
-        <w:textfield name="" value="@mail.getMessageId()" labelKey="MailLogEntry.messageId" readonly="true" />
-        <w:textfield name="" value="@mail.getMailExtension()" labelKey="MailLogEntry.mailExtension" readonly="true" />
+        <w:textfield span="12" name="" value="@mail.getMessageId()" labelKey="MailLogEntry.messageId" readonly="true" />
     </div>
     <div class="row">
         <w:textfield name="" value="@mail.getSender()" labelKey="MailLogEntry.sender" readonly="true" />
