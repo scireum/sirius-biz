@@ -78,8 +78,6 @@ public class ProfileController extends BizController {
                 userAccount.getLogin().setCleartextPassword(password);
                 oma.update(userAccount);
                 showSavedMessage();
-                profile(ctx);
-                return;
             } catch (Exception e) {
                 UserContext.handle(e);
             }

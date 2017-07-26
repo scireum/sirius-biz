@@ -97,14 +97,6 @@ public class MailLogEntry extends Entity {
     private String html;
 
     /**
-     * Contains the name of the template which was used to generate the mail.
-     */
-    public static final Column MAIL_EXTENSION = Column.named("mailExtension");
-    @Length(255)
-    @NullAllowed
-    private String mailExtension;
-
-    /**
      * Contains the node which acutally sent the mail.
      */
     public static final Column NODE = Column.named("node");
@@ -181,14 +173,6 @@ public class MailLogEntry extends Entity {
 
     public void setSuccess(boolean success) {
         this.success = success;
-    }
-
-    public String getMailExtension() {
-        return mailExtension;
-    }
-
-    public void setMailExtension(String mailExtension) {
-        this.mailExtension = mailExtension;
     }
 
     public String getText() {
