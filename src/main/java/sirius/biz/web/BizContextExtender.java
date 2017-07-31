@@ -10,6 +10,7 @@ package sirius.biz.web;
 
 import sirius.biz.codelists.CodeLists;
 import sirius.db.jdbc.Databases;
+import sirius.db.mixing.OMA;
 import sirius.db.redis.Redis;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -32,6 +33,9 @@ public class BizContextExtender implements GlobalContextExtender {
     @Part
     private Redis redis;
 
+    @Part
+    private OMA oma;
+
     @Override
     public void collectTemplate(BiConsumer<String, Object> globalParameterCollector) {
         globalParameterCollector.accept("codeLists", codeLists);
@@ -39,6 +43,7 @@ public class BizContextExtender implements GlobalContextExtender {
 
     @Override
     public void collectScripting(BiConsumer<String, Object> globalParameterCollector) {
+        globalParameterCollector.accept("oma", OMA.class);
         globalParameterCollector.accept("databases", databases);
         globalParameterCollector.accept("redis", redis);
     }
