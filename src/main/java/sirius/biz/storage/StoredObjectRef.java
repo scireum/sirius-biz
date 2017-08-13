@@ -96,7 +96,7 @@ public class StoredObjectRef {
      * @param key the key of the object to reference
      */
     public void setKey(String key) {
-        if (Strings.isFilled(this.key) && !Strings.areEqual(this.key, key)) {
+        if (!Strings.areEqual(this.key, key)) {
             this.changed = true;
         }
 
