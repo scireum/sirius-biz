@@ -71,8 +71,8 @@
     <orderEntry type="library" name="Maven: redis.clients:jedis:2.9.0" level="project" />
     <orderEntry type="library" name="Maven: mysql:mysql-connector-java:5.1.35" level="project" />
     <orderEntry type="library" name="Maven: net.sf.jt400:jt400:9.1" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.ftpserver:ftpserver-core:1.1.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.ftpserver:ftplet-api:1.1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.ftpserver:ftpserver-core:1.1.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.ftpserver:ftplet-api:1.1.1" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.21" level="project" />
     <orderEntry type="library" name="Maven: org.apache.mina:mina-core:2.0.16" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.scireum:sirius-web:test-jar:tests:9.0-SNAPSHOT" level="project" />

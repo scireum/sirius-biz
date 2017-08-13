@@ -44,10 +44,11 @@
             <artifactId>jt400</artifactId>
             <version>9.1</version>
         </dependency>
+
         <dependency>
             <groupId>org.apache.ftpserver</groupId>
             <artifactId>ftpserver-core</artifactId>
-            <version>1.1.0</version>
+            <version>1.1.1</version>
         </dependency>
 
         <dependency>
