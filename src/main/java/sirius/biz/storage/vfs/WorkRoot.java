@@ -1,0 +1,81 @@
+/*
+ * Made with all the love in the world
+ * by scireum in Remshalden, Germany
+ *
+ * Copyright by scireum GmbH
+ * http://www.scireum.de - info@scireum.de
+ */
+
+package sirius.biz.storage.vfs;
+
+import sirius.biz.storage.BucketInfo;
+import sirius.biz.storage.Storage;
+import sirius.biz.storage.StoredObject;
+import sirius.biz.tenants.Tenant;
+import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.Register;
+import sirius.web.security.UserContext;
+
+import java.time.ZoneId;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+
+/**
+ * Makes the work directory visible within the {@link VirtualFileSystem}.
+ */
+@Register
+public class WorkRoot implements VFSRoot {
+
+    @Part
+    private Storage storage;
+
+    @Override
+    public void collectRootFolders(VirtualFile parent, Consumer<VirtualFile> consumer) {
+        BucketInfo bucket = storage.getBucket("work").orElse(null);
+
+        if (bucket == null || !UserContext.getCurrentUser().hasPermission(bucket.getPermission())) {
+            return;
+        }
+
+        VirtualFile workDir = createWorkDir(parent, bucket);
+        consumer.accept(workDir);
+    }
+
+    private VirtualFile createWorkDir(VirtualFile parent, BucketInfo bucket) {
+        VirtualFile workDir = new VirtualFile(parent, "work");
+        if (bucket.isCanCreate()) {
+            workDir.withCreateFileHandler(name -> {
+                StoredObject newFile =
+                        storage.findOrCreateObjectByPath(UserContext.getCurrentUser().as(Tenant.class), "work", name);
+                return storage.updateFile(newFile);
+            });
+        }
+
+        workDir.withChildren(this::listChildren);
+        return workDir;
+    }
+
+    private void listChildren(VirtualFile parent, Consumer<VirtualFile> consumer) {
+        BucketInfo bucket = storage.getBucket("work").orElse(null);
+
+        AtomicInteger maxFiles = new AtomicInteger(250);
+        storage.list(bucket, UserContext.getCurrentUser().as(Tenant.class), file -> {
+            consumer.accept(transform(parent, file));
+            return maxFiles.decrementAndGet() > 0;
+        });
+    }
+
+    private VirtualFile transform(VirtualFile parent, StoredObject file) {
+        VirtualFile result = new VirtualFile(parent, file.getFilename());
+        result.withSize(file.getFileSize());
+        result.withLastModified(file.getLastModified().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+        result.withInputStreamSupplier(() -> storage.getData(file));
+        result.withOutputStreamSupplier(() -> storage.updateFile(file));
+        result.withDeleteHandler(() -> {
+            storage.delete(file);
+            return true;
+        });
+
+        return result;
+    }
+}
