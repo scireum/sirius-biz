@@ -11,12 +11,12 @@
             <a href="/storage/bucket/@bucket.getName()">@bucket.getName()</a>
         </li>
         <li>
-            <a href="/storage/object/@object.getObjectKey()">@object.getObjectKey()</a>
+            <a href="/storage/object/@bucket.getName()/@object.getObjectKey()">@object.getObjectKey()</a>
         </li>
     </i:block>
 
     <w:pageHeader>
-        @bucket.getName(): @object.getObjectKey()
+        @bucket.getName(): @if (isFilled(object.getFilename())) { @object.getFilename() } else { @object.getObjectKey() }
     </w:pageHeader>
 
     <div class="row">
@@ -45,14 +45,9 @@
                     </a>
                 </li>
                 <i:if test="bucket.isCanEdit()">
-                    <li>
-                        <a href="storage/rename/@object.getObjectKey()" class="link">
-                            @i18n("VirtualObject.rename")
-                        </a>
-                    </li>
                     <i:if test="isFilled(object.getReference())">
                         <li>
-                            <a href="storage/unreference/@object.getObjectKey()" class="link">
+                            <a href="storage/unreference/@bucket.getName()/@object.getObjectKey()" class="link">
                                 @i18n("VirtualObject.unreference")
                             </a>
                         </li>
@@ -62,7 +57,7 @@
 
             <w:subHeading labelKey="VirtualObject.replaceContents"/>
 
-            <w:fileUpload uploadUrl="@apply('/storage/replace/%s',object.getObjectKey())"/>
+            <w:fileUpload uploadUrl="@apply('/storage/replace/%s/%s', bucket.getName(), object.getObjectKey())"/>
 
             <a href="/storage/bucket/@bucket.getName()" class="btn btn-block">@i18n("NLS.back")</a>
             <p></p>
@@ -81,7 +76,6 @@
                         @i18n("TraceData.created")<br>
                         <small class="muted">@i18n("VirtualObject.fileSize")</small>
                     </th>
-                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -103,10 +97,6 @@
                                 <br>
                                 <small class="muted">@formatSize(version.getFileSize())</small>
                             </i:if>
-                        </td>
-                        <td class="col-md-2 align-center">
-                            <w:deleteLink
-                                    url="@apply('/storage/delete-version/%s/%s', object.getObjectKey(), version.getId())"/>
                         </td>
                     </tr>
                 </i:for>
