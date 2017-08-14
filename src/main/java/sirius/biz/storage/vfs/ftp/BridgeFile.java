@@ -194,4 +194,13 @@ class BridgeFile implements FtpFile {
     public VirtualFile getVirtualFile() {
         return file;
     }
+
+    @Override
+    public String toString() {
+        if (file != null) {
+            return file.getPath();
+        }
+
+        return parent.getPath() + "/" + childName;
+    }
 }

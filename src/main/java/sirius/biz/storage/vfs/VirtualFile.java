@@ -231,7 +231,9 @@ public class VirtualFile {
      * @param consumer the consumer collecting all children of this file
      */
     public void enumerateChildren(Consumer<VirtualFile> consumer) {
-        childProvider.accept(this, consumer);
+        if (childProvider != null) {
+            childProvider.accept(this, consumer);
+        }
     }
 
     /**
@@ -242,11 +244,13 @@ public class VirtualFile {
      */
     public Optional<VirtualFile> findChild(String name) {
         ValueHolder<VirtualFile> childHolder = new ValueHolder<>(null);
-        childProvider.accept(this, c -> {
-            if (Strings.areEqual(name, c.getName())) {
-                childHolder.set(c);
-            }
-        });
+        if (childProvider != null) {
+            childProvider.accept(this, c -> {
+                if (Strings.areEqual(name, c.getName())) {
+                    childHolder.set(c);
+                }
+            });
+        }
 
         return Optional.ofNullable(childHolder.get());
     }
