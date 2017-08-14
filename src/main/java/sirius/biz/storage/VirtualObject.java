@@ -21,6 +21,8 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.web.http.MimeHelper;
 
+import java.time.LocalDateTime;
+
 /**
  * Stores the metadata for an object managed by the {@link Storage}.
  * <p>
@@ -145,6 +147,16 @@ public class VirtualObject extends TenantAware implements StoredObject {
         fileExtension = Files.getFileExtension(path);
     }
 
+    @Override
+    public LocalDateTime getLastModified() {
+        LocalDateTime result = getTrace().getChangedAt();
+        if (result == null) {
+            return LocalDateTime.now();
+        } else {
+            return result;
+        }
+    }
+
     @AfterDelete
     protected void removePhysicalObject() {
         storage.deletePhysicalObject(getBucket(), getPhysicalKey());
@@ -155,6 +167,7 @@ public class VirtualObject extends TenantAware implements StoredObject {
         return storage.prepareDownload(this);
     }
 
+    @Override
     public String getFilename() {
         return Strings.splitAtLast(getPath(), "/").getSecond();
     }
@@ -192,7 +205,7 @@ public class VirtualObject extends TenantAware implements StoredObject {
     public void setPhysicalKey(String physicalKey) {
         this.physicalKey = physicalKey;
     }
-
+@Override
     public long getFileSize() {
         return fileSize;
     }

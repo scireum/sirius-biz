@@ -11,6 +11,7 @@ package sirius.biz.storage;
 import sirius.db.mixing.Entity;
 
 import javax.annotation.Nullable;
+import java.time.LocalDateTime;
 
 /**
  * Represents the public accessible part of an object (file) stored by {@link Storage}.
@@ -21,6 +22,13 @@ public interface StoredObject {
      * Represents the unique id of the stored object.
      */
     String getObjectKey();
+
+
+    String getFilename();
+
+    long getFileSize();
+
+    LocalDateTime getLastModified();
 
     /**
      * Returns the reference to which this object belongs.
