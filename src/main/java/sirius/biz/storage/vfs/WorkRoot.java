@@ -26,12 +26,15 @@ import java.util.function.Consumer;
 @Register
 public class WorkRoot implements VFSRoot {
 
+    private static final String WORK = "work";
+    private static final int MAX_FILES_IN_FTP = 250;
+
     @Part
     private Storage storage;
 
     @Override
     public void collectRootFolders(VirtualFile parent, Consumer<VirtualFile> consumer) {
-        BucketInfo bucket = storage.getBucket("work").orElse(null);
+        BucketInfo bucket = storage.getBucket(WORK).orElse(null);
 
         if (bucket == null || !UserContext.getCurrentUser().hasPermission(bucket.getPermission())) {
             return;
@@ -42,11 +45,11 @@ public class WorkRoot implements VFSRoot {
     }
 
     private VirtualFile createWorkDir(VirtualFile parent, BucketInfo bucket) {
-        VirtualFile workDir = new VirtualFile(parent, "work");
+        VirtualFile workDir = new VirtualFile(parent, WORK);
         if (bucket.isCanCreate()) {
             workDir.withCreateFileHandler(name -> {
                 StoredObject newFile =
-                        storage.findOrCreateObjectByPath(UserContext.getCurrentUser().as(Tenant.class), "work", name);
+                        storage.findOrCreateObjectByPath(UserContext.getCurrentUser().as(Tenant.class), WORK, name);
                 return storage.updateFile(newFile);
             });
         }
@@ -56,9 +59,9 @@ public class WorkRoot implements VFSRoot {
     }
 
     private void listChildren(VirtualFile parent, Consumer<VirtualFile> consumer) {
-        BucketInfo bucket = storage.getBucket("work").orElse(null);
+        BucketInfo bucket = storage.getBucket(WORK).orElse(null);
 
-        AtomicInteger maxFiles = new AtomicInteger(250);
+        AtomicInteger maxFiles = new AtomicInteger(MAX_FILES_IN_FTP);
         storage.list(bucket, UserContext.getCurrentUser().as(Tenant.class), file -> {
             consumer.accept(transform(parent, file));
             return maxFiles.decrementAndGet() > 0;
