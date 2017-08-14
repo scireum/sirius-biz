@@ -207,17 +207,7 @@ public class UserAccountController extends BizController {
             try {
                 String password = ctx.get(PARAM_PASSWORD).asString();
                 String confirmation = ctx.get(PARAM_CONFIRMATION).asString();
-                if (Strings.isEmpty(password) || password.length() < userAccount.getMinPasswordLength()) {
-                    UserContext.setFieldError(PARAM_PASSWORD, null);
-                    throw Exceptions.createHandled()
-                                    .withNLSKey("Model.password.minLengthError")
-                                    .set("minChars", userAccount.getMinPasswordLength())
-                                    .handle();
-                }
-                if (!Strings.areEqual(password, confirmation)) {
-                    UserContext.setFieldError(PARAM_CONFIRMATION, null);
-                    throw Exceptions.createHandled().withNLSKey("Model.password.confirmationMismatch").handle();
-                }
+                userAccount.getLogin().verifyPassword(password, confirmation, userAccount.getMinPasswordLength());
                 userAccount.getLogin().setCleartextPassword(password);
                 oma.update(userAccount);
                 showSavedMessage();

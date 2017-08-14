@@ -21,6 +21,8 @@ import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.health.Exceptions;
+import sirius.web.security.UserContext;
 
 import java.time.LocalDateTime;
 
@@ -136,6 +138,29 @@ public class LoginData extends Composite {
             this.salt = Strings.generateCode(20);
             this.passwordHash = hashPassword(salt, generatedPassword);
             this.ucasePasswordHash = hashPassword(salt, generatedPassword.toUpperCase());
+        }
+    }
+
+    /**
+     * Verifys the given password if it meets the length requirement and is equal to its confirmation.
+     *
+     * @param password          the password to check for
+     * @param confirmation      the confirmation password to check for
+     * @param minPasswordLength the minimum password length
+     * @throws sirius.kernel.health.HandledException if password is too short or if passwords do mismatch
+     */
+    public void verifyPassword(String password, String confirmation, int minPasswordLength) {
+        if (Strings.isEmpty(password) || password.length() < minPasswordLength) {
+            UserContext.setFieldError("password", null);
+            throw Exceptions.createHandled()
+                            .withNLSKey("Model.password.minLengthError")
+                            .set("minChars", minPasswordLength)
+                            .handle();
+        }
+
+        if (!Strings.areEqual(password, confirmation)) {
+            UserContext.setFieldError("confirmation", null);
+            throw Exceptions.createHandled().withNLSKey("Model.password.confirmationMismatch").handle();
         }
     }
 

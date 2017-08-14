@@ -10,9 +10,7 @@ package sirius.biz.tenants;
 
 import sirius.biz.web.BizController;
 import sirius.db.mixing.Schema;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.health.Exceptions;
 import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
@@ -43,8 +41,7 @@ public class ProfileController extends BizController {
         boolean requestHandled = prepareSave(ctx).saveEntity(userAccount);
 
         if (!requestHandled) {
-            ctx.respondWith()
-               .template("/templates/tenants/profile.html.pasta", userAccount);
+            ctx.respondWith().template("/templates/tenants/profile.html.pasta", userAccount);
         }
     }
 
@@ -64,17 +61,7 @@ public class ProfileController extends BizController {
             try {
                 String password = ctx.get(PARAM_PASSWORD).asString();
                 String confirmation = ctx.get(PARAM_CONFIRMATION).asString();
-                if (Strings.isEmpty(password) || password.length() < userAccount.getMinPasswordLength()) {
-                    UserContext.setFieldError(PARAM_PASSWORD, null);
-                    throw Exceptions.createHandled()
-                                    .withNLSKey("Model.password.minLengthError")
-                                    .set("minChars", userAccount.getMinPasswordLength())
-                                    .handle();
-                }
-                if (!Strings.areEqual(password, confirmation)) {
-                    UserContext.setFieldError(PARAM_CONFIRMATION, null);
-                    throw Exceptions.createHandled().withNLSKey("Model.password.confirmationMismatch").handle();
-                }
+                userAccount.getLogin().verifyPassword(password, confirmation, userAccount.getMinPasswordLength());
                 userAccount.getLogin().setCleartextPassword(password);
                 oma.update(userAccount);
                 showSavedMessage();
@@ -85,6 +72,5 @@ public class ProfileController extends BizController {
 
         ctx.respondWith().template("/templates/tenants/profile-change-password.html.pasta", userAccount);
     }
-
 }
 
