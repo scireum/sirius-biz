@@ -79,7 +79,7 @@ public class DatabaseController extends BasicController {
 
         if (isDDSStatement(query)) {
             // To prevent accidential damage, we try to filter DDS queries (modifying the database structure) and
-            // only permit them against oder system database.
+            // only permit them against our system database.
             if (!Strings.areEqual(database, defaultDatabase)) {
                 throw Exceptions.createHandled()
                                 .withSystemErrorMessage(
