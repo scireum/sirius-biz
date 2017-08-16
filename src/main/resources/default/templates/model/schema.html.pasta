@@ -1,15 +1,15 @@
-<w:page titleKey="SchemaController.schema">
+<w:page titleKey="DatabaseController.schema">
     <i:block name="breadcrumbs">
         <li>
-            <a href="/system/schema">@i18n("SchemaController.schema")</a>
+            <a href="/system/schema">@i18n("DatabaseController.schema")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="SchemaController.schema" />
+    <w:pageHeader titleKey="DatabaseController.schema" />
 
     <div class="row">
         <div class="col-md-3">
-            <w:helpbox helpKey="SchemaController.help" />
+            <w:helpbox helpKey="DatabaseController.help" />
         </div>
         <div class="col-md-9">
             <table class="table table-striped table-colorized">
@@ -17,8 +17,8 @@
                 <tr>
                     <th/>
                     <th>
-                        @i18n("SchemaController.reason")<br>
-                        <small class="muted">@i18n("SchemaController.sql")</small>
+                        @i18n("DatabaseController.reason")<br>
+                        <small class="muted">@i18n("DatabaseController.sql")</small>
                     </th>
                     <th class="col-md-2 align-right">
                         <a class="btn btn-default" href="#" onclick="refreshChanges()"><i class="fa fa-refresh"></i></a>
@@ -84,10 +84,10 @@
                                     row.addClass("success");
                                 }
                             } else if (change.lossless) {
-                                row.append($('<td class="align-right"><a href="#" class="link">@i18n("SchemaController.execute")</a></td>'));
+                                row.append($('<td class="align-right"><a href="#" class="link">@i18n("DatabaseController.execute")</a></td>'));
                             } else {
                                 row.addClass("warning");
-                                row.append($('<td class="align-right"><a href="#" class="link link-danger">@i18n("SchemaController.execute")</a></td>'));
+                                row.append($('<td class="align-right"><a href="#" class="link link-danger">@i18n("DatabaseController.execute")</a></td>'));
                             }
                             $('a', row).click(executeChange);
                             row.appendTo($('#schemaList'));

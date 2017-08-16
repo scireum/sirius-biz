@@ -1,0 +1,81 @@
+<w:page titleKey="DatabaseController.sql">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/system/sql">@i18n("DatabaseController.sql")</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader titleKey="DatabaseController.sql"/>
+
+    <div class="well">
+        <div class="input-group">
+            <input type="text" id="query" class="form-control" placeholder="@i18n('NLS.searchkey')" autofocus />
+            <span class="input-group-addon" onclick="execute()"><i class="fa fa-search"></i></span>
+        </div>
+    </div>
+
+    <table class="table table-striped">
+        <thead id="columns">
+        </thead>
+        <tbody id="rows">
+        </tbody>
+    </table>
+
+    <p>
+        <small id="info"></small>
+    </p>
+
+    <script type="text/javascript">
+
+        function execute() {
+            clearMessages();
+            var $columns = $('#columns');
+            var $rows = $('#rows');
+            var $info = $('#info');
+            $info.html('');
+            $rows.html('<tr><td class="align-center"><i class="fa fa-spin fa-spinner"></i></td></tr>');
+            $.getJSON('/system/sql/api/execute',
+                {
+                    query: $('#query').val()
+                },
+                function (data) {
+                    $columns.html('');
+                    $rows.html('');
+                    $info.text(data.duration);
+                    if (data.error) {
+                        addError(data.message);
+                        return;
+                    }
+                    if (data.columns !== null) {
+                        var row = $('<tr />');
+
+                        for (var j = 0; j < data.columns.length; j++) {
+                            row.append($('<th></th>').text(data.columns[j]));
+                        }
+                        row.appendTo($columns);
+                    }
+                    if (data.rows !== null) {
+                        for (var i = 0; i < data.rows.length; i++) {
+                            var dataRow = data.rows[i];
+                            var row = $('<tr />');
+
+                            for (var j = 0; j < dataRow.length; j++) {
+                                row.append($('<td></td>').text(dataRow[j]));
+                            }
+                            row.appendTo($rows);
+                        }
+                    }
+                }
+            );
+        }
+
+        $(document).ready(function () {
+            $('#query').keydown(function (e) {
+                if (e.keyCode === 13) {
+                    execute();
+                    return false;
+                }
+            });
+        });
+    </script>
+</w:page>
