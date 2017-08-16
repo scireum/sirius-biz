@@ -237,8 +237,54 @@ public class StorageController extends BizController {
             }
 
             out.property("fileId", file.getObjectKey());
+            out.property("refresh", true);
         } catch (Exception e) {
             storage.delete(file);
+            throw Exceptions.createHandled().error(e).handle();
+        }
+    }
+
+    /**
+     * Uploads new contents for the given file.
+     *
+     * @param ctx        the reqest to handle
+     * @param out        the response to the AJAX call
+     * @param bucketName the name of the bucket to upload to
+     * @param objectId   the id of the object for replace
+     */
+    @Routed(value = "/storage/replace/:1/:2", preDispatchable = true, jsonCall = true)
+    @LoginRequired
+    public void uploadObject(final WebContext ctx,
+                             JSONStructuredOutput out,
+                             String bucketName,
+                             String objectId,
+                             InputStreamHandler upload) {
+        try {
+            BucketInfo bucket = storage.getBucket(bucketName).orElse(null);
+            if (isBucketUnaccessible(bucket) || !bucket.isCanEdit()) {
+                handleAccessError(bucketName);
+            }
+
+            StoredObject file = storage.findByKey(currentTenant(), bucketName, objectId)
+                                       .orElseThrow(() -> Exceptions.createHandled()
+                                                                    .withNLSKey("StorageController.cannotAccessBucket")
+                                                                    .set("bucket", bucketName)
+                                                                    .handle());
+
+            try {
+                ctx.markAsLongCall();
+                storage.updateFile(file,
+                                   upload,
+                                   null,
+                                   null,
+                                   Long.parseLong(ctx.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
+            } finally {
+                upload.close();
+            }
+
+            out.property("fileId", file.getObjectKey());
+            out.property("refresh", true);
+        } catch (Exception e) {
             throw Exceptions.createHandled().error(e).handle();
         }
     }
@@ -269,7 +315,10 @@ public class StorageController extends BizController {
                 handleAccessError(bucketName);
             }
             String name = ctx.get("filename").asString(ctx.get("qqfile").asString());
-            file = storage.createTemporaryObject(currentTenant(), bucketName, NO_REFERENCE.equals(reference) ? null : reference, name);
+            file = storage.createTemporaryObject(currentTenant(),
+                                                 bucketName,
+                                                 NO_REFERENCE.equals(reference) ? null : reference,
+                                                 name);
             try {
                 ctx.markAsLongCall();
                 storage.updateFile(file,
@@ -309,6 +358,30 @@ public class StorageController extends BizController {
         storage.delete(object);
         showDeletedMessage();
         listObjects(ctx, virtualObject.getBucket());
+    }
+
+    /**
+     * Removes the reference binding for the given object.
+     *
+     * @param ctx        the request to handle
+     * @param bucketName the bucket in which the object resides
+     * @param objectKey  the unique object key
+     */
+    @Routed("/storage/unreference/:1/:2")
+    public void unreferenceObject(WebContext ctx, String bucketName, String objectKey) {
+        BucketInfo bucket = storage.getBucket(bucketName).orElse(null);
+        if (isBucketUnaccessible(bucket) || !bucket.isCanDelete()) {
+            handleAccessError(bucketName);
+        }
+
+        StoredObject object = findObjectByKey(bucketName, objectKey);
+        VirtualObject virtualObject = (VirtualObject) object;
+        assertTenant(virtualObject);
+
+        virtualObject.setReference(null);
+        oma.update(virtualObject);
+
+        ctx.respondWith().redirectToGet(Strings.apply("/storage/object/%s/%s", bucketName, objectKey));
     }
 
     private StoredObject findObjectByKey(String bucket, String objectKey) {

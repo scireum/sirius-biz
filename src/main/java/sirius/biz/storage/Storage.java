@@ -13,6 +13,7 @@ import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.Files;
+import sirius.biz.model.TraceData;
 import sirius.biz.tenants.Tenant;
 import sirius.db.KeyGenerator;
 import sirius.db.mixing.OMA;
@@ -28,6 +29,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.web.http.WebContext;
+import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -35,6 +37,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -146,6 +149,25 @@ public class Storage {
                                       .eq(VirtualObject.BUCKET, bucket)
                                       .eq(VirtualObject.OBJECT_KEY, key)
                                       .queryFirst());
+    }
+
+    /**
+     * Lists all objects within the given bucket for the given tenant.
+     *
+     * @param bucket   the bucket to search in
+     * @param tenant   the tenant to filter on
+     * @param iterator the iterator to process the objects
+     */
+    public void list(@Nullable BucketInfo bucket, @Nullable Tenant tenant, Function<StoredObject, Boolean> iterator) {
+        if (bucket == null || !UserContext.getCurrentUser().hasPermission(bucket.getPermission())) {
+            return;
+        }
+
+        oma.select(VirtualObject.class)
+           .eqIgnoreNull(VirtualObject.TENANT, tenant)
+           .eq(VirtualObject.BUCKET, bucket.getName())
+           .orderDesc(VirtualObject.TRACE.inner(TraceData.CHANGED_AT))
+           .iterate(iterator::apply);
     }
 
     /**
@@ -368,6 +390,19 @@ public class Storage {
         } catch (IOException e) {
             throw Exceptions.handle().to(LOG).error(e).withNLSKey("Storage.uploadFailed").handle();
         }
+    }
+
+    /**
+     * Creates a new output stream which updates the contents of the given file.
+     * <p>
+     * Note that most probably, the file will be updated once the stream is closed and not immediatelly on a write.
+     * Also note that it is essential to close the stream to release underlying resources.
+     *
+     * @param file the file to update.
+     * @return an output stream to write the contents to.
+     */
+    public OutputStream updateFile(@Nonnull StoredObject file) {
+        return new UpdatingOutputStream(this, file);
     }
 
     /**
