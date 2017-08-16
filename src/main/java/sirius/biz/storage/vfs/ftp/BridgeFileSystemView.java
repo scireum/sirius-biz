@@ -36,9 +36,9 @@ class BridgeFileSystemView implements FileSystemView {
         cwd = root;
     }
 
-    private void computeRoots(VirtualFile parent, Consumer<VirtualFile> consumer) {
+    private void computeRoots(VirtualFile parent, Consumer<VirtualFile> fileCollector) {
         for (VFSRoot childRoot : roots) {
-            childRoot.collectRootFolders(parent, consumer);
+            childRoot.collectRootFolders(parent, fileCollector);
         }
     }
 

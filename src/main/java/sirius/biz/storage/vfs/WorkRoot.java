@@ -33,7 +33,7 @@ public class WorkRoot implements VFSRoot {
     private Storage storage;
 
     @Override
-    public void collectRootFolders(VirtualFile parent, Consumer<VirtualFile> consumer) {
+    public void collectRootFolders(VirtualFile parent, Consumer<VirtualFile> fileCollector) {
         BucketInfo bucket = storage.getBucket(WORK).orElse(null);
 
         if (bucket == null || !UserContext.getCurrentUser().hasPermission(bucket.getPermission())) {
@@ -41,7 +41,7 @@ public class WorkRoot implements VFSRoot {
         }
 
         VirtualFile workDir = createWorkDir(parent, bucket);
-        consumer.accept(workDir);
+        fileCollector.accept(workDir);
     }
 
     private VirtualFile createWorkDir(VirtualFile parent, BucketInfo bucket) {
@@ -58,12 +58,12 @@ public class WorkRoot implements VFSRoot {
         return workDir;
     }
 
-    private void listChildren(VirtualFile parent, Consumer<VirtualFile> consumer) {
+    private void listChildren(VirtualFile parent, Consumer<VirtualFile> childCollector) {
         BucketInfo bucket = storage.getBucket(WORK).orElse(null);
 
         AtomicInteger maxFiles = new AtomicInteger(MAX_FILES_IN_FTP);
         storage.list(bucket, UserContext.getCurrentUser().as(Tenant.class), file -> {
-            consumer.accept(transform(parent, file));
+            childCollector.accept(transform(parent, file));
             return maxFiles.decrementAndGet() > 0;
         });
     }

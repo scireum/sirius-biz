@@ -22,7 +22,7 @@ public interface VFSRoot {
      * Collects all top-level files provided by this root.
      *
      * @param parent   the root directory of the VFS to be used a parent for the provided files
-     * @param consumer the consumer to collect all provided files
+     * @param fileCollector the consumer to collect all provided files
      */
-    void collectRootFolders(VirtualFile parent, Consumer<VirtualFile> consumer);
+    void collectRootFolders(VirtualFile parent, Consumer<VirtualFile> fileCollector);
 }

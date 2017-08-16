@@ -205,7 +205,8 @@ public class VirtualObject extends TenantAware implements StoredObject {
     public void setPhysicalKey(String physicalKey) {
         this.physicalKey = physicalKey;
     }
-@Override
+
+    @Override
     public long getFileSize() {
         return fileSize;
     }

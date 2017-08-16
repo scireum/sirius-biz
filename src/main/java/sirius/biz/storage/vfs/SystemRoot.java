@@ -35,12 +35,12 @@ public class SystemRoot implements VFSRoot {
     private Metrics metrics;
 
     @Override
-    public void collectRootFolders(VirtualFile parent, Consumer<VirtualFile> consumer) {
+    public void collectRootFolders(VirtualFile parent, Consumer<VirtualFile> fileCollector) {
         if (!UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
             return;
         }
 
-        consumer.accept(new VirtualFile(parent, "system").withChildren((system, collector) -> {
+        fileCollector.accept(new VirtualFile(parent, "system").withChildren((system, collector) -> {
             collector.accept(createStatsFile(parent));
             collector.accept(createVersionsFile(parent));
             VirtualFile logsDirectory = createLogsDirectory(parent);

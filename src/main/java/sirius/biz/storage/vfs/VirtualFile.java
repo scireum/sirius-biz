@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 /**
  * Represents a file or directory in the {@link VirtualFileSystem}.
  * <p>
- * The way this file can be modified, can be controlled by providing the appropriate callbacks. No no appropriate
+ * The way this file can be modified, can be controlled by providing the appropriate callbacks. If no appropriate
  * handler is given, the operation is blocked for that file. Therefore, by default, a file is unmodifyable unless
  * some handlers are provided.
  */
@@ -228,11 +228,11 @@ public class VirtualFile {
     /**
      * Enumerates all children of this file.
      *
-     * @param consumer the consumer collecting all children of this file
+     * @param childCollector the consumer collecting all children of this file
      */
-    public void enumerateChildren(Consumer<VirtualFile> consumer) {
+    public void enumerateChildren(Consumer<VirtualFile> childCollector) {
         if (childProvider != null) {
-            childProvider.accept(this, consumer);
+            childProvider.accept(this, childCollector);
         }
     }
 
@@ -299,7 +299,7 @@ public class VirtualFile {
     /**
      * Determines if the file is readable.
      *
-     * @return <tt>true</tt> if the file is readable, false otherwise
+     * @return <tt>true</tt> if the file is readable, <tt>false</tt> otherwise
      */
     public boolean isReadable() {
         return inputStreamSupplier != null;
@@ -308,7 +308,7 @@ public class VirtualFile {
     /**
      * Determines if the file is writeable.
      *
-     * @return <tt>true</tt> if the file is writeable, false otherwise
+     * @return <tt>true</tt> if the file is writeable, <tt>false</tt> otherwise
      */
     public boolean isWriteable() {
         return outputStreamSupplier != null;
