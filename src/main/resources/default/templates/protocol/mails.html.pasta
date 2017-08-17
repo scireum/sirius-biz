@@ -58,7 +58,7 @@
                 </tbody>
             </w:table>
 
-            <w:pagination page="mails" baseUrl="system/mails"/>
+            <w:pagination page="mails" baseUrl="/system/mails"/>
         </div>
     </div>
 
