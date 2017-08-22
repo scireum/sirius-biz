@@ -64,7 +64,7 @@
                 </tbody>
             </w:table>
 
-            <w:pagination page="protocol" baseUrl="system/protocol"/>
+            <w:pagination page="protocol" baseUrl="/system/protocol"/>
         </div>
     </div>
 

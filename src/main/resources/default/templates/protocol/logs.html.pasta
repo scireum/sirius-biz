@@ -59,7 +59,7 @@
                 </tbody>
             </w:table>
 
-            <w:pagination page="logs" baseUrl="system/logs"/>
+            <w:pagination page="logs" baseUrl="/system/logs"/>
         </div>
     </div>
 
