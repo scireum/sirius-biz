@@ -16,7 +16,7 @@
 
 <div class="col-md-@span form-group">
     <i:if test="isFilled(label)">
-        <label>@i18n(label)</label>
+        <label>@label</label>
     </i:if>
 
     <select name="@name" class="form-control @user.signalFieldError(name)" id="select-@localId"
@@ -46,7 +46,7 @@
     <input type="file" id="upload-@localId" style="display:none;" />
 
     <i:if test="isFilled(help)">
-        <span class="help-block">@i18n(help)</span>
+        <span class="help-block">@help</span>
     </i:if>
 
     <a onclick="$('#upload-@localId').click()" class="link pointer" style="cursor: pointer">@i18n("StorageController.uploadFile")</a>
