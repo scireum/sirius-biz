@@ -26,8 +26,7 @@
                 <w:heading labelKey="Tenant.administration"/>
                 <div class="row">
 
-                    <w:singleSelect span="12" name="parent" labelKey="Tenant.parent" helpKey="Tenant.parent.help">
-                        <option value="" @if(tenant.getParent().isEmpty()) {selected="selected" }></option>
+                    <w:singleSelect span="12" name="parent" optional="true" labelKey="Tenant.parent" helpKey="Tenant.parent.help">
                         <i:for type="sirius.biz.tenants.Tenant" var="t" items="tenants">
                             <option value="@t.getId()" @if(tenant.getParent().is(t)) {selected="selected" }>
                                 @t.getName()

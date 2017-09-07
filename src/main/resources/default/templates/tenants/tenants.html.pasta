@@ -1,7 +1,7 @@
 <i:arg type="Page" name="tenants"/>
 
 <w:page titleKey="Tenant.plural">
-    <i:block name="render">
+    <i:block name="breadcrumbs">
         <li>
             <a href="/tenants">@i18n("Tenant.plural")</a>
         </li>
