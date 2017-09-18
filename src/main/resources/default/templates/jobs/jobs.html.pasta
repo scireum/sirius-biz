@@ -8,7 +8,7 @@
         </li>
     </i:block>
 
-    <w:pageHader titleKey="JobsController.jobs" />
+    <w:pageHeader titleKey="JobsController.jobs" />
     <w:tableSearchHeader page="jobs" baseUrl="/jobs">
 
     </w:tableSearchHeader>
