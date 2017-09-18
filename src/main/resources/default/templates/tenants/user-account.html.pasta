@@ -17,7 +17,7 @@
         <i:render name="breadcrumbs" />
     </i:block>
 
-    <w:pageHader titleKey="Model.userAccount" />
+    <w:pageHeader titleKey="Model.userAccount" />
     <div class="row">
         <i:if test="!account.isNew()">
             <div class="col-md-3">
