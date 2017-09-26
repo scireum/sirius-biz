@@ -2,7 +2,7 @@
 <i:arg type="boolean" name="isSpy"/>
 
 <w:page titleKey="Tenant.select">
-    <i:block name="render">
+    <i:block name="breadcrumbs">
         <li>
             <a href="/tenants/select">@i18n("Tenant.select")</a>
         </li>
