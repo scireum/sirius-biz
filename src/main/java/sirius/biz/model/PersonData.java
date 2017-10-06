@@ -19,6 +19,8 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.Formatter;
 
+import java.util.Objects;
+
 /**
  * Provides personal information which can be embedded into other entities or mixins.
  */
@@ -100,6 +102,31 @@ public class PersonData extends Composite {
                         .set("firstname", firstname)
                         .set("lastname", lastname)
                         .smartFormat();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+
+        if (obj == this) {
+            return true;
+        }
+
+        if (!(obj instanceof PersonData)) {
+            return false;
+        }
+
+        return Strings.areEqual(title, ((PersonData) obj).title)
+               && Strings.areEqual(salutation, ((PersonData) obj).salutation)
+               && Strings.areEqual(firstname, ((PersonData) obj).firstname)
+               && Strings.areEqual(lastname, ((PersonData) obj).lastname);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(title, salutation, firstname, lastname);
     }
 
     /**
