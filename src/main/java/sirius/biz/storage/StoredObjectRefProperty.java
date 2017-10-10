@@ -68,7 +68,7 @@ public class StoredObjectRefProperty extends Property {
 
     protected StoredObjectRef getStoredObjectRef(Object entity) {
         try {
-            return (StoredObjectRef) super.getValueFromField(entity);
+            return (StoredObjectRef) super.getValueFromField(this.accessPath.apply(entity));
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(OMA.LOG)
