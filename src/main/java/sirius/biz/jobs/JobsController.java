@@ -84,7 +84,7 @@ public class JobsController extends BizController {
         PageHelper<JobProtocol> ph = PageHelper.withQuery(baseQuery);
         ph.withContext(ctx);
         ph.withSearchFields(JobProtocol.JOB_TITLE, JobProtocol.USER_NAME);
-        ctx.respondWith().template("templates/jobs/protocols.html.pasta", ph);
+        ctx.respondWith().template("templates/jobs/protocol.html.pasta", ph);
     }
 
     public boolean loadParameters(WebContext ctx, List<JobParameterDescription> params, Context context) {

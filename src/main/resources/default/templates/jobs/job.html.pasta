@@ -14,7 +14,7 @@
         @i18n("JobsController.job"): @job.getTitle()
     </w:pageHeader>
 
-    <w:editForm url="@apply('/job/run/%s/%s', job.getFactory(), job.getName())">
+    <w:editForm url="@apply('/job/%s/%s/run', job.getFactory(), job.getName())">
         <div class="row">
             <w:textfield span="8" name="name" value="@job.getName()" labelKey="Model.name" required="true" />
         </div>
