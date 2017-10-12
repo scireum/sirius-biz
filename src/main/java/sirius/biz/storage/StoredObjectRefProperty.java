@@ -92,6 +92,11 @@ public class StoredObjectRefProperty extends Property {
         return value.get();
     }
 
+    @Override
+    protected void setValue(Entity entity, Object object) {
+        this.setValueToField(object, entity);
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     protected void setValueToField(Object value, Object target) {
