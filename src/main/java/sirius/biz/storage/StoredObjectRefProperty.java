@@ -94,9 +94,9 @@ public class StoredObjectRefProperty extends Property {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void setValueToField(Object value, Object target) {
+    protected void setValueToField(Object value, Object target, Entity entity) {
         StoredObjectRef ref = getStoredObjectRef(target);
-        initializeReference((Entity) target, ref);
+        initializeReference(entity, ref);
         if (value == null || value instanceof StoredObject) {
             ref.setObject((StoredObject) value);
         } else {
