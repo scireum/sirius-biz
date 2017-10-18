@@ -31,6 +31,7 @@
                     <i:extensions name="templates-user-account-sidebar-infos" account="account" page="page"/>
                 </w:infobox>
 
+                <i:extensions name="templates-user-account-sidebar-additional" account="account" page="page"/>
 
                 <w:navbox labelKey="Model.links">
                     <w:navboxLink labelKey="Model.details" url="@apply('/user-account/%s', account.getId())" active="page == 'details'"/>

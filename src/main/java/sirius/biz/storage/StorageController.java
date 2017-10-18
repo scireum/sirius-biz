@@ -331,7 +331,7 @@ public class StorageController extends BizController {
             }
 
             out.property("fileId", file.getObjectKey());
-            out.property("url", file.prepareURL().buildURL());
+            out.property("previewUrl", file.prepareURL().buildURL());
         } catch (Exception e) {
             storage.delete(file);
             throw Exceptions.createHandled().error(e).handle();
