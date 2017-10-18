@@ -1,7 +1,7 @@
 <i:arg name="userAccount" type="sirius.biz.tenants.UserAccount"/>
 
 <w:page titleKey="ProfileController.myProfile">
-    <w:pageHeader titleKey="ProfileController.userProfile" />
+    <w:pageHeader titleKey="ProfileController.userProfile"/>
 
     <i:block name="breadcrumbs">
         <li>
@@ -43,8 +43,10 @@
                                  labelKey="PersonData.lastname"/>
                 </div>
             </div>
+            <div class="col-md-4">
+                <i:extensions name="templates-profile-image" userAccount="@userAccount"/>
+            </div>
         </div>
-
     </w:editForm>
 
     <w:formBar/>
