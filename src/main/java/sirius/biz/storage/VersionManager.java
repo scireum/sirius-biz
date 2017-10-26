@@ -8,6 +8,7 @@
 
 package sirius.biz.storage;
 
+import com.google.common.io.ByteStreams;
 import sirius.db.KeyGenerator;
 import sirius.db.mixing.OMA;
 import sirius.kernel.async.Tasks;
@@ -34,6 +35,7 @@ import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
@@ -227,9 +229,25 @@ public class VersionManager {
         }
     }
 
+    /**
+     * Resizes an image with an external tool over the CLI.
+     *
+     * <p>
+     * Because we can have different {@link PhysicalStorageEngine ways of storing the files}, we first need to create
+     * two temporary files. The first one is the source image and the he second one is the destination image. The source
+     * file needs to be filled with the data from the {@link Storage}.
+     *
+     * @param object the metadata for the virtual file
+     * @param width the width in pixels
+     * @param height the height in pixels
+     * @return the destination file
+     * @throws IOException in case of an IO error
+     */
     private File convertUsingCLI(VirtualObject object, int width, int height) throws IOException {
         File src = File.createTempFile("resize-in-", "." + object.getFileExtension());
-        try {
+        try (FileOutputStream out = new FileOutputStream(src)) {
+            ByteStreams.copy(storage.getData(object), out);
+
             File dest = File.createTempFile("resize-out-", ".jpg");
             String command = Formatter.create(conversionCommand)
                                       .set("src", src.getAbsolutePath())
