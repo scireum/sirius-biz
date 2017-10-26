@@ -229,6 +229,20 @@ public class VersionManager {
         }
     }
 
+    /**
+     * Resizes an image with an external tool over the CLI.
+     *
+     * <p>
+     * Because we can have different {@link PhysicalStorageEngine ways of storing the files}, we first need to create
+     * two temporary files. The first one is the source image and the he second one is the destination image. The source
+     * file needs to be filled with the data from the {@link Storage}.
+     *
+     * @param object the metadata for the virtual file
+     * @param width the width in pixels
+     * @param height the height in pixels
+     * @return the destination file
+     * @throws IOException in case of an IO error
+     */
     private File convertUsingCLI(VirtualObject object, int width, int height) throws IOException {
         File src = File.createTempFile("resize-in-", "." + object.getFileExtension());
         try (FileOutputStream out = new FileOutputStream(src)) {
