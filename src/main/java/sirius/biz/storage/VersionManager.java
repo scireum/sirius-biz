@@ -8,6 +8,7 @@
 
 package sirius.biz.storage;
 
+import com.google.common.io.ByteStreams;
 import sirius.db.KeyGenerator;
 import sirius.db.mixing.OMA;
 import sirius.kernel.async.Tasks;
@@ -34,6 +35,7 @@ import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
@@ -229,7 +231,9 @@ public class VersionManager {
 
     private File convertUsingCLI(VirtualObject object, int width, int height) throws IOException {
         File src = File.createTempFile("resize-in-", "." + object.getFileExtension());
-        try {
+        try (FileOutputStream out = new FileOutputStream(src)) {
+            ByteStreams.copy(storage.getData(object), out);
+
             File dest = File.createTempFile("resize-out-", ".jpg");
             String command = Formatter.create(conversionCommand)
                                       .set("src", src.getAbsolutePath())
