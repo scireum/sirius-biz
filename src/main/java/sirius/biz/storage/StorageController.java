@@ -16,6 +16,7 @@ import sirius.biz.web.PageHelper;
 import sirius.db.mixing.SmartQuery;
 import sirius.db.mixing.constraints.FieldOperator;
 import sirius.db.mixing.constraints.Like;
+import sirius.db.mixing.constraints.Or;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
@@ -158,9 +159,11 @@ public class StorageController extends BizController {
         }
 
         if (queryString.contains("*")) {
-            baseQuery.where(Like.on(VirtualObject.PATH).matches(queryString));
+            baseQuery.where(Or.of(Like.on(VirtualObject.PATH).matches(queryString),
+                                  Like.on(VirtualObject.OBJECT_KEY).matches(query)));
         } else {
-            baseQuery.eq(VirtualObject.PATH, queryString);
+            baseQuery.where(Or.of(FieldOperator.on(VirtualObject.PATH).eq(queryString),
+                                  FieldOperator.on(VirtualObject.OBJECT_KEY).eq(query)));
         }
     }
 
