@@ -29,9 +29,9 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -329,9 +329,6 @@ public class VersionManager {
      * @author Chris Campbell
      */
     private BufferedImage getScaledInstance(BufferedImage img, int targetWidth, int targetHeight) {
-        int type = (img.getTransparency() == Transparency.OPAQUE) ?
-                   BufferedImage.TYPE_INT_RGB :
-                   BufferedImage.TYPE_INT_ARGB;
         BufferedImage ret = img;
         int width = img.getWidth();
         int height = img.getHeight();
@@ -349,10 +346,10 @@ public class VersionManager {
                 height = targetHeight;
             }
 
-            BufferedImage tmp = new BufferedImage(width, height, type);
+            BufferedImage tmp = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             Graphics2D g2 = tmp.createGraphics();
             g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g2.drawImage(ret, 0, 0, width, height, null);
+            g2.drawImage(ret, 0, 0, width, height, Color.WHITE, null);
             g2.dispose();
             ret = tmp;
         } while (width != targetWidth || height != targetHeight);
