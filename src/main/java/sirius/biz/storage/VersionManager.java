@@ -155,37 +155,28 @@ public class VersionManager {
     private void performVersionComputation(VirtualObjectVersion objectVersion) {
         VirtualObject object = objectVersion.getVirtualObject().getValue();
         try {
-            int width = 0;
-            int height = 0;
-            int extendWidth = 0;
-            int extendHeight = 0;
+            Tuple<Integer, Integer> size = Tuple.create(0, 0);
+            Tuple<Integer, Integer> extendedSize = Tuple.create(0, 0);
 
             for (String part : objectVersion.getVersionKey().split(",")) {
                 Tuple<String, String> keyValuePair = Strings.split(part, ":");
+                String key = keyValuePair.getFirst().toLowerCase().trim();
 
-                switch (keyValuePair.getFirst().toLowerCase().trim()) {
-                    case "size":
-                        Tuple<String, String> widthAndHeight = Strings.split(keyValuePair.getSecond(), "x");
+                if ("size".equals(key)) {
+                    size = parseWidthAndHeight(keyValuePair.getSecond());
+                }
 
-                        width = Integer.parseInt(widthAndHeight.getFirst().trim());
-                        height = Integer.parseInt(widthAndHeight.getSecond().trim());
-
-                        break;
-
-                    case "min":
-                        Tuple<String, String> extendWidthAndHeight = Strings.split(keyValuePair.getSecond(), "x");
-
-                        extendWidth = Integer.parseInt(extendWidthAndHeight.getFirst().trim());
-                        extendHeight = Integer.parseInt(extendWidthAndHeight.getSecond().trim());
-
-                        break;
-
-                    default:
-                        Storage.LOG.WARN("Unknown key '" + keyValuePair.getFirst() + "' in version string.");
+                if ("min".equals(key)) {
+                    extendedSize = parseWidthAndHeight(keyValuePair.getSecond());
                 }
             }
 
-            convertAndStore(objectVersion, object, width, height, extendWidth, extendHeight);
+            convertAndStore(objectVersion,
+                            object,
+                            size.getFirst(),
+                            size.getSecond(),
+                            extendedSize.getFirst(),
+                            extendedSize.getSecond());
         } catch (Exception e) {
             Exceptions.handle()
                       .to(Storage.LOG)
@@ -196,6 +187,13 @@ public class VersionManager {
                       .handle();
             oma.delete(objectVersion);
         }
+    }
+
+    private Tuple<Integer, Integer> parseWidthAndHeight(String value) {
+        Tuple<String, String> widthAndHeight = Strings.split(value, "x");
+
+        return Tuple.create(Integer.parseInt(widthAndHeight.getFirst().trim()),
+                            Integer.parseInt(widthAndHeight.getSecond().trim()));
     }
 
     private void convertAndStore(VirtualObjectVersion objectVersion,
