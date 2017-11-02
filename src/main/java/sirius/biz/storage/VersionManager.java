@@ -347,8 +347,8 @@ public class VersionManager {
     /**
      * Resizes the given {@code BufferedImage} into a new image with the given dimensions.
      * <p>
-     * First the image is scaled down to be at most the requested size. In this step the aspect ratio is not changed.
-     * The image is then extended to meet the extended size.
+     * First the image is converted to RGB and then scaled down to be at most the requested size. In this step the
+     * aspect ratio is not changed. The image is then extended to meet the extended size.
      *
      * @param image           the original image to be resized
      * @param requestedWidth  the requested maximum width, in pixels
@@ -369,7 +369,9 @@ public class VersionManager {
 
         BufferedImage newImage = image;
 
-        if (requestedWidth < imageWidth && requestedHeight < imageHeight) {
+        newImage = getConvertedInstance(newImage);
+
+        if (requestedWidth < imageWidth || requestedHeight < imageHeight) {
             int newWidth = requestedWidth;
             int newHeight = requestedHeight;
             if (thumbRatio < aspectRatio) {
@@ -382,6 +384,21 @@ public class VersionManager {
         }
 
         newImage = getExtendedImageInstance(newImage, extendWidth, extendHeight);
+
+        return newImage;
+    }
+
+    /**
+     * Returns a to RGB converted instance of the provided {@code BufferedImage}.
+     *
+     * @param img the original image to be scaled
+     * @return a converted version of the original {@code BufferedImage}
+     */
+    private BufferedImage getConvertedInstance(BufferedImage img) {
+        BufferedImage newImage = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2 = newImage.createGraphics();
+        g2.drawImage(img, 0, 0, Color.WHITE, null);
+        g2.dispose();
 
         return newImage;
     }
