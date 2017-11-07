@@ -98,15 +98,7 @@ public class StoredObjectRef {
      * @return the URL for this reference
      */
     public String getURL(String defaultURL) {
-        if (isURL()) {
-            return getKey();
-        }
-
-        if (isEmpty() || getObject() == null) {
-            return defaultURL;
-        }
-
-        return getObject().prepareURL().buildURL();
+        return getURLWithVersion(null, defaultURL);
     }
 
     /**
@@ -165,7 +157,7 @@ public class StoredObjectRef {
      * @return <tt>true</tt> if an URL was stored, <tt>false</tt> if an object key or nothing yet is stored
      */
     public boolean isURL() {
-        return supportsURL && URL_PATTERN.matcher(key).find();
+        return supportsURL && Strings.isFilled(key) && URL_PATTERN.matcher(key).find();
     }
 
     /**
