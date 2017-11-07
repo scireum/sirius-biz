@@ -122,7 +122,7 @@ public class StoredObjectRef {
             return getKey();
         }
 
-        if (getObject() == null) {
+        if (isEmpty() || getObject() == null) {
             return defaultURL;
         }
 
