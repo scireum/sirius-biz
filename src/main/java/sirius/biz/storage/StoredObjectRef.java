@@ -91,6 +91,45 @@ public class StoredObjectRef {
     }
 
     /**
+     * Determines the URL for this reference. Returns either the URL if the reference is an external one, or the URL
+     * for the {@link StoredObject} if it exists, otherwise the default URL.
+     *
+     * @param defaultURL the default URL
+     * @return the URL for this reference
+     */
+    public String getURL(String defaultURL) {
+        if (isURL()) {
+            return getKey();
+        }
+
+        if (isEmpty() || getObject() == null) {
+            return defaultURL;
+        }
+
+        return getObject().prepareURL().buildURL();
+    }
+
+    /**
+     * Determines the URL for this reference. Returns either the URL if the reference is an external one, or the
+     * versioned URL for the {@link StoredObject} if it exists, otherwise the default URL.
+     *
+     * @param version    the version string
+     * @param defaultURL the default URL
+     * @return the URL for this reference
+     */
+    public String getURLWithVersion(String version, String defaultURL) {
+        if (isURL()) {
+            return getKey();
+        }
+
+        if (getObject() == null) {
+            return defaultURL;
+        }
+
+        return getObject().prepareURL().withVersion(version).buildURL();
+    }
+
+    /**
      * Specifies an object key to reference.
      *
      * @param key the key of the object to reference
