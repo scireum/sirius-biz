@@ -143,6 +143,23 @@ public class StoredObjectRef {
     }
 
     /**
+     * Determines the filename of the referenced file or url.
+     *
+     * @return the filename, or <tt>null</tt> if no object is referenced
+     */
+    public String getFilename() {
+        if (isURL()) {
+           return Strings.splitAtLast(getKey(), "/").getSecond();
+        }
+
+        if (isEmpty() || getObject() == null) {
+            return null;
+        }
+
+        return getObject().getFilename();
+    }
+
+    /**
      * Returns the key of the referenced object.
      *
      * @return the key of the object being referenced
