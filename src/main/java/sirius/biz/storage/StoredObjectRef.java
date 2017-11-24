@@ -147,7 +147,7 @@ public class StoredObjectRef {
      *
      * @return the filename, or <tt>null</tt> if no object is referenced
      */
-    public String getFileName() {
+    public String getFilename() {
         if (isURL()) {
            return Strings.splitAtLast(getKey(), "/").getSecond();
         }
