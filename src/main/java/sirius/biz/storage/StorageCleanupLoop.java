@@ -69,7 +69,7 @@ public class StorageCleanupLoop extends BackgroundLoop {
                                                  .queryList();
         if (!objectsToDelete.isEmpty()) {
             for (VirtualObject obj : objectsToDelete) {
-                oma.delete(obj);
+                storage.delete(obj);
             }
 
             Storage.LOG.INFO("Deleted %s temporary uploads...", objectsToDelete.size());
@@ -94,7 +94,7 @@ public class StorageCleanupLoop extends BackgroundLoop {
                                                  .queryList();
         if (!objectsToDelete.isEmpty()) {
             for (VirtualObject obj : objectsToDelete) {
-                oma.delete(obj);
+                storage.delete(obj);
             }
 
             Storage.LOG.INFO("Deleted %s old files in '%s'...", objectsToDelete.size(), bucket.getName());
