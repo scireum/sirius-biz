@@ -21,6 +21,8 @@ import sirius.db.mixing.SmartQuery;
 import sirius.db.mixing.constraints.FieldOperator;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.cache.Cache;
+import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.ConfigValue;
@@ -69,6 +71,8 @@ public class Storage {
 
     public static final Log LOG = Log.get("storage");
     private static final byte[] EMPTY_BUFFER = new byte[0];
+
+    private static Cache<String, VirtualObject> virtualObjectCache = CacheManager.createCache("virtual-objects");
 
     @Part
     private OMA oma;
@@ -136,6 +140,9 @@ public class Storage {
 
     /**
      * Tries to find the object with the given id, for the given tenant and bucket.
+     * <p>
+     * Uses a cache for the {@link VirtualObject virtual objects}. When fetching an object from the cache, the buckets
+     * and tennants are compared to ensure integrity. Only non-temporary objects are cached.
      *
      * @param tenant the tenant to filter on
      * @param bucket the bucket to search in
@@ -144,11 +151,27 @@ public class Storage {
      * object exists.
      */
     public Optional<StoredObject> findByKey(@Nullable Tenant tenant, String bucket, String key) {
-        return Optional.ofNullable(oma.select(VirtualObject.class)
-                                      .eqIgnoreNull(VirtualObject.TENANT, tenant)
-                                      .eq(VirtualObject.BUCKET, bucket)
-                                      .eq(VirtualObject.OBJECT_KEY, key)
-                                      .queryFirst());
+        VirtualObject cachedObject = virtualObjectCache.get(key);
+
+        if (cachedObject != null) {
+            if ((tenant == null || cachedObject.getTenant().is(tenant)) && cachedObject.getBucket().equals(bucket)) {
+                return Optional.of(cachedObject);
+            }
+
+            return Optional.empty();
+        }
+
+        VirtualObject virtualObject = oma.select(VirtualObject.class)
+                                         .eqIgnoreNull(VirtualObject.TENANT, tenant)
+                                         .eq(VirtualObject.BUCKET, bucket)
+                                         .eq(VirtualObject.OBJECT_KEY, key)
+                                         .queryFirst();
+
+        if (virtualObject != null && !virtualObject.isTemporary()) {
+            virtualObjectCache.put(key, virtualObject);
+        }
+
+        return Optional.ofNullable(virtualObject);
     }
 
     /**
@@ -274,7 +297,7 @@ public class Storage {
      * Deletes all automatically created objects except the given one.
      * <p>
      * Removes automatically created object ({@link #createTemporaryObject(Tenant, String, String, String)})
-     * if the reference is updated or the referencing entity is deleted.
+     * if the reference is updated or the referencing entity is deleted. All deleted objects are removed from the cache.
      *
      * @param reference         the reference (field+id of the entity) being referenced
      * @param excludedObjectKey if the reference is just changed, the new object is excluded, to just delete the old
@@ -288,6 +311,8 @@ public class Storage {
         if (Strings.isFilled(excludedObjectKey)) {
             qry.where(FieldOperator.on(VirtualObject.OBJECT_KEY).notEqual(excludedObjectKey));
         }
+
+        qry.iterateAll(virtualObject -> virtualObjectCache.remove(virtualObject.getObjectKey()));
 
         qry.delete();
     }
@@ -355,6 +380,8 @@ public class Storage {
 
     /**
      * Updates the given file based on the given stream.
+     * <p>
+     * The updated object is removed from the cache, to ensure that the cache is up to date.
      *
      * @param file     the S3 file to update
      * @param data     the data to store
@@ -382,6 +409,9 @@ public class Storage {
             }
             object.setPhysicalKey(newPhysicalKey);
             oma.override(object);
+
+            // Remove from cache
+            virtualObjectCache.remove(object.getObjectKey());
 
             // Delete all (now outdated) versions
             oma.select(VirtualObjectVersion.class).eq(VirtualObjectVersion.VIRTUAL_OBJECT, object).delete();
@@ -430,6 +460,7 @@ public class Storage {
      */
     public void delete(StoredObject object) {
         if (object instanceof VirtualObject) {
+            virtualObjectCache.remove(object.getObjectKey());
             oma.delete((VirtualObject) object);
         }
     }
