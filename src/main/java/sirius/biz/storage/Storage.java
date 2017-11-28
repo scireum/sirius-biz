@@ -154,7 +154,7 @@ public class Storage {
         VirtualObject cachedObject = virtualObjectCache.get(key);
 
         if (cachedObject != null) {
-            if ((tenant == null || cachedObject.getTenant().is(tenant)) && cachedObject.getBucket().equals(bucket)) {
+            if (checkIntegrity(cachedObject, tenant, bucket)) {
                 return Optional.of(cachedObject);
             }
 
@@ -172,6 +172,10 @@ public class Storage {
         }
 
         return Optional.ofNullable(virtualObject);
+    }
+
+    private boolean checkIntegrity(VirtualObject virtualObject, @Nullable Tenant tenant, String bucket) {
+        return (tenant == null || virtualObject.getTenant().is(tenant)) && virtualObject.getBucket().equals(bucket);
     }
 
     /**
