@@ -43,7 +43,7 @@ public class BizContextExtender implements GlobalContextExtender {
 
     @Override
     public void collectScripting(BiConsumer<String, Object> globalParameterCollector) {
-        globalParameterCollector.accept("oma", OMA.class);
+        globalParameterCollector.accept("oma", oma);
         globalParameterCollector.accept("databases", databases);
         globalParameterCollector.accept("redis", redis);
     }
