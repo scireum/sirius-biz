@@ -1,0 +1,76 @@
+<i:arg type="sirius.biz.storage.StoredObjectRef" name="objectRef"/>
+<i:arg type="String" name="inputId"/>
+<i:arg type="String" name="id" default="@('file-upload' + call.generateLocalId())"/>
+<i:arg type="String" name="defaultPreview" default=""/>
+<i:arg type="String" name="allowedExtensions" default=""/>
+<i:arg type="String" name="action" default="@apply('/storage/upload-reference/%s/%s/', objectRef.getBucket(), objectRef.getReference())"/>
+<i:arg type="boolean" name="urlAllowed" default="@objectRef.isSupportsURL()"/>
+<i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>
+
+<div id="@id" class="file-upload">
+    <div class="qq-upload-drop-area qq-image-area">
+        <img src="@defaultPreview"
+             class="file-upload-preview @if(!isFilled(defaultPreview) || objectRef.isFilled()) { hide }"/>
+
+        <i class="fa fa-3x file-upload-icon hide" aria-hidden="true"></i>
+        <div class="spinner hide"><i class="fa fa-spinner fa-spin fa-3x"></i><span class="sr-only"></span></div>
+
+        <p>
+            <a href="@objectRef.getURL('')" class="file-upload-name" style="word-wrap: break-word">
+                @objectRef.getFilename()
+            </a>
+        </p>
+
+        <p>@i18n("StoredObject.uploadArea")</p>
+    </div>
+
+    <div class="qq-upload-button btn btn-primary btn-block">@i18n("StoredObject.uploadBtn")</div>
+
+    <i:if test="@urlAllowed">
+        <button type="button" class="btn btn-block" data-placement="top" data-toggle="popover">
+            @i18n("StoredObject.specifyURL")
+        </button>
+
+        <div class="popover-content hide">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>@i18n("StoredObject.URL")</label>
+                        <input type="text" class="form-control">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-block btn-primary button-apply">
+                        @i18n("NLS.ok") <i class="fa fa-check"></i>
+                    </button>
+                </div>
+
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-block button-close">
+                        @i18n("NLS.cancel") <i class="fa fa-close"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </i:if>
+
+    <i:if test="@showResetButton">
+        <button type="button" class="btn btn-block btn-reset-js">
+            @i18n("StoredObject.resetBtn")
+        </button>
+    </i:if>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var $container = $('#@id');
+
+        $container.storedObjectManager({
+            action: '@action',
+            allowedExtensions: '@allowedExtensions',
+            defaultPreview: '@defaultPreview',
+            inputId: '@inputId'
+        });
+    });
+</script>
