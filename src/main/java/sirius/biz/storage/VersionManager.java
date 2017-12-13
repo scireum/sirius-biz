@@ -75,8 +75,8 @@ public class VersionManager {
     private Cache<String, Tuple<VirtualObject, Map<String, String>>> logicalToPhysicalCache =
             CacheManager.createCache("storage-object-metadata");
 
-    public static final String PNG_IMAGE = "png";
-    public static final String JPG_IMAGE = "jpg";
+    private static final String PNG_IMAGE = "png";
+    private static final String JPG_IMAGE = "jpg";
 
     /**
      * Returns the targeted {@link VirtualObject} and its known physical objects for versions.
