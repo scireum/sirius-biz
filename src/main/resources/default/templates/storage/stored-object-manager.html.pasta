@@ -5,10 +5,12 @@
             var button = $(this).find('.qq-upload-button').get(0);
 
             var $dropArea = $(this).find('.qq-upload-drop-area');
+            var $file = $(this).find('.file-upload-file');
             var $filename = $(this).find('.file-upload-name');
-            var $preview = $(element).find('.file-upload-preview');
-            var $icon = $(element).find('.file-upload-icon');
-            var $spinner = $(this).find('.spinner');
+            var $preview = $(this).find('.file-upload-preview');
+            var $icon = $(this).find('.file-upload-icon');
+            var $progress = $(this).find('.file-upload-progress');
+            var $percent = $progress.find('.file-upload-progress-percent');
             var $urlButton = $(this).find('[data-toggle=popover]');
             var $resetButton = $(this).find('.btn-reset-js');
             var $storedObjectInput = $('#' + options.inputId);
@@ -42,20 +44,34 @@
                     }
                 },
                 onSubmit: function (id, filename) {
-                    $filename.text(filename).attr('href', '#');
+                    if ($(element).data('id') !== undefined) {
+                        uploader._handler.cancel($(element).data('id'));
+                    }
 
-                    $preview.addClass('hide');
-                    $icon.addClass('hide');
-                    $spinner.removeClass('hide');
+                    $(element).data('id', id);
+
+                    $progress.find('.file-upload-progress-name').text(filename);
+
+                    $progress.removeClass('hide');
+                    $file.addClass('hide');
                 },
                 onProgress: function (id, filename, loaded, total) {
                     var progress = Math.round(loaded / total * 100);
 
-                    $filename.text(filename + ' (' + progress + '%)');
+                    $percent.text(progress + '%');
+                },
+                onCancel: function (id, filename) {
+                    $(element).removeData('id');
+
+                    $progress.addClass('hide');
+                    $file.removeClass('hide');
                 },
                 onComplete: function (id, filename, responseJSON) {
                     clearMessages();
-                    $spinner.addClass('hide');
+                    $(element).removeData('id');
+
+                    $progress.addClass('hide');
+                    $file.removeClass('hide');
 
                     if (responseJSON.error) {
                         addError(responseJSON.message);
@@ -77,6 +93,12 @@
 
             setupDragDrop(uploader, $dropArea);
             updatePreview(element, $filename.attr('href'));
+
+            $progress.find('a').click(function (e) {
+                e.preventDefault();
+
+                uploader._handler.cancel($(element).data('id'));
+            });
 
             $urlButton.popover({
                 html: true, trigger: 'manual', content: function () {

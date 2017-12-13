@@ -9,17 +9,29 @@
 
 <div id="@id" class="file-upload">
     <div class="qq-upload-drop-area qq-image-area">
-        <img src="@defaultPreview"
-             class="file-upload-preview @if(!isFilled(defaultPreview) || objectRef.isFilled()) { hide }"/>
+        <div class="file-upload-file">
+            <img src="@defaultPreview"
+                 class="file-upload-preview @if(!isFilled(defaultPreview) || objectRef.isFilled()) { hide }"/>
 
-        <i class="fa fa-3x file-upload-icon hide" aria-hidden="true"></i>
-        <div class="spinner hide"><i class="fa fa-spinner fa-spin fa-3x"></i><span class="sr-only"></span></div>
+            <i class="fa fa-3x file-upload-icon hide" aria-hidden="true"></i>
 
-        <p>
-            <a href="@objectRef.getURL('')" class="file-upload-name" style="word-wrap: break-word">
-                @objectRef.getFilename()
-            </a>
-        </p>
+            <p>
+                <a href="@objectRef.getURL('')" class="file-upload-name" style="word-wrap: break-word">
+                    @objectRef.getFilename()
+                </a>
+            </p>
+        </div>
+
+        <div class="file-upload-progress hide">
+            <i class="fa fa-spinner fa-3x fa-spin"></i>
+
+            <div class="file-upload-progress-name" style="word-wrap: break-word"></div>
+            <div class="file-upload-progress-percent"></div>
+
+            <p>
+                <a href="#" role="button">@i18n("StoredObject.cancelUpload")</a>
+            </p>
+        </div>
 
         <p>@i18n("StoredObject.uploadArea")</p>
     </div>
