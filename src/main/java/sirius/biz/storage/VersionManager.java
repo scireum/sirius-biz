@@ -29,6 +29,7 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -289,6 +290,7 @@ public class VersionManager {
      * @param height       the height in pixels
      * @param extendWidth  the minimum extended width in pixels
      * @param extendHeight the minimum extended height in pixels
+     * @param imageFormat  the image format to use
      * @return the destination file
      * @throws IOException in case of an IO error
      */
@@ -364,7 +366,7 @@ public class VersionManager {
             return null;
         }
 
-        BufferedImage dest = resize(src, width, height, extendWidth, extendHeight);
+        BufferedImage dest = resize(src, width, height, extendWidth, extendHeight, imageFormat);
         if (imageFormat.equals(PNG_IMAGE)) {
             return writePNG(dest);
         }
@@ -386,13 +388,15 @@ public class VersionManager {
      * @param requestedHeight the requested maximum height, in pixels
      * @param extendWidth     the minimum extended width, in pixels
      * @param extendHeight    the minimum extended height, in pixels
+     * @param imageFormat     the image format to use
      * @return a resized version of the original {@code BufferedImage}
      */
     private BufferedImage resize(BufferedImage image,
                                  int requestedWidth,
                                  int requestedHeight,
                                  int extendWidth,
-                                 int extendHeight) {
+                                 int extendHeight,
+                                 String imageFormat) {
         double thumbRatio = (double) requestedWidth / requestedHeight;
         int imageWidth = image.getWidth(null);
         int imageHeight = image.getHeight(null);
@@ -400,7 +404,7 @@ public class VersionManager {
 
         BufferedImage newImage = image;
 
-        newImage = getConvertedInstance(newImage);
+        newImage = getConvertedInstance(newImage, imageFormat);
 
         if (requestedWidth < imageWidth || requestedHeight < imageHeight) {
             int newWidth = requestedWidth;
@@ -411,25 +415,38 @@ public class VersionManager {
                 newWidth = (int) (newHeight * aspectRatio);
             }
 
-            newImage = getScaledInstance(newImage, newWidth, newHeight);
+            newImage = getScaledInstance(newImage, newWidth, newHeight, imageFormat);
         }
 
-        newImage = getExtendedImageInstance(newImage, extendWidth, extendHeight);
+        newImage = getExtendedImageInstance(newImage, extendWidth, extendHeight, imageFormat);
 
         return newImage;
     }
 
     /**
-     * Returns a to RGB converted instance of the provided {@code BufferedImage}.
+     * Returns a to the target format converted instance of the provided {@code BufferedImage} .
      *
-     * @param img the original image to be scaled
+     * @param img         the original image to be scaled
+     * @param imageFormat the format to transform into
      * @return a converted version of the original {@code BufferedImage}
      */
-    private BufferedImage getConvertedInstance(BufferedImage img) {
-        BufferedImage newImage = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_RGB);
-        Graphics2D g2 = newImage.createGraphics();
-        g2.drawImage(img, 0, 0, Color.WHITE, null);
-        g2.dispose();
+    private BufferedImage getConvertedInstance(BufferedImage img, String imageFormat) {
+        BufferedImage newImage = null;
+
+        if (imageFormat.equals(PNG_IMAGE)) {
+            newImage = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2 = newImage.createGraphics();
+            g2.setComposite(AlphaComposite.Src);
+            g2.drawImage(img, 0, 0, null);
+            g2.dispose();
+        }
+
+        if (imageFormat.equals(JPG_IMAGE)) {
+            newImage = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2 = newImage.createGraphics();
+            g2.drawImage(img, 0, 0, Color.WHITE, null);
+            g2.dispose();
+        }
 
         return newImage;
     }
@@ -444,10 +461,11 @@ public class VersionManager {
      * @param img          the original image to be scaled
      * @param targetWidth  the desired width of the scaled instance, in pixels
      * @param targetHeight the desired height of the scaled instance, in pixels
+     * @param imageFormat  the format of the image
      * @return a scaled version of the original {@code BufferedImage}
      * @author Chris Campbell
      */
-    private BufferedImage getScaledInstance(BufferedImage img, int targetWidth, int targetHeight) {
+    private BufferedImage getScaledInstance(BufferedImage img, int targetWidth, int targetHeight, String imageFormat) {
         BufferedImage ret = img;
         int width = img.getWidth();
         int height = img.getHeight();
@@ -465,12 +483,23 @@ public class VersionManager {
                 height = targetHeight;
             }
 
-            BufferedImage tmp = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            Graphics2D g2 = tmp.createGraphics();
-            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g2.drawImage(ret, 0, 0, width, height, Color.WHITE, null);
-            g2.dispose();
-            ret = tmp;
+            if (imageFormat.equals(PNG_IMAGE)) {
+                BufferedImage tmp = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g2 = tmp.createGraphics();
+                g2.setComposite(AlphaComposite.Src);
+                g2.drawImage(ret, 0, 0, width, height, null);
+                g2.dispose();
+                ret = tmp;
+            }
+
+            if (imageFormat.equals(JPG_IMAGE)) {
+                BufferedImage tmp = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+                Graphics2D g2 = tmp.createGraphics();
+                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                g2.drawImage(ret, 0, 0, width, height, Color.WHITE, null);
+                g2.dispose();
+                ret = tmp;
+            }
         } while (width != targetWidth || height != targetHeight);
 
         return ret;
@@ -483,9 +512,13 @@ public class VersionManager {
      * @param image        the original image to be extended
      * @param extendWidth  the minimum width of the extended instance, in pixels
      * @param extendHeight the minimum height of the extended instance, in pixels
+     * @param imageFormat  the format of the image
      * @return a extended version of the original {@code BufferedImage}
      */
-    private BufferedImage getExtendedImageInstance(BufferedImage image, int extendWidth, int extendHeight) {
+    private BufferedImage getExtendedImageInstance(BufferedImage image,
+                                                   int extendWidth,
+                                                   int extendHeight,
+                                                   String imageFormat) {
         BufferedImage newImage = image;
         int width = image.getWidth();
         int height = image.getHeight();
@@ -494,12 +527,24 @@ public class VersionManager {
             extendWidth = Math.max(extendWidth, width);
             extendHeight = Math.max(extendHeight, height);
 
-            newImage = new BufferedImage(extendWidth, extendHeight, BufferedImage.TYPE_INT_RGB);
-            Graphics2D g2 = newImage.createGraphics();
-            g2.setColor(Color.WHITE);
-            g2.fillRect(0, 0, extendWidth, extendHeight);
-            g2.drawImage(image, (extendWidth - width) / 2, (extendHeight - height) / 2, Color.WHITE, null);
-            g2.dispose();
+            if (imageFormat.equals(PNG_IMAGE)) {
+                newImage = new BufferedImage(extendWidth, extendHeight, BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g2 = newImage.createGraphics();
+                g2.setComposite(AlphaComposite.Clear);
+                g2.fillRect(0, 0, extendWidth, extendHeight);
+                g2.setComposite(AlphaComposite.Src);
+                g2.drawImage(image, (extendWidth - width) / 2, (extendHeight - height) / 2, null);
+                g2.dispose();
+            }
+
+            if (imageFormat.equals(JPG_IMAGE)) {
+                newImage = new BufferedImage(extendWidth, extendHeight, BufferedImage.TYPE_INT_RGB);
+                Graphics2D g2 = newImage.createGraphics();
+                g2.setColor(Color.WHITE);
+                g2.fillRect(0, 0, extendWidth, extendHeight);
+                g2.drawImage(image, (extendWidth - width) / 2, (extendHeight - height) / 2, Color.WHITE, null);
+                g2.dispose();
+            }
         }
 
         return newImage;
