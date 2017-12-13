@@ -76,12 +76,15 @@ public class DownloadBuilder {
      * Specifies the version of the file to use.
      * <p>
      * The syntax is a comma separated string of key-value pairs in the form of {@code key:value}. The available keys
-     * are {@code size} for the requested maximum size, and {@code min} for the minimum size. The value is the size in
-     * the format {@code <width>x<height>}.
+     * are {@code size} for the requested maximum size, {@code min} for the minimum size and {@code imageFormat} for
+     * the imageFormat. The value for the size key has to be in the format {@code <width>x<height>}.
      * <p>
-     * Example: The version {@code size:500x500,min:100x100} would scale an image with 1000x800 pixels to 500x400. An
-     * image with 1000x150 would be scaled to 500x75 and then extended with a white border to 500x100. An image with
-     * 400x50 pixels would not be scaled but extended to 400x100.
+     * If no external command line command is setup for the image conversion only "png" and "jpg" are supported as
+     * formats. The Default version which is used is the jpg format.
+     * <p>
+     * Example: The version {@code size:500x500,min:100x100,imageFormat:png} would scale an image with 1000x800 pixels
+     * to 500x400. An image with 1000x150 would be scaled to 500x75 and then extended with a white border to 500x100. An
+     * image with 400x50 pixels would not be scaled but extended to 400x100. All files would be in png format.
      *
      * @param version the name of the version to use
      * @return the builder itself for fluent method calls

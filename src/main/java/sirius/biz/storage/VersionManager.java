@@ -75,6 +75,9 @@ public class VersionManager {
     private Cache<String, Tuple<VirtualObject, Map<String, String>>> logicalToPhysicalCache =
             CacheManager.createCache("storage-object-metadata");
 
+    public static final String PNG_IMAGE = "png";
+    public static final String JPG_IMAGE = "jpg";
+
     /**
      * Returns the targeted {@link VirtualObject} and its known physical objects for versions.
      *
@@ -157,6 +160,7 @@ public class VersionManager {
         try {
             Tuple<Integer, Integer> size = Tuple.create(0, 0);
             Tuple<Integer, Integer> extendedSize = Tuple.create(0, 0);
+            String imageFormat = JPG_IMAGE;
 
             for (String part : objectVersion.getVersionKey().split(",")) {
                 Tuple<String, String> keyValuePair = Strings.split(part, ":");
@@ -169,6 +173,10 @@ public class VersionManager {
                 if ("min".equals(key)) {
                     extendedSize = parseWidthAndHeight(keyValuePair.getSecond());
                 }
+
+                if ("imageformat".equals(key)) {
+                    imageFormat = keyValuePair.getSecond().toLowerCase().trim();
+                }
             }
 
             convertAndStore(objectVersion,
@@ -176,7 +184,8 @@ public class VersionManager {
                             size.getFirst(),
                             size.getSecond(),
                             extendedSize.getFirst(),
-                            extendedSize.getSecond());
+                            extendedSize.getSecond(),
+                            imageFormat);
         } catch (Exception e) {
             Exceptions.handle()
                       .to(Storage.LOG)
@@ -201,8 +210,9 @@ public class VersionManager {
                                  int width,
                                  int height,
                                  int extendWidth,
-                                 int extendHeight) throws IOException {
-        File resultingFile = convert(object, width, height, extendWidth, extendHeight);
+                                 int extendHeight,
+                                 String imageFormat) throws IOException {
+        File resultingFile = convert(object, width, height, extendWidth, extendHeight, imageFormat);
         try {
             if (resultingFile == null || resultingFile.length() == 0) {
                 Storage.LOG.WARN("Converting %s (%s) to %sx%s resulted in an empty file.",
@@ -237,13 +247,17 @@ public class VersionManager {
         }
     }
 
-    private File convert(VirtualObject object, int width, int height, int extendWidth, int extendHeight)
-            throws IOException {
+    private File convert(VirtualObject object,
+                         int width,
+                         int height,
+                         int extendWidth,
+                         int extendHeight,
+                         String imageFormat) throws IOException {
         if (isCommandLineAvailable()) {
-            return convertUsingCLI(object, width, height, extendWidth, extendHeight);
+            return convertUsingCLI(object, width, height, extendWidth, extendHeight, imageFormat);
         }
 
-        return convertUsingJava(object, width, height, extendWidth, extendHeight);
+        return convertUsingJava(object, width, height, extendWidth, extendHeight, imageFormat);
     }
 
     private boolean isCommandLineAvailable() {
@@ -278,18 +292,23 @@ public class VersionManager {
      * @return the destination file
      * @throws IOException in case of an IO error
      */
-    private File convertUsingCLI(VirtualObject object, int width, int height, int extendWidth, int extendHeight)
-            throws IOException {
+    private File convertUsingCLI(VirtualObject object,
+                                 int width,
+                                 int height,
+                                 int extendWidth,
+                                 int extendHeight,
+                                 String imageFormat) throws IOException {
         File src = File.createTempFile("resize-in-", "." + object.getFileExtension());
         try (FileOutputStream out = new FileOutputStream(src)) {
             ByteStreams.copy(storage.getData(object), out);
 
-            File dest = File.createTempFile("resize-out-", ".jpg");
+            File dest = File.createTempFile("resize-out-", "." + imageFormat);
             Formatter formatter = Formatter.create(conversionCommand)
                                            .set("src", src.getAbsolutePath())
                                            .set("dest", dest.getAbsolutePath())
                                            .set("width", width)
-                                           .set("height", height);
+                                           .set("height", height)
+                                           .set("imageFormat", imageFormat);
 
             if (extendWidth > 0 || extendHeight > 0) {
                 formatter.set("extend",
@@ -309,12 +328,13 @@ public class VersionManager {
                 Exceptions.handle()
                           .to(Storage.LOG)
                           .error(e)
-                          .withSystemErrorMessage("Failed to invoke: %s to resize %s (%s) to %sx%s",
+                          .withSystemErrorMessage("Failed to invoke: %s to resize %s (%s) to %sx%s in %s imageFormat",
                                                   command,
                                                   object.getObjectKey(),
                                                   object.getPath(),
                                                   width,
-                                                  height)
+                                                  height,
+                                                  imageFormat)
                           .handle();
             }
 
@@ -329,8 +349,12 @@ public class VersionManager {
         }
     }
 
-    private File convertUsingJava(VirtualObject object, int width, int height, int extendWidth, int extendHeight)
-            throws IOException {
+    private File convertUsingJava(VirtualObject object,
+                                  int width,
+                                  int height,
+                                  int extendWidth,
+                                  int extendHeight,
+                                  String imageFormat) throws IOException {
         BufferedImage src;
         try (InputStream input = storage.getData(object)) {
             src = ImageIO.read(input);
@@ -341,7 +365,14 @@ public class VersionManager {
         }
 
         BufferedImage dest = resize(src, width, height, extendWidth, extendHeight);
-        return writeJPEG(dest, 0.9f);
+        if (imageFormat.equals(PNG_IMAGE)) {
+            return writePNG(dest);
+        }
+        if (imageFormat.equals(JPG_IMAGE)) {
+            return writeJPEG(dest, 0.9f);
+        }
+
+        return null;
     }
 
     /**
@@ -478,7 +509,7 @@ public class VersionManager {
      * Stores a buffered image into a JPEG file.
      */
     private File writeJPEG(BufferedImage img, float compressionQuality) throws IOException {
-        ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
+        ImageWriter writer = ImageIO.getImageWritersByFormatName(JPG_IMAGE).next();
 
         File result = File.createTempFile("resize-", ".jpg");
 
@@ -493,6 +524,29 @@ public class VersionManager {
 
             // Write the image
             writer.write(null, new IIOImage(img, null, null), iwparam);
+
+            // Cleanup
+            ios.flush();
+            writer.dispose();
+        }
+
+        return result;
+    }
+
+    /**
+     * Stores a buffered image into a PNG file.
+     */
+    private File writePNG(BufferedImage img) throws IOException {
+        ImageWriter writer = ImageIO.getImageWritersByFormatName(PNG_IMAGE).next();
+
+        File result = File.createTempFile("resize-", ".png");
+
+        // Prepare output file
+        try (ImageOutputStream ios = ImageIO.createImageOutputStream(result)) {
+            writer.setOutput(ios);
+
+            // Write the image
+            writer.write(new IIOImage(img, null, null));
 
             // Cleanup
             ios.flush();
