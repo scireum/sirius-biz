@@ -62,7 +62,7 @@ public class VirtualFile {
      * @return now file, which can be used as root node for a virtual file system
      */
     public static VirtualFile createRootNode() {
-        return new VirtualFile("");
+        return new VirtualFile("/");
     }
 
     /**
