@@ -16,6 +16,8 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
@@ -37,6 +39,8 @@ public class CodeLists {
 
     @Part
     private OMA oma;
+
+    private static final Log LOG = Log.get("codelists");
 
     /**
      * Returns the value from the given code list associated with the given code.
@@ -69,6 +73,34 @@ public class CodeLists {
 
         CodeList cl = findOrCreateCodelist(codeList);
         return oma.select(CodeListEntry.class).eq(CodeListEntry.CODE_LIST, cl).eq(CodeListEntry.CODE, code).exists();
+    }
+
+    /**
+     * Returns the value from the given code list associated with the given code or throws an exception if no matching
+     * entry exists.
+     *
+     * @param codeList the code list to search in
+     * @param code     the code to lookup
+     * @return the value associated with the code
+     * @throws sirius.kernel.health.HandledException if no entry exists for the given code
+     */
+    public String getRequiredValue(@Nonnull String codeList, @Nonnull String code) {
+        CodeList cl = findOrCreateCodelist(codeList);
+        CodeListEntry cle = oma.select(CodeListEntry.class)
+                               .eq(CodeListEntry.CODE_LIST, cl)
+                               .eq(CodeListEntry.CODE, code)
+                               .queryFirst();
+
+        if (cle == null) {
+            throw Exceptions.handle()
+                            .to(LOG)
+                            .withSystemErrorMessage("Unable to find required code ('%s') in code list ('%s')",
+                                                    code,
+                                                    codeList)
+                            .handle();
+        }
+
+        return cle.getValue();
     }
 
     /**
