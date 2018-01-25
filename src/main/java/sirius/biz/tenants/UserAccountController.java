@@ -341,6 +341,7 @@ public class UserAccountController extends BizController {
      *
      * @param ctx the current request
      */
+    @LoginRequired
     @Routed("/user-accounts/autocomplete")
     public void usersAutocomplete(final WebContext ctx) {
         AutocompleteHelper.handle(ctx, (query, result) -> {
