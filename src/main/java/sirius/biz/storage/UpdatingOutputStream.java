@@ -8,13 +8,17 @@
 
 package sirius.biz.storage;
 
+import sirius.kernel.async.CompletionHandler;
+import sirius.kernel.async.Promise;
 import sirius.kernel.health.Exceptions;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
 
 /**
  * Buffers all contents on disk and uploads them in the storage once the stream is closed.
@@ -26,10 +30,18 @@ class UpdatingOutputStream extends OutputStream {
     private StoredObject destination;
     private File bufferFile;
     private FileOutputStream buffer;
+    private Promise<StoredObject> updateFilePromise = new Promise<>();
 
     protected UpdatingOutputStream(Storage storage, StoredObject obj) {
         this.storage = storage;
         this.destination = obj;
+    }
+
+    protected UpdatingOutputStream(Storage storage,
+                                   StoredObject obj,
+                                   CompletionHandler<StoredObject> completionHandler) {
+        this(storage, obj);
+        this.updateFilePromise.onComplete(completionHandler);
     }
 
     @Override
@@ -54,7 +66,7 @@ class UpdatingOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
-        try {
+        try (InputStream emptyBufferInputStream = new ByteArrayInputStream(EMPTY_BUFFER)) {
             // Some implementations, e.g. Apache FTP server love to call close() several times, so we make it
             // idempotent by setting destination to null once it was closed the first time...
             if (destination == null) {
@@ -67,13 +79,20 @@ class UpdatingOutputStream extends OutputStream {
                 buffer.close();
                 storage.updateFile(destination, bufferFile, null);
             } else {
-                storage.updateFile(destination, new ByteArrayInputStream(EMPTY_BUFFER), null, null, 0L);
+                storage.updateFile(destination, emptyBufferInputStream, null, null, 0L);
             }
+            updateFilePromise.success(destination);
+        } catch (Exception e) {
+            updateFilePromise.fail(e);
+            throw e;
         } finally {
             if (bufferFile != null && bufferFile.exists()) {
-                if (!bufferFile.delete()) {
+                try {
+                    Files.delete(bufferFile.toPath());
+                } catch (Exception e) {
                     Exceptions.handle()
                               .to(Storage.LOG)
+                              .error(e)
                               .withSystemErrorMessage("Cannot delete temporary file: %s", bufferFile.getAbsolutePath())
                               .handle();
                 }

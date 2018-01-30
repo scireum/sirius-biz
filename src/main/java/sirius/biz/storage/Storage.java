@@ -20,6 +20,7 @@ import sirius.db.mixing.OMA;
 import sirius.db.mixing.SmartQuery;
 import sirius.db.mixing.constraints.FieldOperator;
 import sirius.kernel.Sirius;
+import sirius.kernel.async.CompletionHandler;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
@@ -437,6 +438,23 @@ public class Storage {
      */
     public OutputStream updateFile(@Nonnull StoredObject file) {
         return new UpdatingOutputStream(this, file);
+    }
+
+    /**
+     * Creates a new output stream which updates the contents of the given file.
+     * <p>
+     * Note that most probably, the file will be updated once the stream is closed and not immediatelly on a write.
+     * Also note that it is essential to close the stream to release underlying resources.
+     * <p>
+     * After closing the stream, based on the result of writing the file, the complectionHandler is called.
+     *
+     * @param file              the file to update.
+     * @param completionHandler completion handler called once the file is written
+     * @return an output stream to write the contents to.
+     */
+    public OutputStream updateFileWithCompletionHandling(@Nonnull StoredObject file,
+                                                         CompletionHandler<StoredObject> completionHandler) {
+        return new UpdatingOutputStream(this, file, completionHandler);
     }
 
     /**
