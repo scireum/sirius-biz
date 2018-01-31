@@ -9,7 +9,7 @@
             <w:textfield span="12" name="accountNumber" value="@tenant.getAccountNumber()"
                          labelKey="Tenant.accountNumber" required="true"/>
         </div>
-        <w:heading labelKey="Model.address"/>
+        <w:subHeading labelKey="Model.address"/>
         <div class="row">
             <w:textfield span="12" name="address_street" value="@tenant.getAddress().getStreet()"
                          labelKey="AddressData.street"/>
@@ -21,9 +21,22 @@
             <w:codelistSelect span="4" list="countries" name="address_country" value="@tenant.getAddress().getCountry()"
                               labelKey="InternationalAddressData.country"/>
         </div>
+        <w:subHeading labelKey="Tenant.saml"/>
+        <div class="row">
+            <w:textfield name="samlRequestIssuerName" value="@tenant.getSamlRequestIssuerName()"
+                         labelKey="Tenant.saml"/>
+            <w:textfield name="samlIssuerIndex" value="@tenant.getSamlIssuerIndex()"
+                         labelKey="Tenant.saml"/>
+            <w:textfield name="samlIssuerUrl" value="@tenant.getSamlIssuerUrl()"
+                         labelKey="Tenant.saml" span="12"/>
+            <w:textfield name="samlIssuerName" value="@tenant.getSamlIssuerName()"
+                         labelKey="Tenant.saml" span="12"/>
+            <w:textfield name="samlFingerprint" value="@tenant.getSamlFingerprint()"
+                         labelKey="Tenant.saml" span="12"/>
+        </div>
         <div class="row">
             <div class="col-md-6">
-                <w:heading labelKey="Tenant.administration"/>
+                <w:subHeading labelKey="Tenant.administration"/>
                 <div class="row">
 
                     <w:singleSelect span="12" name="parent" optional="true" labelKey="Tenant.parent" helpKey="Tenant.parent.help">

@@ -1,0 +1,40 @@
+<i:arg type="List" name="tenants"/>
+
+<w:page titleKey="SAMLController.saml">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/saml">@i18n("SAMLController.saml")</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader titleKey="SAMLController.saml"/>
+
+    <w:table data="tenants">
+        <thead>
+        <tr>
+            <th>
+                @i18n("Model.name")
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants">
+            <tr>
+                <td>
+                    <i:local name="id" value="call.generateLocalId()" />
+                    <form class="samlForm" id="@id" method="post" action="@tenant.getSamlIssuerUrl()">
+                        <input type="hidden" name="SAMLRequest" value="@saml.generateAuthenticationRequest(tenant.getSamlRequestIssuerName(), tenant.getSamlIssuerIndex())" />
+                    </form>
+
+                    <a class="link" href="javascript:$('#@id').submit()">@tenant.getName()</a>
+                </td>
+            </tr>
+        </i:for>
+        </tbody>
+    </w:table>
+    <i:if test="tenants.size() == 1">
+        <script type="text/javascript">
+            $('form.samlForm').submit();
+        </script>
+    </i:if>
+</w:page>

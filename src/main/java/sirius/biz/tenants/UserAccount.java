@@ -20,6 +20,7 @@ import sirius.db.mixing.annotations.BeforeDelete;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.annotations.Versioned;
 import sirius.kernel.Sirius;
@@ -28,19 +29,24 @@ import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.web.controller.Message;
 import sirius.web.mails.Mails;
+import sirius.web.security.MessageProvider;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Represents a user account which can log into the system.
  * <p>
  * Serveral users are grouped together by their company, which is referred to as {@link Tenant}.
  */
-@Framework("tenants")
+@Framework("biz.tenants")
 @Versioned
 @Index(name = "index_username", columns = "login_username", unique = true)
-public class UserAccount extends TenantAware implements Journaled {
+public class UserAccount extends TenantAware implements Journaled, MessageProvider {
 
     /**
      * Contains the email address of the user.
@@ -49,6 +55,7 @@ public class UserAccount extends TenantAware implements Journaled {
     @Trim
     @Autoloaded
     @Length(150)
+    @NullAllowed
     private String email;
 
     /**
@@ -144,6 +151,11 @@ public class UserAccount extends TenantAware implements Journaled {
         if (Tenant.class == adapterType) {
             return Optional.ofNullable((A) getTenant().getValue());
         }
+
+//        if (adapterType.isAssignableFrom(getClass())) {
+//            return Optional.of((A)this);
+//        }
+
         return super.tryAs(adapterType);
     }
 
@@ -203,5 +215,34 @@ public class UserAccount extends TenantAware implements Journaled {
      */
     public boolean hasName() {
         return Strings.isFilled(getPerson().getLastname());
+    }
+
+    @Override
+    public void addMessages(Consumer<Message> messageConsumer) {
+        if (Strings.isFilled(getLogin().getGeneratedPassword())) {
+            messageConsumer.accept(Message.warn("Sie sind uncool"));
+        } else {
+            messageConsumer.accept(Message.warn("Sie sind cool"));
+        }
+
+        if (isNearInterval(getLogin().getLastLogin(), getTenant().getValue().getLoginIntervalDays())) {
+            messageConsumer.accept(Message.warn("Du fliegsch glei!"));
+        }
+        if (isNearInterval(getLogin().getLastExternalLogin(), getTenant().getValue().getExternalLoginIntervalDays())) {
+            messageConsumer.accept(Message.warn("Du fliegsch glei!"));
+        }
+    }
+
+    private boolean isNearInterval(LocalDateTime dateTime, Integer requiredInterval) {
+        if (requiredInterval == null) {
+            return false;
+        }
+
+        if (dateTime == null) {
+            return true;
+        }
+
+        long actualInterval = Duration.between(LocalDateTime.now(), dateTime).toDays();
+        return actualInterval >= requiredInterval - 3;
     }
 }
