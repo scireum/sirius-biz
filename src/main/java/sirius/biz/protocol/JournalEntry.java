@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 /**
  * Records the changes recorded by a {@link JournalData}.
  */
-@Framework(Protocols.FRAMEWORK_PROTOCOLS)
+@Framework(Protocols.FRAMEWORK_JOURNAL)
 public class JournalEntry extends Entity {
 
     /**

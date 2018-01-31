@@ -32,7 +32,7 @@ public class QueryTag {
     private String label;
     private String color;
 
-    public static final Pattern PATTERN = Pattern.compile("::([^:]+):([^:]+):([^:]+):.*");
+    public static final Pattern PATTERN = Pattern.compile("\\|\\|([^|]+)\\|([^|]+)\\|([^|]+)\\|.*");
 
     /**
      * Creates a new tag.
@@ -47,6 +47,16 @@ public class QueryTag {
         this.color = color;
         this.value = value;
         this.label = label;
+
+        if (type != null && type.contains("|")) {
+            throw new IllegalArgumentException("type contains |");
+        }
+        if (value != null && value.contains("|")) {
+            throw new IllegalArgumentException("value contains |");
+        }
+        if (label != null && label.contains("|")) {
+            throw new IllegalArgumentException("label contains |");
+        }
     }
 
     /**
@@ -104,6 +114,6 @@ public class QueryTag {
 
     @Override
     public String toString() {
-        return "::" + type + ":" + color + ":" + value + ":" + label + "::";
+        return "||" + type + "|" + color + "|" + value + "|" + label + "||";
     }
 }

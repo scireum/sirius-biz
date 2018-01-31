@@ -23,7 +23,7 @@ import sirius.kernel.di.std.Priorized;
  * <p>
  * This is the database representation of the data supplied by {@link CodeLists}.
  */
-@Framework("code-lists")
+@Framework("biz.code-lists")
 public class CodeListEntry extends BizEntity {
 
     /**

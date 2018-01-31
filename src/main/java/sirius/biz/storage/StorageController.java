@@ -21,6 +21,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
@@ -42,6 +43,9 @@ import java.util.stream.Collectors;
 public class StorageController extends BizController {
 
     public static final String NO_REFERENCE = "-";
+    private static final String RESPONSE_FILE_ID = "fileId";
+    private static final String RESPONSE_REFRESH = "refresh";
+
     @Part
     private Storage storage;
 
@@ -73,7 +77,7 @@ public class StorageController extends BizController {
     public void listObjects(WebContext ctx, String bucketName) {
         BucketInfo bucket = storage.getBucket(bucketName).orElse(null);
         if (isBucketUnaccessible(bucket)) {
-            handleAccessError(bucketName);
+            throw cannotAccessBucketException(bucketName);
         }
 
         SmartQuery<VirtualObject> baseQuery = oma.select(VirtualObject.class)
@@ -93,11 +97,11 @@ public class StorageController extends BizController {
         return bucket == null || !UserContext.getCurrentUser().hasPermission(bucket.getPermission());
     }
 
-    private void handleAccessError(String bucketName) {
-        throw Exceptions.createHandled()
-                        .withNLSKey("StorageController.cannotAccessBucket")
-                        .set("bucket", bucketName)
-                        .handle();
+    private HandledException cannotAccessBucketException(String bucketName) {
+        return Exceptions.createHandled()
+                         .withNLSKey("StorageController.cannotAccessBucket")
+                         .set("bucket", bucketName)
+                         .handle();
     }
 
     /**
@@ -180,7 +184,7 @@ public class StorageController extends BizController {
 
         BucketInfo bucket = storage.getBucket(virtualObject.getBucket()).orElse(null);
         if (isBucketUnaccessible(bucket) || (ctx.isPOST() && !bucket.isCanEdit())) {
-            handleAccessError(virtualObject.getBucket());
+            throw cannotAccessBucketException(virtualObject.getBucket());
         }
 
         ctx.respondWith()
@@ -211,7 +215,7 @@ public class StorageController extends BizController {
         try {
             BucketInfo bucket = storage.getBucket(bucketName).orElse(null);
             if (isBucketUnaccessible(bucket) || !bucket.isCanEdit()) {
-                handleAccessError(bucketName);
+                throw cannotAccessBucketException(bucketName);
             }
 
             String name = ctx.get("filename").asString(ctx.get("qqfile").asString());
@@ -236,8 +240,8 @@ public class StorageController extends BizController {
                 upload.close();
             }
 
-            out.property("fileId", file.getObjectKey());
-            out.property("refresh", true);
+            out.property(RESPONSE_FILE_ID, file.getObjectKey());
+            out.property(RESPONSE_REFRESH, true);
         } catch (Exception e) {
             storage.delete(file);
             throw Exceptions.createHandled().error(e).handle();
@@ -262,14 +266,11 @@ public class StorageController extends BizController {
         try {
             BucketInfo bucket = storage.getBucket(bucketName).orElse(null);
             if (isBucketUnaccessible(bucket) || !bucket.isCanEdit()) {
-                handleAccessError(bucketName);
+                throw cannotAccessBucketException(bucketName);
             }
 
             StoredObject file = storage.findByKey(currentTenant(), bucketName, objectId)
-                                       .orElseThrow(() -> Exceptions.createHandled()
-                                                                    .withNLSKey("StorageController.cannotAccessBucket")
-                                                                    .set("bucket", bucketName)
-                                                                    .handle());
+                                       .orElseThrow(() -> cannotAccessBucketException(bucketName));
 
             try {
                 ctx.markAsLongCall();
@@ -282,8 +283,8 @@ public class StorageController extends BizController {
                 upload.close();
             }
 
-            out.property("fileId", file.getObjectKey());
-            out.property("refresh", true);
+            out.property(RESPONSE_FILE_ID, file.getObjectKey());
+            out.property(RESPONSE_REFRESH, true);
         } catch (Exception e) {
             throw Exceptions.createHandled().error(e).handle();
         }
@@ -312,7 +313,7 @@ public class StorageController extends BizController {
         try {
             BucketInfo bucket = storage.getBucket(bucketName).orElse(null);
             if (bucket == null) {
-                handleAccessError(bucketName);
+                throw cannotAccessBucketException(bucketName);
             }
             String name = ctx.get("filename").asString(ctx.get("qqfile").asString());
             file = storage.createTemporaryObject(currentTenant(),
@@ -330,7 +331,7 @@ public class StorageController extends BizController {
                 upload.close();
             }
 
-            out.property("fileId", file.getObjectKey());
+            out.property(RESPONSE_FILE_ID, file.getObjectKey());
             out.property("previewUrl", file.prepareURL().buildURL());
         } catch (Exception e) {
             storage.delete(file);
@@ -352,7 +353,7 @@ public class StorageController extends BizController {
         assertTenant(virtualObject);
         BucketInfo bucket = storage.getBucket(virtualObject.getBucket()).orElse(null);
         if (isBucketUnaccessible(bucket) || !bucket.isCanDelete()) {
-            handleAccessError(virtualObject.getBucket());
+            throw cannotAccessBucketException(virtualObject.getBucket());
         }
 
         storage.delete(object);
@@ -371,7 +372,7 @@ public class StorageController extends BizController {
     public void unreferenceObject(WebContext ctx, String bucketName, String objectKey) {
         BucketInfo bucket = storage.getBucket(bucketName).orElse(null);
         if (isBucketUnaccessible(bucket) || !bucket.isCanDelete()) {
-            handleAccessError(bucketName);
+            throw cannotAccessBucketException(bucketName);
         }
 
         StoredObject object = findObjectByKey(bucketName, objectKey);

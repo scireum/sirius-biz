@@ -91,18 +91,22 @@ public class InternationalAddressData extends AddressData {
         if (verifyZip && Strings.isFilled(country)) {
             String zipRegEx = cls.getValues("country", country).getSecond();
             if (Strings.isFilled(zipRegEx)) {
-                try {
-                    if (!Pattern.compile(zipRegEx).matcher(getZip()).matches()) {
-                        throw Exceptions.createHandled()
-                                        .withNLSKey("AddressData.badZip")
-                                        .set("name", fieldLabel)
-                                        .set("zip", getZip())
-                                        .handle();
-                    }
-                } catch (PatternSyntaxException e) {
-                    Exceptions.handle(e);
-                }
+                verifyZip(zipRegEx);
             }
+        }
+    }
+
+    private void verifyZip(String zipRegEx) {
+        try {
+            if (!Pattern.compile(zipRegEx).matcher(getZip()).matches()) {
+                throw Exceptions.createHandled()
+                                .withNLSKey("AddressData.badZip")
+                                .set("name", fieldLabel)
+                                .set("zip", getZip())
+                                .handle();
+            }
+        } catch (PatternSyntaxException e) {
+            Exceptions.handle(e);
         }
     }
 

@@ -103,6 +103,14 @@ public class MailLogEntry extends Entity {
     @Length(255)
     private String node;
 
+    /**
+     * Contains the type of the email (what template was used to generate it).
+     */
+    public static final Column MAIL_TYPE = Column.named("mailType");
+    @Length(255)
+    @NullAllowed
+    private String mailType;
+
     public LocalDateTime getTod() {
         return tod;
     }
@@ -189,5 +197,13 @@ public class MailLogEntry extends Entity {
 
     public void setHtml(String html) {
         this.html = html;
+    }
+
+    public String getMailType() {
+        return mailType;
+    }
+
+    public void setMailType(String mailType) {
+        this.mailType = mailType;
     }
 }

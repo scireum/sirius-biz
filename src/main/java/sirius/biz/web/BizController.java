@@ -18,6 +18,7 @@ import sirius.db.mixing.EntityRef;
 import sirius.db.mixing.OMA;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.properties.BooleanProperty;
+import sirius.db.mixing.properties.EntityRefProperty;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -73,12 +74,16 @@ public class BizController extends BasicController {
         }
 
         if (currentTenant() == null && tenantAware.getTenant().getId() != null) {
-            throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
+            throw invalidTenantException();
         }
 
         if (currentTenant().getId() != tenantAware.getTenant().getId()) {
-            throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
+            throw invalidTenantException();
         }
+    }
+
+    private HandledException invalidTenantException() {
+        return Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
     }
 
     /**
@@ -91,9 +96,9 @@ public class BizController extends BasicController {
             return;
         }
 
-        if (!tenantAware.getTenant().is(currentTenant())
-            && tenantAware.getTenant().getId() != currentTenant().getParent().getId()) {
-            throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
+        if (!tenantAware.getTenant().is(currentTenant()) && !Objects.equals(tenantAware.getTenant().getId(),
+                                                                            currentTenant().getParent().getId())) {
+            throw invalidTenantException();
         }
     }
 
@@ -187,6 +192,7 @@ public class BizController extends BasicController {
 
             try {
                 property.parseValue(entity, ctx.get(propertyName));
+                ensureTenantMatch(entity, property);
             } catch (HandledException e) {
                 UserContext.setFieldError(propertyName, ctx.get(propertyName));
                 UserContext.setErrorMessage(propertyName, e.getMessage());
@@ -197,6 +203,15 @@ public class BizController extends BasicController {
 
         if (hasError) {
             throw Exceptions.createHandled().withNLSKey("BizController.illegalArgument").handle();
+        }
+    }
+
+    private void ensureTenantMatch(Entity entity, Property property) {
+        if ((entity instanceof TenantAware) && property instanceof EntityRefProperty) {
+            Object loadedEntity = property.getValue(entity);
+            if (loadedEntity instanceof TenantAware) {
+                ((TenantAware) entity).assertSameTenant(property::getLabel, (TenantAware) loadedEntity);
+            }
         }
     }
 

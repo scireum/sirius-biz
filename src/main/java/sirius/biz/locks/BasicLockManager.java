@@ -56,7 +56,7 @@ public abstract class BasicLockManager implements LockManager {
     protected abstract int getWaitIncrement();
 
     /**
-     * Returns the maximal interval in millis which is spent until a new atempt is made to acquire a lock.
+     * Returns the maximal interval in millis which is spent until a new attempt is made to acquire a lock.
      *
      * @return the max interval until a new attempt is made to acquire a lock
      */

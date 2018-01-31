@@ -26,7 +26,7 @@ import java.util.Optional;
 /**
  * Provides an editor GUI for managing code lists.
  */
-@Framework("code-lists")
+@Framework("biz.code-lists")
 @Register(classes = Controller.class)
 public class CodeListController extends BizController {
 

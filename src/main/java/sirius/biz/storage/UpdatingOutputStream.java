@@ -8,6 +8,7 @@
 
 package sirius.biz.storage;
 
+import sirius.kernel.commons.Explain;
 import sirius.kernel.health.Exceptions;
 
 import java.io.ByteArrayInputStream;
@@ -53,6 +54,8 @@ class UpdatingOutputStream extends OutputStream {
     }
 
     @Override
+    @SuppressWarnings("squid:S2093")
+    @Explain("Nothing to close here")
     public void close() throws IOException {
         try {
             // Some implementations, e.g. Apache FTP server love to call close() several times, so we make it

@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 /**
  * Provides distributed locks based on SQL.
  */
-@Framework("locks")
+@Framework("biz.locks")
 @Register(classes = LockManager.class)
 public class SQLLockManager extends BasicLockManager {
 

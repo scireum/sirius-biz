@@ -27,7 +27,7 @@ import java.util.Optional;
  * <p>
  * Also some boiler plate methods are provided to perform some assertions.
  */
-@Framework("tenants")
+@Framework("biz.tenants")
 @Register(classes = Tenants.class)
 public class Tenants {
 

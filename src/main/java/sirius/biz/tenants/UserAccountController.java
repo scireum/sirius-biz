@@ -19,7 +19,6 @@ import sirius.db.mixing.constraints.Like;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
-import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -43,8 +42,7 @@ import java.util.Optional;
 /**
  * Provides a GUI for managing user accounts.
  */
-@Framework("tenants")
-@Register(classes = Controller.class)
+@Register(classes = Controller.class,framework = "biz.tenants")
 public class UserAccountController extends BizController {
 
     /**
@@ -237,7 +235,7 @@ public class UserAccountController extends BizController {
         oma.update(userAccount);
 
         UserContext.message(Message.info(NLS.fmtr("UserAccountConroller.passwordGenerated")
-                                            .set("email", userAccount.getEmail())
+                                            .set(PARAM_EMAIL, userAccount.getEmail())
                                             .format()));
 
         if (Strings.isFilled(userAccount.getEmail())) {
@@ -331,7 +329,7 @@ public class UserAccountController extends BizController {
     @Routed("/logout")
     public void logout(WebContext ctx) {
         UserContext.get().getUserManager().detachFromSession(getUser(), ctx);
-        ctx.respondWith().redirectTemporarily(wondergemRoot);
+        ctx.respondWith().redirectToGet(wondergemRoot);
     }
 
     /**

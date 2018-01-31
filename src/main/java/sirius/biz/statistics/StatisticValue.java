@@ -11,6 +11,7 @@ package sirius.biz.statistics;
 import sirius.db.mixing.Column;
 import sirius.db.mixing.Entity;
 import sirius.db.mixing.annotations.Length;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.di.std.Framework;
 
 import java.time.LocalDate;
@@ -20,7 +21,9 @@ import java.time.LocalDate;
  *
  * @see Statistics
  */
-@Framework("statistics")
+@Framework("biz.statistics")
+@SuppressWarnings("squid:S1700")
+@Explain("The field name in this case is fine, especially as it is a database column")
 public class StatisticValue extends Entity {
 
     /**

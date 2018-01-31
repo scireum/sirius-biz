@@ -24,22 +24,22 @@ import java.time.LocalDateTime;
  * The duration for which logs and incidents are kept can be controlled via <tt>journal.keep-logs</tt> and
  * <tt>journal.keep-incidents</tt>.
  */
-@Register
-public class JournalCleaner implements EveryDay {
-
-    @Override
-    public String getConfigKeyName() {
-        return "journal-cleaner";
-    }
+@Register(framework = Protocols.FRAMEWORK_JOURNAL)
+public class CleanupProtocolsTask implements EveryDay {
 
     @Part
     private OMA oma;
 
-    @ConfigValue("journal.keep-logs")
+    @ConfigValue("protocols.keep-logs")
     private Duration keepLogs;
 
-    @ConfigValue("journal.keep-incidents")
+    @ConfigValue("protocols.keep-incidents")
     private Duration keepIncidents;
+
+    @Override
+    public String getConfigKeyName() {
+        return "protocols-cleaner";
+    }
 
     @Override
     public void runTimer() throws Exception {

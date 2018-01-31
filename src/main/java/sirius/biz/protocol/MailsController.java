@@ -11,8 +11,6 @@ package sirius.biz.protocol;
 import sirius.biz.web.BizController;
 import sirius.biz.web.DateRange;
 import sirius.biz.web.PageHelper;
-import sirius.db.mixing.OMA;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Controller;
@@ -27,15 +25,12 @@ import sirius.web.security.Permission;
 @Register(classes = Controller.class, framework = Protocols.FRAMEWORK_PROTOCOLS)
 public class MailsController extends BizController {
 
-    @Part
-    private OMA oma;
-
     /**
      * Lists all recorded mail entries.
      *
      * @param ctx the current request
      */
-    @Permission(Protocols.PERMISSION_VIEW_PROTOCOLS)
+    @Permission(Protocols.PERMISSION_SYSTEM_PROTOCOLS)
     @DefaultRoute
     @Routed("/system/mails")
     public void mails(final WebContext ctx) {
@@ -59,7 +54,7 @@ public class MailsController extends BizController {
         ctx.respondWith().template("templates/protocol/mails.html.pasta", ph.asPage());
     }
 
-    @Permission(Protocols.PERMISSION_VIEW_PROTOCOLS)
+    @Permission(Protocols.PERMISSION_SYSTEM_PROTOCOLS)
     @Routed("/system/mail/:1")
     public void mail(final WebContext ctx, String id) {
         MailLogEntry mailLogEntry = find(MailLogEntry.class, id);

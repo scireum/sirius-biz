@@ -16,7 +16,6 @@ import sirius.kernel.nls.NLS;
 import javax.annotation.Nullable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.temporal.WeekFields;
 import java.util.Locale;
 
@@ -31,6 +30,22 @@ public class DateRange {
     private final LocalDateTime from;
     private final LocalDateTime until;
     private boolean useLocalDate;
+
+    /**
+     * Creates a new DateRange with the given unique key, translated (shown) name and two dates specifying the
+     * range
+     *
+     * @param key   the unique name of the ranged used as filter value
+     * @param name  the translated name shown to the user
+     * @param from  the lower limit (including) of the range
+     * @param until the upper limit (including) of the range
+     */
+    public DateRange(String key, String name, @Nullable LocalDateTime from, @Nullable LocalDateTime until) {
+        this.key = key;
+        this.name = name;
+        this.from = from;
+        this.until = until;
+    }
 
     /**
      * Creates a date range filtering on the last five minutes.
@@ -192,22 +207,6 @@ public class DateRange {
                              NLS.get("DateRange.beforeLastYear"),
                              null,
                              LocalDate.now().minusYears(1).withDayOfYear(1).atStartOfDay());
-    }
-
-    /**
-     * Creates a new DateRange with the given unique key, translated (shown) name and two dates specifying the
-     * range
-     *
-     * @param key   the unique name of the ranged used as filter value
-     * @param name  the translated name shown to the user
-     * @param from  the lower limit (including) of the range
-     * @param until the upper limit (including) of the range
-     */
-    public DateRange(String key, String name, @Nullable LocalDateTime from, @Nullable LocalDateTime until) {
-        this.key = key;
-        this.name = name;
-        this.from = from;
-        this.until = until;
     }
 
     /**

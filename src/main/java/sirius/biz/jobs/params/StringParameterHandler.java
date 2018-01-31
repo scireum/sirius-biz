@@ -19,7 +19,7 @@ public class StringParameterHandler implements ParameterHandler {
 
     @Override
     public Object convert(Value value) {
-        return value.asString(null);
+        return value.getString();
     }
 
     @Nonnull
