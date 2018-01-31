@@ -24,13 +24,17 @@ import java.util.Map;
  */
 @Register(classes = LockManager.class)
 public class JavaLockManager extends BasicLockManager {
+    /**
+     * Contains the name of this lock manager
+     */
+    public static final String NAME = "java";
 
     private Map<String, LockInfo> locks = new HashMap<>();
 
     @Nonnull
     @Override
     public String getName() {
-        return "java";
+        return NAME;
     }
 
     @Override
