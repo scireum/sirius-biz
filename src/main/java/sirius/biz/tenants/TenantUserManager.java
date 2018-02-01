@@ -441,7 +441,15 @@ public class TenantUserManager extends GenericUserManager {
             return null;
         }
 
-        LoginData loginData = result.getUserObject(UserAccount.class).getLogin();
+        UserAccount account = result.getUserObject(UserAccount.class);
+        if (account.isExternalLoginRequired() && !isWithinInterval(account.getLogin().getLastExternalLogin(),
+                                                                   account.getTenant()
+                                                                          .getValue()
+                                                                          .getExternalLoginIntervalDays())) {
+            throw Exceptions.createHandled().withNLSKey("UserAccount.externalLoginMustBePerformed").handle();
+        }
+
+        LoginData loginData = account.getLogin();
         if (acceptApiTokens && Strings.areEqual(password, loginData.getApiToken())) {
             return result;
         }
@@ -461,10 +469,10 @@ public class TenantUserManager extends GenericUserManager {
     }
 
     /**
-     * TODO JAVADOC
+     * Records a login which has either happened within this user manager or externally.
      *
-     * @param user
-     * @param external
+     * @param user     the user which logged in
+     * @param external <tt>true</tt> if the login was performed via an external system like SAML, <tt>false</tt> otherwise
      */
     public void recordLogin(UserInfo user, boolean external) {
         try {
@@ -535,8 +543,11 @@ public class TenantUserManager extends GenericUserManager {
         if (!isWithinInterval(user.getLogin().getLastLogin(), user.getTenant().getValue().getLoginIntervalDays())) {
             return false;
         }
-        if (!isWithinInterval(user.getLogin().getLastExternalLogin(),
-                              user.getTenant().getValue().getExternalLoginIntervalDays())) {
+
+        if (user.isExternalLoginRequired() && !isWithinInterval(user.getLogin().getLastExternalLogin(),
+                                                                user.getTenant()
+                                                                    .getValue()
+                                                                    .getExternalLoginIntervalDays())) {
             return false;
         }
 

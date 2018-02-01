@@ -82,6 +82,13 @@ public class UserAccount extends TenantAware implements Journaled, MessageProvid
     public static final Column JOURNAL = Column.named("journal");
     private final JournalData journal = new JournalData(this);
 
+    /**
+     * Determines if an external login is required from time to time.
+     */
+    public static final Column EXTERNAL_LOGIN_REQUIRED = Column.named("externalLoginRequired");
+    @Autoloaded
+    private boolean externalLoginRequired = false;
+
     @Part
     private static Mails ms;
 
@@ -152,10 +159,6 @@ public class UserAccount extends TenantAware implements Journaled, MessageProvid
             return Optional.ofNullable((A) getTenant().getValue());
         }
 
-//        if (adapterType.isAssignableFrom(getClass())) {
-//            return Optional.of((A)this);
-//        }
-
         return super.tryAs(adapterType);
     }
 
@@ -169,6 +172,63 @@ public class UserAccount extends TenantAware implements Journaled, MessageProvid
         }
 
         return super.is(type);
+    }
+
+    @Override
+    public String toString() {
+        if (hasName()) {
+            return getPerson().toString();
+        }
+        if (Strings.isFilled(getLogin().getUsername())) {
+            return getLogin().getUsername();
+        }
+
+        return NLS.get("Model.userAccount");
+    }
+
+    /**
+     * Determines if the user has a real name.
+     *
+     * @return <tt>true</tt> if a real name was provided, <tt>false</tt> otherwise
+     */
+    public boolean hasName() {
+        return Strings.isFilled(getPerson().getLastname());
+    }
+
+    @Override
+    public void addMessages(Consumer<Message> messageConsumer) {
+        if (Strings.isFilled(getLogin().getGeneratedPassword())) {
+            messageConsumer.accept(Message.warn(NLS.get("UserAccount.warnAboutGeneratedPassword"))
+                                          .withAction("/profile/password", NLS.get("UserAccount.changePassword")));
+        }
+
+        warnAboutForcedLogout(messageConsumer);
+    }
+
+    private void warnAboutForcedLogout(Consumer<Message> messageConsumer) {
+        if (isExternalLoginRequired()) {
+            if (isNearInterval(getLogin().getLastExternalLogin(),
+                               getTenant().getValue().getExternalLoginIntervalDays())) {
+                messageConsumer.accept(Message.info(NLS.get("UserAccount.forcedExternalLoginNear")));
+                return;
+            }
+        }
+        if (isNearInterval(getLogin().getLastLogin(), getTenant().getValue().getLoginIntervalDays())) {
+            messageConsumer.accept(Message.info(NLS.get("UserAccount.forcedLogoutNear")));
+        }
+    }
+
+    private boolean isNearInterval(LocalDateTime dateTime, Integer requiredInterval) {
+        if (requiredInterval == null) {
+            return false;
+        }
+
+        if (dateTime == null) {
+            return true;
+        }
+
+        long actualInterval = Duration.between(LocalDateTime.now(), dateTime).toDays();
+        return actualInterval >= requiredInterval - 3;
     }
 
     public PersonData getPerson() {
@@ -196,53 +256,11 @@ public class UserAccount extends TenantAware implements Journaled, MessageProvid
         return journal;
     }
 
-    @Override
-    public String toString() {
-        if (hasName()) {
-            return getPerson().toString();
-        }
-        if (Strings.isFilled(getLogin().getUsername())) {
-            return getLogin().getUsername();
-        }
-
-        return NLS.get("Model.userAccount");
+    public boolean isExternalLoginRequired() {
+        return externalLoginRequired;
     }
 
-    /**
-     * Determines if the user has a real name.
-     *
-     * @return <tt>true</tt> if a real name was provided, <tt>false</tt> otherwise
-     */
-    public boolean hasName() {
-        return Strings.isFilled(getPerson().getLastname());
-    }
-
-    @Override
-    public void addMessages(Consumer<Message> messageConsumer) {
-        if (Strings.isFilled(getLogin().getGeneratedPassword())) {
-            messageConsumer.accept(Message.warn("Sie sind uncool"));
-        } else {
-            messageConsumer.accept(Message.warn("Sie sind cool"));
-        }
-
-        if (isNearInterval(getLogin().getLastLogin(), getTenant().getValue().getLoginIntervalDays())) {
-            messageConsumer.accept(Message.warn("Du fliegsch glei!"));
-        }
-        if (isNearInterval(getLogin().getLastExternalLogin(), getTenant().getValue().getExternalLoginIntervalDays())) {
-            messageConsumer.accept(Message.warn("Du fliegsch glei!"));
-        }
-    }
-
-    private boolean isNearInterval(LocalDateTime dateTime, Integer requiredInterval) {
-        if (requiredInterval == null) {
-            return false;
-        }
-
-        if (dateTime == null) {
-            return true;
-        }
-
-        long actualInterval = Duration.between(LocalDateTime.now(), dateTime).toDays();
-        return actualInterval >= requiredInterval - 3;
+    public void setExternalLoginRequired(boolean externalLoginRequired) {
+        this.externalLoginRequired = externalLoginRequired;
     }
 }

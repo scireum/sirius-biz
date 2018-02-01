@@ -24,10 +24,12 @@
         </div>
         <div class="row">
             <div class="col-md-6">
-                <w:heading labelKey="UserAccount.security"/>
+                <w:heading labelKey="Model.security"/>
                 <div class="row">
                     <w:checkbox span="12" name="login_accountLocked" value="account.getLogin().isAccountLocked()"
                                 labelKey="LoginData.accountLocked"/>
+                    <w:checkbox span="12" name="externalLoginRequired" value="account.isExternalLoginRequired()"
+                                labelKey="UserAccount.externalLoginRequired" helpKey="UserAccount.externalLoginRequired.help"/>
                 </div>
                 <div class="row">
                     <i:if test="isFilled(account.getLogin().getGeneratedPassword())">

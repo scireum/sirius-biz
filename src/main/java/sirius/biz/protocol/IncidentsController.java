@@ -52,7 +52,8 @@ public class IncidentsController extends BizController {
                         DateRange.lastWeek());
         ph.withSearchFields(Incident.CATEGORY, Incident.MESSAGE);
 
-        ctx.respondWith().template("templates/protocol/errors.html.pasta", ph.asPage(), (int)oma.select(Incident.class).count());
+        ctx.respondWith()
+           .template("templates/protocol/errors.html.pasta", ph.asPage(), (int) oma.select(Incident.class).count());
     }
 
     /**

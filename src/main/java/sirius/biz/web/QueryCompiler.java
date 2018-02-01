@@ -63,7 +63,7 @@ class QueryCompiler {
     }
 
     private boolean isAtOR(LookaheadReader reader) {
-        return (reader.current().is('o', 'O') && reader.next().is('r', 'R'));
+        return reader.current().is('o', 'O') && reader.next().is('r', 'R');
     }
 
     private boolean isAtBinaryAND(LookaheadReader reader) {

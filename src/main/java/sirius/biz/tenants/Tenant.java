@@ -59,11 +59,19 @@ public class Tenant extends BizEntity implements Journaled {
     @Autoloaded
     private boolean canAccessParent = false;
 
+    /**
+     * Determines the interval in days, after which a user needs to login again.
+     */
     public static final Column LOGIN_INTERVAL_DAYS = Column.named("loginIntervalDays");
     @Autoloaded
     @NullAllowed
     private Integer loginIntervalDays;
 
+    /**
+     * Determines the interval in days, after which a user needs to login again, via an extenal system.
+     * <p>
+     * Note that this is only enforced if {@link UserAccount#externalLoginRequired} is <tt>true</tt>.
+     */
     public static final Column EXTERNAL_LOGIN_INTERVAL_DAYS = Column.named("externalLoginIntervalDays");
     @Autoloaded
     @NullAllowed
@@ -90,6 +98,9 @@ public class Tenant extends BizEntity implements Journaled {
     @Length(50)
     private String accountNumber;
 
+    /**
+     * Contains the name of the system which is used as the SAML provider.
+     */
     public static final Column SAML_REQUEST_ISSUER_NAME = Column.named("samlRequestIssuerName");
     @Trim
     @Autoloaded
@@ -97,6 +108,9 @@ public class Tenant extends BizEntity implements Journaled {
     @Length(50)
     private String samlRequestIssuerName;
 
+    /**
+     * Contains the URL of the SAML provider.
+     */
     public static final Column SAML_ISSUER_URL = Column.named("samlIssuerUrl");
     @Trim
     @Autoloaded
@@ -104,6 +118,9 @@ public class Tenant extends BizEntity implements Journaled {
     @Length(255)
     private String samlIssuerUrl;
 
+    /**
+     * Contains the endpoint index at the SAML provider.
+     */
     public static final Column SAML_ISSUER_INDEX = Column.named("samlIssuerIndex");
     @Trim
     @Autoloaded
@@ -111,7 +128,11 @@ public class Tenant extends BizEntity implements Journaled {
     @Length(10)
     private String samlIssuerIndex;
 
-
+    /**
+     * Contains the issuer name within a SAML assertion.
+     * <p>
+     * If several SAML providers are used, multiple values can be separated by a <tt>,</tt>.
+     */
     public static final Column SAML_ISSUER_NAME = Column.named("samlIssuerName");
     @Trim
     @Autoloaded
@@ -119,6 +140,11 @@ public class Tenant extends BizEntity implements Journaled {
     @Length(50)
     private String samlIssuerName;
 
+    /**
+     * Contains the SHA-1 fingerprint of the X509 certificate which is used to sign the SAML assertions.
+     * <p>
+     * If several SAML providers are used, multiple values can be separated by a <tt>,</tt>.
+     */
     public static final Column SAML_FINGERPRINT = Column.named("samlFingerprint");
     @Trim
     @Autoloaded

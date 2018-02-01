@@ -21,25 +21,35 @@
             <w:codelistSelect span="4" list="countries" name="address_country" value="@tenant.getAddress().getCountry()"
                               labelKey="InternationalAddressData.country"/>
         </div>
+        <w:subHeading labelKey="Model.security"/>
+        <div class="row">
+            <w:textfield name="loginIntervalDays" value="@toUserString(tenant.getLoginIntervalDays())"
+                         addonText="@i18n('Tenant.suffixDays')" labelKey="Tenant.loginIntervalDays"
+                         helpKey="Tenant.loginIntervalDays.help"/>
+            <w:textfield name="externalLoginIntervalDays" value="@toUserString(tenant.getExternalLoginIntervalDays())"
+                         addonText="@i18n('Tenant.suffixDays')" labelKey="Tenant.externalLoginIntervalDays"
+                         helpKey="Tenant.externalLoginIntervalDays.help"/>
+        </div>
         <w:subHeading labelKey="Tenant.saml"/>
         <div class="row">
             <w:textfield name="samlRequestIssuerName" value="@tenant.getSamlRequestIssuerName()"
-                         labelKey="Tenant.saml"/>
+                         labelKey="Tenant.samlRequestIssuerName" helpKey="Tenant.samlRequestIssuerName.help"/>
             <w:textfield name="samlIssuerIndex" value="@tenant.getSamlIssuerIndex()"
-                         labelKey="Tenant.saml"/>
+                         labelKey="Tenant.samlIssuerIndex" helpKey="Tenant.samlIssuerIndex.help"/>
             <w:textfield name="samlIssuerUrl" value="@tenant.getSamlIssuerUrl()"
-                         labelKey="Tenant.saml" span="12"/>
+                         labelKey="Tenant.samlIssuerUrl" span="12" helpKey="Tenant.samlIssuerUrl.help"/>
             <w:textfield name="samlIssuerName" value="@tenant.getSamlIssuerName()"
-                         labelKey="Tenant.saml" span="12"/>
+                         labelKey="Tenant.samlIssuerName" span="12" helpKey="Tenant.samlIssuerName.help"/>
             <w:textfield name="samlFingerprint" value="@tenant.getSamlFingerprint()"
-                         labelKey="Tenant.saml" span="12"/>
+                         labelKey="Tenant.samlFingerprint" span="12" helpKey="Tenant.samlFingerprint.help"/>
         </div>
         <div class="row">
             <div class="col-md-6">
                 <w:subHeading labelKey="Tenant.administration"/>
                 <div class="row">
 
-                    <w:singleSelect span="12" name="parent" optional="true" labelKey="Tenant.parent" helpKey="Tenant.parent.help">
+                    <w:singleSelect span="12" name="parent" optional="true" labelKey="Tenant.parent"
+                                    helpKey="Tenant.parent.help">
                         <i:for type="sirius.biz.tenants.Tenant" var="t" items="tenants">
                             <option value="@t.getId()" @if(tenant.getParent().is(t)) {selected="selected" }>
                                 @t.getName()

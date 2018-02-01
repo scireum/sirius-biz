@@ -9,29 +9,46 @@
 
     <w:pageHeader titleKey="SAMLController.saml"/>
 
-    <w:table data="tenants">
-        <thead>
-        <tr>
-            <th>
-                @i18n("Model.name")
-            </th>
-        </tr>
-        </thead>
-        <tbody>
-        <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants">
+    <i:if test="!tenants.isEmpty()">
+        <w:table data="tenants">
+            <thead>
             <tr>
-                <td>
-                    <i:local name="id" value="call.generateLocalId()" />
-                    <form class="samlForm" id="@id" method="post" action="@tenant.getSamlIssuerUrl()">
-                        <input type="hidden" name="SAMLRequest" value="@saml.generateAuthenticationRequest(tenant.getSamlRequestIssuerName(), tenant.getSamlIssuerIndex())" />
-                    </form>
-
-                    <a class="link" href="javascript:$('#@id').submit()">@tenant.getName()</a>
-                </td>
+                <th>
+                    @i18n("Model.name")
+                </th>
             </tr>
-        </i:for>
-        </tbody>
-    </w:table>
+            </thead>
+            <tbody>
+            <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants">
+                <tr>
+                    <td>
+                        <i:local name="id" value="call.generateLocalId()"/>
+                        <form class="samlForm" id="@id" method="post" action="@tenant.getSamlIssuerUrl()">
+                            <input type="hidden" name="SAMLRequest"
+                                   value="@saml.generateAuthenticationRequest(tenant.getSamlRequestIssuerName(), tenant.getSamlIssuerIndex())"/>
+                        </form>
+
+                        <a class="link" href="javascript:$('#@id').submit()">@tenant.getName()</a>
+                    </td>
+                </tr>
+            </i:for>
+            </tbody>
+        </w:table>
+    </i:if>
+    <w:subHeading labelKey="SAMLController.customSaml"/>
+    <w:editForm url="/saml">
+        <div class="row">
+            <w:textfield name="issuerName" value="@call.get('issuerName').asString()"
+                         labelKey="Tenant.samlRequestIssuerName"
+                         required="true"/>
+            <w:textfield name="issuerIndex" value="@call.get('issuerIndex').asString('0')"
+                         labelKey="Tenant.samlIssuerIndex" required="true"/>
+            <w:textfield name="issuerUrl" value="@call.get('issuerUrl').asString()" labelKey="Tenant.samlIssuerUrl"
+                         required="true" span="12"/>
+        </div>
+
+        <w:formBar/>
+    </w:editForm>
     <i:if test="tenants.size() == 1">
         <script type="text/javascript">
             $('form.samlForm').submit();

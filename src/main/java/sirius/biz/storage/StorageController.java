@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 @Register(classes = Controller.class)
 public class StorageController extends BizController {
 
-    public static final String NO_REFERENCE = "-";
+    private static final String NO_REFERENCE = "-";
     private static final String RESPONSE_FILE_ID = "fileId";
     private static final String RESPONSE_REFRESH = "refresh";
 
@@ -70,7 +70,8 @@ public class StorageController extends BizController {
     /**
      * Lists all objects of the given bucket.
      *
-     * @param ctx the request to handle
+     * @param ctx        the request to handle
+     * @param bucketName the bucket to list
      */
     @Routed("/storage/bucket/:1")
     @LoginRequired
@@ -255,6 +256,7 @@ public class StorageController extends BizController {
      * @param out        the response to the AJAX call
      * @param bucketName the name of the bucket to upload to
      * @param objectId   the id of the object for replace
+     * @param upload     the upload to handle
      */
     @Routed(value = "/storage/replace/:1/:2", preDispatchable = true, jsonCall = true)
     @LoginRequired

@@ -305,8 +305,10 @@ public class Storage {
     protected void markAsUsed(String reference, String objectKey) {
         try {
             oma.getDatabase()
-               .createQuery(
-                       "UPDATE virtualobject SET reference=${reference}, temporary = 0 WHERE objectKey=${objectKey} AND temporary=1")
+               .createQuery("UPDATE virtualobject"
+                            + " SET reference=${reference}, temporary = 0"
+                            + " WHERE objectKey=${objectKey}"
+                            + "   AND temporary=1")
                .set("reference", reference)
                .set("objectKey", objectKey)
                .executeUpdate();

@@ -25,9 +25,13 @@ import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Permis a login via SAML.
+ */
 @Register(classes = Controller.class)
 public class SAMLController extends BizController {
 
@@ -40,16 +44,43 @@ public class SAMLController extends BizController {
     @ConfigValue("security.roles")
     private List<String> roles;
 
+    /**
+     * Lists all possible SAML tenants or permits to create a login form for a custom SAML provider.
+     *
+     * @param ctx the current request
+     */
     @Routed("/saml")
     public void saml(WebContext ctx) {
-        List<Tenant> tenants = oma.select(Tenant.class)
-                                  .where(FieldOperator.on(Tenant.SAML_ISSUER_URL).notEqual(null))
-                                  .orderAsc(Tenant.NAME)
-                                  .queryList();
+        List<Tenant> tenants = obtainTenantsForSaml(ctx);
 
         ctx.respondWith().template("/templates/tenants/saml.html.pasta", tenants);
     }
 
+    private List<Tenant> obtainTenantsForSaml(WebContext ctx) {
+        // If GET parameters are present, we create a "fake" tenant to provide a custom SAML target.
+        // This can be used if several identity providers are available for a single tenant.
+        // We can verify several tenants but we can only redirect to a single identity provider.
+        // Therefore these parameters can be used to create a SAML request to a custom one.
+        if (ctx.hasParameter("issuerName")) {
+            Tenant fakeTenant = new Tenant();
+            fakeTenant.setSamlRequestIssuerName(ctx.require("issuerName").asString());
+            fakeTenant.setSamlIssuerUrl(ctx.require("issuerUrl").asString());
+            fakeTenant.setSamlIssuerIndex(ctx.get("issuerIndex").asString("0"));
+
+            return Collections.singletonList(fakeTenant);
+        }
+
+        return oma.select(Tenant.class)
+                  .where(FieldOperator.on(Tenant.SAML_ISSUER_URL).notEqual(null))
+                  .orderAsc(Tenant.NAME)
+                  .queryList();
+    }
+
+    /**
+     * Processes a SAML response and tries to create or update a user which is then logged in.
+     *
+     * @param ctx the SAML response as request
+     */
     @Routed("/saml/login")
     public void samlLogin(WebContext ctx) {
         if (!ctx.isPOST()) {
@@ -94,6 +125,7 @@ public class SAMLController extends BizController {
         account.getTenant().setValue(tenant);
         account.getLogin().setUsername(response.getNameId());
         account.getLogin().setCleartextPassword(UUID.randomUUID().toString());
+        account.setExternalLoginRequired(true);
         updateAccount(response, account);
         oma.update(account);
 
@@ -139,6 +171,28 @@ public class SAMLController extends BizController {
         oma.update(account);
     }
 
+    private boolean checkFingerprint(Tenant tenant, SAMLResponse response) {
+        return isInList(tenant.getSamlFingerprint(), response.getFingerprint());
+    }
+
+    private boolean checkIssuer(Tenant tenant, SAMLResponse response) {
+        return isInList(tenant.getSamlIssuerName(), response.getIssuer());
+    }
+
+    private boolean isInList(String values, String valueToCheck) {
+        if (Strings.isEmpty(values)) {
+            return false;
+        }
+
+        for (String value : values.split(",")) {
+            if (Strings.isFilled(value) && Strings.areEqual(value, valueToCheck)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void updateAccount(SAMLResponse response, UserAccount account) {
         account.getPermissions().getPermissions().clear();
         response.getAttribute(SAMLResponse.ATTRIBUTE_GROUP)
@@ -159,35 +213,5 @@ public class SAMLController extends BizController {
         if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_EMAIL_ADDRESS))) {
             account.setEmail(response.getAttributeValue(SAMLResponse.ATTRIBUTE_EMAIL_ADDRESS));
         }
-    }
-
-    private boolean checkFingerprint(Tenant tenant, SAMLResponse response) {
-        String fingerprints = tenant.getSamlFingerprint();
-        if (Strings.isEmpty(fingerprints)) {
-            return false;
-        }
-
-        for (String fingerprint : fingerprints.split(",")) {
-            if (Strings.isFilled(fingerprint) && Strings.areEqual(response.getFingerprint(), fingerprint)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private boolean checkIssuer(Tenant tenant, SAMLResponse response) {
-        String samlIssuerNames = tenant.getSamlIssuerName();
-        if (Strings.isEmpty(samlIssuerNames)) {
-            return false;
-        }
-
-        for (String issuer : samlIssuerNames.split(",")) {
-            if (Strings.isFilled(issuer) && Strings.areEqual(issuer, response.getIssuer())) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

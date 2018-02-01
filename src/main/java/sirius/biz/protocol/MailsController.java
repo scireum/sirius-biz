@@ -54,6 +54,12 @@ public class MailsController extends BizController {
         ctx.respondWith().template("templates/protocol/mails.html.pasta", ph.asPage());
     }
 
+    /**
+     * Shows the details of a selected mail.
+     *
+     * @param ctx the current request
+     * @param id  the id of the mail to show
+     */
     @Permission(Protocols.PERMISSION_SYSTEM_PROTOCOLS)
     @Routed("/system/mail/:1")
     public void mail(final WebContext ctx, String id) {

@@ -112,7 +112,7 @@ public class Jobs {
         JobProtocol protocol = prepareProtocol(job, context);
         try {
             job.execute(context, mtc);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             mtc.log(Exceptions.handle(LOG, e).getMessage());
             mtc.markErroneous();
         } finally {

@@ -11,6 +11,9 @@ package sirius.biz.storage.vfs.ftp;
 import org.apache.ftpserver.ConnectionConfig;
 import sirius.kernel.di.std.ConfigValue;
 
+/**
+ * Provides a FTP config based on the system configuration.
+ */
 class ConfigBasedConnectionConfig implements ConnectionConfig {
 
     @ConfigValue("storage.ftp.maxLoginFailures")

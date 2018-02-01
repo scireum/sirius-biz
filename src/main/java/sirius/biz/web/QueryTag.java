@@ -32,7 +32,7 @@ public class QueryTag {
     private String label;
     private String color;
 
-    public static final Pattern PATTERN = Pattern.compile("\\|\\|([^|]+)\\|([^|]+)\\|([^|]+)\\|.*");
+    private static final Pattern PATTERN = Pattern.compile("\\|\\|([^|]+)\\|([^|]+)\\|([^|]+)\\|.*");
 
     /**
      * Creates a new tag.
