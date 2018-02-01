@@ -63,8 +63,7 @@ class QueryCompiler {
     }
 
     private boolean isAtOR(LookaheadReader reader) {
-        return (reader.current().is('o', 'O') && reader.next().is('r', 'R')) || (reader.current().is('|')
-                                                                                 && reader.next().is('|'));
+        return reader.current().is('o', 'O') && reader.next().is('r', 'R');
     }
 
     private boolean isAtBinaryAND(LookaheadReader reader) {
@@ -128,7 +127,7 @@ class QueryCompiler {
             return parseBrackets();
         }
 
-        if (reader.current().is(':') && reader.next().is(':')) {
+        if (reader.current().is('|') && reader.next().is('|')) {
             return parseTag();
         }
 
@@ -259,7 +258,7 @@ class QueryCompiler {
         StringBuilder tag = new StringBuilder();
         tag.append(reader.consume());
         tag.append(reader.consume());
-        while (!reader.current().isEndOfInput() && !(reader.current().is(':') && reader.next().is(':'))) {
+        while (!reader.current().isEndOfInput() && !(reader.current().is('|') && reader.next().is('|'))) {
             tag.append(reader.consume());
         }
         tag.append(reader.consume());

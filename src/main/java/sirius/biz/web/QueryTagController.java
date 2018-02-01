@@ -58,9 +58,10 @@ public class QueryTagController implements Controller {
             Class<? extends Entity> entityType =
                     schema.findDescriptor(type).map(EntityDescriptor::getType).orElse(null);
             for (QueryTagSuggester suggester : suggesters) {
-                suggester.computeQueryTags(type, entityType, query, (tag) -> {
+                suggester.computeQueryTags(type, entityType, query, tag -> {
                     out.beginObject("suggestion");
                     out.property("name", tag.getLabel());
+                    out.property("color", tag.getColor());
                     out.property("value", tag.toString());
                     out.endObject();
                 });

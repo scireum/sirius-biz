@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  * <p>
  * Additionally various queries are provided to simplify the extraction and visualization of the recorded statistics.
  */
-@Framework("statistics")
+@Framework("biz.statistics")
 @Register(classes = {Statistics.class, BackgroundLoop.class, Lifecycle.class, MetricProvider.class})
 public class Statistics extends BackgroundLoop implements Lifecycle, MetricProvider {
 

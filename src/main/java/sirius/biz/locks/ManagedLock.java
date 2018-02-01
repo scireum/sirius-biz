@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
  *
  * @see Locks
  */
-@Framework("locks")
+@Framework("biz.locks")
 @Index(name = "unique_name", columns = "name", unique = true)
 public class ManagedLock extends Entity {
 

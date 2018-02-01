@@ -11,6 +11,7 @@ package sirius.biz.codelists;
 import sirius.db.mixing.Entity;
 import sirius.db.mixing.OMA;
 import sirius.kernel.Sirius;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Framework;
@@ -33,7 +34,7 @@ import java.util.List;
  * The required data is stored via {@link CodeList} and {@link CodeListEntry}. The {@link CodeListController} is used
  * to provide an administration GUI for the user.
  */
-@Framework("code-lists")
+@Framework("biz.code-lists")
 @Register(classes = CodeLists.class)
 public class CodeLists {
 
@@ -52,10 +53,13 @@ public class CodeLists {
      * @return the value associated with the code or the code itself if no value exists
      */
     @Nullable
+    @SuppressWarnings("squid:S2637")
+    @Explain("code cannot be null due to Strings.isEmpty")
     public String getValue(@Nonnull String codeList, @Nullable String code) {
         if (Strings.isEmpty(code)) {
             return null;
         }
+
         return getValues(codeList, code).getFirst();
     }
 

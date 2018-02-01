@@ -463,7 +463,6 @@ public class VersionManager {
      * @param targetHeight the desired height of the scaled instance, in pixels
      * @param imageFormat  the format of the image
      * @return a scaled version of the original {@code BufferedImage}
-     * @author Chris Campbell
      */
     private BufferedImage getScaledInstance(BufferedImage img, int targetWidth, int targetHeight, String imageFormat) {
         BufferedImage ret = img;

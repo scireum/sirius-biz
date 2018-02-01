@@ -1,22 +1,23 @@
-<i:arg type="Page" name="page" />
-<i:arg type="String" name="baseUrl" />
-<i:arg type="String" name="suggestionsName" />
+<i:arg type="Page" name="page"/>
+<i:arg type="String" name="baseUrl"/>
+<i:arg type="String" name="suggestionsName"/>
 
-<i:pragma name="inline" value="true" />
-<i:pragma name="description" value="Renders a dropdown field based on a codelist" />
+<i:pragma name="inline" value="true"/>
+<i:pragma name="description" value="Renders a dropdown field based on a codelist"/>
 
 <div class="well taggedSearchBox">
     <form action="@baseUrl" method="post" id="search">
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-8 taggedSearch">
                 <input name="query" id="searchField" type="text" value="@page.getQuery()"></input>
             </div>
             <div class="col-md-4">
                 <div class="pull-right">
                 <span>
-                    <i:render name="body" />
+                    <i:render name="body"/>
                 </span>
-                <a class="btn btn-default" href="@baseUrl?@page.createQueryString()"><i class="fa fa-refresh"></i></a>
+                    <a class="btn btn-default" href="@baseUrl?@page.createQueryString()"><i
+                            class="fa fa-refresh"></i></a>
                 </div>
             </div>
         </div>
@@ -34,7 +35,7 @@
             $container.html();
 
             while (true) {
-                var nextIndex = data.indexOf('::');
+                var nextIndex = data.indexOf('||');
                 if (nextIndex < 0) {
                     break;
                 }
@@ -48,7 +49,7 @@
                     data = data.substring(nextIndex);
                 }
 
-                nextIndex = data.indexOf('::', 2);
+                nextIndex = data.indexOf('||', 2);
                 var tag = data.substring(0, nextIndex + 2);
                 $container.append(makeTag(tag));
                 data = data.substring(nextIndex + 2);
@@ -61,8 +62,8 @@
         }
 
         function makeTag(data) {
-            var contents = /::([^:]+):([^:]+):([^:]+):(.*)/.exec(data.substring(0, data.length - 2));
-            return $('<span>').text(contents[4]).addClass(contents[1]).addClass(contents[2]).data('content', data);
+            var contents = /\|\|([^|]+)\|([^|]+)\|([^|]+)\|(.*)/.exec(data.substring(0, data.length - 2));
+            return $('<span>').text(contents[4]).addClass('suggestion').addClass('suggestion-'+contents[1]).css('background-color', contents[2]).data('content', data);
         }
 
         function makeInput(text) {
@@ -248,7 +249,13 @@
                     $popup.html('');
                     for (var i = 0; i < json.suggestions.length; i++) {
                         var result = json.suggestions[i];
-                        $('<div data-tag="' + result.value + '">' + result.name + '</div>').appendTo($popup);
+                        $('<div data-tag="'
+                            + result.value
+                            + '"><span style="display: inline-block; line-height: 16px; width: 16px; background-color: '
+                            + result.color
+                            + '; margin-right: 8px; border-radius: 2px">&nbsp;</span>'
+                            + result.name
+                            + '</div>').appendTo($popup);
                     }
                     $popup.show();
                 }

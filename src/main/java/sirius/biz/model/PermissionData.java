@@ -40,15 +40,6 @@ public class PermissionData extends Composite {
     private final Entity parent;
 
     /**
-     * Creates a new instance for the given parent.
-     *
-     * @param parent the parent entity which contains this composite.
-     */
-    public PermissionData(Entity parent) {
-        this.parent = parent;
-    }
-
-    /**
      * Contains all permissions as a single string, separated with commas.
      */
     public static final Column PERMISSION_STRING = Column.named("permissionString");
@@ -74,6 +65,15 @@ public class PermissionData extends Composite {
     private Config config;
 
     /**
+     * Creates a new instance for the given parent.
+     *
+     * @param parent the parent entity which contains this composite.
+     */
+    public PermissionData(Entity parent) {
+        this.parent = parent;
+    }
+
+    /**
      * Returns all granted permissions.
      * <p>
      * Note that this set can also be modified as the set will be written back to the database on save.
@@ -82,17 +82,21 @@ public class PermissionData extends Composite {
      */
     public Set<String> getPermissions() {
         if (permissions == null) {
-            permissions = new TreeSet<>();
-            if (Strings.isFilled(permissionString)) {
-                for (String permission : permissionString.split(",")) {
-                    permission = permission.trim();
-                    if (Strings.isFilled(permission)) {
-                        permissions.add(permission);
-                    }
+            compilePermissions();
+        }
+        return permissions;
+    }
+
+    private void compilePermissions() {
+        permissions = new TreeSet<>();
+        if (Strings.isFilled(permissionString)) {
+            for (String permission : permissionString.split(",")) {
+                permission = permission.trim();
+                if (Strings.isFilled(permission)) {
+                    permissions.add(permission);
                 }
             }
         }
-        return permissions;
     }
 
     /**
@@ -110,7 +114,7 @@ public class PermissionData extends Composite {
                     throw Exceptions.handle()
                                     .to(BizController.LOG)
                                     .error(e)
-                                    .withSystemErrorMessage("Cannot loag config of %s (%s): %s (%s)",
+                                    .withSystemErrorMessage("Cannot load config of %s (%s): %s (%s)",
                                                             parent,
                                                             parent.getId())
                                     .handle();

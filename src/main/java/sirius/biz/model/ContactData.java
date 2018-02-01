@@ -19,6 +19,7 @@ import sirius.db.mixing.annotations.Trim;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 import sirius.web.mails.Mails;
 
@@ -37,15 +38,6 @@ public class ContactData extends Composite {
 
     @Transient
     private boolean validatePhoneNumbers;
-
-    /**
-     * Creates a new instance.
-     *
-     * @param validatePhoneNumbers determines if phone numbers should be validated or not
-     */
-    public ContactData(boolean validatePhoneNumbers) {
-        this.validatePhoneNumbers = validatePhoneNumbers;
-    }
 
     /**
      * Contains an email address.
@@ -101,6 +93,15 @@ public class ContactData extends Composite {
     @Part
     private static Mails mails;
 
+    /**
+     * Creates a new instance.
+     *
+     * @param validatePhoneNumbers determines if phone numbers should be validated or not
+     */
+    public ContactData(boolean validatePhoneNumbers) {
+        this.validatePhoneNumbers = validatePhoneNumbers;
+    }
+
     @BeforeSave
     protected void onSave() throws Exception {
         if (Strings.isFilled(email)) {
@@ -109,27 +110,23 @@ public class ContactData extends Composite {
 
         if (validatePhoneNumbers) {
             if (Strings.isFilled(phone) && !VALID_PHONE_NUMBER.matcher(phone).matches()) {
-                throw Exceptions.createHandled()
-                                .withNLSKey("ContactData.invalidPhone")
-                                .set("field", NLS.get("Model.phone"))
-                                .set("value", phone)
-                                .handle();
+                throw invalidPhoneException(NLS.get("Model.phone"), phone);
             }
             if (Strings.isFilled(fax) && !VALID_PHONE_NUMBER.matcher(fax).matches()) {
-                throw Exceptions.createHandled()
-                                .withNLSKey("ContactData.invalidPhone")
-                                .set("field", NLS.get("Model.fax"))
-                                .set("value", fax)
-                                .handle();
+                throw invalidPhoneException(NLS.get("Model.fax"), fax);
             }
             if (Strings.isFilled(mobile) && !VALID_PHONE_NUMBER.matcher(mobile).matches()) {
-                throw Exceptions.createHandled()
-                                .withNLSKey("ContactData.invalidPhone")
-                                .set("field", NLS.get("Model.mobile"))
-                                .set("value", mobile)
-                                .handle();
+                throw invalidPhoneException(NLS.get("Model.mobile"), mobile);
             }
         }
+    }
+
+    private HandledException invalidPhoneException(String field, String value) {
+        return Exceptions.createHandled()
+                         .withNLSKey("ContactData.invalidPhone")
+                         .set("field", field)
+                         .set("value", value)
+                         .handle();
     }
 
     public String getEmail() {

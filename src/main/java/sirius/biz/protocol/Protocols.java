@@ -39,12 +39,21 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
     /**
      * Names the framework which must be enabled to activate all protocol features.
      */
-    public static final String FRAMEWORK_PROTOCOLS = "protocols";
+    public static final String FRAMEWORK_PROTOCOLS = "biz.protocols";
 
     /**
-     * Names the permissions required to vide the protocol.
+     * Names the framework which must be enabled to activate the system journal.
      */
-    public static final String PERMISSION_VIEW_PROTOCOLS = "permission-view-protocols";
+    public static final String FRAMEWORK_JOURNAL = "biz.journal";
+
+    /**
+     * Names the permissions required to view the protocol.
+     */
+    public static final String PERMISSION_SYSTEM_PROTOCOLS = "permission-system-protocols";
+    /**
+     * Names the permissions required to view the system journal.
+     */
+    public static final String PERMISSION_SYSTEM_JOURNAL = "permission-system-journal";
 
     @Part
     private OMA oma;
@@ -126,7 +135,8 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
                             String receiverName,
                             String subject,
                             String text,
-                            String html) {
+                            String html,
+                            String type) {
         if (oma == null || !oma.isReady() || Sirius.isStartedAsTest()) {
             return;
         }
@@ -144,6 +154,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             msg.setHtml(html);
             msg.setSuccess(success);
             msg.setNode(CallContext.getNodeName());
+            msg.setMailType(type);
 
             oma.update(msg);
         } catch (Exception e) {

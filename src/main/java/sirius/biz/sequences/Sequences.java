@@ -29,7 +29,7 @@ import java.sql.SQLException;
  * Note that these sequences are global and not tenant aware. Therefore care must be taken to generate unique names for
  * sequences. A viable option is to use {@link Entity#getUniqueName()} of the entity which utilizes the generator.
  */
-@Framework("sequences")
+@Framework("biz.sequences")
 @Register(classes = Sequences.class)
 public class Sequences {
 
@@ -54,35 +54,9 @@ public class Sequences {
         try {
             int retries = 25;
             while (retries-- > 0) {
-                // Select the current value which will be returned if all goes well....
-                SequenceCounter result =
-                        oma.select(SequenceCounter.class).eq(SequenceCounter.NAME, sequence).queryFirst();
-                if (result == null) {
-                    try {
-                        // Try to create a new record, as no counter is yet present...
-                        result = new SequenceCounter();
-                        result.setName(sequence);
-                        result.setNextValue(2);
-                        oma.update(result);
-                        return 1;
-                    } catch (HandledException e) {
-                        // This only happens if another thread / server inserted the entity already...
-                        Exceptions.ignore(e);
-                        continue;
-                    }
-                }
-
-                int numRowsChanged = oma.getDatabase()
-                                        .createQuery(" UPDATE sequencecounter "
-                                                     + "  SET nextValue = nextValue + 1 "
-                                                     + "WHERE name = ${name} "
-                                                     + "  AND nextValue = ${value}")
-                                        .set("name", sequence)
-                                        .set("value", result.getNextValue())
-                                        .executeUpdate();
-                if (numRowsChanged == 1) {
-                    // Nobody else changed the counter, so we can savely return the determined value...
-                    return result.getNextValue();
+                Long id = tryGenerateId(sequence);
+                if (id != null) {
+                    return id;
                 }
 
                 // Block a short random amount of time to resolve conflicts with other waiting threads
@@ -106,6 +80,44 @@ public class Sequences {
         }
     }
 
+    private Long tryGenerateId(String sequence) throws SQLException {
+        // Select the current value which will be returned if all goes well....
+        SequenceCounter result = oma.select(SequenceCounter.class).eq(SequenceCounter.NAME, sequence).queryFirst();
+        if (result == null) {
+            return createSequence(sequence);
+        }
+
+        int numRowsChanged = oma.getDatabase()
+                                .createQuery("UPDATE sequencecounter"
+                                             + "     SET nextValue = nextValue + 1"
+                                             + "     WHERE name = ${name} "
+                                             + "     AND nextValue = ${value}")
+                                .set("name", sequence)
+                                .set("value", result.getNextValue())
+                                .executeUpdate();
+        if (numRowsChanged == 1) {
+            // Nobody else changed the counter, so we can savely return the determined value...
+            return result.getNextValue();
+        }
+        return null;
+    }
+
+    private Long createSequence(String sequence) {
+        SequenceCounter result;
+        try {
+            // Try to create a new record, as no counter is yet present...
+            result = new SequenceCounter();
+            result.setName(sequence);
+            result.setNextValue(2);
+            oma.update(result);
+            return 1L;
+        } catch (HandledException e) {
+            // This only happens if another thread / server inserted the entity already...
+            Exceptions.ignore(e);
+            return null;
+        }
+    }
+
     /**
      * Sets the initial or next value of the given sequence.
      * <p>
@@ -124,36 +136,10 @@ public class Sequences {
         try {
             // Select the current value which will be returned if all goes well....
             if (oma.select(SequenceCounter.class).eq(SequenceCounter.NAME, sequence).exists()) {
-                String sql = "UPDATE sequencecounter SET nextValue = ${value} WHERE name = ${name}";
-                if (!force) {
-                    sql += "  AND nextValue <= ${value}";
-                }
-
-                int updatedRows = oma.getDatabase()
-                                     .createQuery(sql)
-                                     .set("name", sequence)
-                                     .set("value", nextValue)
-                                     .executeUpdate();
-                if (updatedRows == 1) {
-                    return;
-                }
+                updateCounterValue(sequence, nextValue, force);
             } else {
-                try {
-                    // Try to create a new record, as no counter is yet present...
-                    SequenceCounter counter = new SequenceCounter();
-                    counter.setName(sequence);
-                    counter.setNextValue(nextValue);
-                    oma.update(counter);
-                    return;
-                } catch (HandledException e) {
-                    // This only happens if another thread / server inserted the entity already...
-                    Exceptions.ignore(e);
-                }
+                createSequenceWithValue(sequence, nextValue);
             }
-            throw Exceptions.handle()
-                            .to(LOG)
-                            .withSystemErrorMessage("Failed to specify the next value for sequence %s", sequence)
-                            .handle();
         } catch (SQLException e) {
             throw Exceptions.handle()
                             .to(LOG)
@@ -161,6 +147,39 @@ public class Sequences {
                             .withSystemErrorMessage(
                                     "Failed to specify the next value for sequence %s due to a database error: %s",
                                     sequence)
+                            .handle();
+        }
+    }
+
+    private void createSequenceWithValue(String sequence, long nextValue) {
+        try {
+            // Try to create a new record, as no counter is yet present...
+            SequenceCounter counter = new SequenceCounter();
+            counter.setName(sequence);
+            counter.setNextValue(nextValue);
+            oma.update(counter);
+        } catch (HandledException e) {
+            throw Exceptions.handle()
+                            .to(LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Failed to specify the next value for sequence %s - %s (%s)",
+                                                    sequence)
+                            .handle();
+        }
+    }
+
+    private void updateCounterValue(String sequence, long nextValue, boolean force) throws SQLException {
+        String sql = "UPDATE sequencecounter SET nextValue = ${value} WHERE name = ${name}";
+        if (!force) {
+            sql += "  AND nextValue <= ${value}";
+        }
+
+        int updatedRows =
+                oma.getDatabase().createQuery(sql).set("name", sequence).set("value", nextValue).executeUpdate();
+        if (updatedRows != 1) {
+            throw Exceptions.handle()
+                            .to(LOG)
+                            .withSystemErrorMessage("Failed to specify the next value for sequence %s", sequence)
                             .handle();
         }
     }

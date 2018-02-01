@@ -111,6 +111,17 @@ public class LoginData extends Composite {
     private LocalDateTime lastLogin;
 
     /**
+     * Records the timestamp of the last login via an external system.
+     * <p>
+     * When using external identity poviders, like SAML, we want to keep track when the last login via this happened
+     * as we probably want to enforce regular validations (logins).
+     */
+    public static final Column LAST_EXTERNAL_LOGIN = Column.named("lastExternalLogin");
+    @NoJournal
+    @NullAllowed
+    private LocalDateTime lastExternalLogin;
+
+    /**
      * Contains a flag which checks if the user is permitted to login.
      */
     public static final Column ACCOUNT_LOCKED = Column.named("accountLocked");
@@ -233,6 +244,14 @@ public class LoginData extends Composite {
 
     public void setLastLogin(LocalDateTime lastLogin) {
         this.lastLogin = lastLogin;
+    }
+
+    public LocalDateTime getLastExternalLogin() {
+        return lastExternalLogin;
+    }
+
+    public void setLastExternalLogin(LocalDateTime lastExternalLogin) {
+        this.lastExternalLogin = lastExternalLogin;
     }
 
     public boolean isAccountLocked() {

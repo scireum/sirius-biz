@@ -115,8 +115,7 @@ public class TenantController extends BizController {
     public void tenant(WebContext ctx, String tenantId) {
         Tenant tenant = find(Tenant.class, tenantId);
 
-        SaveHelper saveHelper =
-                prepareSave(ctx).withAfterCreateURI("/tenant/${id}").withAfterSaveURI("/tenants");
+        SaveHelper saveHelper = prepareSave(ctx).withAfterCreateURI("/tenant/${id}").withAfterSaveURI("/tenants");
         saveHelper.withPreSaveHandler(isNew -> {
             tenant.getPermissions().getPermissions().clear();
             for (String permission : ctx.getParameters("permissions")) {
@@ -230,7 +229,8 @@ public class TenantController extends BizController {
     }
 
     private boolean isCurrentlySpying(WebContext ctx) {
-        return ctx.getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX).isFilled();
+        return ctx.getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX)
+                  .isFilled();
     }
 
     /**

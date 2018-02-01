@@ -24,8 +24,8 @@ import sirius.web.security.Permission;
 /**
  * Provides a GUI for viewing the system journal recorded by {@link JournalData} / {@link JournalEntry}.
  */
-@Register(classes = Controller.class, framework = Protocols.FRAMEWORK_PROTOCOLS)
-public class ProtocolController extends BasicController {
+@Register(classes = Controller.class, framework = Protocols.FRAMEWORK_JOURNAL)
+public class JournalController extends BasicController {
 
     @Part
     private OMA oma;
@@ -35,7 +35,7 @@ public class ProtocolController extends BasicController {
      *
      * @param ctx the current request
      */
-    @Permission(Protocols.PERMISSION_VIEW_PROTOCOLS)
+    @Permission(Protocols.PERMISSION_SYSTEM_JOURNAL)
     @DefaultRoute
     @Routed("/system/protocol")
     public void protocol(WebContext ctx) {

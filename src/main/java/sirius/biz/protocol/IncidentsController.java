@@ -30,7 +30,7 @@ public class IncidentsController extends BizController {
      *
      * @param ctx the current request
      */
-    @Permission(Protocols.PERMISSION_VIEW_PROTOCOLS)
+    @Permission(Protocols.PERMISSION_SYSTEM_PROTOCOLS)
     @DefaultRoute
     @Routed("/system/errors")
     public void errors(WebContext ctx) {
@@ -52,7 +52,8 @@ public class IncidentsController extends BizController {
                         DateRange.lastWeek());
         ph.withSearchFields(Incident.CATEGORY, Incident.MESSAGE);
 
-        ctx.respondWith().template("templates/protocol/errors.html.pasta", ph.asPage(), (int)oma.select(Incident.class).count());
+        ctx.respondWith()
+           .template("templates/protocol/errors.html.pasta", ph.asPage(), (int) oma.select(Incident.class).count());
     }
 
     /**
@@ -61,7 +62,7 @@ public class IncidentsController extends BizController {
      * @param id  the ID of the {@link Incident} to show
      * @param ctx the current request
      */
-    @Permission(Protocols.PERMISSION_VIEW_PROTOCOLS)
+    @Permission(Protocols.PERMISSION_SYSTEM_PROTOCOLS)
     @Routed("/system/error/:1")
     public void error(WebContext ctx, String id) {
         Incident incident = find(Incident.class, id);

@@ -76,6 +76,7 @@ public class I5Connector implements Lifecycle {
 
     @Override
     public void started() {
+        // Nothing to do
     }
 
     @Override
@@ -85,6 +86,7 @@ public class I5Connector implements Lifecycle {
 
     @Override
     public void awaitTermination() {
+        // Nothing to wait for
     }
 
     @Override

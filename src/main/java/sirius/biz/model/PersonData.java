@@ -15,6 +15,7 @@ import sirius.db.mixing.Composite;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.Formatter;
@@ -24,6 +25,8 @@ import java.util.Objects;
 /**
  * Provides personal information which can be embedded into other entities or mixins.
  */
+@SuppressWarnings("squid:S1192")
+@Explain("Constants are semantically different")
 public class PersonData extends Composite {
 
     /**
@@ -119,7 +122,8 @@ public class PersonData extends Composite {
         }
 
         return Strings.areEqual(title, ((PersonData) obj).title)
-               && Strings.areEqual(salutation, ((PersonData) obj).salutation)
+               && Strings.areEqual(salutation,
+                                   ((PersonData) obj).salutation)
                && Strings.areEqual(firstname, ((PersonData) obj).firstname)
                && Strings.areEqual(lastname, ((PersonData) obj).lastname);
     }

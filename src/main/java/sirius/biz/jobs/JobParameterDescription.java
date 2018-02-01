@@ -24,6 +24,9 @@ public class JobParameterDescription {
     private String description;
     private boolean required;
 
+    @Part
+    private static GlobalContext ctx;
+
     public String getName() {
         return name;
     }
@@ -51,9 +54,6 @@ public class JobParameterDescription {
     public boolean isRequired() {
         return required;
     }
-
-    @Part
-    private static GlobalContext ctx;
 
     public ParameterHandler getParameterHandler() {
         return ctx.findPart(type, ParameterHandler.class);

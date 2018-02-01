@@ -19,7 +19,7 @@ import sirius.kernel.di.std.Framework;
  * <p>
  * This is used by {@link Sequences} to store and generate the next value for a sequence.
  */
-@Framework("sequences")
+@Framework("biz.sequences")
 public class SequenceCounter extends BizEntity {
 
     /**

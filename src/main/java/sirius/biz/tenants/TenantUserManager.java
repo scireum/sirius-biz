@@ -20,9 +20,10 @@ import sirius.db.mixing.Entity;
 import sirius.db.mixing.OMA;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
-import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -37,6 +38,7 @@ import sirius.web.security.UserSettings;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -107,7 +109,6 @@ public class TenantUserManager extends GenericUserManager {
     private final String systemTenant;
     private final String defaultSalt;
     private final boolean acceptApiTokens;
-    private final boolean checkPasswordsCaseInsensitive;
     private final boolean autocreateTenant;
 
     @Part
@@ -122,23 +123,20 @@ public class TenantUserManager extends GenericUserManager {
     private static Cache<String, Set<String>> rolesCache = CacheManager.createCache("tenants-roles");
     private static Cache<String, UserAccount> userAccountCache = CacheManager.createCache("tenants-users");
     private static Cache<String, Tenant> tenantsCache = CacheManager.createCache("tenants-tenants");
-    private static Cache<String, UserSettings> configCache = CacheManager.createCache("tenants-configs");
+    private static Cache<String, Tuple<UserSettings, String>> configCache = CacheManager.createCache("tenants-configs");
 
     protected TenantUserManager(ScopeInfo scope, Extension config) {
         super(scope, config);
-        this.sessionStorage = SESSION_STORAGE_TYPE_CLIENT;
         this.systemTenant = config.get("system-tenant").asString();
         this.defaultSalt = config.get("default-salt").asString("");
         this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(true);
-        this.checkPasswordsCaseInsensitive = config.get("check-passwords-case-insensitive").asBoolean(false);
         this.autocreateTenant = config.get("autocreate-tenant").asBoolean(true);
     }
 
     /**
      * Creates a new user manager for the given scope and configuration.
      */
-    @Framework("tenants")
-    @Register(name = "tenants")
+    @Register(name = "tenants", framework = "biz.tenants")
     public static class Factory implements UserManagerFactory {
 
         @Nonnull
@@ -166,7 +164,9 @@ public class TenantUserManager extends GenericUserManager {
      */
     public static void flushCacheForTenant(Tenant tenant) {
         tenantsCache.remove(tenant.getIdAsString());
-        configCache.clear();
+        configCache.remove(tenant.getUniqueName());
+        configCache.removeIf(cachedValue -> Strings.areEqual(cachedValue.getValue().getSecond(),
+                                                             tenant.getUniqueName()));
     }
 
     @Override
@@ -364,6 +364,7 @@ public class TenantUserManager extends GenericUserManager {
             // as this is also determined by the tenant
             rolesCache.remove(account.getUniqueName());
             configCache.remove(account.getUniqueName());
+            configCache.remove(tenantFromDB.getUniqueName());
 
             return tenantFromDB;
         }
@@ -440,7 +441,15 @@ public class TenantUserManager extends GenericUserManager {
             return null;
         }
 
-        LoginData loginData = result.getUserObject(UserAccount.class).getLogin();
+        UserAccount account = result.getUserObject(UserAccount.class);
+        if (account.isExternalLoginRequired() && !isWithinInterval(account.getLogin().getLastExternalLogin(),
+                                                                   account.getTenant()
+                                                                          .getValue()
+                                                                          .getExternalLoginIntervalDays())) {
+            throw Exceptions.createHandled().withNLSKey("UserAccount.externalLoginMustBePerformed").handle();
+        }
+
+        LoginData loginData = account.getLogin();
         if (acceptApiTokens && Strings.areEqual(password, loginData.getApiToken())) {
             return result;
         }
@@ -451,16 +460,21 @@ public class TenantUserManager extends GenericUserManager {
             return result;
         }
 
-        String givenUcasePasswordHash = LoginData.hashPassword(salt, password.toUpperCase());
-        if (checkPasswordsCaseInsensitive && givenUcasePasswordHash.equals(loginData.getUcasePasswordHash())) {
-            return result;
-        }
-
         return null;
     }
 
     @Override
     protected void recordUserLogin(WebContext ctx, UserInfo user) {
+        recordLogin(user, false);
+    }
+
+    /**
+     * Records a login which has either happened within this user manager or externally.
+     *
+     * @param user     the user which logged in
+     * @param external <tt>true</tt> if the login was performed via an external system like SAML, <tt>false</tt> otherwise
+     */
+    public void recordLogin(UserInfo user, boolean external) {
         try {
             UserAccount account = (UserAccount) getUserObject(user);
 
@@ -475,6 +489,9 @@ public class TenantUserManager extends GenericUserManager {
             account.getJournal().setSilent(true);
             account.getLogin().setNumberOfLogins(account.getLogin().getNumberOfLogins() + 1);
             account.getLogin().setLastLogin(LocalDateTime.now());
+            if (external) {
+                account.getLogin().setLastExternalLogin(LocalDateTime.now());
+            }
             oma.override(account);
         } catch (Exception e) {
             Exceptions.handle(BizController.LOG, e);
@@ -493,25 +510,61 @@ public class TenantUserManager extends GenericUserManager {
             if (user.getTenant().getValue().getPermissions().getConfig() == null) {
                 return scopeSettings;
             }
+
+            return configCache.get(user.getTenant().getUniqueObjectName(), i -> {
+                Config cfg = scopeSettings.getConfig();
+                cfg = user.getTenant().getValue().getPermissions().getConfig().withFallback(cfg);
+                return Tuple.create(new UserSettings(cfg), user.getTenant().getUniqueObjectName());
+            }).getFirst();
         }
 
-        return configCache.get(userInfo.getUserId(), i -> {
+        return configCache.get(user.getUniqueName(), i -> {
             Config cfg = scopeSettings.getConfig();
-            if (user.getTenant().getValue().getPermissions().getConfig() != null) {
-                cfg = user.getTenant().getValue().getPermissions().getConfig().withFallback(cfg);
-            }
-            if (user.getPermissions().getConfig() != null) {
-                cfg = user.getPermissions().getConfig().withFallback(cfg);
-            }
-
-            return new UserSettings(cfg);
-        });
+            cfg = user.getTenant().getValue().getPermissions().getConfig().withFallback(cfg);
+            cfg = user.getPermissions().getConfig().withFallback(cfg);
+            return Tuple.create(new UserSettings(cfg), user.getTenant().getUniqueObjectName());
+        }).getFirst();
     }
 
     @Override
+    @SuppressWarnings({"squid:S1126", "RedundantIfStatement"})
+    @Explain("Using explicit abort conditions and a final true makes all checks obvious")
     protected boolean isUserStillValid(String userId) {
         UserAccount user = fetchAccount(userId, null);
-        return user != null && !user.getLogin().isAccountLocked();
+
+        if (user == null) {
+            return false;
+        }
+
+        if (user.getLogin().isAccountLocked()) {
+            return false;
+        }
+
+        if (!isWithinInterval(user.getLogin().getLastLogin(), user.getTenant().getValue().getLoginIntervalDays())) {
+            return false;
+        }
+
+        if (user.isExternalLoginRequired() && !isWithinInterval(user.getLogin().getLastExternalLogin(),
+                                                                user.getTenant()
+                                                                    .getValue()
+                                                                    .getExternalLoginIntervalDays())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isWithinInterval(LocalDateTime dateTime, Integer requiredInterval) {
+        if (requiredInterval == null) {
+            return true;
+        }
+
+        if (dateTime == null) {
+            return false;
+        }
+
+        long actualInterval = Duration.between(LocalDateTime.now(), dateTime).toDays();
+        return actualInterval < requiredInterval;
     }
 
     private Set<String> computeRoles(UserAccount user, Tenant tenant, boolean isSystemTenant) {

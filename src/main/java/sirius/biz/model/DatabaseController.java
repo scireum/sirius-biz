@@ -41,7 +41,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Register(classes = Controller.class)
 public class DatabaseController extends BasicController {
 
-    public static final int DEFAULT_LIMIT = 1000;
+    /**
+     * Contains the default limit to prevent accidents when querying large tables
+     */
+    private static final int DEFAULT_LIMIT = 1000;
+
     @Part
     private Schema schema;
 
@@ -67,6 +71,7 @@ public class DatabaseController extends BasicController {
      *
      * @param ctx the current request
      * @param out the JSON response
+     * @throws SQLException in case of a database error
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
     @Routed(value = "/system/sql/api/execute", jsonCall = true)

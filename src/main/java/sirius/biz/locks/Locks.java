@@ -27,7 +27,7 @@ import java.util.List;
  * These locks can either be distributed (via SQL or REDIS) or held locally. The implementation is provided via a {@link
  * LockManager}.
  */
-@Framework("locks")
+@Framework("biz.locks")
 @Register(classes = {Locks.class, MetricProvider.class})
 public class Locks implements MetricProvider {
 

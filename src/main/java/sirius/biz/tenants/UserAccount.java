@@ -20,6 +20,7 @@ import sirius.db.mixing.annotations.BeforeDelete;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.annotations.Versioned;
 import sirius.kernel.Sirius;
@@ -28,19 +29,24 @@ import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.web.controller.Message;
 import sirius.web.mails.Mails;
+import sirius.web.security.MessageProvider;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Represents a user account which can log into the system.
  * <p>
  * Serveral users are grouped together by their company, which is referred to as {@link Tenant}.
  */
-@Framework("tenants")
+@Framework("biz.tenants")
 @Versioned
 @Index(name = "index_username", columns = "login_username", unique = true)
-public class UserAccount extends TenantAware implements Journaled {
+public class UserAccount extends TenantAware implements Journaled, MessageProvider {
 
     /**
      * Contains the email address of the user.
@@ -49,6 +55,7 @@ public class UserAccount extends TenantAware implements Journaled {
     @Trim
     @Autoloaded
     @Length(150)
+    @NullAllowed
     private String email;
 
     /**
@@ -74,6 +81,13 @@ public class UserAccount extends TenantAware implements Journaled {
      */
     public static final Column JOURNAL = Column.named("journal");
     private final JournalData journal = new JournalData(this);
+
+    /**
+     * Determines if an external login is required from time to time.
+     */
+    public static final Column EXTERNAL_LOGIN_REQUIRED = Column.named("externalLoginRequired");
+    @Autoloaded
+    private boolean externalLoginRequired = false;
 
     @Part
     private static Mails ms;
@@ -144,6 +158,7 @@ public class UserAccount extends TenantAware implements Journaled {
         if (Tenant.class == adapterType) {
             return Optional.ofNullable((A) getTenant().getValue());
         }
+
         return super.tryAs(adapterType);
     }
 
@@ -157,6 +172,63 @@ public class UserAccount extends TenantAware implements Journaled {
         }
 
         return super.is(type);
+    }
+
+    @Override
+    public String toString() {
+        if (hasName()) {
+            return getPerson().toString();
+        }
+        if (Strings.isFilled(getLogin().getUsername())) {
+            return getLogin().getUsername();
+        }
+
+        return NLS.get("Model.userAccount");
+    }
+
+    /**
+     * Determines if the user has a real name.
+     *
+     * @return <tt>true</tt> if a real name was provided, <tt>false</tt> otherwise
+     */
+    public boolean hasName() {
+        return Strings.isFilled(getPerson().getLastname());
+    }
+
+    @Override
+    public void addMessages(Consumer<Message> messageConsumer) {
+        if (Strings.isFilled(getLogin().getGeneratedPassword())) {
+            messageConsumer.accept(Message.warn(NLS.get("UserAccount.warnAboutGeneratedPassword"))
+                                          .withAction("/profile/password", NLS.get("UserAccount.changePassword")));
+        }
+
+        warnAboutForcedLogout(messageConsumer);
+    }
+
+    private void warnAboutForcedLogout(Consumer<Message> messageConsumer) {
+        if (isExternalLoginRequired()) {
+            if (isNearInterval(getLogin().getLastExternalLogin(),
+                               getTenant().getValue().getExternalLoginIntervalDays())) {
+                messageConsumer.accept(Message.info(NLS.get("UserAccount.forcedExternalLoginNear")));
+                return;
+            }
+        }
+        if (isNearInterval(getLogin().getLastLogin(), getTenant().getValue().getLoginIntervalDays())) {
+            messageConsumer.accept(Message.info(NLS.get("UserAccount.forcedLogoutNear")));
+        }
+    }
+
+    private boolean isNearInterval(LocalDateTime dateTime, Integer requiredInterval) {
+        if (requiredInterval == null) {
+            return false;
+        }
+
+        if (dateTime == null) {
+            return true;
+        }
+
+        long actualInterval = Duration.between(LocalDateTime.now(), dateTime).toDays();
+        return actualInterval >= requiredInterval - 3;
     }
 
     public PersonData getPerson() {
@@ -184,24 +256,11 @@ public class UserAccount extends TenantAware implements Journaled {
         return journal;
     }
 
-    @Override
-    public String toString() {
-        if (hasName()) {
-            return getPerson().toString();
-        }
-        if (Strings.isFilled(getLogin().getUsername())) {
-            return getLogin().getUsername();
-        }
-
-        return NLS.get("Model.userAccount");
+    public boolean isExternalLoginRequired() {
+        return externalLoginRequired;
     }
 
-    /**
-     * Determines if the user has a real name.
-     *
-     * @return <tt>true</tt> if a real name was provided, <tt>false</tt> otherwise
-     */
-    public boolean hasName() {
-        return Strings.isFilled(getPerson().getLastname());
+    public void setExternalLoginRequired(boolean externalLoginRequired) {
+        this.externalLoginRequired = externalLoginRequired;
     }
 }

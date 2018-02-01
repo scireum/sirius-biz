@@ -33,7 +33,7 @@ import sirius.kernel.nls.NLS;
  * <p>
  * Helps to support multi tenancy for SaaS platforms.
  */
-@Framework("tenants")
+@Framework("biz.tenants")
 @Versioned
 public class Tenant extends BizEntity implements Journaled {
 
@@ -60,6 +60,24 @@ public class Tenant extends BizEntity implements Journaled {
     private boolean canAccessParent = false;
 
     /**
+     * Determines the interval in days, after which a user needs to login again.
+     */
+    public static final Column LOGIN_INTERVAL_DAYS = Column.named("loginIntervalDays");
+    @Autoloaded
+    @NullAllowed
+    private Integer loginIntervalDays;
+
+    /**
+     * Determines the interval in days, after which a user needs to login again, via an extenal system.
+     * <p>
+     * Note that this is only enforced if {@link UserAccount#externalLoginRequired} is <tt>true</tt>.
+     */
+    public static final Column EXTERNAL_LOGIN_INTERVAL_DAYS = Column.named("externalLoginIntervalDays");
+    @Autoloaded
+    @NullAllowed
+    private Integer externalLoginIntervalDays;
+
+    /**
      * Contains the name of the tenant.
      */
     public static final Column NAME = Column.named("name");
@@ -79,6 +97,60 @@ public class Tenant extends BizEntity implements Journaled {
     @NullAllowed
     @Length(50)
     private String accountNumber;
+
+    /**
+     * Contains the name of the system which is used as the SAML provider.
+     */
+    public static final Column SAML_REQUEST_ISSUER_NAME = Column.named("samlRequestIssuerName");
+    @Trim
+    @Autoloaded
+    @NullAllowed
+    @Length(50)
+    private String samlRequestIssuerName;
+
+    /**
+     * Contains the URL of the SAML provider.
+     */
+    public static final Column SAML_ISSUER_URL = Column.named("samlIssuerUrl");
+    @Trim
+    @Autoloaded
+    @NullAllowed
+    @Length(255)
+    private String samlIssuerUrl;
+
+    /**
+     * Contains the endpoint index at the SAML provider.
+     */
+    public static final Column SAML_ISSUER_INDEX = Column.named("samlIssuerIndex");
+    @Trim
+    @Autoloaded
+    @NullAllowed
+    @Length(10)
+    private String samlIssuerIndex;
+
+    /**
+     * Contains the issuer name within a SAML assertion.
+     * <p>
+     * If several SAML providers are used, multiple values can be separated by a <tt>,</tt>.
+     */
+    public static final Column SAML_ISSUER_NAME = Column.named("samlIssuerName");
+    @Trim
+    @Autoloaded
+    @NullAllowed
+    @Length(50)
+    private String samlIssuerName;
+
+    /**
+     * Contains the SHA-1 fingerprint of the X509 certificate which is used to sign the SAML assertions.
+     * <p>
+     * If several SAML providers are used, multiple values can be separated by a <tt>,</tt>.
+     */
+    public static final Column SAML_FINGERPRINT = Column.named("samlFingerprint");
+    @Trim
+    @Autoloaded
+    @NullAllowed
+    @Length(255)
+    private String samlFingerprint;
 
     /**
      * Contains the address of the tenant.
@@ -108,6 +180,10 @@ public class Tenant extends BizEntity implements Journaled {
         if (journal.hasJournaledChanges()) {
             TenantUserManager.flushCacheForTenant(this);
             tenants.flushTenantChildrenCache();
+        }
+
+        if (Strings.isFilled(samlFingerprint)) {
+            samlFingerprint = samlFingerprint.replace(" ", "").toLowerCase();
         }
     }
 
@@ -153,6 +229,62 @@ public class Tenant extends BizEntity implements Journaled {
 
     public void setCanAccessParent(boolean canAccessParent) {
         this.canAccessParent = canAccessParent;
+    }
+
+    public String getSamlIssuerName() {
+        return samlIssuerName;
+    }
+
+    public void setSamlIssuerName(String samlIssuerName) {
+        this.samlIssuerName = samlIssuerName;
+    }
+
+    public String getSamlIssuerUrl() {
+        return samlIssuerUrl;
+    }
+
+    public void setSamlIssuerUrl(String samlIssuerUrl) {
+        this.samlIssuerUrl = samlIssuerUrl;
+    }
+
+    public String getSamlIssuerIndex() {
+        return samlIssuerIndex;
+    }
+
+    public void setSamlIssuerIndex(String samlIssuerIndex) {
+        this.samlIssuerIndex = samlIssuerIndex;
+    }
+
+    public String getSamlFingerprint() {
+        return samlFingerprint;
+    }
+
+    public void setSamlFingerprint(String samlFingerprint) {
+        this.samlFingerprint = samlFingerprint;
+    }
+
+    public String getSamlRequestIssuerName() {
+        return samlRequestIssuerName;
+    }
+
+    public void setSamlRequestIssuerName(String samlRequestIssuerName) {
+        this.samlRequestIssuerName = samlRequestIssuerName;
+    }
+
+    public Integer getLoginIntervalDays() {
+        return loginIntervalDays;
+    }
+
+    public void setLoginIntervalDays(Integer loginIntervalDays) {
+        this.loginIntervalDays = loginIntervalDays;
+    }
+
+    public Integer getExternalLoginIntervalDays() {
+        return externalLoginIntervalDays;
+    }
+
+    public void setExternalLoginIntervalDays(Integer externalLoginIntervalDays) {
+        this.externalLoginIntervalDays = externalLoginIntervalDays;
     }
 
     @Override

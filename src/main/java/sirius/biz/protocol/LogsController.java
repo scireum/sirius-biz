@@ -30,7 +30,7 @@ public class LogsController extends BizController {
      *
      * @param ctx the current request
      */
-    @Permission(Protocols.PERMISSION_VIEW_PROTOCOLS)
+    @Permission(Protocols.PERMISSION_SYSTEM_PROTOCOLS)
     @DefaultRoute
     @Routed("/system/logs")
     public void logs(WebContext ctx) {
