@@ -381,7 +381,8 @@ public class BizController extends BasicController {
                 }
 
                 if (!oma.hasValidationWarnings(entity) && Strings.isFilled(afterSaveURI)) {
-                    ctx.respondWith().redirectToGet(afterSaveURI);
+                    ctx.respondWith()
+                       .redirectToGet(Formatter.create(afterSaveURI).set("id", entity.getIdAsString()).format());
                     return true;
                 }
                 showSavedMessage();

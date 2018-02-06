@@ -64,7 +64,7 @@
             </div>
             <div class="col-md-6">
                 <i:if test="!controller.getPermissions().isEmpty()">
-                    <w:heading labelKey="Tenant.permissions"/>
+                    <w:subHeading labelKey="Tenant.permissions"/>
                     <i:for type="String" var="permission" items="controller.getPermissions()">
                         <div class="checkbox">
                             <label>
