@@ -31,6 +31,13 @@ public interface StoredObject {
     String getFilename();
 
     /**
+     * Returns the path of the object.
+     *
+     * @return the path of the object
+     */
+    String getPath();
+
+    /**
      * Returns the size of the object in bytes.
      *
      * @return the size in bytes

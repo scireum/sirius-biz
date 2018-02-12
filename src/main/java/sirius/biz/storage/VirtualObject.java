@@ -215,6 +215,7 @@ public class VirtualObject extends TenantAware implements StoredObject {
         this.fileSize = fileSize;
     }
 
+    @Override
     public String getPath() {
         return path;
     }
