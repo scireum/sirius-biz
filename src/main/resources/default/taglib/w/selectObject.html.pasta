@@ -6,6 +6,7 @@
 <i:arg name="helpKey" type="String" default="" />
 <i:arg name="help" type="String" default="@i18n(helpKey)" />
 <i:arg name="optional" type="boolean" default="false" />
+<i:arg name="required" type="boolean" default="false" />
 <i:arg name="strict" type="boolean" default="false" />
 <i:arg name="forceFullWidth" type="boolean" default="false" />
 
@@ -16,7 +17,11 @@
 
 <div class="col-md-@span form-group">
     <i:if test="isFilled(label)">
-        <label>@label</label>
+        <label>
+            <span class="@if (required) { input-required }">
+                @label
+            </span>
+        </label>
     </i:if>
 
     <select name="@name" class="form-control @user.signalFieldError(name)" id="select-@localId"
