@@ -8,25 +8,25 @@
 <i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>
 
 <div id="@id" class="file-upload">
-    <div class="qq-upload-drop-area qq-image-area">
-        <div class="file-upload-file">
+    <div class="qq-upload-drop-area qq-image-area qq-upload-drop-area-js">
+        <div class="file-upload-file file-upload-file-js">
             <img src="@defaultPreview"
-                 class="file-upload-preview @if(!isFilled(defaultPreview) || objectRef.isFilled()) { hide }"/>
+                 class="file-upload-preview file-upload-preview-js @if(!isFilled(defaultPreview) || objectRef.isFilled()) { hide }"/>
 
-            <i class="fa fa-3x file-upload-icon hide" aria-hidden="true"></i>
+            <i class="fa fa-3x file-upload-icon file-upload-icon-js hide" aria-hidden="true"></i>
 
             <p>
-                <a href="@objectRef.getURL('')" class="file-upload-name" style="word-wrap: break-word">
+                <a href="@objectRef.getURL('')" class="file-upload-name file-upload-name-js" style="word-wrap: break-word">
                     @objectRef.getFilename()
                 </a>
             </p>
         </div>
 
-        <div class="file-upload-progress hide">
+        <div class="file-upload-progress file-upload-progress-js hide">
             <i class="fa fa-spinner fa-3x fa-spin"></i>
 
-            <div class="file-upload-progress-name" style="word-wrap: break-word"></div>
-            <div class="file-upload-progress-percent"></div>
+            <div class="file-upload-progress-name file-upload-progress-name-js" style="word-wrap: break-word"></div>
+            <div class="file-upload-progress-percent file-upload-progress-percent-js"></div>
 
             <p>
                 <a href="#" role="button">@i18n("StoredObject.cancelUpload")</a>
@@ -36,7 +36,7 @@
         <p>@i18n("StoredObject.uploadArea")</p>
     </div>
 
-    <div class="qq-upload-button btn btn-primary btn-block">@i18n("StoredObject.uploadBtn")</div>
+    <div class="qq-upload-button qq-upload-button-js btn btn-primary btn-block">@i18n("StoredObject.uploadBtn")</div>
 
     <i:if test="@urlAllowed">
         <button type="button" class="btn btn-block" data-placement="top" data-toggle="popover">

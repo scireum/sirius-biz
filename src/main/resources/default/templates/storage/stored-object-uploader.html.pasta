@@ -2,15 +2,15 @@
     (function ($) {
         $.fn.storedObjectUploader = function (options) {
             var element = this;
-            var button = $(this).find('.qq-upload-button').get(0);
+            var button = $(this).find('.qq-upload-button-js').get(0);
 
-            var $dropArea = $(this).find('.qq-upload-drop-area');
-            var $file = $(this).find('.file-upload-file');
-            var $filename = $(this).find('.file-upload-name');
-            var $preview = $(this).find('.file-upload-preview');
-            var $icon = $(this).find('.file-upload-icon');
-            var $progress = $(this).find('.file-upload-progress');
-            var $percent = $progress.find('.file-upload-progress-percent');
+            var $dropArea = $(this).find('.qq-upload-drop-area-js');
+            var $file = $(this).find('.file-upload-file-js');
+            var $filename = $(this).find('.file-upload-name-js');
+            var $preview = $(this).find('.file-upload-preview-js');
+            var $icon = $(this).find('.file-upload-icon-js');
+            var $progress = $(this).find('.file-upload-progress-js');
+            var $percent = $progress.find('.file-upload-progress-percent-js');
             var $urlButton = $(this).find('[data-toggle=popover]');
             var $resetButton = $(this).find('.btn-reset-js');
             var $storedObjectInput = $('#' + options.inputId);
@@ -50,7 +50,7 @@
 
                     $(element).data('id', id);
 
-                    $progress.find('.file-upload-progress-name').text(filename);
+                    $progress.find('.file-upload-progress-name-js').text(filename);
 
                     $progress.removeClass('hide');
                     $file.addClass('hide');
@@ -204,7 +204,7 @@
          */
         var updateURL = function (element, url, $input) {
             if (url.startsWith('http://') || url.startsWith('https://')) {
-                var $filename = $(element).find('.file-upload-name');
+                var $filename = $(element).find('.file-upload-name-js');
                 var filename = url.substr(url.lastIndexOf("/") + 1);
 
                 $filename.text(filename).attr('href', url);
@@ -227,11 +227,11 @@
                 return;
             }
 
-            var $preview = $(element).find('.file-upload-preview');
-            var $icon = $(element).find('.file-upload-icon');
+            var $preview = $(element).find('.file-upload-preview-js');
+            var $icon = $(element).find('.file-upload-icon-js');
 
             $preview.addClass('hide');
-            $icon.removeClass().addClass('fa fa-3x file-upload-icon hide');
+            $icon.removeClass().addClass('fa fa-3x file-upload-icon-js hide');
 
             if (url.startsWith('http://') || url.startsWith('https://')) {
                 $icon.addClass('fa-external-link').removeClass('hide');
