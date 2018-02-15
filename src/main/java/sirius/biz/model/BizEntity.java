@@ -10,6 +10,7 @@ package sirius.biz.model;
 
 import sirius.db.mixing.Column;
 import sirius.db.mixing.Entity;
+import sirius.kernel.commons.Strings;
 
 /**
  * Provides a base class for entities managed by a {@link sirius.biz.web.BizController}.
@@ -26,5 +27,18 @@ public abstract class BizEntity extends Entity {
 
     public TraceData getTrace() {
         return trace;
+    }
+
+    /**
+     * Checks whether any {@link Column} (except {@link #TRACE}) of the current {@link BizEntity} changed.
+     *
+     * @return <tt>true</tt> if at least one column was changed, <tt>false</tt> otherwise.
+     */
+    public boolean isAnyColumnChangedExceptTrace() {
+        return getDescriptor().getProperties()
+                              .stream()
+                              .anyMatch(property -> getDescriptor().isChanged(this, property) && !property.getName()
+                                                                                                          .startsWith(
+                                                                                                                  TRACE.getName()));
     }
 }
