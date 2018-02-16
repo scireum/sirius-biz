@@ -8,6 +8,7 @@
 
 package sirius.biz.model;
 
+import sirius.biz.protocol.NoJournal;
 import sirius.db.mixing.Column;
 import sirius.db.mixing.Entity;
 import sirius.kernel.commons.Strings;
@@ -30,15 +31,14 @@ public abstract class BizEntity extends Entity {
     }
 
     /**
-     * Checks whether any {@link Column} (except {@link #TRACE}) of the current {@link BizEntity} changed.
+     * Checks whether any {@link Column} (except {@link NoJournal no journal data}) of the current {@link BizEntity} changed.
      *
      * @return <tt>true</tt> if at least one column was changed, <tt>false</tt> otherwise.
      */
-    public boolean isAnyColumnChangedExceptTrace() {
+    public boolean isAnyColumnChangedExceptNoJournal() {
         return getDescriptor().getProperties()
                               .stream()
-                              .anyMatch(property -> getDescriptor().isChanged(this, property) && !property.getName()
-                                                                                                          .startsWith(
-                                                                                                                  TRACE.getName()));
+                              .anyMatch(property -> getDescriptor().isChanged(this, property)
+                                                    && property.getAnnotation(NoJournal.class) == null);
     }
 }
