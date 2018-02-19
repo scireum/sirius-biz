@@ -32,12 +32,18 @@
                                 labelKey="UserAccount.externalLoginRequired" helpKey="UserAccount.externalLoginRequired.help"/>
                 </div>
                 <div class="row">
+                    <w:textfield span="12" name="apiToken"
+                                 value="@account.getLogin().getApiToken()"
+                                 labelKey="LoginData.apiToken" readonly="true"/>
+                </div>
+                <div class="row">
                     <i:if test="isFilled(account.getLogin().getGeneratedPassword())">
                         <w:textfield span="12" name="generatedPassword"
                                      value="@account.getLogin().getGeneratedPassword()"
                                      labelKey="LoginData.generatedPassword" readonly="true"/>
                     </i:if>
                 </div>
+
             </div>
             <div class="col-md-6">
                 <w:heading labelKey="UserAccount.roles"/>

@@ -150,6 +150,9 @@ public class LoginData extends Composite {
             this.passwordHash = hashPassword(salt, generatedPassword);
             this.ucasePasswordHash = hashPassword(salt, generatedPassword.toUpperCase());
         }
+        if (Strings.isEmpty(apiToken)) {
+            this.apiToken = Strings.generateCode(32);
+        }
     }
 
     /**
