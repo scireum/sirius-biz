@@ -6,10 +6,17 @@
 <i:arg type="String" name="action" default="@apply('/storage/upload-reference/%s/%s/', objectRef.getBucket(), objectRef.getReference())"/>
 <i:arg type="boolean" name="urlAllowed" default="@objectRef.isSupportsURL()"/>
 <i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>
+<i:arg type="boolean" name="showStorageKey" default="@objectRef.isFilled()"/>
 
 <div id="@id" class="file-upload">
     <div class="qq-upload-drop-area qq-image-area qq-upload-drop-area-js">
         <div class="file-upload-file file-upload-file-js">
+            <i:if test="@showStorageKey">
+                <p>
+                    @objectRef.toString()
+                </p>
+            </i:if>
+
             <img src="@defaultPreview"
                  class="file-upload-preview file-upload-preview-js @if(!isFilled(defaultPreview) || objectRef.isFilled()) { hide }"/>
 
