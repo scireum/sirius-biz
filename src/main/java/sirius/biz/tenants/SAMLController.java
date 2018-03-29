@@ -64,7 +64,7 @@ public class SAMLController extends BizController {
         if (ctx.hasParameter("issuerName")) {
             Tenant fakeTenant = new Tenant();
             fakeTenant.setSamlRequestIssuerName(ctx.require("issuerName").asString());
-            fakeTenant.setSamlIssuerUrl(ctx.require("issuerUrl").asString());
+            fakeTenant.setSamlIssuerUrl(ctx.require("issuerUrl").asString().replace("javascript:", ""));
             fakeTenant.setSamlIssuerIndex(ctx.get("issuerIndex").asString("0"));
 
             return Collections.singletonList(fakeTenant);
