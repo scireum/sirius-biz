@@ -160,11 +160,19 @@ public class StorageController extends BizController {
         }
 
         String queryString = query;
+        if (alwaysUseLikeSearch) {
+            if (!queryString.startsWith("*")) {
+                queryString = "*" + queryString;
+            }
+            if (!queryString.endsWith("*")) {
+                queryString += "*";
+            }
+        }
         if (!(queryString.startsWith("*") || queryString.startsWith("/"))) {
             queryString = "/" + queryString;
         }
 
-        if (queryString.contains("*") || alwaysUseLikeSearch) {
+        if (queryString.contains("*")) {
             baseQuery.where(Or.of(Like.on(VirtualObject.PATH).matches(queryString),
                                   Like.on(VirtualObject.OBJECT_KEY).matches(query)));
         } else {
