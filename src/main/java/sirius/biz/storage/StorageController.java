@@ -88,7 +88,7 @@ public class StorageController extends BizController {
                                                  .where(FieldOperator.on(VirtualObject.PATH).notEqual(null))
                                                  .orderDesc(VirtualObject.TRACE.inner(TraceData.CHANGED_AT));
 
-        applyQuery(ctx.get("query").asString(), baseQuery);
+        applyQuery(ctx.get("query").asString(), baseQuery, bucket.isAlwaysUseLikeSearch());
 
         PageHelper<VirtualObject> pageHelper = PageHelper.withQuery(baseQuery).withContext(ctx).forCurrentTenant();
 
@@ -137,7 +137,7 @@ public class StorageController extends BizController {
                                                  .orderDesc(VirtualObject.TRACE.inner(TraceData.CHANGED_AT))
                                                  .limit(10);
 
-        applyQuery(query, baseQuery);
+        applyQuery(query, baseQuery, bucket.isAlwaysUseLikeSearch());
         for (VirtualObject object : baseQuery.queryList()) {
             result.accept(new AutocompleteHelper.Completion(object.getObjectKey(),
                                                             object.getFilename(),
@@ -150,15 +150,21 @@ public class StorageController extends BizController {
      * but most user will search for a filename without a leading slash. Therefore we
      * gracefully fix this.
      *
-     * @param query     the query string to apply
-     * @param baseQuery the query to expand
+     * @param query               the query string to apply
+     * @param baseQuery           the query to expand
+     * @param alwaysUseLikeSearch determines wheter we always use a like on for matching
      */
-    private void applyQuery(String query, SmartQuery<VirtualObject> baseQuery) {
+    private void applyQuery(String query, SmartQuery<VirtualObject> baseQuery, boolean alwaysUseLikeSearch) {
         if (Strings.isEmpty(query)) {
             return;
         }
 
         String queryString = query;
+        if (alwaysUseLikeSearch) {
+            baseQuery.where(Or.of(Like.on(VirtualObject.PATH).contains(queryString),
+                                  Like.on(VirtualObject.OBJECT_KEY).matches(query)));
+            return;
+        }
         if (!(queryString.startsWith("*") || queryString.startsWith("/"))) {
             queryString = "/" + queryString;
         }
