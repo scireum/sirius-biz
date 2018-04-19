@@ -110,6 +110,19 @@ public class StoredObjectRef {
      * @return the URL for this reference
      */
     public String getURLWithVersion(String version, String defaultURL) {
+        return getURLWithVersionAndAddonText(version, null, defaultURL);
+    }
+
+    /**
+     * Determines the URL for this reference. Returns either the URL if the reference is an external one, or the
+     * versioned URL for the {@link StoredObject} if it exists, otherwise the default URL.
+     *
+     * @param version    the version string
+     * @param addonText  the addon text to add to the generated URL
+     * @param defaultURL the default URL
+     * @return the URL for this reference
+     */
+    public String getURLWithVersionAndAddonText(String version, String addonText, String defaultURL) {
         if (isURL()) {
             return getKey();
         }
@@ -118,7 +131,7 @@ public class StoredObjectRef {
             return defaultURL;
         }
 
-        return getObject().prepareURL().withVersion(version).buildURL();
+        return getObject().prepareURL().withVersion(version).withAddonText(addonText).buildURL();
     }
 
     /**
@@ -149,7 +162,7 @@ public class StoredObjectRef {
      */
     public String getFilename() {
         if (isURL()) {
-           return Strings.splitAtLast(getKey(), "/").getSecond();
+            return Strings.splitAtLast(getKey(), "/").getSecond();
         }
 
         if (isEmpty() || getObject() == null) {
