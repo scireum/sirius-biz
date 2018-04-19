@@ -581,6 +581,10 @@ public class Storage {
             result.append(computeHash(downloadBuilder.getPhysicalKey(), 0));
         }
         result.append("/");
+        if (Strings.isFilled(downloadBuilder.getAddonText())) {
+            result.append(Strings.reduceCharacters(downloadBuilder.getAddonText()).replaceAll("[^a-zA-Z0-9\\-_.]", "-"));
+            result.append("--");
+        }
         result.append(downloadBuilder.getPhysicalKey());
         result.append(".");
         result.append(downloadBuilder.getFileExtension());
