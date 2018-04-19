@@ -161,12 +161,9 @@ public class StorageController extends BizController {
 
         String queryString = query;
         if (alwaysUseLikeSearch) {
-            if (!queryString.startsWith("*")) {
-                queryString = "*" + queryString;
-            }
-            if (!queryString.endsWith("*")) {
-                queryString += "*";
-            }
+            baseQuery.where(Or.of(Like.on(VirtualObject.PATH).contains(queryString),
+                                  Like.on(VirtualObject.OBJECT_KEY).matches(query)));
+            return;
         }
         if (!(queryString.startsWith("*") || queryString.startsWith("/"))) {
             queryString = "/" + queryString;
