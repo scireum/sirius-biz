@@ -29,6 +29,7 @@ public class BucketInfo {
     private boolean canCreate;
     private boolean canEdit;
     private boolean canDelete;
+    private boolean alwaysUseLikeSearch;
     private int deleteFilesAfterDays;
     private PhysicalStorageEngine engine;
 
@@ -50,6 +51,7 @@ public class BucketInfo {
         this.canCreate = extension.get("canCreate").asBoolean();
         this.canEdit = extension.get("canEdit").asBoolean();
         this.canDelete = extension.get("canDelete").asBoolean();
+        this.alwaysUseLikeSearch = extension.get("alwaysUseLikeSearch").asBoolean();
         this.deleteFilesAfterDays = extension.get("deleteFilesAfterDays").asInt(0);
         this.engine = context.findPart(extension.get("engine").asString(), PhysicalStorageEngine.class);
     }
@@ -103,7 +105,7 @@ public class BucketInfo {
     }
 
     /**
-     * Determines if a user can edit objects within thi bucket.
+     * Determines if a user can edit objects within this bucket.
      *
      * @return <tt>true</tt> if a user can modify an object within this bucket, <tt>false</tt> otherwise
      */
@@ -112,12 +114,21 @@ public class BucketInfo {
     }
 
     /**
-     * Determines if a user can delete objects within thi bucket.
+     * Determines if a user can delete objects within this bucket.
      *
      * @return <tt>true</tt> if a user can delete an object within this bucket, <tt>false</tt> otherwise
      */
     public boolean isCanDelete() {
         return canDelete;
+    }
+
+    /**
+     * Determines if searching in a bucket always uses a like on search.
+     *
+     * @return <tt>true</tt> if a like on search is to be used, <tt>false</tt> otherwise
+     */
+    public boolean isAlwaysUseLikeSearch() {
+        return alwaysUseLikeSearch;
     }
 
     /**
