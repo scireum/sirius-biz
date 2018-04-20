@@ -49,6 +49,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -70,7 +71,10 @@ import java.util.stream.Collectors;
 public class Storage {
 
     public static final Log LOG = Log.get("storage");
+
     private static final byte[] EMPTY_BUFFER = new byte[0];
+
+    private static final Pattern NON_URL_CHARACTERS = Pattern.compile("[^a-zA-Z0-9\\-_.]");
 
     private static Cache<String, VirtualObject> virtualObjectCache = CacheManager.createCache("virtual-objects");
 
@@ -582,7 +586,8 @@ public class Storage {
         }
         result.append("/");
         if (Strings.isFilled(downloadBuilder.getAddonText())) {
-            result.append(Strings.reduceCharacters(downloadBuilder.getAddonText()).replaceAll("[^a-zA-Z0-9\\-_.]", "-"));
+            result.append(Strings.reduceCharacters(NON_URL_CHARACTERS.matcher(downloadBuilder.getAddonText())
+                                                                     .replaceAll("-")));
             result.append("--");
         }
         result.append(downloadBuilder.getPhysicalKey());
