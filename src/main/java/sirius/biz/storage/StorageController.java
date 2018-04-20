@@ -418,11 +418,15 @@ public class StorageController extends BizController {
     @Routed("/storage/physical/:1/:2/:3")
     public void downloadPhysicalObject(WebContext ctx, String bucket, String authHash, String physicalFileKey) {
         Tuple<String, String> keyAndExtension = Strings.split(physicalFileKey, ".");
-        if (!storage.verifyHash(keyAndExtension.getFirst(), authHash)) {
+        String key = keyAndExtension.getFirst();
+        if (key.contains("--")) {
+            key = Strings.splitAtLast(key, "--").getSecond();
+        }
+        if (!storage.verifyHash(key, authHash)) {
             ctx.respondWith().error(HttpResponseStatus.FORBIDDEN);
             return;
         }
 
-        storage.deliverPhysicalFile(ctx, bucket, keyAndExtension.getFirst(), keyAndExtension.getSecond());
+        storage.deliverPhysicalFile(ctx, bucket, key, keyAndExtension.getSecond());
     }
 }
