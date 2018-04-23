@@ -417,11 +417,7 @@ public class StorageController extends BizController {
      */
     @Routed("/storage/physical/:1/:2/:3")
     public void downloadPhysicalObject(WebContext ctx, String bucket, String authHash, String physicalFileKey) {
-        if (physicalFileKey.contains("--")) {
-            physicalFileKey = Strings.splitAtLast(physicalFileKey, "--").getSecond();
-        }
-
-        Tuple<String, String> keyAndExtension = Strings.splitAtLast(physicalFileKey, ".");
+        Tuple<String, String> keyAndExtension = determineKeyAndExtension(physicalFileKey);
         String key = keyAndExtension.getFirst();
 
         if (!storage.verifyHash(key, authHash)) {
@@ -430,5 +426,14 @@ public class StorageController extends BizController {
         }
 
         storage.deliverPhysicalFile(ctx, bucket, key, keyAndExtension.getSecond());
+    }
+
+    private Tuple<String, String> determineKeyAndExtension(String physicalFileKey) {
+        if (physicalFileKey.contains("--")) {
+            String effectiveKey = Strings.splitAtLast(physicalFileKey, "--").getSecond();
+            return Strings.splitAtLast(effectiveKey, ".");
+        }
+
+        return Strings.splitAtLast(physicalFileKey, ".");
     }
 }
