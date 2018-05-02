@@ -89,9 +89,6 @@ public class TenantsHelper {
         request.setSessionValue("default-tenant-id", getTestTenant().getId());
         request.setSessionValue("default-tenant-name", getTestTenant().getName());
         request.setSessionValue("default-user-id", getTestUser().getUniqueName());
-        request.setSessionValue("default-user-name", getTestUser().getEmail());
-        request.setSessionValue("default-user-email", getTestUser().getEmail());
-        request.setSessionValue("default-user-lang", "de");
     }
 
     public static void clearCurrentUser() {
