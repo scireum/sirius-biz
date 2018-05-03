@@ -27,6 +27,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.http.WebContext;
 import sirius.web.security.GenericUserManager;
@@ -220,7 +221,7 @@ public class TenantUserManager extends GenericUserManager {
         if (Strings.isEmpty(tenantId) || Strings.areEqual(originalUser.getTenantId(), tenantId)) {
             return originalUser;
         }
-        Tenant tenant = tenantsCache.get(tenantId, i -> oma.find(Tenant.class, i).orElse(null));
+        Tenant tenant = fetchTenant(tenantId);
         if (tenant == null) {
             return originalUser;
         }
@@ -241,6 +242,11 @@ public class TenantUserManager extends GenericUserManager {
         roles.add(PERMISSION_SPY_USER);
         roles.add(PERMISSION_SELECT_TENANT);
         return asUserWithRoles(modifiedUser, roles);
+    }
+
+    @Nullable
+    private Tenant fetchTenant(String tenantId) {
+        return tenantsCache.get(tenantId, i -> oma.find(Tenant.class, i).orElse(null));
     }
 
     public String getOriginalTenantId(WebContext ctx) {
@@ -422,8 +428,7 @@ public class TenantUserManager extends GenericUserManager {
                                .withUsername(account.getLogin().getUsername())
                                .withTenantId(String.valueOf(account.getTenant().getId()))
                                .withTenantName(account.getTenant().getValue().getName())
-                               .withEmail(account.getEmail())
-                               .withLang("de")
+                               .withLang(NLS.getDefaultLanguage())
                                .withPermissions(roles)
                                .withSettingsSupplier(ui -> getUserSettings(getScopeSettings(), ui))
                                .withUserSupplier(u -> account)
@@ -599,5 +604,33 @@ public class TenantUserManager extends GenericUserManager {
 
         rolesCache.put(userId, roles);
         return roles;
+    }
+
+    @Nonnull
+    @Override
+    protected String computeUsername(@Nullable WebContext ctx, String userId) {
+        UserAccount account = fetchAccount(userId, null);
+        if (account == null) {
+            return "(unknown)";
+        } else {
+            return account.getLogin().getUsername();
+        }
+    }
+
+    @Nonnull
+    @Override
+    protected String computeTenantname(@Nullable WebContext ctx, String tenantId) {
+        Tenant tenant = fetchTenant(tenantId);
+        if (tenant == null) {
+            return "(unknown)";
+        } else {
+            return tenant.getName();
+        }
+    }
+
+    @Nonnull
+    @Override
+    protected String computeLang(WebContext ctx, String userId) {
+        return NLS.getDefaultLanguage();
     }
 }
