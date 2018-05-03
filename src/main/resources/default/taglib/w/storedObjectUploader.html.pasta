@@ -12,7 +12,7 @@
     <div class="qq-upload-drop-area qq-image-area qq-upload-drop-area-js">
         <div class="file-upload-file file-upload-file-js">
             <i:if test="@showStorageKey">
-                <p>
+                <p style="word-wrap: break-word">
                     @objectRef.toString()
                 </p>
             </i:if>
