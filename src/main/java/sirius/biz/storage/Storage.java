@@ -90,6 +90,9 @@ public class Storage {
     @Part
     private GlobalContext context;
 
+    @Part
+    private VersionManager versionManager;
+
     @ConfigValue("storage.sharedSecret")
     private String sharedSecret;
     private String safeSharedSecret;
@@ -424,7 +427,8 @@ public class Storage {
             virtualObjectCache.remove(object.getObjectKey());
 
             // Delete all (now outdated) versions
-            oma.select(VirtualObjectVersion.class).eq(VirtualObjectVersion.VIRTUAL_OBJECT, object).delete();
+            versionManager.removeVersionsForVirtualObject(object);
+
             // Delete old file
             engine.deletePhysicalObject(object.getBucket(), oldPhysicalKey);
         } catch (IOException e) {

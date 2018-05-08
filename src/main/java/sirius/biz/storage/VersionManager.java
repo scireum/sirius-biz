@@ -103,6 +103,18 @@ public class VersionManager {
     }
 
     /**
+     * Removes all versions for a given {@link VirtualObject}.
+     * <p>
+     * And clears the cache.
+     *
+     * @param virtualObject the virtual object
+     */
+    protected void removeVersionsForVirtualObject(VirtualObject virtualObject) {
+        logicalToPhysicalCache.remove(virtualObject.getBucket() + "-" + virtualObject.getObjectKey());
+        oma.select(VirtualObjectVersion.class).eq(VirtualObjectVersion.VIRTUAL_OBJECT, virtualObject).delete();
+    }
+
+    /**
      * Fetches the pyhsical key for a version from the tuple retrieved via {@link #fetchPhysicalObjects(DownloadBuilder)}
      *
      * @param physicalObjects the map of already resolved keys
