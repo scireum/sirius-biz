@@ -43,7 +43,7 @@
                 <i:for type="sirius.biz.storage.VirtualObject" var="object" items="objects.getItems()">
                     <tr>
                         <td>
-                            <a class="link" href="@object.prepareURL().asDownload(object.getFilename()).buildURL()">@object.getPath()</a><br>
+                            <a class="link" href="@object.prepareURL().asDownload(object.getFilename()).buildURL().get()">@object.getPath()</a><br>
                             <small class="muted">@object.getObjectKey()</small>
                         </td>
                         <td class="align-right">
