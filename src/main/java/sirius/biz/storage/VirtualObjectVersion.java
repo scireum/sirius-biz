@@ -76,6 +76,9 @@ public class VirtualObjectVersion extends Entity {
     @Part
     private static Storage storage;
 
+    @Part
+    private static VersionManager versionManager;
+
     @BeforeSave
     protected void initDate() {
         if (createdDate == null) {
@@ -86,6 +89,15 @@ public class VirtualObjectVersion extends Entity {
     @AfterDelete
     protected void removePhysicalFile() {
         storage.deletePhysicalObject(getBucket(), getPhysicalKey());
+    }
+
+    @BeforeSave
+    @AfterDelete
+    protected void removeVersionFromCaches() {
+        if (this.getVirtualObject().isFilled()) {
+            versionManager.clearCacheForVirtualObject(this.getVirtualObject().getValue());
+            storage.clearCacheForVirtualObject(this.getVirtualObject().getValue());
+        }
     }
 
     public EntityRef<VirtualObject> getVirtualObject() {

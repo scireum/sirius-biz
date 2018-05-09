@@ -103,15 +103,12 @@ public class VersionManager {
     }
 
     /**
-     * Removes all versions for a given {@link VirtualObject}.
-     * <p>
-     * And clears the cache.
+     * Clears the cache for a given {@link VirtualObject}.
      *
      * @param virtualObject the virtual object
      */
-    protected void removeVersionsForVirtualObject(VirtualObject virtualObject) {
+    protected void clearCacheForVirtualObject(VirtualObject virtualObject) {
         logicalToPhysicalCache.remove(virtualObject.getBucket() + "-" + virtualObject.getObjectKey());
-        oma.select(VirtualObjectVersion.class).eq(VirtualObjectVersion.VIRTUAL_OBJECT, virtualObject).delete();
     }
 
     /**
