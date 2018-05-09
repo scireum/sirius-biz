@@ -178,6 +178,15 @@ public class Storage {
         return Optional.ofNullable(virtualObject);
     }
 
+    /**
+     * Clears the cache for a given {@link VirtualObject}.
+     *
+     * @param virtualObject the virtual object
+     */
+    protected void clearCacheForVirtualObject(VirtualObject virtualObject) {
+        virtualObjectCache.remove(virtualObject.getObjectKey());
+    }
+
     private boolean checkIntegrity(VirtualObject virtualObject, @Nullable Tenant tenant, String bucket) {
         return (tenant == null || virtualObject.getTenant().is(tenant)) && virtualObject.getBucket().equals(bucket);
     }
@@ -305,7 +314,7 @@ public class Storage {
      * Deletes all automatically created objects except the given one.
      * <p>
      * Removes automatically created object ({@link #createTemporaryObject(Tenant, String, String, String)})
-     * if the reference is updated or the referencing entity is deleted. All deleted objects are removed from the cache.
+     * if the reference is updated or the referencing entity is deleted.
      *
      * @param reference         the reference (field+id of the entity) being referenced
      * @param excludedObjectKey if the reference is just changed, the new object is excluded, to just delete the old
@@ -319,8 +328,6 @@ public class Storage {
         if (Strings.isFilled(excludedObjectKey)) {
             qry.where(FieldOperator.on(VirtualObject.OBJECT_KEY).notEqual(excludedObjectKey));
         }
-
-        qry.iterateAll(virtualObject -> virtualObjectCache.remove(virtualObject.getObjectKey()));
 
         qry.delete();
     }
@@ -390,8 +397,6 @@ public class Storage {
 
     /**
      * Updates the given file based on the given stream.
-     * <p>
-     * The updated object is removed from the cache, to ensure that the cache is up to date.
      *
      * @param file     the S3 file to update
      * @param data     the data to store
@@ -420,11 +425,9 @@ public class Storage {
             object.setPhysicalKey(newPhysicalKey);
             oma.override(object);
 
-            // Remove from cache
-            virtualObjectCache.remove(object.getObjectKey());
-
             // Delete all (now outdated) versions
             oma.select(VirtualObjectVersion.class).eq(VirtualObjectVersion.VIRTUAL_OBJECT, object).delete();
+
             // Delete old file
             engine.deletePhysicalObject(object.getBucket(), oldPhysicalKey);
         } catch (IOException e) {
@@ -470,7 +473,6 @@ public class Storage {
      */
     public void delete(StoredObject object) {
         if (object instanceof VirtualObject) {
-            virtualObjectCache.remove(object.getObjectKey());
             oma.delete((VirtualObject) object);
         }
     }

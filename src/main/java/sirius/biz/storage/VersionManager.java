@@ -103,6 +103,15 @@ public class VersionManager {
     }
 
     /**
+     * Clears the cache for a given {@link VirtualObject}.
+     *
+     * @param virtualObject the virtual object
+     */
+    protected void clearCacheForVirtualObject(VirtualObject virtualObject) {
+        logicalToPhysicalCache.remove(virtualObject.getBucket() + "-" + virtualObject.getObjectKey());
+    }
+
+    /**
      * Fetches the pyhsical key for a version from the tuple retrieved via {@link #fetchPhysicalObjects(DownloadBuilder)}
      *
      * @param physicalObjects the map of already resolved keys
