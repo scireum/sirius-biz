@@ -26,7 +26,7 @@
                     <li class="nav-header"></li>
                     <li>
                         <span class="thumbnail">
-                            <img src="@object.prepareURL().buildURL()" style="max-height: 150px"/>
+                            <img src="@object.prepareURL().buildURL().orElse('')" style="max-height: 150px"/>
                         </span>
                     </li>
                 </i:if>
@@ -40,7 +40,7 @@
                 </li>
                 <li class="nav-header"></li>
                 <li>
-                    <a href="@object.prepareURL().asDownload(object.getFilename()).buildURL()" class="link">
+                    <a href="@object.prepareURL().asDownload(object.getFilename()).buildURL().orElse('')" class="link">
                         @i18n("VirtualObject.download")
                     </a>
                 </li>
@@ -84,7 +84,7 @@
                         <td>
                             <i:if test="isFilled(version.getPhysicalKey())">
                                 <a class="link"
-                                   href="@object.prepareURL().withVersion(version.getVersionKey()).buildURL()">@version.getVersionKey()</a><br>
+                                   href="@object.prepareURL().withVersion(version.getVersionKey()).buildURL().orElse('')">@version.getVersionKey()</a><br>
                                 <i:else>
                                     @version.getVersionKey()<br>
                                 </i:else>

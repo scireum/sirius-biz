@@ -131,7 +131,7 @@ public class StoredObjectRef {
             return defaultURL;
         }
 
-        return getObject().prepareURL().withVersion(version).withAddonText(addonText).buildURL();
+        return getObject().prepareURL().withVersion(version).withAddonText(addonText).buildURL().orElse(defaultURL);
     }
 
     /**
