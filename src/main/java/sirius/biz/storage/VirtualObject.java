@@ -12,7 +12,6 @@ import sirius.biz.tenants.TenantAware;
 import sirius.db.KeyGenerator;
 import sirius.db.mixing.Column;
 import sirius.db.mixing.annotations.AfterDelete;
-import sirius.db.mixing.annotations.AfterSave;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
@@ -166,11 +165,13 @@ public class VirtualObject extends TenantAware implements StoredObject {
         storage.deletePhysicalObject(getBucket(), getPhysicalKey());
     }
 
-    @BeforeSave
+    @BeforeSave (priority = 110)
     @AfterDelete
     protected void removeObjectFromCaches() {
-        versionManager.clearCacheForVirtualObject(this);
-        storage.clearCacheForVirtualObject(this);
+        if (!isNew()) {
+            versionManager.clearCacheForVirtualObject(this);
+            storage.clearCacheForVirtualObject(this);
+        }
     }
 
     @Override
