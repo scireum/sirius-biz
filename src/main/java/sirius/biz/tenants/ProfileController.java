@@ -11,11 +11,13 @@ package sirius.biz.tenants;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.Schema;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
 import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.UserContext;
+import sirius.web.security.UserInfo;
 
 /**
  * Provides functionality to modify accounts.
@@ -23,7 +25,8 @@ import sirius.web.security.UserContext;
 @Register(classes = Controller.class)
 public class ProfileController extends BizController {
 
-    private static final String PARAM_PASSWORD = "password";
+    private static final String PARAM_OLD_PASSWORD = "oldPassword";
+    private static final String PARAM_NEW_PASSWORD = "newPassword";
     private static final String PARAM_CONFIRMATION = "confirmation";
 
     /**
@@ -59,10 +62,13 @@ public class ProfileController extends BizController {
 
         if (ctx.isPOST()) {
             try {
-                String password = ctx.get(PARAM_PASSWORD).asString();
+                validateOldPassword(ctx, userAccount);
+                
+                String newPassword = ctx.get(PARAM_NEW_PASSWORD).asString();
                 String confirmation = ctx.get(PARAM_CONFIRMATION).asString();
-                userAccount.getLogin().verifyPassword(password, confirmation, userAccount.getMinPasswordLength());
-                userAccount.getLogin().setCleartextPassword(password);
+
+                userAccount.getLogin().verifyPassword(newPassword, confirmation, userAccount.getMinPasswordLength());
+                userAccount.getLogin().setCleartextPassword(newPassword);
                 oma.update(userAccount);
                 showSavedMessage();
             } catch (Exception e) {
@@ -71,6 +77,17 @@ public class ProfileController extends BizController {
         }
 
         ctx.respondWith().template("/templates/tenants/profile-change-password.html.pasta", userAccount);
+    }
+
+    private void validateOldPassword(WebContext ctx, UserAccount userAccount) {
+        String oldPassword = ctx.get(PARAM_OLD_PASSWORD).asString();
+        UserInfo userInfo = UserContext.get()
+                                       .getUserManager()
+                                       .findUserByCredentials(ctx, userAccount.getLogin().getUsername(), oldPassword);
+
+        if (userInfo == null || userInfo.as(UserAccount.class).getId() != userAccount.getId()) {
+            throw Exceptions.createHandled().withNLSKey("ProfileController.invalidOldPassword").handle();
+        }
     }
 }
 
