@@ -23,7 +23,6 @@ import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
-import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -459,13 +458,22 @@ public class TenantUserManager extends GenericUserManager {
             return result;
         }
 
-        String salt = Value.of(loginData.getSalt()).asString(defaultSalt);
-        String givenPasswordHash = LoginData.hashPassword(salt, password);
-        if (givenPasswordHash.equals(loginData.getPasswordHash())) {
+        if (loginData.checkPassword(password, defaultSalt)) {
             return result;
         }
 
         return null;
+    }
+
+    /**
+     * Checks if the given password of the given {@link UserAccount}  is correct.
+     *
+     * @param userAccount the user account to validate the password for
+     * @param password    the password to validate
+     * @return <tt>true</tt> if the password is valid, <tt>false</tt> otherwise
+     */
+    public boolean checkPassword(UserAccount userAccount, String password) {
+        return userAccount.getLogin().checkPassword(password, defaultSalt);
     }
 
     @Override

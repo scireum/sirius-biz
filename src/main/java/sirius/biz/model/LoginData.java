@@ -21,6 +21,7 @@ import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
 import sirius.web.security.UserContext;
 
@@ -188,6 +189,19 @@ public class LoginData extends Composite {
     public static String hashPassword(String salt, String password) {
         String hashInput = salt != null ? salt + password : password;
         return BaseEncoding.base64().encode(Hashing.md5().hashString(hashInput, Charsets.UTF_8).asBytes());
+    }
+
+    /**
+     * Checks if the given password is correct.
+     *
+     * @param password    the password to validate
+     * @param defaultSalt the salt used as a fallback
+     * @return <tt>true</tt> if the password is valid, <tt>false</tt> otherwise
+     */
+    public boolean checkPassword(String password, String defaultSalt) {
+        String givenPasswordHash = LoginData.hashPassword(Value.of(salt).asString(defaultSalt), password);
+
+        return givenPasswordHash.equals(passwordHash);
     }
 
     /**
