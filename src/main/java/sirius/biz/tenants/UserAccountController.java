@@ -33,6 +33,7 @@ import sirius.web.mails.Mails;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
+import sirius.web.security.UserInfo;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.util.Collections;
@@ -51,6 +52,8 @@ public class UserAccountController extends BizController {
     public static final String PERMISSION_MANAGE_USER_ACCOUNTS = "permission-manage-user-accounts";
 
     private static final String PARAM_PASSWORD = "password";
+    private static final String PARAM_OLD_PASSWORD = "oldPassword";
+    private static final String PARAM_NEW_PASSWORD = "newPassword";
     private static final String PARAM_CONFIRMATION = "confirmation";
     private static final String PARAM_NAME = "name";
     private static final String PARAM_USERNAME = "username";
@@ -203,10 +206,13 @@ public class UserAccountController extends BizController {
 
         if (ctx.isPOST()) {
             try {
-                String password = ctx.get(PARAM_PASSWORD).asString();
+                validateOldPassword(ctx, userAccount);
+
+                String newPassword = ctx.get(PARAM_NEW_PASSWORD).asString();
                 String confirmation = ctx.get(PARAM_CONFIRMATION).asString();
-                userAccount.getLogin().verifyPassword(password, confirmation, userAccount.getMinPasswordLength());
-                userAccount.getLogin().setCleartextPassword(password);
+
+                userAccount.getLogin().verifyPassword(newPassword, confirmation, userAccount.getMinPasswordLength());
+                userAccount.getLogin().setCleartextPassword(newPassword);
                 oma.update(userAccount);
                 showSavedMessage();
                 accounts(ctx);
@@ -216,6 +222,17 @@ public class UserAccountController extends BizController {
             }
         }
         ctx.respondWith().template("templates/tenants/user-account-password.html.pasta", userAccount);
+    }
+
+    private void validateOldPassword(WebContext ctx, UserAccount userAccount) {
+        String oldPassword = ctx.get(PARAM_OLD_PASSWORD).asString();
+        UserInfo userInfo = UserContext.get()
+                                       .getUserManager()
+                                       .findUserByCredentials(ctx, userAccount.getLogin().getUsername(), oldPassword);
+
+        if (userInfo == null || userInfo.as(UserAccount.class).getId() != userAccount.getId()) {
+            throw Exceptions.createHandled().withNLSKey("ProfileController.invalidOldPassword").handle();
+        }
     }
 
     /**
