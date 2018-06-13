@@ -23,7 +23,6 @@ import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
-import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -454,11 +453,12 @@ public class TenantUserManager extends GenericUserManager {
             throw Exceptions.createHandled().withNLSKey("UserAccount.externalLoginMustBePerformed").handle();
         }
 
-        if (acceptApiTokens && Strings.areEqual(password, account.getLogin().getApiToken())) {
+        LoginData loginData = account.getLogin();
+        if (acceptApiTokens && Strings.areEqual(password, loginData.getApiToken())) {
             return result;
         }
 
-        if (validatePassword(account, password)) {
+        if (loginData.checkPassword(password, defaultSalt)) {
             return result;
         }
 
@@ -466,19 +466,14 @@ public class TenantUserManager extends GenericUserManager {
     }
 
     /**
-     * Validates the password of the given {@link UserAccount}.
+     * Checks if the given password of the given {@link UserAccount}  is correct.
      *
      * @param userAccount the user account to validate the password for
      * @param password    the password to validate
      * @return <tt>true</tt> if the password is valid, <tt>false</tt> otherwise
      */
-    public boolean validatePassword(UserAccount userAccount, String password) {
-        LoginData loginData = userAccount.getLogin();
-
-        String salt = Value.of(loginData.getSalt()).asString(defaultSalt);
-        String givenPasswordHash = LoginData.hashPassword(salt, password);
-
-        return givenPasswordHash.equals(loginData.getPasswordHash());
+    public boolean checkPassword(UserAccount userAccount, String password) {
+        return userAccount.getLogin().checkPassword(password, defaultSalt);
     }
 
     @Override

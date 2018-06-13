@@ -90,7 +90,7 @@ public class ProfileController extends BizController {
         UserManager userManager = UserContext.get().getUserManager();
 
         if (!(userManager instanceof TenantUserManager
-              && ((TenantUserManager) userManager).validatePassword(userAccount, oldPassword))) {
+              && ((TenantUserManager) userManager).checkPassword(userAccount, oldPassword))) {
             throw Exceptions.createHandled().withNLSKey("ProfileController.invalidOldPassword").handle();
         }
     }
