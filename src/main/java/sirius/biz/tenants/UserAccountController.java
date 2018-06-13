@@ -33,7 +33,6 @@ import sirius.web.mails.Mails;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
-import sirius.web.security.UserInfo;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.util.Collections;
@@ -206,7 +205,7 @@ public class UserAccountController extends BizController {
 
         if (ctx.isPOST()) {
             try {
-                validateOldPassword(ctx, userAccount);
+                ProfileController.validateOldPassword(ctx, userAccount);
 
                 String newPassword = ctx.get(PARAM_NEW_PASSWORD).asString();
                 String confirmation = ctx.get(PARAM_CONFIRMATION).asString();
@@ -222,17 +221,6 @@ public class UserAccountController extends BizController {
             }
         }
         ctx.respondWith().template("templates/tenants/user-account-password.html.pasta", userAccount);
-    }
-
-    private void validateOldPassword(WebContext ctx, UserAccount userAccount) {
-        String oldPassword = ctx.get(PARAM_OLD_PASSWORD).asString();
-        UserInfo userInfo = UserContext.get()
-                                       .getUserManager()
-                                       .findUserByCredentials(ctx, userAccount.getLogin().getUsername(), oldPassword);
-
-        if (userInfo == null || userInfo.as(UserAccount.class).getId() != userAccount.getId()) {
-            throw Exceptions.createHandled().withNLSKey("ProfileController.invalidOldPassword").handle();
-        }
     }
 
     /**

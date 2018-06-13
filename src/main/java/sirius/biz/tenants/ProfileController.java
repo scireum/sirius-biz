@@ -79,7 +79,7 @@ public class ProfileController extends BizController {
         ctx.respondWith().template("/templates/tenants/profile-change-password.html.pasta", userAccount);
     }
 
-    private void validateOldPassword(WebContext ctx, UserAccount userAccount) {
+    public static void validateOldPassword(WebContext ctx, UserAccount userAccount) {
         String oldPassword = ctx.get(PARAM_OLD_PASSWORD).asString();
         UserInfo userInfo = UserContext.get()
                                        .getUserManager()
