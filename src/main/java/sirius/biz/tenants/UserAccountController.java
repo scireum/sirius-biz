@@ -33,6 +33,7 @@ import sirius.web.mails.Mails;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
+import sirius.web.security.UserManager;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.util.Collections;
@@ -205,11 +206,11 @@ public class UserAccountController extends BizController {
 
         if (ctx.isPOST()) {
             try {
-                ProfileController.validateOldPassword(ctx, userAccount);
-
+                String oldPassword = ctx.get(PARAM_OLD_PASSWORD).asString();
                 String newPassword = ctx.get(PARAM_NEW_PASSWORD).asString();
                 String confirmation = ctx.get(PARAM_CONFIRMATION).asString();
 
+                validateOldPassword(oldPassword, userAccount);
                 userAccount.getLogin().verifyPassword(newPassword, confirmation, userAccount.getMinPasswordLength());
                 userAccount.getLogin().setCleartextPassword(newPassword);
                 oma.update(userAccount);
@@ -221,6 +222,22 @@ public class UserAccountController extends BizController {
             }
         }
         ctx.respondWith().template("templates/tenants/user-account-password.html.pasta", userAccount);
+    }
+
+    /**
+     * Validates the old password for the given {@link UserAccount}.
+     *
+     * @param oldPassword the current request to read the old password from
+     * @param userAccount the user account to validate the old password for
+     * @throws sirius.kernel.health.HandledException if the old password is invalid
+     */
+    private void validateOldPassword(String oldPassword, UserAccount userAccount) {
+        UserManager userManager = UserContext.get().getUserManager();
+
+        if (!(userManager instanceof TenantUserManager
+              && ((TenantUserManager) userManager).validatePassword(userAccount, oldPassword))) {
+            throw Exceptions.createHandled().withNLSKey("UserAccount.invalidOldPassword").handle();
+        }
     }
 
     /**

@@ -17,7 +17,7 @@ import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.UserContext;
-import sirius.web.security.UserInfo;
+import sirius.web.security.UserManager;
 
 /**
  * Provides functionality to modify accounts.
@@ -62,11 +62,11 @@ public class ProfileController extends BizController {
 
         if (ctx.isPOST()) {
             try {
-                validateOldPassword(ctx, userAccount);
-
+                String oldPassword = ctx.get(PARAM_OLD_PASSWORD).asString();
                 String newPassword = ctx.get(PARAM_NEW_PASSWORD).asString();
                 String confirmation = ctx.get(PARAM_CONFIRMATION).asString();
 
+                validateOldPassword(oldPassword, userAccount);
                 userAccount.getLogin().verifyPassword(newPassword, confirmation, userAccount.getMinPasswordLength());
                 userAccount.getLogin().setCleartextPassword(newPassword);
                 oma.update(userAccount);
@@ -82,16 +82,15 @@ public class ProfileController extends BizController {
     /**
      * Validates the old password for the given {@link UserAccount}.
      *
-     * @param ctx         the current request to read the old password from
+     * @param oldPassword the current request to read the old password from
      * @param userAccount the user account to validate the old password for
+     * @throws sirius.kernel.health.HandledException if the old password is invalid
      */
-    public static void validateOldPassword(WebContext ctx, UserAccount userAccount) {
-        String oldPassword = ctx.get(PARAM_OLD_PASSWORD).asString();
-        UserInfo userInfo = UserContext.get()
-                                       .getUserManager()
-                                       .findUserByCredentials(ctx, userAccount.getLogin().getUsername(), oldPassword);
+    private void validateOldPassword(String oldPassword, UserAccount userAccount) {
+        UserManager userManager = UserContext.get().getUserManager();
 
-        if (userInfo == null || userInfo.as(UserAccount.class).getId() != userAccount.getId()) {
+        if (!(userManager instanceof TenantUserManager
+              && ((TenantUserManager) userManager).validatePassword(userAccount, oldPassword))) {
             throw Exceptions.createHandled().withNLSKey("ProfileController.invalidOldPassword").handle();
         }
     }

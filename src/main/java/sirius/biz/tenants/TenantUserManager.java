@@ -454,18 +454,31 @@ public class TenantUserManager extends GenericUserManager {
             throw Exceptions.createHandled().withNLSKey("UserAccount.externalLoginMustBePerformed").handle();
         }
 
-        LoginData loginData = account.getLogin();
-        if (acceptApiTokens && Strings.areEqual(password, loginData.getApiToken())) {
+        if (acceptApiTokens && Strings.areEqual(password, account.getLogin().getApiToken())) {
             return result;
         }
 
-        String salt = Value.of(loginData.getSalt()).asString(defaultSalt);
-        String givenPasswordHash = LoginData.hashPassword(salt, password);
-        if (givenPasswordHash.equals(loginData.getPasswordHash())) {
+        if (validatePassword(account, password)) {
             return result;
         }
 
         return null;
+    }
+
+    /**
+     * Validates the password of the given {@link UserAccount}.
+     *
+     * @param userAccount the user account to validate the password for
+     * @param password    the password to validate
+     * @return <tt>true</tt> if the password is valid, <tt>false</tt> otherwise
+     */
+    public boolean validatePassword(UserAccount userAccount, String password) {
+        LoginData loginData = userAccount.getLogin();
+
+        String salt = Value.of(loginData.getSalt()).asString(defaultSalt);
+        String givenPasswordHash = LoginData.hashPassword(salt, password);
+
+        return givenPasswordHash.equals(loginData.getPasswordHash());
     }
 
     @Override
