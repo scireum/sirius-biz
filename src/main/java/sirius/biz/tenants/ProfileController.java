@@ -63,7 +63,7 @@ public class ProfileController extends BizController {
         if (ctx.isPOST()) {
             try {
                 validateOldPassword(ctx, userAccount);
-                
+
                 String newPassword = ctx.get(PARAM_NEW_PASSWORD).asString();
                 String confirmation = ctx.get(PARAM_CONFIRMATION).asString();
 
@@ -79,6 +79,12 @@ public class ProfileController extends BizController {
         ctx.respondWith().template("/templates/tenants/profile-change-password.html.pasta", userAccount);
     }
 
+    /**
+     * Validates the old password for the given {@link UserAccount}.
+     *
+     * @param ctx         the current request to read the old password from
+     * @param userAccount the user account to validate the old password for
+     */
     public static void validateOldPassword(WebContext ctx, UserAccount userAccount) {
         String oldPassword = ctx.get(PARAM_OLD_PASSWORD).asString();
         UserInfo userInfo = UserContext.get()
