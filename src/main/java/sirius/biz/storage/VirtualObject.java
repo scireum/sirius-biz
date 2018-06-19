@@ -10,7 +10,7 @@ package sirius.biz.storage;
 
 import sirius.biz.tenants.TenantAware;
 import sirius.db.KeyGenerator;
-import sirius.db.mixing.Column;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
@@ -38,21 +38,21 @@ public class VirtualObject extends TenantAware implements StoredObject {
     /**
      * Contains the bucket in which the object resides.
      */
-    public static final Column BUCKET = Column.named("bucket");
+    public static final Mapping BUCKET = Mapping.named("bucket");
     @Length(32)
     private String bucket;
 
     /**
      * Contains the unique object key of this object.
      */
-    public static final Column OBJECT_KEY = Column.named("objectKey");
+    public static final Mapping OBJECT_KEY = Mapping.named("objectKey");
     @Length(64)
     private String objectKey;
 
     /**
      * Contains the physical key, which points to the actual contents of this object.
      */
-    public static final Column PHYSICAL_KEY = Column.named("physicalKey");
+    public static final Mapping PHYSICAL_KEY = Mapping.named("physicalKey");
     @Length(64)
     @NullAllowed
     private String physicalKey;
@@ -60,13 +60,13 @@ public class VirtualObject extends TenantAware implements StoredObject {
     /**
      * Contains the size in bytes of this object.
      */
-    public static final Column FILE_SIZE = Column.named("fileSize");
+    public static final Mapping FILE_SIZE = Mapping.named("fileSize");
     private long fileSize = 0;
 
     /**
      * Contains the MD5 checksum of the stored data.
      */
-    public static final Column MD5 = Column.named("md5");
+    public static final Mapping MD5 = Mapping.named("md5");
     @NullAllowed
     @Length(64)
     private String md5;
@@ -77,7 +77,7 @@ public class VirtualObject extends TenantAware implements StoredObject {
      * The length is shorten than a UNIX path (255 chars) to permit proper indexing in the database (the max key length
      * in MySQL is typically 767 bytes).
      */
-    public static final Column PATH = Column.named("path");
+    public static final Mapping PATH = Mapping.named("path");
     @Length(200)
     @NullAllowed
     private String path;
@@ -85,7 +85,7 @@ public class VirtualObject extends TenantAware implements StoredObject {
     /**
      * Contains the file extension used to determine the mime type.
      */
-    public static final Column FILE_EXTENSION = Column.named("fileExtension");
+    public static final Mapping FILE_EXTENSION = Mapping.named("fileExtension");
     @Length(10)
     @NullAllowed
     private String fileExtension;
@@ -96,7 +96,7 @@ public class VirtualObject extends TenantAware implements StoredObject {
      * When an object is uploaded / created for a reference, the field name and object name is placed here. This makes
      * the object invisible in the UI and also automatically deletes it if the referencing object is deleted.
      */
-    public static final Column REFERENCE = Column.named("reference");
+    public static final Mapping REFERENCE = Mapping.named("reference");
     @Length(255)
     @NullAllowed
     private String reference;
@@ -108,7 +108,7 @@ public class VirtualObject extends TenantAware implements StoredObject {
      * confirms the object key, this flag is removed. Otherwise, if the file is uploaded but the entity is
      * never saved, the file will be eventually deleted by {@link StorageCleanupLoop}.
      */
-    public static final Column TEMPORARY = Column.named("temporary");
+    public static final Mapping TEMPORARY = Mapping.named("temporary");
     private boolean temporary;
 
     @Part

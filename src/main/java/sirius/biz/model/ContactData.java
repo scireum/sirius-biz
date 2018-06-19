@@ -9,7 +9,7 @@
 package sirius.biz.model;
 
 import sirius.biz.web.Autoloaded;
-import sirius.db.mixing.Column;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
@@ -44,7 +44,7 @@ public class ContactData extends Composite {
      * <p>
      * If the field is filled, it has to be a valid email address, otherwise an exception will be thrown.
      */
-    public static final Column EMAIL = Column.named("email");
+    public static final Mapping EMAIL = Mapping.named("email");
     @Trim
     @NullAllowed
     @Autoloaded
@@ -57,7 +57,7 @@ public class ContactData extends Composite {
      * If the field is filled and <tt>validatePhoneNumbers</tt> is <tt>true</tt>, an exception is thrown
      * if the phone number has an illegal format.
      */
-    public static final Column PHONE = Column.named("phone");
+    public static final Mapping PHONE = Mapping.named("phone");
     @Trim
     @NullAllowed
     @Autoloaded
@@ -70,7 +70,7 @@ public class ContactData extends Composite {
      * If the field is filled and <tt>validatePhoneNumbers</tt> is <tt>true</tt>, an exception is thrown
      * if the fax number has an illegal format.
      */
-    public static final Column FAX = Column.named("fax");
+    public static final Mapping FAX = Mapping.named("fax");
     @Trim
     @NullAllowed
     @Autoloaded
@@ -83,7 +83,7 @@ public class ContactData extends Composite {
      * If the field is filled and <tt>validatePhoneNumbers</tt> is <tt>true</tt>, an exception is thrown
      * if the mobile phone number has an illegal format.
      */
-    public static final Column MOBILE = Column.named("mobile");
+    public static final Mapping MOBILE = Mapping.named("mobile");
     @Trim
     @NullAllowed
     @Autoloaded

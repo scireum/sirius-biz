@@ -9,7 +9,6 @@
 package sirius.biz.tenants;
 
 import sirius.biz.web.BizController;
-import sirius.db.mixing.Schema;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.web.controller.Controller;
@@ -37,8 +36,7 @@ public class ProfileController extends BizController {
     @LoginRequired
     @Routed("/profile")
     public void profile(WebContext ctx) {
-        UserAccount userAccount =
-                find(UserAccount.class, Schema.splitUniqueName(UserContext.getCurrentUser().getUserId()).getSecond());
+        UserAccount userAccount = oma.refreshOrFail(getUser().getUserObject(UserAccount.class));
         assertNotNew(userAccount);
 
         boolean requestHandled = prepareSave(ctx).saveEntity(userAccount);
@@ -56,8 +54,7 @@ public class ProfileController extends BizController {
     @LoginRequired
     @Routed("/profile/password")
     public void profileChangePassword(WebContext ctx) {
-        UserAccount userAccount =
-                find(UserAccount.class, Schema.splitUniqueName(UserContext.getCurrentUser().getUserId()).getSecond());
+        UserAccount userAccount = oma.refreshOrFail(getUser().getUserObject(UserAccount.class));
         assertNotNew(userAccount);
 
         if (ctx.isPOST()) {

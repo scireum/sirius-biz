@@ -9,7 +9,7 @@
 package sirius.biz.jobs;
 
 import sirius.biz.model.BizEntity;
-import sirius.db.mixing.Column;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
@@ -20,39 +20,39 @@ import sirius.db.mixing.annotations.NullAllowed;
 //TODO indices
 public class JobProtocol extends BizEntity {
 
-    public static final Column TENANT = Column.named("tenant");
+    public static final Mapping TENANT = Mapping.named("tenant");
     @Length(50)
     private String tenant;
 
-    public static final Column USER = Column.named("user");
+    public static final Mapping USER = Mapping.named("user");
     @Length(50)
     private String user;
 
-    public static final Column USER_NAME = Column.named("userName");
+    public static final Mapping USER_NAME = Mapping.named("userName");
     @Length(255)
     private String userName;
 
-    public static final Column FACTORY = Column.named("factory");
+    public static final Mapping FACTORY = Mapping.named("factory");
     @Length(100)
     private String factory;
 
-    public static final Column JOB = Column.named("job");
+    public static final Mapping JOB = Mapping.named("job");
     @Length(100)
     private String job;
 
-    public static final Column JOB_TITLE = Column.named("jobTitle");
+    public static final Mapping JOB_TITLE = Mapping.named("jobTitle");
     @Length(255)
     private String jobTitle;
 
-    public static final Column JOB_LOG = Column.named("jobLog");
+    public static final Mapping JOB_LOG = Mapping.named("jobLog");
     @NullAllowed
     @Lob
     private String jobLog;
 
-    public static final Column SUCCESSFUL = Column.named("successful");
+    public static final Mapping SUCCESSFUL = Mapping.named("successful");
     private boolean successful;
 
-    public static final Column DURATION_IN_SECONDS = Column.named("durationInSeconds");
+    public static final Mapping DURATION_IN_SECONDS = Mapping.named("durationInSeconds");
     private long durationInSeconds;
 
     public String getTenant() {

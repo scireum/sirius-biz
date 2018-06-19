@@ -13,9 +13,8 @@ import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.protocol.Journaled;
-import sirius.biz.statistics.Statistics;
 import sirius.biz.web.Autoloaded;
-import sirius.db.mixing.Column;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeDelete;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
@@ -51,7 +50,7 @@ public class UserAccount extends TenantAware implements Journaled, MessageProvid
     /**
      * Contains the email address of the user.
      */
-    public static final Column EMAIL = Column.named("email");
+    public static final Mapping EMAIL = Mapping.named("email");
     @Trim
     @Autoloaded
     @Length(150)
@@ -61,39 +60,36 @@ public class UserAccount extends TenantAware implements Journaled, MessageProvid
     /**
      * Contains the personal information of the user.
      */
-    public static final Column PERSON = Column.named("person");
+    public static final Mapping PERSON = Mapping.named("person");
     private final PersonData person = new PersonData();
 
     /**
      * Contains the login data used to authenticate the user.
      */
-    public static final Column LOGIN = Column.named("login");
+    public static final Mapping LOGIN = Mapping.named("login");
     private final LoginData login = new LoginData();
 
     /**
      * Contains the permissions granted to the user and the custom configuration.
      */
-    public static final Column PERMISSIONS = Column.named("permissions");
+    public static final Mapping PERMISSIONS = Mapping.named("permissions");
     private final PermissionData permissions = new PermissionData(this);
 
     /**
      * Used to record changes on fields of the user.
      */
-    public static final Column JOURNAL = Column.named("journal");
+    public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal = new JournalData(this);
 
     /**
      * Determines if an external login is required from time to time.
      */
-    public static final Column EXTERNAL_LOGIN_REQUIRED = Column.named("externalLoginRequired");
+    public static final Mapping EXTERNAL_LOGIN_REQUIRED = Mapping.named("externalLoginRequired");
     @Autoloaded
     private boolean externalLoginRequired = false;
 
     @Part
     private static Mails ms;
-
-    @Part
-    private static Statistics statistics;
 
     @BeforeSave
     protected void verifyData() {
@@ -127,7 +123,6 @@ public class UserAccount extends TenantAware implements Journaled, MessageProvid
 
     @BeforeDelete
     protected void onDelete() {
-        statistics.deleteStatistic(getUniqueName());
         TenantUserManager.flushCacheForUserAccount(this);
     }
 

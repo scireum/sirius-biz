@@ -9,8 +9,10 @@
 package sirius.biz.storage.vfs;
 
 import sirius.biz.storage.vfs.ftp.FTPBridge;
-import sirius.kernel.Lifecycle;
+import sirius.kernel.Startable;
+import sirius.kernel.Stoppable;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Log;
 
@@ -21,12 +23,17 @@ import sirius.kernel.health.Log;
  * added in the future.
  */
 @Register
-public class VirtualFileSystem implements Lifecycle {
+public class VirtualFileSystem implements Startable, Stoppable {
 
     public static final Log LOG = Log.get("vfs");
 
     @Part
     private FTPBridge ftpBridge;
+
+    @Override
+    public int getPriority() {
+        return Priorized.DEFAULT_PRIORITY;
+    }
 
     @Override
     public void started() {
@@ -36,15 +43,5 @@ public class VirtualFileSystem implements Lifecycle {
     @Override
     public void stopped() {
         ftpBridge.stop();
-    }
-
-    @Override
-    public void awaitTermination() {
-        // Nothing to wait for
-    }
-
-    @Override
-    public String getName() {
-        return "Virtual File System";
     }
 }

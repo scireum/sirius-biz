@@ -16,9 +16,10 @@ import com.google.common.io.Files;
 import sirius.biz.model.TraceData;
 import sirius.biz.tenants.Tenant;
 import sirius.db.KeyGenerator;
-import sirius.db.mixing.OMA;
-import sirius.db.mixing.SmartQuery;
-import sirius.db.mixing.constraints.FieldOperator;
+import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.SmartQuery;
+import sirius.db.jdbc.constraints.FieldOperator;
+import sirius.db.mixing.Mixing;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
@@ -344,7 +345,7 @@ public class Storage {
      */
     protected void markAsUsed(String reference, String objectKey) {
         try {
-            oma.getDatabase()
+            oma.getDatabase(Mixing.DEFAULT_REALM)
                .createQuery("UPDATE virtualobject"
                             + " SET reference=${reference}, temporary = 0"
                             + " WHERE objectKey=${objectKey}"

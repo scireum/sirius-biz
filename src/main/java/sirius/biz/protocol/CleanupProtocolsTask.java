@@ -8,8 +8,8 @@
 
 package sirius.biz.protocol;
 
-import sirius.db.mixing.OMA;
-import sirius.db.mixing.constraints.FieldOperator;
+import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.constraints.FieldOperator;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;

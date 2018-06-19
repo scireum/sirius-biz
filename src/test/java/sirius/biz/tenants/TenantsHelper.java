@@ -9,7 +9,7 @@
 package sirius.biz.tenants;
 
 import sirius.biz.model.LoginData;
-import sirius.db.mixing.OMA;
+import sirius.db.jdbc.OMA;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.web.http.TestRequest;
@@ -50,7 +50,8 @@ public class TenantsHelper {
         }
 
         UserContext.get()
-                   .setCurrentUser(((TenantUserManager) UserContext.get().getUserManager()).asUser(getTestUser(), null));
+                   .setCurrentUser(((TenantUserManager) UserContext.get().getUserManager()).asUser(getTestUser(),
+                                                                                                   null));
     }
 
     private static void setupTestTenant() {

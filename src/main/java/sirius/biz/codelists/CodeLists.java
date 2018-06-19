@@ -8,8 +8,8 @@
 
 package sirius.biz.codelists;
 
-import sirius.db.mixing.Entity;
-import sirius.db.mixing.OMA;
+import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.SQLEntity;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
@@ -141,7 +141,7 @@ public class CodeLists {
         if (Strings.isEmpty(codeList)) {
             throw new IllegalArgumentException("codeList must not be empty");
         }
-        CodeList cl = oma.select(CodeList.class).fields(Entity.ID).eq(CodeList.CODE, codeList).queryFirst();
+        CodeList cl = oma.select(CodeList.class).fields(SQLEntity.ID).eq(CodeList.CODE, codeList).queryFirst();
         if (cl == null) {
             Extension ext = Sirius.getSettings().getExtension("code-lists", codeList);
             cl = new CodeList();

@@ -8,9 +8,9 @@
 
 package sirius.biz.locks;
 
-import sirius.db.mixing.OMA;
-import sirius.db.mixing.Schema;
-import sirius.db.mixing.constraints.FieldOperator;
+import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.constraints.FieldOperator;
+import sirius.db.mixing.Mixing;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Framework;
@@ -36,7 +36,7 @@ public class SQLLockManager extends BasicLockManager {
     private OMA oma;
 
     @Part
-    private Schema schema;
+    private Mixing mixing;
 
     @Nonnull
     @Override
@@ -62,8 +62,8 @@ public class SQLLockManager extends BasicLockManager {
     @Override
     protected boolean acquireLock(@Nonnull String lockName) {
         try {
-            oma.getDatabase()
-               .insertRow(schema.getDescriptor(ManagedLock.class).getTableName(),
+            oma.getDatabase(Mixing.DEFAULT_REALM)
+               .insertRow(mixing.getDescriptor(ManagedLock.class).getRelationName(),
                           Context.create()
                                  .set(ManagedLock.NAME.getName(), lockName)
                                  .set(ManagedLock.OWNER.getName(), CallContext.getNodeName())
@@ -88,12 +88,12 @@ public class SQLLockManager extends BasicLockManager {
     public void unlock(String lock, boolean force) {
         try {
             if (force) {
-                oma.getDatabase()
+                oma.getDatabase(Mixing.DEFAULT_REALM)
                    .createQuery("DELETE FROM managedlock WHERE name = ${name}")
                    .set("name", lock)
                    .executeUpdate();
             } else {
-                oma.getDatabase()
+                oma.getDatabase(Mixing.DEFAULT_REALM)
                    .createQuery("DELETE FROM managedlock WHERE name = ${name} AND owner = ${owner}")
                    .set("name", lock)
                    .set("owner", CallContext.getNodeName())

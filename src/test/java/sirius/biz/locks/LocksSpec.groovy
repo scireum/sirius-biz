@@ -8,8 +8,6 @@
 
 package sirius.biz.locks
 
-import sirius.db.mixing.OMA
-import sirius.db.mixing.Schema
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
 
@@ -19,12 +17,6 @@ class LocksSpec extends BaseSpecification {
 
     @Part
     private static Locks locks
-
-    @Part
-    private static Schema schema
-
-    @Part
-    private static OMA oma
 
     def setupSpec() {
         oma.getReadyFuture().await(Duration.ofSeconds(60))

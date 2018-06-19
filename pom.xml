@@ -9,29 +9,36 @@
         <version>3.10</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
-    <version>6.1.1</version>
+    <version>7.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>SIRIUS biz</name>
     <description>Provides a framework for building web based business applications</description>
     <url>http://www.sirius-lib.net</url>
 
+    <properties>
+        <sirius.kernel>10.0</sirius.kernel>
+        <sirius.web>17.1</sirius.web>
+        <sirius.db>5.0-SNAPSHOT</sirius.db>
+    </properties>
+
+
     <dependencies>
 
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-kernel</artifactId>
-            <version>9.2.0</version>
+            <version>${sirius.kernel}</version>
         </dependency>
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-web</artifactId>
-            <version>15.1</version>
+            <version>${sirius.web}</version>
         </dependency>
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-db</artifactId>
-            <version>4.0</version>
+            <version>${sirius.db}</version>
         </dependency>
 
         <dependency>
@@ -54,21 +61,21 @@
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-web</artifactId>
-            <version>15.0</version>
+            <version>${sirius.web}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-db</artifactId>
-            <version>4.0</version>
+            <version>${sirius.db}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-kernel</artifactId>
-            <version>9.2.0</version>
+            <version>${sirius.kernel}</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>

@@ -13,9 +13,9 @@ import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
 import sirius.biz.web.BizController;
 import sirius.biz.web.PageHelper;
-import sirius.db.mixing.Entity;
-import sirius.db.mixing.SmartQuery;
-import sirius.db.mixing.constraints.Like;
+import sirius.db.jdbc.SQLEntity;
+import sirius.db.jdbc.SmartQuery;
+import sirius.db.jdbc.constraints.Like;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
@@ -398,7 +398,7 @@ public class UserAccountController extends BizController {
             baseQuery.eq(UserAccount.TENANT, currentTenant());
         }
 
-        baseQuery.fields(Entity.ID,
+        baseQuery.fields(SQLEntity.ID,
                          UserAccount.PERSON.inner(PersonData.LASTNAME),
                          UserAccount.PERSON.inner(PersonData.FIRSTNAME),
                          UserAccount.LOGIN.inner(LoginData.USERNAME),

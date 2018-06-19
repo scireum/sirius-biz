@@ -10,7 +10,7 @@ package sirius.biz.codelists;
 
 import sirius.biz.model.BizEntity;
 import sirius.biz.web.Autoloaded;
-import sirius.db.mixing.Column;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
@@ -28,7 +28,7 @@ public class CodeList extends BizEntity {
     /**
      * Contains the unique code or short name which identifies the code list.
      */
-    public static final Column CODE = Column.named("code");
+    public static final Mapping CODE = Mapping.named("code");
     @Trim
     @Autoloaded
     @Length(50)
@@ -38,7 +38,7 @@ public class CodeList extends BizEntity {
     /**
      * Contains a descriptive name of the list which is show in the administration GUI.
      */
-    public static final Column NAME = Column.named("name");
+    public static final Mapping NAME = Mapping.named("name");
     @Trim
     @Autoloaded
     @NullAllowed
@@ -48,7 +48,7 @@ public class CodeList extends BizEntity {
     /**
      * Contains a description of the purpose and use of the code list.
      */
-    public static final Column DESCRIPTION = Column.named("description");
+    public static final Mapping DESCRIPTION = Mapping.named("description");
     @Trim
     @Autoloaded
     @NullAllowed
@@ -60,7 +60,7 @@ public class CodeList extends BizEntity {
      * <p>
      * Using this approach, the code list will fill itself and a user can provide descriptive texts later.
      */
-    public static final Column AUTO_FILL = Column.named("autofill");
+    public static final Mapping AUTO_FILL = Mapping.named("autofill");
     @Autoloaded
     private boolean autofill = true;
 

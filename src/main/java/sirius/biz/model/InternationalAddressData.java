@@ -10,7 +10,7 @@ package sirius.biz.model;
 
 import sirius.biz.codelists.CodeLists;
 import sirius.biz.web.Autoloaded;
-import sirius.db.mixing.Column;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
@@ -41,7 +41,7 @@ public class InternationalAddressData extends AddressData {
      * <p>
      * Note that a code list "country" exists which enumerates possible countries.
      */
-    public static final Column COUNTRY = Column.named("country");
+    public static final Mapping COUNTRY = Mapping.named("country");
     @Trim
     @NullAllowed
     @Autoloaded

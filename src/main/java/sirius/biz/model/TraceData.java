@@ -9,7 +9,7 @@
 package sirius.biz.model;
 
 import sirius.biz.protocol.NoJournal;
-import sirius.db.mixing.Column;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
@@ -28,7 +28,7 @@ public class TraceData extends Composite {
     /**
      * Stores the username of the user which created the assoicated entity.
      */
-    public static final Column CREATED_BY = Column.named("createdBy");
+    public static final Mapping CREATED_BY = Mapping.named("createdBy");
     @NoJournal
     @NullAllowed
     @Length(50)
@@ -37,7 +37,7 @@ public class TraceData extends Composite {
     /**
      * Stores the timstamp when the associated entity was created.
      */
-    public static final Column CREATED_AT = Column.named("createdAt");
+    public static final Mapping CREATED_AT = Mapping.named("createdAt");
     @NoJournal
     @NullAllowed
     private LocalDateTime createdAt;
@@ -45,7 +45,7 @@ public class TraceData extends Composite {
     /**
      * Stores the system string ({@link TaskContext#getSystemString()} where the associated entity was created.
      */
-    public static final Column CREATED_IN = Column.named("createdIn");
+    public static final Mapping CREATED_IN = Mapping.named("createdIn");
     @NoJournal
     @NullAllowed
     @Length(150)
@@ -54,7 +54,7 @@ public class TraceData extends Composite {
     /**
      * Stores the username of the user which last changed the associated entity.
      */
-    public static final Column CHANGED_BY = Column.named("changedBy");
+    public static final Mapping CHANGED_BY = Mapping.named("changedBy");
     @NoJournal
     @NullAllowed
     @Length(50)
@@ -63,7 +63,7 @@ public class TraceData extends Composite {
     /**
      * Stores the timestamp when the associated entity was last changed.
      */
-    public static final Column CHANGED_AT = Column.named("changedAt");
+    public static final Mapping CHANGED_AT = Mapping.named("changedAt");
     @NoJournal
     @NullAllowed
     private LocalDateTime changedAt;
@@ -71,7 +71,7 @@ public class TraceData extends Composite {
     /**
      * Stores the system string ({@link TaskContext#getSystemString()} where the associated entity was last changed.
      */
-    public static final Column CHANGED_IN = Column.named("changedIn");
+    public static final Mapping CHANGED_IN = Mapping.named("changedIn");
     @NoJournal
     @NullAllowed
     @Length(150)

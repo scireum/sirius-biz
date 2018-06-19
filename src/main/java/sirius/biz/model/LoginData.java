@@ -13,7 +13,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import sirius.biz.protocol.NoJournal;
 import sirius.biz.web.Autoloaded;
-import sirius.db.mixing.Column;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
@@ -41,7 +41,7 @@ public class LoginData extends Composite {
     /**
      * Contains the username used to identify the account.
      */
-    public static final Column USERNAME = Column.named("username");
+    public static final Mapping USERNAME = Mapping.named("username");
     @Trim
     @Autoloaded
     @Length(150)
@@ -51,7 +51,7 @@ public class LoginData extends Composite {
     /**
      * Contains the hashed value of the password to verify the password at login
      */
-    public static final Column PASSWORD_HASH = Column.named("passwordHash");
+    public static final Mapping PASSWORD_HASH = Mapping.named("passwordHash");
     @Trim
     @Length(50)
     @NullAllowed
@@ -62,7 +62,7 @@ public class LoginData extends Composite {
      * case insensitive password. This is kind of a crazy idea, but some systems need this
      * functionality for legacy reasons.
      */
-    public static final Column UCASE_PASSWORD_HASH = Column.named("ucasePasswordHash");
+    public static final Mapping UCASE_PASSWORD_HASH = Mapping.named("ucasePasswordHash");
     @Trim
     @Length(50)
     @NullAllowed
@@ -72,7 +72,7 @@ public class LoginData extends Composite {
      * Contains a random salt which is prepended to the password before hashing to block
      * rainbow tables and the like.
      */
-    public static final Column SALT = Column.named("salt");
+    public static final Mapping SALT = Mapping.named("salt");
     @Trim
     @Length(50)
     private String salt;
@@ -81,7 +81,7 @@ public class LoginData extends Composite {
      * Contains the generated password as cleartext (so it can be reported to the user). Once the user
      * changes the password, this field will be set to <tt>null</tt>.
      */
-    public static final Column GENERATED_PASSWORD = Column.named("generatedPassword");
+    public static final Mapping GENERATED_PASSWORD = Mapping.named("generatedPassword");
     @Trim
     @Length(50)
     @NullAllowed
@@ -90,7 +90,7 @@ public class LoginData extends Composite {
     /**
      * Provides an API TOKEN which is crypthgraphically created and can be used as password for technical integrations
      */
-    public static final Column API_TOKEN = Column.named("apiToken");
+    public static final Mapping API_TOKEN = Mapping.named("apiToken");
     @Trim
     @Length(50)
     @NullAllowed
@@ -99,14 +99,14 @@ public class LoginData extends Composite {
     /**
      * Records the number of logins.
      */
-    public static final Column NUMBER_OF_LOGINS = Column.named("numberOfLogins");
+    public static final Mapping NUMBER_OF_LOGINS = Mapping.named("numberOfLogins");
     @NoJournal
     private int numberOfLogins;
 
     /**
      * Records the timestamp of the last login.
      */
-    public static final Column LAST_LOGIN = Column.named("lastLogin");
+    public static final Mapping LAST_LOGIN = Mapping.named("lastLogin");
     @NoJournal
     @NullAllowed
     private LocalDateTime lastLogin;
@@ -117,7 +117,7 @@ public class LoginData extends Composite {
      * When using external identity poviders, like SAML, we want to keep track when the last login via this happened
      * as we probably want to enforce regular validations (logins).
      */
-    public static final Column LAST_EXTERNAL_LOGIN = Column.named("lastExternalLogin");
+    public static final Mapping LAST_EXTERNAL_LOGIN = Mapping.named("lastExternalLogin");
     @NoJournal
     @NullAllowed
     private LocalDateTime lastExternalLogin;
@@ -125,7 +125,7 @@ public class LoginData extends Composite {
     /**
      * Contains a flag which checks if the user is permitted to login.
      */
-    public static final Column ACCOUNT_LOCKED = Column.named("accountLocked");
+    public static final Mapping ACCOUNT_LOCKED = Mapping.named("accountLocked");
     @Autoloaded
     private boolean accountLocked;
 

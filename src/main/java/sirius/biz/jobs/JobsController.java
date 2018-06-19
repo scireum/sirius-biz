@@ -13,7 +13,7 @@ import sirius.biz.model.TraceData;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.biz.web.PageHelper;
-import sirius.db.mixing.SmartQuery;
+import sirius.db.jdbc.SmartQuery;
 import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;

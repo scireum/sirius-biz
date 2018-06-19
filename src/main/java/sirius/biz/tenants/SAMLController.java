@@ -9,7 +9,7 @@
 package sirius.biz.tenants;
 
 import sirius.biz.web.BizController;
-import sirius.db.mixing.constraints.FieldOperator;
+import sirius.db.jdbc.constraints.FieldOperator;
 import sirius.kernel.commons.Lambdas;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;

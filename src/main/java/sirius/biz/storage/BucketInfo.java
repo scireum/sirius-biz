@@ -9,7 +9,7 @@
 package sirius.biz.storage;
 
 import sirius.biz.tenants.Tenant;
-import sirius.db.mixing.OMA;
+import sirius.db.jdbc.OMA;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;

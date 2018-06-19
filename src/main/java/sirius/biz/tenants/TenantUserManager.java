@@ -12,12 +12,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.typesafe.config.Config;
 import sirius.biz.model.LoginData;
-import sirius.biz.statistics.AggregationLevel;
-import sirius.biz.statistics.StatisticalEvent;
-import sirius.biz.statistics.Statistics;
 import sirius.biz.web.BizController;
-import sirius.db.mixing.Entity;
-import sirius.db.mixing.OMA;
+import sirius.db.jdbc.OMA;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
@@ -113,12 +109,6 @@ public class TenantUserManager extends GenericUserManager {
 
     @Part
     private static OMA oma;
-
-    @Part
-    private static Statistics statistics;
-
-    private static final StatisticalEvent LOGGED_IN_EVENT =
-            StatisticalEvent.create("useraccount-login", AggregationLevel.MONTHS);
 
     private static Cache<String, Set<String>> rolesCache = CacheManager.createCache("tenants-roles");
     private static Cache<String, UserAccount> userAccountCache = CacheManager.createCache("tenants-users");
@@ -296,7 +286,6 @@ public class TenantUserManager extends GenericUserManager {
      * @param accountId the unique object name of an <tt>UserAccount</tt> to resolve into a <tt>UserInfo</tt>
      * @return the <tt>UserInfo</tt> representing the given account (will utilize caches if available) or <tt>null</tt>
      * if no such user exists
-     * @see Entity#getUniqueName()
      */
     @Nullable
     public UserInfo findUserByUserId(String accountId) {
@@ -490,8 +479,6 @@ public class TenantUserManager extends GenericUserManager {
     public void recordLogin(UserInfo user, boolean external) {
         try {
             UserAccount account = (UserAccount) getUserObject(user);
-
-            statistics.incrementStatistic(LOGGED_IN_EVENT, account.getUniqueName());
 
             // This should never happen (other than manually changed or tampered database data).
             // However, this would lead to an endless recursion, so we skip right here....

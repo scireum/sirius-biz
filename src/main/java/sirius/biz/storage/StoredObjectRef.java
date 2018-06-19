@@ -8,7 +8,6 @@
 
 package sirius.biz.storage;
 
-import sirius.db.mixing.Entity;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 

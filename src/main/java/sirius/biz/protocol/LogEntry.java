@@ -8,8 +8,8 @@
 
 package sirius.biz.protocol;
 
-import sirius.db.mixing.Column;
-import sirius.db.mixing.Entity;
+import sirius.db.mixing.Mapping;
+import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
@@ -24,46 +24,46 @@ import java.time.LocalDateTime;
 @Index(name = "category_idx", columns = "category")
 @Index(name = "level_idx", columns = "level")
 @Index(name = "tod_idx", columns = "tod")
-public class LogEntry extends Entity {
+public class LogEntry extends SQLEntity {
 
     /**
      * Contains the logged message.
      */
-    public static final Column MESSAGE = Column.named("message");
+    public static final Mapping MESSAGE = Mapping.named("message");
     @Lob
     private String message;
 
     /**
      * Contains the name of the logger which create the message.
      */
-    public static final Column CATEGORY = Column.named("category");
+    public static final Mapping CATEGORY = Mapping.named("category");
     @Length(50)
     private String category;
 
     /**
      * Contains the log level of the message.
      */
-    public static final Column LEVEL = Column.named("level");
+    public static final Mapping LEVEL = Mapping.named("level");
     @Length(50)
     private String level;
 
     /**
      * Contains the name of the node on which the message was logged.
      */
-    public static final Column NODE = Column.named("node");
+    public static final Mapping NODE = Mapping.named("node");
     @Length(50)
     private String node;
 
     /**
      * Contains the timestamp when the message was logged.
      */
-    public static final Column TOD = Column.named("tod");
+    public static final Mapping TOD = Mapping.named("tod");
     private LocalDateTime tod = LocalDateTime.now();
 
     /**
      * Contains the name of the user which was active when the message was logged.
      */
-    public static final Column USER = Column.named("user");
+    public static final Mapping USER = Mapping.named("user");
     @Length(255)
     private String user;
 

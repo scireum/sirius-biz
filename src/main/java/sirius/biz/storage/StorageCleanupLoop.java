@@ -9,8 +9,8 @@
 package sirius.biz.storage;
 
 import sirius.biz.model.TraceData;
-import sirius.db.mixing.OMA;
-import sirius.db.mixing.constraints.FieldOperator;
+import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.constraints.FieldOperator;
 import sirius.kernel.async.BackgroundLoop;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;

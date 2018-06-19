@@ -8,10 +8,14 @@
 
 package sirius.biz.storage;
 
+import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.SQLEntity;
+import sirius.db.jdbc.schema.SQLPropertyInfo;
+import sirius.db.jdbc.schema.Table;
+import sirius.db.jdbc.schema.TableColumn;
 import sirius.db.mixing.AccessPath;
-import sirius.db.mixing.Entity;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
-import sirius.db.mixing.OMA;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.PropertyFactory;
 import sirius.kernel.commons.Strings;
@@ -27,9 +31,9 @@ import java.sql.Types;
 import java.util.function.Consumer;
 
 /**
- * Handles fields of the type {@link StoredObjectRef} within an {@link Entity}.
+ * Handles fields of the type {@link StoredObjectRef} within an {@link SQLEntity}.
  */
-public class StoredObjectRefProperty extends Property {
+public class StoredObjectRefProperty extends Property implements SQLPropertyInfo {
 
     /**
      * Factory for generating properties based on their field type
@@ -93,7 +97,7 @@ public class StoredObjectRefProperty extends Property {
     }
 
     @Override
-    protected void setValue(Entity entity, Object object) {
+    protected void setValue(Object entity, Object object) {
         this.setValueToField(object, entity);
     }
 
@@ -101,7 +105,7 @@ public class StoredObjectRefProperty extends Property {
     @Override
     protected void setValueToField(Object value, Object target) {
         StoredObjectRef ref = getStoredObjectRef(target);
-        initializeReference((Entity) target, ref);
+        initializeReference((SQLEntity) target, ref);
         if (value == null || value instanceof StoredObject) {
             ref.setObject((StoredObject) value);
         } else {
@@ -110,8 +114,8 @@ public class StoredObjectRefProperty extends Property {
     }
 
     @Override
-    protected int getSQLType() {
-        return Types.CHAR;
+    public void contributeToTable(Table table) {
+        table.getColumns().add(new TableColumn(this, Types.CHAR));
     }
 
     @Override
@@ -121,9 +125,9 @@ public class StoredObjectRefProperty extends Property {
     }
 
     @Override
-    protected void onAfterSave(Entity entity) {
+    protected void onAfterSave(Object entity) {
         StoredObjectRef ref = getStoredObjectRef(entity);
-        initializeReference(entity, ref);
+        initializeReference((BaseEntity<?>) entity, ref);
         if (ref.changed && Strings.isFilled(ref.reference)) {
             storage.deleteReferencedObjects(ref.reference, ref.getKey());
             storage.markAsUsed(ref.reference, ref.getKey());
@@ -131,7 +135,7 @@ public class StoredObjectRefProperty extends Property {
         }
     }
 
-    private void initializeReference(Entity entity, StoredObjectRef ref) {
+    private void initializeReference(BaseEntity<?> entity, StoredObjectRef ref) {
         if (entity.isNew()) {
             ref.reference = null;
         } else {
@@ -140,7 +144,7 @@ public class StoredObjectRefProperty extends Property {
     }
 
     @Override
-    protected void onAfterDelete(Entity entity) {
+    protected void onAfterDelete(Object entity) {
         StoredObjectRef ref = getStoredObjectRef(entity);
         if (Strings.isFilled(ref.reference)) {
             storage.deleteReferencedObjects(ref.reference, null);

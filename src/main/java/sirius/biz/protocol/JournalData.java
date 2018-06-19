@@ -8,16 +8,17 @@
 
 package sirius.biz.protocol;
 
+import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.Composite;
-import sirius.db.mixing.Entity;
 import sirius.db.mixing.EntityDescriptor;
+import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
-import sirius.db.mixing.Schema;
 import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.AfterSave;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.TaskContext;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.security.UserContext;
@@ -39,14 +40,17 @@ public class JournalData extends Composite {
     private volatile boolean silent;
 
     @Transient
-    private Entity owner;
+    private SQLEntity owner;
+
+    @Part
+    private static Mixing mixing;
 
     /**
      * Creates a new instance for the given entity.
      *
      * @param owner the entity which fields are to be recorded.
      */
-    public JournalData(Entity owner) {
+    public JournalData(SQLEntity owner) {
         this.owner = owner;
     }
 
@@ -82,16 +86,17 @@ public class JournalData extends Composite {
      * @param entity  the entity to write a journal entry for
      * @param changes the entry to add to the journal
      */
-    public static void addJournalEntry(Entity entity, String changes) {
+    public static void addJournalEntry(SQLEntity entity, String changes) {
         if (!Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_PROTOCOLS)) {
             return;
         }
+
         JournalEntry entry = new JournalEntry();
         entry.setTod(LocalDateTime.now());
         entry.setChanges(changes);
         entry.setTargetId(entity.getId());
         entry.setTargetName(entity.toString());
-        entry.setTargetType(Schema.getNameForType(entity.getClass()));
+        entry.setTargetType(mixing.getNameForType(entity.getClass()));
         entry.setSubsystem(TaskContext.get().getSystemString());
         entry.setUserId(UserContext.getCurrentUser().getUserId());
         entry.setUsername(UserContext.getCurrentUser().getUserName());

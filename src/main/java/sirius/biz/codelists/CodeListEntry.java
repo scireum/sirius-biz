@@ -9,8 +9,8 @@
 package sirius.biz.codelists;
 
 import sirius.biz.model.BizEntity;
-import sirius.db.mixing.Column;
-import sirius.db.mixing.EntityRef;
+import sirius.db.jdbc.SQLEntityRef;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
@@ -29,13 +29,13 @@ public class CodeListEntry extends BizEntity {
     /**
      * References the code list this entrd belongs to.
      */
-    public static final Column CODE_LIST = Column.named("codeList");
-    private final EntityRef<CodeList> codeList = EntityRef.on(CodeList.class, EntityRef.OnDelete.CASCADE);
+    public static final Mapping CODE_LIST = Mapping.named("codeList");
+    private final SQLEntityRef<CodeList> codeList = SQLEntityRef.on(CodeList.class, SQLEntityRef.OnDelete.CASCADE);
 
     /**
      * Contains the code of the entry.
      */
-    public static final Column CODE = Column.named("code");
+    public static final Mapping CODE = Mapping.named("code");
     @Trim
     @Length(50)
     @Unique(within = "codeList")
@@ -44,13 +44,13 @@ public class CodeListEntry extends BizEntity {
     /**
      * Contains the priority of the entry used for sorting
      */
-    public static final Column PRIORITY = Column.named("priority");
+    public static final Mapping PRIORITY = Mapping.named("priority");
     private int priority = Priorized.DEFAULT_PRIORITY;
 
     /**
      * Contains the value associated with the code of this entry.
      */
-    public static final Column VALUE = Column.named("value");
+    public static final Mapping VALUE = Mapping.named("value");
     @Trim
     @Length(512)
     @NullAllowed
@@ -59,7 +59,7 @@ public class CodeListEntry extends BizEntity {
     /**
      * Contains the additional value associated with the code of this entry.
      */
-    public static final Column ADDITIONAL_VALUE = Column.named("additionalValue");
+    public static final Mapping ADDITIONAL_VALUE = Mapping.named("additionalValue");
     @Length(512)
     @NullAllowed
     private String additionalValue;
@@ -67,12 +67,12 @@ public class CodeListEntry extends BizEntity {
     /**
      * Contains a description of the value or the entry.
      */
-    public static final Column DESCRIPTION = Column.named("description");
+    public static final Mapping DESCRIPTION = Mapping.named("description");
     @Length(1024)
     @NullAllowed
     private String description;
 
-    public EntityRef<CodeList> getCodeList() {
+    public SQLEntityRef<CodeList> getCodeList() {
         return codeList;
     }
 

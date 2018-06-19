@@ -8,8 +8,8 @@
 
 package sirius.biz.protocol;
 
-import sirius.db.mixing.Column;
-import sirius.db.mixing.Entity;
+import sirius.db.mixing.Mapping;
+import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
@@ -26,26 +26,26 @@ import java.time.LocalDateTime;
  */
 @Framework(Protocols.FRAMEWORK_PROTOCOLS)
 @Index(name = "category_idx", columns = "category")
-public class Incident extends Entity {
+public class Incident extends SQLEntity {
 
     /**
      * Contains the error message.
      */
-    public static final Column MESSAGE = Column.named("message");
+    public static final Mapping MESSAGE = Mapping.named("message");
     @Lob
     private String message;
 
     /**
      * Contains the logger category which recorded the error.
      */
-    public static final Column CATEGORY = Column.named("category");
+    public static final Mapping CATEGORY = Mapping.named("category");
     @Length(50)
     private String category;
 
     /**
      * Contains the name of the server/node on which the error occured.
      */
-    public static final Column NODE = Column.named("node");
+    public static final Mapping NODE = Mapping.named("node");
     @Length(50)
     private String node;
 
@@ -55,33 +55,33 @@ public class Incident extends Entity {
      * This is only used to de-duplicate similar incidents. The real location can be found the the recorded {@link
      * #stack}.
      */
-    public static final Column LOCATION = Column.named("location");
+    public static final Mapping LOCATION = Mapping.named("location");
     @Length(255)
     private String location;
 
     /**
      * Contains the recorded stacktrace of the error or exception.
      */
-    public static final Column STACK = Column.named("stack");
+    public static final Mapping STACK = Mapping.named("stack");
     @Lob
     private String stack;
 
     /**
      * Contains the timestamp of the first occurrence.
      */
-    public static final Column FIRST_OCCURRENCE = Column.named("firstOccurrence");
+    public static final Mapping FIRST_OCCURRENCE = Mapping.named("firstOccurrence");
     private LocalDateTime firstOccurrence = LocalDateTime.now();
 
     /**
      * Contains the timestamp of the last occurrence.
      */
-    public static final Column LAST_OCCURRENCE = Column.named("lastOccurrence");
+    public static final Mapping LAST_OCCURRENCE = Mapping.named("lastOccurrence");
     private LocalDateTime lastOccurrence = LocalDateTime.now();
 
     /**
      * Contains the number of occurrences within the given time span.
      */
-    public static final Column NUMBER_OF_OCCURRENCES = Column.named("numberOfOccurrences");
+    public static final Mapping NUMBER_OF_OCCURRENCES = Mapping.named("numberOfOccurrences");
     private int numberOfOccurrences = 0;
 
     /**
@@ -89,14 +89,14 @@ public class Incident extends Entity {
      *
      * @see CallContext#getMDC()
      */
-    public static final Column MDC = Column.named("mdc");
+    public static final Mapping MDC = Mapping.named("mdc");
     @Lob
     private String mdc;
 
     /**
      * Contains the name of the user which was present when the error occured.
      */
-    public static final Column USER = Column.named("user");
+    public static final Mapping USER = Mapping.named("user");
     @Length(255)
     private String user;
 

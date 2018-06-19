@@ -10,7 +10,7 @@ package sirius.biz.storage;
 
 import com.google.common.io.ByteStreams;
 import sirius.db.KeyGenerator;
-import sirius.db.mixing.OMA;
+import sirius.db.jdbc.OMA;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;

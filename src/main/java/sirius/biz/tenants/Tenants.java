@@ -9,7 +9,7 @@
 package sirius.biz.tenants;
 
 import sirius.biz.web.BizController;
-import sirius.db.mixing.OMA;
+import sirius.db.jdbc.OMA;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.di.std.Framework;

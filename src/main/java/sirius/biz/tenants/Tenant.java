@@ -14,8 +14,8 @@ import sirius.biz.model.PermissionData;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.web.Autoloaded;
-import sirius.db.mixing.Column;
-import sirius.db.mixing.EntityRef;
+import sirius.db.jdbc.SQLEntityRef;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeDelete;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
@@ -40,29 +40,29 @@ public class Tenant extends BizEntity implements Journaled {
     /**
      * Contains the parent tenant of this tenant.
      */
-    public static final Column PARENT = Column.named("parent");
+    public static final Mapping PARENT = Mapping.named("parent");
     @Autoloaded
     @NullAllowed
-    private final EntityRef<Tenant> parent = EntityRef.on(Tenant.class, EntityRef.OnDelete.SET_NULL);
+    private final SQLEntityRef<Tenant> parent = SQLEntityRef.on(Tenant.class, SQLEntityRef.OnDelete.SET_NULL);
 
     /**
      * Determines if the parent tenant can become this tenant by calling "/tenants/select".
      */
-    public static final Column PARENT_CAN_ACCESS = Column.named("parentCanAccess");
+    public static final Mapping PARENT_CAN_ACCESS = Mapping.named("parentCanAccess");
     @Autoloaded
     private boolean parentCanAccess = false;
 
     /**
      * Determines if this tenant can become its tenant by calling "/tenants/select".
      */
-    public static final Column CAN_ACCESS_PARENT = Column.named("canAccessParent");
+    public static final Mapping CAN_ACCESS_PARENT = Mapping.named("canAccessParent");
     @Autoloaded
     private boolean canAccessParent = false;
 
     /**
      * Determines the interval in days, after which a user needs to login again.
      */
-    public static final Column LOGIN_INTERVAL_DAYS = Column.named("loginIntervalDays");
+    public static final Mapping LOGIN_INTERVAL_DAYS = Mapping.named("loginIntervalDays");
     @Autoloaded
     @NullAllowed
     private Integer loginIntervalDays;
@@ -72,7 +72,7 @@ public class Tenant extends BizEntity implements Journaled {
      * <p>
      * Note that this is only enforced if {@link UserAccount#externalLoginRequired} is <tt>true</tt>.
      */
-    public static final Column EXTERNAL_LOGIN_INTERVAL_DAYS = Column.named("externalLoginIntervalDays");
+    public static final Mapping EXTERNAL_LOGIN_INTERVAL_DAYS = Mapping.named("externalLoginIntervalDays");
     @Autoloaded
     @NullAllowed
     private Integer externalLoginIntervalDays;
@@ -80,7 +80,7 @@ public class Tenant extends BizEntity implements Journaled {
     /**
      * Contains the name of the tenant.
      */
-    public static final Column NAME = Column.named("name");
+    public static final Mapping NAME = Mapping.named("name");
     @Trim
     @Unique
     @Autoloaded
@@ -90,7 +90,7 @@ public class Tenant extends BizEntity implements Journaled {
     /**
      * Contains the customer number assigned to the tenant.
      */
-    public static final Column ACCOUNT_NUMBER = Column.named("accountNumber");
+    public static final Mapping ACCOUNT_NUMBER = Mapping.named("accountNumber");
     @Trim
     @Unique
     @Autoloaded
@@ -101,7 +101,7 @@ public class Tenant extends BizEntity implements Journaled {
     /**
      * Contains the name of the system which is used as the SAML provider.
      */
-    public static final Column SAML_REQUEST_ISSUER_NAME = Column.named("samlRequestIssuerName");
+    public static final Mapping SAML_REQUEST_ISSUER_NAME = Mapping.named("samlRequestIssuerName");
     @Trim
     @Autoloaded
     @NullAllowed
@@ -111,7 +111,7 @@ public class Tenant extends BizEntity implements Journaled {
     /**
      * Contains the URL of the SAML provider.
      */
-    public static final Column SAML_ISSUER_URL = Column.named("samlIssuerUrl");
+    public static final Mapping SAML_ISSUER_URL = Mapping.named("samlIssuerUrl");
     @Trim
     @Autoloaded
     @NullAllowed
@@ -121,7 +121,7 @@ public class Tenant extends BizEntity implements Journaled {
     /**
      * Contains the endpoint index at the SAML provider.
      */
-    public static final Column SAML_ISSUER_INDEX = Column.named("samlIssuerIndex");
+    public static final Mapping SAML_ISSUER_INDEX = Mapping.named("samlIssuerIndex");
     @Trim
     @Autoloaded
     @NullAllowed
@@ -133,7 +133,7 @@ public class Tenant extends BizEntity implements Journaled {
      * <p>
      * If several SAML providers are used, multiple values can be separated by a <tt>,</tt>.
      */
-    public static final Column SAML_ISSUER_NAME = Column.named("samlIssuerName");
+    public static final Mapping SAML_ISSUER_NAME = Mapping.named("samlIssuerName");
     @Trim
     @Autoloaded
     @NullAllowed
@@ -145,7 +145,7 @@ public class Tenant extends BizEntity implements Journaled {
      * <p>
      * If several SAML providers are used, multiple values can be separated by a <tt>,</tt>.
      */
-    public static final Column SAML_FINGERPRINT = Column.named("samlFingerprint");
+    public static final Mapping SAML_FINGERPRINT = Mapping.named("samlFingerprint");
     @Trim
     @Autoloaded
     @NullAllowed
@@ -155,20 +155,20 @@ public class Tenant extends BizEntity implements Journaled {
     /**
      * Contains the address of the tenant.
      */
-    public static final Column ADDRESS = Column.named("address");
+    public static final Mapping ADDRESS = Mapping.named("address");
     private final InternationalAddressData address =
             new InternationalAddressData(InternationalAddressData.Requirements.NONE, null);
 
     /**
      * Contains the features and individual config assigned to the tenant.
      */
-    public static final Column PERMISSIONS = Column.named("permissions");
+    public static final Mapping PERMISSIONS = Mapping.named("permissions");
     private final PermissionData permissions = new PermissionData(this);
 
     /**
      * Used to record changes on fields of the tenant.
      */
-    public static final Column JOURNAL = Column.named("journal");
+    public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal = new JournalData(this);
 
     @Part
@@ -211,7 +211,7 @@ public class Tenant extends BizEntity implements Journaled {
         return permissions;
     }
 
-    public EntityRef<Tenant> getParent() {
+    public SQLEntityRef<Tenant> getParent() {
         return parent;
     }
 

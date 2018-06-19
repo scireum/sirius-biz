@@ -12,9 +12,9 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import sirius.biz.web.Autoloaded;
 import sirius.biz.web.BizController;
-import sirius.db.mixing.Column;
+import sirius.db.jdbc.SQLEntity;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Composite;
-import sirius.db.mixing.Entity;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
@@ -37,12 +37,12 @@ public class PermissionData extends Composite {
      * Stores the associated user account or tenant for which the permissions and config is stored
      */
     @Transient
-    private final Entity parent;
+    private final SQLEntity parent;
 
     /**
      * Contains all permissions as a single string, separated with commas.
      */
-    public static final Column PERMISSION_STRING = Column.named("permissionString");
+    public static final Mapping PERMISSION_STRING = Mapping.named("permissionString");
     @Autoloaded
     @NullAllowed
     @Length(4096)
@@ -52,7 +52,7 @@ public class PermissionData extends Composite {
      * Contains a custom configuration which is added to the config of the current {@link
      * sirius.web.security.ScopeInfo}.
      */
-    public static final Column CONFIG_STRING = Column.named("configString");
+    public static final Mapping CONFIG_STRING = Mapping.named("configString");
     @Autoloaded
     @NullAllowed
     @Lob
@@ -69,7 +69,7 @@ public class PermissionData extends Composite {
      *
      * @param parent the parent entity which contains this composite.
      */
-    public PermissionData(Entity parent) {
+    public PermissionData(SQLEntity parent) {
         this.parent = parent;
     }
 

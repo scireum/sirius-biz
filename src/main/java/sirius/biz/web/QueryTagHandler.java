@@ -8,7 +8,7 @@
 
 package sirius.biz.web;
 
-import sirius.db.mixing.Constraint;
+import sirius.db.jdbc.Constraint;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.kernel.di.std.Named;
 

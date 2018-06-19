@@ -8,8 +8,8 @@
 
 package sirius.biz.locks;
 
-import sirius.db.mixing.Column;
-import sirius.db.mixing.Entity;
+import sirius.db.jdbc.SQLEntity;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Unique;
@@ -24,12 +24,12 @@ import java.time.LocalDateTime;
  */
 @Framework("biz.locks")
 @Index(name = "unique_name", columns = "name", unique = true)
-public class ManagedLock extends Entity {
+public class ManagedLock extends SQLEntity {
 
     /**
      * Contains the name of the lock.
      */
-    public static final Column NAME = Column.named("name");
+    public static final Mapping NAME = Mapping.named("name");
     @Unique
     @Length(100)
     private String name;
@@ -37,21 +37,21 @@ public class ManagedLock extends Entity {
     /**
      * Contains the owner holding the lock.
      */
-    public static final Column OWNER = Column.named("owner");
+    public static final Mapping OWNER = Mapping.named("owner");
     @Length(150)
     private String owner;
 
     /**
      * Contains the thread holding the lock.
      */
-    public static final Column THREAD = Column.named("thread");
+    public static final Mapping THREAD = Mapping.named("thread");
     @Length(150)
     private String thread;
 
     /**
      * Determines if the lock is currently acquired.
      */
-    public static final Column ACQUIRED = Column.named("acquired");
+    public static final Mapping ACQUIRED = Mapping.named("acquired");
     private LocalDateTime acquired;
 
     public String getName() {

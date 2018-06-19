@@ -8,9 +8,9 @@
 
 package sirius.biz.storage;
 
-import sirius.db.mixing.Column;
-import sirius.db.mixing.Entity;
-import sirius.db.mixing.EntityRef;
+import sirius.db.jdbc.SQLEntity;
+import sirius.db.jdbc.SQLEntityRef;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
@@ -22,33 +22,33 @@ import java.time.LocalDate;
 /**
  * Represents a resized image version of a {@link VirtualObject}.
  */
-public class VirtualObjectVersion extends Entity {
+public class VirtualObjectVersion extends SQLEntity {
 
     /**
      * Contains the object to which this version belongs.
      */
-    public static final Column VIRTUAL_OBJECT = Column.named("virtualObject");
-    private final EntityRef<VirtualObject> virtualObject =
-            EntityRef.on(VirtualObject.class, EntityRef.OnDelete.CASCADE);
+    public static final Mapping VIRTUAL_OBJECT = Mapping.named("virtualObject");
+    private final SQLEntityRef<VirtualObject> virtualObject =
+            SQLEntityRef.on(VirtualObject.class, SQLEntityRef.OnDelete.CASCADE);
 
     /**
      * Contains a copy of the bucket in which the virtual object resides, for faster access.
      */
-    public static final Column BUCKET = Column.named("bucket");
+    public static final Mapping BUCKET = Mapping.named("bucket");
     @Length(32)
     private String bucket;
 
     /**
      * Contains the version name which is WIDTHxHEIGTH.
      */
-    public static final Column VERSION_KEY = Column.named("versionKey");
+    public static final Mapping VERSION_KEY = Mapping.named("versionKey");
     @Length(32)
     private String versionKey;
 
     /**
      * Contains the physical storage key of this version.
      */
-    public static final Column PHYSICAL_KEY = Column.named("physicalKey");
+    public static final Mapping PHYSICAL_KEY = Mapping.named("physicalKey");
     @Length(64)
     @NullAllowed
     private String physicalKey;
@@ -56,13 +56,13 @@ public class VirtualObjectVersion extends Entity {
     /**
      * Contains the file size in bytes.
      */
-    public static final Column FILE_SIZE = Column.named("fileSize");
+    public static final Mapping FILE_SIZE = Mapping.named("fileSize");
     private long fileSize = 0;
 
     /**
      * Contains the MD5 checksum of the data of this version.
      */
-    public static final Column MD5 = Column.named("md5");
+    public static final Mapping MD5 = Mapping.named("md5");
     @NullAllowed
     @Length(64)
     private String md5;
@@ -70,7 +70,7 @@ public class VirtualObjectVersion extends Entity {
     /**
      * Contains the creation date of this version.
      */
-    public static final Column CREATED_DATE = Column.named("createdDate");
+    public static final Mapping CREATED_DATE = Mapping.named("createdDate");
     private LocalDate createdDate;
 
     @Part
@@ -100,7 +100,7 @@ public class VirtualObjectVersion extends Entity {
         }
     }
 
-    public EntityRef<VirtualObject> getVirtualObject() {
+    public SQLEntityRef<VirtualObject> getVirtualObject() {
         return virtualObject;
     }
 

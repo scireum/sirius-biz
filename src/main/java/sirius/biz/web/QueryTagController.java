@@ -9,9 +9,9 @@
 package sirius.biz.web;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import sirius.db.mixing.Entity;
+import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.EntityDescriptor;
-import sirius.db.mixing.Schema;
+import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
@@ -33,7 +33,7 @@ import java.util.Collection;
 public class QueryTagController implements Controller {
 
     @Part
-    private Schema schema;
+    private Mixing mixing;
 
     @Parts(QueryTagSuggester.class)
     private Collection<QueryTagSuggester> suggesters;
@@ -50,15 +50,15 @@ public class QueryTagController implements Controller {
      * @param out  the JSON response
      * @param type the entity type for provide suggestions for
      */
+    @SuppressWarnings("unchecked")
     @Routed(value = "/system/search/suggestions/:1", jsonCall = true)
     public void suggestions(WebContext ctx, JSONStructuredOutput out, String type) {
         String query = ctx.get("query").asString();
         out.beginArray("suggestions");
         if (Strings.isFilled(query)) {
-            Class<? extends Entity> entityType =
-                    schema.findDescriptor(type).map(EntityDescriptor::getType).orElse(null);
+            Class<?> entityType = mixing.findDescriptor(type).map(EntityDescriptor::getType).orElse(null);
             for (QueryTagSuggester suggester : suggesters) {
-                suggester.computeQueryTags(type, entityType, query, tag -> {
+                suggester.computeQueryTags(type, (Class<? extends SQLEntity>) entityType, query, tag -> {
                     out.beginObject("suggestion");
                     out.property("name", tag.getLabel());
                     out.property("color", tag.getColor());

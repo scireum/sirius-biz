@@ -12,13 +12,13 @@ import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantAware;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.tenants.UserAccount;
-import sirius.db.mixing.Column;
-import sirius.db.mixing.Entity;
-import sirius.db.mixing.EntityRef;
-import sirius.db.mixing.OMA;
+import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.SQLEntity;
+import sirius.db.jdbc.SQLEntityRef;
+import sirius.db.jdbc.properties.SQLEntityRefProperty;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.properties.BooleanProperty;
-import sirius.db.mixing.properties.EntityRefProperty;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -42,8 +42,6 @@ import java.util.stream.Collectors;
  * Base class for all controllers which operate on entities.
  * <p>
  * Provides glue logic for filling entites from {@link WebContext}s and for resolving entities for a given id.
- *
- * @see Entity
  */
 public class BizController extends BasicController {
 
@@ -77,7 +75,7 @@ public class BizController extends BasicController {
             throw invalidTenantException();
         }
 
-        if (currentTenant().getId() != tenantAware.getTenant().getId()) {
+        if (!Objects.equals(currentTenant().getId(), tenantAware.getTenant().getId())) {
             throw invalidTenantException();
         }
     }
@@ -114,7 +112,7 @@ public class BizController extends BasicController {
      * @param <E>    the generic type the the entity being referenced
      * @throws sirius.kernel.health.HandledException if the entities do no match
      */
-    protected <E extends Entity> void setOrVerify(Entity owner, EntityRef<E> ref, E entity) {
+    protected <E extends SQLEntity> void setOrVerify(SQLEntity owner, SQLEntityRef<E> ref, E entity) {
         if (!Objects.equals(ref.getId(), entity.getId())) {
             if (owner.isNew()) {
                 ref.setValue(entity);
@@ -130,7 +128,7 @@ public class BizController extends BasicController {
      * @param obj the entity to check
      * @throws sirius.kernel.health.HandledException if the entity is still new and not yet persisted in the database
      */
-    protected void assertNotNew(Entity obj) {
+    protected void assertNotNew(SQLEntity obj) {
         assertNotNull(obj);
         if (obj.isNew()) {
             throw Exceptions.createHandled().withNLSKey("BizController.mustNotBeNew").handle();
@@ -159,15 +157,15 @@ public class BizController extends BasicController {
      * @param entity the entity to fill
      * @see Autoloaded
      */
-    protected void load(WebContext ctx, Entity entity) {
-        List<Column> columns = entity.getDescriptor()
-                                     .getProperties()
-                                     .stream()
-                                     .filter(property -> shouldAutoload(ctx, property))
-                                     .map((Property property) -> {
-                                         return Column.named(property.getName());
-                                     })
-                                     .collect(Collectors.toList());
+    protected void load(WebContext ctx, SQLEntity entity) {
+        List<Mapping> columns = entity.getDescriptor()
+                                      .getProperties()
+                                      .stream()
+                                      .filter(property -> shouldAutoload(ctx, property))
+                                      .map((Property property) -> {
+                                          return Mapping.named(property.getName());
+                                      })
+                                      .collect(Collectors.toList());
 
         load(ctx, entity, columns);
     }
@@ -179,14 +177,14 @@ public class BizController extends BasicController {
      * @param entity     the entity to fill
      * @param properties the list of properties to transfer
      */
-    protected void load(WebContext ctx, Entity entity, Column... properties) {
+    protected void load(WebContext ctx, SQLEntity entity, Mapping... properties) {
         load(ctx, entity, Arrays.asList(properties));
     }
 
-    protected void load(WebContext ctx, Entity entity, List<Column> properties) {
+    protected void load(WebContext ctx, SQLEntity entity, List<Mapping> properties) {
         boolean hasError = false;
 
-        for (Column columnProperty : properties) {
+        for (Mapping columnProperty : properties) {
             Property property = entity.getDescriptor().getProperty(columnProperty);
             String propertyName = property.getName();
 
@@ -206,8 +204,8 @@ public class BizController extends BasicController {
         }
     }
 
-    private void ensureTenantMatch(Entity entity, Property property) {
-        if ((entity instanceof TenantAware) && property instanceof EntityRefProperty) {
+    private void ensureTenantMatch(SQLEntity entity, Property property) {
+        if ((entity instanceof TenantAware) && property instanceof SQLEntityRefProperty) {
             Object loadedEntity = property.getValue(entity);
             if (loadedEntity instanceof TenantAware) {
                 ((TenantAware) entity).assertSameTenant(property::getLabel, (TenantAware) loadedEntity);
@@ -233,7 +231,7 @@ public class BizController extends BasicController {
     }
 
     private boolean isAutoloaded(Property property) {
-        Autoloaded autoloaded = property.getAnnotation(Autoloaded.class);
+        Autoloaded autoloaded = property.getAnnotation(Autoloaded.class).orElse(null);
         if (autoloaded == null) {
             return false;
         }
@@ -256,7 +254,7 @@ public class BizController extends BasicController {
         private String createdURI;
         private String afterSaveURI;
 
-        private List<Column> columns;
+        private List<Mapping> columns;
         private boolean autoload = true;
 
         private SaveHelper(WebContext ctx) {
@@ -294,10 +292,10 @@ public class BizController extends BasicController {
          * <p>
          * if not set all marked as {@link Autoloaded} properties of the entity are loaded
          *
-         * @param columns array of {@link Column} objects
+         * @param columns array of {@link Mapping} objects
          * @return the helper itself for fluent method calls
          */
-        public SaveHelper withColumns(Column... columns) {
+        public SaveHelper withMappings(Mapping... columns) {
             this.columns = Arrays.asList(columns);
             return this;
         }
@@ -349,7 +347,7 @@ public class BizController extends BasicController {
          * @param entity the entity to update and save
          * @return <tt>true</tt> if the request was handled (the user was redirected), <tt>false</tt> otherwise
          */
-        public boolean saveEntity(Entity entity) {
+        public boolean saveEntity(SQLEntity entity) {
             if (!ctx.isPOST()) {
                 return false;
             }
@@ -408,7 +406,7 @@ public class BizController extends BasicController {
      *
      * @param entity the entity to validate
      */
-    protected void validate(Entity entity) {
+    protected void validate(SQLEntity entity) {
         for (String warning : oma.validate(entity)) {
             UserContext.message(Message.warn(warning));
         }
@@ -426,8 +424,8 @@ public class BizController extends BasicController {
      * @return the requested entity or a new one, if id was <tt>new</tt>
      * @throws sirius.kernel.health.HandledException if either the id is unknown or a new instance cannot be created
      */
-    protected <E extends Entity> E find(Class<E> type, String id) {
-        if (Entity.NEW.equals(id) && Entity.class.isAssignableFrom(type)) {
+    protected <E extends SQLEntity> E find(Class<E> type, String id) {
+        if (SQLEntity.NEW.equals(id) && SQLEntity.class.isAssignableFrom(type)) {
             try {
                 return type.newInstance();
             } catch (Exception e) {
@@ -455,8 +453,8 @@ public class BizController extends BasicController {
      * was found
      * or if the id was <tt>new</tt>
      */
-    protected <E extends Entity> Optional<E> tryFind(Class<E> type, String id) {
-        if (Entity.NEW.equals(id)) {
+    protected <E extends SQLEntity> Optional<E> tryFind(Class<E> type, String id) {
+        if (SQLEntity.NEW.equals(id)) {
             return Optional.empty();
         }
         return oma.find(type, id);
@@ -474,7 +472,7 @@ public class BizController extends BasicController {
      * @param <E>  the generic type of the entity class
      * @return the requested entity, which is either new or belongs to the current tenant
      */
-    protected <E extends Entity> E findForTenant(Class<E> type, String id) {
+    protected <E extends SQLEntity> E findForTenant(Class<E> type, String id) {
         E result = find(type, id);
         if (result instanceof TenantAware) {
             if (result.isNew()) {
@@ -499,7 +497,7 @@ public class BizController extends BasicController {
      * @return the requested entity, which belongs to the current tenant, wrapped as <tt>Optional</tt> or an empty
      * optional.
      */
-    protected <E extends Entity> Optional<E> tryFindForTenant(Class<E> type, String id) {
+    protected <E extends SQLEntity> Optional<E> tryFindForTenant(Class<E> type, String id) {
         return tryFind(type, id).map(e -> {
             if (e instanceof TenantAware) {
                 assertTenant((TenantAware) e);

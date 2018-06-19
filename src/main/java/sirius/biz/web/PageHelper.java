@@ -11,13 +11,13 @@ package sirius.biz.web;
 import com.google.common.collect.Lists;
 import sirius.biz.tenants.TenantAware;
 import sirius.biz.tenants.Tenants;
+import sirius.db.jdbc.Constraint;
+import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLQuery;
-import sirius.db.mixing.Column;
-import sirius.db.mixing.Constraint;
-import sirius.db.mixing.Entity;
-import sirius.db.mixing.OMA;
-import sirius.db.mixing.SmartQuery;
-import sirius.db.mixing.constraints.Like;
+import sirius.db.jdbc.SmartQuery;
+import sirius.db.jdbc.constraints.Like;
+import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
@@ -44,12 +44,12 @@ import java.util.function.Function;
  *
  * @param <E> the generic type of the entities being queries
  */
-public class PageHelper<E extends Entity> {
+public class PageHelper<E extends SQLEntity> {
 
     private static final int DEFAULT_PAGE_SIZE = 25;
     private WebContext ctx;
     private SmartQuery<E> baseQuery;
-    private Column[] searchFields;
+    private Mapping[] searchFields;
     private boolean advancedSearch;
     private List<Tuple<Facet, BiConsumer<Facet, SmartQuery<E>>>> facets = Lists.newArrayList();
     private int pageSize = DEFAULT_PAGE_SIZE;
@@ -67,7 +67,7 @@ public class PageHelper<E extends Entity> {
      * @param <E>       the generic entity type being queried
      * @return a new instance operating on the given base query
      */
-    public static <E extends Entity> PageHelper<E> withQuery(SmartQuery<E> baseQuery) {
+    public static <E extends SQLEntity> PageHelper<E> withQuery(SmartQuery<E> baseQuery) {
         PageHelper<E> result = new PageHelper<>();
         result.baseQuery = baseQuery;
         return result;
@@ -103,7 +103,7 @@ public class PageHelper<E extends Entity> {
      * @param searchFields the fields to search in
      * @return the helper itself for fluent method calls
      */
-    public PageHelper<E> withSearchFields(Column... searchFields) {
+    public PageHelper<E> withSearchFields(Mapping... searchFields) {
         this.searchFields = searchFields;
         return this;
     }
@@ -125,7 +125,7 @@ public class PageHelper<E extends Entity> {
      * @return the helper itself for fluent method calls
      */
     public PageHelper<E> addFilterFacet(Facet facet) {
-        return addFacet(facet, (f, q) -> q.eqIgnoreNull(Column.named(f.getName()), f.getValue()));
+        return addFacet(facet, (f, q) -> q.eqIgnoreNull(Mapping.named(f.getName()), f.getValue()));
     }
 
     /**
@@ -196,7 +196,7 @@ public class PageHelper<E extends Entity> {
     public PageHelper<E> addQueryFacet(String name, String title, Function<SmartQuery<E>, SQLQuery> queryTransformer) {
         return addFacet(new Facet(title, name, null, null), (f, q) -> {
             if (Strings.isFilled(f.getValue())) {
-                q.eq(Column.named(f.getName()), f.getValue());
+                q.eq(Mapping.named(f.getName()), f.getValue());
             }
         }, (f, q) -> {
             try {
@@ -236,7 +236,7 @@ public class PageHelper<E extends Entity> {
         return addFacet(facet, (f, q) -> {
             Value filterValue = Value.of(f.getValue());
             if (filterValue.isFilled()) {
-                q.eq(Column.named(f.getName()), filterValue.asBoolean());
+                q.eq(Mapping.named(f.getName()), filterValue.asBoolean());
             }
         });
     }

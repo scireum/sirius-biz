@@ -9,8 +9,8 @@
 package sirius.biz.i5;
 
 import com.google.common.collect.Maps;
-import sirius.kernel.Lifecycle;
 import sirius.kernel.Sirius;
+import sirius.kernel.Stoppable;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Average;
@@ -29,8 +29,8 @@ import java.util.function.Consumer;
  * In contrast to native pooling provided by jt400, this facility permits to configure connections using the system
  * config and additionally to share these accross multiple pools.
  */
-@Register(classes = {I5Connector.class, Lifecycle.class})
-public class I5Connector implements Lifecycle {
+@Register(classes = {I5Connector.class, Stoppable.class})
+public class I5Connector implements Stoppable {
 
     public static final Log LOG = Log.get("i5");
     protected Counter borrows = new Counter();
@@ -75,22 +75,7 @@ public class I5Connector implements Lifecycle {
     }
 
     @Override
-    public void started() {
-        // Nothing to do
-    }
-
-    @Override
     public void stopped() {
         pools.entrySet().stream().map(Map.Entry::getValue).forEach(I5ConnectionPool::release);
-    }
-
-    @Override
-    public void awaitTermination() {
-        // Nothing to wait for
-    }
-
-    @Override
-    public String getName() {
-        return "i5";
     }
 }

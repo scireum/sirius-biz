@@ -8,8 +8,8 @@
 
 package sirius.biz.sequences;
 
-import sirius.db.mixing.Entity;
-import sirius.db.mixing.OMA;
+import sirius.db.jdbc.OMA;
+import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
@@ -27,7 +27,7 @@ import java.sql.SQLException;
  * number being returned can be specified by {@link #setCounterValue(String, long, boolean)}.
  * <p>
  * Note that these sequences are global and not tenant aware. Therefore care must be taken to generate unique names for
- * sequences. A viable option is to use {@link Entity#getUniqueName()} of the entity which utilizes the generator.
+ * sequences. A viable option is to use {@link sirius.db.mixing.BaseEntity#getUniqueName()} of the entity which utilizes the generator.
  */
 @Framework("biz.sequences")
 @Register(classes = Sequences.class)
@@ -87,7 +87,7 @@ public class Sequences {
             return createSequence(sequence);
         }
 
-        int numRowsChanged = oma.getDatabase()
+        int numRowsChanged = oma.getDatabase(Mixing.DEFAULT_REALM)
                                 .createQuery("UPDATE sequencecounter"
                                              + "     SET nextValue = nextValue + 1"
                                              + "     WHERE name = ${name} "
@@ -174,8 +174,11 @@ public class Sequences {
             sql += "  AND nextValue <= ${value}";
         }
 
-        int updatedRows =
-                oma.getDatabase().createQuery(sql).set("name", sequence).set("value", nextValue).executeUpdate();
+        int updatedRows = oma.getDatabase(Mixing.DEFAULT_REALM)
+                             .createQuery(sql)
+                             .set("name", sequence)
+                             .set("value", nextValue)
+                             .executeUpdate();
         if (updatedRows != 1) {
             throw Exceptions.handle()
                             .to(LOG)

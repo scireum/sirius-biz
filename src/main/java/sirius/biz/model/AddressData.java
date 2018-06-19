@@ -9,7 +9,7 @@
 package sirius.biz.model;
 
 import sirius.biz.web.Autoloaded;
-import sirius.db.mixing.Column;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
@@ -58,7 +58,7 @@ public class AddressData extends Composite {
     /**
      * Contains the street and street number.
      */
-    public static final Column STREET = Column.named("street");
+    public static final Mapping STREET = Mapping.named("street");
     @Trim
     @NullAllowed
     @Autoloaded
@@ -68,7 +68,7 @@ public class AddressData extends Composite {
     /**
      * Contains the ZIP code.
      */
-    public static final Column ZIP = Column.named("zip");
+    public static final Mapping ZIP = Mapping.named("zip");
     @Trim
     @NullAllowed
     @Autoloaded
@@ -78,7 +78,7 @@ public class AddressData extends Composite {
     /**
      * Contains the name of the city.
      */
-    public static final Column CITY = Column.named("city");
+    public static final Mapping CITY = Mapping.named("city");
     @Trim
     @NullAllowed
     @Autoloaded

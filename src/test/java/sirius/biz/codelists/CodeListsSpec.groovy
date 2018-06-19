@@ -9,7 +9,7 @@
 package sirius.biz.codelists
 
 import sirius.biz.tenants.TenantsHelper
-import sirius.db.mixing.OMA
+import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
 

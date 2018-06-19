@@ -10,7 +10,7 @@ package sirius.biz.model;
 
 import sirius.biz.codelists.CodeLists;
 import sirius.biz.web.Autoloaded;
-import sirius.db.mixing.Column;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
@@ -32,7 +32,7 @@ public class PersonData extends Composite {
     /**
      * Contains a title.
      */
-    public static final Column TITLE = Column.named("title");
+    public static final Mapping TITLE = Mapping.named("title");
     @Length(50)
     @Trim
     @Autoloaded
@@ -44,7 +44,7 @@ public class PersonData extends Composite {
      * <p>
      * It is expected to be one of the codes in the code list "salutations".
      */
-    public static final Column SALUTATION = Column.named("salutation");
+    public static final Mapping SALUTATION = Mapping.named("salutation");
     @Length(20)
     @Autoloaded
     @NullAllowed
@@ -54,7 +54,7 @@ public class PersonData extends Composite {
     /**
      * Contains the first name of the person.
      */
-    public static final Column FIRSTNAME = Column.named("firstname");
+    public static final Mapping FIRSTNAME = Mapping.named("firstname");
     @Length(150)
     @Trim
     @Autoloaded
@@ -64,7 +64,7 @@ public class PersonData extends Composite {
     /**
      * Contains the last name of the person.
      */
-    public static final Column LASTNAME = Column.named("lastname");
+    public static final Mapping LASTNAME = Mapping.named("lastname");
     @Length(150)
     @Trim
     @Autoloaded

@@ -9,8 +9,8 @@
 package sirius.biz.tenants;
 
 import sirius.biz.model.BizEntity;
-import sirius.db.mixing.Column;
-import sirius.db.mixing.EntityRef;
+import sirius.db.mixing.Mapping;
+import sirius.db.jdbc.SQLEntityRef;
 import sirius.kernel.health.Exceptions;
 
 import java.util.Objects;
@@ -24,10 +24,10 @@ public abstract class TenantAware extends BizEntity {
     /**
      * Contains the tenant the entity belongs to.
      */
-    public static final Column TENANT = Column.named("tenant");
-    private final EntityRef<Tenant> tenant = EntityRef.on(Tenant.class, EntityRef.OnDelete.CASCADE);
+    public static final Mapping TENANT = Mapping.named("tenant");
+    private final SQLEntityRef<Tenant> tenant = SQLEntityRef.on(Tenant.class, SQLEntityRef.OnDelete.CASCADE);
 
-    public EntityRef<Tenant> getTenant() {
+    public SQLEntityRef<Tenant> getTenant() {
         return tenant;
     }
 
