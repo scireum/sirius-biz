@@ -1,5 +1,5 @@
-<i:arg type="sirius.biz.tenants.Tenant" name="tenant"/>
-<i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
+<i:arg type="sirius.biz.jdbc.tenants.Tenant" name="tenant"/>
+<i:arg type="sirius.biz.jdbc.tenants.TenantController" name="controller"/>
 <i:arg type="List" name="tenants"/>
 
 <i:invoke template="/templates/tenants/tenant.html.pasta" tenant="tenant" page="details">
@@ -50,7 +50,7 @@
 
                     <w:singleSelect span="12" name="parent" optional="true" labelKey="Tenant.parent"
                                     helpKey="Tenant.parent.help">
-                        <i:for type="sirius.biz.tenants.Tenant" var="t" items="tenants">
+                        <i:for type="sirius.biz.jdbc.tenants.Tenant" var="t" items="tenants">
                             <option value="@t.getId()" @if(tenant.getParent().is(t)) {selected="selected" }>
                                 @t.getName()
                             </option>

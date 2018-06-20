@@ -8,22 +8,16 @@
 
 package sirius.biz.web;
 
-import com.google.common.collect.Lists;
-import sirius.biz.tenants.TenantAware;
-import sirius.biz.tenants.Tenants;
-import sirius.db.jdbc.Constraint;
 import sirius.db.jdbc.OMA;
-import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLQuery;
-import sirius.db.jdbc.SmartQuery;
-import sirius.db.jdbc.constraints.Like;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.Query;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Watch;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Facet;
@@ -32,6 +26,7 @@ import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -42,20 +37,17 @@ import java.util.function.Function;
  * Helper class to build a query, bind it to values given in a {@link WebContext} and create a resulting {@link Page}
  * which can be used to render a resulting table and filter box.
  *
- * @param <E> the generic type of the entities being queries
+ * @param <E> the generic type of the entities being queried
  */
-public class PageHelper<E extends SQLEntity> {
+public class PageHelper<E extends BaseEntity<?>> {
 
     private static final int DEFAULT_PAGE_SIZE = 25;
     private WebContext ctx;
-    private SmartQuery<E> baseQuery;
+    private Query<?, E> baseQuery;
     private Mapping[] searchFields;
     private boolean advancedSearch;
-    private List<Tuple<Facet, BiConsumer<Facet, SmartQuery<E>>>> facets = Lists.newArrayList();
+    private List<Tuple<Facet, BiConsumer<Facet, Query<?, E>>>> facets = new ArrayList<>();
     private int pageSize = DEFAULT_PAGE_SIZE;
-
-    @Part
-    private static Tenants tenants;
 
     private PageHelper() {
     }
@@ -67,22 +59,10 @@ public class PageHelper<E extends SQLEntity> {
      * @param <E>       the generic entity type being queried
      * @return a new instance operating on the given base query
      */
-    public static <E extends SQLEntity> PageHelper<E> withQuery(SmartQuery<E> baseQuery) {
+    public static <E extends BaseEntity<?>> PageHelper<E> withQuery(Query<?, E> baseQuery) {
         PageHelper<E> result = new PageHelper<>();
         result.baseQuery = baseQuery;
         return result;
-    }
-
-    /**
-     * Filters the results to only contain entities which belong to the current tenant.
-     * <p>
-     * The entity type must extend {@link TenantAware} for this to work.
-     *
-     * @return the helper itself for fluent method calls
-     */
-    public PageHelper<E> forCurrentTenant() {
-        this.baseQuery.eq(TenantAware.TENANT, tenants.getRequiredTenant());
-        return this;
     }
 
     /**
@@ -135,7 +115,7 @@ public class PageHelper<E extends SQLEntity> {
      * @param filter the custom logic which determines how a filter value is applied to the query.
      * @return the helper itself for fluent method calls
      */
-    public PageHelper<E> addFacet(Facet facet, BiConsumer<Facet, SmartQuery<E>> filter) {
+    public PageHelper<E> addFacet(Facet facet, BiConsumer<Facet, Query<?, E>> filter) {
         return addFacet(facet, filter, null);
     }
 
@@ -148,8 +128,8 @@ public class PageHelper<E extends SQLEntity> {
      * @return the helper itself for fluent method calls
      */
     public PageHelper<E> addFacet(Facet facet,
-                                  BiConsumer<Facet, SmartQuery<E>> filter,
-                                  BiConsumer<Facet, SmartQuery<E>> itemsComputer) {
+                                  BiConsumer<Facet, Query<?, E>> filter,
+                                  BiConsumer<Facet, Query<?, E>> itemsComputer) {
         Objects.requireNonNull(baseQuery);
         Objects.requireNonNull(ctx);
 
@@ -193,7 +173,7 @@ public class PageHelper<E extends SQLEntity> {
      * @param queryTransformer used to generate the sub-query which determines which filter values to show
      * @return the helper itself for fluent method calls
      */
-    public PageHelper<E> addQueryFacet(String name, String title, Function<SmartQuery<E>, SQLQuery> queryTransformer) {
+    public PageHelper<E> addQueryFacet(String name, String title, Function<Query<?, E>, SQLQuery> queryTransformer) {
         return addFacet(new Facet(title, name, null, null), (f, q) -> {
             if (Strings.isFilled(f.getValue())) {
                 q.eq(Mapping.named(f.getName()), f.getValue());
@@ -263,20 +243,20 @@ public class PageHelper<E extends SQLEntity> {
         Page<E> result = new Page<E>().withStart(1).withPageSize(pageSize);
         result.bindToRequest(ctx);
 
-        if (advancedSearch) {
-            QueryCompiler compiler =
-                    new QueryCompiler(baseQuery.getEntityDescriptor(), result.getQuery(), searchFields);
-            Constraint constraint = compiler.compile();
-            if (constraint != null) {
-                baseQuery.where(constraint);
-            }
-        } else {
-            if (searchFields != null && searchFields.length > 0) {
-                baseQuery.where(Like.allWordsInAnyField(result.getQuery(), searchFields));
-            }
-        }
+//        if (advancedSearch) {
+//            QueryCompiler compiler =
+//                    new QueryCompiler(baseQuery.getEntityDescriptor(), result.getQuery(), searchFields);
+//            Constraint constraint = compiler.compile();
+//            if (constraint != null) {
+//                baseQuery.eq(constraint);
+//            }
+//        } else {
+//            if (searchFields != null && searchFields.length > 0) {
+//                baseQuery.where(Like.allWordsInAnyField(result.getQuery(), searchFields));
+//            }
+//        }
 
-        for (Tuple<Facet, BiConsumer<Facet, SmartQuery<E>>> f : facets) {
+        for (Tuple<Facet, BiConsumer<Facet, Query<?, E>>> f : facets) {
             if (f.getSecond() != null) {
                 f.getSecond().accept(f.getFirst(), baseQuery);
             }
@@ -284,7 +264,9 @@ public class PageHelper<E extends SQLEntity> {
         }
 
         try {
-            List<E> items = baseQuery.skip(result.getStart() - 1).limit(pageSize + 1).queryList();
+            baseQuery.skip(result.getStart() - 1);
+            baseQuery.limit(pageSize + 1);
+            List<E> items = baseQuery.queryList();
             if (items.size() > pageSize) {
                 result.withHasMore(true);
                 items.remove(items.size() - 1);

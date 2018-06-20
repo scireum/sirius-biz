@@ -8,7 +8,7 @@
 
 package sirius.biz.sequences;
 
-import sirius.biz.model.BizEntity;
+import sirius.biz.jdbc.model.BizEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Unique;

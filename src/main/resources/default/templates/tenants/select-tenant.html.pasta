@@ -33,7 +33,7 @@
         </tr>
         </thead>
         <tbody>
-        <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants.getItems()">
+        <i:for type="sirius.biz.jdbc.tenants.Tenant" var="tenant" items="tenants.getItems()">
             <tr>
                 <td>
                     <a class="link" href="/tenants/select/@tenant.getId()">@tenant.getName()</a><br>

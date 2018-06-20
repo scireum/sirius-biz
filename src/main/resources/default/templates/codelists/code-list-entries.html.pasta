@@ -1,4 +1,4 @@
-<i:arg type="sirius.biz.codelists.CodeList" name="codeList" />
+<i:arg type="sirius.biz.jdbc.codelists.CodeList" name="codeList" />
 <i:arg type="Page" name="entries" />
 
 <i:invoke template="templates/codelists/code-list.html.pasta" codeList="codeList" page="entries" inline="true">
@@ -24,7 +24,7 @@
         </tr>
         </thead>
         <tbody>
-        <i:for type="sirius.biz.codelists.CodeListEntry" var="entry" items="entries.getItems()">
+        <i:for type="sirius.biz.jdbc.codelists.CodeListEntry" var="entry" items="entries.getItems()">
             <tr>
                 <td>
                     <a href="#" onclick="editEntry('@entry.getCode()', '@entry.getValue()', '@entry.getAdditionalValue()', '@entry.getDescription()', @entry.getPriority())">@entry.getCode()</a><br>

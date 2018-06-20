@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.scireum</groupId>
         <artifactId>sirius-parent</artifactId>
-        <version>3.10</version>
+        <version>3.12</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
     <version>7.0-SNAPSHOT</version>
@@ -21,7 +21,6 @@
         <sirius.web>17.1</sirius.web>
         <sirius.db>5.0-SNAPSHOT</sirius.db>
     </properties>
-
 
     <dependencies>
 
@@ -50,6 +49,12 @@
             <groupId>net.sf.jt400</groupId>
             <artifactId>jt400</artifactId>
             <version>9.4</version>
+        </dependency>
+        <dependency>
+            <groupId>ru.yandex.clickhouse</groupId>
+            <artifactId>clickhouse-jdbc</artifactId>
+            <version>0.1.40</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
