@@ -23,7 +23,7 @@
         </tr>
         </thead>
         <tbody>
-        <i:for type="sirius.biz.jobs.JobDescription" var="job" items="jobs.getItems()">
+        <i:for type="sirius.biz.jdbc.jobs.JobDescription" var="job" items="jobs.getItems()">
             <tr>
                 <td>
                     <a class="link" href="/job/@job.getFactory()/@job.getName()/run">@job.getTitle()</a><br>

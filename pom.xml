@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.scireum</groupId>
         <artifactId>sirius-parent</artifactId>
-        <version>3.12</version>
+        <version>3.14</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
     <version>7.0-SNAPSHOT</version>

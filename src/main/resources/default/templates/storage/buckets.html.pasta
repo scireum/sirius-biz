@@ -22,7 +22,7 @@
         </tr>
         </thead>
         <tbody>
-        <i:for type="sirius.biz.storage.BucketInfo" var="bucket" items="buckets">
+        <i:for type="sirius.biz.jdbc.storage.BucketInfo" var="bucket" items="buckets">
             <tr>
                 <td>
                     <a class="link" href="/storage/bucket/@bucket.getName()">@bucket.getName()</a><br>
