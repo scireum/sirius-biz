@@ -8,7 +8,7 @@
 
 package sirius.biz.sequences
 
-import sirius.db.mixing.OMA
+import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
 import sirius.kernel.health.HandledException

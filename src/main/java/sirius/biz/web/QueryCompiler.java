@@ -10,15 +10,15 @@ package sirius.biz.web;
 
 import com.google.common.collect.Lists;
 import parsii.tokenizer.LookaheadReader;
-import sirius.db.mixing.Column;
-import sirius.db.mixing.Constraint;
+import sirius.db.jdbc.Constraint;
+import sirius.db.jdbc.constraints.And;
+import sirius.db.jdbc.constraints.FieldOperator;
+import sirius.db.jdbc.constraints.Like;
+import sirius.db.jdbc.constraints.Or;
+import sirius.db.jdbc.properties.SQLEntityRefProperty;
 import sirius.db.mixing.EntityDescriptor;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Property;
-import sirius.db.mixing.constraints.And;
-import sirius.db.mixing.constraints.FieldOperator;
-import sirius.db.mixing.constraints.Like;
-import sirius.db.mixing.constraints.Or;
-import sirius.db.mixing.properties.EntityRefProperty;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.GlobalContext;
@@ -40,13 +40,13 @@ class QueryCompiler {
     }
 
     private EntityDescriptor descriptor;
-    private final Column[] searchFields;
+    private final Mapping[] searchFields;
     private final LookaheadReader reader;
 
     @Part
     private static GlobalContext ctx;
 
-    QueryCompiler(EntityDescriptor descriptor, String query, Column... searchFields) {
+    QueryCompiler(EntityDescriptor descriptor, String query, Mapping... searchFields) {
         this.descriptor = descriptor;
         this.searchFields = searchFields;
         this.reader = new LookaheadReader(new StringReader(query));
@@ -138,7 +138,7 @@ class QueryCompiler {
         }
 
         List<Constraint> fieldConstraints = Lists.newArrayList();
-        for (Column field : searchFields) {
+        for (Mapping field : searchFields) {
             fieldConstraints.add(Like.on(field).contains(token).ignoreCase().ignoreEmpty());
         }
 
@@ -148,7 +148,7 @@ class QueryCompiler {
     private Constraint parseOperation(String field) {
         Operation operation = readOp();
         Object value = compileValue(field, parseValue());
-        FieldOperator op = FieldOperator.on(Column.named(field));
+        FieldOperator op = FieldOperator.on(Mapping.named(field));
         switch (operation) {
             case GT:
                 return op.greaterThan(value);
@@ -196,8 +196,8 @@ class QueryCompiler {
         String[] path = property.split("\\.");
         for (int i = 0; i < path.length - 2; i++) {
             Property reference = effectiveDescriptor.findProperty(path[i]);
-            if (reference instanceof EntityRefProperty) {
-                effectiveDescriptor = ((EntityRefProperty) reference).getReferencedDescriptor();
+            if (reference instanceof SQLEntityRefProperty) {
+                effectiveDescriptor = ((SQLEntityRefProperty) reference).getReferencedDescriptor();
             } else {
                 return null;
             }

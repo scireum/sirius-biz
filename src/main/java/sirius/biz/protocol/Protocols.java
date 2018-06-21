@@ -9,9 +9,9 @@
 package sirius.biz.protocol;
 
 import org.apache.log4j.Level;
-import sirius.db.mixing.OMA;
+import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.constraints.FieldOperator;
 import sirius.db.mixing.OptimisticLockException;
-import sirius.db.mixing.constraints.FieldOperator;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Tuple;

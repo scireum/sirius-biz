@@ -8,7 +8,7 @@
 
 package sirius.biz.web;
 
-import sirius.db.mixing.Entity;
+import sirius.db.jdbc.SQLEntity;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -28,7 +28,7 @@ public interface QueryTagSuggester {
      * @param consumer   the consumer to send suggestions to
      */
     void computeQueryTags(@Nonnull String type,
-                          @Nullable Class<? extends Entity> entityType,
+                          @Nullable Class<? extends SQLEntity> entityType,
                           @Nonnull String searchTerm,
                           @Nonnull Consumer<QueryTag> consumer);
 

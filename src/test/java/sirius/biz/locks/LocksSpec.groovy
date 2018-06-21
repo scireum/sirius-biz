@@ -8,8 +8,7 @@
 
 package sirius.biz.locks
 
-import sirius.db.mixing.OMA
-import sirius.db.mixing.Schema
+import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
 
@@ -19,9 +18,6 @@ class LocksSpec extends BaseSpecification {
 
     @Part
     private static Locks locks
-
-    @Part
-    private static Schema schema
 
     @Part
     private static OMA oma

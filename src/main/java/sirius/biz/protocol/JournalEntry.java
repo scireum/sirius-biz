@@ -8,8 +8,8 @@
 
 package sirius.biz.protocol;
 
-import sirius.db.mixing.Column;
-import sirius.db.mixing.Entity;
+import sirius.db.mixing.Mapping;
+import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
 import sirius.kernel.async.TaskContext;
@@ -21,25 +21,25 @@ import java.time.LocalDateTime;
  * Records the changes recorded by a {@link JournalData}.
  */
 @Framework(Protocols.FRAMEWORK_JOURNAL)
-public class JournalEntry extends Entity {
+public class JournalEntry extends SQLEntity {
 
     /**
      * Contains the timestamp of the change.
      */
-    public static final Column TOD = Column.named("tod");
+    public static final Mapping TOD = Mapping.named("tod");
     private LocalDateTime tod;
 
     /**
      * Contains the name of the user which was active when the change occured.
      */
-    public static final Column USERNAME = Column.named("username");
+    public static final Mapping USERNAME = Mapping.named("username");
     @Length(255)
     private String username;
 
     /**
      * Contaisn the id of the user which was active when the change occured.
      */
-    public static final Column USER_ID = Column.named("userId");
+    public static final Mapping USER_ID = Mapping.named("userId");
     @Length(255)
     private String userId;
 
@@ -48,27 +48,27 @@ public class JournalEntry extends Entity {
      *
      * @see TaskContext#getSystemString()
      */
-    public static final Column SUBSYSTEM = Column.named("subsystem");
+    public static final Mapping SUBSYSTEM = Mapping.named("subsystem");
     @Length(255)
     private String subsystem;
 
     /**
      * Contains the type name of the entity which was changed.
      */
-    public static final Column TARGET_TYPE = Column.named("targetType");
+    public static final Mapping TARGET_TYPE = Mapping.named("targetType");
     @Length(255)
     private String targetType;
 
     /**
      * Contains the ID of entity which was changed.
      */
-    public static final Column TARGET_ID = Column.named("targetId");
+    public static final Mapping TARGET_ID = Mapping.named("targetId");
     private long targetId;
 
     /**
      * Contains the {@code toString()} of the entity which was changed.
      */
-    public static final Column TARGET_NAME = Column.named("targetName");
+    public static final Mapping TARGET_NAME = Mapping.named("targetName");
     @Length(255)
     private String targetName;
 
@@ -77,7 +77,7 @@ public class JournalEntry extends Entity {
      * <p>
      * The old values are not recorded, as these are in the previous protocol entry.
      */
-    public static final Column CHANGES = Column.named("changes");
+    public static final Mapping CHANGES = Mapping.named("changes");
     @Lob
     private String changes;
 

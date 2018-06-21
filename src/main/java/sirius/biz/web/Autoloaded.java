@@ -8,7 +8,7 @@
 
 package sirius.biz.web;
 
-import sirius.db.mixing.Entity;
+import sirius.db.jdbc.SQLEntity;
 import sirius.web.http.WebContext;
 
 import java.lang.annotation.ElementType;
@@ -18,7 +18,7 @@ import java.lang.annotation.Target;
 
 /**
  * Fields marked with this annotation are auto filled from the given request, when calling {@link
- * BizController#load(WebContext, Entity)}.
+ * BizController#load(WebContext, SQLEntity)}.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

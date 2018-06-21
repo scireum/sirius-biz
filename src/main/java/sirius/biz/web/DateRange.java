@@ -8,9 +8,10 @@
 
 package sirius.biz.web;
 
-import sirius.db.mixing.Column;
-import sirius.db.mixing.SmartQuery;
-import sirius.db.mixing.constraints.FieldOperator;
+import sirius.db.jdbc.SmartQuery;
+import sirius.db.jdbc.constraints.FieldOperator;
+import sirius.db.mixing.Mapping;
+import sirius.db.mixing.Query;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
@@ -224,16 +225,12 @@ public class DateRange {
         return key;
     }
 
-    protected void applyTo(String field, SmartQuery<?> qry) {
+    protected void applyTo(String field, Query<?, ?> qry) {
         if (from != null) {
-            qry.where(FieldOperator.on(Column.named(field)).greaterOrEqual(useLocalDate ? from.toLocalDate() : from));
+            qry.greaterOrEqual(Mapping.named(field), useLocalDate ? from.toLocalDate() : from);
         }
         if (until != null) {
-            FieldOperator untilFilter = FieldOperator.on(Column.named(field));
-            untilFilter = useLocalDate ?
-                          untilFilter.lessThan(until.toLocalDate().plusDays(1)) :
-                          untilFilter.lessOrEqual(until);
-            qry.where(untilFilter);
+            qry.lessOrEqual(Mapping.named(field), useLocalDate ? until.toLocalDate() : until);
         }
     }
 

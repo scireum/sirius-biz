@@ -8,9 +8,9 @@
 
 package sirius.biz.web;
 
-import sirius.biz.codelists.CodeLists;
+import sirius.biz.jdbc.codelists.CodeLists;
 import sirius.db.jdbc.Databases;
-import sirius.db.mixing.OMA;
+import sirius.db.jdbc.OMA;
 import sirius.db.redis.Redis;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;

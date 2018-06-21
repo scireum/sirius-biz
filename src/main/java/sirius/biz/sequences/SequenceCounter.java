@@ -8,8 +8,8 @@
 
 package sirius.biz.sequences;
 
-import sirius.biz.model.BizEntity;
-import sirius.db.mixing.Column;
+import sirius.biz.jdbc.model.BizEntity;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Unique;
 import sirius.kernel.di.std.Framework;
@@ -25,7 +25,7 @@ public class SequenceCounter extends BizEntity {
     /**
      * Contains the name of the sequence.
      */
-    public static final Column NAME = Column.named("name");
+    public static final Mapping NAME = Mapping.named("name");
     @Unique
     @Length(100)
     private String name;
@@ -33,7 +33,7 @@ public class SequenceCounter extends BizEntity {
     /**
      * Contains the next value which will be generated for this sequence.
      */
-    public static final Column NEXT_VALUE = Column.named("nextValue");
+    public static final Mapping NEXT_VALUE = Mapping.named("nextValue");
     private long nextValue;
 
     public String getName() {
