@@ -1,4 +1,4 @@
-<i:arg type="sirius.biz.jobs.JobDescription" name="job" />
+<i:arg type="sirius.biz.jdbc.jobs.JobDescription" name="job" />
 
 <w:page title="@apply('%s: %s', i18n('JobsController.job'), job.getTitle())">
     <i:block name="breadcrumbs">
