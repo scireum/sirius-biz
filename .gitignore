@@ -3,3 +3,7 @@ workspace.xml
 .idea/libraries
 .idea/sonarlint
 data
+instance.conf
+localhost.jks
+sirius-biz.iml
+.idea
