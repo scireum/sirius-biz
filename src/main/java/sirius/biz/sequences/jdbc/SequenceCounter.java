@@ -6,10 +6,12 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.sequences;
+package sirius.biz.sequences.jdbc;
 
-import sirius.biz.jdbc.model.BizEntity;
+import sirius.biz.sequences.Sequences;
+import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Unique;
 import sirius.kernel.di.std.Framework;
@@ -20,7 +22,8 @@ import sirius.kernel.di.std.Framework;
  * This is used by {@link Sequences} to store and generate the next value for a sequence.
  */
 @Framework("biz.sequences")
-public class SequenceCounter extends BizEntity {
+@Index(name = "nameIndex", columns = "name")
+public class SequenceCounter extends SQLEntity {
 
     /**
      * Contains the name of the sequence.

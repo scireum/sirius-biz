@@ -8,31 +8,23 @@
 
 package sirius.biz.sequences
 
-import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
 import sirius.kernel.health.HandledException
-
-import java.time.Duration
-import java.util.concurrent.ThreadLocalRandom
 
 class SequencesSpec extends BaseSpecification {
 
     @Part
     private static Sequences sequences
 
-    @Part
-    private static OMA oma
-
-    def setupSpec() {
-        oma.getReadyFuture().await(Duration.ofSeconds(60))
-    }
-
     def "a new sequence is automatically created"() {
         when:
-        String value = sequences.generateId(String.valueOf(ThreadLocalRandom.current().nextLong()))
+        String value = sequences.generateId("__generated")
+        String value1 = sequences.generateId("__generated")
         then:
         value == "1"
+        and:
+        value1 == "2"
     }
 
     def "a sequence is incremented by generate id"() {
@@ -45,7 +37,7 @@ class SequencesSpec extends BaseSpecification {
 
     def "a new next value can be set"() {
         when:
-        sequences.setCounterValue("test", 1000, false)
+        sequences.setNextValue("test", 1000, false)
         String value = sequences.generateId("test")
         then:
         "1000" == value
@@ -55,7 +47,7 @@ class SequencesSpec extends BaseSpecification {
         when:
         String value = sequences.generateId("test")
         sequences.generateId("test")
-        sequences.setCounterValue("test", Integer.parseInt(value), false)
+        sequences.setNextValue("test", Integer.parseInt(value), false)
         then:
         thrown(HandledException)
     }
@@ -64,7 +56,7 @@ class SequencesSpec extends BaseSpecification {
         when:
         String value = sequences.generateId("test")
         sequences.generateId("test")
-        sequences.setCounterValue("test", Integer.parseInt(value), true)
+        sequences.setNextValue("test", Integer.parseInt(value), true)
         then:
         notThrown(HandledException)
     }

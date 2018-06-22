@@ -6,8 +6,9 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.locks;
+package sirius.biz.locks.jdbc;
 
+import sirius.biz.locks.Locks;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Index;

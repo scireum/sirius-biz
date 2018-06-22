@@ -6,8 +6,12 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.locks;
+package sirius.biz.locks.jdbc;
 
+import sirius.biz.locks.BasicLockManager;
+import sirius.biz.locks.LockInfo;
+import sirius.biz.locks.LockManager;
+import sirius.biz.locks.Locks;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.constraints.FieldOperator;
 import sirius.db.mixing.Mixing;
