@@ -30,20 +30,20 @@
         </tr>
         </thead>
         <tbody>
-        <i:for type="sirius.biz.jdbc.tenants.UserAccount" var="user" items="users.getItems()">
+        <i:for type="sirius.biz.jdbc.tenants.UserAccount" var="selectableUser" items="users.getItems()">
             <tr>
                 <td>
-                    <i:if test="user.hasName()">
-                        <a class="link" href="/user-accounts/select/@user.getId()">@user.getPerson()</a><br>
-                        <small class="muted">@user.getLogin().getUsername()</small>
+                    <i:if test="selectableUser.hasName()">
+                        <a class="link" href="/user-accounts/select/@selectableUser.getId()">@selectableUser.getPerson()</a><br>
+                        <small class="muted">@selectableUser.getLogin().getUsername()</small>
                         <i:else>
-                            <a class="link" href="/user-accounts/select/@user.getId()">@user.getLogin().getUsername()</a>
+                            <a class="link" href="/user-accounts/select/@selectableUser.getId()">@selectableUser.getLogin().getUsername()</a>
                         </i:else>
                     </i:if>
                 </td>
                 <td>
-                    @user.getTenant().getValue().as(sirius.biz.jdbc.tenants.Tenant.class).getName()<br>
-                    @user.getTenant().getValue().as(sirius.biz.jdbc.tenants.Tenant.class).getAccountNumber()
+                    @selectableUser.getTenant().getValue().as(sirius.biz.jdbc.tenants.Tenant.class).getName()<br>
+                    @selectableUser.getTenant().getValue().as(sirius.biz.jdbc.tenants.Tenant.class).getAccountNumber()
                 </td>
             </tr>
         </i:for>
