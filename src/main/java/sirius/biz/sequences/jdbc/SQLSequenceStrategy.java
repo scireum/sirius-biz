@@ -12,7 +12,6 @@ import sirius.biz.sequences.SequenceStrategy;
 import sirius.biz.sequences.Sequences;
 import sirius.db.jdbc.OMA;
 import sirius.db.mixing.Mixing;
-import sirius.kernel.async.Future;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -23,9 +22,17 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.util.function.Consumer;
 
+/**
+ * Uses a table in a JDBC database to generate and maintain sequences.
+ *
+ * @see Sequences
+ */
 @Register
 public class SQLSequenceStrategy implements SequenceStrategy {
 
+    /**
+     * Contains the name of this strategy.
+     */
     public static final String TYPE = "sql";
 
     @Part

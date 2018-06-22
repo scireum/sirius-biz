@@ -8,6 +8,7 @@
 
 package sirius.biz.sequences;
 
+import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.console.Command;
@@ -19,6 +20,7 @@ import javax.annotation.Nonnull;
  *
  * @see Sequences
  */
+@Framework("biz.sequences")
 @Register
 public class SequencesCommand implements Command {
 

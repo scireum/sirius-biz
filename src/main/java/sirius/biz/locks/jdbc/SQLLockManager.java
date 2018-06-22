@@ -25,6 +25,7 @@ import sirius.kernel.health.Exceptions;
 import javax.annotation.Nonnull;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,9 +64,17 @@ public class SQLLockManager extends BasicLockManager {
         return 500;
     }
 
+    private void awaitReadiness() {
+        if (!oma.isReady()) {
+            oma.getReadyFuture().await(Duration.ofSeconds(30));
+        }
+    }
+
     @Override
     protected boolean acquireLock(@Nonnull String lockName) {
         try {
+            awaitReadiness();
+
             oma.getDatabase(Mixing.DEFAULT_REALM)
                .insertRow(mixing.getDescriptor(ManagedLock.class).getRelationName(),
                           Context.create()
@@ -85,12 +94,15 @@ public class SQLLockManager extends BasicLockManager {
 
     @Override
     public boolean isLocked(@Nonnull String lock) {
+        awaitReadiness();
         return oma.select(ManagedLock.class).where(FieldOperator.on(ManagedLock.NAME).eq(lock)).exists();
     }
 
     @Override
     public void unlock(String lock, boolean force) {
         try {
+            awaitReadiness();
+
             if (force) {
                 oma.getDatabase(Mixing.DEFAULT_REALM)
                    .createQuery("DELETE FROM managedlock WHERE name = ${name}")
@@ -110,6 +122,8 @@ public class SQLLockManager extends BasicLockManager {
 
     @Override
     public List<LockInfo> getLocks() {
+        awaitReadiness();
+
         return oma.select(ManagedLock.class).queryList().stream().map(this::transformLock).collect(Collectors.toList());
     }
 

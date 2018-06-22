@@ -9,12 +9,14 @@
 package sirius.biz.sequences.mongo;
 
 import com.mongodb.MongoWriteException;
+import com.mongodb.client.result.UpdateResult;
 import sirius.biz.sequences.SequenceStrategy;
 import sirius.biz.sequences.Sequences;
 import sirius.db.mongo.Doc;
 import sirius.db.mongo.Filter;
 import sirius.db.mongo.Mongo;
 import sirius.db.mongo.Updater;
+import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -22,9 +24,18 @@ import sirius.kernel.health.Exceptions;
 import javax.annotation.Nonnull;
 import java.util.function.Consumer;
 
+/**
+ * Uses a collection in MongoDB to generate and maintain sequences.
+ *
+ * @see Sequences
+ */
+@Framework("biz.sequences")
 @Register
 public class MongoSequenceStrategy implements SequenceStrategy {
 
+    /**
+     * Contains the name of this strategy.
+     */
     public static final String TYPE = "mongo";
 
     @Part
@@ -121,9 +132,9 @@ public class MongoSequenceStrategy implements SequenceStrategy {
             updater.where(Filter.lt(MongoSequenceCounter.NEXT_VALUE, nextValue));
         }
 
-        long numRowsChanged = updater.executeFor(MongoSequenceCounter.class).getMatchedCount();
+        UpdateResult updateResult = updater.executeFor(MongoSequenceCounter.class);
 
-        if (numRowsChanged != 1) {
+        if (updateResult.getMatchedCount() != 1) {
             throw Exceptions.handle()
                             .to(Sequences.LOG)
                             .withSystemErrorMessage("Failed to specify the next value for sequence %s", sequence)
