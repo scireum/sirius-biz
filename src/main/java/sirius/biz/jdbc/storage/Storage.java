@@ -59,7 +59,7 @@ import java.util.stream.Collectors;
  * The object storage is organized in two layers. The virtual layer is completely stored in the database and contains
  * all metadata of buckets and objects.
  * <p>
- * Everytime an object is created or updated, a <b>physical object</b> if created and stored using the {@link
+ * Everytime an object is created or updated, a <b>physical object</b> is created and stored using the {@link
  * PhysicalStorageEngine} of the bucket. Therefore a physical object key which is stored in the virtual objects
  * always contains the same data. If the data changes, the physical key changes but the virtual key remains the same.
  * <p>

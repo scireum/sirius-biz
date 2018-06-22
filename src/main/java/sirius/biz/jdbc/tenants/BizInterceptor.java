@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.web;
+package sirius.biz.jdbc.tenants;
 
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
