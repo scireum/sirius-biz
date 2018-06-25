@@ -12,7 +12,6 @@ import sirius.biz.jdbc.model.BizEntity;
 import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
-import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 
 /**
@@ -35,7 +34,7 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
 
     @Override
     public String getTenantAsString() {
-        return Value.of(getTenant().getId()).getString();
+        return getTenant().isFilled() ? String.valueOf(getTenant().getId()) : null;
     }
 
     @Override
