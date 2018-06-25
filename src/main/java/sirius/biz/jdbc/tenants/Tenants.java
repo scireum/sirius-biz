@@ -15,6 +15,7 @@ import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.jdbc.SmartQuery;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -150,7 +151,9 @@ public class Tenants {
         if (!Objects.equals(tenantAware.getTenantAsString(), getCurrentTenant().map(Tenant::getIdAsString).orElse(null))
             && !Objects.equals(tenantAware.getTenantAsString(),
                                getCurrentTenant().map(Tenant::getParent)
-                                                 .map(SQLEntityRef::getIdAsString)
+                                                 .map(SQLEntityRef::getId)
+                                                 .map(Value::of)
+                                                 .map(Value::getString)
                                                  .orElse(null))) {
             throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
         }
