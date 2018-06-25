@@ -9,8 +9,9 @@
 package sirius.biz.protocol;
 
 import sirius.biz.web.DateRange;
-import sirius.biz.web.PageHelper;
+import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.OMA;
+import sirius.db.mixing.DateRange;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
@@ -39,7 +40,7 @@ public class JournalController extends BasicController {
     @DefaultRoute
     @Routed("/system/protocol")
     public void protocol(WebContext ctx) {
-        PageHelper<JournalEntry> ph = PageHelper.withQuery(oma.select(JournalEntry.class).orderDesc(JournalEntry.TOD));
+        SQLPageHelper<JournalEntry> ph = SQLPageHelper.withQuery(oma.select(JournalEntry.class).orderDesc(JournalEntry.TOD));
         ph.withContext(ctx);
         ph.addQueryFacet(JournalEntry.TARGET_TYPE.getName(),
                          NLS.get("JournalEntry.targetType"),

@@ -12,7 +12,7 @@ import sirius.biz.jdbc.model.LoginData;
 import sirius.biz.jdbc.model.PermissionData;
 import sirius.biz.jdbc.model.PersonData;
 import sirius.biz.web.BizController;
-import sirius.biz.web.PageHelper;
+import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.jdbc.constraints.Like;
@@ -81,10 +81,10 @@ public class UserAccountController extends BizController {
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void accounts(WebContext ctx) {
-        PageHelper<UserAccount> ph = PageHelper.withQuery(tenants.forCurrentTenant(oma.select(UserAccount.class)
-                                                                                      .orderAsc(UserAccount.PERSON.inner(
+        SQLPageHelper<UserAccount> ph = SQLPageHelper.withQuery(tenants.forCurrentTenant(oma.select(UserAccount.class)
+                                                                                            .orderAsc(UserAccount.PERSON.inner(
                                                                                               PersonData.LASTNAME))
-                                                                                      .orderAsc(UserAccount.PERSON.inner(
+                                                                                            .orderAsc(UserAccount.PERSON.inner(
                                                                                               PersonData.FIRSTNAME))));
         ph.withContext(ctx);
         ph.withSearchFields(UserAccount.EMAIL,
@@ -406,7 +406,7 @@ public class UserAccountController extends BizController {
                          UserAccount.TENANT.join(Tenant.NAME),
                          UserAccount.TENANT.join(Tenant.ACCOUNT_NUMBER));
 
-        PageHelper<UserAccount> ph = PageHelper.withQuery(baseQuery);
+        SQLPageHelper<UserAccount> ph = SQLPageHelper.withQuery(baseQuery);
         ph.withContext(ctx);
         ph.withSearchFields(UserAccount.PERSON.inner(PersonData.LASTNAME),
                             UserAccount.PERSON.inner(PersonData.FIRSTNAME),

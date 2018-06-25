@@ -9,8 +9,8 @@
 package sirius.biz.protocol;
 
 import sirius.biz.web.BizController;
-import sirius.biz.web.DateRange;
-import sirius.biz.web.PageHelper;
+import sirius.biz.web.SQLPageHelper;
+import sirius.db.mixing.DateRange;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Controller;
@@ -34,7 +34,7 @@ public class LogsController extends BizController {
     @DefaultRoute
     @Routed("/system/logs")
     public void logs(WebContext ctx) {
-        PageHelper<LogEntry> ph = PageHelper.withQuery(oma.select(LogEntry.class).orderDesc(LogEntry.TOD));
+        SQLPageHelper<LogEntry> ph = SQLPageHelper.withQuery(oma.select(LogEntry.class).orderDesc(LogEntry.TOD));
         ph.withContext(ctx);
         ph.enableAdvancedSearch();
         ph.addQueryFacet(LogEntry.CATEGORY.getName(),

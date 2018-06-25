@@ -10,7 +10,8 @@ package sirius.biz.protocol;
 
 import sirius.biz.web.BizController;
 import sirius.biz.web.DateRange;
-import sirius.biz.web.PageHelper;
+import sirius.biz.web.SQLPageHelper;
+import sirius.db.mixing.DateRange;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Controller;
@@ -34,7 +35,7 @@ public class IncidentsController extends BizController {
     @DefaultRoute
     @Routed("/system/errors")
     public void errors(WebContext ctx) {
-        PageHelper<Incident> ph = PageHelper.withQuery(oma.select(Incident.class).orderDesc(Incident.LAST_OCCURRENCE));
+        SQLPageHelper<Incident> ph = SQLPageHelper.withQuery(oma.select(Incident.class).orderDesc(Incident.LAST_OCCURRENCE));
         ph.withContext(ctx);
         ph.addQueryFacet(Incident.CATEGORY.getName(),
                          NLS.get("Incident.category"),

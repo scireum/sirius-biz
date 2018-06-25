@@ -13,7 +13,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.jdbc.tenants.Tenants;
 import sirius.biz.protocol.TraceData;
 import sirius.biz.web.BizController;
-import sirius.biz.web.PageHelper;
+import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.jdbc.constraints.FieldOperator;
 import sirius.db.jdbc.constraints.Like;
@@ -94,8 +94,8 @@ public class StorageController extends BizController {
 
         applyQuery(ctx.get("query").asString(), baseQuery, bucket.isAlwaysUseLikeSearch());
 
-        PageHelper<VirtualObject> pageHelper =
-                PageHelper.withQuery(tenants.forCurrentTenant(baseQuery)).withContext(ctx);
+        SQLPageHelper<VirtualObject> pageHelper =
+                SQLPageHelper.withQuery(tenants.forCurrentTenant(baseQuery)).withContext(ctx);
 
         ctx.respondWith().template("templates/storage/objects.html.pasta", bucket, pageHelper.asPage());
     }

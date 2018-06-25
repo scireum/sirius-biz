@@ -11,7 +11,7 @@ package sirius.biz.jdbc.tenants;
 import sirius.biz.jdbc.model.AddressData;
 import sirius.biz.jdbc.model.PermissionData;
 import sirius.biz.web.BizController;
-import sirius.biz.web.PageHelper;
+import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.jdbc.constraints.And;
 import sirius.db.jdbc.constraints.FieldOperator;
@@ -93,7 +93,7 @@ public class TenantController extends BizController {
     @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void tenants(WebContext ctx) {
-        PageHelper<Tenant> ph = PageHelper.withQuery(oma.select(Tenant.class).orderAsc(Tenant.NAME));
+        SQLPageHelper<Tenant> ph = SQLPageHelper.withQuery(oma.select(Tenant.class).orderAsc(Tenant.NAME));
         ph.withContext(ctx);
         ph.withSearchFields(Tenant.NAME,
                             Tenant.ACCOUNT_NUMBER,
@@ -218,7 +218,7 @@ public class TenantController extends BizController {
     @Permission(TenantUserManager.PERMISSION_SELECT_TENANT)
     public void selectTenants(WebContext ctx) {
         SmartQuery<Tenant> baseQuery = queryPossibleTenants(ctx).orderAsc(Tenant.NAME);
-        PageHelper<Tenant> ph = PageHelper.withQuery(baseQuery);
+        SQLPageHelper<Tenant> ph = SQLPageHelper.withQuery(baseQuery);
         ph.withContext(ctx);
         ph.withSearchFields(Tenant.NAME,
                             Tenant.ACCOUNT_NUMBER,

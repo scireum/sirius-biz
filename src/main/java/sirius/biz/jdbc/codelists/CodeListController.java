@@ -10,7 +10,7 @@ package sirius.biz.jdbc.codelists;
 
 import sirius.biz.jdbc.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
-import sirius.biz.web.PageHelper;
+import sirius.biz.web.SQLPageHelper;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
@@ -43,7 +43,7 @@ public class CodeListController extends BizController {
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-lists")
     public void codeLists(WebContext ctx) {
-        PageHelper<CodeList> ph = PageHelper.withQuery(oma.select(CodeList.class).orderAsc(CodeList.CODE));
+        SQLPageHelper<CodeList> ph = SQLPageHelper.withQuery(oma.select(CodeList.class).orderAsc(CodeList.CODE));
         ph.withContext(ctx);
         ph.withSearchFields(CodeList.CODE, CodeList.NAME, CodeList.DESCRIPTION);
         ctx.respondWith().template("templates/codelists/code-lists.html.pasta", ph.asPage());
@@ -92,9 +92,9 @@ public class CodeListController extends BizController {
     }
 
     private void renderCodeList(WebContext ctx, CodeList cl) {
-        PageHelper<CodeListEntry> ph = PageHelper.withQuery(oma.select(CodeListEntry.class)
-                                                               .eq(CodeListEntry.CODE_LIST, cl)
-                                                               .orderAsc(CodeListEntry.CODE_LIST));
+        SQLPageHelper<CodeListEntry> ph = SQLPageHelper.withQuery(oma.select(CodeListEntry.class)
+                                                                     .eq(CodeListEntry.CODE_LIST, cl)
+                                                                     .orderAsc(CodeListEntry.CODE_LIST));
         ph.withContext(ctx);
         ph.withSearchFields(CodeListEntry.CODE,
                             CodeListEntry.VALUE,

@@ -8,30 +8,24 @@
 
 package sirius.biz.web;
 
-import sirius.db.jdbc.OMA;
-import sirius.db.jdbc.SQLQuery;
 import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.DateRange;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Query;
-import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Watch;
-import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Facet;
 import sirius.web.controller.Page;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 /**
  * Helper class to build a query, bind it to values given in a {@link WebContext} and create a resulting {@link Page}
@@ -39,30 +33,18 @@ import java.util.function.Function;
  *
  * @param <E> the generic type of the entities being queried
  */
-public class PageHelper<E extends BaseEntity<?>> {
+public class BasePageHelper<E extends BaseEntity<?>, Q extends Query<Q, E>, B extends BasePageHelper<E, Q, B>> {
 
-    private static final int DEFAULT_PAGE_SIZE = 25;
-    private WebContext ctx;
-    private Query<?, E> baseQuery;
-    private Mapping[] searchFields;
-    private boolean advancedSearch;
-    private List<Tuple<Facet, BiConsumer<Facet, Query<?, E>>>> facets = new ArrayList<>();
-    private int pageSize = DEFAULT_PAGE_SIZE;
+    protected static final int DEFAULT_PAGE_SIZE = 25;
+    protected WebContext ctx;
+    protected Q baseQuery;
+    protected Mapping[] searchFields;
+    protected boolean advancedSearch;
+    protected List<Tuple<Facet, BiConsumer<Facet, Q>>> facets = new ArrayList<>();
+    protected int pageSize = DEFAULT_PAGE_SIZE;
 
-    private PageHelper() {
-    }
-
-    /**
-     * Creates a new instance with the given base query.
-     *
-     * @param baseQuery the initial query to execute
-     * @param <E>       the generic entity type being queried
-     * @return a new instance operating on the given base query
-     */
-    public static <E extends BaseEntity<?>> PageHelper<E> withQuery(Query<?, E> baseQuery) {
-        PageHelper<E> result = new PageHelper<>();
-        result.baseQuery = baseQuery;
-        return result;
+    protected BasePageHelper(Q query) {
+        this.baseQuery = query;
     }
 
     /**
@@ -71,9 +53,10 @@ public class PageHelper<E extends BaseEntity<?>> {
      * @param ctx the request to attach
      * @return the helper itself for fluent method calls
      */
-    public PageHelper<E> withContext(WebContext ctx) {
+    @SuppressWarnings("unchecked")
+    public B withContext(WebContext ctx) {
         this.ctx = ctx;
-        return this;
+        return (B) this;
     }
 
     /**
@@ -83,9 +66,10 @@ public class PageHelper<E extends BaseEntity<?>> {
      * @param searchFields the fields to search in
      * @return the helper itself for fluent method calls
      */
-    public PageHelper<E> withSearchFields(Mapping... searchFields) {
+    @SuppressWarnings("unchecked")
+    public B withSearchFields(Mapping... searchFields) {
         this.searchFields = searchFields;
-        return this;
+        return (B) this;
     }
 
     /**
@@ -93,9 +77,10 @@ public class PageHelper<E extends BaseEntity<?>> {
      *
      * @return the helper itself for fluent method calls
      */
-    public PageHelper<E> enableAdvancedSearch() {
+    @SuppressWarnings("unchecked")
+    public B enableAdvancedSearch() {
         this.advancedSearch = true;
-        return this;
+        return (B) this;
     }
 
     /**
@@ -104,7 +89,7 @@ public class PageHelper<E extends BaseEntity<?>> {
      * @param facet the facet to add
      * @return the helper itself for fluent method calls
      */
-    public PageHelper<E> addFilterFacet(Facet facet) {
+    public B addFilterFacet(Facet facet) {
         return addFacet(facet, (f, q) -> q.eqIgnoreNull(Mapping.named(f.getName()), f.getValue()));
     }
 
@@ -115,7 +100,7 @@ public class PageHelper<E extends BaseEntity<?>> {
      * @param filter the custom logic which determines how a filter value is applied to the query.
      * @return the helper itself for fluent method calls
      */
-    public PageHelper<E> addFacet(Facet facet, BiConsumer<Facet, Query<?, E>> filter) {
+    public B addFacet(Facet facet, BiConsumer<Facet, Q> filter) {
         return addFacet(facet, filter, null);
     }
 
@@ -127,9 +112,8 @@ public class PageHelper<E extends BaseEntity<?>> {
      * @param itemsComputer the custom logic which determines the list of items in the filter
      * @return the helper itself for fluent method calls
      */
-    public PageHelper<E> addFacet(Facet facet,
-                                  BiConsumer<Facet, Query<?, E>> filter,
-                                  BiConsumer<Facet, Query<?, E>> itemsComputer) {
+    @SuppressWarnings("unchecked")
+    public B addFacet(Facet facet, BiConsumer<Facet, Q> filter, BiConsumer<Facet, Q> itemsComputer) {
         Objects.requireNonNull(baseQuery);
         Objects.requireNonNull(ctx);
 
@@ -138,7 +122,7 @@ public class PageHelper<E extends BaseEntity<?>> {
 
         facets.add(Tuple.create(facet, itemsComputer));
 
-        return this;
+        return (B) this;
     }
 
     /**
@@ -149,7 +133,8 @@ public class PageHelper<E extends BaseEntity<?>> {
      * @param ranges the ranges which are supported as filter values
      * @return the helper itself for fluent method calls
      */
-    public PageHelper<E> addTimeFacet(String name, String title, DateRange... ranges) {
+    @SuppressWarnings("unchecked")
+    public B addTimeFacet(String name, String title, DateRange... ranges) {
         Facet facet = new Facet(title, name, null, null);
         addFacet(facet, (f, q) -> {
             for (DateRange range : ranges) {
@@ -162,41 +147,7 @@ public class PageHelper<E extends BaseEntity<?>> {
             facet.addItem(range.getKey(), range.toString(), -1);
         }
 
-        return this;
-    }
-
-    /**
-     * Adds a query based filter which uses the given query to determine which filter items are shown.
-     *
-     * @param name             the name of the field to filter on
-     * @param title            the title of the filter shown to the user
-     * @param queryTransformer used to generate the sub-query which determines which filter values to show
-     * @return the helper itself for fluent method calls
-     */
-    public PageHelper<E> addQueryFacet(String name, String title, Function<Query<?, E>, SQLQuery> queryTransformer) {
-        return addFacet(new Facet(title, name, null, null), (f, q) -> {
-            if (Strings.isFilled(f.getValue())) {
-                q.eq(Mapping.named(f.getName()), f.getValue());
-            }
-        }, (f, q) -> {
-            try {
-                SQLQuery qry = queryTransformer.apply(q);
-                qry.iterateAll(r -> {
-                    Iterator<Tuple<String, Object>> iter = r.getFieldsList().iterator();
-                    if (!iter.hasNext()) {
-                        return;
-                    }
-                    String key = Value.of(iter.next().getSecond()).asString();
-                    String label = key;
-                    if (iter.hasNext()) {
-                        label = Value.of(iter.next().getSecond()).asString();
-                    }
-                    f.addItem(key, label, -1);
-                }, new Limit(0, 100));
-            } catch (SQLException e) {
-                Exceptions.handle(OMA.LOG, e);
-            }
-        });
+        return (B) this;
     }
 
     /**
@@ -206,7 +157,7 @@ public class PageHelper<E extends BaseEntity<?>> {
      * @param title the title of the filter shown to the user
      * @return the helper itself for fluent method calls
      */
-    public PageHelper<E> addBooleanFacet(String name, String title) {
+    public B addBooleanFacet(String name, String title) {
         Objects.requireNonNull(ctx);
 
         Facet facet = new Facet(title, name, ctx.get(name).asString(), null);
@@ -227,9 +178,10 @@ public class PageHelper<E extends BaseEntity<?>> {
      * @param pageSize the number of items shown per page
      * @return the helper itself for fluent method calls
      */
-    public PageHelper<E> withPageSize(int pageSize) {
+    @SuppressWarnings("unchecked")
+    public B withPageSize(int pageSize) {
         this.pageSize = pageSize;
-        return this;
+        return (B) this;
     }
 
     /**
@@ -256,7 +208,7 @@ public class PageHelper<E extends BaseEntity<?>> {
 //            }
 //        }
 
-        for (Tuple<Facet, BiConsumer<Facet, Query<?, E>>> f : facets) {
+        for (Tuple<Facet, BiConsumer<Facet, Q>> f : facets) {
             if (f.getSecond() != null) {
                 f.getSecond().accept(f.getFirst(), baseQuery);
             }

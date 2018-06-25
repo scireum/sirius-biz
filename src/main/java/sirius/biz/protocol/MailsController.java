@@ -10,7 +10,7 @@ package sirius.biz.protocol;
 
 import sirius.biz.web.BizController;
 import sirius.biz.web.DateRange;
-import sirius.biz.web.PageHelper;
+import sirius.biz.web.SQLPageHelper;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Controller;
@@ -34,7 +34,8 @@ public class MailsController extends BizController {
     @DefaultRoute
     @Routed("/system/mails")
     public void mails(final WebContext ctx) {
-        PageHelper<MailLogEntry> ph = PageHelper.withQuery(oma.select(MailLogEntry.class).orderDesc(MailLogEntry.TOD));
+        SQLPageHelper<MailLogEntry>
+                ph = SQLPageHelper.withQuery(elastic.select(MailProtocol.class).orderDesc(MailProtocol.TOD));
         ph.withContext(ctx);
         ph.addTimeFacet(MailLogEntry.TOD.getName(),
                         NLS.get("MailLogEntry.tod"),
@@ -63,7 +64,7 @@ public class MailsController extends BizController {
     @Permission(Protocols.PERMISSION_SYSTEM_PROTOCOLS)
     @Routed("/system/mail/:1")
     public void mail(final WebContext ctx, String id) {
-        MailLogEntry mailLogEntry = find(MailLogEntry.class, id);
+        MailProtocol mailLogEntry = find(MailProtocol.class, id);
         ctx.respondWith().template("templates/protocol/mail.html.pasta", mailLogEntry);
     }
 }

@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 /**
  * Can be embedded in a query parsed by the {@link QueryCompiler}.
  * <p>
- * Such a compiler is created and applied by a {@link PageHelper} where {@link PageHelper#enableAdvancedSearch()} is
+ * Such a compiler is created and applied by a {@link SQLPageHelper} where {@link SQLPageHelper#enableAdvancedSearch()} is
  * invoked.
  * <p>
  * A query tag represents a special kind of filter which is suggested by a {@link QueryTagSuggester} and then

@@ -9,8 +9,11 @@
 package sirius.biz.web;
 
 import sirius.biz.jdbc.codelists.CodeLists;
+import sirius.db.es.Elastic;
 import sirius.db.jdbc.Databases;
 import sirius.db.jdbc.OMA;
+import sirius.db.mongo.Mango;
+import sirius.db.mongo.Mongo;
 import sirius.db.redis.Redis;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -36,6 +39,15 @@ public class BizContextExtender implements GlobalContextExtender {
     @Part
     private OMA oma;
 
+    @Part
+    private Mongo mongo;
+
+    @Part
+    private Mango mango;
+
+    @Part
+    private Elastic elastic;
+
     @Override
     public void collectTemplate(BiConsumer<String, Object> globalParameterCollector) {
         globalParameterCollector.accept("codeLists", codeLists);
@@ -44,6 +56,9 @@ public class BizContextExtender implements GlobalContextExtender {
     @Override
     public void collectScripting(BiConsumer<String, Object> globalParameterCollector) {
         globalParameterCollector.accept("oma", oma);
+        globalParameterCollector.accept("mongo", mongo);
+        globalParameterCollector.accept("mango", mango);
+        globalParameterCollector.accept("elastic", elastic);
         globalParameterCollector.accept("databases", databases);
         globalParameterCollector.accept("redis", redis);
     }
