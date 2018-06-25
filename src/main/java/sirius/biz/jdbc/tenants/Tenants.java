@@ -147,10 +147,12 @@ public class Tenants {
             return;
         }
 
-        if (!Objects.equals(tenantAware.getTenantAsString(), getCurrentTenant().map(Tenant::getUniqueName).orElse(null))
+        if (!Objects.equals(tenantAware.getTenantAsString(), getCurrentTenant().map(Tenant::getIdAsString).orElse(null))
             && !Objects.equals(tenantAware.getTenantAsString(),
                                getCurrentTenant().map(Tenant::getParent)
-                                                 .map(SQLEntityRef::getUniqueObjectName)
+                                                 .filter(SQLEntityRef::isFilled)
+                                                 .map(SQLEntityRef::getId)
+                                                 .map(String::valueOf)
                                                  .orElse(null))) {
             throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
         }
