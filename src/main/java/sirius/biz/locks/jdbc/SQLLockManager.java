@@ -13,7 +13,6 @@ import sirius.biz.locks.LockInfo;
 import sirius.biz.locks.LockManager;
 import sirius.biz.locks.Locks;
 import sirius.db.jdbc.OMA;
-import sirius.db.jdbc.constraints.FieldOperator;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Context;
@@ -95,7 +94,7 @@ public class SQLLockManager extends BasicLockManager {
     @Override
     public boolean isLocked(@Nonnull String lock) {
         awaitReadiness();
-        return oma.select(ManagedLock.class).where(FieldOperator.on(ManagedLock.NAME).eq(lock)).exists();
+        return oma.select(ManagedLock.class).eq(ManagedLock.NAME, lock).exists();
     }
 
     @Override

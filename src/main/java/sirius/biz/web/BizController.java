@@ -431,7 +431,7 @@ public class BizController extends BasicController {
                                 .handle();
             }
         }
-        Optional<E> result = ((BaseMapper<BaseEntity<?>, ?>) mixing.getDescriptor(type).getMapper()).find(type, id);
+        Optional<E> result = ((BaseMapper<BaseEntity<?>, ?, ?>) mixing.getDescriptor(type).getMapper()).find(type, id);
         if (!result.isPresent()) {
             throw Exceptions.createHandled().withNLSKey("BizController.unknownObject").set("id", id).handle();
         }
@@ -453,7 +453,7 @@ public class BizController extends BasicController {
         if (BaseEntity.NEW.equals(id)) {
             return Optional.empty();
         }
-        return ((BaseMapper<BaseEntity<?>, ?>) mixing.getDescriptor(type).getMapper()).find(type, id);
+        return ((BaseMapper<BaseEntity<?>, ?, ?>) mixing.getDescriptor(type).getMapper()).find(type, id);
     }
 
     /**

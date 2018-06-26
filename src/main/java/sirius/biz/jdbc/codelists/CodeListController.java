@@ -11,6 +11,7 @@ package sirius.biz.jdbc.codelists;
 import sirius.biz.jdbc.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.biz.web.SQLPageHelper;
+import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
@@ -45,7 +46,9 @@ public class CodeListController extends BizController {
     public void codeLists(WebContext ctx) {
         SQLPageHelper<CodeList> ph = SQLPageHelper.withQuery(oma.select(CodeList.class).orderAsc(CodeList.CODE));
         ph.withContext(ctx);
-        ph.withSearchFields(CodeList.CODE, CodeList.NAME, CodeList.DESCRIPTION);
+        ph.withSearchFields(QueryField.contains(CodeList.CODE),
+                            QueryField.contains(CodeList.NAME),
+                            QueryField.contains(CodeList.DESCRIPTION));
         ctx.respondWith().template("templates/codelists/code-lists.html.pasta", ph.asPage());
     }
 
@@ -81,8 +84,7 @@ public class CodeListController extends BizController {
         CodeList cl = findForTenant(CodeList.class, codeListId);
 
         if (cl.isNew() || forceDetails) {
-            boolean requestHandled =
-                    prepareSave(ctx).withAfterCreateURI("/code-list/${id}/details").saveEntity(cl);
+            boolean requestHandled = prepareSave(ctx).withAfterCreateURI("/code-list/${id}/details").saveEntity(cl);
             if (!requestHandled) {
                 ctx.respondWith().template("templates/codelists/code-list-details.html.pasta", cl);
             }
@@ -96,10 +98,10 @@ public class CodeListController extends BizController {
                                                                      .eq(CodeListEntry.CODE_LIST, cl)
                                                                      .orderAsc(CodeListEntry.CODE_LIST));
         ph.withContext(ctx);
-        ph.withSearchFields(CodeListEntry.CODE,
-                            CodeListEntry.VALUE,
-                            CodeListEntry.ADDITIONAL_VALUE,
-                            CodeListEntry.DESCRIPTION);
+        ph.withSearchFields(QueryField.contains(CodeListEntry.CODE),
+                            QueryField.contains(CodeListEntry.VALUE),
+                            QueryField.contains(CodeListEntry.ADDITIONAL_VALUE),
+                            QueryField.contains(CodeListEntry.DESCRIPTION));
         ctx.respondWith().template("templates/codelists/code-list-entries.html.pasta", cl, ph.asPage());
     }
 

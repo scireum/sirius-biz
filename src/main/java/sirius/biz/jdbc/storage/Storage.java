@@ -18,7 +18,6 @@ import sirius.biz.protocol.TraceData;
 import sirius.db.KeyGenerator;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
-import sirius.db.jdbc.constraints.FieldOperator;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.Tasks;
@@ -327,7 +326,7 @@ public class Storage {
         }
         SmartQuery<VirtualObject> qry = oma.select(VirtualObject.class).eq(VirtualObject.REFERENCE, reference);
         if (Strings.isFilled(excludedObjectKey)) {
-            qry.where(FieldOperator.on(VirtualObject.OBJECT_KEY).notEqual(excludedObjectKey));
+            qry.ne(VirtualObject.OBJECT_KEY, excludedObjectKey);
         }
 
         qry.delete();

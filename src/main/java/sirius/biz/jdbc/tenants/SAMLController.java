@@ -9,7 +9,6 @@
 package sirius.biz.jdbc.tenants;
 
 import sirius.biz.web.BizController;
-import sirius.db.jdbc.constraints.FieldOperator;
 import sirius.kernel.commons.Lambdas;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
@@ -70,10 +69,7 @@ public class SAMLController extends BizController {
             return Collections.singletonList(fakeTenant);
         }
 
-        return oma.select(Tenant.class)
-                  .where(FieldOperator.on(Tenant.SAML_ISSUER_URL).notEqual(null))
-                  .orderAsc(Tenant.NAME)
-                  .queryList();
+        return oma.select(Tenant.class).ne(Tenant.SAML_ISSUER_URL, null).orderAsc(Tenant.NAME).queryList();
     }
 
     /**
@@ -141,8 +137,8 @@ public class SAMLController extends BizController {
     private Tenant findTenant(SAMLResponse response) {
         for (Tenant tenant : oma.select(Tenant.class)
                                 .fields(Tenant.ID, Tenant.SAML_ISSUER_NAME, Tenant.SAML_FINGERPRINT)
-                                .where(FieldOperator.on(Tenant.SAML_ISSUER_NAME).notEqual(null))
-                                .where(FieldOperator.on(Tenant.SAML_FINGERPRINT).notEqual(null))
+                                .ne(Tenant.SAML_ISSUER_NAME, null)
+                                .ne(Tenant.SAML_FINGERPRINT, null)
                                 .queryList()) {
             if (checkIssuer(tenant, response)) {
                 return tenant;

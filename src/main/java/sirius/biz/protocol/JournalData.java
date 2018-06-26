@@ -8,6 +8,7 @@
 
 package sirius.biz.protocol;
 
+import sirius.db.es.Elastic;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.EntityDescriptor;
@@ -42,9 +43,6 @@ public class JournalData extends Composite {
     @Transient
     private SQLEntity owner;
 
-    @Part
-    private static Mixing mixing;
-
     /**
      * Creates a new instance for the given entity.
      *
@@ -56,7 +54,7 @@ public class JournalData extends Composite {
 
     @AfterSave
     protected void onSave() {
-        if (silent) {
+        if (silent || !Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_JOURNAL)) {
             return;
         }
 
@@ -91,16 +89,20 @@ public class JournalData extends Composite {
             return;
         }
 
-        JournalEntry entry = new JournalEntry();
-        entry.setTod(LocalDateTime.now());
-        entry.setChanges(changes);
-        entry.setTargetId(entity.getId());
-        entry.setTargetName(entity.toString());
-        entry.setTargetType(mixing.getNameForType(entity.getClass()));
-        entry.setSubsystem(TaskContext.get().getSystemString());
-        entry.setUserId(UserContext.getCurrentUser().getUserId());
-        entry.setUsername(UserContext.getCurrentUser().getUserName());
-        oma.update(entry);
+        try {
+            JournalEntry entry = new JournalEntry();
+            entry.setTod(LocalDateTime.now());
+            entry.setChanges(changes);
+            entry.setTargetId(entity.getId());
+            entry.setTargetName(entity.toString());
+            entry.setTargetType(mixing.getNameForType(entity.getClass()));
+            entry.setSubsystem(TaskContext.get().getSystemString());
+            entry.setUserId(UserContext.getCurrentUser().getUserId());
+            entry.setUsername(UserContext.getCurrentUser().getUserName());
+            elastic.update(entry);
+        } catch (Exception e) {
+            Exceptions.handle(Elastic.LOG, e);
+        }
     }
 
     @AfterDelete
@@ -147,7 +149,7 @@ public class JournalData extends Composite {
 
         EntityDescriptor descriptor = owner.getDescriptor();
         for (Property p : descriptor.getProperties()) {
-            if (p.getAnnotation(NoJournal.class) == null && descriptor.isChanged(owner, p)) {
+            if (!p.getAnnotation(NoJournal.class).isPresent() && descriptor.isChanged(owner, p)) {
                 return true;
             }
         }

@@ -11,7 +11,9 @@ package sirius.biz.web;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.DateRange;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.Query;
+import sirius.db.mixing.query.Query;
+import sirius.db.mixing.query.QueryField;
+import sirius.db.mixing.query.constraints.Constraint;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
@@ -23,6 +25,8 @@ import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -33,13 +37,12 @@ import java.util.function.BiConsumer;
  *
  * @param <E> the generic type of the entities being queried
  */
-public class BasePageHelper<E extends BaseEntity<?>, Q extends Query<Q, E>, B extends BasePageHelper<E, Q, B>> {
+public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constraint, Q extends Query<Q, E, C>, B extends BasePageHelper<E, C, Q, B>> {
 
     protected static final int DEFAULT_PAGE_SIZE = 25;
     protected WebContext ctx;
     protected Q baseQuery;
-    protected Mapping[] searchFields;
-    protected boolean advancedSearch;
+    protected List<QueryField> searchFields = Collections.emptyList();
     protected List<Tuple<Facet, BiConsumer<Facet, Q>>> facets = new ArrayList<>();
     protected int pageSize = DEFAULT_PAGE_SIZE;
 
@@ -67,19 +70,8 @@ public class BasePageHelper<E extends BaseEntity<?>, Q extends Query<Q, E>, B ex
      * @return the helper itself for fluent method calls
      */
     @SuppressWarnings("unchecked")
-    public B withSearchFields(Mapping... searchFields) {
-        this.searchFields = searchFields;
-        return (B) this;
-    }
-
-    /**
-     * Enables the {@link QueryCompiler} which supports SQL like queries and {@link QueryTag}s.
-     *
-     * @return the helper itself for fluent method calls
-     */
-    @SuppressWarnings("unchecked")
-    public B enableAdvancedSearch() {
-        this.advancedSearch = true;
+    public B withSearchFields(QueryField... searchFields) {
+        this.searchFields = Arrays.asList(searchFields);
         return (B) this;
     }
 
@@ -135,6 +127,12 @@ public class BasePageHelper<E extends BaseEntity<?>, Q extends Query<Q, E>, B ex
      */
     @SuppressWarnings("unchecked")
     public B addTimeFacet(String name, String title, DateRange... ranges) {
+        createTimeFacet(name, title, ranges);
+
+        return (B) this;
+    }
+
+    protected Facet createTimeFacet(String name, String title, DateRange[] ranges) {
         Facet facet = new Facet(title, name, null, null);
         addFacet(facet, (f, q) -> {
             for (DateRange range : ranges) {
@@ -147,7 +145,7 @@ public class BasePageHelper<E extends BaseEntity<?>, Q extends Query<Q, E>, B ex
             facet.addItem(range.getKey(), range.toString(), -1);
         }
 
-        return (B) this;
+        return facet;
     }
 
     /**
@@ -195,40 +193,52 @@ public class BasePageHelper<E extends BaseEntity<?>, Q extends Query<Q, E>, B ex
         Page<E> result = new Page<E>().withStart(1).withPageSize(pageSize);
         result.bindToRequest(ctx);
 
-//        if (advancedSearch) {
-//            QueryCompiler compiler =
-//                    new QueryCompiler(baseQuery.getEntityDescriptor(), result.getQuery(), searchFields);
-//            Constraint constraint = compiler.compile();
-//            if (constraint != null) {
-//                baseQuery.eq(constraint);
-//            }
-//        } else {
-//            if (searchFields != null && searchFields.length > 0) {
-//                baseQuery.where(Like.allWordsInAnyField(result.getQuery(), searchFields));
-//            }
-//        }
+        if (Strings.isFilled(result.getQuery()) && !searchFields.isEmpty()) {
+            baseQuery.where(baseQuery.filters()
+                                     .queryString(baseQuery.getDescriptor(), result.getQuery(), searchFields));
+        }
 
+        applyFacets(result);
+
+        try {
+            setupPaging(result);
+            List<E> items = executeQuery();
+            enforcePaging(result, items);
+            fillPage(w, result, items);
+        } catch (Exception e) {
+            UserContext.handle(e);
+        }
+
+        return result;
+    }
+
+    protected void fillPage(Watch w, Page<E> result, List<E> items) {
+        result.withDuration(w.duration());
+        result.withItems(items);
+    }
+
+    protected void enforcePaging(Page<E> result, List<E> items) {
+        if (items.size() > pageSize) {
+            result.withHasMore(true);
+            items.remove(items.size() - 1);
+        }
+    }
+
+    protected List<E> executeQuery() {
+        return baseQuery.queryList();
+    }
+
+    protected void setupPaging(Page<E> result) {
+        baseQuery.skip(result.getStart() - 1);
+        baseQuery.limit(pageSize + 1);
+    }
+
+    protected void applyFacets(Page<E> result) {
         for (Tuple<Facet, BiConsumer<Facet, Q>> f : facets) {
             if (f.getSecond() != null) {
                 f.getSecond().accept(f.getFirst(), baseQuery);
             }
             result.addFacet(f.getFirst());
         }
-
-        try {
-            baseQuery.skip(result.getStart() - 1);
-            baseQuery.limit(pageSize + 1);
-            List<E> items = baseQuery.queryList();
-            if (items.size() > pageSize) {
-                result.withHasMore(true);
-                items.remove(items.size() - 1);
-            }
-            result.withDuration(w.duration());
-            result.withItems(items);
-        } catch (Exception e) {
-            UserContext.handle(e);
-        }
-
-        return result;
     }
 }

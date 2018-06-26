@@ -12,6 +12,7 @@ import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLQuery;
 import sirius.db.jdbc.SmartQuery;
+import sirius.db.jdbc.constraints.SQLConstraint;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
@@ -19,20 +20,18 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
 import sirius.web.controller.Facet;
-import sirius.web.controller.Page;
-import sirius.web.http.WebContext;
 
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.function.Function;
 
 /**
- * Helper class to build a query, bind it to values given in a {@link WebContext} and create a resulting {@link Page}
- * which can be used to render a resulting table and filter box.
+ * Implements a page helper for {@link SmartQuery smart queries}.
  *
  * @param <E> the generic type of the entities being queried
  */
-public class SQLPageHelper<E extends SQLEntity> extends BasePageHelper<E, SmartQuery<E>, SQLPageHelper<E>> {
+public class SQLPageHelper<E extends SQLEntity>
+        extends BasePageHelper<E, SQLConstraint, SmartQuery<E>, SQLPageHelper<E>> {
 
     protected SQLPageHelper(SmartQuery<E> query) {
         super(query);
@@ -57,7 +56,9 @@ public class SQLPageHelper<E extends SQLEntity> extends BasePageHelper<E, SmartQ
      * @param queryTransformer used to generate the sub-query which determines which filter values to show
      * @return the helper itself for fluent method calls
      */
-    public SQLPageHelper<E> addQueryFacet(String name, String title, Function<SmartQuery<E>, SQLQuery> queryTransformer) {
+    public SQLPageHelper<E> addQueryFacet(String name,
+                                          String title,
+                                          Function<SmartQuery<E>, SQLQuery> queryTransformer) {
         return addFacet(new Facet(title, name, null, null), (f, q) -> {
             if (Strings.isFilled(f.getValue())) {
                 q.eq(Mapping.named(f.getName()), f.getValue());

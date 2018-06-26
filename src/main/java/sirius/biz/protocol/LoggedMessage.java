@@ -8,50 +8,43 @@
 
 package sirius.biz.protocol;
 
+import sirius.db.es.ElasticEntity;
+import sirius.db.es.annotations.Analyzed;
 import sirius.db.mixing.Mapping;
-import sirius.db.jdbc.SQLEntity;
-import sirius.db.mixing.annotations.Index;
-import sirius.db.mixing.annotations.Length;
-import sirius.db.mixing.annotations.Lob;
 import sirius.kernel.di.std.Framework;
+import sirius.kernel.health.Log;
 
 import java.time.LocalDateTime;
 
 /**
- * Stores a log message in the database.
+ * Stores a log message created via a {@link Log} instance.
  */
 @Framework(Protocols.FRAMEWORK_PROTOCOLS)
-@Index(name = "category_idx", columns = "category")
-@Index(name = "level_idx", columns = "level")
-@Index(name = "tod_idx", columns = "tod")
-public class LogEntry extends SQLEntity {
+public class LoggedMessage extends ElasticEntity {
 
     /**
-     * Contains the logged message.
+     * Contains the message itself.
      */
     public static final Mapping MESSAGE = Mapping.named("message");
-    @Lob
+    @Analyzed(indexOptions = Analyzed.IndexOption.DOCS)
     private String message;
 
     /**
-     * Contains the name of the logger which create the message.
+     * Contains the category (name of the logger) which created the message.
      */
     public static final Mapping CATEGORY = Mapping.named("category");
-    @Length(50)
     private String category;
 
     /**
-     * Contains the log level of the message.
+     * Contains the level the message was logged at.
      */
     public static final Mapping LEVEL = Mapping.named("level");
-    @Length(50)
     private String level;
 
     /**
-     * Contains the name of the node on which the message was logged.
+     * Contains the node the message was logged on.
      */
     public static final Mapping NODE = Mapping.named("node");
-    @Length(50)
     private String node;
 
     /**
@@ -61,16 +54,15 @@ public class LogEntry extends SQLEntity {
     private LocalDateTime tod = LocalDateTime.now();
 
     /**
-     * Contains the name of the user which was active when the message was logged.
+     * Contains the user that was logged in, when the message was logged.
      */
     public static final Mapping USER = Mapping.named("user");
-    @Length(255)
     private String user;
 
     /**
-     * Returns a CSS class which can be used to style the HTML table displaying the entries.
+     * Computes an appropriate CSS class used to render the message.
      *
-     * @return a CSS clas matching the log level of the entry
+     * @return the name of a CSS class based on the level of the message.
      */
     public String getLabelClass() {
         if ("ERROR".equals(getLevel())) {

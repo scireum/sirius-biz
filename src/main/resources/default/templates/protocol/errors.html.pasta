@@ -1,20 +1,20 @@
 <i:arg type="Page" name="errors"/>
 <i:arg type="int" name="total"/>
 
-<w:page titleKey="Incident.plural">
+<w:page titleKey="StoredIncident.plural">
     <i:block name="breadcrumbs">
         <li>
-            <a href="/system/errors">@i18n("Incident.plural")</a>
+            <a href="/system/errors">@i18n("StoredIncident.plural")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="Incident.plural"/>
+    <w:pageHeader titleKey="StoredIncident.plural"/>
 
     <div class="row">
         <div class="col-md-3">
             <w:filterbox page="errors" baseUrl="/system/errors"/>
 
-            <w:navbox labelKey="Incident.totalIncidents">
+            <w:navbox labelKey="IncidentController.totalIncidents">
                 @total
             </w:navbox>
         </div>
@@ -26,20 +26,20 @@
                 <tr>
                     <th>
                         <div class="row">
-                            <div class="col-md-4">@i18n("Incident.lastOccurrence")</div>
-                            <div class="col-md-4">@i18n("Incident.numberOfOccurrences")</div>
-                            <div class="col-md-4">@i18n("Incident.user")</div>
+                            <div class="col-md-4">@i18n("StoredIncident.lastOccurrence")</div>
+                            <div class="col-md-4">@i18n("StoredIncident.numberOfOccurrences")</div>
+                            <div class="col-md-4">@i18n("StoredIncident.user")</div>
                         </div>
                         <div class="row">
-                            <div class="muted col-md-4">@i18n("Incident.firstOccurrence")</div>
-                            <div class="muted col-md-4">@i18n("Incident.category")</div>
-                            <div class="muted col-md-4">@i18n("Incident.node")</div>
+                            <div class="muted col-md-4">@i18n("StoredIncident.firstOccurrence")</div>
+                            <div class="muted col-md-4">@i18n("StoredIncident.category")</div>
+                            <div class="muted col-md-4">@i18n("StoredIncident.node")</div>
                         </div>
                     </th>
                 </tr>
                 </thead>
                 <tbody>
-                <i:for type="sirius.biz.protocol.Incident" var="i" items="errors.getItems()">
+                <i:for type="sirius.biz.protocol.StoredIncident" var="i" items="errors.getItems()">
                     <tr>
                         <td>
                             <div class="row">

@@ -13,8 +13,8 @@ import com.mongodb.client.result.UpdateResult;
 import sirius.biz.sequences.SequenceStrategy;
 import sirius.biz.sequences.Sequences;
 import sirius.db.mongo.Doc;
-import sirius.db.mongo.Filter;
 import sirius.db.mongo.Mongo;
+import sirius.db.mongo.QueryBuilder;
 import sirius.db.mongo.Updater;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
@@ -129,7 +129,7 @@ public class MongoSequenceStrategy implements SequenceStrategy {
                                .set(MongoSequenceCounter.NEXT_VALUE, nextValue);
 
         if (!force) {
-            updater.where(Filter.lt(MongoSequenceCounter.NEXT_VALUE, nextValue));
+            updater.where(QueryBuilder.FILTERS.lt(MongoSequenceCounter.NEXT_VALUE, nextValue));
         }
 
         UpdateResult updateResult = updater.executeFor(MongoSequenceCounter.class);

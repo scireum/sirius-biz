@@ -9,10 +9,10 @@
 package sirius.biz.protocol;
 
 import sirius.biz.web.BizController;
-import sirius.biz.web.DateRange;
-import sirius.biz.web.SQLPageHelper;
+import sirius.biz.web.ElasticPageHelper;
+import sirius.db.mixing.DateRange;
+import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.nls.NLS;
 import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
@@ -23,7 +23,7 @@ import sirius.web.security.Permission;
  * Provides a GUI for viewing system logs.
  */
 @Register(classes = Controller.class, framework = Protocols.FRAMEWORK_PROTOCOLS)
-public class MailsController extends BizController {
+public class MailController extends BizController {
 
     /**
      * Lists all recorded mail entries.
@@ -34,23 +34,22 @@ public class MailsController extends BizController {
     @DefaultRoute
     @Routed("/system/mails")
     public void mails(final WebContext ctx) {
-        SQLPageHelper<MailLogEntry>
-                ph = SQLPageHelper.withQuery(elastic.select(MailProtocol.class).orderDesc(MailProtocol.TOD));
+        ElasticPageHelper<MailProtocol> ph =
+                ElasticPageHelper.withQuery(elastic.select(MailProtocol.class).orderDesc(MailProtocol.TOD));
         ph.withContext(ctx);
-        ph.addTimeFacet(MailLogEntry.TOD.getName(),
-                        NLS.get("MailLogEntry.tod"),
-                        DateRange.lastFiveMinutes(),
-                        DateRange.lastFiveteenMinutes(),
-                        DateRange.lastTwoHours(),
-                        DateRange.today(),
-                        DateRange.yesterday(),
-                        DateRange.thisWeek(),
-                        DateRange.lastWeek());
-        ph.withSearchFields(MailLogEntry.SUBJECT,
-                            MailLogEntry.SENDER,
-                            MailLogEntry.SENDER_NAME,
-                            MailLogEntry.RECEIVER,
-                            MailLogEntry.RECEIVER_NAME);
+        ph.addTimeAggregation(MailProtocol.TOD,
+                              DateRange.lastFiveMinutes(),
+                              DateRange.lastFiveteenMinutes(),
+                              DateRange.lastTwoHours(),
+                              DateRange.today(),
+                              DateRange.yesterday(),
+                              DateRange.thisWeek(),
+                              DateRange.lastWeek());
+        ph.withSearchFields(QueryField.contains(MailProtocol.SUBJECT),
+                            QueryField.contains(MailProtocol.SENDER),
+                            QueryField.contains(MailProtocol.SENDER_NAME),
+                            QueryField.contains(MailProtocol.RECEIVER),
+                            QueryField.contains(MailProtocol.RECEIVER_NAME));
 
         ctx.respondWith().template("templates/protocol/mails.html.pasta", ph.asPage());
     }

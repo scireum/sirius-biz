@@ -12,10 +12,9 @@ import sirius.biz.jdbc.model.AddressData;
 import sirius.biz.jdbc.model.PermissionData;
 import sirius.biz.web.BizController;
 import sirius.biz.web.SQLPageHelper;
+import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
-import sirius.db.jdbc.constraints.And;
-import sirius.db.jdbc.constraints.FieldOperator;
-import sirius.db.jdbc.constraints.Or;
+import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -95,10 +94,10 @@ public class TenantController extends BizController {
     public void tenants(WebContext ctx) {
         SQLPageHelper<Tenant> ph = SQLPageHelper.withQuery(oma.select(Tenant.class).orderAsc(Tenant.NAME));
         ph.withContext(ctx);
-        ph.withSearchFields(Tenant.NAME,
-                            Tenant.ACCOUNT_NUMBER,
-                            Tenant.ADDRESS.inner(AddressData.STREET),
-                            Tenant.ADDRESS.inner(AddressData.CITY));
+        ph.withSearchFields(QueryField.contains(Tenant.NAME),
+                            QueryField.contains(Tenant.ACCOUNT_NUMBER),
+                            QueryField.contains(Tenant.ADDRESS.inner(AddressData.STREET)),
+                            QueryField.contains(Tenant.ADDRESS.inner(AddressData.CITY)));
 
         ctx.respondWith().template("templates/tenants/tenants.html.pasta", ph.asPage());
     }
@@ -135,10 +134,7 @@ public class TenantController extends BizController {
                .template("templates/tenants/tenant-details.html.pasta",
                          tenant,
                          this,
-                         oma.select(Tenant.class)
-                            .orderAsc(Tenant.NAME)
-                            .where(FieldOperator.on(Tenant.ID).notEqual(tenant.getId()))
-                            .queryList());
+                         oma.select(Tenant.class).orderAsc(Tenant.NAME).ne(Tenant.ID, tenant.getId()).queryList());
         }
     }
 
@@ -220,10 +216,10 @@ public class TenantController extends BizController {
         SmartQuery<Tenant> baseQuery = queryPossibleTenants(ctx).orderAsc(Tenant.NAME);
         SQLPageHelper<Tenant> ph = SQLPageHelper.withQuery(baseQuery);
         ph.withContext(ctx);
-        ph.withSearchFields(Tenant.NAME,
-                            Tenant.ACCOUNT_NUMBER,
-                            Tenant.ADDRESS.inner(AddressData.STREET),
-                            Tenant.ADDRESS.inner(AddressData.CITY));
+        ph.withSearchFields(QueryField.contains(Tenant.NAME),
+                            QueryField.contains(Tenant.ACCOUNT_NUMBER),
+                            QueryField.contains(Tenant.ADDRESS.inner(AddressData.STREET)),
+                            QueryField.contains(Tenant.ADDRESS.inner(AddressData.CITY)));
 
         ctx.respondWith().template("templates/tenants/select-tenant.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
     }
@@ -272,12 +268,13 @@ public class TenantController extends BizController {
             SmartQuery<Tenant> baseQuery = oma.select(Tenant.class);
             if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
                 if (originalTenant.get().isCanAccessParent()) {
-                    baseQuery.where(Or.of(And.of(FieldOperator.on(Tenant.PARENT).eq(tenantId),
-                                                 FieldOperator.on(Tenant.PARENT_CAN_ACCESS).eq(true)),
-                                          FieldOperator.on(Tenant.ID).eq(originalTenant.get().getParent().getId())));
+                    baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.and(OMA.FILTERS.eq(Tenant.PARENT, tenantId),
+                                                                   OMA.FILTERS.eq(Tenant.PARENT_CAN_ACCESS, true)),
+                                                   OMA.FILTERS.eq(Tenant.ID,
+                                                                  originalTenant.get().getParent().getId())));
                 } else {
-                    baseQuery.where(And.of(FieldOperator.on(Tenant.PARENT).eq(tenantId),
-                                           FieldOperator.on(Tenant.PARENT_CAN_ACCESS).eq(true)));
+                    baseQuery.where(OMA.FILTERS.and(OMA.FILTERS.eq(Tenant.PARENT, tenantId),
+                                                    OMA.FILTERS.eq(Tenant.PARENT_CAN_ACCESS, true)));
                 }
             }
             return baseQuery;

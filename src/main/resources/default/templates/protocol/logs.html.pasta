@@ -1,12 +1,12 @@
 <i:arg type="Page" name="logs"/>
-<w:page titleKey="LogEntry.plural">
+<w:page titleKey="LoggedMessage.plural">
     <i:block name="breadcrumbs">
         <li>
-            <a href="/system/logs">@i18n("LogEntry.plural")</a>
+            <a href="/system/logs">@i18n("LoggedMessage.plural")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="LogEntry.plural"/>
+    <w:pageHeader titleKey="LoggedMessage.plural"/>
 
     <div class="row">
         <div class="col-md-3">
@@ -20,17 +20,17 @@
                 <tr>
                     <th>
                         <div class="row">
-                            <div class="col-md-2">@i18n("LogEntry.level")</div>
-                            <div class="col-md-3">@i18n("LogEntry.tod")</div>
-                            <div class="col-md-2">@i18n("LogEntry.category")</div>
-                            <div class="col-md-2">@i18n("LogEntry.user")</div>
-                            <div class="col-md-3">@i18n("LogEntry.node")</div>
+                            <div class="col-md-2">@i18n("LoggedMessage.level")</div>
+                            <div class="col-md-3">@i18n("LoggedMessage.tod")</div>
+                            <div class="col-md-2">@i18n("LoggedMessage.category")</div>
+                            <div class="col-md-2">@i18n("LoggedMessage.user")</div>
+                            <div class="col-md-3">@i18n("LoggedMessage.node")</div>
                         </div>
                     </th>
                 </tr>
                 </thead>
                 <tbody>
-                <i:for type="sirius.biz.protocol.LogEntry" var="msg" items="logs.getItems()">
+                <i:for type="sirius.biz.protocol.LoggedMessage" var="msg" items="logs.getItems()">
                     <tr>
                         <td>
                             <div class="row">

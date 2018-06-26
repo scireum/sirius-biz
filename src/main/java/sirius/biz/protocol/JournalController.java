@@ -8,7 +8,6 @@
 
 package sirius.biz.protocol;
 
-import sirius.biz.web.DateRange;
 import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.OMA;
 import sirius.db.mixing.DateRange;
@@ -27,37 +26,38 @@ import sirius.web.security.Permission;
  */
 @Register(classes = Controller.class, framework = Protocols.FRAMEWORK_JOURNAL)
 public class JournalController extends BasicController {
-
-    @Part
-    private OMA oma;
-
-    /**
-     * Displays all changes on entities recorded by the protocol.
-     *
-     * @param ctx the current request
-     */
-    @Permission(Protocols.PERMISSION_SYSTEM_JOURNAL)
-    @DefaultRoute
-    @Routed("/system/protocol")
-    public void protocol(WebContext ctx) {
-        SQLPageHelper<JournalEntry> ph = SQLPageHelper.withQuery(oma.select(JournalEntry.class).orderDesc(JournalEntry.TOD));
-        ph.withContext(ctx);
-        ph.addQueryFacet(JournalEntry.TARGET_TYPE.getName(),
-                         NLS.get("JournalEntry.targetType"),
-                         q -> oma.select(JournalEntry.class)
-                                 .distinctFields(JournalEntry.TARGET_TYPE, JournalEntry.TARGET_TYPE)
-                                 .asSQLQuery());
-        ph.addTimeFacet(JournalEntry.TOD.getName(),
-                        NLS.get("JournalEntry.tod"),
-                        DateRange.lastFiveMinutes(),
-                        DateRange.lastFiveteenMinutes(),
-                        DateRange.lastTwoHours(),
-                        DateRange.today(),
-                        DateRange.yesterday(),
-                        DateRange.thisWeek(),
-                        DateRange.lastWeek());
-        ph.withSearchFields(JournalEntry.CHANGES, JournalEntry.TARGET_NAME, JournalEntry.USERNAME);
-
-        ctx.respondWith().template("templates/protocol/protocol.html.pasta", ph.asPage());
-    }
+//
+//    @Part
+//    private OMA oma;
+//
+//    /**
+//     * Displays all changes on entities recorded by the protocol.
+//     *
+//     * @param ctx the current request
+//     */
+//    @Permission(Protocols.PERMISSION_SYSTEM_JOURNAL)
+//    @DefaultRoute
+//    @Routed("/system/protocol")
+//    public void protocol(WebContext ctx) {
+//        SQLPageHelper<JournalEntry> ph =
+//                SQLPageHelper.withQuery(oma.select(JournalEntry.class).orderDesc(JournalEntry.TOD));
+//        ph.withContext(ctx);
+//        ph.addQueryFacet(JournalEntry.TARGET_TYPE.getName(),
+//                         NLS.get("JournalEntry.targetType"),
+//                         q -> oma.select(JournalEntry.class)
+//                                 .distinctFields(JournalEntry.TARGET_TYPE, JournalEntry.TARGET_TYPE)
+//                                 .asSQLQuery());
+//        ph.addTimeFacet(JournalEntry.TOD.getName(),
+//                        NLS.get("JournalEntry.tod"),
+//                        DateRange.lastFiveMinutes(),
+//                        DateRange.lastFiveteenMinutes(),
+//                        DateRange.lastTwoHours(),
+//                        DateRange.today(),
+//                        DateRange.yesterday(),
+//                        DateRange.thisWeek(),
+//                        DateRange.lastWeek());
+//        ph.withSearchFields(JournalEntry.CHANGES, JournalEntry.TARGET_NAME, JournalEntry.USERNAME);
+//
+//        ctx.respondWith().template("templates/protocol/protocol.html.pasta", ph.asPage());
+//    }
 }
