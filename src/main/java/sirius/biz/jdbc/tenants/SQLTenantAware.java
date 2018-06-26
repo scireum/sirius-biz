@@ -34,7 +34,7 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
 
     @Override
     public String getTenantAsString() {
-        return getTenant().getUniqueObjectName();
+        return getTenant().isFilled() ? String.valueOf(getTenant().getId()) : null;
     }
 
     @Override

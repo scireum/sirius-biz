@@ -11,6 +11,7 @@ package sirius.biz.web;
 import sirius.biz.jdbc.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.properties.JDBCBooleanProperty;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.BaseMapper;
 import sirius.db.mixing.Mapping;
@@ -221,7 +222,7 @@ public class BizController extends BasicController {
         // by a checkbox. As an unchecked checkbox will not submit any value
         // we still process this property, which is then considered to be
         // false (matching the unchecked checkbox).
-        return property instanceof BooleanProperty;
+        return property instanceof BooleanProperty || property instanceof JDBCBooleanProperty;
     }
 
     private boolean isAutoloaded(Property property) {
