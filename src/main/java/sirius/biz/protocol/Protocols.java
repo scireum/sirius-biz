@@ -55,10 +55,6 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
      */
     public static final String PERMISSION_SYSTEM_JOURNAL = "permission-system-journal";
 
-//    @Part
-//    private OMA oma;
-//
-
     @Part
     private Elastic elastic;
 

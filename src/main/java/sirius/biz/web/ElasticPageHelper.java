@@ -61,7 +61,24 @@ public class ElasticPageHelper<E extends ElasticEntity>
      * @return the helper itself for fluent method calls
      */
     public ElasticPageHelper<E> addTermAggregation(Mapping field) {
-        return addTermAggregation(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(), field, null);
+        return addTermAggregation(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
+                                  field,
+                                  null,
+                                  ElasticQuery.DEFAULT_TERM_AGGREGATION_BUCKET_COUNT);
+    }
+
+    /**
+     * Adds a automatic facet for values in the given field.
+     *
+     * @param field           the field to aggregate on
+     * @param numberOfBuckets the maximal number of buckets collect and return
+     * @return the helper itself for fluent method calls
+     */
+    public ElasticPageHelper<E> addTermAggregation(Mapping field, int numberOfBuckets) {
+        return addTermAggregation(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
+                                  field,
+                                  null,
+                                  numberOfBuckets);
     }
 
     /**
@@ -96,18 +113,20 @@ public class ElasticPageHelper<E extends ElasticEntity>
     /**
      * Adds a automatic facet for values in the given field.
      *
-     * @param title      the title to use for the facet
-     * @param field      the field to aggregate on
-     * @param translator the translator used to convert field values into filter labels
+     * @param title           the title to use for the facet
+     * @param field           the field to aggregate on
+     * @param translator      the translator used to convert field values into filter labels
+     * @param numberOfBuckets the maximal number of buckets collect and return
      * @return the helper itself for fluent method calls
      */
     public ElasticPageHelper<E> addTermAggregation(String title,
                                                    Mapping field,
-                                                   ValueComputer<String, String> translator) {
+                                                   ValueComputer<String, String> translator,
+                                                   int numberOfBuckets) {
         Facet facet = new Facet(title, field.toString(), null, translator);
         addFilterFacet(facet);
         aggregatingFacets.add(Tuple.create(facet, translator));
-        baseQuery.addTermAggregation(field);
+        baseQuery.addTermAggregation(field.toString(), field, numberOfBuckets);
 
         return this;
     }

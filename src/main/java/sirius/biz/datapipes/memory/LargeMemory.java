@@ -20,17 +20,6 @@ public class LargeMemory {
 
     public static final int PAGE_SIZE = 4 * 1024 * 1024;
 
-    private AtomicLong usedSize = new AtomicLong();
-    private volatile long allocatedSize = 0;
-    private volatile int numberOfBuffers = 0;
-    private static final boolean BIG_ENDIAN = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
-    private volatile long[] buffers = new long[16];
-    private Allocator allocator;
-
-    public LargeMemory(Allocator allocator) {
-        this.allocator = allocator;
-    }
-
     protected static final Unsafe UNSAFE;
 
     static {
@@ -41,6 +30,17 @@ public class LargeMemory {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private AtomicLong usedSize = new AtomicLong();
+    private volatile long allocatedSize = 0;
+    private volatile int numberOfBuffers = 0;
+    private static final boolean BIG_ENDIAN = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
+    private volatile long[] buffers = new long[16];
+    private Allocator allocator;
+
+    public LargeMemory(Allocator allocator) {
+        this.allocator = allocator;
     }
 
     public void writeByte(long address, byte data) {

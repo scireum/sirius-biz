@@ -39,7 +39,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable {
     private static final String EXECUTION_ENABLED_SUFFIX = "-enabled";
     private static final String EXECUTION_INFO_SUFFIX = "-info";
     private static final String BACKGROUND_LOOP_PREFIX = "loop-";
-    public static final String DAILY_TASK_PREFIX = "task-";
+    private static final String DAILY_TASK_PREFIX = "task-";
 
     public enum SynchronizeType {
         DISABLED, CLUSTER, LOCAL
