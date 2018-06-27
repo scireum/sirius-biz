@@ -43,7 +43,7 @@ import java.util.function.Consumer;
  * <p>
  * Serveral users are grouped together by their company, which is referred to as {@link Tenant}.
  */
-@Framework("biz.tenants")
+@Framework(Tenants.FRAMEWORK_TENANTS)
 @Versioned
 @Index(name = "index_username", columns = "login_username", unique = true)
 public class UserAccount extends SQLTenantAware implements Journaled, MessageProvider {

@@ -9,7 +9,7 @@
 package sirius.biz.web;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import sirius.db.jdbc.SQLEntity;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Strings;
@@ -58,7 +58,7 @@ public class QueryTagController implements Controller {
         if (Strings.isFilled(query)) {
             Class<?> entityType = mixing.findDescriptor(type).map(EntityDescriptor::getType).orElse(null);
             for (QueryTagSuggester suggester : suggesters) {
-                suggester.computeQueryTags(type, (Class<? extends SQLEntity>) entityType, query, tag -> {
+                suggester.computeQueryTags(type, (Class<? extends BaseEntity<?>>) entityType, query, tag -> {
                     out.beginObject("suggestion");
                     out.property("name", tag.getLabel());
                     out.property("color", tag.getColor());

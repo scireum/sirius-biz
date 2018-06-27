@@ -33,7 +33,7 @@ import sirius.kernel.nls.NLS;
  * <p>
  * Helps to support multi tenancy for SaaS platforms.
  */
-@Framework("biz.tenants")
+@Framework(Tenants.FRAMEWORK_TENANTS)
 @Versioned
 public class Tenant extends BizEntity implements Journaled {
 

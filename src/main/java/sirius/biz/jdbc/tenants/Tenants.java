@@ -15,7 +15,6 @@ import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.jdbc.SmartQuery;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
-import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -31,9 +30,13 @@ import java.util.Optional;
  * <p>
  * Also some boiler plate methods are provided to perform some assertions.
  */
-@Framework("biz.tenants")
-@Register(classes = Tenants.class)
+@Register(classes = Tenants.class, framework = Tenants.FRAMEWORK_TENANTS)
 public class Tenants {
+
+    /**
+     * Names the framework which must be enabled to activate the tenant based user management.
+     */
+    public static final String FRAMEWORK_TENANTS = "biz.tenants";
 
     @Part
     private OMA oma;

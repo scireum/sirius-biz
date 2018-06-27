@@ -12,10 +12,10 @@ import sirius.biz.jdbc.model.LoginData;
 import sirius.biz.jdbc.model.PermissionData;
 import sirius.biz.jdbc.model.PersonData;
 import sirius.biz.web.BizController;
-import sirius.biz.web.PageHelper;
+import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SmartQuery;
-import sirius.db.jdbc.constraints.Like;
+import sirius.db.mixing.query.QueryField;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
@@ -43,7 +43,7 @@ import java.util.Optional;
 /**
  * Provides a GUI for managing user accounts.
  */
-@Register(classes = Controller.class, framework = "biz.tenants")
+@Register(classes = Controller.class, framework = Tenants.FRAMEWORK_TENANTS)
 public class UserAccountController extends BizController {
 
     /**
@@ -81,16 +81,16 @@ public class UserAccountController extends BizController {
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void accounts(WebContext ctx) {
-        PageHelper<UserAccount> ph = PageHelper.withQuery(tenants.forCurrentTenant(oma.select(UserAccount.class)
-                                                                                      .orderAsc(UserAccount.PERSON.inner(
-                                                                                              PersonData.LASTNAME))
-                                                                                      .orderAsc(UserAccount.PERSON.inner(
-                                                                                              PersonData.FIRSTNAME))));
+        SQLPageHelper<UserAccount> ph = SQLPageHelper.withQuery(tenants.forCurrentTenant(oma.select(UserAccount.class)
+                                                                                            .orderAsc(UserAccount.PERSON
+                                                                                                              .inner(PersonData.LASTNAME))
+                                                                                            .orderAsc(UserAccount.PERSON
+                                                                                                              .inner(PersonData.FIRSTNAME))));
         ph.withContext(ctx);
-        ph.withSearchFields(UserAccount.EMAIL,
-                            UserAccount.LOGIN.inner(LoginData.USERNAME),
-                            UserAccount.PERSON.inner(PersonData.FIRSTNAME),
-                            UserAccount.PERSON.inner(PersonData.LASTNAME));
+        ph.withSearchFields(QueryField.contains(UserAccount.EMAIL),
+                            QueryField.contains(UserAccount.LOGIN.inner(LoginData.USERNAME)),
+                            QueryField.contains(UserAccount.PERSON.inner(PersonData.FIRSTNAME)),
+                            QueryField.contains(UserAccount.PERSON.inner(PersonData.LASTNAME)));
 
         ctx.respondWith().template("templates/tenants/user-accounts.html.pasta", ph.asPage());
     }
@@ -368,13 +368,12 @@ public class UserAccountController extends BizController {
         AutocompleteHelper.handle(ctx, (query, result) -> {
             oma.select(UserAccount.class)
                .eq(UserAccount.TENANT, tenants.getRequiredTenant())
-               .where(Like.allWordsInAnyField(query,
-                                              UserAccount.EMAIL,
-                                              UserAccount.LOGIN.inner(LoginData.USERNAME),
-                                              UserAccount.PERSON.inner(PersonData.FIRSTNAME),
-                                              UserAccount.PERSON.inner(PersonData.LASTNAME)))
+               .queryString(query,
+                            QueryField.contains(UserAccount.EMAIL),
+                            QueryField.contains(UserAccount.LOGIN.inner(LoginData.USERNAME)),
+                            QueryField.contains(UserAccount.PERSON.inner(PersonData.FIRSTNAME)),
+                            QueryField.contains(UserAccount.PERSON.inner(PersonData.LASTNAME)))
                .limit(10)
-
                .iterateAll(userAccount -> {
                    result.accept(new AutocompleteHelper.Completion(userAccount.getIdAsString(),
                                                                    userAccount.toString(),
@@ -406,14 +405,14 @@ public class UserAccountController extends BizController {
                          UserAccount.TENANT.join(Tenant.NAME),
                          UserAccount.TENANT.join(Tenant.ACCOUNT_NUMBER));
 
-        PageHelper<UserAccount> ph = PageHelper.withQuery(baseQuery);
+        SQLPageHelper<UserAccount> ph = SQLPageHelper.withQuery(baseQuery);
         ph.withContext(ctx);
-        ph.withSearchFields(UserAccount.PERSON.inner(PersonData.LASTNAME),
-                            UserAccount.PERSON.inner(PersonData.FIRSTNAME),
-                            UserAccount.LOGIN.inner(LoginData.USERNAME),
-                            UserAccount.EMAIL,
-                            UserAccount.TENANT.join(Tenant.NAME),
-                            UserAccount.TENANT.join(Tenant.ACCOUNT_NUMBER));
+        ph.withSearchFields(QueryField.contains(UserAccount.PERSON.inner(PersonData.LASTNAME)),
+                            QueryField.contains(UserAccount.PERSON.inner(PersonData.FIRSTNAME)),
+                            QueryField.contains(UserAccount.LOGIN.inner(LoginData.USERNAME)),
+                            QueryField.contains(UserAccount.EMAIL),
+                            QueryField.contains(UserAccount.TENANT.join(Tenant.NAME)),
+                            QueryField.contains(UserAccount.TENANT.join(Tenant.ACCOUNT_NUMBER)));
 
         ctx.respondWith()
            .template("templates/tenants/select-user-account.html.pasta", ph.asPage(), isCurrentlySpying(ctx));

@@ -76,6 +76,6 @@ public class I5Connector implements Stoppable {
 
     @Override
     public void stopped() {
-        pools.entrySet().stream().map(Map.Entry::getValue).forEach(I5ConnectionPool::release);
+        pools.values().forEach(I5ConnectionPool::release);
     }
 }

@@ -10,7 +10,6 @@ package sirius.biz.jdbc.storage;
 
 import sirius.biz.protocol.TraceData;
 import sirius.db.jdbc.OMA;
-import sirius.db.jdbc.constraints.FieldOperator;
 import sirius.kernel.async.BackgroundLoop;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -63,8 +62,8 @@ public class StorageCleanupLoop extends BackgroundLoop {
     private void cleanupTemporaryUploads() {
         List<VirtualObject> objectsToDelete = oma.select(VirtualObject.class)
                                                  .eq(VirtualObject.TEMPORARY, true)
-                                                 .where(FieldOperator.on(VirtualObject.TRACE.inner(TraceData.CHANGED_AT))
-                                                                     .lessThan(LocalDateTime.now().minusHours(1)))
+                                                 .where(OMA.FILTERS.lt(VirtualObject.TRACE.inner(TraceData.CHANGED_AT),
+                                                                       LocalDateTime.now().minusHours(1)))
                                                  .limit(256)
                                                  .queryList();
         if (!objectsToDelete.isEmpty()) {
@@ -88,8 +87,8 @@ public class StorageCleanupLoop extends BackgroundLoop {
         LocalDate limit = LocalDate.now().minusDays(bucket.getDeleteFilesAfterDays());
         List<VirtualObject> objectsToDelete = oma.select(VirtualObject.class)
                                                  .eq(VirtualObject.BUCKET, bucket.getName())
-                                                 .where(FieldOperator.on(VirtualObject.TRACE.inner(TraceData.CHANGED_AT))
-                                                                     .lessThan(limit))
+                                                 .where(OMA.FILTERS.lt(VirtualObject.TRACE.inner(TraceData.CHANGED_AT),
+                                                                       limit))
                                                  .limit(256)
                                                  .queryList();
         if (!objectsToDelete.isEmpty()) {

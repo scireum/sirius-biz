@@ -13,11 +13,9 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.jdbc.tenants.Tenants;
 import sirius.biz.protocol.TraceData;
 import sirius.biz.web.BizController;
-import sirius.biz.web.PageHelper;
+import sirius.biz.web.SQLPageHelper;
+import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
-import sirius.db.jdbc.constraints.FieldOperator;
-import sirius.db.jdbc.constraints.Like;
-import sirius.db.jdbc.constraints.Or;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
@@ -89,13 +87,13 @@ public class StorageController extends BizController {
         SmartQuery<VirtualObject> baseQuery = oma.select(VirtualObject.class)
                                                  .eq(VirtualObject.BUCKET, bucket.getName())
                                                  .eq(VirtualObject.REFERENCE, null)
-                                                 .where(FieldOperator.on(VirtualObject.PATH).notEqual(null))
+                                                 .ne(VirtualObject.PATH, null)
                                                  .orderDesc(VirtualObject.TRACE.inner(TraceData.CHANGED_AT));
 
         applyQuery(ctx.get("query").asString(), baseQuery, bucket.isAlwaysUseLikeSearch());
 
-        PageHelper<VirtualObject> pageHelper =
-                PageHelper.withQuery(tenants.forCurrentTenant(baseQuery)).withContext(ctx);
+        SQLPageHelper<VirtualObject> pageHelper =
+                SQLPageHelper.withQuery(tenants.forCurrentTenant(baseQuery)).withContext(ctx);
 
         ctx.respondWith().template("templates/storage/objects.html.pasta", bucket, pageHelper.asPage());
     }
@@ -138,7 +136,7 @@ public class StorageController extends BizController {
                                                  .eq(VirtualObject.TENANT, tenants.getRequiredTenant())
                                                  .eq(VirtualObject.BUCKET, bucket.getName())
                                                  .eq(VirtualObject.REFERENCE, null)
-                                                 .where(FieldOperator.on(VirtualObject.PATH).notEqual(null))
+                                                 .ne(VirtualObject.PATH, null)
                                                  .orderDesc(VirtualObject.TRACE.inner(TraceData.CHANGED_AT))
                                                  .limit(10);
 
@@ -166,8 +164,8 @@ public class StorageController extends BizController {
 
         String queryString = query;
         if (alwaysUseLikeSearch) {
-            baseQuery.where(Or.of(Like.on(VirtualObject.PATH).contains(queryString),
-                                  Like.on(VirtualObject.OBJECT_KEY).matches(query)));
+            baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.like(VirtualObject.PATH).contains(queryString).build(),
+                                           OMA.FILTERS.like(VirtualObject.OBJECT_KEY).matches(query).build()));
             return;
         }
         if (!(queryString.startsWith("*") || queryString.startsWith("/"))) {
@@ -175,11 +173,11 @@ public class StorageController extends BizController {
         }
 
         if (queryString.contains("*")) {
-            baseQuery.where(Or.of(Like.on(VirtualObject.PATH).matches(queryString),
-                                  Like.on(VirtualObject.OBJECT_KEY).matches(query)));
+            baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.like(VirtualObject.PATH).matches(queryString).build(),
+                                           OMA.FILTERS.like(VirtualObject.OBJECT_KEY).matches(query).build()));
         } else {
-            baseQuery.where(Or.of(FieldOperator.on(VirtualObject.PATH).eq(queryString),
-                                  FieldOperator.on(VirtualObject.OBJECT_KEY).eq(query)));
+            baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.eq(VirtualObject.PATH, queryString),
+                                           OMA.FILTERS.eq(VirtualObject.OBJECT_KEY, query)));
         }
     }
 

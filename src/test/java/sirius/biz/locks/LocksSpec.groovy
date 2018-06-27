@@ -8,23 +8,13 @@
 
 package sirius.biz.locks
 
-import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
-
-import java.time.Duration
 
 class LocksSpec extends BaseSpecification {
 
     @Part
-    private static Locks locks
-
-    @Part
-    private static OMA oma
-
-    def setupSpec() {
-        oma.getReadyFuture().await(Duration.ofSeconds(60))
-    }
+    protected static Locks locks
 
     def "an acquired lock cannot be locked again unless it has been released"() {
         when:

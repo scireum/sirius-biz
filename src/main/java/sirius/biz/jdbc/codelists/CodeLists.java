@@ -14,7 +14,6 @@ import sirius.kernel.Sirius;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
-import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -34,9 +33,13 @@ import java.util.List;
  * The required data is stored via {@link CodeList} and {@link CodeListEntry}. The {@link CodeListController} is used
  * to provide an administration GUI for the user.
  */
-@Framework("biz.code-lists")
-@Register(classes = CodeLists.class)
+@Register(classes = CodeLists.class, framework = CodeLists.FRAMEWORK_CODE_LISTS)
 public class CodeLists {
+
+    /**
+     * Names the framework which must be enabled to activate the code lists feature.
+     */
+    public static final String FRAMEWORK_CODE_LISTS = "biz.code-lists";
 
     @Part
     private OMA oma;

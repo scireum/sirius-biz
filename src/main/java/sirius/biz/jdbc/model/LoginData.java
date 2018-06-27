@@ -55,6 +55,7 @@ public class LoginData extends Composite {
     @Trim
     @Length(50)
     @NullAllowed
+    @NoJournal
     private String passwordHash;
 
     /**
@@ -66,6 +67,7 @@ public class LoginData extends Composite {
     @Trim
     @Length(50)
     @NullAllowed
+    @NoJournal
     private String ucasePasswordHash;
 
     /**
@@ -75,6 +77,7 @@ public class LoginData extends Composite {
     public static final Mapping SALT = Mapping.named("salt");
     @Trim
     @Length(50)
+    @NoJournal
     private String salt;
 
     /**

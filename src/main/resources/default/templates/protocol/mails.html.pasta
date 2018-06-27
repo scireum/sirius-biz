@@ -1,13 +1,13 @@
 <i:arg type="Page" name="mails"/>
 
-<w:page titleKey="MailLogEntry.plural">
+<w:page titleKey="MailProtocol.plural">
     <i:block name="breadcrumbs">
         <li>
-            <a href="/system/mails">@i18n("MailLogEntry.plural")</a>
+            <a href="/system/mails">@i18n("MailProtocol.plural")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="MailLogEntry.plural"/>
+    <w:pageHeader titleKey="MailProtocol.plural"/>
 
     <div class="row">
         <div class="col-md-3">
@@ -21,16 +21,16 @@
                 <tr>
                     <th>
                         <div class="row">
-                            <div class="col-md-3">@i18n("MailLogEntry.tod")</div>
-                            <div class="col-md-3">@i18n("MailLogEntry.sender")</div>
-                            <div class="col-md-3">@i18n("MailLogEntry.receiver")</div>
-                            <div class="col-md-3">@i18n("MailLogEntry.node")</div>
+                            <div class="col-md-3">@i18n("MailProtocol.tod")</div>
+                            <div class="col-md-3">@i18n("MailProtocol.sender")</div>
+                            <div class="col-md-3">@i18n("MailProtocol.receiver")</div>
+                            <div class="col-md-3">@i18n("MailProtocol.node")</div>
                         </div>
                     </th>
                 </tr>
                 </thead>
                 <tbody>
-                <i:for type="sirius.biz.protocol.MailLogEntry" var="mail" items="mails.getItems()">
+                <i:for type="sirius.biz.protocol.MailProtocol" var="mail" items="mails.getItems()">
                     <tr>
                         <td>
                             <div class="row">

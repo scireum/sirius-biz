@@ -126,7 +126,7 @@ public class TenantUserManager extends GenericUserManager {
     /**
      * Creates a new user manager for the given scope and configuration.
      */
-    @Register(name = "tenants", framework = "biz.tenants")
+    @Register(name = "tenants", framework = Tenants.FRAMEWORK_TENANTS)
     public static class Factory implements UserManagerFactory {
 
         @Nonnull

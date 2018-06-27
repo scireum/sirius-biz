@@ -18,7 +18,7 @@
 
     <properties>
         <sirius.kernel>11.0</sirius.kernel>
-        <sirius.web>18.0</sirius.web>
+        <sirius.web>18.2</sirius.web>
         <sirius.db>5.0-SNAPSHOT</sirius.db>
     </properties>
 
@@ -87,7 +87,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.10.12</version>
+            <version>1.11.82</version>
         </dependency>
     </dependencies>
 

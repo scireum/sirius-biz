@@ -8,8 +8,9 @@
 
 package sirius.biz.sequences;
 
-import sirius.db.jdbc.OMA;
-import sirius.db.mixing.Mixing;
+import sirius.biz.locks.Locks;
+import sirius.db.jdbc.schema.Schema;
+import sirius.db.mongo.Mongo;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
@@ -18,25 +19,41 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 
-import java.sql.SQLException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Provides a facility to generate unique consecutive numbers.
  * <p>
  * For each sequence name, a call to {@link #generateId(String)} will return a unique number. The initial or next
- * number being returned can be specified by {@link #setCounterValue(String, long, boolean)}.
+ * number being returned can be specified by {@link #setNextValue(String, long, boolean)}.
  * <p>
  * Note that these sequences are global and not tenant aware. Therefore care must be taken to generate unique names for
- * sequences. A viable option is to use {@link sirius.db.mixing.BaseEntity#getUniqueName()} of the entity which utilizes the generator.
+ * sequences. A viable option is to use {@link sirius.db.mixing.BaseEntity#getUniqueName()} of the entity which utilizes
+ * this generator.
  */
-@Framework("biz.sequences")
-@Register(classes = Sequences.class)
+@Register(classes = Sequences.class,framework = Sequences.FRAMEWORK_SEQUENCES)
 public class Sequences {
+
+    /**
+     * Names the framework which must be enabled to activate the sequences feature.
+     */
+    public static final String FRAMEWORK_SEQUENCES = "biz.sequences";
 
     public static final Log LOG = Log.get("sequences");
 
     @Part
-    private OMA oma;
+    private Locks locks;
+
+    @Part
+    private Schema schema;
+
+    @Part
+    private Mongo mongo;
+
+    @Part(configPath = "sequences.strategy")
+    private SequenceStrategy sequenceStrategy;
 
     /**
      * Returns the next value in the given sequence.
@@ -52,9 +69,9 @@ public class Sequences {
      */
     public long generateId(String sequence) {
         try {
-            int retries = 25;
+            int retries = 2;
             while (retries-- > 0) {
-                Long id = tryGenerateId(sequence);
+                Long id = sequenceStrategy.tryGenerateId(sequence);
                 if (id != null) {
                     return id;
                 }
@@ -63,58 +80,39 @@ public class Sequences {
                 Wait.randomMillis(50, 100);
             }
 
-            throw Exceptions.handle()
-                            .to(LOG)
-                            .withSystemErrorMessage(
-                                    "Failed to generate an unique sequence number for %s. Giving up after 25 retries.",
-                                    sequence)
-                            .handle();
-        } catch (SQLException e) {
+            return generateInLock(sequence);
+        } catch (Exception e) {
             throw Exceptions.handle()
                             .to(LOG)
                             .error(e)
-                            .withSystemErrorMessage(
-                                    "Failed to generate an unique number for %s due to a database error: %s",
-                                    sequence)
+                            .withSystemErrorMessage("Failed to generate an unique number for %s: %s (%s)", sequence)
                             .handle();
         }
     }
 
-    private Long tryGenerateId(String sequence) throws SQLException {
-        // Select the current value which will be returned if all goes well....
-        SequenceCounter result = oma.select(SequenceCounter.class).eq(SequenceCounter.NAME, sequence).queryFirst();
-        if (result == null) {
-            return createSequence(sequence);
-        }
-
-        int numRowsChanged = oma.getDatabase(Mixing.DEFAULT_REALM)
-                                .createQuery("UPDATE sequencecounter"
-                                             + "     SET nextValue = nextValue + 1"
-                                             + "     WHERE name = ${name} "
-                                             + "     AND nextValue = ${value}")
-                                .set("name", sequence)
-                                .set("value", result.getNextValue())
-                                .executeUpdate();
-        if (numRowsChanged == 1) {
-            // Nobody else changed the counter, so we can savely return the determined value...
-            return result.getNextValue();
-        }
-        return null;
-    }
-
-    private Long createSequence(String sequence) {
-        SequenceCounter result;
-        try {
-            // Try to create a new record, as no counter is yet present...
-            result = new SequenceCounter();
-            result.setName(sequence);
-            result.setNextValue(2);
-            oma.update(result);
-            return 1L;
-        } catch (HandledException e) {
-            // This only happens if another thread / server inserted the entity already...
-            Exceptions.ignore(e);
-            return null;
+    private long generateInLock(String sequence) throws Exception {
+        if (locks.tryLock("sequence-" + sequence, Duration.ofSeconds(5))) {
+            try {
+                Long id = sequenceStrategy.tryGenerateId(sequence);
+                if (id == null) {
+                    throw Exceptions.handle()
+                                    .to(LOG)
+                                    .withSystemErrorMessage(
+                                            "Failed to generate an unique sequence number for %s while holding a lock.",
+                                            sequence)
+                                    .handle();
+                }
+                return id;
+            } finally {
+                locks.unlock("sequence-" + sequence);
+            }
+        } else {
+            throw Exceptions.handle()
+                            .to(LOG)
+                            .withSystemErrorMessage(
+                                    "Failed to acquire a lock to generate a unique sequence number for %s.",
+                                    sequence)
+                            .handle();
         }
     }
 
@@ -132,57 +130,62 @@ public class Sequences {
      *                  set to <tt>false</tt>, the given <tt>nextValue</tt> has to be higher than the current sequence
      *                  value.
      */
-    public void setCounterValue(String sequence, long nextValue, boolean force) {
+    public void setNextValue(String sequence, long nextValue, boolean force) {
         try {
-            // Select the current value which will be returned if all goes well....
-            if (oma.select(SequenceCounter.class).eq(SequenceCounter.NAME, sequence).exists()) {
-                updateCounterValue(sequence, nextValue, force);
-            } else {
-                createSequenceWithValue(sequence, nextValue);
-            }
-        } catch (SQLException e) {
+            sequenceStrategy.setNextValue(sequence, nextValue, force);
+        } catch (Exception e) {
             throw Exceptions.handle()
                             .to(LOG)
                             .error(e)
                             .withSystemErrorMessage(
-                                    "Failed to specify the next value for sequence %s due to a database error: %s",
+                                    "Failed to specify the next value for sequence %s due to an error: %s (%s)",
                                     sequence)
                             .handle();
         }
     }
 
-    private void createSequenceWithValue(String sequence, long nextValue) {
+    /**
+     * Identifies the next value for the given sequence without using it.
+     * <p>
+     * Note that this method is only used for reporting and statistics and must never be called by production code,
+     * as there is no guarantee that there isn't a parallel thread which currently acquires the returned value while
+     * this method is running.
+     *
+     * @param sequence the sequence to peek the next value for
+     * @return the next value for the sequence (unless already acquired by another thread)
+     */
+    public long peekNextValue(String sequence) {
         try {
-            // Try to create a new record, as no counter is yet present...
-            SequenceCounter counter = new SequenceCounter();
-            counter.setName(sequence);
-            counter.setNextValue(nextValue);
-            oma.update(counter);
-        } catch (HandledException e) {
+            return sequenceStrategy.peekNextValue(sequence);
+        } catch (Exception e) {
             throw Exceptions.handle()
                             .to(LOG)
                             .error(e)
-                            .withSystemErrorMessage("Failed to specify the next value for sequence %s - %s (%s)",
-                                                    sequence)
+                            .withSystemErrorMessage(
+                                    "Failed to peek the next value for sequence %s due to an error: %s (%s)",
+                                    sequence)
                             .handle();
         }
     }
 
-    private void updateCounterValue(String sequence, long nextValue, boolean force) throws SQLException {
-        String sql = "UPDATE sequencecounter SET nextValue = ${value} WHERE name = ${name}";
-        if (!force) {
-            sql += "  AND nextValue <= ${value}";
-        }
-
-        int updatedRows = oma.getDatabase(Mixing.DEFAULT_REALM)
-                             .createQuery(sql)
-                             .set("name", sequence)
-                             .set("value", nextValue)
-                             .executeUpdate();
-        if (updatedRows != 1) {
+    /**
+     * Enumerates all sequences known to the framework.
+     * <p>
+     * This must be only used by reporting systems. There is no guarantee that this list is complete.
+     *
+     * @return a list of known sequences.
+     */
+    public List<String> getKnownSequences() {
+        try {
+            List<String> result = new ArrayList<>();
+            sequenceStrategy.collectKnownSequences(result::add);
+            return result;
+        } catch (Exception e) {
             throw Exceptions.handle()
                             .to(LOG)
-                            .withSystemErrorMessage("Failed to specify the next value for sequence %s", sequence)
+                            .error(e)
+                            .withSystemErrorMessage(
+                                    "Failed to determine the list of known sequences due to an error: %s (%s)")
                             .handle();
         }
     }

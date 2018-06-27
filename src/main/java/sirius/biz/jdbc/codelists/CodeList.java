@@ -22,7 +22,7 @@ import sirius.kernel.di.std.Framework;
  * <p>
  * This is the database representation of the data supplied by {@link CodeLists}.
  */
-@Framework("biz.code-lists")
+@Framework(CodeLists.FRAMEWORK_CODE_LISTS)
 public class CodeList extends BizEntity {
 
     /**
