@@ -16,7 +16,6 @@ import sirius.db.mongo.Doc;
 import sirius.db.mongo.Mongo;
 import sirius.db.mongo.QueryBuilder;
 import sirius.db.mongo.Updater;
-import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -29,8 +28,7 @@ import java.util.function.Consumer;
  *
  * @see Sequences
  */
-@Framework("biz.sequences")
-@Register
+@Register(framework = Sequences.FRAMEWORK_SEQUENCES)
 public class MongoSequenceStrategy implements SequenceStrategy {
 
     /**

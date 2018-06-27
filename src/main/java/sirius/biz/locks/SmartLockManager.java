@@ -23,7 +23,7 @@ import java.util.List;
  * <p>
  * Uses {@link RedisLockManager} is <tt>Redis</tt> is configured or otherwise {@link JavaLockManager}
  */
-@Register(classes = LockManager.class)
+@Register(classes = LockManager.class, framework = Locks.FRAMEWORK_LOCKS)
 public class SmartLockManager implements LockManager {
 
     @Part

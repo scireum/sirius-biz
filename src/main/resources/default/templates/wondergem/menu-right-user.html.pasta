@@ -3,15 +3,15 @@
         permission="flag-logged-in">
     <i:extensions name="templates-user-menu"/>
 
-    <w:menuSection>
+    <w:menuSection framework="biz.storage">
         <w:menuItem titleKey="StorageController.buckets" url="/storage" permission="permission-manage-files"/>
     </w:menuSection>
 
     <w:menuSection>
-        <w:menuItem titleKey="LogEntry.plural" url="/system/logs"/>
-        <w:menuItem titleKey="Incident.plural" url="/system/errors"/>
-        <w:menuItem titleKey="JournalEntry.plural" url="/system/protocol"/>
-        <w:menuItem titleKey="MailLogEntry.plural" url="/system/mails"/>
+        <w:menuItem titleKey="LoggedMessage.plural" url="/system/logs" framework="biz.protocols"/>
+        <w:menuItem titleKey="StoredIncident.plural" url="/system/errors" framework="biz.protocols"/>
+        <w:menuItem titleKey="JournalEntry.plural" url="/system/protocol" framework="biz.journal"/>
+        <w:menuItem titleKey="MailProtocol.plural" url="/system/mails" framework="biz.protocols"/>
     </w:menuSection>
 
     <w:menuSection>
@@ -22,7 +22,8 @@
         <w:menuItem title="SQL" url="/system/sql" permission="flag-system-tenant"/>
         <w:menuItem title="State" url="/system/state" permission="permission-system-state"/>
     </w:menuSection>
-    <w:menuSection>
+    <w:menuSection framework="biz.tenants">
         <w:menuItem titleKey="UserAccountController.logout" url="/logout"/>
     </w:menuSection>
+    <i:extensions name="templates-user-menu-bottom"/>
 </w:menuDropdown>

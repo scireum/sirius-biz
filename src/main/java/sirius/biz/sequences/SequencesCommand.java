@@ -20,8 +20,7 @@ import javax.annotation.Nonnull;
  *
  * @see Sequences
  */
-@Framework("biz.sequences")
-@Register
+@Register(framework = Sequences.FRAMEWORK_SEQUENCES)
 public class SequencesCommand implements Command {
 
     @Part

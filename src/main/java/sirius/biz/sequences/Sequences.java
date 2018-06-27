@@ -33,9 +33,13 @@ import java.util.List;
  * sequences. A viable option is to use {@link sirius.db.mixing.BaseEntity#getUniqueName()} of the entity which utilizes
  * this generator.
  */
-@Framework("biz.sequences")
-@Register(classes = Sequences.class)
+@Register(classes = Sequences.class,framework = Sequences.FRAMEWORK_SEQUENCES)
 public class Sequences {
+
+    /**
+     * Names the framework which must be enabled to activate the sequences feature.
+     */
+    public static final String FRAMEWORK_SEQUENCES = "biz.sequences";
 
     public static final Log LOG = Log.get("sequences");
 

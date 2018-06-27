@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 /**
  * Deletes all logs older than N days.
  */
-@Register
+@Register(framework = Protocols.FRAMEWORK_PROTOCOLS)
 public class FlushLogsCommand implements Command {
 
     @Part

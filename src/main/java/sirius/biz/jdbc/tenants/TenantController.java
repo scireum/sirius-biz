@@ -36,7 +36,7 @@ import java.util.Optional;
 /**
  * Provides a GUI for managing tenants.
  */
-@Register(classes = Controller.class)
+@Register(classes = Controller.class, framework = Tenants.FRAMEWORK_TENANTS)
 public class TenantController extends BizController {
 
     /**

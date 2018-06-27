@@ -31,7 +31,7 @@ import java.util.UUID;
 /**
  * Permis a login via SAML.
  */
-@Register(classes = Controller.class)
+@Register(classes = Controller.class, framework = Tenants.FRAMEWORK_TENANTS)
 public class SAMLController extends BizController {
 
     @Part

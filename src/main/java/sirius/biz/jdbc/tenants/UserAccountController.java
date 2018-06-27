@@ -43,7 +43,7 @@ import java.util.Optional;
 /**
  * Provides a GUI for managing user accounts.
  */
-@Register(classes = Controller.class, framework = "biz.tenants")
+@Register(classes = Controller.class, framework = Tenants.FRAMEWORK_TENANTS)
 public class UserAccountController extends BizController {
 
     /**

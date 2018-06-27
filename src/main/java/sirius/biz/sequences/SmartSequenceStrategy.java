@@ -14,7 +14,6 @@ import sirius.db.jdbc.schema.Schema;
 import sirius.db.mixing.Mixing;
 import sirius.db.mongo.Mongo;
 import sirius.kernel.di.GlobalContext;
-import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
@@ -27,8 +26,7 @@ import java.util.function.Consumer;
  * This is the standard strategy which determines if a JDBC database is present or a MongoDB and pick the effective
  * strategy accordingly.
  */
-@Framework("biz.sequences")
-@Register
+@Register(framework = Sequences.FRAMEWORK_SEQUENCES)
 public class SmartSequenceStrategy implements SequenceStrategy {
 
     private SequenceStrategy delegate;

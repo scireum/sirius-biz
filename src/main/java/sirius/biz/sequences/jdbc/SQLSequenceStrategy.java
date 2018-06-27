@@ -27,7 +27,7 @@ import java.util.function.Consumer;
  *
  * @see Sequences
  */
-@Register
+@Register(framework = Sequences.FRAMEWORK_SEQUENCES)
 public class SQLSequenceStrategy implements SequenceStrategy {
 
     /**

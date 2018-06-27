@@ -20,7 +20,7 @@ import java.time.LocalDate;
 /**
  * Deletes all incidents older than N days.
  */
-@Register
+@Register(framework = Protocols.FRAMEWORK_PROTOCOLS)
 public class FlushIncidentsCommand implements Command {
 
     @Part

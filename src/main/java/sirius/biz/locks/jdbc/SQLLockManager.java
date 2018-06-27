@@ -16,7 +16,6 @@ import sirius.db.jdbc.OMA;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Context;
-import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -32,8 +31,7 @@ import java.util.stream.Collectors;
 /**
  * Provides distributed locks based on SQL.
  */
-@Framework("biz.locks")
-@Register(classes = LockManager.class)
+@Register(classes = LockManager.class, framework = Locks.FRAMEWORK_LOCKS)
 public class SQLLockManager extends BasicLockManager {
 
     @Part

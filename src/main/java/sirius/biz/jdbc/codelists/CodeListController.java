@@ -12,7 +12,6 @@ import sirius.biz.jdbc.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.biz.web.SQLPageHelper;
 import sirius.db.mixing.query.QueryField;
-import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
@@ -27,8 +26,7 @@ import java.util.Optional;
 /**
  * Provides an editor GUI for managing code lists.
  */
-@Framework("biz.code-lists")
-@Register(classes = Controller.class)
+@Register(classes = Controller.class, framework = CodeLists.FRAMEWORK_CODE_LISTS)
 public class CodeListController extends BizController {
 
     private static final String PERMISSION_MANAGE_CODELISTS = "permission-manage-code-lists";

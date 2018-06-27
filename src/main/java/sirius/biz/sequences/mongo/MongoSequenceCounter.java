@@ -23,7 +23,7 @@ import sirius.kernel.di.std.Framework;
  * <p>
  * This is used by {@link Sequences} to store and generate the next value for a sequence.
  */
-@Framework("biz.sequences")
+@Framework(Sequences.FRAMEWORK_SEQUENCES)
 @Index(name = "nameIndex", columns = "name", columnSettings = Mango.INDEX_ASCENDING, unique = true)
 @RelationName("sequences")
 public class MongoSequenceCounter extends MongoEntity {
