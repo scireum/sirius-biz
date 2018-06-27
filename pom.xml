@@ -18,7 +18,7 @@
 
     <properties>
         <sirius.kernel>11.0</sirius.kernel>
-        <sirius.web>18.0</sirius.web>
+        <sirius.web>18.3</sirius.web>
         <sirius.db>5.0-SNAPSHOT</sirius.db>
     </properties>
 

@@ -83,7 +83,7 @@ public class SAMLController extends BizController {
      */
     @Routed("/saml/login")
     public void samlLogin(WebContext ctx) {
-        if (!ctx.isPOST()) {
+        if (!ctx.isUnsafePOST()) {
             ctx.respondWith().redirectToGet("/saml");
             return;
         }
