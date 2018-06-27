@@ -53,7 +53,7 @@
     </w:editForm>
 
     <w:formBar>
-        <w:tracing trace="account.getTrace()"/>
+        <w:tracing trace="account.getTrace()" journal="account.getJournal()"/>
     </w:formBar>
 </i:invoke>
 

@@ -8,56 +8,97 @@
 
 package sirius.biz.protocol;
 
-import sirius.biz.web.SQLPageHelper;
-import sirius.db.jdbc.OMA;
+import com.google.common.base.Charsets;
+import com.google.common.hash.Hashing;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.web.BizController;
+import sirius.biz.web.ElasticPageHelper;
 import sirius.db.mixing.DateRange;
-import sirius.kernel.di.std.Part;
+import sirius.db.mixing.query.QueryField;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.nls.NLS;
-import sirius.web.controller.BasicController;
 import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Provides a GUI for viewing the system journal recorded by {@link JournalData} / {@link JournalEntry}.
  */
 @Register(classes = Controller.class, framework = Protocols.FRAMEWORK_JOURNAL)
-public class JournalController extends BasicController {
-//
-//    @Part
-//    private OMA oma;
-//
-//    /**
-//     * Displays all changes on entities recorded by the protocol.
-//     *
-//     * @param ctx the current request
-//     */
-//    @Permission(Protocols.PERMISSION_SYSTEM_JOURNAL)
-//    @DefaultRoute
-//    @Routed("/system/protocol")
-//    public void protocol(WebContext ctx) {
-//        SQLPageHelper<JournalEntry> ph =
-//                SQLPageHelper.withQuery(oma.select(JournalEntry.class).orderDesc(JournalEntry.TOD));
-//        ph.withContext(ctx);
-//        ph.addQueryFacet(JournalEntry.TARGET_TYPE.getName(),
-//                         NLS.get("JournalEntry.targetType"),
-//                         q -> oma.select(JournalEntry.class)
-//                                 .distinctFields(JournalEntry.TARGET_TYPE, JournalEntry.TARGET_TYPE)
-//                                 .asSQLQuery());
-//        ph.addTimeFacet(JournalEntry.TOD.getName(),
-//                        NLS.get("JournalEntry.tod"),
-//                        DateRange.lastFiveMinutes(),
-//                        DateRange.lastFiveteenMinutes(),
-//                        DateRange.lastTwoHours(),
-//                        DateRange.today(),
-//                        DateRange.yesterday(),
-//                        DateRange.thisWeek(),
-//                        DateRange.lastWeek());
-//        ph.withSearchFields(JournalEntry.CHANGES, JournalEntry.TARGET_NAME, JournalEntry.USERNAME);
-//
-//        ctx.respondWith().template("templates/protocol/protocol.html.pasta", ph.asPage());
-//    }
+public class JournalController extends BizController {
+
+    private static String secret;
+
+    public static String computeAuthHash(String type, String id) {
+        if (Strings.isEmpty(secret)) {
+            secret = Strings.generateCode(32);
+        }
+
+        long unixTimeInDays = TimeUnit.DAYS.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+
+        return Hashing.md5().hashString(type + id + secret + String.valueOf(unixTimeInDays), Charsets.UTF_8).toString();
+    }
+
+    /**
+     * Displays all changes on entries recorded by the protocol.
+     *
+     * @param ctx the current request
+     */
+    @Permission(Protocols.PERMISSION_SYSTEM_JOURNAL)
+    @DefaultRoute
+    @Routed("/system/protocol")
+    public void protocol(WebContext ctx) {
+        ElasticPageHelper<JournalEntry> ph =
+                ElasticPageHelper.withQuery(elastic.select(JournalEntry.class).orderDesc(JournalEntry.TOD));
+        ph.withContext(ctx);
+        ph.addTermAggregation(JournalEntry.TARGET_TYPE);
+        ph.addTimeAggregation(JournalEntry.TOD,
+                              DateRange.lastFiveMinutes(),
+                              DateRange.lastFiveteenMinutes(),
+                              DateRange.lastTwoHours(),
+                              DateRange.today(),
+                              DateRange.yesterday(),
+                              DateRange.thisWeek(),
+                              DateRange.lastWeek());
+        ph.withSearchFields(QueryField.contains(JournalEntry.CHANGES),
+                            QueryField.contains(JournalEntry.TARGET_NAME),
+                            QueryField.contains(JournalEntry.USERNAME));
+
+        ctx.respondWith().template("templates/protocol/protocol.html.pasta", ph.asPage());
+    }
+
+    /**
+     * Displays all changes on entries recorded for a given entity by the protocol.
+     *
+     * @param ctx the current request
+     */
+    @Routed("/system/protocol/:1/:2/:3")
+    public void entityProtocol(WebContext ctx, String type, String id, String hash) {
+        String expectedHash = computeAuthHash(type, id);
+        if (!Strings.areEqual(expectedHash, hash)) {
+            ctx.respondWith().error(HttpResponseStatus.FORBIDDEN, "Security hash does not match!");
+            return;
+        }
+
+        ElasticPageHelper<JournalEntry> ph = ElasticPageHelper.withQuery(elastic.select(JournalEntry.class)
+                                                                                .eq(JournalEntry.TARGET_TYPE, type)
+                                                                                .eq(JournalEntry.TARGET_ID, id)
+                                                                                .orderDesc(JournalEntry.TOD));
+        ph.withContext(ctx);
+        ph.addTimeAggregation(JournalEntry.TOD,
+                              DateRange.lastFiveMinutes(),
+                              DateRange.lastFiveteenMinutes(),
+                              DateRange.lastTwoHours(),
+                              DateRange.today(),
+                              DateRange.yesterday(),
+                              DateRange.thisWeek(),
+                              DateRange.lastWeek());
+        ph.withSearchFields(QueryField.contains(JournalEntry.CHANGES), QueryField.contains(JournalEntry.USERNAME));
+
+        ctx.respondWith().template("templates/protocol/entity_protocol.html.pasta", type, id, hash, ph.asPage());
+    }
 }

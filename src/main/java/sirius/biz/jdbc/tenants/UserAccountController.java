@@ -13,7 +13,6 @@ import sirius.biz.jdbc.model.PermissionData;
 import sirius.biz.jdbc.model.PersonData;
 import sirius.biz.web.BizController;
 import sirius.biz.web.SQLPageHelper;
-import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.query.QueryField;
@@ -369,14 +368,12 @@ public class UserAccountController extends BizController {
         AutocompleteHelper.handle(ctx, (query, result) -> {
             oma.select(UserAccount.class)
                .eq(UserAccount.TENANT, tenants.getRequiredTenant())
-               //TODO
-//               .where(OMA.FILTERS.allWordsInAnyField(query,
-//                                                     UserAccount.EMAIL,
-//                                                     UserAccount.LOGIN.inner(LoginData.USERNAME),
-//                                                     UserAccount.PERSON.inner(PersonData.FIRSTNAME),
-//                                                     UserAccount.PERSON.inner(PersonData.LASTNAME)))
+               .queryString(query,
+                            QueryField.contains(UserAccount.EMAIL),
+                            QueryField.contains(UserAccount.LOGIN.inner(LoginData.USERNAME)),
+                            QueryField.contains(UserAccount.PERSON.inner(PersonData.FIRSTNAME)),
+                            QueryField.contains(UserAccount.PERSON.inner(PersonData.LASTNAME)))
                .limit(10)
-
                .iterateAll(userAccount -> {
                    result.accept(new AutocompleteHelper.Completion(userAccount.getIdAsString(),
                                                                    userAccount.toString(),

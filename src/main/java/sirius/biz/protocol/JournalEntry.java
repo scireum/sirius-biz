@@ -57,7 +57,7 @@ public class JournalEntry extends ElasticEntity {
      * Contains the ID of entity which was changed.
      */
     public static final Mapping TARGET_ID = Mapping.named("targetId");
-    private long targetId;
+    private String targetId;
 
     /**
      * Contains the {@code toString()} of the entity which was changed.
@@ -113,11 +113,11 @@ public class JournalEntry extends ElasticEntity {
         this.targetType = targetType;
     }
 
-    public long getTargetId() {
+    public String getTargetId() {
         return targetId;
     }
 
-    public void setTargetId(long targetId) {
+    public void setTargetId(String targetId) {
         this.targetId = targetId;
     }
 

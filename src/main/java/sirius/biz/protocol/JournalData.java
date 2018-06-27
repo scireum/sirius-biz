@@ -9,17 +9,15 @@
 package sirius.biz.protocol;
 
 import sirius.db.es.Elastic;
-import sirius.db.jdbc.SQLEntity;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.EntityDescriptor;
-import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.AfterSave;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.TaskContext;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.security.UserContext;
@@ -41,14 +39,14 @@ public class JournalData extends Composite {
     private volatile boolean silent;
 
     @Transient
-    private SQLEntity owner;
+    private BaseEntity<?> owner;
 
     /**
      * Creates a new instance for the given entity.
      *
      * @param owner the entity which fields are to be recorded.
      */
-    public JournalData(SQLEntity owner) {
+    public JournalData(BaseEntity<?> owner) {
         this.owner = owner;
     }
 
@@ -62,7 +60,7 @@ public class JournalData extends Composite {
             StringBuilder changes = new StringBuilder();
             EntityDescriptor descriptor = owner.getDescriptor();
             for (Property p : descriptor.getProperties()) {
-                if (p.getAnnotation(NoJournal.class) == null && descriptor.isChanged(owner, p)) {
+                if (!p.getAnnotation(NoJournal.class).isPresent() && descriptor.isChanged(owner, p)) {
                     changes.append(p.getName());
                     changes.append(": ");
                     changes.append(NLS.toUserString(p.getValue(owner), NLS.getDefaultLanguage()));
@@ -84,8 +82,8 @@ public class JournalData extends Composite {
      * @param entity  the entity to write a journal entry for
      * @param changes the entry to add to the journal
      */
-    public static void addJournalEntry(SQLEntity entity, String changes) {
-        if (!Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_PROTOCOLS)) {
+    public static void addJournalEntry(BaseEntity<?> entity, String changes) {
+        if (!Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_PROTOCOLS) || entity.isNew()) {
             return;
         }
 
@@ -93,7 +91,7 @@ public class JournalData extends Composite {
             JournalEntry entry = new JournalEntry();
             entry.setTod(LocalDateTime.now());
             entry.setChanges(changes);
-            entry.setTargetId(entity.getId());
+            entry.setTargetId(String.valueOf(entity.getId()));
             entry.setTargetName(entity.toString());
             entry.setTargetType(mixing.getNameForType(entity.getClass()));
             entry.setSubsystem(TaskContext.get().getSystemString());
@@ -155,5 +153,13 @@ public class JournalData extends Composite {
         }
 
         return false;
+    }
+
+    public String getProtocolUri() {
+        String type = mixing.getNameForType(owner.getClass());
+        String id = String.valueOf(owner.getId());
+        String hash = JournalController.computeAuthHash(type, id);
+
+        return "/system/protocol/" + type + "/" + id + "/" + hash;
     }
 }
