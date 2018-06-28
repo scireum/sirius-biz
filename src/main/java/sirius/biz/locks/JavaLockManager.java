@@ -22,7 +22,7 @@ import java.util.Map;
  * <p>
  * Note that this managed is not suitable for clusters, as locks are only held locally.
  */
-@Register(classes = LockManager.class)
+@Register(classes = LockManager.class, framework = Locks.FRAMEWORK_LOCKS)
 public class JavaLockManager extends BasicLockManager {
     /**
      * Contains the name of this lock manager

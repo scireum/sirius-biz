@@ -18,7 +18,6 @@ import sirius.biz.protocol.TraceData;
 import sirius.db.KeyGenerator;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
-import sirius.db.jdbc.constraints.FieldOperator;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.Tasks;
@@ -59,7 +58,7 @@ import java.util.stream.Collectors;
  * The object storage is organized in two layers. The virtual layer is completely stored in the database and contains
  * all metadata of buckets and objects.
  * <p>
- * Everytime an object is created or updated, a <b>physical object</b> if created and stored using the {@link
+ * Everytime an object is created or updated, a <b>physical object</b> is created and stored using the {@link
  * PhysicalStorageEngine} of the bucket. Therefore a physical object key which is stored in the virtual objects
  * always contains the same data. If the data changes, the physical key changes but the virtual key remains the same.
  * <p>
@@ -327,7 +326,7 @@ public class Storage {
         }
         SmartQuery<VirtualObject> qry = oma.select(VirtualObject.class).eq(VirtualObject.REFERENCE, reference);
         if (Strings.isFilled(excludedObjectKey)) {
-            qry.where(FieldOperator.on(VirtualObject.OBJECT_KEY).notEqual(excludedObjectKey));
+            qry.ne(VirtualObject.OBJECT_KEY, excludedObjectKey);
         }
 
         qry.delete();

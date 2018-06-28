@@ -8,7 +8,6 @@
 
 package sirius.biz.locks;
 
-import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Log;
@@ -24,12 +23,16 @@ import java.util.List;
 /**
  * Provides a central framework to obtain and manage named locks.
  * <p>
- * These locks can either be distributed (via SQL or REDIS) or held locally. The implementation is provided via a {@link
- * LockManager}.
+ * These locks can either be distributed (via SQL or REDIS) or held locally. The implementation is provided via a
+ * {@link LockManager}.
  */
-@Framework("biz.locks")
-@Register(classes = {Locks.class, MetricProvider.class})
+@Register(classes = {Locks.class, MetricProvider.class}, framework = Locks.FRAMEWORK_LOCKS)
 public class Locks implements MetricProvider {
+
+    /**
+     * Names the framework which must be enabled to activate the locks feature.
+     */
+    public static final String FRAMEWORK_LOCKS = "biz.locks";
 
     private static final Duration LONG_RUNNING_LOGS_THRESHOLD = Duration.ofMinutes(30);
 

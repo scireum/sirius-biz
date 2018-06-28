@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 /**
  * Provides a fast multi node implementation which is based on Redis.
  */
-@Register(classes = LockManager.class)
+@Register(classes = LockManager.class, framework = Locks.FRAMEWORK_LOCKS)
 public class RedisLockManager implements LockManager {
 
     /**

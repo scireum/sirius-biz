@@ -1,4 +1,5 @@
 <i:arg name="trace" type="sirius.biz.protocol.TraceData"/>
+<i:arg name="journal" type="sirius.biz.protocol.JournalData" default="null"/>
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders a trace button and the trace information for a TracedEntity"/>
 
@@ -34,7 +35,11 @@
                     <div class="muted">@trace.getChangedIn()</div>
                 </div>
             </div>
-
+            <i:if test="journal != null">
+                <a href="@journal.getProtocolUri()" class="link">
+                    <i class="fa fa-angle-double-right"></i> @i18n("JournalEntry.plural")
+                </a>
+            </i:if>
         </div>
     </div>
 </i:if>

@@ -12,8 +12,9 @@ import com.google.common.collect.Lists;
 import sirius.biz.jdbc.tenants.TenantUserManager;
 import sirius.biz.protocol.TraceData;
 import sirius.biz.web.BizController;
-import sirius.biz.web.PageHelper;
+import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.SmartQuery;
+import sirius.db.mixing.query.QueryField;
 import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -81,9 +82,9 @@ public class JobsController extends BizController {
         if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
             baseQuery.eq(JobProtocol.TENANT, getUser().getTenantId());
         }
-        PageHelper<JobProtocol> ph = PageHelper.withQuery(baseQuery);
+        SQLPageHelper<JobProtocol> ph = SQLPageHelper.withQuery(baseQuery);
         ph.withContext(ctx);
-        ph.withSearchFields(JobProtocol.JOB_TITLE, JobProtocol.USER_NAME);
+        ph.withSearchFields(QueryField.contains(JobProtocol.JOB_TITLE), QueryField.contains(JobProtocol.USER_NAME));
         ctx.respondWith().template("templates/jobs/protocol.html.pasta", ph);
     }
 

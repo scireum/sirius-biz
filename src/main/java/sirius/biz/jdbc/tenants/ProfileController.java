@@ -21,7 +21,7 @@ import sirius.web.security.UserManager;
 /**
  * Provides functionality to modify accounts.
  */
-@Register(classes = Controller.class)
+@Register(classes = Controller.class,framework = Tenants.FRAMEWORK_TENANTS)
 public class ProfileController extends BizController {
 
     private static final String PARAM_OLD_PASSWORD = "oldPassword";

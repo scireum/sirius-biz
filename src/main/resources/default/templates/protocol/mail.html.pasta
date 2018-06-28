@@ -1,9 +1,9 @@
-<i:arg type="sirius.biz.protocol.MailLogEntry" name="mail" />
+<i:arg type="sirius.biz.protocol.MailProtocol" name="mail" />
 
 <w:page title="@mail.getSubject()">
     <i:block name="breadcrumbs">
         <li>
-            <a href="/system/mails">@i18n("MailLogEntry.plural")</a>
+            <a href="/system/mails">@i18n("MailProtocol.plural")</a>
         </li>
         <li>
             <a href="/system/mail/@mail.getId()">@mail.getSubject()</a>
@@ -13,23 +13,23 @@
     <w:pageHeader title="@mail.getSubject()" />
 
     <div class="row">
-        <w:textfield name="" value="@toUserString(mail.isSuccess())" labelKey="MailLogEntry.success" readonly="true" />
-        <w:textfield name="" value="@toUserString(mail.getTod())" labelKey="MailLogEntry.tod" readonly="true" />
+        <w:textfield name="" value="@toUserString(mail.isSuccess())" labelKey="MailProtocol.success" readonly="true" />
+        <w:textfield name="" value="@toUserString(mail.getTod())" labelKey="MailProtocol.tod" readonly="true" />
     </div>
     <div class="row">
-        <w:textfield span="12" name="" value="@mail.getMessageId()" labelKey="MailLogEntry.messageId" readonly="true" />
+        <w:textfield span="12" name="" value="@mail.getMessageId()" labelKey="MailProtocol.messageId" readonly="true" />
     </div>
     <div class="row">
-        <w:textfield name="" value="@mail.getSender()" labelKey="MailLogEntry.sender" readonly="true" />
-        <w:textfield name="" value="@mail.getSenderName()" labelKey="MailLogEntry.senderName" readonly="true" />
+        <w:textfield name="" value="@mail.getSender()" labelKey="MailProtocol.sender" readonly="true" />
+        <w:textfield name="" value="@mail.getSenderName()" labelKey="MailProtocol.senderName" readonly="true" />
     </div>
     <div class="row">
-        <w:textfield name="" value="@mail.getReceiver()" labelKey="MailLogEntry.receiver" readonly="true" />
-        <w:textfield name="" value="@mail.getReceiverName()" labelKey="MailLogEntry.receiverName" readonly="true" />
+        <w:textfield name="" value="@mail.getReceiver()" labelKey="MailProtocol.receiver" readonly="true" />
+        <w:textfield name="" value="@mail.getReceiverName()" labelKey="MailProtocol.receiverName" readonly="true" />
     </div>
     <div class="row">
         <div class="col-md-12">
-            <w:heading labelKey="MailLogEntry.text" />
+            <w:heading labelKey="MailProtocol.text" />
             <div class="well">
                 <pre class="plain">@mail.getText()</pre>
             </div>
@@ -37,7 +37,7 @@
     </div>
     <div class="row">
         <div class="col-md-12">
-            <w:heading labelKey="MailLogEntry.html" />
+            <w:heading labelKey="MailProtocol.html" />
             <div class="well">
                 <pre class="plain">@mail.getHtml()</pre>
             </div>

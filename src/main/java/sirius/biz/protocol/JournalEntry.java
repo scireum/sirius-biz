@@ -8,10 +8,8 @@
 
 package sirius.biz.protocol;
 
+import sirius.db.es.ElasticEntity;
 import sirius.db.mixing.Mapping;
-import sirius.db.jdbc.SQLEntity;
-import sirius.db.mixing.annotations.Length;
-import sirius.db.mixing.annotations.Lob;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.di.std.Framework;
 
@@ -21,7 +19,7 @@ import java.time.LocalDateTime;
  * Records the changes recorded by a {@link JournalData}.
  */
 @Framework(Protocols.FRAMEWORK_JOURNAL)
-public class JournalEntry extends SQLEntity {
+public class JournalEntry extends ElasticEntity {
 
     /**
      * Contains the timestamp of the change.
@@ -33,14 +31,12 @@ public class JournalEntry extends SQLEntity {
      * Contains the name of the user which was active when the change occured.
      */
     public static final Mapping USERNAME = Mapping.named("username");
-    @Length(255)
     private String username;
 
     /**
      * Contaisn the id of the user which was active when the change occured.
      */
     public static final Mapping USER_ID = Mapping.named("userId");
-    @Length(255)
     private String userId;
 
     /**
@@ -49,27 +45,24 @@ public class JournalEntry extends SQLEntity {
      * @see TaskContext#getSystemString()
      */
     public static final Mapping SUBSYSTEM = Mapping.named("subsystem");
-    @Length(255)
     private String subsystem;
 
     /**
      * Contains the type name of the entity which was changed.
      */
     public static final Mapping TARGET_TYPE = Mapping.named("targetType");
-    @Length(255)
     private String targetType;
 
     /**
      * Contains the ID of entity which was changed.
      */
     public static final Mapping TARGET_ID = Mapping.named("targetId");
-    private long targetId;
+    private String targetId;
 
     /**
      * Contains the {@code toString()} of the entity which was changed.
      */
     public static final Mapping TARGET_NAME = Mapping.named("targetName");
-    @Length(255)
     private String targetName;
 
     /**
@@ -78,7 +71,6 @@ public class JournalEntry extends SQLEntity {
      * The old values are not recorded, as these are in the previous protocol entry.
      */
     public static final Mapping CHANGES = Mapping.named("changes");
-    @Lob
     private String changes;
 
     public LocalDateTime getTod() {
@@ -121,11 +113,11 @@ public class JournalEntry extends SQLEntity {
         this.targetType = targetType;
     }
 
-    public long getTargetId() {
+    public String getTargetId() {
         return targetId;
     }
 
-    public void setTargetId(long targetId) {
+    public void setTargetId(String targetId) {
         this.targetId = targetId;
     }
 

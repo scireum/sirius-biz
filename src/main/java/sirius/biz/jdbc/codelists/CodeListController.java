@@ -10,8 +10,8 @@ package sirius.biz.jdbc.codelists;
 
 import sirius.biz.jdbc.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
-import sirius.biz.web.PageHelper;
-import sirius.kernel.di.std.Framework;
+import sirius.biz.web.SQLPageHelper;
+import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
@@ -26,8 +26,7 @@ import java.util.Optional;
 /**
  * Provides an editor GUI for managing code lists.
  */
-@Framework("biz.code-lists")
-@Register(classes = Controller.class)
+@Register(classes = Controller.class, framework = CodeLists.FRAMEWORK_CODE_LISTS)
 public class CodeListController extends BizController {
 
     private static final String PERMISSION_MANAGE_CODELISTS = "permission-manage-code-lists";
@@ -43,9 +42,11 @@ public class CodeListController extends BizController {
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-lists")
     public void codeLists(WebContext ctx) {
-        PageHelper<CodeList> ph = PageHelper.withQuery(oma.select(CodeList.class).orderAsc(CodeList.CODE));
+        SQLPageHelper<CodeList> ph = SQLPageHelper.withQuery(oma.select(CodeList.class).orderAsc(CodeList.CODE));
         ph.withContext(ctx);
-        ph.withSearchFields(CodeList.CODE, CodeList.NAME, CodeList.DESCRIPTION);
+        ph.withSearchFields(QueryField.contains(CodeList.CODE),
+                            QueryField.contains(CodeList.NAME),
+                            QueryField.contains(CodeList.DESCRIPTION));
         ctx.respondWith().template("templates/codelists/code-lists.html.pasta", ph.asPage());
     }
 
@@ -81,8 +82,7 @@ public class CodeListController extends BizController {
         CodeList cl = findForTenant(CodeList.class, codeListId);
 
         if (cl.isNew() || forceDetails) {
-            boolean requestHandled =
-                    prepareSave(ctx).withAfterCreateURI("/code-list/${id}/details").saveEntity(cl);
+            boolean requestHandled = prepareSave(ctx).withAfterCreateURI("/code-list/${id}/details").saveEntity(cl);
             if (!requestHandled) {
                 ctx.respondWith().template("templates/codelists/code-list-details.html.pasta", cl);
             }
@@ -92,14 +92,14 @@ public class CodeListController extends BizController {
     }
 
     private void renderCodeList(WebContext ctx, CodeList cl) {
-        PageHelper<CodeListEntry> ph = PageHelper.withQuery(oma.select(CodeListEntry.class)
-                                                               .eq(CodeListEntry.CODE_LIST, cl)
-                                                               .orderAsc(CodeListEntry.CODE_LIST));
+        SQLPageHelper<CodeListEntry> ph = SQLPageHelper.withQuery(oma.select(CodeListEntry.class)
+                                                                     .eq(CodeListEntry.CODE_LIST, cl)
+                                                                     .orderAsc(CodeListEntry.CODE_LIST));
         ph.withContext(ctx);
-        ph.withSearchFields(CodeListEntry.CODE,
-                            CodeListEntry.VALUE,
-                            CodeListEntry.ADDITIONAL_VALUE,
-                            CodeListEntry.DESCRIPTION);
+        ph.withSearchFields(QueryField.contains(CodeListEntry.CODE),
+                            QueryField.contains(CodeListEntry.VALUE),
+                            QueryField.contains(CodeListEntry.ADDITIONAL_VALUE),
+                            QueryField.contains(CodeListEntry.DESCRIPTION));
         ctx.respondWith().template("templates/codelists/code-list-entries.html.pasta", cl, ph.asPage());
     }
 

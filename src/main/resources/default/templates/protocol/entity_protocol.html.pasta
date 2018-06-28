@@ -1,0 +1,68 @@
+<i:arg type="String" name="type"/>
+<i:arg type="String" name="id"/>
+<i:arg type="String" name="hash"/>
+<i:arg type="Page" name="protocol"/>
+<w:page titleKey="JournalEntry.plural">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/system/protocol/@type/@id/@hash">@i18n("JournalEntry.plural")</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader titleKey="JournalEntry.plural"/>
+
+    <div class="row">
+        <div class="col-md-3">
+            <w:filterbox page="protocol" baseUrl="/system/protocol/@type/@id/@hash"/>
+        </div>
+        <div class="col-md-9">
+            <w:tableSearchHeader page="protocol" baseUrl="/system/protocol/@type/@id/@hash"/>
+
+            <w:table data="protocol">
+                <thead>
+                <tr>
+                    <th>
+                        <div class="row">
+                            <div class="col-md-4">
+                                @i18n("JournalEntry.tod")
+                            </div>
+                            <div class="col-md-4">
+                                @i18n("JournalEntry.username")<br>
+                                <small>@i18n("JournalEntry.userId")</small>
+                            </div>
+                            <div class="col-md-4">@i18n("JournalEntry.subsystem")</div>
+                        </div>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <i:for type="sirius.biz.protocol.JournalEntry" var="msg" items="protocol.getItems()">
+                    <tr>
+                        <td>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    @toUserString(msg.getTod())
+                                </div>
+                                <div class="col-md-4">
+                                    @msg.getUsername()<br>
+                                    <small>@msg.getUserId()</small>
+                                </div>
+                                <div class="col-md-4">@msg.getSubsystem()</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <p/>
+                                    <pre class="plain" style="white-space: pre-wrap">@msg.getChanges()</pre>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </i:for>
+                </tbody>
+            </w:table>
+
+            <w:pagination page="protocol" baseUrl="/system/protocol/@type/@id/@hash"/>
+        </div>
+    </div>
+
+</w:page>

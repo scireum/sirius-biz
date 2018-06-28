@@ -8,10 +8,7 @@
 
 package sirius.biz.protocol;
 
-import org.apache.log4j.Level;
-import sirius.db.jdbc.OMA;
-import sirius.db.jdbc.constraints.FieldOperator;
-import sirius.db.mixing.OptimisticLockException;
+import sirius.db.es.Elastic;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Tuple;
@@ -19,6 +16,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.ExceptionHandler;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Incident;
 import sirius.kernel.health.LogMessage;
 import sirius.kernel.health.LogTap;
 import sirius.kernel.nls.NLS;
@@ -27,7 +25,7 @@ import sirius.web.security.UserContext;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Adapter which records all log entries and incidents and mails into the appropriate database entities.
@@ -35,6 +33,8 @@ import java.util.stream.Collectors;
 @Register(classes = {Protocols.class, LogTap.class, ExceptionHandler.class, MailLog.class},
         framework = Protocols.FRAMEWORK_PROTOCOLS)
 public class Protocols implements LogTap, ExceptionHandler, MailLog {
+
+    private static final int DISABLE_ON_ERROR_PERIOD_MILLIS = 1000 * 60;
 
     /**
      * Names the framework which must be enabled to activate all protocol features.
@@ -56,54 +56,74 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
     public static final String PERMISSION_SYSTEM_JOURNAL = "permission-system-journal";
 
     @Part
-    private OMA oma;
+    private Elastic elastic;
 
-    @Override
-    public void handle(sirius.kernel.health.Incident incident) throws Exception {
-        try {
-            if (oma == null || !oma.isReady() || Sirius.isStartedAsTest()) {
-                return;
-            }
-            storeIncident(incident);
-        } catch (Exception e) {
-            Exceptions.handle(e);
-        }
+    private volatile AtomicLong disabledUntil;
+
+    /**
+     * In case the ES cluster is unreachable or we can for some reason not log errors or log messages,
+     * we disable the facility for one minute so that the local syslogs aren't jammed with errors.
+     */
+    private void disableForOneMinute() {
+        disabledUntil = new AtomicLong(System.currentTimeMillis() + DISABLE_ON_ERROR_PERIOD_MILLIS);
     }
 
-    private void storeIncident(sirius.kernel.health.Incident incident) {
+    private boolean isDisabled() {
+        if (disabledUntil == null) {
+            return false;
+        }
+
+        if (disabledUntil.get() < System.currentTimeMillis()) {
+            disabledUntil = null;
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public void handle(Incident incident) throws Exception {
+        if (elastic == null || !elastic.getReadyFuture().isCompleted() || Sirius.isStartedAsTest() || isDisabled()) {
+            return;
+        }
+
         try {
             LocalDate yesterday = LocalDate.now().minusDays(1);
-            Incident si = null;
+            StoredIncident si = null;
             if (incident.getLocation() != null) {
-                si = oma.select(Incident.class)
-                        .eq(Incident.LOCATION, incident.getLocation())
-                        .where(FieldOperator.on(Incident.LAST_OCCURRENCE).greaterThan(yesterday))
-                        .queryFirst();
+                si = elastic.select(StoredIncident.class)
+                            .eq(StoredIncident.LOCATION, incident.getLocation())
+                            .where(Elastic.FILTERS.gt(StoredIncident.LAST_OCCURRENCE, yesterday))
+                            .queryFirst();
             }
+
             if (si == null) {
-                si = new Incident();
+                si = new StoredIncident();
                 si.setLocation(incident.getLocation());
                 si.setFirstOccurrence(LocalDateTime.now());
             }
+
             si.setNumberOfOccurrences(si.getNumberOfOccurrences() + 1);
             si.setNode(CallContext.getNodeName());
-
-            si.setMdc(incident.getMDC().stream().map(Tuple::toString).collect(Collectors.joining("\n")));
+            for (Tuple<String, String> t : incident.getMDC()) {
+                si.getMdc().put(t.getFirst(), t.getSecond());
+            }
             si.setUser(UserContext.getCurrentUser().getUserName());
             si.setMessage(incident.getException().getMessage());
             si.setStack(NLS.toUserString(incident.getException()));
             si.setCategory(incident.getCategory());
             si.setLastOccurrence(LocalDateTime.now());
 
-            oma.tryUpdate(si);
-        } catch (OptimisticLockException e) {
-            Exceptions.ignore(e);
+            elastic.update(si);
+        } catch (Exception e) {
+            Elastic.LOG.SEVERE(e);
+            disableForOneMinute();
         }
     }
 
     @Override
     public void handleLogMessage(LogMessage message) {
-        if (oma == null || !oma.isReady() || message == null || shouldNotLog(message)) {
+        if (shouldNotLog(message)) {
             return;
         }
 
@@ -111,19 +131,31 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             return;
         }
 
-        LogEntry entry = new LogEntry();
-        entry.setCategory(message.getReceiver().getName());
-        entry.setLevel(message.getLogLevel().toString());
-        entry.setMessage(message.getMessage());
-        entry.setNode(CallContext.getNodeName());
-        entry.setTod(LocalDateTime.now());
-        entry.setUser(UserContext.getCurrentUser().getUserName());
+        try {
+            LoggedMessage msg = new LoggedMessage();
+            msg.setCategory(message.getReceiver().getName());
+            msg.setLevel(message.getLogLevel().toString());
+            msg.setMessage(message.getMessage());
+            msg.setNode(CallContext.getNodeName());
+            msg.setUser(UserContext.getCurrentUser().getUserName());
 
-        oma.update(entry);
+            elastic.update(msg);
+        } catch (Exception e) {
+            Exceptions.ignore(e);
+            disableForOneMinute();
+        }
     }
 
-    private boolean shouldNotLog(LogMessage message) {
-        return Sirius.isStartedAsTest() || Sirius.isDev() && message.getLogLevel().toInt() <= Level.INFO.toInt();
+    protected boolean shouldNotLog(LogMessage message) {
+        if (message == null || !message.isReceiverWouldLog()) {
+            return true;
+        }
+
+        if (elastic == null || !elastic.getReadyFuture().isCompleted()) {
+            return true;
+        }
+
+        return Sirius.isStartedAsTest() || isDisabled();
     }
 
     @Override
@@ -137,12 +169,12 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
                             String text,
                             String html,
                             String type) {
-        if (oma == null || !oma.isReady() || Sirius.isStartedAsTest()) {
+        if (elastic == null || !elastic.getReadyFuture().isCompleted() || Sirius.isStartedAsTest()) {
             return;
         }
 
         try {
-            MailLogEntry msg = new MailLogEntry();
+            MailProtocol msg = new MailProtocol();
             msg.setTod(LocalDateTime.now());
             msg.setMessageId(messageId);
             msg.setSender(sender);
@@ -150,13 +182,13 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             msg.setReceiver(receiver);
             msg.setReceiverName(receiverName);
             msg.setSubject(subject);
-            msg.setText(text);
-            msg.setHtml(html);
+            msg.setTextContent(text);
+            msg.setHtmlContent(html);
             msg.setSuccess(success);
             msg.setNode(CallContext.getNodeName());
-            msg.setMailType(type);
+            msg.setType(type);
 
-            oma.update(msg);
+            elastic.update(msg);
         } catch (Exception e) {
             Exceptions.handle(e);
         }

@@ -8,13 +8,14 @@
 
 package sirius.biz.jdbc.storage;
 
+import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 
 import java.util.regex.Pattern;
 
 /**
- * Represents a reference to a {@link StoredObject} which can be placed as field within an {@link Entity}.
+ * Represents a reference to a {@link StoredObject} which can be placed as field within an {@link BaseEntity}.
  * <p>
  * If the owning entity is deleted, the referenced object is also deleted if it was uploaded specifically
  * for this reference. If it was a shared object from within a bucket, the referenced object remains untouched.
