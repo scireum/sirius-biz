@@ -52,7 +52,7 @@ public class DatabaseController extends BasicController {
     @Part
     private Databases databases;
 
-    @ConfigValue("mixing.database")
+    @ConfigValue("mixing.jdbc.mixing.database")
     private String defaultDatabase;
 
     /**

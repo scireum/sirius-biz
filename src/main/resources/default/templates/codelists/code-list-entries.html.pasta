@@ -82,7 +82,7 @@
                 $('#dlgMessageBox .alert').text('@i18n("CodeListController.codeMustBeFilled")');
                 $('#dlgMessageBox').show();
             } else {
-                $('#entryForm').submit();
+                $('#editForm').submit();
             }
         }
 
@@ -94,7 +94,7 @@
                 <div class="alert alert-danger"></div>
             </div>
 
-            <form id="entryForm" action="/code-list/@codeList.getId()/entry" method="post">
+            <w:editForm url="@apply('/code-list/%s/entry', codeList.getId())">
                 <fieldset>
                     <w:textfield name="code" value="" labelKey="Model.code" required="true" />
                     <w:textfield name="priority" value="" labelKey="Model.priority" />
@@ -102,7 +102,7 @@
                     <w:textfield span="12" name="additionalValue" value="" labelKey="CodeListEntry.additionalValue" />
                     <w:textarea span="12" rows="5" name="description" value="" labelKey="Model.description" />
                 </fieldset>
-            </form>
+            </w:editForm>
         </w:modalBody>
         <w:modalFooter cancelKey="NLS.cancel">
             <a onclick="updateEntry()" class="btn btn-primary"><i class="icon-ok"></i> @i18n("NLS.save")</a>

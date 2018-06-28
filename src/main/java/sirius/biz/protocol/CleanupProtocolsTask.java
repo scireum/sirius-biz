@@ -37,7 +37,7 @@ public class CleanupProtocolsTask implements EveryDay {
     @ConfigValue("protocols.keep-logs")
     private Duration keepLogs;
 
-    @ConfigValue("protocols.protocols.keep-mails")
+    @ConfigValue("protocols.keep-incidents")
     private Duration keepIncidents;
 
     @ConfigValue("protocols.keep-mails")
