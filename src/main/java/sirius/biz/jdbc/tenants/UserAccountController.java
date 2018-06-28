@@ -11,6 +11,7 @@ package sirius.biz.jdbc.tenants;
 import sirius.biz.jdbc.model.LoginData;
 import sirius.biz.jdbc.model.PermissionData;
 import sirius.biz.jdbc.model.PersonData;
+import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
 import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.SQLEntity;
@@ -70,6 +71,9 @@ public class UserAccountController extends BizController {
 
     @ConfigValue("security.roles")
     private List<String> roles;
+
+    @Part
+    private AuditLog auditLog;
 
     /**
      * Shows a list of all available users of the current tenant.
@@ -257,6 +261,11 @@ public class UserAccountController extends BizController {
         userAccount.getLogin().setGeneratedPassword(Strings.generatePassword());
         oma.update(userAccount);
 
+        auditLog.neutral("%s generated a new password for %s (%s)",
+                         UserContext.getCurrentUser().getUserName(),
+                         userAccount.toString(),
+                         userAccount.getUniqueName()).forCurrentUser().log();
+
         UserContext.message(Message.info(NLS.fmtr("UserAccountConroller.passwordGenerated")
                                             .set(PARAM_EMAIL, userAccount.getEmail())
                                             .format()));
@@ -301,10 +310,23 @@ public class UserAccountController extends BizController {
 
         UserAccount account = accounts.get(0);
         if (account.getLogin().isAccountLocked()) {
+            auditLog.negative("The password of %s (%s) was not reset via /forgotPassword - the account is locked!",
+                              account.toString(),
+                              account.getUniqueName())
+                    .forUser(account.getUniqueName(), account.getLogin().getUsername())
+                    .forTenant(account.getTenant().getValue().getIdAsString(), account.getTenant().getValue().getName())
+                    .log();
             throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
         }
         account.getLogin().setGeneratedPassword(Strings.generatePassword());
         oma.update(account);
+
+        auditLog.neutral("The password of %s (%s) was reset via /forgotPassword",
+                         account.toString(),
+                         account.getUniqueName())
+                .forUser(account.getUniqueName(), account.getLogin().getUsername())
+                .forTenant(account.getTenant().getValue().getIdAsString(), account.getTenant().getValue().getName())
+                .log();
 
         if (Strings.isFilled(account.getEmail())) {
             Context context = Context.create()
@@ -433,6 +455,10 @@ public class UserAccountController extends BizController {
     @Routed("/user-accounts/select/:1")
     public void selectUserAccount(final WebContext ctx, String id) {
         if ("main".equals(id)) {
+            auditLog.neutral("%s switched back to her or his own user", UserContext.getCurrentUser().getUserName())
+                    .forCurrentUser()
+                    .log();
+
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX, null);
             ctx.respondWith().redirectTemporarily("/user-accounts/select");
             return;
@@ -448,6 +474,10 @@ public class UserAccountController extends BizController {
             if (!UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
                 assertTenant(user);
             }
+
+            auditLog.neutral("%s took contol over %s (%s)", UserContext.getCurrentUser().getUserName(), user.toString(), user.getUniqueName())
+                    .forCurrentUser()
+                    .log();
 
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
                                 user.getUniqueName());
