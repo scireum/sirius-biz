@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.datapipes.memory;
+package sirius.biz.analytics.offheap.memory;
 
 import sirius.kernel.commons.Strings;
 import sirius.kernel.nls.NLS;
@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class LargeMemory {
 
     public static final int PAGE_SIZE = 4 * 1024 * 1024;
+    private static final boolean BIG_ENDIAN = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
 
     protected static final Unsafe UNSAFE;
 
@@ -35,7 +36,6 @@ public class LargeMemory {
     private AtomicLong usedSize = new AtomicLong();
     private volatile long allocatedSize = 0;
     private volatile int numberOfBuffers = 0;
-    private static final boolean BIG_ENDIAN = ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN;
     private volatile long[] buffers = new long[16];
     private Allocator allocator;
 
@@ -218,13 +218,13 @@ public class LargeMemory {
             writeBytes(address,
                        new byte[]{(byte) (data & 0xFF),
                                   (byte) ((data & 0xFF00) >> 8),
-                                  (byte) ((data & 0xFF000) >> 16),
+                                  (byte) ((data & 0xFF0000) >> 16),
                                   (byte) ((data & 0xFF000000) >> 24)},
                        4);
         } else {
             writeBytes(address,
                        new byte[]{(byte) ((data & 0xFF000000) >> 24),
-                                  (byte) ((data & 0xFF000) >> 16),
+                                  (byte) ((data & 0xFF0000) >> 16),
                                   (byte) ((data & 0xFF00) >> 8),
                                   (byte) (data & 0xFF)},
                        4);
@@ -248,13 +248,13 @@ public class LargeMemory {
             writeBytes(address,
                        new byte[]{(byte) (data & 0xFFL),
                                   (byte) ((data & 0xFF00L) >> 8),
-                                  (byte) ((data & 0xFF000L) >> 16),
+                                  (byte) ((data & 0xFF0000L) >> 16),
                                   (byte) ((data & 0xFF000000L) >> 24),
                                   (byte) ((data & 0xFF00000000L) >> 32),
                                   (byte) ((data & 0xFF0000000000L) >> 40),
                                   (byte) ((data & 0xFF000000000000L) >> 48),
                                   (byte) ((data & 0xFF00000000000000L) >> 56)},
-                       4);
+                       8);
         } else {
             writeBytes(address,
                        new byte[]{(byte) ((data & 0xFF00000000000000L) >> 56),
@@ -262,10 +262,10 @@ public class LargeMemory {
                                   (byte) ((data & 0xFF0000000000L) >> 40),
                                   (byte) ((data & 0xFF00000000L) >> 32),
                                   (byte) ((data & 0xFF000000) >> 24),
-                                  (byte) ((data & 0xFF000) >> 16),
+                                  (byte) ((data & 0xFF0000) >> 16),
                                   (byte) ((data & 0xFF00) >> 8),
                                   (byte) (data & 0xFF)},
-                       4);
+                       8);
         }
     }
 

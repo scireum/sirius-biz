@@ -6,12 +6,12 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.storage.vfs.ftp;
+package sirius.biz.vfs.ftp;
 
 import com.google.common.io.ByteStreams;
 import org.apache.ftpserver.ftplet.FtpFile;
-import sirius.biz.jdbc.storage.vfs.VirtualFile;
-import sirius.biz.jdbc.storage.vfs.VirtualFileSystem;
+import sirius.biz.vfs.VirtualFile;
+import sirius.biz.vfs.VirtualFileSystem;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

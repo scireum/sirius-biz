@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.storage.vfs.ftp;
+package sirius.biz.vfs.ftp;
 
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
@@ -16,7 +16,7 @@ import org.apache.ftpserver.listener.ListenerFactory;
 import org.apache.ftpserver.ssl.SslConfigurationFactory;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import sirius.biz.jdbc.storage.vfs.VirtualFileSystem;
+import sirius.biz.vfs.VirtualFileSystem;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Register;

@@ -15,6 +15,7 @@ import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
+import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 
 import java.time.LocalDate;
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 /**
  * Represents a resized image version of a {@link VirtualObject}.
  */
+@Framework(Storage.FRAMEWORK_STORAGE)
 public class VirtualObjectVersion extends SQLEntity {
 
     /**

@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.storage.vfs.ftp;
+package sirius.biz.vfs.ftp;
 
 import org.apache.ftpserver.ftplet.FtpException;
 import org.apache.ftpserver.ftplet.FtpReply;
@@ -15,7 +15,7 @@ import org.apache.ftpserver.ftplet.FtpSession;
 import org.apache.ftpserver.ftplet.Ftplet;
 import org.apache.ftpserver.ftplet.FtpletContext;
 import org.apache.ftpserver.ftplet.FtpletResult;
-import sirius.biz.jdbc.storage.vfs.VirtualFileSystem;
+import sirius.biz.vfs.VirtualFileSystem;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.web.security.ScopeInfo;

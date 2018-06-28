@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.datapipes.memory;
+package sirius.biz.analytics.offheap.memory;
 
 public class BitBuddy {
 

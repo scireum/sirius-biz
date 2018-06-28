@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.storage.vfs.ftp;
+package sirius.biz.vfs.ftp;
 
 import org.apache.ftpserver.ConnectionConfig;
 import sirius.kernel.di.std.ConfigValue;
