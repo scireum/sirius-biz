@@ -49,7 +49,7 @@ public class JobsController extends BizController {
     public void runJob(WebContext ctx, String factory, String jobName) {
         JobDescription job = jobs.resolve(factory, jobName);
         List<JobParameterDescription> params = fetchParameterDescriptions(job);
-        if (ctx.isPOST()) {
+        if (ctx.isSafePOST()) {
             try {
                 Context context = Context.create();
                 boolean hasWarnings = loadParameters(ctx, params, context);

@@ -251,6 +251,7 @@ public class BizController extends BasicController {
 
         private List<Mapping> mappings;
         private boolean autoload = true;
+        private boolean acceptUnsafePOST = false;
 
         private SaveHelper(WebContext ctx) {
             this.ctx = ctx;
@@ -337,13 +338,23 @@ public class BizController extends BasicController {
         }
 
         /**
+         * Disables the CSRF-token checks when {@link #saveEntity(BaseEntity)} is called.
+         *
+         * @return the helper itself for fluent method calls
+         */
+        public SaveHelper disableSafePOST() {
+            this.acceptUnsafePOST = true;
+            return this;
+        }
+
+        /**
          * Applies the configured save login on the given entity.
          *
          * @param entity the entity to update and save
          * @return <tt>true</tt> if the request was handled (the user was redirected), <tt>false</tt> otherwise
          */
         public boolean saveEntity(BaseEntity<?> entity) {
-            if (!ctx.isPOST()) {
+            if (!((acceptUnsafePOST && ctx.isUnsafePOST()) || ctx.isSafePOST())) {
                 return false;
             }
 
