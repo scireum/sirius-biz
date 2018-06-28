@@ -10,6 +10,7 @@ package sirius.biz.protocol;
 
 import sirius.db.es.ElasticEntity;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.di.std.Framework;
 
 import java.time.LocalDateTime;
@@ -48,6 +49,7 @@ public class MailProtocol extends ElasticEntity {
      * Contains the name of the sender.
      */
     public static final Mapping SENDER_NAME = Mapping.named("senderName");
+    @NullAllowed
     private String senderName;
 
     /**
@@ -60,6 +62,7 @@ public class MailProtocol extends ElasticEntity {
      * Contains the name of the receiver.
      */
     public static final Mapping RECEIVER_NAME = Mapping.named("receiverName");
+    @NullAllowed
     private String receiverName;
 
     /**
@@ -72,18 +75,21 @@ public class MailProtocol extends ElasticEntity {
      * Contains the text contents.
      */
     public static final Mapping TEXT_CONTENT = Mapping.named("textContent");
+    @NullAllowed
     private String textContent;
 
     /**
      * Contains the HTML contents.
      */
     public static final Mapping HTML_CONTENT = Mapping.named("htmlContent");
+    @NullAllowed
     private String htmlContent;
 
     /**
      * Contains the type of the mail (if given).
      */
     public static final Mapping TYPE = Mapping.named("type");
+    @NullAllowed
     private String type;
 
     /**
