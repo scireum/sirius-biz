@@ -82,7 +82,7 @@
                 $('#dlgMessageBox .alert').text('@i18n("CodeListController.codeMustBeFilled")');
                 $('#dlgMessageBox').show();
             } else {
-                $('#entryForm').submit();
+                $('#editForm').submit();
             }
         }
 
@@ -94,7 +94,7 @@
                 <div class="alert alert-danger"></div>
             </div>
 
-            <w:editForm url="/code-list/@codeList.getId()/entry">
+            <w:editForm url="@apply('/code-list/%s/entry', codeList.getId())">
                 <fieldset>
                     <w:textfield name="code" value="" labelKey="Model.code" required="true" />
                     <w:textfield name="priority" value="" labelKey="Model.priority" />
