@@ -6,9 +6,9 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.storage.vfs;
+package sirius.biz.vfs;
 
-import sirius.biz.jdbc.storage.vfs.ftp.FTPBridge;
+import sirius.biz.vfs.ftp.FTPBridge;
 import sirius.kernel.Startable;
 import sirius.kernel.Stoppable;
 import sirius.kernel.di.std.Part;

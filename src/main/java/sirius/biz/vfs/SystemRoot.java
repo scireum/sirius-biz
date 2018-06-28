@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.storage.vfs;
+package sirius.biz.vfs;
 
 import com.google.common.base.Charsets;
 import sirius.biz.jdbc.tenants.TenantUserManager;

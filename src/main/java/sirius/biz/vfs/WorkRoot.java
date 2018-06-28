@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.storage.vfs;
+package sirius.biz.vfs;
 
 import sirius.biz.jdbc.storage.BucketInfo;
 import sirius.biz.jdbc.storage.Storage;

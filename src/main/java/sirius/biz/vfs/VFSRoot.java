@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.storage.vfs;
+package sirius.biz.vfs;
 
 import java.util.function.Consumer;
 

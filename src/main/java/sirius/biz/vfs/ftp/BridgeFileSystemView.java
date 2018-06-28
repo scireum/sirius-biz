@@ -6,13 +6,13 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.storage.vfs.ftp;
+package sirius.biz.vfs.ftp;
 
 import org.apache.ftpserver.ftplet.FileSystemView;
 import org.apache.ftpserver.ftplet.FtpException;
 import org.apache.ftpserver.ftplet.FtpFile;
-import sirius.biz.jdbc.storage.vfs.VFSRoot;
-import sirius.biz.jdbc.storage.vfs.VirtualFile;
+import sirius.biz.vfs.VFSRoot;
+import sirius.biz.vfs.VirtualFile;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Parts;
 
@@ -20,7 +20,7 @@ import java.util.Collection;
 import java.util.function.Consumer;
 
 /**
- * Providesa a bridge between the {@link sirius.biz.jdbc.storage.vfs.VirtualFileSystem} and the FTP server.
+ * Providesa a bridge between the {@link sirius.biz.vfs.VirtualFileSystem} and the FTP server.
  */
 class BridgeFileSystemView implements FileSystemView {
 
