@@ -258,6 +258,10 @@ public class UserAccountController extends BizController {
         UserAccount userAccount = findForTenant(UserAccount.class, id);
         assertNotNew(userAccount);
 
+        if (Strings.areEqual(userAccount.getUniqueName(), UserContext.getCurrentUser().getUserId())) {
+            throw Exceptions.createHandled().withNLSKey("UserAccountConroller.cannotGeneratePasswordForOwnUser").handle();
+        }
+
         userAccount.getLogin().setGeneratedPassword(Strings.generatePassword());
         oma.update(userAccount);
 

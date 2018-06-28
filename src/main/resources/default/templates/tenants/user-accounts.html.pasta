@@ -52,13 +52,12 @@
                     @account.getEmail()
                 </td>
                 <td>
-                    <a href="/user-account/@account.getId()/password" class="link">
-                        <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.set")
-                    </a><br>
-                    <a href="/user-account/@account.getId()/generate-password?@accounts.createQueryString()"
-                       class="link">
-                        <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generate")
-                    </a>
+                    <i:if test="user.getCurrentUser().getUserId() != account.getUniqueName()">
+                        <a href="/user-account/@account.getId()/generate-password?@accounts.createQueryString()"
+                           class="link">
+                            <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generate")
+                        </a>
+                    </i:if>
                     <i:if test="isFilled(account.getLogin().getGeneratedPassword())">
                         <br><span class="muted">@account.getLogin().getGeneratedPassword()</span>
                     </i:if>
