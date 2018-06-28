@@ -19,6 +19,7 @@ import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.web.http.MimeHelper;
 
@@ -34,6 +35,7 @@ import java.time.LocalDateTime;
 @Index(name = "reference_lookup", columns = "reference")
 @Index(name = "temporary_lookup", columns = {"temporary", "trace_changedAt"})
 @Index(name = "cleanup_lookup", columns = {"bucket", "trace_changedAt"})
+@Framework(Storage.FRAMEWORK_STORAGE)
 public class VirtualObject extends SQLTenantAware implements StoredObject {
 
     /**

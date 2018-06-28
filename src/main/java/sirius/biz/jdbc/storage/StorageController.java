@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 /**
  * Provides a management UI for the storage system.
  */
-@Register(classes = Controller.class)
+@Register(classes = Controller.class,framework = Storage.FRAMEWORK_STORAGE)
 public class StorageController extends BizController {
 
     private static final String NO_REFERENCE = "-";
@@ -48,9 +48,6 @@ public class StorageController extends BizController {
 
     @Part
     private Storage storage;
-
-    @Part
-    private Tenants tenants;
 
     /**
      * Lists all buckets visible to the current user.

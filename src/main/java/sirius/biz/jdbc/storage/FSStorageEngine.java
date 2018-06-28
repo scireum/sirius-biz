@@ -27,7 +27,7 @@ import java.io.InputStream;
 /**
  * Provides a {@link PhysicalStorageEngine} which operates on the local file system.
  */
-@Register(name = "fs")
+@Register(name = "fs",framework = Storage.FRAMEWORK_STORAGE)
 public class FSStorageEngine implements PhysicalStorageEngine {
 
     @ConfigValue("storage.baseDir")

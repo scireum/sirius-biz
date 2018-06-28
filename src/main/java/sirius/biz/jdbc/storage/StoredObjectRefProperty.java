@@ -38,7 +38,7 @@ public class StoredObjectRefProperty extends Property implements SQLPropertyInfo
     /**
      * Factory for generating properties based on their field type
      */
-    @Register
+    @Register(framework = Storage.FRAMEWORK_STORAGE)
     public static class Factory implements PropertyFactory {
 
         @Override

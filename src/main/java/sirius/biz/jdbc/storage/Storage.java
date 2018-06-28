@@ -35,6 +35,7 @@ import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.mail.Store;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -67,10 +68,18 @@ import java.util.stream.Collectors;
  * For database entities referencing virtual objects a {@link StoredObjectRef} can be used, which takes care of
  * referential integrity (deletes the object, if the entity is deleted etc.)
  */
-@Register(classes = Storage.class)
+@Register(classes = Storage.class,framework = Storage.FRAMEWORK_STORAGE)
 public class Storage {
 
+    /**
+     * Logger used by the storage facility.
+     */
     public static final Log LOG = Log.get("storage");
+
+    /**
+     * Names the framework which must be enabled to activate the storage feature.
+     */
+    public static final String FRAMEWORK_STORAGE = "biz.storage";
 
     private static final byte[] EMPTY_BUFFER = new byte[0];
 
