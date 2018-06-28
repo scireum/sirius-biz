@@ -31,7 +31,7 @@
         <div class="col-md-12">
             <w:heading labelKey="MailProtocol.text" />
             <div class="well">
-                <pre class="plain">@mail.getText()</pre>
+                <pre class="plain">@mail.getTextContent()</pre>
             </div>
         </div>
     </div>
@@ -39,7 +39,7 @@
         <div class="col-md-12">
             <w:heading labelKey="MailProtocol.html" />
             <div class="well">
-                <pre class="plain">@mail.getHtml()</pre>
+                <pre class="plain">@mail.getHtmlContent()</pre>
             </div>
         </div>
     </div>
