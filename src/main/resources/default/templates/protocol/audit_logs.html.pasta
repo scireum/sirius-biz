@@ -1,0 +1,60 @@
+<i:arg type="Page" name="messages"/>
+<w:page titleKey="AuditLogEntry.plural">
+    <i:block name="breadcrumbs">
+        <li><a href="/audit-logs">@i18n("AuditLogEntry.plural")</a></li>
+    </i:block>
+
+    <w:pageHeader titleKey="AuditLogEntry.plural"/>
+
+    <div class="row">
+        <div class="col-md-12">
+            <w:tableSearchHeader page="messages" hideSearchBox="true" baseUrl="/audit-log"/>
+
+            <w:table data="messages" colorized="true">
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>
+                        <div class="row">
+                            <div class="col-md-2">@i18n("AuditLogEntry.timestamp")</div>
+                            <div class="col-md-4">@i18n("AuditLogEntry.account")</div>
+                            <div class="col-md-4">@i18n("AuditLogEntry.company")</div>
+                            <div class="col-md-2">@i18n("AuditLogEntry.ip")</div>
+                        </div>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <i:for type="sirius.biz.protocol.AuditLogEntry" var="msg" items="messages.getItems()">
+                    <tr @if (msg.isNegative()) { class="warning" } else { class="info" }>
+                    <td></td>
+                    <td>
+                        <div class="row">
+                            <div class="col-md-2">
+                                <small>@toUserString(msg.getTimestamp())</small>
+                            </div>
+                            <div class="col-md-4">
+                                @msg.getUserName()
+                            </div>
+                            <div class="col-md-4">
+                                @msg.getTenantName()
+                            </div>
+                            <div class="col-md-2">
+                                <small>@msg.getIp()</small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <pre class="plain" style="white-space: pre-wrap">@msg.getMessage()</pre>
+                            </div>
+                        </div>
+                    </td>
+                    </tr>
+                </i:for>
+
+                </tbody>
+            </w:table>
+            <w:pagination page="messages" baseUrl="/audit-log"/>
+        </div>
+    </div>
+</w:page>
