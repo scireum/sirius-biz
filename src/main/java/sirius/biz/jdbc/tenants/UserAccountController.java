@@ -197,55 +197,6 @@ public class UserAccountController extends BizController {
     }
 
     /**
-     * Shows an editor to change the password of an account.
-     *
-     * @param ctx the current request
-     * @param id  the account to change the password for
-     */
-    @Routed("/user-account/:1/password")
-    @LoginRequired
-    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
-    public void password(final WebContext ctx, String id) {
-        UserAccount userAccount = findForTenant(UserAccount.class, id);
-        assertNotNew(userAccount);
-
-        if (ctx.isSafePOST()) {
-            try {
-                String oldPassword = ctx.get(PARAM_OLD_PASSWORD).asString();
-                String newPassword = ctx.get(PARAM_NEW_PASSWORD).asString();
-                String confirmation = ctx.get(PARAM_CONFIRMATION).asString();
-
-                validateOldPassword(oldPassword, userAccount);
-                userAccount.getLogin().verifyPassword(newPassword, confirmation, userAccount.getMinPasswordLength());
-                userAccount.getLogin().setCleartextPassword(newPassword);
-                oma.update(userAccount);
-                showSavedMessage();
-                accounts(ctx);
-                return;
-            } catch (Exception e) {
-                UserContext.handle(e);
-            }
-        }
-        ctx.respondWith().template("templates/tenants/user-account-password.html.pasta", userAccount);
-    }
-
-    /**
-     * Validates the old password for the given {@link UserAccount}.
-     *
-     * @param oldPassword the current request to read the old password from
-     * @param userAccount the user account to validate the old password for
-     * @throws sirius.kernel.health.HandledException if the old password is invalid
-     */
-    private void validateOldPassword(String oldPassword, UserAccount userAccount) {
-        UserManager userManager = UserContext.get().getUserManager();
-
-        if (!(userManager instanceof TenantUserManager && ((TenantUserManager) userManager).checkPassword(userAccount,
-                                                                                                          oldPassword))) {
-            throw Exceptions.createHandled().withNLSKey("UserAccount.invalidOldPassword").handle();
-        }
-    }
-
-    /**
      * Generates a new password for the given account and send a mail to the user.
      *
      * @param ctx the current request
