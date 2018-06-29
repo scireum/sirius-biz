@@ -12,6 +12,7 @@ import sirius.biz.jdbc.model.LoginData;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
+import sirius.web.http.CSRFHelper;
 import sirius.web.http.TestRequest;
 import sirius.web.security.UserContext;
 
@@ -34,6 +35,9 @@ public class TenantsHelper {
 
     @Part
     private static Tenants tenants;
+
+    @Part
+    private static CSRFHelper csrfHelper;
 
     private static Tenant testTenant;
     private static UserAccount testUser;
@@ -90,6 +94,7 @@ public class TenantsHelper {
         request.setSessionValue("default-tenant-id", getTestTenant().getId());
         request.setSessionValue("default-tenant-name", getTestTenant().getName());
         request.setSessionValue("default-user-id", getTestUser().getUniqueName());
+        request.setAttribute("CSRFToken", csrfHelper.getCSRFToken(request));
     }
 
     public static void clearCurrentUser() {
