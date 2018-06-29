@@ -57,7 +57,7 @@ public class ProfileController extends BizController {
         UserAccount userAccount = oma.refreshOrFail(getUser().getUserObject(UserAccount.class));
         assertNotNew(userAccount);
 
-        if (ctx.isSafePOST()) {
+        if (ctx.ensureSafePOST()) {
             try {
                 String oldPassword = ctx.get(PARAM_OLD_PASSWORD).asString();
                 String newPassword = ctx.get(PARAM_NEW_PASSWORD).asString();

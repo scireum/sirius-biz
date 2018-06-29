@@ -115,7 +115,7 @@ public class CodeListController extends BizController {
     public void codeListEntry(WebContext ctx, String codeListId) {
         CodeList cl = findForTenant(CodeList.class, codeListId);
         assertNotNew(cl);
-        if (ctx.isSafePOST()) {
+        if (ctx.ensureSafePOST()) {
             if (ctx.get("code").isFilled()) {
                 String code = ctx.get("code").asString();
                 CodeListEntry cle = oma.select(CodeListEntry.class)
