@@ -205,7 +205,7 @@ public class UserAccountController extends BizController {
         UserAccount userAccount = findForTenant(UserAccount.class, id);
         assertNotNew(userAccount);
 
-        if (ctx.isSafePOST()) {
+        if (ctx.ensureSafePOST()) {
             try {
                 String oldPassword = ctx.get(PARAM_OLD_PASSWORD).asString();
                 String newPassword = ctx.get(PARAM_NEW_PASSWORD).asString();
