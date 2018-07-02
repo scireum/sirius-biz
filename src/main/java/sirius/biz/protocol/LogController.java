@@ -49,9 +49,7 @@ public class LogController extends BizController {
                               DateRange.yesterday(),
                               DateRange.thisWeek(),
                               DateRange.lastWeek());
-        ph.withSearchFields(QueryField.contains(LoggedMessage.CATEGORY),
-                            QueryField.contains(LoggedMessage.LEVEL),
-                            QueryField.contains(LoggedMessage.MESSAGE));
+        ph.withSearchFields(QueryField.contains(LoggedMessage.SEARCH_FIELD));
 
         ctx.respondWith().template("templates/protocol/logs.html.pasta", ph.asPage());
     }

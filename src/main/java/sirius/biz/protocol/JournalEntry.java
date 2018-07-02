@@ -8,6 +8,8 @@
 
 package sirius.biz.protocol;
 
+import sirius.biz.elastic.SearchContent;
+import sirius.biz.elastic.SearchableEntity;
 import sirius.db.es.ElasticEntity;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.async.TaskContext;
@@ -19,7 +21,7 @@ import java.time.LocalDateTime;
  * Records the changes recorded by a {@link JournalData}.
  */
 @Framework(Protocols.FRAMEWORK_JOURNAL)
-public class JournalEntry extends ElasticEntity {
+public class JournalEntry extends SearchableEntity {
 
     /**
      * Contains the timestamp of the change.
@@ -31,6 +33,7 @@ public class JournalEntry extends ElasticEntity {
      * Contains the name of the user which was active when the change occured.
      */
     public static final Mapping USERNAME = Mapping.named("username");
+    @SearchContent
     private String username;
 
     /**
@@ -45,24 +48,28 @@ public class JournalEntry extends ElasticEntity {
      * @see TaskContext#getSystemString()
      */
     public static final Mapping SUBSYSTEM = Mapping.named("subsystem");
+    @SearchContent
     private String subsystem;
 
     /**
      * Contains the type name of the entity which was changed.
      */
     public static final Mapping TARGET_TYPE = Mapping.named("targetType");
+    @SearchContent
     private String targetType;
 
     /**
      * Contains the ID of entity which was changed.
      */
     public static final Mapping TARGET_ID = Mapping.named("targetId");
+    @SearchContent
     private String targetId;
 
     /**
      * Contains the {@code toString()} of the entity which was changed.
      */
     public static final Mapping TARGET_NAME = Mapping.named("targetName");
+    @SearchContent
     private String targetName;
 
     /**
@@ -71,6 +78,7 @@ public class JournalEntry extends ElasticEntity {
      * The old values are not recorded, as these are in the previous protocol entry.
      */
     public static final Mapping CHANGES = Mapping.named("changes");
+    @SearchContent
     private String changes;
 
     public LocalDateTime getTod() {
