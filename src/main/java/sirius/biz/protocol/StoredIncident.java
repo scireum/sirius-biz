@@ -8,8 +8,8 @@
 
 package sirius.biz.protocol;
 
-import sirius.db.es.ElasticEntity;
-import sirius.db.es.annotations.Analyzed;
+import sirius.biz.elastic.SearchContent;
+import sirius.biz.elastic.SearchableEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.di.std.Framework;
@@ -20,37 +20,41 @@ import java.time.LocalDateTime;
  * Stores an exception along with some context.
  */
 @Framework(Protocols.FRAMEWORK_PROTOCOLS)
-public class StoredIncident extends ElasticEntity {
+public class StoredIncident extends SearchableEntity {
 
     /**
      * Contains the error message.
      */
     public static final Mapping MESSAGE = Mapping.named("message");
-    @Analyzed(indexOptions = Analyzed.IndexOption.DOCS)
+    @SearchContent
     private String message;
 
     /**
      * Contains the category or logger name which logged the error.
      */
     public static final Mapping CATEGORY = Mapping.named("category");
+    @SearchContent
     private String category;
 
     /**
      * Contains the name of the node on which the error occured.
      */
     public static final Mapping NODE = Mapping.named("node");
+    @SearchContent
     private String node;
 
     /**
      * Contains the code-location where the error occured.
      */
     public static final Mapping LOCATION = Mapping.named("location");
+    @SearchContent
     private String location;
 
     /**
      * Contains the exception stacktrace.
      */
     public static final Mapping STACK = Mapping.named("stack");
+    @SearchContent
     private String stack;
 
     /**
@@ -75,12 +79,14 @@ public class StoredIncident extends ElasticEntity {
      * Contains the <tt>mapped diagnostic context</tt>, providing some insight how and why the error occured.
      */
     public static final Mapping MDC = Mapping.named("mdc");
+    @SearchContent
     private final StringMap mdc = new StringMap();
 
     /**
      * Contains the name of the user that was logged in while the error occured.
      */
     public static final Mapping USER = Mapping.named("user");
+    @SearchContent
     private String user;
 
     public String getMessage() {

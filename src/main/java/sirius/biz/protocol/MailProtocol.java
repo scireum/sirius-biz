@@ -8,6 +8,8 @@
 
 package sirius.biz.protocol;
 
+import sirius.biz.elastic.SearchContent;
+import sirius.biz.elastic.SearchableEntity;
 import sirius.db.es.ElasticEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.NullAllowed;
@@ -19,7 +21,7 @@ import java.time.LocalDateTime;
  * Stores a copy of a mail sent by the system.
  */
 @Framework(Protocols.FRAMEWORK_PROTOCOLS)
-public class MailProtocol extends ElasticEntity {
+public class MailProtocol extends SearchableEntity {
 
     /**
      * Contains the timestamp when the mail was sent.
@@ -37,12 +39,14 @@ public class MailProtocol extends ElasticEntity {
      * Contains the id assigned by the mailing system.
      */
     public static final Mapping MESSAGE_ID = Mapping.named("messageId");
+    @SearchContent
     private String messageId;
 
     /**
      * Contains the address of the sender.
      */
     public static final Mapping SENDER = Mapping.named("sender");
+    @SearchContent
     private String sender;
 
     /**
@@ -50,12 +54,14 @@ public class MailProtocol extends ElasticEntity {
      */
     public static final Mapping SENDER_NAME = Mapping.named("senderName");
     @NullAllowed
+    @SearchContent
     private String senderName;
 
     /**
      * Contains the address of the receiver.
      */
     public static final Mapping RECEIVER = Mapping.named("receiver");
+    @SearchContent
     private String receiver;
 
     /**
@@ -63,12 +69,14 @@ public class MailProtocol extends ElasticEntity {
      */
     public static final Mapping RECEIVER_NAME = Mapping.named("receiverName");
     @NullAllowed
+    @SearchContent
     private String receiverName;
 
     /**
      * Contains the subject.
      */
     public static final Mapping SUBJECT = Mapping.named("subject");
+    @SearchContent
     private String subject;
 
     /**
@@ -76,6 +84,7 @@ public class MailProtocol extends ElasticEntity {
      */
     public static final Mapping TEXT_CONTENT = Mapping.named("textContent");
     @NullAllowed
+    @SearchContent
     private String textContent;
 
     /**
@@ -83,6 +92,7 @@ public class MailProtocol extends ElasticEntity {
      */
     public static final Mapping HTML_CONTENT = Mapping.named("htmlContent");
     @NullAllowed
+    @SearchContent
     private String htmlContent;
 
     /**
@@ -96,6 +106,7 @@ public class MailProtocol extends ElasticEntity {
      * Contains the node which sent the email.
      */
     public static final Mapping NODE = Mapping.named("node");
+    @SearchContent
     private String node;
 
     public LocalDateTime getTod() {

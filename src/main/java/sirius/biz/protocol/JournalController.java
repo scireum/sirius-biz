@@ -40,7 +40,7 @@ public class JournalController extends BizController {
 
         long unixTimeInDays = TimeUnit.DAYS.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS);
 
-        return Hashing.md5().hashString(type + id + secret + String.valueOf(unixTimeInDays), Charsets.UTF_8).toString();
+        return Hashing.md5().hashString(type + id + secret + unixTimeInDays, Charsets.UTF_8).toString();
     }
 
     /**
@@ -64,9 +64,7 @@ public class JournalController extends BizController {
                               DateRange.yesterday(),
                               DateRange.thisWeek(),
                               DateRange.lastWeek());
-        ph.withSearchFields(QueryField.contains(JournalEntry.CHANGES),
-                            QueryField.contains(JournalEntry.TARGET_NAME),
-                            QueryField.contains(JournalEntry.USERNAME));
+        ph.withSearchFields(QueryField.contains(JournalEntry.SEARCH_FIELD));
 
         ctx.respondWith().template("templates/protocol/protocol.html.pasta", ph.asPage());
     }
@@ -97,7 +95,7 @@ public class JournalController extends BizController {
                               DateRange.yesterday(),
                               DateRange.thisWeek(),
                               DateRange.lastWeek());
-        ph.withSearchFields(QueryField.contains(JournalEntry.CHANGES), QueryField.contains(JournalEntry.USERNAME));
+        ph.withSearchFields(QueryField.contains(JournalEntry.SEARCH_FIELD));
 
         ctx.respondWith().template("templates/protocol/entity_protocol.html.pasta", type, id, hash, ph.asPage());
     }

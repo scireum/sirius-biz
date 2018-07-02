@@ -8,6 +8,8 @@
 
 package sirius.biz.protocol;
 
+import sirius.biz.elastic.SearchContent;
+import sirius.biz.elastic.SearchableEntity;
 import sirius.db.es.ElasticEntity;
 import sirius.db.es.annotations.Analyzed;
 import sirius.db.mixing.Mapping;
@@ -20,19 +22,21 @@ import java.time.LocalDateTime;
  * Stores a log message created via a {@link Log} instance.
  */
 @Framework(Protocols.FRAMEWORK_PROTOCOLS)
-public class LoggedMessage extends ElasticEntity {
+public class LoggedMessage extends SearchableEntity {
 
     /**
      * Contains the message itself.
      */
     public static final Mapping MESSAGE = Mapping.named("message");
     @Analyzed(indexOptions = Analyzed.IndexOption.DOCS)
+    @SearchContent
     private String message;
 
     /**
      * Contains the category (name of the logger) which created the message.
      */
     public static final Mapping CATEGORY = Mapping.named("category");
+    @SearchContent
     private String category;
 
     /**
@@ -45,6 +49,7 @@ public class LoggedMessage extends ElasticEntity {
      * Contains the node the message was logged on.
      */
     public static final Mapping NODE = Mapping.named("node");
+    @SearchContent
     private String node;
 
     /**
@@ -57,6 +62,7 @@ public class LoggedMessage extends ElasticEntity {
      * Contains the user that was logged in, when the message was logged.
      */
     public static final Mapping USER = Mapping.named("user");
+    @SearchContent
     private String user;
 
     /**

@@ -46,7 +46,7 @@ public class IncidentController extends BizController {
                               DateRange.yesterday(),
                               DateRange.thisWeek(),
                               DateRange.lastWeek());
-        ph.withSearchFields(QueryField.contains(StoredIncident.CATEGORY), QueryField.contains(StoredIncident.MESSAGE));
+        ph.withSearchFields(QueryField.contains(StoredIncident.SEARCH_FIELD));
 
         ctx.respondWith()
            .template("templates/protocol/errors.html.pasta",

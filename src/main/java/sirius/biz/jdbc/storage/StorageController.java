@@ -10,7 +10,6 @@ package sirius.biz.jdbc.storage;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import sirius.biz.jdbc.tenants.Tenants;
 import sirius.biz.protocol.TraceData;
 import sirius.biz.web.BizController;
 import sirius.biz.web.SQLPageHelper;
@@ -39,7 +38,7 @@ import java.util.stream.Collectors;
 /**
  * Provides a management UI for the storage system.
  */
-@Register(classes = Controller.class,framework = Storage.FRAMEWORK_STORAGE)
+@Register(classes = Controller.class, framework = Storage.FRAMEWORK_STORAGE)
 public class StorageController extends BizController {
 
     private static final String NO_REFERENCE = "-";

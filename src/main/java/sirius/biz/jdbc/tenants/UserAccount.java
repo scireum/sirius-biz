@@ -14,7 +14,6 @@ import sirius.biz.jdbc.model.PersonData;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.web.Autoloaded;
-import sirius.biz.web.TenantAware;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeDelete;
 import sirius.db.mixing.annotations.BeforeSave;

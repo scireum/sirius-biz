@@ -45,11 +45,7 @@ public class MailController extends BizController {
                               DateRange.yesterday(),
                               DateRange.thisWeek(),
                               DateRange.lastWeek());
-        ph.withSearchFields(QueryField.contains(MailProtocol.SUBJECT),
-                            QueryField.contains(MailProtocol.SENDER),
-                            QueryField.contains(MailProtocol.SENDER_NAME),
-                            QueryField.contains(MailProtocol.RECEIVER),
-                            QueryField.contains(MailProtocol.RECEIVER_NAME));
+        ph.withSearchFields(QueryField.contains(MailProtocol.SEARCH_FIELD));
 
         ctx.respondWith().template("templates/protocol/mails.html.pasta", ph.asPage());
     }
