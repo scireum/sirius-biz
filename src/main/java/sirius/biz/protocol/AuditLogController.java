@@ -28,9 +28,6 @@ import sirius.web.security.UserContext;
 @Register(classes = Controller.class)
 public class AuditLogController extends BizController {
 
-    @Part
-    private Mongo mongo;
-
     /**
      * Names the permissions required to view the protocol.
      */

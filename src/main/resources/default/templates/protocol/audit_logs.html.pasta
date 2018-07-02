@@ -43,11 +43,7 @@
                                 <small>@msg.getIp()</small>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <pre class="plain" style="white-space: pre-wrap">@msg.getMessage()</pre>
-                            </div>
-                        </div>
+                        <pre class="plain" style="white-space: pre-wrap">@msg.getMessage()</pre>
                     </td>
                     </tr>
                 </i:for>

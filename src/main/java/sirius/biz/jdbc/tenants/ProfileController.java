@@ -73,13 +73,13 @@ public class ProfileController extends BizController {
                 userAccount.getLogin().setCleartextPassword(newPassword);
                 oma.update(userAccount);
 
-                auditLog.neutral("%s changed her or his password.", UserContext.getCurrentUser().getUserName())
+                auditLog.neutral("%s changed the password.", UserContext.getCurrentUser().getUserName())
                         .forCurrentUser()
                         .log();
 
                 showSavedMessage();
             } catch (Exception e) {
-                auditLog.neutral("Ann error occurred when %s tried to changed her or his password: %s",
+                auditLog.neutral("An error occurred when %s tried to changed the password: %s",
                                  UserContext.getCurrentUser().getUserName(),
                                  e.getMessage()).forCurrentUser().log();
 
