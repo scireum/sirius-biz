@@ -196,7 +196,7 @@ public class TenantController extends BizController {
     public void deleteTenant(WebContext ctx, String tenantId) {
         Optional<Tenant> t = oma.find(Tenant.class, tenantId);
         if (t.isPresent()) {
-            if (!Objects.equals(t.get().getId(), tenants.getRequiredTenant().getId())) {
+            if (t.get().equals(tenants.getRequiredTenant())) {
                 throw Exceptions.createHandled().withNLSKey("TenantController.cannotDeleteSelf").handle();
             }
             oma.delete(t.get());

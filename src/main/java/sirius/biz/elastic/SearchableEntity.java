@@ -79,7 +79,7 @@ public abstract class SearchableEntity extends ElasticEntity {
             .stream()
             .filter(p -> p.getAnnotation(SearchContent.class).isPresent())
             .map(p -> p.getValue(this))
-            .filter(Objects::nonNull)
+            .filter(Strings::isFilled)
             .forEach(obj -> addContent(contentBuilder, obj));
         searchField = contentBuilder.toString();
     }
