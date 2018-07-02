@@ -8,7 +8,6 @@
 
 package sirius.biz.sequences;
 
-import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.console.Command;

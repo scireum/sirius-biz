@@ -31,6 +31,7 @@ import sirius.web.services.JSONStructuredOutput;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -195,7 +196,7 @@ public class TenantController extends BizController {
     public void deleteTenant(WebContext ctx, String tenantId) {
         Optional<Tenant> t = oma.find(Tenant.class, tenantId);
         if (t.isPresent()) {
-            if (t.get().getId() == tenants.getRequiredTenant().getId()) {
+            if (!Objects.equals(t.get().getId(), tenants.getRequiredTenant().getId())) {
                 throw Exceptions.createHandled().withNLSKey("TenantController.cannotDeleteSelf").handle();
             }
             oma.delete(t.get());

@@ -12,7 +12,6 @@ import sirius.biz.locks.Locks;
 import sirius.db.jdbc.schema.Schema;
 import sirius.db.mongo.Mongo;
 import sirius.kernel.commons.Wait;
-import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -33,7 +32,7 @@ import java.util.List;
  * sequences. A viable option is to use {@link sirius.db.mixing.BaseEntity#getUniqueName()} of the entity which utilizes
  * this generator.
  */
-@Register(classes = Sequences.class,framework = Sequences.FRAMEWORK_SEQUENCES)
+@Register(classes = Sequences.class, framework = Sequences.FRAMEWORK_SEQUENCES)
 public class Sequences {
 
     /**

@@ -9,7 +9,6 @@
 package sirius.biz.jdbc.storage;
 
 import sirius.biz.jdbc.tenants.SQLTenantAware;
-import sirius.biz.web.TenantAware;
 import sirius.db.KeyGenerator;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
@@ -168,7 +167,7 @@ public class VirtualObject extends SQLTenantAware implements StoredObject {
         storage.deletePhysicalObject(getBucket(), getPhysicalKey());
     }
 
-    @BeforeSave (priority = 110)
+    @BeforeSave(priority = 110)
     @AfterDelete
     protected void removeObjectFromCaches() {
         if (!isNew()) {

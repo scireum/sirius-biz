@@ -20,12 +20,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Removes old and outdates files from buckets.
+ * Removes old and outdated files from buckets.
  * <p>
  * A bucket can specify a max age for its objects. Older objects are automatically deleted by the system (vis this
  * loop).
  */
-@Register(classes = BackgroundLoop.class,framework = Storage.FRAMEWORK_STORAGE)
+@Register(classes = BackgroundLoop.class, framework = Storage.FRAMEWORK_STORAGE)
 public class StorageCleanupLoop extends BackgroundLoop {
 
     @Part
