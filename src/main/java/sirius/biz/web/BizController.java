@@ -354,11 +354,11 @@ public class BizController extends BasicController {
          * @return <tt>true</tt> if the request was handled (the user was redirected), <tt>false</tt> otherwise
          */
         public boolean saveEntity(BaseEntity<?> entity) {
-            if (!((acceptUnsafePOST && ctx.isUnsafePOST()) || ctx.isSafePOST())) {
-                return false;
-            }
-
             try {
+                if (!((acceptUnsafePOST && ctx.isUnsafePOST()) || ctx.ensureSafePOST())) {
+                    return false;
+                }
+
                 boolean wasNew = entity.isNew();
 
                 if (autoload) {
