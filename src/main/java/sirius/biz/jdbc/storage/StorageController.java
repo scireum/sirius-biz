@@ -167,14 +167,12 @@ public class StorageController extends BizController {
         if (!(queryString.startsWith("*") || queryString.startsWith("/"))) {
             queryString = "/" + queryString;
         }
-
-        if (queryString.contains("*")) {
-            baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.like(VirtualObject.PATH).matches(queryString).build(),
-                                           OMA.FILTERS.like(VirtualObject.OBJECT_KEY).matches(query).build()));
-        } else {
-            baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.eq(VirtualObject.PATH, queryString),
-                                           OMA.FILTERS.eq(VirtualObject.OBJECT_KEY, query)));
+        if (!queryString.contains("*")) {
+            queryString += "*";
         }
+
+        baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.like(VirtualObject.PATH).matches(queryString).build(),
+                                       OMA.FILTERS.like(VirtualObject.OBJECT_KEY).matches(query).build()));
     }
 
     /**
