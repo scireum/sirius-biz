@@ -86,7 +86,7 @@ public class StorageController extends BizController {
                                                  .ne(VirtualObject.PATH, null)
                                                  .orderDesc(VirtualObject.TRACE.inner(TraceData.CHANGED_AT));
 
-        applyQuery(ctx.get("query").asString(), baseQuery, bucket.isAlwaysUseLikeSearch());
+        applyQuery(ctx.get("query").asString(), baseQuery, bucket.isAlwaysUseLikeSearch(), false);
 
         SQLPageHelper<VirtualObject> pageHelper =
                 SQLPageHelper.withQuery(tenants.forCurrentTenant(baseQuery)).withContext(ctx);
@@ -136,7 +136,7 @@ public class StorageController extends BizController {
                                                  .orderDesc(VirtualObject.TRACE.inner(TraceData.CHANGED_AT))
                                                  .limit(10);
 
-        applyQuery(query, baseQuery, bucket.isAlwaysUseLikeSearch());
+        applyQuery(query, baseQuery, bucket.isAlwaysUseLikeSearch(), true);
         for (VirtualObject object : baseQuery.queryList()) {
             result.accept(new AutocompleteHelper.Completion(object.getObjectKey(),
                                                             object.getFilename(),
@@ -152,8 +152,12 @@ public class StorageController extends BizController {
      * @param query               the query string to apply
      * @param baseQuery           the query to expand
      * @param alwaysUseLikeSearch determines wheter we always use a like on for matching
+     * @param autocomplete        determines if the query is for an autocomplete request
      */
-    private void applyQuery(String query, SmartQuery<VirtualObject> baseQuery, boolean alwaysUseLikeSearch) {
+    private void applyQuery(String query,
+                            SmartQuery<VirtualObject> baseQuery,
+                            boolean alwaysUseLikeSearch,
+                            boolean autocomplete) {
         if (Strings.isEmpty(query)) {
             return;
         }
@@ -167,12 +171,17 @@ public class StorageController extends BizController {
         if (!(queryString.startsWith("*") || queryString.startsWith("/"))) {
             queryString = "/" + queryString;
         }
-        if (!queryString.contains("*")) {
-            queryString += "*";
-        }
 
-        baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.like(VirtualObject.PATH).matches(queryString).build(),
-                                       OMA.FILTERS.like(VirtualObject.OBJECT_KEY).matches(query).build()));
+        if (queryString.contains("*")) {
+            baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.like(VirtualObject.PATH).matches(queryString).build(),
+                                           OMA.FILTERS.like(VirtualObject.OBJECT_KEY).matches(query).build()));
+        } else if (autocomplete) {
+            baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.like(VirtualObject.PATH).startsWith(queryString).build(),
+                                           OMA.FILTERS.like(VirtualObject.OBJECT_KEY).startsWith(query).build()));
+        } else {
+            baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.eq(VirtualObject.PATH, queryString),
+                                           OMA.FILTERS.eq(VirtualObject.OBJECT_KEY, query)));
+        }
     }
 
     /**
