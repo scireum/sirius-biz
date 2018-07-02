@@ -10,12 +10,14 @@ package sirius.biz.jdbc.tenants;
 
 import sirius.biz.jdbc.model.AddressData;
 import sirius.biz.jdbc.model.PermissionData;
+import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
 import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.ConfigValue;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
@@ -53,6 +55,9 @@ public class TenantController extends BizController {
 
     @ConfigValue("product.wondergemRoot")
     private String wondergemRoot;
+
+    @Part
+    private AuditLog auditLog;
 
     /**
      * Returns all available features which can be assigned to a tenant.
@@ -240,6 +245,10 @@ public class TenantController extends BizController {
     @Routed("/tenants/select/:1")
     public void selectTenant(final WebContext ctx, String id) {
         if ("main".equals(id)) {
+            auditLog.neutral("%s switched back to the main tenant", UserContext.getCurrentUser().getUserName())
+                    .forCurrentUser()
+                    .log();
+
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
                                 null);
             ctx.respondWith().redirectTemporarily("/tenants/select");
@@ -256,6 +265,11 @@ public class TenantController extends BizController {
             selectTenants(ctx);
             return;
         }
+
+        auditLog.neutral("%s took control over tenant %s (%s)",
+                         UserContext.getCurrentUser().getUserName(),
+                         tenant.getName(),
+                         tenant.getUniqueName()).forCurrentUser().log();
 
         ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
                             tenant.getIdAsString());

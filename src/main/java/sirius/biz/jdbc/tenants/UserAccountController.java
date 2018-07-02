@@ -11,6 +11,7 @@ package sirius.biz.jdbc.tenants;
 import sirius.biz.jdbc.model.LoginData;
 import sirius.biz.jdbc.model.PermissionData;
 import sirius.biz.jdbc.model.PersonData;
+import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
 import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.SQLEntity;
@@ -70,6 +71,9 @@ public class UserAccountController extends BizController {
 
     @ConfigValue("security.roles")
     private List<String> roles;
+
+    @Part
+    private AuditLog auditLog;
 
     /**
      * Shows a list of all available users of the current tenant.
@@ -193,55 +197,6 @@ public class UserAccountController extends BizController {
     }
 
     /**
-     * Shows an editor to change the password of an account.
-     *
-     * @param ctx the current request
-     * @param id  the account to change the password for
-     */
-    @Routed("/user-account/:1/password")
-    @LoginRequired
-    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
-    public void password(final WebContext ctx, String id) {
-        UserAccount userAccount = findForTenant(UserAccount.class, id);
-        assertNotNew(userAccount);
-
-        if (ctx.ensureSafePOST()) {
-            try {
-                String oldPassword = ctx.get(PARAM_OLD_PASSWORD).asString();
-                String newPassword = ctx.get(PARAM_NEW_PASSWORD).asString();
-                String confirmation = ctx.get(PARAM_CONFIRMATION).asString();
-
-                validateOldPassword(oldPassword, userAccount);
-                userAccount.getLogin().verifyPassword(newPassword, confirmation, userAccount.getMinPasswordLength());
-                userAccount.getLogin().setCleartextPassword(newPassword);
-                oma.update(userAccount);
-                showSavedMessage();
-                accounts(ctx);
-                return;
-            } catch (Exception e) {
-                UserContext.handle(e);
-            }
-        }
-        ctx.respondWith().template("templates/tenants/user-account-password.html.pasta", userAccount);
-    }
-
-    /**
-     * Validates the old password for the given {@link UserAccount}.
-     *
-     * @param oldPassword the current request to read the old password from
-     * @param userAccount the user account to validate the old password for
-     * @throws sirius.kernel.health.HandledException if the old password is invalid
-     */
-    private void validateOldPassword(String oldPassword, UserAccount userAccount) {
-        UserManager userManager = UserContext.get().getUserManager();
-
-        if (!(userManager instanceof TenantUserManager && ((TenantUserManager) userManager).checkPassword(userAccount,
-                                                                                                          oldPassword))) {
-            throw Exceptions.createHandled().withNLSKey("UserAccount.invalidOldPassword").handle();
-        }
-    }
-
-    /**
      * Generates a new password for the given account and send a mail to the user.
      *
      * @param ctx the current request
@@ -254,8 +209,17 @@ public class UserAccountController extends BizController {
         UserAccount userAccount = findForTenant(UserAccount.class, id);
         assertNotNew(userAccount);
 
+        if (Strings.areEqual(userAccount.getUniqueName(), UserContext.getCurrentUser().getUserId())) {
+            throw Exceptions.createHandled().withNLSKey("UserAccountConroller.cannotGeneratePasswordForOwnUser").handle();
+        }
+
         userAccount.getLogin().setGeneratedPassword(Strings.generatePassword());
         oma.update(userAccount);
+
+        auditLog.neutral("%s generated a new password for %s (%s)",
+                         UserContext.getCurrentUser().getUserName(),
+                         userAccount.toString(),
+                         userAccount.getUniqueName()).forCurrentUser().log();
 
         UserContext.message(Message.info(NLS.fmtr("UserAccountConroller.passwordGenerated")
                                             .set(PARAM_EMAIL, userAccount.getEmail())
@@ -301,10 +265,23 @@ public class UserAccountController extends BizController {
 
         UserAccount account = accounts.get(0);
         if (account.getLogin().isAccountLocked()) {
+            auditLog.negative("The password of %s (%s) was not reset via /forgotPassword - the account is locked!",
+                              account.toString(),
+                              account.getUniqueName())
+                    .forUser(account.getUniqueName(), account.getLogin().getUsername())
+                    .forTenant(account.getTenant().getValue().getIdAsString(), account.getTenant().getValue().getName())
+                    .log();
             throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
         }
         account.getLogin().setGeneratedPassword(Strings.generatePassword());
         oma.update(account);
+
+        auditLog.neutral("The password of %s (%s) was reset via /forgotPassword",
+                         account.toString(),
+                         account.getUniqueName())
+                .forUser(account.getUniqueName(), account.getLogin().getUsername())
+                .forTenant(account.getTenant().getValue().getIdAsString(), account.getTenant().getValue().getName())
+                .log();
 
         if (Strings.isFilled(account.getEmail())) {
             Context context = Context.create()
@@ -433,6 +410,10 @@ public class UserAccountController extends BizController {
     @Routed("/user-accounts/select/:1")
     public void selectUserAccount(final WebContext ctx, String id) {
         if ("main".equals(id)) {
+            auditLog.neutral("%s switched back to her or his own user", UserContext.getCurrentUser().getUserName())
+                    .forCurrentUser()
+                    .log();
+
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX, null);
             ctx.respondWith().redirectTemporarily("/user-accounts/select");
             return;
@@ -448,6 +429,10 @@ public class UserAccountController extends BizController {
             if (!UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
                 assertTenant(user);
             }
+
+            auditLog.neutral("%s took contol over %s (%s)", UserContext.getCurrentUser().getUserName(), user.toString(), user.getUniqueName())
+                    .forCurrentUser()
+                    .log();
 
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
                                 user.getUniqueName());

@@ -8,7 +8,9 @@
 
 package sirius.biz.jdbc.tenants;
 
+import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.web.controller.Controller;
@@ -21,12 +23,15 @@ import sirius.web.security.UserManager;
 /**
  * Provides functionality to modify accounts.
  */
-@Register(classes = Controller.class,framework = Tenants.FRAMEWORK_TENANTS)
+@Register(classes = Controller.class, framework = Tenants.FRAMEWORK_TENANTS)
 public class ProfileController extends BizController {
 
     private static final String PARAM_OLD_PASSWORD = "oldPassword";
     private static final String PARAM_NEW_PASSWORD = "newPassword";
     private static final String PARAM_CONFIRMATION = "confirmation";
+
+    @Part
+    private AuditLog auditLog;
 
     /**
      * Shows a page where an account can change the user informations, e.g. mail, name, ...
@@ -67,8 +72,17 @@ public class ProfileController extends BizController {
                 userAccount.getLogin().verifyPassword(newPassword, confirmation, userAccount.getMinPasswordLength());
                 userAccount.getLogin().setCleartextPassword(newPassword);
                 oma.update(userAccount);
+
+                auditLog.neutral("%s changed the password.", UserContext.getCurrentUser().getUserName())
+                        .forCurrentUser()
+                        .log();
+
                 showSavedMessage();
             } catch (Exception e) {
+                auditLog.neutral("An error occurred when %s tried to changed the password: %s",
+                                 UserContext.getCurrentUser().getUserName(),
+                                 e.getMessage()).forCurrentUser().log();
+
                 UserContext.handle(e);
             }
         }
@@ -86,8 +100,8 @@ public class ProfileController extends BizController {
     private void validateOldPassword(String oldPassword, UserAccount userAccount) {
         UserManager userManager = UserContext.get().getUserManager();
 
-        if (!(userManager instanceof TenantUserManager
-              && ((TenantUserManager) userManager).checkPassword(userAccount, oldPassword))) {
+        if (!(userManager instanceof TenantUserManager && ((TenantUserManager) userManager).checkPassword(userAccount,
+                                                                                                          oldPassword))) {
             throw Exceptions.createHandled().withNLSKey("ProfileController.invalidOldPassword").handle();
         }
     }

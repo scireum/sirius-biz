@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.typesafe.config.Config;
 import sirius.biz.jdbc.model.LoginData;
+import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.cache.Cache;
@@ -109,6 +110,9 @@ public class TenantUserManager extends GenericUserManager {
 
     @Part
     private static OMA oma;
+
+    @Part
+    private static AuditLog auditLog;
 
     private static Cache<String, Set<String>> rolesCache = CacheManager.createCache("tenants-roles");
     private static Cache<String, UserAccount> userAccountCache = CacheManager.createCache("tenants-users");
@@ -431,6 +435,7 @@ public class TenantUserManager extends GenericUserManager {
 
         UserInfo result = findUserByName(ctx, user);
         if (result == null) {
+            auditLog.negative("A user which is either non-existent or locked tried a login: %s", user).log();
             return null;
         }
 
@@ -439,17 +444,34 @@ public class TenantUserManager extends GenericUserManager {
                                                                    account.getTenant()
                                                                           .getValue()
                                                                           .getExternalLoginIntervalDays())) {
+            auditLog.negative("A login was rejected for as an external login is required for: %s", user)
+                    .forUser(account.getUniqueName(), account.getLogin().getUsername())
+                    .forTenant(String.valueOf(account.getTenant().getId()), account.getTenant().getValue().getName())
+                    .log();
             throw Exceptions.createHandled().withNLSKey("UserAccount.externalLoginMustBePerformed").handle();
         }
 
         LoginData loginData = account.getLogin();
         if (acceptApiTokens && Strings.areEqual(password, loginData.getApiToken())) {
+            auditLog.neutral("A login was performed using the API token of: %s", user)
+                    .forUser(account.getUniqueName(), account.getLogin().getUsername())
+                    .forTenant(String.valueOf(account.getTenant().getId()), account.getTenant().getValue().getName())
+                    .log();
             return result;
         }
 
         if (loginData.checkPassword(password, defaultSalt)) {
+            auditLog.neutral("A login was performed using the password of: %s", user)
+                    .forUser(account.getUniqueName(), account.getLogin().getUsername())
+                    .forTenant(String.valueOf(account.getTenant().getId()), account.getTenant().getValue().getName())
+                    .log();
             return result;
         }
+
+        auditLog.negative("A login for %s was rejected (invalid password or API token...)", user)
+                .forUser(account.getUniqueName(), account.getLogin().getUsername())
+                .forTenant(String.valueOf(account.getTenant().getId()), account.getTenant().getValue().getName())
+                .log();
 
         return null;
     }

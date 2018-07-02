@@ -9,6 +9,7 @@
 package sirius.biz.protocol;
 
 import sirius.db.es.Elastic;
+import sirius.kernel.Sirius;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.ConfigValue;
@@ -20,10 +21,10 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 /**
- * Removes old {@link LogEntry} and {@link Incident} objects.
+ * Removes old protocol and journal entries.
  * <p>
- * The duration for which logs and incidents are kept can be controlled via <tt>journal.keep-logs</tt> and
- * <tt>journal.keep-incidents</tt>.
+ * The duration for which logs and incidents are kept can be controlled via the <tt>protocoals</tt> section in the
+ * system configuration.
  */
 @Register(framework = Protocols.FRAMEWORK_JOURNAL)
 public class CleanupProtocolsTask implements EveryDay {
@@ -46,8 +47,8 @@ public class CleanupProtocolsTask implements EveryDay {
     @ConfigValue("protocols.keep-journal")
     private Duration keepJournal;
 
-    @ConfigValue("protocols.keep-positive-audit-logs")
-    private Duration keepPositiveAudits;
+    @ConfigValue("protocols.keep-neutral-audit-logs")
+    private Duration keepNeutralAudits;
 
     @ConfigValue("protocols.keep-negative-audit-logs")
     private Duration keepNegativeAudits;
@@ -59,20 +60,22 @@ public class CleanupProtocolsTask implements EveryDay {
 
     @Override
     public void runTimer() throws Exception {
-        if (elastic.getReadyFuture().isCompleted()) {
+        if (elastic != null && elastic.getReadyFuture().isCompleted() && !Sirius.isStartedAsTest()) {
             tasks.defaultExecutor().fork(() -> {
                 deleteLogs();
                 deleteIncidents();
                 deleteMails();
+                deleteAuditLogs();
                 deleteJournal();
-                //TODO auditlogs
             });
         }
     }
 
     private void deleteIncidents() {
         LocalDateTime limit = LocalDateTime.now().minusSeconds(keepIncidents.getSeconds());
-        elastic.select(StoredIncident.class).where(Elastic.FILTERS.lt(StoredIncident.LAST_OCCURRENCE, limit)).truncate();
+        elastic.select(StoredIncident.class)
+               .where(Elastic.FILTERS.lt(StoredIncident.LAST_OCCURRENCE, limit))
+               .truncate();
 
         // Give ES some time to digest the delete...
         Wait.seconds(2);
@@ -93,11 +96,31 @@ public class CleanupProtocolsTask implements EveryDay {
         // Give ES some time to digest the delete...
         Wait.seconds(2);
     }
-    private void deleteJournal() {
-        LocalDateTime limit = LocalDateTime.now().minusSeconds(keepJournal.getSeconds());
-        elastic.select(JournalEntry.class).where(Elastic.FILTERS.lt(JournalEntry.TOD, limit)).truncate();
+
+    private void deleteAuditLogs() {
+        LocalDateTime limit = LocalDateTime.now().minusSeconds(keepNegativeAudits.getSeconds());
+        elastic.select(AuditLogEntry.class)
+               .eq(AuditLogEntry.NEGATIVE, true)
+               .where(Elastic.FILTERS.lt(AuditLogEntry.TIMESTAMP, limit))
+               .truncate();
+
+        limit = LocalDateTime.now().minusSeconds(keepNeutralAudits.getSeconds());
+        elastic.select(AuditLogEntry.class)
+               .eq(AuditLogEntry.NEGATIVE, false)
+               .where(Elastic.FILTERS.lt(AuditLogEntry.TIMESTAMP, limit))
+               .truncate();
 
         // Give ES some time to digest the delete...
         Wait.seconds(2);
+    }
+
+    private void deleteJournal() {
+        if (Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_JOURNAL)) {
+            LocalDateTime limit = LocalDateTime.now().minusSeconds(keepJournal.getSeconds());
+            elastic.select(JournalEntry.class).where(Elastic.FILTERS.lt(JournalEntry.TOD, limit)).truncate();
+
+            // Give ES some time to digest the delete...
+            Wait.seconds(2);
+        }
     }
 }

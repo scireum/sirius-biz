@@ -1,6 +1,7 @@
 <w:menuDropdown
         title="@format('${user}[ (${tenant})]').set('user', user.getCurrentUser().getUserName()).set('tenant', user.getCurrentUser().getTenantName()).smartFormat()"
         permission="flag-logged-in">
+
     <i:extensions name="templates-user-menu"/>
 
     <w:menuSection framework="biz.storage">
@@ -8,6 +9,7 @@
     </w:menuSection>
 
     <w:menuSection>
+        <w:menuItem titleKey="AuditLogEntry.plural" url="/audit-log"/>
         <w:menuItem titleKey="LoggedMessage.plural" url="/system/logs" framework="biz.protocols"/>
         <w:menuItem titleKey="StoredIncident.plural" url="/system/errors" framework="biz.protocols"/>
         <w:menuItem titleKey="JournalEntry.plural" url="/system/protocol" framework="biz.journal"/>
