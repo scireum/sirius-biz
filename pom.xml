@@ -17,8 +17,8 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>11.0</sirius.kernel>
-        <sirius.web>18.5</sirius.web>
+        <sirius.kernel>11.5</sirius.kernel>
+        <sirius.web>18.7</sirius.web>
         <sirius.db>5.0-SNAPSHOT</sirius.db>
     </properties>
 
