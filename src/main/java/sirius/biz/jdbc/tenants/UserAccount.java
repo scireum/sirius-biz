@@ -226,6 +226,15 @@ public class UserAccount extends SQLTenantAware implements Journaled, MessagePro
         return actualInterval >= requiredInterval - 3;
     }
 
+    /**
+     * Determines if generated passwords should be sent to <tt>this</tt> user.
+     *
+     * @return <tt>true</tt> if generated passwords should be sent to the user, <tt>false</tt> otherwise
+     */
+    public boolean shouldSendGeneratedPassword() {
+        return Strings.isFilled(email) && isUnique(EMAIL, email);
+    }
+
     public PersonData getPerson() {
         return person;
     }

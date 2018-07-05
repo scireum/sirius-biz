@@ -223,11 +223,11 @@ public class UserAccountController extends BizController {
                          userAccount.toString(),
                          userAccount.getUniqueName()).forCurrentUser().log();
 
-        UserContext.message(Message.info(NLS.fmtr("UserAccountConroller.passwordGenerated")
-                                            .set(PARAM_EMAIL, userAccount.getEmail())
-                                            .format()));
+        if (userAccount.shouldSendGeneratedPassword()) {
+            UserContext.message(Message.info(NLS.fmtr("UserAccountConroller.passwordGeneratedAndSent")
+                                                .set(PARAM_EMAIL, userAccount.getEmail())
+                                                .format()));
 
-        if (Strings.isFilled(userAccount.getEmail())) {
             Context context = Context.create()
                                      .set(PARAM_PASSWORD, userAccount.getLogin().getGeneratedPassword())
                                      .set(PARAM_NAME, userAccount.getPerson().getAddressableName())
@@ -240,6 +240,8 @@ public class UserAccountController extends BizController {
                  .textTemplate("mail/useraccount/password.pasta", context)
                  .htmlTemplate("mail/useraccount/password.html.pasta", context)
                  .send();
+        } else {
+            UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
         }
 
         accounts(ctx);
