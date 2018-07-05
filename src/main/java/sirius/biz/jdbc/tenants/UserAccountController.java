@@ -209,8 +209,10 @@ public class UserAccountController extends BizController {
         UserAccount userAccount = findForTenant(UserAccount.class, id);
         assertNotNew(userAccount);
 
-        if (Strings.areEqual(userAccount.getUniqueName(), UserContext.getCurrentUser().getUserId())) {
-            throw Exceptions.createHandled().withNLSKey("UserAccountConroller.cannotGeneratePasswordForOwnUser").handle();
+        if (!userAccount.getLogin().isPasswordGenerationPossible()) {
+            throw Exceptions.createHandled()
+                            .withNLSKey("UserAccountConroller.cannotGeneratePasswordForOwnUser")
+                            .handle();
         }
 
         userAccount.getLogin().setGeneratedPassword(Strings.generatePassword());
@@ -430,9 +432,10 @@ public class UserAccountController extends BizController {
                 assertTenant(user);
             }
 
-            auditLog.neutral("%s took contol over %s (%s)", UserContext.getCurrentUser().getUserName(), user.toString(), user.getUniqueName())
-                    .forCurrentUser()
-                    .log();
+            auditLog.neutral("%s took contol over %s (%s)",
+                             UserContext.getCurrentUser().getUserName(),
+                             user.toString(),
+                             user.getUniqueName()).forCurrentUser().log();
 
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
                                 user.getUniqueName());
