@@ -209,8 +209,10 @@ public class UserAccountController extends BizController {
         UserAccount userAccount = findForTenant(UserAccount.class, id);
         assertNotNew(userAccount);
 
-        if (Strings.areEqual(userAccount.getUniqueName(), UserContext.getCurrentUser().getUserId())) {
-            throw Exceptions.createHandled().withNLSKey("UserAccountConroller.cannotGeneratePasswordForOwnUser").handle();
+        if (!userAccount.isPasswordGenerationPossible()) {
+            throw Exceptions.createHandled()
+                            .withNLSKey("UserAccountConroller.cannotGeneratePasswordForOwnUser")
+                            .handle();
         }
 
         userAccount.getLogin().setGeneratedPassword(Strings.generatePassword());
@@ -221,11 +223,11 @@ public class UserAccountController extends BizController {
                          userAccount.toString(),
                          userAccount.getUniqueName()).forCurrentUser().log();
 
-        UserContext.message(Message.info(NLS.fmtr("UserAccountConroller.passwordGenerated")
-                                            .set(PARAM_EMAIL, userAccount.getEmail())
-                                            .format()));
+        if (userAccount.shouldSendGeneratedPassword()) {
+            UserContext.message(Message.info(NLS.fmtr("UserAccountConroller.passwordGeneratedAndSent")
+                                                .set(PARAM_EMAIL, userAccount.getEmail())
+                                                .format()));
 
-        if (Strings.isFilled(userAccount.getEmail())) {
             Context context = Context.create()
                                      .set(PARAM_PASSWORD, userAccount.getLogin().getGeneratedPassword())
                                      .set(PARAM_NAME, userAccount.getPerson().getAddressableName())
@@ -238,6 +240,8 @@ public class UserAccountController extends BizController {
                  .textTemplate("mail/useraccount/password.pasta", context)
                  .htmlTemplate("mail/useraccount/password.html.pasta", context)
                  .send();
+        } else {
+            UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
         }
 
         accounts(ctx);
@@ -430,9 +434,10 @@ public class UserAccountController extends BizController {
                 assertTenant(user);
             }
 
-            auditLog.neutral("%s took contol over %s (%s)", UserContext.getCurrentUser().getUserName(), user.toString(), user.getUniqueName())
-                    .forCurrentUser()
-                    .log();
+            auditLog.neutral("%s took contol over %s (%s)",
+                             UserContext.getCurrentUser().getUserName(),
+                             user.toString(),
+                             user.getUniqueName()).forCurrentUser().log();
 
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
                                 user.getUniqueName());
