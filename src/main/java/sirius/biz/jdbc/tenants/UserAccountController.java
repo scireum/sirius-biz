@@ -209,7 +209,7 @@ public class UserAccountController extends BizController {
         UserAccount userAccount = findForTenant(UserAccount.class, id);
         assertNotNew(userAccount);
 
-        if (!userAccount.getLogin().isPasswordGenerationPossible()) {
+        if (!userAccount.isPasswordGenerationPossible()) {
             throw Exceptions.createHandled()
                             .withNLSKey("UserAccountConroller.cannotGeneratePasswordForOwnUser")
                             .handle();

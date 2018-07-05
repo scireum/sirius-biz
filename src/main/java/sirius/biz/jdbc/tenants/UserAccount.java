@@ -31,6 +31,7 @@ import sirius.kernel.nls.NLS;
 import sirius.web.controller.Message;
 import sirius.web.mails.Mails;
 import sirius.web.security.MessageProvider;
+import sirius.web.security.UserContext;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -224,6 +225,15 @@ public class UserAccount extends SQLTenantAware implements Journaled, MessagePro
 
         long actualInterval = Duration.between(LocalDateTime.now(), dateTime).toDays();
         return actualInterval >= requiredInterval - 3;
+    }
+
+    /**
+     * Determines if the current user is able to generate the password for <tt>this</tt> user.
+     *
+     * @return <tt>true</tt> if the current user can generate a password, <tt>false</tt> otherwise
+     */
+    public boolean isPasswordGenerationPossible() {
+        return !equals(UserContext.getCurrentUser().as(UserAccount.class));
     }
 
     /**

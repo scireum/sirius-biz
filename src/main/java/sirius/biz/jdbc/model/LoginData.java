@@ -208,15 +208,6 @@ public class LoginData extends Composite {
     }
 
     /**
-     * Determines if the current user is able to generate the password for <tt>this</tt> user.
-     *
-     * @return <tt>true</tt> if the current user can generate a password, <tt>false</tt> otherwise
-     */
-    public boolean isPasswordGenerationPossible() {
-        return !Strings.areEqual(username, UserContext.getCurrentUser().getUserName());
-    }
-
-    /**
      * Returns the currently set password in cleartext.
      * <p>
      * Note that this value is transient and therefore not saved to the database.
