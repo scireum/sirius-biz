@@ -20,11 +20,13 @@ import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
+import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
 import sirius.web.security.UserContext;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 /**
@@ -126,6 +128,14 @@ public class LoginData extends Composite {
     private LocalDateTime lastExternalLogin;
 
     /**
+     * Records the timestamp of the last password change.
+     */
+    public static final Mapping LAST_PASSWORD_CHANGE = Mapping.named("lastPasswordChange");
+    @NoJournal
+    @NullAllowed
+    private LocalDateTime lastPasswordChange;
+
+    /**
      * Contains a flag which checks if the user is permitted to login.
      */
     public static final Mapping ACCOUNT_LOCKED = Mapping.named("accountLocked");
@@ -147,7 +157,7 @@ public class LoginData extends Composite {
             }
         }
         if (Strings.isEmpty(passwordHash) && Strings.isEmpty(generatedPassword)) {
-            this.generatedPassword = Strings.generatePassword();
+            setGeneratedPassword(Strings.generatePassword());
         }
         if (Strings.isFilled(generatedPassword)) {
             this.salt = Strings.generateCode(20);
@@ -160,7 +170,7 @@ public class LoginData extends Composite {
     }
 
     /**
-     * Verifys the given password if it meets the length requirement and is equal to its confirmation.
+     * Verifys the given password if it meets the length requirement and is equal to its confi^rmation.
      *
      * @param password          the password to check for
      * @param confirmation      the confirmation password to check for
@@ -228,6 +238,7 @@ public class LoginData extends Composite {
      */
     public void setCleartextPassword(String cleartextPassword) {
         this.cleartextPassword = cleartextPassword;
+        this.lastPasswordChange = LocalDateTime.now();
     }
 
     public String getPasswordHash() {
@@ -248,6 +259,7 @@ public class LoginData extends Composite {
 
     public void setGeneratedPassword(String generatedPassword) {
         this.generatedPassword = generatedPassword;
+        this.lastPasswordChange = LocalDateTime.now();
     }
 
     public int getNumberOfLogins() {
@@ -272,6 +284,30 @@ public class LoginData extends Composite {
 
     public void setLastExternalLogin(LocalDateTime lastExternalLogin) {
         this.lastExternalLogin = lastExternalLogin;
+    }
+
+    public LocalDateTime getLastPasswordChange() {
+        return lastPasswordChange;
+    }
+
+    /**
+     * Determines if the generated password should ne displayed.
+     *
+     * @return <tt>true</tt> if the generated password should be displayed, <tt>false</tt> otherwise
+     */
+    public boolean isDisplayGeneratedPassword() {
+        if (Strings.isEmpty(generatedPassword) || lastPasswordChange == null) {
+            return false;
+        }
+
+        Duration showGeneratedPasswordFor =
+                Duration.ofMillis(Sirius.getSettings().getMilliseconds("security.showGeneratedPasswordFor"));
+
+        if (showGeneratedPasswordFor == null) {
+            return false;
+        }
+
+        return Duration.between(lastPasswordChange, LocalDateTime.now()).compareTo(showGeneratedPasswordFor) < 0;
     }
 
     public boolean isAccountLocked() {
