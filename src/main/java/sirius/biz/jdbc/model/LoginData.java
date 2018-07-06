@@ -291,7 +291,7 @@ public class LoginData extends Composite {
     }
 
     /**
-     * Determines if the generated password should ne displayed.
+     * Determines if the generated password should be displayed.
      *
      * @return <tt>true</tt> if the generated password should be displayed, <tt>false</tt> otherwise
      */
