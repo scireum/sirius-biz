@@ -170,7 +170,7 @@ public class LoginData extends Composite {
     }
 
     /**
-     * Verifys the given password if it meets the length requirement and is equal to its confi^rmation.
+     * Verifys the given password if it meets the length requirement and is equal to its confirmation.
      *
      * @param password          the password to check for
      * @param confirmation      the confirmation password to check for
