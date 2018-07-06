@@ -65,9 +65,17 @@
                                 </i:else>
                             </i:if>
                         </a>
+                        <br>
                     </i:if>
-                    <i:if test="isFilled(account.getLogin().getGeneratedPassword())">
-                        <br><span class="muted">@account.getLogin().getGeneratedPassword()</span>
+
+                    <i:if test="@account.getLogin().isDisplayGeneratedPassword()">
+                        <span class="muted">@account.getLogin().getGeneratedPassword()</span>
+
+                        <i:else>
+                            <i:if test="isFilled(account.getLogin().getGeneratedPassword())">
+                                <span class="muted">@i18n("LoginData.password.hiddenGenerated")</span>
+                            </i:if>
+                        </i:else>
                     </i:if>
                 </td>
                 <td class="align-right">
