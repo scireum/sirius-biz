@@ -27,9 +27,17 @@
                         <w:infoboxElement labelKey="Model.name" value="@account.getPerson()"/>
                     </i:if>
                     <w:infoboxElement labelKey="Model.email" value="@account.getEmail()"/>
-                    <i:if test="isFilled(account.getLogin().getGeneratedPassword())">
+
+                    <i:if test="@account.getLogin().isDisplayGeneratedPassword()">
                         <w:infoboxElement labelKey="LoginData.generatedPassword" value="@account.getLogin().getGeneratedPassword()"/>
+
+                        <i:else>
+                            <i:if test="isFilled(account.getLogin().getGeneratedPassword())">
+                                <w:infoboxElement labelKey="LoginData.generatedPassword" value="@i18n('LoginData.password.hiddenGeneratedShort')"/>
+                            </i:if>
+                        </i:else>
                     </i:if>
+
                     <w:infoboxElement labelKey="LoginData.apiToken" value="@account.getLogin().getApiToken()"/>
                     
                     <i:extensions name="templates-user-account-sidebar-infos" account="account" page="page"/>
