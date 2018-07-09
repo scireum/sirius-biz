@@ -222,7 +222,6 @@ public class UserAccountController extends BizController {
                 .forUser(userAccount.getUniqueName(), userAccount.getLogin().getUsername())
                 .forTenant(String.valueOf(userAccount.getTenant().getId()),
                            userAccount.getTenant().getValue().getName())
-                .forCurrentUser()
                 .log();
 
         if (userAccount.shouldSendGeneratedPassword()) {
