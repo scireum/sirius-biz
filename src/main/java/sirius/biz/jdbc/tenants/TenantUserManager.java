@@ -472,7 +472,6 @@ public class TenantUserManager extends GenericUserManager {
         }
 
         auditLog.negative("AuditLog.loginRejected")
-                .causedByUser(account.getUniqueName(), account.getLogin().getUsername())
                 .forUser(account.getUniqueName(), account.getLogin().getUsername())
                 .forTenant(String.valueOf(account.getTenant().getId()), account.getTenant().getValue().getName())
                 .log();
