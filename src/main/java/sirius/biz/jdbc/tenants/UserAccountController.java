@@ -34,7 +34,6 @@ import sirius.web.mails.Mails;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
-import sirius.web.security.UserManager;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.util.Collections;
@@ -218,10 +217,12 @@ public class UserAccountController extends BizController {
         userAccount.getLogin().setGeneratedPassword(Strings.generatePassword());
         oma.update(userAccount);
 
-        auditLog.neutral("%s generated a new password for %s (%s)",
-                         UserContext.getCurrentUser().getUserName(),
-                         userAccount.toString(),
-                         userAccount.getUniqueName()).forCurrentUser().log();
+        auditLog.neutral("AuditLog.passwordGenerated")
+                .causedByCurrentUser()
+                .forUser(userAccount.getUniqueName(), userAccount.getLogin().getUsername())
+                .forTenant(String.valueOf(userAccount.getTenant().getId()),
+                           userAccount.getTenant().getValue().getName())
+                .log();
 
         if (userAccount.shouldSendGeneratedPassword()) {
             UserContext.message(Message.info(NLS.fmtr("UserAccountConroller.passwordGeneratedAndSent")
@@ -269,9 +270,8 @@ public class UserAccountController extends BizController {
 
         UserAccount account = accounts.get(0);
         if (account.getLogin().isAccountLocked()) {
-            auditLog.negative("The password of %s (%s) was not reset via /forgotPassword - the account is locked!",
-                              account.toString(),
-                              account.getUniqueName())
+            auditLog.negative("AuditLog.resetPasswordRejected")
+                    .causedByUser(account.getUniqueName(), account.getLogin().getUsername())
                     .forUser(account.getUniqueName(), account.getLogin().getUsername())
                     .forTenant(account.getTenant().getValue().getIdAsString(), account.getTenant().getValue().getName())
                     .log();
@@ -280,9 +280,8 @@ public class UserAccountController extends BizController {
         account.getLogin().setGeneratedPassword(Strings.generatePassword());
         oma.update(account);
 
-        auditLog.neutral("The password of %s (%s) was reset via /forgotPassword",
-                         account.toString(),
-                         account.getUniqueName())
+        auditLog.neutral("AuditLog.resetPassword")
+                .causedByUser(account.getUniqueName(), account.getLogin().getUsername())
                 .forUser(account.getUniqueName(), account.getLogin().getUsername())
                 .forTenant(account.getTenant().getValue().getIdAsString(), account.getTenant().getValue().getName())
                 .log();
@@ -414,9 +413,7 @@ public class UserAccountController extends BizController {
     @Routed("/user-accounts/select/:1")
     public void selectUserAccount(final WebContext ctx, String id) {
         if ("main".equals(id)) {
-            auditLog.neutral("%s switched back to her or his own user", UserContext.getCurrentUser().getUserName())
-                    .forCurrentUser()
-                    .log();
+            auditLog.neutral("AuditLog.switchedToMainUser").causedByCurrentUser().forCurrentUser().log();
 
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX, null);
             ctx.respondWith().redirectTemporarily("/user-accounts/select");
@@ -434,10 +431,11 @@ public class UserAccountController extends BizController {
                 assertTenant(user);
             }
 
-            auditLog.neutral("%s took contol over %s (%s)",
-                             UserContext.getCurrentUser().getUserName(),
-                             user.toString(),
-                             user.getUniqueName()).forCurrentUser().log();
+            auditLog.neutral("AuditLog.selectedUser")
+                    .causedByCurrentUser()
+                    .forUser(user.getUniqueName(), user.getLogin().getUsername())
+                    .forTenant(String.valueOf(user.getTenant().getId()), user.getTenant().getValue().getName())
+                    .log();
 
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
                                 user.getUniqueName());

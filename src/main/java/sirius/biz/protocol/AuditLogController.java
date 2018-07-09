@@ -10,11 +10,10 @@ package sirius.biz.protocol;
 
 import sirius.biz.web.BizController;
 import sirius.biz.web.ElasticPageHelper;
+import sirius.db.es.Elastic;
 import sirius.db.es.ElasticQuery;
 import sirius.db.mixing.DateRange;
 import sirius.db.mixing.query.QueryField;
-import sirius.db.mongo.Mongo;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
@@ -45,7 +44,10 @@ public class AuditLogController extends BizController {
 
         if (!hasPermission(Protocols.PERMISSION_SYSTEM_PROTOCOLS)) {
             if (!hasPermission(PERMISSION_AUDIT_LOGS)) {
-                query.eq(AuditLogEntry.USER, UserContext.getCurrentUser().getUserId());
+                query.where(Elastic.FILTERS.or(Elastic.FILTERS.eq(AuditLogEntry.USER,
+                                                                  UserContext.getCurrentUser().getUserId()),
+                                               Elastic.FILTERS.eq(AuditLogEntry.CAUSED_BY_USER,
+                                                                  UserContext.getCurrentUser().getUserId())));
             } else {
                 query.eq(AuditLogEntry.TENANT, UserContext.getCurrentUser().getTenantId());
             }
