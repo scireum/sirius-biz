@@ -8,6 +8,8 @@
 
 package sirius.biz.protocol;
 
+import sirius.biz.elastic.SearchContent;
+import sirius.biz.elastic.SearchableEntity;
 import sirius.db.es.ElasticEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.NullAllowed;
@@ -19,7 +21,7 @@ import java.time.LocalDateTime;
  * Stores security relevant events as "audit logs".
  */
 @Framework(Protocols.FRAMEWORK_PROTOCOLS)
-public class AuditLogEntry extends ElasticEntity {
+public class AuditLogEntry extends SearchableEntity {
 
     /**
      * Contains the timestamp when the event happened.
@@ -32,6 +34,7 @@ public class AuditLogEntry extends ElasticEntity {
      */
     public static final Mapping TENANT = Mapping.named("tenant");
     @NullAllowed
+    @SearchContent
     private String tenant;
 
     /**
@@ -39,6 +42,7 @@ public class AuditLogEntry extends ElasticEntity {
      */
     public static final Mapping TENANT_NAME = Mapping.named("tenantName");
     @NullAllowed
+    @SearchContent
     private String tenantName;
 
     /**
@@ -46,6 +50,7 @@ public class AuditLogEntry extends ElasticEntity {
      */
     public static final Mapping USER = Mapping.named("user");
     @NullAllowed
+    @SearchContent
     private String user;
 
     /**
@@ -53,7 +58,24 @@ public class AuditLogEntry extends ElasticEntity {
      */
     public static final Mapping USER_NAME = Mapping.named("userName");
     @NullAllowed
+    @SearchContent
     private String userName;
+
+    /**
+     * Contains the id of the account which caused the event.
+     */
+    public static final Mapping CAUSED_BY_USER = Mapping.named("causedByUser");
+    @NullAllowed
+    @SearchContent
+    private String causedByUser;
+
+    /**
+     * Contains the name of the account for which this event was recorded.
+     */
+    public static final Mapping CAUSED_BY_USER_NAME = Mapping.named("causedByUserName");
+    @NullAllowed
+    @SearchContent
+    private String causedByUserName;
 
     /**
      * Determines if the entry represents an error / warning or an informative entry.
@@ -66,6 +88,7 @@ public class AuditLogEntry extends ElasticEntity {
      */
     public static final Mapping IP = Mapping.named("ip");
     @NullAllowed
+    @SearchContent
     private String ip;
 
     /**
@@ -73,6 +96,7 @@ public class AuditLogEntry extends ElasticEntity {
      */
     public static final Mapping MESSAGE = Mapping.named("message");
     @NullAllowed
+    @SearchContent
     private String message;
 
     public LocalDateTime getTimestamp() {
@@ -137,5 +161,21 @@ public class AuditLogEntry extends ElasticEntity {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String getCausedByUser() {
+        return causedByUser;
+    }
+
+    public void setCausedByUser(String causedByUser) {
+        this.causedByUser = causedByUser;
+    }
+
+    public String getCausedByUserName() {
+        return causedByUserName;
+    }
+
+    public void setCausedByUserName(String causedByUserName) {
+        this.causedByUserName = causedByUserName;
     }
 }

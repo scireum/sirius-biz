@@ -16,9 +16,14 @@
                     <th></th>
                     <th>
                         <div class="row">
-                            <div class="col-md-2">@i18n("AuditLogEntry.timestamp")</div>
-                            <div class="col-md-4">@i18n("AuditLogEntry.account")</div>
-                            <div class="col-md-4">@i18n("AuditLogEntry.company")</div>
+                            <div class="col-md-4">
+                                @i18n("AuditLogEntry.timestamp")<br>
+                                @i18n("AuditLogEntry.causedBy")
+                            </div>
+                            <div class="col-md-4">
+                                @i18n("AuditLogEntry.account")<br>
+                                @i18n("AuditLogEntry.company")
+                            </div>
                             <div class="col-md-2">@i18n("AuditLogEntry.ip")</div>
                         </div>
                     </th>
@@ -27,24 +32,24 @@
                 <tbody>
                 <i:for type="sirius.biz.protocol.AuditLogEntry" var="msg" items="messages.getItems()">
                     <tr @if (msg.isNegative()) { class="warning" } else { class="info" }>
-                    <td></td>
-                    <td>
-                        <div class="row">
-                            <div class="col-md-2">
-                                <small>@toUserString(msg.getTimestamp())</small>
+                        <td></td>
+                        <td>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    @toUserString(msg.getTimestamp())
+                                    <br>
+                                    @msg.getCausedByUserName()
+                                </div>
+                                <div class="col-md-4">
+                                    @msg.getUserName()<br>
+                                    @msg.getTenantName()
+                                </div>
+                                <div class="col-md-4">
+                                    @msg.getIp()
+                                </div>
                             </div>
-                            <div class="col-md-4">
-                                @msg.getUserName()
-                            </div>
-                            <div class="col-md-4">
-                                @msg.getTenantName()
-                            </div>
-                            <div class="col-md-2">
-                                <small>@msg.getIp()</small>
-                            </div>
-                        </div>
-                        <pre class="plain" style="white-space: pre-wrap">@msg.getMessage()</pre>
-                    </td>
+                            <pre class="plain" style="white-space: pre-wrap">@i18n(msg.getMessage())</pre>
+                        </td>
                     </tr>
                 </i:for>
 

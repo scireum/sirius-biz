@@ -435,7 +435,7 @@ public class TenantUserManager extends GenericUserManager {
 
         UserInfo result = findUserByName(ctx, user);
         if (result == null) {
-            auditLog.negative("A user which is either non-existent or locked tried a login: %s", user).log();
+            auditLog.negative("AuditLog.lockedOrNonexitentUserTriedLogin").forUser(null, user).log();
             return null;
         }
 
@@ -444,7 +444,8 @@ public class TenantUserManager extends GenericUserManager {
                                                                    account.getTenant()
                                                                           .getValue()
                                                                           .getExternalLoginIntervalDays())) {
-            auditLog.negative("A login was rejected for as an external login is required for: %s", user)
+            auditLog.negative("AuditLog.externalLoginRequired")
+                    .causedByUser(account.getUniqueName(), account.getLogin().getUsername())
                     .forUser(account.getUniqueName(), account.getLogin().getUsername())
                     .forTenant(String.valueOf(account.getTenant().getId()), account.getTenant().getValue().getName())
                     .log();
@@ -453,7 +454,8 @@ public class TenantUserManager extends GenericUserManager {
 
         LoginData loginData = account.getLogin();
         if (acceptApiTokens && Strings.areEqual(password, loginData.getApiToken())) {
-            auditLog.neutral("A login was performed using the API token of: %s", user)
+            auditLog.neutral("AuditLog.apiTokenLogin")
+                    .causedByUser(account.getUniqueName(), account.getLogin().getUsername())
                     .forUser(account.getUniqueName(), account.getLogin().getUsername())
                     .forTenant(String.valueOf(account.getTenant().getId()), account.getTenant().getValue().getName())
                     .log();
@@ -461,14 +463,16 @@ public class TenantUserManager extends GenericUserManager {
         }
 
         if (loginData.checkPassword(password, defaultSalt)) {
-            auditLog.neutral("A login was performed using the password of: %s", user)
+            auditLog.neutral("AuditLog.passwordLogin")
+                    .causedByUser(account.getUniqueName(), account.getLogin().getUsername())
                     .forUser(account.getUniqueName(), account.getLogin().getUsername())
                     .forTenant(String.valueOf(account.getTenant().getId()), account.getTenant().getValue().getName())
                     .log();
             return result;
         }
 
-        auditLog.negative("A login for %s was rejected (invalid password or API token...)", user)
+        auditLog.negative("AuditLog.loginRejected")
+                .causedByUser(account.getUniqueName(), account.getLogin().getUsername())
                 .forUser(account.getUniqueName(), account.getLogin().getUsername())
                 .forTenant(String.valueOf(account.getTenant().getId()), account.getTenant().getValue().getName())
                 .log();

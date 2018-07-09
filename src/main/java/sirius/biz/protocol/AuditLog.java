@@ -11,7 +11,6 @@ package sirius.biz.protocol;
 import sirius.db.es.Elastic;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.CallContext;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.Initializable;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -90,6 +89,33 @@ public class AuditLog implements Initializable {
         }
 
         /**
+         * Marks the entry as caused by the current user in {@link UserContext#getCurrentUser()}.
+         *
+         * @return the builder for fluent method calls
+         */
+        @CheckReturnValue
+        public AuditLogBuilder causedByCurrentUser() {
+            UserInfo user = UserContext.getCurrentUser();
+            return causedByUser(user.getUserId(), user.getUserName()).forTenant(user.getTenantId(),
+                                                                                user.getTenantName());
+        }
+
+        /**
+         * Marks the entry as caused by the given user.
+         *
+         * @param id   the ID of the user
+         * @param name the name of the user
+         * @return the builder for fluent method calls
+         */
+        @CheckReturnValue
+        public AuditLogBuilder causedByUser(@Nullable String id, @Nullable String name) {
+            entry.setCausedByUser(id);
+            entry.setCausedByUserName(name);
+
+            return this;
+        }
+
+        /**
          * Creates the entry for the given tenant.
          *
          * @param id   the ID of the tenant
@@ -109,7 +135,10 @@ public class AuditLog implements Initializable {
          */
         public void log() {
             try {
-                if (!enabled || elastic == null || !elastic.getReadyFuture().isCompleted() || Sirius.isStartedAsTest()) {
+                if (!enabled
+                    || elastic == null
+                    || !elastic.getReadyFuture().isCompleted()
+                    || Sirius.isStartedAsTest()) {
                     return;
                 }
                 elastic.update(entry);
@@ -124,13 +153,12 @@ public class AuditLog implements Initializable {
      * <p>
      * Note that a builder is returned and eventually {@link AuditLogBuilder#log()} has to be called.
      *
-     * @param message the message to log
-     * @param params  the objects to fill into the placeholders in <tt>message</tt>
+     * @param messageKey the message key (i18n key) to log
      * @return the builder used to supply further info
      */
     @CheckReturnValue
-    public AuditLogBuilder neutral(String message, Object... params) {
-        return new AuditLogBuilder(params.length == 0 ? message : Strings.apply(message, params), false);
+    public AuditLogBuilder neutral(String messageKey) {
+        return new AuditLogBuilder(messageKey, false);
     }
 
     /**
@@ -138,12 +166,11 @@ public class AuditLog implements Initializable {
      * <p>
      * Note that a builder is returned and eventually {@link AuditLogBuilder#log()} has to be called.
      *
-     * @param message the message to log
-     * @param params  the objects to fill into the placeholders in <tt>message</tt>
+     * @param messageKey the message key (i18n key) to log
      * @return the builder used to supply further info
      */
     @CheckReturnValue
-    public AuditLogBuilder negative(String message, Object... params) {
-        return new AuditLogBuilder(params.length == 0 ? message : Strings.apply(message, params), true);
+    public AuditLogBuilder negative(String messageKey) {
+        return new AuditLogBuilder(messageKey, true);
     }
 }

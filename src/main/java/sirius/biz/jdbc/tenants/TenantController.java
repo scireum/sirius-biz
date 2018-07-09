@@ -33,7 +33,6 @@ import sirius.web.services.JSONStructuredOutput;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -245,9 +244,7 @@ public class TenantController extends BizController {
     @Routed("/tenants/select/:1")
     public void selectTenant(final WebContext ctx, String id) {
         if ("main".equals(id)) {
-            auditLog.neutral("%s switched back to the main tenant", UserContext.getCurrentUser().getUserName())
-                    .forCurrentUser()
-                    .log();
+            auditLog.neutral("AuditLog.switchedToMainTenant").causedByCurrentUser().forCurrentUser().log();
 
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
                                 null);
@@ -266,10 +263,7 @@ public class TenantController extends BizController {
             return;
         }
 
-        auditLog.neutral("%s took control over tenant %s (%s)",
-                         UserContext.getCurrentUser().getUserName(),
-                         tenant.getName(),
-                         tenant.getUniqueName()).forCurrentUser().log();
+        auditLog.neutral("AuditLog.selectedTenant").causedByCurrentUser().forCurrentUser().log();
 
         ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
                             tenant.getIdAsString());
