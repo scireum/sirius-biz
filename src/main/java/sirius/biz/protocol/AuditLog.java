@@ -96,8 +96,7 @@ public class AuditLog implements Initializable {
         @CheckReturnValue
         public AuditLogBuilder causedByCurrentUser() {
             UserInfo user = UserContext.getCurrentUser();
-            return causedByUser(user.getUserId(), user.getUserName()).forTenant(user.getTenantId(),
-                                                                                user.getTenantName());
+            return causedByUser(user.getUserId(), user.getUserName());
         }
 
         /**
