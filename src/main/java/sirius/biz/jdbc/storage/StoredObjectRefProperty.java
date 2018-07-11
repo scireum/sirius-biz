@@ -97,6 +97,16 @@ public class StoredObjectRefProperty extends Property implements SQLPropertyInfo
     }
 
     @Override
+    protected Object transformToJDBC(Object object) {
+        return object;
+    }
+
+    @Override
+    protected Object transformFromJDBC(Value object) {
+        return object.get();
+    }
+
+    @Override
     protected void setValue(Object entity, Object object) {
         this.setValueToField(object, entity);
     }
