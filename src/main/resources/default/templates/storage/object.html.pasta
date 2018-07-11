@@ -63,9 +63,9 @@
             <p></p>
         </div>
         <div class="col-md-9">
-            <i:if test="@bucket.getName() == 'media' || bucket.getName() == 'public'">
+            <i:if test="@bucket.isShowPublicURLs()">
                 <div class="row">
-                    <w:textfield span="12" name="frontendUrl" labelKey="VirtualObject.frontendUrl" readonly="true"
+                    <w:textfield span="12" name="publicUrl" labelKey="VirtualObject.publicUrl" readonly="true"
                                  value="@object.prepareURL().eternallyValid().buildURL().orElse('').as(String.class)"/>
                 </div>
             </i:if>

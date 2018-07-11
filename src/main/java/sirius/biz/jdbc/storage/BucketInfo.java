@@ -30,6 +30,7 @@ public class BucketInfo {
     private boolean canEdit;
     private boolean canDelete;
     private boolean alwaysUseLikeSearch;
+    private boolean showPublicURLs;
     private int deleteFilesAfterDays;
     private PhysicalStorageEngine engine;
 
@@ -52,6 +53,7 @@ public class BucketInfo {
         this.canEdit = extension.get("canEdit").asBoolean();
         this.canDelete = extension.get("canDelete").asBoolean();
         this.alwaysUseLikeSearch = extension.get("alwaysUseLikeSearch").asBoolean();
+        this.showPublicURLs = extension.get("showPublicURLs").asBoolean();
         this.deleteFilesAfterDays = extension.get("deleteFilesAfterDays").asInt(0);
         this.engine = context.findPart(extension.get("engine").asString(), PhysicalStorageEngine.class);
     }
@@ -129,6 +131,15 @@ public class BucketInfo {
      */
     public boolean isAlwaysUseLikeSearch() {
         return alwaysUseLikeSearch;
+    }
+
+    /**
+     * Determines if publicly accessible URLs should be displayed in the backend.
+     *
+     * @return <tt>true</tt> if public URLs should be shown, <tt>false</tt> otherwise
+     */
+    public boolean isShowPublicURLs() {
+        return showPublicURLs;
     }
 
     /**
