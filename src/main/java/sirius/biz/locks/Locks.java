@@ -19,6 +19,7 @@ import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Provides a central framework to obtain and manage named locks.
@@ -116,7 +117,10 @@ public class Locks implements MetricProvider {
         collector.metric("locks-count", "Active Locks", locks.size(), null);
         collector.metric("locks-long-running",
                          "Long locks",
-                         locks.stream().filter(l -> l.getAcquired().isBefore(limitForAcquired)).count(),
+                         locks.stream()
+                              .filter(lock -> Objects.nonNull(lock.getAcquired()))
+                              .filter(lock -> lock.getAcquired().isBefore(limitForAcquired))
+                              .count(),
                          null);
     }
 
