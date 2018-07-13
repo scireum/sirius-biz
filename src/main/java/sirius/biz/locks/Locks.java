@@ -118,8 +118,9 @@ public class Locks implements MetricProvider {
         collector.metric("locks-long-running",
                          "Long locks",
                          locks.stream()
-                              .filter(lock -> Objects.nonNull(lock.getAcquired()))
-                              .filter(lock -> lock.getAcquired().isBefore(limitForAcquired))
+                              .map(LockInfo::getAcquired)
+                              .filter(Objects::nonNull)
+                              .filter(date -> date.isBefore(limitForAcquired))
                               .count(),
                          null);
     }
