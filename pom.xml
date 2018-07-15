@@ -6,10 +6,10 @@
     <parent>
         <groupId>com.scireum</groupId>
         <artifactId>sirius-parent</artifactId>
-        <version>4.0</version>
+        <version>5.0.1</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
-    <version>7.0-SNAPSHOT</version>
+    <version>DEVELOPMENT-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>SIRIUS biz</name>
@@ -17,9 +17,9 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>11.6</sirius.kernel>
+        <sirius.kernel>12.0-rc2</sirius.kernel>
         <sirius.web>18.7</sirius.web>
-        <sirius.db>5.0-SNAPSHOT</sirius.db>
+        <sirius.db>5.0-rc2</sirius.db>
     </properties>
 
     <dependencies>
