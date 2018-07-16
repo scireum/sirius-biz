@@ -32,12 +32,6 @@ services:
       - "9200"
     environment:
       - xpack.security.enabled=false
-      - cluster.name=test
       - script.inline=true
-      - ES_JAVA_OPTS=-Xms1G -Xmx1G
-      - bootstrap.memory_lock=true
-      - http.host=0.0.0.0
-      - http.publish_host=127.0.0.1
-      - network.host=0.0.0.0
-      - network.publish_host=127.0.0.1
+      - ES_JAVA_OPTS=-Xms32M -Xms128M
     hostname: es
