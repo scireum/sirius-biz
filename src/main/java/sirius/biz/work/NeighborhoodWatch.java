@@ -13,6 +13,7 @@ import sirius.kernel.Sirius;
 import sirius.kernel.async.BackgroundLoop;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.Orchestration;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.Initializable;
@@ -113,7 +114,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable {
     @Override
     public void backgroundLoopCompleted(String name, String executionInfo) {
         try {
-            if (redis.isConfigured()) {
+            if (CallContext.getCurrent().get(TaskContext.class).isActive() && redis.isConfigured()) {
                 String syncName = BACKGROUND_LOOP_PREFIX + name;
                 SynchronizeType type = syncSettings.getOrDefault(syncName, SynchronizeType.LOCAL);
                 if (type == SynchronizeType.CLUSTER) {
