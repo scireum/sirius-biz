@@ -33,5 +33,5 @@ services:
     environment:
       - xpack.security.enabled=false
       - script.inline=true
-      - ES_JAVA_OPTS=-Xms32M -Xms128M
+      - ES_JAVA_OPTS=-Xms32M -Xmx128M
     hostname: es
