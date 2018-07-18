@@ -22,7 +22,6 @@ import sirius.db.mixing.types.StringListMap;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.commons.Strings;
 
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -124,10 +123,10 @@ public abstract class SearchableEntity extends ElasticEntity {
         }
 
         String tokenInLowerCase = input.toLowerCase();
-        for (String subToken: NON_WORD_CHARACTER.matcher(tokenInLowerCase).replaceAll(" ").split(" ")) {
+        for (String subToken : NON_WORD_CHARACTER.matcher(tokenInLowerCase).replaceAll(" ").split(" ")) {
             appendSingleToken(output, subToken);
         }
-        for (String subToken: tokenInLowerCase.split(" ")) {
+        for (String subToken : tokenInLowerCase.split(" ")) {
             appendSingleToken(output, subToken);
         }
     }
