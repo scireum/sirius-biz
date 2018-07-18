@@ -11,6 +11,8 @@ package sirius.biz.protocol;
 import sirius.biz.elastic.SearchContent;
 import sirius.biz.elastic.SearchableEntity;
 import sirius.db.es.ElasticEntity;
+import sirius.db.es.annotations.ESOption;
+import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.di.std.Framework;
@@ -79,6 +81,7 @@ public class JournalEntry extends SearchableEntity {
      */
     public static final Mapping CHANGES = Mapping.named("changes");
     @SearchContent
+    @IndexMode(indexed = ESOption.FALSE)
     private String changes;
 
     public LocalDateTime getTod() {

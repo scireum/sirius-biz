@@ -12,6 +12,8 @@ import sirius.biz.elastic.SearchContent;
 import sirius.biz.elastic.SearchableEntity;
 import sirius.db.es.ElasticEntity;
 import sirius.db.es.annotations.Analyzed;
+import sirius.db.es.annotations.ESOption;
+import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.health.Log;
@@ -28,8 +30,8 @@ public class LoggedMessage extends SearchableEntity {
      * Contains the message itself.
      */
     public static final Mapping MESSAGE = Mapping.named("message");
-    @Analyzed(indexOptions = Analyzed.IndexOption.DOCS)
     @SearchContent
+    @IndexMode(indexed = ESOption.FALSE)
     private String message;
 
     /**

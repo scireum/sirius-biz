@@ -10,6 +10,8 @@ package sirius.biz.protocol;
 
 import sirius.biz.elastic.SearchContent;
 import sirius.biz.elastic.SearchableEntity;
+import sirius.db.es.annotations.ESOption;
+import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.di.std.Framework;
@@ -27,6 +29,7 @@ public class StoredIncident extends SearchableEntity {
      */
     public static final Mapping MESSAGE = Mapping.named("message");
     @SearchContent
+    @IndexMode(indexed = ESOption.FALSE)
     private String message;
 
     /**
@@ -55,6 +58,7 @@ public class StoredIncident extends SearchableEntity {
      */
     public static final Mapping STACK = Mapping.named("stack");
     @SearchContent
+    @IndexMode(indexed = ESOption.FALSE)
     private String stack;
 
     /**
@@ -80,6 +84,7 @@ public class StoredIncident extends SearchableEntity {
      */
     public static final Mapping MDC = Mapping.named("mdc");
     @SearchContent
+    @IndexMode(indexed = ESOption.FALSE)
     private final StringMap mdc = new StringMap();
 
     /**

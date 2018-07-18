@@ -11,6 +11,8 @@ package sirius.biz.protocol;
 import sirius.biz.elastic.SearchContent;
 import sirius.biz.elastic.SearchableEntity;
 import sirius.db.es.ElasticEntity;
+import sirius.db.es.annotations.ESOption;
+import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.di.std.Framework;
@@ -77,6 +79,7 @@ public class MailProtocol extends SearchableEntity {
      */
     public static final Mapping SUBJECT = Mapping.named("subject");
     @SearchContent
+    @IndexMode(indexed = ESOption.FALSE)
     private String subject;
 
     /**
@@ -85,6 +88,7 @@ public class MailProtocol extends SearchableEntity {
     public static final Mapping TEXT_CONTENT = Mapping.named("textContent");
     @NullAllowed
     @SearchContent
+    @IndexMode(indexed = ESOption.FALSE)
     private String textContent;
 
     /**
@@ -93,6 +97,7 @@ public class MailProtocol extends SearchableEntity {
     public static final Mapping HTML_CONTENT = Mapping.named("htmlContent");
     @NullAllowed
     @SearchContent
+    @IndexMode(indexed = ESOption.FALSE)
     private String htmlContent;
 
     /**

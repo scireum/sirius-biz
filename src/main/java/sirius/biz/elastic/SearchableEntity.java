@@ -54,6 +54,7 @@ public abstract class SearchableEntity extends ElasticEntity {
     public static final Mapping SEARCHABLE_CONTENT = Mapping.named("searchableContent");
     @NullAllowed
     @SearchContent
+    @IndexMode(indexed = ESOption.FALSE)
     private String searchableContent;
 
     /**

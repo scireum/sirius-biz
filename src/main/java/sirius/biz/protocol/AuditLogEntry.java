@@ -11,6 +11,8 @@ package sirius.biz.protocol;
 import sirius.biz.elastic.SearchContent;
 import sirius.biz.elastic.SearchableEntity;
 import sirius.db.es.ElasticEntity;
+import sirius.db.es.annotations.ESOption;
+import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.di.std.Framework;
@@ -97,6 +99,7 @@ public class AuditLogEntry extends SearchableEntity {
     public static final Mapping MESSAGE = Mapping.named("message");
     @NullAllowed
     @SearchContent
+    @IndexMode(indexed = ESOption.FALSE)
     private String message;
 
     public LocalDateTime getTimestamp() {
