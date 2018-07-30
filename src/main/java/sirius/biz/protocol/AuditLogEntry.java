@@ -99,7 +99,7 @@ public class AuditLogEntry extends SearchableEntity {
     public static final Mapping MESSAGE = Mapping.named("message");
     @NullAllowed
     @SearchContent
-    @IndexMode(indexed = ESOption.FALSE)
+    @IndexMode(indexed = ESOption.FALSE, docValues = ESOption.FALSE)
     private String message;
 
     public LocalDateTime getTimestamp() {

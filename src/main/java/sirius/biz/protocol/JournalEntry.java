@@ -81,7 +81,7 @@ public class JournalEntry extends SearchableEntity {
      */
     public static final Mapping CHANGES = Mapping.named("changes");
     @SearchContent
-    @IndexMode(indexed = ESOption.FALSE)
+    @IndexMode(indexed = ESOption.FALSE, docValues = ESOption.FALSE)
     private String changes;
 
     public LocalDateTime getTod() {

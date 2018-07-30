@@ -10,7 +10,6 @@ package sirius.biz.protocol;
 
 import sirius.biz.elastic.SearchContent;
 import sirius.biz.elastic.SearchableEntity;
-import sirius.db.es.ElasticEntity;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
@@ -41,6 +40,7 @@ public class MailProtocol extends SearchableEntity {
      * Contains the id assigned by the mailing system.
      */
     public static final Mapping MESSAGE_ID = Mapping.named("messageId");
+    @NullAllowed
     @SearchContent
     private String messageId;
 
@@ -79,7 +79,7 @@ public class MailProtocol extends SearchableEntity {
      */
     public static final Mapping SUBJECT = Mapping.named("subject");
     @SearchContent
-    @IndexMode(indexed = ESOption.FALSE)
+    @IndexMode(indexed = ESOption.FALSE, docValues = ESOption.FALSE)
     private String subject;
 
     /**
@@ -88,7 +88,7 @@ public class MailProtocol extends SearchableEntity {
     public static final Mapping TEXT_CONTENT = Mapping.named("textContent");
     @NullAllowed
     @SearchContent
-    @IndexMode(indexed = ESOption.FALSE)
+    @IndexMode(indexed = ESOption.FALSE, docValues = ESOption.FALSE)
     private String textContent;
 
     /**
@@ -97,7 +97,7 @@ public class MailProtocol extends SearchableEntity {
     public static final Mapping HTML_CONTENT = Mapping.named("htmlContent");
     @NullAllowed
     @SearchContent
-    @IndexMode(indexed = ESOption.FALSE)
+    @IndexMode(indexed = ESOption.FALSE, docValues = ESOption.FALSE)
     private String htmlContent;
 
     /**

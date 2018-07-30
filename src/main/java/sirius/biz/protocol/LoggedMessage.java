@@ -10,8 +10,6 @@ package sirius.biz.protocol;
 
 import sirius.biz.elastic.SearchContent;
 import sirius.biz.elastic.SearchableEntity;
-import sirius.db.es.ElasticEntity;
-import sirius.db.es.annotations.Analyzed;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
@@ -31,7 +29,7 @@ public class LoggedMessage extends SearchableEntity {
      */
     public static final Mapping MESSAGE = Mapping.named("message");
     @SearchContent
-    @IndexMode(indexed = ESOption.FALSE)
+    @IndexMode(indexed = ESOption.FALSE, docValues = ESOption.FALSE)
     private String message;
 
     /**
