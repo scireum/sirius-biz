@@ -13,11 +13,16 @@ import sirius.db.jdbc.batch.FindQuery;
 import sirius.db.jdbc.batch.InsertQuery;
 import sirius.db.jdbc.batch.UpdateQuery;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandler<E> {
 
@@ -26,11 +31,32 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
     private UpdateQuery<E> updateQuery;
     private InsertQuery<E> insertQuery;
 
-    private List<Mapping> mappingsToLoad;
-    private List<Mapping> mappingsToFind;
+    private Mapping[] mappingsToLoad;
+    private Mapping[] mappingsToFind;
+    private Mapping[] mappingsToCompare;
 
     public SQLEntityImportHandler(ImportContext context) {
         super(context);
+        this.mappingsToLoad = getMappingsToLoad().toArray(MAPPING_ARRAY);
+        this.mappingsToFind = getMappingsToFind().toArray(MAPPING_ARRAY);
+        this.mappingsToCompare = getMappingsToCompare().toArray(MAPPING_ARRAY);
+    }
+
+    protected List<Mapping> getMappingsToFind() {
+        return Collections.singletonList(SQLEntity.ID);
+    }
+
+    protected List<Mapping> getMappingsToCompare() {
+        return Collections.singletonList(SQLEntity.ID);
+    }
+
+    protected List<Mapping> getMappingsToLoad() {
+        return descriptor.getProperties()
+                         .stream()
+                         .map(Property::getName)
+                         .map(Mapping::named)
+                         .filter(Predicate.isEqual(SQLEntity.ID).negate())
+                         .collect(Collectors.toList());
     }
 
     @Override
@@ -70,8 +96,7 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
     @SuppressWarnings({"unchecked"})
     private FindQuery<E> getFindQuery() {
         if (findQuery == null) {
-            findQuery = context.getBatchContext()
-                               .findQuery((Class<E>) descriptor.getType(), mappingsToFind.toArray(MAPPING_ARRAY));
+            findQuery = context.getBatchContext().findQuery((Class<E>) descriptor.getType(), mappingsToFind);
         }
 
         return findQuery;
@@ -85,14 +110,14 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
     protected E createOrUpdate(E entity, boolean batch) {
         E entityToUpdate = getFindQuery().find(entity).orElse(null);
         if (entityToUpdate == null) {
-            if (entity.isChanged(mappingsToLoad.toArray(MAPPING_ARRAY))) {
+            if (entity.isChanged(mappingsToLoad)) {
                 getInsertQuery().insert(entity, true, batch);
             }
         } else {
-            mappingsToLoad.stream()
-                          .map(descriptor::getProperty)
-                          .forEach(property -> property.setValue(entityToUpdate, property.getValue(entity)));
-            if (entityToUpdate.isChanged(mappingsToLoad.toArray(MAPPING_ARRAY))) {
+            Arrays.stream(mappingsToLoad)
+                  .map(descriptor::getProperty)
+                  .forEach(property -> property.setValue(entityToUpdate, property.getValue(entity)));
+            if (entityToUpdate.isChanged(mappingsToLoad)) {
                 getUpdateQuery().update(entityToUpdate, true, batch);
             }
         }
@@ -104,8 +129,8 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
     private UpdateQuery<E> getUpdateQuery() {
         if (updateQuery == null) {
             updateQuery = context.getBatchContext()
-                                 .updateQuery((Class<E>) descriptor.getType(), mappingsToFind.toArray(MAPPING_ARRAY))
-                                 .withUpdatedMappings(mappingsToLoad.toArray(MAPPING_ARRAY));
+                                 .updateQuery((Class<E>) descriptor.getType(), mappingsToCompare)
+                                 .withUpdatedMappings(mappingsToLoad);
         }
 
         return updateQuery;
@@ -114,10 +139,7 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
     @SuppressWarnings("unchecked")
     private InsertQuery<E> getInsertQuery() {
         if (insertQuery == null) {
-            insertQuery = context.getBatchContext()
-                                 .insertQuery((Class<E>) descriptor.getType(),
-                                              true,
-                                              mappingsToLoad.toArray(MAPPING_ARRAY));
+            insertQuery = context.getBatchContext().insertQuery((Class<E>) descriptor.getType(), true, mappingsToLoad);
         }
 
         return insertQuery;

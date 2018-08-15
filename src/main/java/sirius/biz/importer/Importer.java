@@ -33,17 +33,14 @@ public class Importer implements Closeable {
 
     public <E extends BaseEntity<?>> E findOrFail(Class<E> type, Context data) {
         return context.findHandler(type).findOrFail(data);
-//        return tryFind(type, data).orElseThrow(() -> Exceptions.createHandled().withSystemErrorMessage("Cannot find an instance for: %s of type %s", ));
     }
 
     public <E extends BaseEntity<?>> E findOrLoad(Class<E> type, Context data) {
         return context.findHandler(type).findOrLoad(data);
-//        return tryFind(type, data).orElse(load(type, data));
     }
 
     public <E extends BaseEntity<?>> E findOrLoadAndCreate(Class<E> type, Context data) {
         return context.findHandler(type).findOrLoadAndCreate(data);
-//        return tryFind(type, data).orElse(createOrUpdateNow(load(type, data)));
     }
 
     @SuppressWarnings("unchecked")

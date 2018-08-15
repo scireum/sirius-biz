@@ -16,12 +16,10 @@ import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.properties.BaseEntityRefProperty;
 import sirius.kernel.commons.Context;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.Arrays;
 
 public abstract class BaseImportHandler<E extends BaseEntity<?>> implements ImportHandler<E> {
 
@@ -36,10 +34,12 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     }
 
     @SuppressWarnings("unchecked")
-    protected E load(Context data, List<Mapping> mappings) {
+    protected E load(Context data, Mapping... mappings) {
         try {
             E entity = (E) descriptor.getType().newInstance();
-            mappings.stream().map(descriptor::getProperty).forEach(property -> loadProperty(entity, property, data));
+            Arrays.stream(mappings)
+                  .map(descriptor::getProperty)
+                  .forEach(property -> loadProperty(entity, property, data));
             return entity;
         } catch (InstantiationException | IllegalAccessException e) {
             throw Exceptions.handle()
