@@ -483,7 +483,7 @@ public class BizController extends BasicController {
         E result = find(type, id);
         if (result instanceof TenantAware) {
             if (result.isNew()) {
-                ((TenantAware) result).setCurrentTenant();
+                ((TenantAware) result).fillWithCurrentTenant();
             } else {
                 assertTenant((TenantAware) result);
             }

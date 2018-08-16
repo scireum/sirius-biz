@@ -38,7 +38,7 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
     }
 
     @Override
-    public void setCurrentTenant() {
+    public void fillWithCurrentTenant() {
         getTenant().setValue(tenants.getRequiredTenant());
     }
 }
