@@ -7,14 +7,14 @@ import sirius.kernel.di.std.Register;
  * Provides a test implementation of a {@link ImportHandlerFactory} for {@link Tenant tenants}.
  */
 @Register
-public class TenantImportHandlerFactory implements ImportHandlerFactory<Tenant> {
+public class TenantImportHandlerFactory implements ImportHandlerFactory {
     @Override
     public boolean accepts(Class<?> type) {
         return type == Tenant.class;
     }
 
     @Override
-    public ImportHandler<Tenant> create(Class<Tenant> type, Importer importer, ImportContext context) {
+    public ImportHandler<?> create(Class<?> type, ImportContext context) {
         return new TenantImportHandler(context);
     }
 }
