@@ -63,7 +63,7 @@ class ImporterSpec extends BaseSpecification {
         tenant1.getId() == tenant.getId()
         and:
         tenant2.getName() == newTenantName
-        tenant2.getId() == NON_EXISTENT_TENANT_ID
+        tenant2.isNew()
         and:
         !oma.select(Tenant.class).eq(Tenant.ID, NON_EXISTENT_TENANT_ID).first().isPresent()
     }
@@ -88,7 +88,9 @@ class ImporterSpec extends BaseSpecification {
         and:
         Tenant tenant = TenantsHelper.getTestTenant()
         and:
-        Context context = Context.create().set(Tenant.NAME.getName(), newTenantName).set(Tenant.PARENT.getName(), tenant)
+        Context context = Context.create().
+                set(Tenant.NAME.getName(), newTenantName).
+                set(Tenant.PARENT.getName(), tenant)
         and:
         Tenant newTenant = importer.load(Tenant.class, context)
         then:

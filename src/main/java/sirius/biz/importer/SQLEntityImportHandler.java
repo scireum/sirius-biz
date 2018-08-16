@@ -109,8 +109,8 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
         return descriptor.getProperties()
                          .stream()
                          .map(Property::getName)
+                         .filter(Predicate.isEqual(SQLEntity.ID.getName()).negate())
                          .map(Mapping::named)
-                         .filter(Predicate.isEqual(SQLEntity.ID).negate())
                          .collect(Collectors.toList());
     }
 
