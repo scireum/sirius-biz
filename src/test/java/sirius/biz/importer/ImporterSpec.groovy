@@ -81,4 +81,17 @@ class ImporterSpec extends BaseSpecification {
         and:
         oma.select(Tenant.class).eq(Tenant.ID, tenant.getId()).first().isPresent()
     }
+
+    def "load parent tenant entity ref with importer"() {
+        when:
+        String newTenantName = "Importer_Test_Load"
+        and:
+        Tenant tenant = TenantsHelper.getTestTenant()
+        and:
+        Context context = Context.create().set(Tenant.NAME.getName(), newTenantName).set(Tenant.PARENT.getName(), tenant)
+        and:
+        Tenant newTenant = importer.load(Tenant.class, context)
+        then:
+        newTenant.getParent().getId() == tenant.getId()
+    }
 }
