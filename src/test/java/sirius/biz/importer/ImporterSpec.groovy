@@ -67,4 +67,18 @@ class ImporterSpec extends BaseSpecification {
         and:
         !oma.select(Tenant.class).eq(Tenant.ID, NON_EXISTENT_TENANT_ID).first().isPresent()
     }
+
+    def "findOrLoadAndCreate tenant with importer"() {
+        when:
+        String newTenantName = "Importer_Test123456471232"
+        and:
+        Context context = Context.create().set(Tenant.NAME.getName(), newTenantName)
+        and:
+        Tenant tenant = importer.findOrLoadAndCreate(Tenant.class, context)
+        then:
+        tenant.getName() == newTenantName
+        !tenant.isNew()
+        and:
+        oma.select(Tenant.class).eq(Tenant.ID, tenant.getId()).first().isPresent()
+    }
 }
