@@ -10,16 +10,15 @@ package sirius.biz.importer;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.batch.BatchContext;
-import sirius.db.jdbc.batch.FindQuery;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.health.Exceptions;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class ImportContext {
@@ -27,14 +26,15 @@ public class ImportContext {
     private Importer importer;
     private BatchContext batchContext;
 
-    @Parts(ImportHandler.class)
-    private List<ImportHandlerFactory> factories;
+    @Parts(ImportHandlerFactory.class)
+    private static Collection<ImportHandlerFactory> factories;
 
     private Map<Class<?>, ImportHandler<?>> handlers = new HashMap<>();
     private Cache<String, Object> localCache = CacheBuilder.newBuilder().maximumSize(256).build();
 
     protected ImportContext(Importer importer) {
         this.importer = importer;
+        batchContext = new BatchContext(() -> "Batch Context of ImportContext", Duration.ofMinutes(2));
     }
 
     @SuppressWarnings("unchecked")
@@ -46,7 +46,7 @@ public class ImportContext {
     private ImportHandler<?> lookupHandler(Class<?> type) {
         for (ImportHandlerFactory factory : factories) {
             if (factory.accepts(type)) {
-                return factory.create((Class<? extends BaseEntity<?>>) type, importer, this);
+                return factory.create(type, importer, this);
             }
         }
 

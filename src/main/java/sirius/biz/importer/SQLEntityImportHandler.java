@@ -35,8 +35,8 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
     private Mapping[] mappingsToFind;
     private Mapping[] mappingsToCompare;
 
-    public SQLEntityImportHandler(ImportContext context) {
-        super(context);
+    public SQLEntityImportHandler(Class<E> clazz, ImportContext context) {
+        super(clazz, context);
         this.mappingsToLoad = getMappingsToLoad().toArray(MAPPING_ARRAY);
         this.mappingsToFind = getMappingsToFind().toArray(MAPPING_ARRAY);
         this.mappingsToCompare = getMappingsToCompare().toArray(MAPPING_ARRAY);

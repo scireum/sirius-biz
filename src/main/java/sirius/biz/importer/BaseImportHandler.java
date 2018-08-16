@@ -29,8 +29,9 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     protected EntityDescriptor descriptor;
     protected ImportContext context;
 
-    protected BaseImportHandler(ImportContext context) {
+    protected BaseImportHandler(Class<E> clazz, ImportContext context) {
         this.context = context;
+        descriptor = mixing.getDescriptor(clazz);
     }
 
     @SuppressWarnings("unchecked")

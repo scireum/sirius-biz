@@ -10,9 +10,9 @@ package sirius.biz.importer;
 
 import sirius.db.mixing.BaseEntity;
 
-public interface ImportHandlerFactory {
+public interface ImportHandlerFactory<E extends BaseEntity<?>> {
 
     boolean accepts(Class<?> type);
 
-    <E extends BaseEntity<?>> ImportHandler<E> create(Class<E> type, Importer importer, ImportContext context);
+    ImportHandler<E> create(Class<E> type, Importer importer, ImportContext context);
 }
