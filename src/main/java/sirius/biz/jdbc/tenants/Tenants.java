@@ -41,7 +41,7 @@ public class Tenants {
     @Part
     private OMA oma;
 
-    private Cache<Long, Boolean> tenantsWithChildren = CacheManager.createCache("tenants-children");
+    private Cache<String, Boolean> tenantsWithChildren = CacheManager.createCoherentCache("tenants-children");
 
     /**
      * Returns the current user as {@link UserAccount} which is logged in.
@@ -130,7 +130,7 @@ public class Tenants {
      * id is unknown.
      */
     public boolean hasChildTenants(long tenantId) {
-        return tenantsWithChildren.get(tenantId, id -> oma.select(Tenant.class).eq(Tenant.PARENT, tenantId).exists());
+        return tenantsWithChildren.get(String.valueOf(tenantId), id -> oma.select(Tenant.class).eq(Tenant.PARENT, tenantId).exists());
     }
 
     /**
