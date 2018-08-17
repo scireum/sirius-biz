@@ -90,15 +90,7 @@ public class Isenguard implements Firewall {
         String key = "rate-limit-" + ip + "-" + realm + "-" + currentInterval;
 
         return getLimiter().increaseAndCheckLimit(ip, key, intervalInSeconds, limit, limitReachedOnce);
-//        return redis.query(() -> "Rate Limit", db -> {
-//            long value = db.incr(key);
-//            if (value == 1) {
-//                db.expire(key, intervalInSeconds);
-//            } else if (value == limit) {
-//                //TODO log
-//            }
-//            return value >= limit;
-//        });
+
     }
 
     private Limiter getLimiter() {
@@ -110,7 +102,7 @@ public class Isenguard implements Firewall {
     }
 
     private Limiter determineLimiter() {
-        return redis.isConfigured() ? new RedisLimiter() : new JavaLimiter();
+        return redis.isConfigured() ? new RedisLimiter(redis) : new JavaLimiter();
     }
 }
 // IsenGuard

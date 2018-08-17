@@ -8,7 +8,15 @@
 
 package sirius.biz.isenguard;
 
+import sirius.db.redis.Redis;
+
 public class RedisLimiter implements Limiter {
+
+    private Redis redis;
+
+    public RedisLimiter(Redis redis) {
+        this.redis = redis;
+    }
 
     @Override
     public boolean isIPBLacklisted(String ip) {
@@ -31,7 +39,15 @@ public class RedisLimiter implements Limiter {
                                          int intervalInSeconds,
                                          int limit,
                                          Runnable limitReachedOnce) {
-        return false;
-    }
+        return redis.query(() -> "Rate Limit: " + key, db -> {
+            long value = db.incr(key);
+            if (value == 1) {
+                db.expire(key, intervalInSeconds);
+            } else if (value == limit) {
+                limitReachedOnce.run();
+            }
 
+            return value >= limit;
+        });
+    }
 }

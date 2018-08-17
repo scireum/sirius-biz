@@ -35,3 +35,8 @@ services:
       - script.inline=true
       - ES_JAVA_OPTS=-Xms32M -Xmx128M
     hostname: es
+  s3-system:
+    image: scireum/s3-ninja:5
+    ports:
+      - 80
+    hostname: s3ninja

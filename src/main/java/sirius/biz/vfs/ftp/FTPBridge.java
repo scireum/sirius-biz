@@ -35,25 +35,25 @@ public class FTPBridge {
 
     private FtpServer ftpServer;
 
-    @ConfigValue("storage.ftp.port")
+    @ConfigValue("vfs.ftp.port")
     private int ftpPort;
 
-    @ConfigValue("storage.ftp.bindAddress")
+    @ConfigValue("vfs.ftp.bindAddress")
     private String bindAddress;
 
-    @ConfigValue("storage.ftp.idleTimeout")
+    @ConfigValue("vfs.ftp.idleTimeout")
     private Duration idleTimeout;
 
-    @ConfigValue("storage.ftp.keystore")
+    @ConfigValue("vfs.ftp.keystore")
     private String keystore;
 
-    @ConfigValue("storage.ftp.keystorePassword")
+    @ConfigValue("vfs.ftp.keystorePassword")
     private String keystorePassword;
 
-    @ConfigValue("storage.ftp.keyAlias")
+    @ConfigValue("vfs.ftp.keyAlias")
     private String keyAlias;
 
-    @ConfigValue("storage.ftp.forceSSL")
+    @ConfigValue("vfs.ftp.forceSSL")
     private boolean forceSSL;
 
     /**
