@@ -96,4 +96,41 @@ class ImporterSpec extends BaseSpecification {
         then:
         newTenant.getParent().getId() == tenant.getId()
     }
+
+    def "createOrUpdateNow creating tenant"() {
+        given:
+        String newTenantName = "Importer_createOrUpdateNow_Test"
+        and:
+        Context context = Context.create().set(Tenant.NAME.getName(), newTenantName)
+        when:
+        !oma.select(Tenant.class).eq(Tenant.NAME, newTenantName).first().isPresent()
+        and:
+        Tenant tenant = importer.load(Tenant.class, context)
+        importer.createOrUpdateNow(tenant)
+        then:
+        !tenant.isNew()
+        and:
+        oma.select(Tenant.class).eq(Tenant.NAME, newTenantName).first().isPresent()
+    }
+
+    def "createOrUpdateNow updating tenant"() {
+        given:
+        String newTenantName = "Importer_createOrUpdateNow_Test2"
+        and:
+        Context context = Context.create().set(Tenant.NAME.getName(), newTenantName)
+        and:
+        Tenant tenant = importer.load(Tenant.class, context)
+        importer.createOrUpdateNow(tenant)
+        when:
+        context = Context.create().set(Tenant.NAME.getName(), newTenantName + "new").set(Tenant.ID.getName(), tenant.getId())
+        and:
+        tenant = importer.load(Tenant.class, context)
+        importer.createOrUpdateNow(tenant)
+        then:
+        !oma.select(Tenant.class).eq(Tenant.NAME, newTenantName).first().isPresent()
+        and:
+        oma.select(Tenant.class).eq(Tenant.NAME, newTenantName + "new").first().isPresent()
+        and:
+        oma.select(Tenant.class).eq(Tenant.NAME, newTenantName).queryFirst().getId() == tenant.getId()
+    }
 }
