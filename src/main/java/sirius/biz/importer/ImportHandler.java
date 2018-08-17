@@ -30,12 +30,13 @@ import java.util.Optional;
 public interface ImportHandler<E extends BaseEntity<?>> {
 
     /**
-     * Create a new entity and fills it using the supplied <tt>data</tt>.
+     * Fills the given entity it using the supplied <tt>data</tt>.
      *
-     * @param data used to fill the newly created entity
+     * @param data   used to fill the newly created entity
+     * @param entity the entity to be filled
      * @return a new and not yet persisted entity filled with value from <tt>data</tt>
      */
-    E load(Context data);
+    E load(Context data, E entity);
 
     /**
      * Tries to find an entity using the supplied <tt>data</tt>.

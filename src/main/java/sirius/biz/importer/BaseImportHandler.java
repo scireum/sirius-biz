@@ -54,18 +54,21 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      */
     @SuppressWarnings("unchecked")
     protected E load(Context data, Mapping... mappings) {
-        try {
-            E entity = (E) descriptor.getType().newInstance();
-            Arrays.stream(mappings)
-                  .map(descriptor::getProperty)
-                  .forEach(property -> loadProperty(entity, property, data));
-            return entity;
-        } catch (InstantiationException | IllegalAccessException e) {
-            throw Exceptions.handle()
-                            .error(e)
-                            .withSystemErrorMessage("Cannot create an instance of: %s", descriptor.getType().getName())
-                            .handle();
-        }
+        return load(data, newEntity(), mappings);
+    }
+
+    /**
+     * Loads the given list of mappings from the given data into a given instance of the entity type.
+     *
+     * @param data     the data to load values from
+     * @param entity   the entity to load the data into
+     * @param mappings the list of properties to load
+     * @return a newly created and not yet persisted entity with values loaded from <tt>data</tt>
+     */
+    @SuppressWarnings("unchecked")
+    protected E load(Context data, E entity, Mapping... mappings) {
+        Arrays.stream(mappings).map(descriptor::getProperty).forEach(property -> loadProperty(entity, property, data));
+        return entity;
     }
 
     /**
@@ -111,11 +114,28 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
 
     @Override
     public E findOrLoad(Context data) {
-        return tryFind(data).orElse(load(data));
+        return tryFind(data).orElse(load(data, newEntity()));
     }
 
     @Override
     public E findOrLoadAndCreate(Context data) {
-        return tryFind(data).orElse(createOrUpdateNow(load(data)));
+        return tryFind(data).orElse(createOrUpdateNow(load(data, newEntity())));
+    }
+
+    /**
+     * Creates a new entity of the handled entity type.
+     *
+     * @return new entity instance
+     */
+    @SuppressWarnings("unchecked")
+    protected E newEntity() {
+        try {
+            return (E) descriptor.getType().newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw Exceptions.handle()
+                            .error(e)
+                            .withSystemErrorMessage("Cannot create an instance of: %s", descriptor.getType().getName())
+                            .handle();
+        }
     }
 }

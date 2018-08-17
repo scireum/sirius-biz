@@ -10,6 +10,7 @@ package sirius.biz.importer;
 
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
+import sirius.kernel.health.Exceptions;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -52,7 +53,37 @@ public class Importer implements Closeable {
      * @return a new and non persisted entity of the given type, pre-filled with the given data
      */
     public <E extends BaseEntity<?>> E load(Class<E> type, Context data) {
-        return context.findHandler(type).load(data);
+        try {
+            E entity = type.newInstance();
+            return load(type, data, entity);
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw Exceptions.handle()
+                            .error(e)
+                            .withSystemErrorMessage("Cannot create an instance of: %s", type.getName())
+                            .handle();
+        }
+    }
+
+    /**
+     * Loads all relevant fields of the given data into a given entity of the given type.
+     * <p>
+     * Note that the properties which are actually filled are determined by the {@link ImportHandler} being used.
+     * Also note, that if the given entity is null a new entity is created.
+     * <p>
+     * The changes to the entity are not persisted. This must be done by an extra create or update call.
+     *
+     * @param type   the type of entity to create.
+     * @param data   the data to read the values from
+     * @param entity the entity to load the relevant fields into
+     * @param <E>    the generic type of the entity to create
+     * @return a new and non persisted entity of the given type, pre-filled with the given data
+     */
+    public <E extends BaseEntity<?>> E load(Class<E> type, Context data, E entity) {
+        if (entity == null) {
+            return load(type, data);
+        }
+
+        return context.findHandler(type).load(data, entity);
     }
 
     /**

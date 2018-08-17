@@ -115,8 +115,8 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
     }
 
     @Override
-    public E load(Context data) {
-        return load(data, mappingsToLoad);
+    public E load(Context data, E entity) {
+        return load(data, entity, mappingsToLoad);
     }
 
     @Override

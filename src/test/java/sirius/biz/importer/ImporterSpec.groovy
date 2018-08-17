@@ -120,11 +120,12 @@ class ImporterSpec extends BaseSpecification {
         Context context = Context.create().set(Tenant.NAME.getName(), newTenantName)
         and:
         Tenant tenant = importer.load(Tenant.class, context)
-        importer.createOrUpdateNow(tenant)
+        tenant = importer.createOrUpdateNow(tenant)
         when:
         context = Context.create().set(Tenant.NAME.getName(), newTenantName + "new").set(Tenant.ID.getName(), tenant.getId())
+        tenant = importer.tryFind(Tenant.class, context).orElse(null)
         and:
-        tenant = importer.load(Tenant.class, context)
+        tenant = importer.load(Tenant.class, context, tenant)
         importer.createOrUpdateNow(tenant)
         then:
         !oma.select(Tenant.class).eq(Tenant.NAME, newTenantName).first().isPresent()
@@ -141,7 +142,7 @@ class ImporterSpec extends BaseSpecification {
         long tenantCount = oma.select(Tenant.class).count()
         when:
         for (int i = 0; i < 200; i++) {
-            Context context = Context.create().set(Tenant.NAME.getName(), basicTenantName+ i)
+            Context context = Context.create().set(Tenant.NAME.getName(), basicTenantName + i)
             and:
             Tenant tenant = importer.load(Tenant.class, context)
             importer.createOrUpdateInBatch(tenant)
