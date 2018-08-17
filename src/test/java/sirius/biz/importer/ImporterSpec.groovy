@@ -132,7 +132,7 @@ class ImporterSpec extends BaseSpecification {
         and:
         oma.select(Tenant.class).eq(Tenant.NAME, newTenantName + "new").first().isPresent()
         and:
-        oma.select(Tenant.class).eq(Tenant.NAME, newTenantName).queryFirst().getId() == tenant.getId()
+        oma.select(Tenant.class).eq(Tenant.NAME, newTenantName + "new").queryFirst().getId() == tenant.getId()
     }
 
     def "createOrUpdate in batch inserting tenants"() {
@@ -151,5 +151,29 @@ class ImporterSpec extends BaseSpecification {
         importer.close()
         then:
         tenantCount + 200 == oma.select(Tenant.class).count()
+    }
+
+    def "createOrUpdate in batch updating tenants"() {
+        given:
+        String basicTenantName = "Importer_batchUpdate"
+        and:
+        for (int i = 0; i < 200; i++) {
+            Context context = Context.create().set(Tenant.NAME.getName(), basicTenantName + i)
+            Tenant tenant = importer.load(Tenant.class, context)
+            importer.createOrUpdateInBatch(tenant)
+        }
+        importer.close()
+        and:
+        long tenantCount = oma.select(Tenant.class).count()
+        when:
+        oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).contains(basicTenantName).build()).iterateAll { tenant ->
+            tenant.setName(tenant.getName() + "AFTERUPDATE")
+            importer.createOrUpdateInBatch(tenant)
+        }
+        importer.close()
+        then:
+        tenantCount == oma.select(Tenant.class).count()
+        and:
+        tenantCount == oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).contains("AFTERUPDATE").build()).count()
     }
 }
