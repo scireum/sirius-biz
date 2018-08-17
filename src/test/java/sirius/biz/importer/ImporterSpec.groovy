@@ -133,4 +133,22 @@ class ImporterSpec extends BaseSpecification {
         and:
         oma.select(Tenant.class).eq(Tenant.NAME, newTenantName).queryFirst().getId() == tenant.getId()
     }
+
+    def "createOrUpdate in batch inserting tenants"() {
+        given:
+        String basicTenantName = "Importer_batchInsert"
+        and:
+        long tenantCount = oma.select(Tenant.class).count()
+        when:
+        for (int i = 0; i < 200; i++) {
+            Context context = Context.create().set(Tenant.NAME.getName(), basicTenantName+ i)
+            and:
+            Tenant tenant = importer.load(Tenant.class, context)
+            importer.createOrUpdateInBatch(tenant)
+        }
+        and:
+        importer.close()
+        then:
+        tenantCount + 200 == oma.select(Tenant.class).count()
+    }
 }
