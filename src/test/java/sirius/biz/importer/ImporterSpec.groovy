@@ -157,14 +157,14 @@ class ImporterSpec extends BaseSpecification {
         given:
         String basicTenantName = "Importer_batchUpdate"
         and:
+        long tenantCount = oma.select(Tenant.class).count()
+        and:
         for (int i = 0; i < 200; i++) {
             Context context = Context.create().set(Tenant.NAME.getName(), basicTenantName + i)
             Tenant tenant = importer.load(Tenant.class, context)
             importer.createOrUpdateInBatch(tenant)
         }
         importer.close()
-        and:
-        long tenantCount = oma.select(Tenant.class).count()
         when:
         oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).contains(basicTenantName).build()).iterateAll { tenant ->
             tenant.setName(tenant.getName() + "AFTERUPDATE")
@@ -172,8 +172,6 @@ class ImporterSpec extends BaseSpecification {
         }
         importer.close()
         then:
-        tenantCount == oma.select(Tenant.class).count()
-        and:
-        tenantCount == oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).contains("AFTERUPDATE").build()).count()
+        oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).contains("AFTERUPDATE").build()).count() == 200
     }
 }
