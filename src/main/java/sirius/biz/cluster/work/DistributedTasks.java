@@ -33,13 +33,13 @@ public class DistributedTasks {
     private Map<String, Semaphore> concurrencyTokens = new ConcurrentHashMap<>();
 
     @Part
-    private NeighborhoodWatch orchestration;
+    private static NeighborhoodWatch orchestration;
 
     @Part
-    private Redis redis;
+    private static Redis redis;
 
     @Part
-    private GlobalContext ctx;
+    private static GlobalContext ctx;
 
     private List<String> taskQueues;
     private Map<Class<? extends DistributedTaskExecutor>, String> queuePerExecutor;
