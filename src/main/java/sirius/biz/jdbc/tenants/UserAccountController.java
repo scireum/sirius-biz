@@ -196,7 +196,7 @@ public class UserAccountController extends BizController {
     }
 
     /**
-     * Generates a new password for the given account and send a mail to the user.
+     * Generates a new password for the given account.
      *
      * @param ctx the current request
      * @param id  the account for which a password is to be created
@@ -206,25 +206,28 @@ public class UserAccountController extends BizController {
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void generatePassword(final WebContext ctx, String id) {
         UserAccount userAccount = findForTenant(UserAccount.class, id);
-        assertNotNew(userAccount);
 
-        if (!userAccount.isPasswordGenerationPossible()) {
-            throw Exceptions.createHandled()
-                            .withNLSKey("UserAccountConroller.cannotGeneratePasswordForOwnUser")
-                            .handle();
-        }
+        generateNewPassword(userAccount);
+        UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
 
-        userAccount.getLogin().setGeneratedPassword(Strings.generatePassword());
-        oma.update(userAccount);
+        accounts(ctx);
+    }
 
-        auditLog.neutral("AuditLog.passwordGenerated")
-                .causedByCurrentUser()
-                .forUser(userAccount.getUniqueName(), userAccount.getLogin().getUsername())
-                .forTenant(String.valueOf(userAccount.getTenant().getId()),
-                           userAccount.getTenant().getValue().getName())
-                .log();
+    /**
+     * Generates a new password for the given account and send a mail to the user.
+     *
+     * @param ctx the current request
+     * @param id  the account for which a password is to be created
+     */
+    @Routed("/user-account/:1/generate-and-send-password")
+    @LoginRequired
+    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
+    public void generateAndSendPassword(final WebContext ctx, String id) {
+        UserAccount userAccount = findForTenant(UserAccount.class, id);
 
-        if (userAccount.shouldSendGeneratedPassword()) {
+        generateNewPassword(userAccount);
+
+        if (userAccount.canSendGeneratedPassword()) {
             UserContext.message(Message.info(NLS.fmtr("UserAccountConroller.passwordGeneratedAndSent")
                                                 .set(PARAM_EMAIL, userAccount.getEmail())
                                                 .format()));
@@ -246,6 +249,26 @@ public class UserAccountController extends BizController {
         }
 
         accounts(ctx);
+    }
+
+    private void generateNewPassword(UserAccount userAccount) {
+        assertNotNew(userAccount);
+
+        if (!userAccount.isPasswordGenerationPossible()) {
+            throw Exceptions.createHandled()
+                            .withNLSKey("UserAccountConroller.cannotGeneratePasswordForOwnUser")
+                            .handle();
+        }
+
+        userAccount.getLogin().setGeneratedPassword(Strings.generatePassword());
+        oma.update(userAccount);
+
+        auditLog.neutral("AuditLog.passwordGenerated")
+                .causedByCurrentUser()
+                .forUser(userAccount.getUniqueName(), userAccount.getLogin().getUsername())
+                .forTenant(String.valueOf(userAccount.getTenant().getId()),
+                           userAccount.getTenant().getValue().getName())
+                .log();
     }
 
     /**

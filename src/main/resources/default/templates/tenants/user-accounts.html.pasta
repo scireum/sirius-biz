@@ -53,17 +53,17 @@
                 </td>
                 <td>
                     <i:if test="@account.isPasswordGenerationPossible()">
+                        <i:if test="@account.canSendGeneratedPassword()">
+                            <a href="/user-account/@account.getId()/generate-and-send-password?@accounts.createQueryString()"
+                               class="link">
+                                <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generateAndSend")
+                            </a>
+                            <br>
+                        </i:if>
+
                         <a href="/user-account/@account.getId()/generate-password?@accounts.createQueryString()"
                            class="link">
-                            <i class="fa fa-angle-double-right"></i>
-
-                            <i:if test="@account.shouldSendGeneratedPassword()">
-                                @i18n("LoginData.password.generateAndSend")
-
-                                <i:else>
-                                    @i18n("LoginData.password.generate")
-                                </i:else>
-                            </i:if>
+                            <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generate")
                         </a>
                         <br>
                     </i:if>
