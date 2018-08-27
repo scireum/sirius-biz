@@ -71,16 +71,16 @@ public class SmartSequenceStrategy implements SequenceStrategy {
 
     @Override
     public long peekNextValue(String sequence) throws Exception {
-        return delegate.peekNextValue(sequence);
+        return getDelegate().peekNextValue(sequence);
     }
 
     @Override
     public void setNextValue(String sequence, long nextValue, boolean force) throws Exception {
-        delegate.setNextValue(sequence, nextValue, force);
+        getDelegate().setNextValue(sequence, nextValue, force);
     }
 
     @Override
     public void collectKnownSequences(Consumer<String> nameConsumer) throws Exception {
-        delegate.collectKnownSequences(nameConsumer);
+        getDelegate().collectKnownSequences(nameConsumer);
     }
 }
