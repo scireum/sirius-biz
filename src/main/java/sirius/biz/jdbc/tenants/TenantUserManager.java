@@ -117,6 +117,7 @@ public class TenantUserManager extends GenericUserManager {
     private static Cache<String, Set<String>> rolesCache = CacheManager.createCoherentCache("tenants-roles");
     private static Cache<String, UserAccount> userAccountCache = CacheManager.createCoherentCache("tenants-users");
     private static Cache<String, Tenant> tenantsCache = CacheManager.createCoherentCache("tenants-tenants");
+
     private static Cache<String, Tuple<UserSettings, String>> configCache =
             CacheManager.createCoherentCache("tenants-configs");
 
