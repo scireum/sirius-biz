@@ -21,7 +21,7 @@ public class ObjectStore {
     protected final AmazonS3Client client;
     protected final String bucketSuffix;
     //TODO bad idea
-    private final Cache<String, Boolean> bucketCache = CacheManager.createCache("storage-buckets");
+    private final Cache<String, Boolean> bucketCache = CacheManager.createCoherentCache("storage-buckets");
 
     public ObjectStore(AmazonS3Client client, String bucketSuffix) {
         this.client = client;

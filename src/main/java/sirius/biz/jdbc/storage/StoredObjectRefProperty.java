@@ -107,7 +107,7 @@ public class StoredObjectRefProperty extends Property implements SQLPropertyInfo
     }
 
     @Override
-    protected void setValue(Object entity, Object object) {
+    public void setValue(Object entity, Object object) {
         this.setValueToField(object, entity);
     }
 
