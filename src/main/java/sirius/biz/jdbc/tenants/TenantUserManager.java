@@ -114,10 +114,10 @@ public class TenantUserManager extends GenericUserManager {
     @Part
     private static AuditLog auditLog;
 
-    private static Cache<String, Set<String>> rolesCache = CacheManager.createCache("tenants-roles");
-    private static Cache<String, UserAccount> userAccountCache = CacheManager.createCache("tenants-users");
-    private static Cache<String, Tenant> tenantsCache = CacheManager.createCache("tenants-tenants");
-    private static Cache<String, Tuple<UserSettings, String>> configCache = CacheManager.createCache("tenants-configs");
+    private static Cache<String, Set<String>> rolesCache = CacheManager.createCoherentCache("tenants-roles");
+    private static Cache<String, UserAccount> userAccountCache = CacheManager.createCoherentCache("tenants-users");
+    private static Cache<String, Tenant> tenantsCache = CacheManager.createCoherentCache("tenants-tenants");
+    private static Cache<String, Tuple<UserSettings, String>> configCache = CacheManager.createCoherentCache("tenants-configs");
 
     protected TenantUserManager(ScopeInfo scope, Extension config) {
         super(scope, config);
