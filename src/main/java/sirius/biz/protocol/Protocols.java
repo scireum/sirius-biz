@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.protocol;
+package sirius.biz.elastic.protocol;
 
 import sirius.db.es.Elastic;
 import sirius.kernel.Sirius;

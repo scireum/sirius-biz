@@ -52,9 +52,6 @@ public class UserAccountController extends BizController {
     public static final String PERMISSION_MANAGE_USER_ACCOUNTS = "permission-manage-user-accounts";
 
     private static final String PARAM_PASSWORD = "password";
-    private static final String PARAM_OLD_PASSWORD = "oldPassword";
-    private static final String PARAM_NEW_PASSWORD = "newPassword";
-    private static final String PARAM_CONFIRMATION = "confirmation";
     private static final String PARAM_NAME = "name";
     private static final String PARAM_USERNAME = "username";
     private static final String PARAM_URL = "url";

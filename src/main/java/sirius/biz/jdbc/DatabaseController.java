@@ -6,9 +6,9 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.model;
+package sirius.biz.model;
 
-import sirius.biz.jdbc.tenants.TenantUserManager;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.db.jdbc.Database;
 import sirius.db.jdbc.Databases;
 import sirius.db.jdbc.Row;

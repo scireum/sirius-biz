@@ -6,11 +6,12 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.protocol;
+package sirius.biz.elastic.protocol;
 
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.protocol.JournalData;
 import sirius.biz.web.BizController;
 import sirius.biz.web.ElasticPageHelper;
 import sirius.db.mixing.DateRange;

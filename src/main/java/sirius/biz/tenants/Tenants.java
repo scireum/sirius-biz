@@ -130,7 +130,8 @@ public class Tenants {
      * id is unknown.
      */
     public boolean hasChildTenants(long tenantId) {
-        return tenantsWithChildren.get(String.valueOf(tenantId), id -> oma.select(Tenant.class).eq(Tenant.PARENT, tenantId).exists());
+        return tenantsWithChildren.get(String.valueOf(tenantId),
+                                       id -> oma.select(Tenant.class).eq(Tenant.PARENT, tenantId).exists());
     }
 
     /**
@@ -161,6 +162,14 @@ public class Tenants {
         }
     }
 
+    /**
+     * Applies an appropriate filter to the given query to only return entities which belong to the current tenant.
+     *
+     * @param qry the query to extent
+     * @param <E> the type of entities processed by the query
+     * @return the query with an additional constraint filtering on the current tenant
+     * @throws sirius.kernel.health.HandledException if there is currently no user / tenant available
+     */
     public <E extends SQLTenantAware> SmartQuery<E> forCurrentTenant(SmartQuery<E> qry) {
         return qry.eq(SQLTenantAware.TENANT, getRequiredTenant());
     }
