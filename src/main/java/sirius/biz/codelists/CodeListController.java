@@ -6,9 +6,9 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.codelists;
+package sirius.biz.codelists;
 
-import sirius.biz.jdbc.tenants.TenantUserManager;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.biz.web.SQLPageHelper;
 import sirius.db.mixing.query.QueryField;

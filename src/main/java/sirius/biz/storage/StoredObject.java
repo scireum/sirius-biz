@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.storage;
+package sirius.biz.storage;
 
 import javax.annotation.Nullable;
 import java.time.LocalDateTime;

@@ -6,9 +6,9 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.codelists
+package sirius.biz.codelists
 
-import sirius.biz.jdbc.tenants.TenantsHelper
+import sirius.biz.tenants.TenantsHelper
 import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part

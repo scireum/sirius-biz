@@ -6,9 +6,9 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.storage;
+package sirius.biz.storage;
 
-import sirius.biz.jdbc.tenants.SQLTenantAware;
+import sirius.biz.tenants.SQLTenantAware;
 import sirius.db.KeyGenerator;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;

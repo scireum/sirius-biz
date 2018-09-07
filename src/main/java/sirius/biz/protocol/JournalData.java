@@ -12,6 +12,7 @@ import sirius.db.es.Elastic;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.EntityDescriptor;
+import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.AfterSave;
@@ -93,7 +94,7 @@ public class JournalData extends Composite {
             entry.setChanges(changes);
             entry.setTargetId(String.valueOf(entity.getId()));
             entry.setTargetName(entity.toString());
-            entry.setTargetType(mixing.getNameForType(entity.getClass()));
+            entry.setTargetType(Mixing.getNameForType(entity.getClass()));
             entry.setSubsystem(TaskContext.get().getSystemString());
             entry.setUserId(UserContext.getCurrentUser().getUserId());
             entry.setUsername(UserContext.getCurrentUser().getUserName());
@@ -156,7 +157,7 @@ public class JournalData extends Composite {
     }
 
     public String getProtocolUri() {
-        String type = mixing.getNameForType(owner.getClass());
+        String type = Mixing.getNameForType(owner.getClass());
         String id = String.valueOf(owner.getId());
         String hash = JournalController.computeAuthHash(type, id);
 

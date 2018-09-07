@@ -6,9 +6,9 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.codelists;
+package sirius.biz.codelists;
 
-import sirius.biz.jdbc.model.BizEntity;
+import sirius.biz.jdbc.BizEntity;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;

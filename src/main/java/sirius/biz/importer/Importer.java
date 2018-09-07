@@ -14,6 +14,7 @@ import sirius.kernel.health.Exceptions;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
 
 /**
@@ -54,9 +55,9 @@ public class Importer implements Closeable {
      */
     public <E extends BaseEntity<?>> E load(Class<E> type, Context data) {
         try {
-            E entity = type.newInstance();
+            E entity = type.getConstructor().newInstance();
             return load(type, data, entity);
-        } catch (InstantiationException | IllegalAccessException e) {
+        } catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
             throw Exceptions.handle()
                             .error(e)
                             .withSystemErrorMessage("Cannot create an instance of: %s", type.getName())

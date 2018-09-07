@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.codelists;
+package sirius.biz.codelists;
 
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SQLEntity;

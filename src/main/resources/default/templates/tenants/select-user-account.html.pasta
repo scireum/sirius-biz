@@ -30,7 +30,7 @@
         </tr>
         </thead>
         <tbody>
-        <i:for type="sirius.biz.jdbc.tenants.UserAccount" var="selectableUser" items="users.getItems()">
+        <i:for type="sirius.biz.tenants.UserAccount" var="selectableUser" items="users.getItems()">
             <tr>
                 <td>
                     <i:if test="selectableUser.hasName()">
@@ -42,8 +42,8 @@
                     </i:if>
                 </td>
                 <td>
-                    @selectableUser.getTenant().getValue().as(sirius.biz.jdbc.tenants.Tenant.class).getName()<br>
-                    @selectableUser.getTenant().getValue().as(sirius.biz.jdbc.tenants.Tenant.class).getAccountNumber()
+                    @selectableUser.getTenant().getValue().as(sirius.biz.tenants.Tenant.class).getName()<br>
+                    @selectableUser.getTenant().getValue().as(sirius.biz.tenants.Tenant.class).getAccountNumber()
                 </td>
             </tr>
         </i:for>

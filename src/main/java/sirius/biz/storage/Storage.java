@@ -6,14 +6,14 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.storage;
+package sirius.biz.storage;
 
 import com.amazonaws.internal.ResettableInputStream;
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.Files;
-import sirius.biz.jdbc.tenants.Tenant;
+import sirius.biz.tenants.Tenant;
 import sirius.biz.protocol.TraceData;
 import sirius.db.KeyGenerator;
 import sirius.db.jdbc.OMA;

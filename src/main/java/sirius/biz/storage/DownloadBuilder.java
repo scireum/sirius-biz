@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.storage;
+package sirius.biz.storage;
 
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;

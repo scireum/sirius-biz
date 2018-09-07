@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.model;
+package sirius.biz.model;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;

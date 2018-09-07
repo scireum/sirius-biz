@@ -19,6 +19,7 @@ import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
 /**
@@ -130,8 +131,8 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     @SuppressWarnings("unchecked")
     protected E newEntity() {
         try {
-            return (E) descriptor.getType().newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
+            return (E) descriptor.getType().getConstructor().newInstance();
+        } catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
             throw Exceptions.handle()
                             .error(e)
                             .withSystemErrorMessage("Cannot create an instance of: %s", descriptor.getType().getName())

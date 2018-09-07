@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.elastic.protocol;
+package sirius.biz.protocol;
 
 import sirius.biz.web.BizController;
 import sirius.biz.web.ElasticPageHelper;

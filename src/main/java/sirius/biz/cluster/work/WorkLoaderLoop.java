@@ -8,7 +8,6 @@
 
 package sirius.biz.cluster.work;
 
-import org.jetbrains.annotations.NotNull;
 import sirius.kernel.async.AsyncExecutor;
 import sirius.kernel.async.BackgroundLoop;
 import sirius.kernel.async.Tasks;
@@ -71,7 +70,7 @@ public class WorkLoaderLoop extends BackgroundLoop {
         }
     }
 
-    @NotNull
+    @Nonnull
     private AsyncExecutor getExecutor() {
         return tasks.executorService("distributed-tasks");
     }

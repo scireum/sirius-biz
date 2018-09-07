@@ -6,10 +6,10 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.tenants;
+package sirius.biz.tenants;
 
-import sirius.biz.jdbc.model.AddressData;
-import sirius.biz.jdbc.model.PermissionData;
+import sirius.biz.model.AddressData;
+import sirius.biz.model.PermissionData;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
 import sirius.biz.web.SQLPageHelper;

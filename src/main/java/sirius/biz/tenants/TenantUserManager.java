@@ -6,12 +6,12 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.tenants;
+package sirius.biz.tenants;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.typesafe.config.Config;
-import sirius.biz.jdbc.model.LoginData;
+import sirius.biz.model.LoginData;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
 import sirius.db.jdbc.OMA;

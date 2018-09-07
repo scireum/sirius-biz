@@ -22,7 +22,8 @@ import java.util.List;
 /**
  * Provides a distributed cache to store not yet shown user messages.
  * <p>
- * This is used by {@link WebContext#cacheUserMessages()} and {@link WebContext#restoreCachedUserMessages()} to cache
+ * This is used by {@link sirius.web.http.UserMessagesCache#cacheUserMessages(WebContext)}
+ * and {@link sirius.web.http.UserMessagesCache#restoreCachedUserMessages(WebContext)} to cache
  * user messages which were not shown to a user due to a redirect.
  */
 @Register

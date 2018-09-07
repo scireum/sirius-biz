@@ -6,9 +6,9 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.tenants;
+package sirius.biz.tenants;
 
-import sirius.biz.jdbc.model.BizEntity;
+import sirius.biz.jdbc.BizEntity;
 import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;

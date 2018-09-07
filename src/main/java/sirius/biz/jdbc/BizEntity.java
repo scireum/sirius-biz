@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.model;
+package sirius.biz.jdbc;
 
 import sirius.biz.protocol.NoJournal;
 import sirius.biz.protocol.TraceData;

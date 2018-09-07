@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.model;
+package sirius.biz.model;
 
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
@@ -36,7 +36,7 @@ import java.time.LocalDateTime;
  * Note that no uniqueness constraint is placed on the username as the context of unqiueness has to be decided by the
  * outside class.
  * <p>
- * An example of an actual user is {@link sirius.biz.jdbc.tenants.UserAccount}.
+ * An example of an actual user is {@link sirius.biz.tenants.UserAccount}.
  */
 public class LoginData extends Composite {
 

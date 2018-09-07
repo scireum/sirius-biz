@@ -6,9 +6,9 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.storage;
+package sirius.biz.storage;
 
-import sirius.biz.jdbc.tenants.Tenant;
+import sirius.biz.tenants.Tenant;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;

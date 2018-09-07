@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.tenants;
+package sirius.biz.tenants;
 
 import sirius.biz.web.BizController;
 import sirius.biz.web.TenantAware;

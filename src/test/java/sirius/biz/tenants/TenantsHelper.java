@@ -6,9 +6,9 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jdbc.tenants;
+package sirius.biz.tenants;
 
-import sirius.biz.jdbc.model.LoginData;
+import sirius.biz.model.LoginData;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
