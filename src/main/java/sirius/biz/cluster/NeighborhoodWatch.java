@@ -9,7 +9,6 @@
 package sirius.biz.cluster;
 
 import com.alibaba.fastjson.JSONObject;
-import sirius.biz.cluster.work.DistributedTasks;
 import sirius.db.redis.Redis;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.BackgroundLoop;
@@ -62,9 +61,6 @@ public class NeighborhoodWatch implements Orchestration, Initializable {
 
     @Parts(EveryDay.class)
     private Collection<EveryDay> dailyTasks;
-
-    @Part
-    private DistributedTasks distributedTasks;
 
     private Map<String, SynchronizeType> syncSettings = Collections.emptyMap();
     private Map<String, Boolean> localOverwrite = new ConcurrentHashMap<>();
@@ -230,14 +226,6 @@ public class NeighborhoodWatch implements Orchestration, Initializable {
         appendSeparator(stateBuilder);
         for (BackgroundLoop loop : loops) {
             String key = BACKGROUND_LOOP_PREFIX + loop.getName();
-            loadAndStoreSetting(key, targetMap);
-            stateBuilder.append(key).append(": ").append(targetMap.get(key)).append("\n");
-        }
-
-        stateBuilder.append("\nDistributed Tasks\n");
-        appendSeparator(stateBuilder);
-        for (String queue : distributedTasks.getQueues()) {
-            String key = QUEUE_PREFIX + queue;
             loadAndStoreSetting(key, targetMap);
             stateBuilder.append(key).append(": ").append(targetMap.get(key)).append("\n");
         }
