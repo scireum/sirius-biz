@@ -122,7 +122,9 @@ class ImporterSpec extends BaseSpecification {
         Tenant tenant = importer.load(Tenant.class, context)
         tenant = importer.createOrUpdateNow(tenant)
         when:
-        context = Context.create().set(Tenant.NAME.getName(), newTenantName + "new").set(Tenant.ID.getName(), tenant.getId())
+        context = Context.create().
+                set(Tenant.NAME.getName(), newTenantName + "new").
+                set(Tenant.ID.getName(), tenant.getId())
         tenant = importer.tryFind(Tenant.class, context).orElse(null)
         and:
         tenant = importer.load(Tenant.class, context, tenant)
@@ -166,10 +168,12 @@ class ImporterSpec extends BaseSpecification {
         }
         importer.close()
         when:
-        oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).contains(basicTenantName).build()).iterateAll { tenant ->
-            tenant.setName(tenant.getName() + "AFTERUPDATE")
-            importer.createOrUpdateInBatch(tenant)
-        }
+        oma.select(Tenant.class).
+                where(OMA.FILTERS.like(Tenant.NAME).contains(basicTenantName).build()).
+                iterateAll { tenant ->
+                    tenant.setName(tenant.getName() + "AFTERUPDATE")
+                    importer.createOrUpdateInBatch(tenant)
+                }
         importer.close()
         then:
         oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).contains("AFTERUPDATE").build()).count() == 200
