@@ -25,6 +25,7 @@ import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.health.Cluster;
 import sirius.web.http.WebContext;
+import sirius.web.security.Permission;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.util.Comparator;
@@ -41,6 +42,11 @@ import java.util.stream.Collectors;
  */
 @Register
 public class ClusterController implements Controller {
+
+    /**
+     * Names the permissions required to view and manage the cluster state.
+     */
+    public static final String PERMISSION_SYSTEM_CLUSTER = "permission-system-cluster";
 
     public static final String RESPONSE_NAME = "name";
     public static final String RESPONSE_DESCRIPTION = "description";
@@ -139,6 +145,7 @@ public class ClusterController implements Controller {
      * @param ctx the request to handle
      */
     @Routed("/system/cluster")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void cluster(WebContext ctx) {
         List<BackgroundInfo> clusterInfo = neighborhoodWatch.getClusterBackgroundInfo();
         List<String> jobKeys = clusterInfo.stream()
@@ -162,6 +169,7 @@ public class ClusterController implements Controller {
      * @param jobKey  the jobKey to change
      */
     @Routed("/system/cluster/global/:1/:2")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void globalSwitch(WebContext ctx, String setting, String jobKey) {
         neighborhoodWatch.changeGlobalEnabledFlag(jobKey, FLAG_ENABLE.equals(setting));
         delayLine.callDelayed(Tasks.DEFAULT, 2, () -> ctx.respondWith().redirectTemporarily("/system/cluster"));
@@ -176,6 +184,7 @@ public class ClusterController implements Controller {
      * @param jobKey  the jobKey to change
      */
     @Routed("/system/cluster/local/:1/:2/:3")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void localSwitch(WebContext ctx, String setting, String node, String jobKey) {
         neighborhoodWatch.changeLocalOverwrite(node, jobKey, FLAG_DISABLE.equals(setting));
         delayLine.callDelayed(Tasks.DEFAULT, 2, () -> ctx.respondWith().redirectTemporarily("/system/cluster"));
