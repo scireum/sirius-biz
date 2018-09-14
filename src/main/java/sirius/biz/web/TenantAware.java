@@ -18,6 +18,11 @@ import java.util.function.Supplier;
  */
 public interface TenantAware {
 
+    /**
+     * Returns the tenant id as string.
+     *
+     * @return the tenant id as string
+     */
     String getTenantAsString();
 
     /**
@@ -36,6 +41,8 @@ public interface TenantAware {
         }
     }
 
-    //TODO
-    void setCurrentTenant();
+    /**
+     * Installs the currently present tenant (in the {@link sirius.web.security.UserContext}) into this entity.
+     */
+    void fillWithCurrentTenant();
 }

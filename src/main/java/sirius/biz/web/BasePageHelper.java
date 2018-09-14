@@ -36,6 +36,9 @@ import java.util.function.BiConsumer;
  * which can be used to render a resulting table and filter box.
  *
  * @param <E> the generic type of the entities being queried
+ * @param <Q> the effective type of the generated query
+ * @param <C> the type of constraints accepted by the generated query
+ * @param <B> recursive definition of the BasePageHelper with generics
  */
 public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constraint, Q extends Query<Q, E, C>, B extends BasePageHelper<E, C, Q, B>> {
 

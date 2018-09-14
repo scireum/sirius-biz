@@ -147,6 +147,10 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
     }
 
     protected boolean shouldNotLog(LogMessage message) {
+        if (!Sirius.isRunning() || Sirius.isStartedAsTest()) {
+            return true;
+        }
+
         if (message == null || !message.isReceiverWouldLog()) {
             return true;
         }
@@ -155,7 +159,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             return true;
         }
 
-        return Sirius.isStartedAsTest() || isDisabled();
+        return isDisabled();
     }
 
     @Override

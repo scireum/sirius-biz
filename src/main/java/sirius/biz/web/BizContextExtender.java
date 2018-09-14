@@ -8,7 +8,7 @@
 
 package sirius.biz.web;
 
-import sirius.biz.jdbc.codelists.CodeLists;
+import sirius.biz.codelists.CodeLists;
 import sirius.db.es.Elastic;
 import sirius.db.jdbc.Databases;
 import sirius.db.jdbc.OMA;

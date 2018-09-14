@@ -1,4 +1,4 @@
-<i:arg type="sirius.biz.jdbc.tenants.Tenant" name="tenant"/>
+<i:arg type="sirius.biz.tenants.Tenant" name="tenant"/>
 <i:arg type="String" name="page"/>
 
 <w:page title="@tenant.toString()">

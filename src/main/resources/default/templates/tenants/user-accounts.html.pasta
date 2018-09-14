@@ -38,7 +38,7 @@
         </tr>
         </thead>
         <tbody>
-        <i:for type="sirius.biz.jdbc.tenants.UserAccount" var="account" items="accounts.getItems()">
+        <i:for type="sirius.biz.tenants.UserAccount" var="account" items="accounts.getItems()">
             <tr @if (account.getLogin().isAccountLocked()) { class="warning" }>
                 <td>
                     <a class="link"

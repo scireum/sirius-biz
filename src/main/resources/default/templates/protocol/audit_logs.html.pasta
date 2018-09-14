@@ -7,8 +7,11 @@
     <w:pageHeader titleKey="AuditLogEntry.plural"/>
 
     <div class="row">
-        <div class="col-md-12">
-            <w:tableSearchHeader page="messages" hideSearchBox="true" baseUrl="/audit-log"/>
+        <div class="col-md-3">
+            <w:filterbox page="messages" baseUrl="/audit-log"/>
+        </div>
+        <div class="col-md-9">
+            <w:tableSearchHeader page="messages" baseUrl="/audit-log"/>
 
             <w:table data="messages" colorized="true">
                 <thead>
@@ -21,8 +24,8 @@
                                 @i18n("AuditLogEntry.causedBy")
                             </div>
                             <div class="col-md-4">
-                                @i18n("AuditLogEntry.account")<br>
-                                @i18n("AuditLogEntry.company")
+                                @i18n("AuditLogEntry.user")<br>
+                                @i18n("AuditLogEntry.tenant")
                             </div>
                             <div class="col-md-2">@i18n("AuditLogEntry.ip")</div>
                         </div>

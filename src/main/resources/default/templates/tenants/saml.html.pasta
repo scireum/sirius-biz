@@ -19,7 +19,7 @@
             </tr>
             </thead>
             <tbody>
-            <i:for type="sirius.biz.jdbc.tenants.Tenant" var="tenant" items="tenants">
+            <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants">
                 <tr>
                     <td>
                         <i:local name="id" value="call.generateLocalId()"/>
@@ -49,7 +49,7 @@
 
         <w:formBar/>
     </w:editForm>
-    <i:if test="tenants.size() == 1 && tenants.get(0).as(sirius.biz.jdbc.tenants.Tenant.class).isNew()">
+    <i:if test="tenants.size() == 1 && tenants.get(0).as(sirius.biz.tenants.Tenant.class).isNew()">
         <script type="text/javascript">
             $('form.samlForm').submit();
         </script>

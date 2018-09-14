@@ -9,7 +9,7 @@
 package sirius.biz.vfs;
 
 import com.google.common.base.Charsets;
-import sirius.biz.jdbc.tenants.TenantUserManager;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;

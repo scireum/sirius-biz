@@ -1,4 +1,4 @@
-<i:arg name="userAccount" type="sirius.biz.jdbc.tenants.UserAccount"/>
+<i:arg name="userAccount" type="sirius.biz.tenants.UserAccount"/>
 
 <w:page titleKey="ProfileController.myProfile">
     <w:pageHeader titleKey="ProfileController.userProfile"/>
