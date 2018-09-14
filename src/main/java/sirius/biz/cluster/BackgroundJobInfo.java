@@ -13,18 +13,21 @@ package sirius.biz.cluster;
  */
 public class BackgroundJobInfo {
     private String name;
-    private SynchronizeType local;
+    private String description;
+    private SynchronizeType synchronizeType;
     private boolean localOverwrite;
     private boolean globallyEnabled;
     private String executionInfo;
 
     protected BackgroundJobInfo(String name,
-                                SynchronizeType local,
+                                String description,
+                                SynchronizeType synchronizeType,
                                 boolean localOverwrite,
                                 boolean globallyEnabled,
                                 String executionInfo) {
         this.name = name;
-        this.local = local;
+        this.description = description;
+        this.synchronizeType = synchronizeType;
         this.localOverwrite = localOverwrite;
         this.globallyEnabled = globallyEnabled;
         this.executionInfo = executionInfo;
@@ -40,12 +43,21 @@ public class BackgroundJobInfo {
     }
 
     /**
-     * Determines the local synchronization settings for the job.
+     * Returns the description of the job.
      *
-     * @return the local synchronization type to use
+     * @return a short description of the job
      */
-    public SynchronizeType getLocal() {
-        return local;
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * Determines the synchronization settings for the job.
+     *
+     * @return the synchronization type to use
+     */
+    public SynchronizeType getSynchronizeType() {
+        return synchronizeType;
     }
 
     /**

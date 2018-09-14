@@ -10,12 +10,13 @@ package sirius.biz.storage;
 
 import sirius.biz.protocol.TraceData;
 import sirius.db.jdbc.OMA;
-import sirius.kernel.async.BackgroundLoop;
-import sirius.kernel.commons.Strings;
+import sirius.kernel.async.Tasks;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
+import sirius.kernel.timer.EveryDay;
 
-import javax.annotation.Nonnull;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,8 +27,8 @@ import java.util.List;
  * A bucket can specify a max age for its objects. Older objects are automatically deleted by the system (vis this
  * loop).
  */
-@Register(classes = BackgroundLoop.class, framework = Storage.FRAMEWORK_STORAGE)
-public class StorageCleanupLoop extends BackgroundLoop {
+@Register(classes = EveryDay.class, framework = Storage.FRAMEWORK_STORAGE)
+public class StorageCleanupTask implements EveryDay {
 
     @Part
     private OMA oma;
@@ -35,32 +36,28 @@ public class StorageCleanupLoop extends BackgroundLoop {
     @Part
     private Storage storage;
 
-    @Nonnull
+    @Part
+    private Tasks tasks;
+
     @Override
-    public String getName() {
-        return "storage-cleanup";
+    public String getConfigKeyName() {
+        return "storage-cleaner";
     }
 
     @Override
-    protected double maxCallFrequency() {
-        return 0.01f;
-    }
-
-    @Override
-    protected String doWork() throws Exception {
+    public void runTimer() throws Exception {
         if (!oma.isReady()) {
-            return null;
+            return;
         }
+        tasks.defaultExecutor().start(this::runCleanup);
+    }
 
-        String temporaryUploadInfo = cleanupTemporaryUploads();
-        String bucketInfo = cleanupBuckets();
-
-        if (temporaryUploadInfo != null && bucketInfo != null) {
-            return temporaryUploadInfo + ", " + bucketInfo;
-        } else if (temporaryUploadInfo != null) {
-            return temporaryUploadInfo;
-        } else {
-            return bucketInfo;
+    protected void runCleanup() {
+        try {
+            cleanupTemporaryUploads();
+            cleanupBuckets();
+        } catch (Exception e) {
+            Exceptions.handle(Log.BACKGROUND, e);
         }
     }
 
@@ -70,7 +67,7 @@ public class StorageCleanupLoop extends BackgroundLoop {
      *
      * @see VirtualObject#TEMPORARY
      */
-    private String cleanupTemporaryUploads() {
+    private void cleanupTemporaryUploads() {
         List<VirtualObject> objectsToDelete = oma.select(VirtualObject.class)
                                                  .eq(VirtualObject.TEMPORARY, true)
                                                  .where(OMA.FILTERS.lt(VirtualObject.TRACE.inner(TraceData.CHANGED_AT),
@@ -78,32 +75,23 @@ public class StorageCleanupLoop extends BackgroundLoop {
                                                  .limit(256)
                                                  .queryList();
         if (objectsToDelete.isEmpty()) {
-            return null;
+            return;
         }
 
         for (VirtualObject obj : objectsToDelete) {
             storage.delete(obj);
         }
-
-        return Strings.apply("Deleted %s temporary uploads", objectsToDelete.size());
     }
 
-    private String cleanupBuckets() {
-        StringBuilder logBuilder = new StringBuilder();
+    private void cleanupBuckets() {
         for (BucketInfo bucket : storage.getBuckets()) {
             if (bucket.getDeleteFilesAfterDays() > 0) {
-                cleanupBucket(bucket, logBuilder);
+                cleanupBucket(bucket);
             }
         }
-
-        if (logBuilder.length() > 0) {
-            return logBuilder.toString();
-        }
-
-        return null;
     }
 
-    private void cleanupBucket(BucketInfo bucket, StringBuilder logBuilder) {
+    private void cleanupBucket(BucketInfo bucket) {
         LocalDate limit = LocalDate.now().minusDays(bucket.getDeleteFilesAfterDays());
         List<VirtualObject> objectsToDelete = oma.select(VirtualObject.class)
                                                  .eq(VirtualObject.BUCKET, bucket.getName())
@@ -115,12 +103,6 @@ public class StorageCleanupLoop extends BackgroundLoop {
             for (VirtualObject obj : objectsToDelete) {
                 storage.delete(obj);
             }
-
-            if (logBuilder.length() > 0) {
-                logBuilder.append(", ");
-            }
-
-            logBuilder.append(Strings.apply("Deleted %s old files in '%s'", objectsToDelete.size(), bucket.getName()));
         }
     }
 }

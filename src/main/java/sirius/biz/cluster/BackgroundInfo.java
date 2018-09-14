@@ -8,9 +8,9 @@
 
 package sirius.biz.cluster;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Contains infomation about all background jobs or processes running on a node.
@@ -18,7 +18,7 @@ import java.util.List;
 public class BackgroundInfo {
     private String nodeName;
     private String uptime;
-    protected List<BackgroundJobInfo> jobs = new ArrayList<>();
+    protected Map<String, BackgroundJobInfo> jobs = new HashMap<>();
 
     protected BackgroundInfo(String nodeName, String uptime) {
         this.nodeName = nodeName;
@@ -44,11 +44,11 @@ public class BackgroundInfo {
     }
 
     /**
-     * Provides a list of all background jobs running on a node.
+     * Provides a map of all background jobs running on a node.
      *
-     * @return a list of all background jobs
+     * @return a map of all background jobs using the name as key
      */
-    public List<BackgroundJobInfo> getJobs() {
-        return Collections.unmodifiableList(jobs);
+    public Map<String, BackgroundJobInfo> getJobs() {
+        return Collections.unmodifiableMap(jobs);
     }
 }

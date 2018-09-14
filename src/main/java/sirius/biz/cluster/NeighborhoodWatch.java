@@ -16,7 +16,7 @@ import sirius.kernel.async.CallContext;
 import sirius.kernel.async.Orchestration;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Lambdas;
-import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.Initializable;
 import sirius.kernel.di.std.Part;
@@ -25,8 +25,10 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.timer.EveryDay;
+import sirius.kernel.timer.Timers;
 import sirius.web.health.Cluster;
 
+import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -38,16 +40,35 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-@Register(classes = {Orchestration.class, NeighborhoodWatch.class, Initializable.class})
-public class NeighborhoodWatch implements Orchestration, Initializable {
+/**
+ * Provides a {@link Orchestration} based on <tt>Redis</tt> and {@link Interconnect}.
+ * <p>
+ * This is used to distribute background tasks ({@link BackgroundLoop}, {@link EveryDay}) across all
+ * cluster members while still ensuring that a single job only runs on one node concurrently.
+ * <p>
+ * Also the provides a possibility to globally or locally disable a centrain background activity.
+ * <p>
+ * Locally the synchronization of background jobs can be controller via the system configuration
+ * providing a key like <tt>orchestration.job-name = SYNC-TYPE</tt> - use a name of {@link SynchronizeType} to specify
+ * how to synchronize a job across the cluster.
+ */
+@Register(classes = {Orchestration.class, NeighborhoodWatch.class, Initializable.class, InterconnectHandler.class})
+public class NeighborhoodWatch implements Orchestration, Initializable, InterconnectHandler {
 
     private static final String EXECUTION_TIMESTAMP_SUFFIX = "-timestamp";
     private static final String EXECUTION_ENABLED_SUFFIX = "-enabled";
     private static final String BACKGROUND_LOOP_PREFIX = "loop-";
     private static final String DAILY_TASK_PREFIX = "task-";
-    public static final String QUEUE_PREFIX = "queue-";
 
-    private static final Duration MAX_GLOBAL_STATE_CACHE_DURATION = Duration.ofSeconds(32);
+    private static final String MESSAGE_TYPE = "type";
+    private static final String TYPE_GLOBAL = "global";
+    private static final String TYPE_LOCAL = "local";
+    private static final String MESSAGE_NAME = "name";
+    private static final String MESSAGE_ENABLED = "enabled";
+    private static final String MESSAGE_NODE = "node";
+    private static final String STATE_ENABLED = "enabled";
+    private static final String STATE_DISABLED = "disabled";
+
     private static final int MIN_WAIT_DAILY_TASK_HOURS = 10;
 
     @Part
@@ -62,35 +83,95 @@ public class NeighborhoodWatch implements Orchestration, Initializable {
     @Parts(EveryDay.class)
     private Collection<EveryDay> dailyTasks;
 
+    @Part
+    private Timers timers;
+
+    @Part
+    private Interconnect interconnect;
+
     private Map<String, SynchronizeType> syncSettings = Collections.emptyMap();
+    private Map<String, String> descriptions = new ConcurrentHashMap<>();
     private Map<String, Boolean> localOverwrite = new ConcurrentHashMap<>();
     private Map<String, String> executionInfos = new ConcurrentHashMap<>();
-    private Map<String, Tuple<Boolean, LocalDateTime>> globallyEnabledState = new ConcurrentHashMap<>();
+    private Map<String, Boolean> globallyEnabledState = new ConcurrentHashMap<>();
+
+    @Nonnull
+    @Override
+    public String getName() {
+        return "neighborhood-watch";
+    }
+
+    @Override
+    public void handleEvent(JSONObject event) {
+        String name = event.getString(MESSAGE_NAME);
+        boolean enabled = event.getBooleanValue(MESSAGE_ENABLED);
+        if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_GLOBAL)) {
+            globallyEnabledState.put(name, enabled);
+            return;
+        }
+
+        if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_LOCAL)) {
+            if (Strings.areEqual(event.getString(MESSAGE_NODE), CallContext.getNodeName())) {
+                if (enabled) {
+                    localOverwrite.put(name, true);
+                } else {
+                    localOverwrite.remove(name);
+                }
+            }
+        }
+    }
 
     private boolean isBackgroundJobGloballyEnabled(String name) {
         try {
-            if (!redis.isConfigured()) {
-                return true;
-            }
-
-            Tuple<Boolean, LocalDateTime> globalState = globallyEnabledState.get(name);
-            if (globalState != null
-                && Duration.between(LocalDateTime.now(), globalState.getSecond())
-                           .compareTo(MAX_GLOBAL_STATE_CACHE_DURATION) < 0) {
-                return globalState.getFirst();
-            }
-
-            String value = redis.query(() -> "Check if " + name + " is enabled",
-                                       db -> db.get(name + EXECUTION_ENABLED_SUFFIX));
-
-            boolean enabled = !"disabled".equals(value);
-            globallyEnabledState.put(name, Tuple.create(enabled, LocalDateTime.now()));
-
-            return enabled;
+            return globallyEnabledState.computeIfAbsent(name, this::readGlobalState);
         } catch (Exception e) {
             Exceptions.handle(Cluster.LOG, e);
             return true;
         }
+    }
+
+    private boolean readGlobalState(String name) {
+        if (!redis.isConfigured()) {
+            return true;
+        }
+
+        String value =
+                redis.query(() -> "Check if " + name + " is enabled", db -> db.get(name + EXECUTION_ENABLED_SUFFIX));
+
+        return !STATE_DISABLED.equals(value);
+    }
+
+    /**
+     * Enables or Disables the given background job globally on all nodes.
+     *
+     * @param name    the name of the background job - provided by {@link #getLocalBackgroundInfo()}
+     * @param enabled <tt>true</tt> to enable to job, <tt>false</tt> to disable it
+     */
+    public void changeGlobalEnabledFlag(String name, boolean enabled) {
+        if (redis.isConfigured()) {
+            redis.exec(() -> "Update global enabled flag for " + name,
+                       db -> db.set(name + EXECUTION_ENABLED_SUFFIX, enabled ? STATE_ENABLED : STATE_DISABLED));
+        }
+
+        interconnect.dispatch(getName(),
+                              new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_GLOBAL)
+                                              .fluentPut(MESSAGE_NAME, name)
+                                              .fluentPut(MESSAGE_ENABLED, enabled));
+    }
+
+    /**
+     * Disables the given bacckground job locally on the given node.
+     *
+     * @param node        the node to disable the job on
+     * @param name        the name of the background job - provided by {@link #getLocalBackgroundInfo()}
+     * @param overwritten <tt>true</tt> to overwrite (disable) the job, <tt>false</tt> otherwise
+     */
+    public void changeLocalOverwrite(String node, String name, boolean overwritten) {
+        interconnect.dispatch(getName(),
+                              new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_LOCAL)
+                                              .fluentPut(MESSAGE_NODE, node)
+                                              .fluentPut(MESSAGE_NAME, name)
+                                              .fluentPut(MESSAGE_ENABLED, overwritten));
     }
 
     @Override
@@ -106,15 +187,11 @@ public class NeighborhoodWatch implements Orchestration, Initializable {
             return false;
         }
 
-        if (!redis.isConfigured()) {
-            return true;
-        }
-
         if (!isBackgroundJobGloballyEnabled(syncName)) {
             return false;
         }
 
-        if (type == SynchronizeType.CLUSTER) {
+        if (redis.isConfigured() && type == SynchronizeType.CLUSTER) {
             return redis.tryLock(syncName, null, Duration.ofMinutes(30));
         } else {
             return true;
@@ -125,11 +202,11 @@ public class NeighborhoodWatch implements Orchestration, Initializable {
     public void backgroundLoopCompleted(String name, String executionInfo) {
         try {
             String syncName = BACKGROUND_LOOP_PREFIX + name;
-            if (CallContext.getCurrent().get(TaskContext.class).isActive() && redis.isConfigured()) {
-                SynchronizeType type = syncSettings.getOrDefault(syncName, SynchronizeType.LOCAL);
-                if (type == SynchronizeType.CLUSTER) {
-                    redis.unlock(syncName);
-                }
+            SynchronizeType type = syncSettings.getOrDefault(syncName, SynchronizeType.LOCAL);
+            if (type == SynchronizeType.CLUSTER
+                && CallContext.getCurrent().get(TaskContext.class).isActive()
+                && redis.isConfigured()) {
+                redis.unlock(syncName);
             }
 
             executionInfos.put(syncName, executionInfo);
@@ -196,54 +273,28 @@ public class NeighborhoodWatch implements Orchestration, Initializable {
         }
     }
 
-    public boolean isDistributedTaskQueueEnabled(String name) {
-        String syncName = QUEUE_PREFIX + name;
-
-        if (localOverwrite.containsKey(syncName)) {
-            return false;
-        }
-
-        SynchronizeType type = syncSettings.getOrDefault(syncName, SynchronizeType.LOCAL);
-        if (type == SynchronizeType.DISABLED) {
-            return false;
-        }
-
-        if (!redis.isConfigured()) {
-            return true;
-        }
-
-        return isBackgroundJobGloballyEnabled(syncName);
-    }
-
     @Override
     public void initialize() throws Exception {
         Map<String, SynchronizeType> targetMap = new HashMap<>();
-        StringBuilder stateBuilder = new StringBuilder();
-        stateBuilder.append("\n\nNeighborhood Watch is ONLINE\n");
-        appendSeparator(stateBuilder);
 
-        stateBuilder.append("\nBackground Loops\n");
-        appendSeparator(stateBuilder);
         for (BackgroundLoop loop : loops) {
             String key = BACKGROUND_LOOP_PREFIX + loop.getName();
             loadAndStoreSetting(key, targetMap);
-            stateBuilder.append(key).append(": ").append(targetMap.get(key)).append("\n");
+            descriptions.put(key, Strings.apply("BackgroundLoop running at %1.2f Hz", loop.maxCallFrequency()));
         }
 
-        stateBuilder.append("\nDaily Tasks\n");
-        appendSeparator(stateBuilder);
         for (EveryDay task : dailyTasks) {
-            String key = DAILY_TASK_PREFIX + task.getConfigKeyName();
-            loadAndStoreSetting(key, targetMap);
-            stateBuilder.append(key).append(": ").append(targetMap.get(key)).append("\n");
+            timers.getExecutionHour(task).ifPresent(executionHour -> {
+                String key = DAILY_TASK_PREFIX + task.getConfigKeyName();
+                loadAndStoreSetting(key, targetMap);
+                descriptions.put(key,
+                                 Strings.apply("EveryDay task executing between %2d:00 and %2d:59",
+                                               executionHour,
+                                               executionHour));
+            });
         }
 
         syncSettings = targetMap;
-        Cluster.LOG.INFO(stateBuilder.toString());
-    }
-
-    protected void appendSeparator(StringBuilder stateBuilder) {
-        stateBuilder.append("----------------------------\n");
     }
 
     private void loadAndStoreSetting(String key, Map<String, SynchronizeType> targetMap) {
@@ -262,6 +313,11 @@ public class NeighborhoodWatch implements Orchestration, Initializable {
         }
     }
 
+    /**
+     * Returns all background infos for all known cluster members.
+     *
+     * @return a list of background infos for all known cluster members
+     */
     public List<BackgroundInfo> getClusterBackgroundInfo() {
         List<BackgroundInfo> result = new ArrayList<>();
         result.add(getLocalBackgroundInfo());
@@ -272,12 +328,19 @@ public class NeighborhoodWatch implements Orchestration, Initializable {
         return result;
     }
 
+    /**
+     * Returns a report of all local background activities.
+     *
+     * @return all background infos for this node
+     */
     public BackgroundInfo getLocalBackgroundInfo() {
         BackgroundInfo result = new BackgroundInfo(CallContext.getNodeName(),
                                                    NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false));
 
         for (Map.Entry<String, SynchronizeType> job : syncSettings.entrySet()) {
-            result.jobs.add(new BackgroundJobInfo(job.getKey(),
+            result.jobs.put(job.getKey(),
+                            new BackgroundJobInfo(job.getKey(),
+                                                  descriptions.get(job.getKey()),
                                                   job.getValue(),
                                                   localOverwrite.containsKey(job.getKey()),
                                                   isBackgroundJobGloballyEnabled(job.getKey()),
@@ -292,7 +355,10 @@ public class NeighborhoodWatch implements Orchestration, Initializable {
         jsonObject.getJSONArray(ClusterController.RESPONSE_JOBS).forEach(job -> {
             try {
                 JSONObject jobJson = (JSONObject) job;
-                result.jobs.add(new BackgroundJobInfo(jobJson.getString(ClusterController.RESPONSE_NAME),
+                String name = jobJson.getString(ClusterController.RESPONSE_NAME);
+                result.jobs.put(name,
+                                new BackgroundJobInfo(name,
+                                                      jobJson.getString(ClusterController.RESPONSE_DESCRIPTION),
                                                       SynchronizeType.valueOf(jobJson.getString(ClusterController.RESPONSE_LOCAL)),
                                                       jobJson.getBooleanValue(ClusterController.RESPONSE_LOCAL_OVERWRITE),
                                                       jobJson.getBooleanValue(ClusterController.RESPONSE_GLOBALLY_ENABLED),

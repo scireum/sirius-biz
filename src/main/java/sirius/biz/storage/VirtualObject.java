@@ -108,7 +108,7 @@ public class VirtualObject extends SQLTenantAware implements StoredObject {
      * <p>
      * If a new file is uploaded for a reference it is marked as temporary. If the referencing entity is saved and
      * confirms the object key, this flag is removed. Otherwise, if the file is uploaded but the entity is
-     * never saved, the file will be eventually deleted by {@link StorageCleanupLoop}.
+     * never saved, the file will be eventually deleted by {@link StorageCleanupTask}.
      */
     public static final Mapping TEMPORARY = Mapping.named("temporary");
     private boolean temporary;
