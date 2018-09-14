@@ -50,6 +50,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
      * Names the permissions required to view the protocol.
      */
     public static final String PERMISSION_SYSTEM_PROTOCOLS = "permission-system-protocols";
+
     /**
      * Names the permissions required to view the system journal.
      */
