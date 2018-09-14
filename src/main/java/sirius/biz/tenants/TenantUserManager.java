@@ -244,6 +244,12 @@ public class TenantUserManager extends GenericUserManager {
         return tenantsCache.get(tenantId, i -> oma.find(Tenant.class, i).orElse(null));
     }
 
+    /**
+     * Determines the original tenant ID.
+     *
+     * @param ctx the current web request
+     * @return the original tenant id of the currently active user (without spy overwrites)
+     */
     public String getOriginalTenantId(WebContext ctx) {
         return ctx.getSessionValue(this.scope.getScopeId() + "-tenant-id").asString();
     }
