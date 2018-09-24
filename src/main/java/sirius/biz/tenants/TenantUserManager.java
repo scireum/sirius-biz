@@ -89,8 +89,7 @@ public class TenantUserManager extends GenericUserManager {
      * is present, the user will belong to the given tenant and not to his own one.
      * <p>
      * This is used by support and administrative tasks. Beware, that the id is not checked, so the one who installs
-     * the
-     * ID has to verify that the user is allowed to switch to this tenant.
+     * the ID has to verify that the user is allowed to switch to this tenant.
      */
     public static final String TENANT_SPY_ID_SUFFIX = "-tenant-spy-id";
 
