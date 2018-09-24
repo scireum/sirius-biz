@@ -212,7 +212,7 @@ public class LoginData extends Composite {
      * @return <tt>true</tt> if the password is valid, <tt>false</tt> otherwise
      */
     public boolean checkPassword(String password, String defaultSalt) {
-        String givenPasswordHash = LoginData.hashPassword(Value.of(salt).asString(defaultSalt), password);
+        String givenPasswordHash = hashPassword(Value.of(salt).asString(defaultSalt), password);
 
         return givenPasswordHash.equals(passwordHash);
     }
