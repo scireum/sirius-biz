@@ -15,6 +15,9 @@ import sirius.biz.model.LoginData;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
 import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.SQLQuery;
+import sirius.db.mixing.EntityDescriptor;
+import sirius.db.mixing.Mixing;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
@@ -109,6 +112,9 @@ public class TenantUserManager extends GenericUserManager {
 
     @Part
     private static OMA oma;
+
+    @Part
+    private static Mixing mixing;
 
     @Part
     private static AuditLog auditLog;
@@ -511,20 +517,45 @@ public class TenantUserManager extends GenericUserManager {
     public void recordLogin(UserInfo user, boolean external) {
         try {
             UserAccount account = (UserAccount) getUserObject(user);
+            EntityDescriptor ed = mixing.getDescriptor(UserAccount.class);
 
-            // This should never happen (other than manually changed or tampered database data).
-            // However, this would lead to an endless recursion, so we skip right here....
-            if (account.getTrace().getCreatedAt() == null) {
-                return;
-            }
-            account.getTrace().setSilent(true);
-            account.getJournal().setSilent(true);
-            account.getLogin().setNumberOfLogins(account.getLogin().getNumberOfLogins() + 1);
-            account.getLogin().setLastLogin(LocalDateTime.now());
+            String numberOfLoginsField =
+                    ed.getProperty(UserAccount.LOGIN.inner(LoginData.NUMBER_OF_LOGINS)).getPropertyName();
+            String lastLogin = ed.getProperty(UserAccount.LOGIN.inner(LoginData.LAST_LOGIN)).getPropertyName();
+
             if (external) {
-                account.getLogin().setLastExternalLogin(LocalDateTime.now());
+                String lastExternalLogin =
+                        ed.getProperty(UserAccount.LOGIN.inner(LoginData.LAST_EXTERNAL_LOGIN)).getPropertyName();
+                SQLQuery qry = oma.getDatabase(Mixing.DEFAULT_REALM)
+                                  .createQuery("UPDATE "
+                                               + ed.getRelationName()
+                                               + " SET "
+                                               + numberOfLoginsField
+                                               + " = "
+                                               + numberOfLoginsField
+                                               + " + 1, "
+                                               + lastExternalLogin
+                                               + " = ${lastExternalLogin}, "
+                                               + lastLogin
+                                               + " = ${lastLogin} WHERE id = ${id}");
+                qry.set("lastExternalLogin", LocalDateTime.now());
+                qry.set("lastLogin", LocalDateTime.now());
+                qry.set("id", account.getId());
+                qry.executeUpdate();
+            } else {
+                SQLQuery qry = oma.getDatabase(Mixing.DEFAULT_REALM)
+                                  .createQuery("UPDATE "
+                                               + ed.getRelationName()
+                                               + " SET "
+                                               + numberOfLoginsField
+                                               + " = "
+                                               + numberOfLoginsField
+                                               + " + 1, "
+                                               + lastLogin
+                                               + " = ${lastLogin} WHERE id = ${id}");
+                qry.set("lastLogin", LocalDateTime.now());
+                qry.set("id", account.getId());
             }
-            oma.override(account);
         } catch (Exception e) {
             Exceptions.handle(BizController.LOG, e);
         }
