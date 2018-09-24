@@ -521,10 +521,10 @@ public class TenantUserManager extends GenericUserManager {
 
             String numberOfLoginsField =
                     ed.getProperty(UserAccount.LOGIN.inner(LoginData.NUMBER_OF_LOGINS)).getPropertyName();
-            String lastLogin = ed.getProperty(UserAccount.LOGIN.inner(LoginData.LAST_LOGIN)).getPropertyName();
+            String lastLoginField = ed.getProperty(UserAccount.LOGIN.inner(LoginData.LAST_LOGIN)).getPropertyName();
 
             if (external) {
-                String lastExternalLogin =
+                String lastExternalLoginField =
                         ed.getProperty(UserAccount.LOGIN.inner(LoginData.LAST_EXTERNAL_LOGIN)).getPropertyName();
                 SQLQuery qry = oma.getDatabase(Mixing.DEFAULT_REALM)
                                   .createQuery("UPDATE "
@@ -534,9 +534,9 @@ public class TenantUserManager extends GenericUserManager {
                                                + " = "
                                                + numberOfLoginsField
                                                + " + 1, "
-                                               + lastExternalLogin
+                                               + lastExternalLoginField
                                                + " = ${lastExternalLogin}, "
-                                               + lastLogin
+                                               + lastLoginField
                                                + " = ${lastLogin} WHERE id = ${id}");
                 qry.set("lastExternalLogin", LocalDateTime.now());
                 qry.set("lastLogin", LocalDateTime.now());
@@ -551,10 +551,11 @@ public class TenantUserManager extends GenericUserManager {
                                                + " = "
                                                + numberOfLoginsField
                                                + " + 1, "
-                                               + lastLogin
+                                               + lastLoginField
                                                + " = ${lastLogin} WHERE id = ${id}");
                 qry.set("lastLogin", LocalDateTime.now());
                 qry.set("id", account.getId());
+                qry.executeUpdate();
             }
         } catch (Exception e) {
             Exceptions.handle(BizController.LOG, e);
