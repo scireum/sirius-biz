@@ -15,6 +15,8 @@ import sirius.biz.protocol.JournalData;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.AfterDelete;
+import sirius.db.mixing.annotations.AfterSave;
 import sirius.db.mixing.annotations.BeforeDelete;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
@@ -117,12 +119,12 @@ public class UserAccount extends SQLTenantAware implements Journaled, MessagePro
         assertUnique(LOGIN.inner(LoginData.USERNAME), getLogin().getUsername());
     }
 
-    @BeforeSave
+    @AfterSave
     protected void onModify() {
         TenantUserManager.flushCacheForUserAccount(this);
     }
 
-    @BeforeDelete
+    @AfterDelete
     protected void onDelete() {
         TenantUserManager.flushCacheForUserAccount(this);
     }

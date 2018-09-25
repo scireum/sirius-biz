@@ -13,8 +13,8 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import sirius.biz.protocol.NoJournal;
 import sirius.biz.web.Autoloaded;
-import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Composite;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
@@ -59,18 +59,6 @@ public class LoginData extends Composite {
     @NullAllowed
     @NoJournal
     private String passwordHash;
-
-    /**
-     * Contains the hash value of the password in all upper case. This is used to support
-     * case insensitive password. This is kind of a crazy idea, but some systems need this
-     * functionality for legacy reasons.
-     */
-    public static final Mapping UCASE_PASSWORD_HASH = Mapping.named("ucasePasswordHash");
-    @Trim
-    @Length(50)
-    @NullAllowed
-    @NoJournal
-    private String ucasePasswordHash;
 
     /**
      * Contains a random salt which is prepended to the password before hashing to block
@@ -152,7 +140,6 @@ public class LoginData extends Composite {
             if (Strings.isFilled(cleartextPassword)) {
                 this.salt = Strings.generateCode(20);
                 this.passwordHash = hashPassword(salt, cleartextPassword);
-                this.ucasePasswordHash = hashPassword(salt, cleartextPassword.toUpperCase());
                 this.generatedPassword = null;
             }
         }
@@ -162,7 +149,6 @@ public class LoginData extends Composite {
         if (Strings.isFilled(generatedPassword)) {
             this.salt = Strings.generateCode(20);
             this.passwordHash = hashPassword(salt, generatedPassword);
-            this.ucasePasswordHash = hashPassword(salt, generatedPassword.toUpperCase());
         }
         if (Strings.isEmpty(apiToken)) {
             this.apiToken = Strings.generateCode(32);
@@ -212,7 +198,7 @@ public class LoginData extends Composite {
      * @return <tt>true</tt> if the password is valid, <tt>false</tt> otherwise
      */
     public boolean checkPassword(String password, String defaultSalt) {
-        String givenPasswordHash = LoginData.hashPassword(Value.of(salt).asString(defaultSalt), password);
+        String givenPasswordHash = hashPassword(Value.of(salt).asString(defaultSalt), password);
 
         return givenPasswordHash.equals(passwordHash);
     }
@@ -243,10 +229,6 @@ public class LoginData extends Composite {
 
     public String getPasswordHash() {
         return passwordHash;
-    }
-
-    public String getUcasePasswordHash() {
-        return ucasePasswordHash;
     }
 
     public String getSalt() {
