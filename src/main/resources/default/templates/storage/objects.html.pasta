@@ -1,4 +1,4 @@
-<i:arg type="sirius.biz.jdbc.storage.BucketInfo" name="bucket"/>
+<i:arg type="sirius.biz.storage.BucketInfo" name="bucket"/>
 <i:arg type="Page" name="objects"/>
 
 <w:page title="@bucket.getName()">
@@ -40,7 +40,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <i:for type="sirius.biz.jdbc.storage.VirtualObject" var="object" items="objects.getItems()">
+                <i:for type="sirius.biz.storage.VirtualObject" var="object" items="objects.getItems()">
                     <tr>
                         <td>
                             <a class="link" href="@object.prepareURL().asDownload(object.getFilename()).buildURL().orElse('')">@object.getPath()</a><br>
