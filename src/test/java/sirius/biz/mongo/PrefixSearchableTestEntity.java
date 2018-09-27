@@ -8,11 +8,14 @@
 
 package sirius.biz.mongo;
 
+import sirius.db.mixing.annotations.NullAllowed;
+
 public class PrefixSearchableTestEntity extends PrefixSearchableEntity {
 
     @PrefixSearchContent
     private String test;
 
+    @NullAllowed
     private String unsearchableTest;
 
     public String getTest() {
