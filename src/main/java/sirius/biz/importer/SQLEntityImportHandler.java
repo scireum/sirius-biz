@@ -10,6 +10,7 @@ package sirius.biz.importer;
 
 import sirius.biz.tenants.SQLTenantAware;
 import sirius.db.jdbc.SQLEntity;
+import sirius.db.jdbc.batch.DeleteQuery;
 import sirius.db.jdbc.batch.FindQuery;
 import sirius.db.jdbc.batch.InsertQuery;
 import sirius.db.jdbc.batch.UpdateQuery;
@@ -66,6 +67,7 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
     protected FindQuery<E> findQuery;
     protected UpdateQuery<E> updateQuery;
     protected InsertQuery<E> insertQuery;
+    protected DeleteQuery<E> deleteQuery;
 
     protected Mapping[] mappingsToLoad;
     protected Mapping[] mappingsToFind;
@@ -306,5 +308,29 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
         }
 
         return insertQuery;
+    }
+
+    /**
+     * Creates the prepared statement as {@link DeleteQuery} used to delete entities.
+     *
+     * @return the delete query to use
+     */
+    @SuppressWarnings("unchecked")
+    protected DeleteQuery<E> getDeleteQuery() {
+        if (deleteQuery == null) {
+            deleteQuery = context.getBatchContext().deleteQuery((Class<E>) descriptor.getType(), mappingsToCompare);
+        }
+
+        return deleteQuery;
+    }
+
+    @Override
+    public void deleteNow(E entity) {
+        getDeleteQuery().delete(entity, true, false);
+    }
+
+    @Override
+    public void deleteInBatch(E entity) {
+        getDeleteQuery().delete(entity, true, true);
     }
 }
