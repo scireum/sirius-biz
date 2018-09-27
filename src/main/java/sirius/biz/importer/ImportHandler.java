@@ -19,7 +19,7 @@ import java.util.Optional;
  * A new handler can be provided by implementing an appropriate {@link ImportHandlerFactory} which must be made
  * available to the dependency injection framework using {@link sirius.kernel.di.std.Register}.
  * <p>
- * Which import handle is actually used for a type is determined by {@link ImportContext#findHandler(Class)}. As the
+ * Which import handle is actually used for a type is determined by {@link ImporterContext#findHandler(Class)}. As the
  * factories are priorized, an existing handler can be overwritten by providing a customization which supplies a
  * factory with a lower {@link ImportHandlerFactory#getPriority() priority} for the same entity type.
  * <p>
@@ -47,7 +47,7 @@ public interface ImportHandler<E extends BaseEntity<?>> {
     Optional<E> tryFind(Context data);
 
     /**
-     * Tries to find an entity using the supplied <tt>data</tt> while utilizing the {@link ImportContext#getLocalCache()
+     * Tries to find an entity using the supplied <tt>data</tt> while utilizing the {@link ImporterContext#getLocalCache()
      * local cache of the import}.
      *
      * @param data the data used to describe the entity to find

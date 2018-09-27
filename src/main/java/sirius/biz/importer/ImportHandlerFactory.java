@@ -14,7 +14,7 @@ import sirius.kernel.di.std.Priorized;
  * Creates instances of {@link ImportHandler} for a certain type of entities.
  * <p>
  * Each {@link ImportHandler} has to have its own factory which creates instances in
- * {@link ImportContext#findHandler(Class)} if an appropriate type shows up.
+ * {@link ImporterContext#findHandler(Class)} if an appropriate type shows up.
  * <p>
  * A factory has to be made visible to the framework using a {@link sirius.kernel.di.std.Register} annotation. It is
  * common practice to put the factory as static public inner class into the actual import handler as they are tightly
@@ -43,7 +43,7 @@ public interface ImportHandlerFactory extends Priorized {
      * Determines if this factory can create an appropriate {@link ImportHandler} for the given type.
      *
      * @param type the type to check
-     * @return <tt>true</tt> if {@link #create(Class, ImportContext)} should be called for the given type
+     * @return <tt>true</tt> if {@link #create(Class, ImporterContext)} should be called for the given type
      * in order to create a new handler,<tt>false</tt> otherwise.
      */
     boolean accepts(Class<?> type);
@@ -55,5 +55,5 @@ public interface ImportHandlerFactory extends Priorized {
      * @param context the context of this import
      * @return a new instance of an appropriate import handler for the given type
      */
-    ImportHandler<?> create(Class<?> type, ImportContext context);
+    ImportHandler<?> create(Class<?> type, ImporterContext context);
 }

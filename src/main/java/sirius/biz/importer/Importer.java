@@ -26,7 +26,7 @@ import java.util.Optional;
  */
 public class Importer implements Closeable {
 
-    protected ImportContext context;
+    protected ImporterContext context;
     protected String name;
 
     /**
@@ -39,7 +39,7 @@ public class Importer implements Closeable {
      */
     public Importer(String name) {
         this.name = name;
-        this.context = new ImportContext(this);
+        this.context = new ImporterContext(this);
     }
 
     /**

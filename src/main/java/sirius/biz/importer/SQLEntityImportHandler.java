@@ -54,7 +54,7 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
 
         @Override
         @SuppressWarnings("unchecked")
-        public ImportHandler<?> create(Class<?> type, ImportContext context) {
+        public ImportHandler<?> create(Class<?> type, ImporterContext context) {
             return new SQLEntityImportHandler<>(type, context);
         }
     }
@@ -75,7 +75,7 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
      * @param clazz   the type of entities being handled
      * @param context the import context to use
      */
-    protected SQLEntityImportHandler(Class<?> clazz, ImportContext context) {
+    protected SQLEntityImportHandler(Class<?> clazz, ImporterContext context) {
         super(clazz, context);
         this.mappingsToLoad = getMappingsToLoad().toArray(MAPPING_ARRAY);
         this.mappingsToFind = getMappingsToFind().toArray(MAPPING_ARRAY);

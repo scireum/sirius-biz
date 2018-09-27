@@ -33,7 +33,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     protected static Mixing mixing;
 
     protected EntityDescriptor descriptor;
-    protected ImportContext context;
+    protected ImporterContext context;
 
     /**
      * Creates a new instance for the given type of entities and import context.
@@ -41,7 +41,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @param clazz   the type of entities being handled
      * @param context the import context to use
      */
-    protected BaseImportHandler(Class<?> clazz, ImportContext context) {
+    protected BaseImportHandler(Class<?> clazz, ImporterContext context) {
         this.context = context;
         descriptor = mixing.getDescriptor(clazz);
     }
@@ -114,8 +114,8 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     }
 
     @Override
-    public E findOrLoad(Context data) {
-        return tryFind(data).orElse(load(data, newEntity()));
+    public E findAndLoad(Context data) {
+        return load(data, tryFind(data).orElse(newEntity()));
     }
 
     @Override

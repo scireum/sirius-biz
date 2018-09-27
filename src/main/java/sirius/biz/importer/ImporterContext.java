@@ -26,7 +26,7 @@ import java.util.Map;
 /**
  * Provides a shared context which is available to all {@link ImportHandler import handlers} of an {@link Importer}.
  */
-public class ImportContext {
+public class ImporterContext {
 
     private Importer importer;
     private BatchContext batchContext;
@@ -42,7 +42,7 @@ public class ImportContext {
      *
      * @param importer the imported which which this context was created
      */
-    protected ImportContext(Importer importer) {
+    protected ImporterContext(Importer importer) {
         this.importer = importer;
     }
 

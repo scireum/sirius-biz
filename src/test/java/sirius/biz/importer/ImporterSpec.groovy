@@ -49,17 +49,17 @@ class ImporterSpec extends BaseSpecification {
         thrown HandledException.class
     }
 
-    def "find or load tenant with importer"() {
+    def "find and load tenant with importer"() {
         when:
         Tenant tenant = TenantsHelper.getTestTenant()
         String newTenantName = "Test1234"
         and:
         Context context = Context.create().set(Tenant.NAME.getName(), newTenantName)
         and:
-        Tenant tenant1 = importer.findOrLoad(Tenant.class, context.set(Tenant.ID.getName(), tenant.getId()))
-        Tenant tenant2 = importer.findOrLoad(Tenant.class, context.set(Tenant.ID.getName(), NON_EXISTENT_TENANT_ID))
+        Tenant tenant1 = importer.findAndLoad(Tenant.class, context.set(Tenant.ID.getName(), tenant.getId()))
+        Tenant tenant2 = importer.findAndLoad(Tenant.class, context.set(Tenant.ID.getName(), NON_EXISTENT_TENANT_ID))
         then:
-        tenant1.getName() == tenant.getName()
+        tenant1.getName() == newTenantName
         tenant1.getId() == tenant.getId()
         and:
         tenant2.getName() == newTenantName
