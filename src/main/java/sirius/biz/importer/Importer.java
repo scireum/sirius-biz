@@ -11,6 +11,7 @@ package sirius.biz.importer;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -28,6 +29,11 @@ public class Importer implements Closeable {
 
     protected ImporterContext context;
     protected String name;
+
+    /**
+     * Import log which is accessible to all import jobs.
+     */
+    public static final Log LOG = Log.get("importer");
 
     /**
      * Creates a new importer.
