@@ -65,12 +65,14 @@ public interface ImportHandler<E extends BaseEntity<?>> {
     E findOrFail(Context data);
 
     /**
-     * Tries to find an entity using the supplied <tt>data</tt> - creates and loads a new entity if no match was found.
+     * Tries to find an entity using the supplied <tt>data</tt> - creates new entity if no match was found.
+     * <p>
+     * Loads the given data into the found or created entity.
      *
      * @param data the data used to describe the entity to find
      * @return the matching entity or a newly created and not yet persisted one if no match was found
      */
-    E findOrLoad(Context data);
+    E findAndLoad(Context data);
 
     /**
      * Tries to find an entity using the supplied <tt>data</tt> - creates, loads and persists a new entity if no match

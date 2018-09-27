@@ -154,8 +154,8 @@ public class Importer implements Closeable {
      * @param <E>  the generic type of the entity to find
      * @return either a matching entity or a new and not yet peristed entity loaded from the given data
      */
-    public <E extends BaseEntity<?>> E findOrLoad(Class<E> type, Context data) {
-        return context.findHandler(type).findOrLoad(data);
+    public <E extends BaseEntity<?>> E findAndLoad(Class<E> type, Context data) {
+        return context.findHandler(type).findAndLoad(data);
     }
 
     /**
