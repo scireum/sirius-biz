@@ -14,7 +14,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotates a field within a {@link SearchableEntity} to be indexed into the {@link SearchableEntity#SEARCH_FIELD}.
+ * Annotates a field within a {@link PrefixSearchableEntity} to be indexed into the
+ * {@link PrefixSearchableEntity#SEARCH_PREFIXES}.
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

@@ -8,6 +8,7 @@
 
 package sirius.biz.mongo;
 
+import sirius.biz.protocol.NoJournal;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
@@ -17,17 +18,14 @@ import sirius.db.mixing.types.StringListMap;
 import sirius.db.mixing.types.StringMap;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
+import sirius.db.mongo.constraints.MongoFilterFactory;
 import sirius.kernel.commons.Strings;
-
-import java.util.regex.Pattern;
 
 /**
  * Maintains a <tt>prefixSearchField</tt> in which all fields annotated with {@link PrefixSearchContent} are indexed.
  */
 @Index(name = "prefix_index", columns = "searchPrefixes", columnSettings = Mango.INDEX_ASCENDING)
 public abstract class PrefixSearchableEntity extends MongoEntity {
-
-    private static final Pattern NON_WORD_CHARACTER = Pattern.compile("[^\\p{L}]");
 
     /**
      * We will not index anything longer than 255 characters as it is pointless.
@@ -38,6 +36,7 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
      * Contains manually maintained content to be added to the search field.
      */
     public static final Mapping SEARCH_PREFIXES = Mapping.named("searchPrefixes");
+    @NoJournal
     private final StringList searchPrefixes = new StringList();
 
     @BeforeSave
@@ -94,10 +93,9 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
         }
 
         String tokenInLowerCase = input.toLowerCase();
-        for (String subToken : NON_WORD_CHARACTER.matcher(tokenInLowerCase).replaceAll(" ").split(" ")) {
-            appendSingleToken(subToken);
-        }
-        for (String subToken : tokenInLowerCase.split(" ")) {
+        for (String subToken : MongoFilterFactory.NON_PREFIX_CHARACTER.matcher(tokenInLowerCase)
+                                                                      .replaceAll(" ")
+                                                                      .split(" ")) {
             appendSingleToken(subToken);
         }
     }

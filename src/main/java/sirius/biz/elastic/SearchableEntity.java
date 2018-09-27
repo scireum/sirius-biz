@@ -53,6 +53,7 @@ public abstract class SearchableEntity extends ElasticEntity {
     public static final Mapping SEARCHABLE_CONTENT = Mapping.named("searchableContent");
     @NullAllowed
     @SearchContent
+    @NoJournal
     @IndexMode(indexed = ESOption.FALSE, docValues = ESOption.FALSE)
     private String searchableContent;
 
@@ -124,9 +125,6 @@ public abstract class SearchableEntity extends ElasticEntity {
 
         String tokenInLowerCase = input.toLowerCase();
         for (String subToken : NON_WORD_CHARACTER.matcher(tokenInLowerCase).replaceAll(" ").split(" ")) {
-            appendSingleToken(output, subToken);
-        }
-        for (String subToken : tokenInLowerCase.split(" ")) {
             appendSingleToken(output, subToken);
         }
     }
