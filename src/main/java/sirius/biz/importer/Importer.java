@@ -211,4 +211,16 @@ public class Importer implements Closeable {
     public void close() throws IOException {
         context.close();
     }
+    /**
+     * Resolves which {@link ImportHandler} to use for a given type.
+     *
+     * @param type the entity type to find the appropriate handler for.
+     * @param <E>  the generic type of the entity class
+     * @return the appropriate handler for this type
+     * @throws sirius.kernel.health.HandledException if no appropriate handler is available
+     */
+    @SuppressWarnings("unchecked")
+    public <E extends BaseEntity<?>> ImportHandler<E> findHandler(Class<E> type) {
+        return context.findHandler(type);
+    }
 }
