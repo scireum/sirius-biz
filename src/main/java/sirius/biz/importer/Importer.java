@@ -11,6 +11,7 @@ package sirius.biz.importer;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -26,8 +27,13 @@ import java.util.Optional;
  */
 public class Importer implements Closeable {
 
-    protected ImportContext context;
+    protected ImporterContext context;
     protected String name;
+
+    /**
+     * Import log which is accessible to all import jobs.
+     */
+    public static final Log LOG = Log.get("importer");
 
     /**
      * Creates a new importer.
@@ -39,7 +45,7 @@ public class Importer implements Closeable {
      */
     public Importer(String name) {
         this.name = name;
-        this.context = new ImportContext(this);
+        this.context = new ImporterContext(this);
     }
 
     /**
@@ -148,8 +154,8 @@ public class Importer implements Closeable {
      * @param <E>  the generic type of the entity to find
      * @return either a matching entity or a new and not yet peristed entity loaded from the given data
      */
-    public <E extends BaseEntity<?>> E findOrLoad(Class<E> type, Context data) {
-        return context.findHandler(type).findOrLoad(data);
+    public <E extends BaseEntity<?>> E findAndLoad(Class<E> type, Context data) {
+        return context.findHandler(type).findAndLoad(data);
     }
 
     /**
@@ -204,5 +210,17 @@ public class Importer implements Closeable {
     @Override
     public void close() throws IOException {
         context.close();
+    }
+    /**
+     * Resolves which {@link ImportHandler} to use for a given type.
+     *
+     * @param type the entity type to find the appropriate handler for.
+     * @param <E>  the generic type of the entity class
+     * @return the appropriate handler for this type
+     * @throws sirius.kernel.health.HandledException if no appropriate handler is available
+     */
+    @SuppressWarnings("unchecked")
+    public <E extends BaseEntity<?>> ImportHandler<E> findHandler(Class<E> type) {
+        return context.findHandler(type);
     }
 }

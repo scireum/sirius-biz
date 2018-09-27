@@ -8,6 +8,7 @@
 
 package sirius.biz.importer;
 
+import sirius.biz.tenants.SQLTenantAware;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.batch.FindQuery;
 import sirius.db.jdbc.batch.InsertQuery;
@@ -20,6 +21,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Register;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -54,7 +56,7 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
 
         @Override
         @SuppressWarnings("unchecked")
-        public ImportHandler<?> create(Class<?> type, ImportContext context) {
+        public ImportHandler<?> create(Class<?> type, ImporterContext context) {
             return new SQLEntityImportHandler<>(type, context);
         }
     }
@@ -75,11 +77,19 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
      * @param clazz   the type of entities being handled
      * @param context the import context to use
      */
-    protected SQLEntityImportHandler(Class<?> clazz, ImportContext context) {
+    protected SQLEntityImportHandler(Class<?> clazz, ImporterContext context) {
         super(clazz, context);
-        this.mappingsToLoad = getMappingsToLoad().toArray(MAPPING_ARRAY);
-        this.mappingsToFind = getMappingsToFind().toArray(MAPPING_ARRAY);
         this.mappingsToCompare = getMappingsToCompare().toArray(MAPPING_ARRAY);
+        this.mappingsToLoad = getMappingsToLoad().toArray(MAPPING_ARRAY);
+
+        if (newEntity() instanceof SQLTenantAware) {
+            List<Mapping> tmp = new ArrayList<>();
+            tmp.add(SQLTenantAware.TENANT);
+            tmp.addAll(getMappingsToFind());
+            this.mappingsToFind = tmp.toArray(MAPPING_ARRAY);
+        } else {
+            this.mappingsToFind = getMappingsToFind().toArray(MAPPING_ARRAY);
+        }
     }
 
     /**
@@ -117,6 +127,16 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
     @Override
     public E load(Context data, E entity) {
         return load(data, entity, mappingsToLoad);
+    }
+
+    @Override
+    protected E load(Context data, E entity, Mapping... mappings) {
+        E e = super.load(data, entity, mappings);
+        if (e instanceof SQLTenantAware) {
+            ((SQLTenantAware) e).fillWithCurrentTenant();
+        }
+
+        return e;
     }
 
     @Override
