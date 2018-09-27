@@ -178,4 +178,46 @@ class ImporterSpec extends BaseSpecification {
         then:
         oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).contains("AFTERUPDATE").build()).count() == 200
     }
+
+    def "deleteNow"() {
+        given:
+        String basicTenantName = "Importer_delete"
+        and:
+        for (int i = 0; i < 10; i++) {
+            Context context = Context.create().set(Tenant.NAME.getName(), basicTenantName + i)
+            Tenant tenant = importer.load(Tenant.class, context)
+            importer.createOrUpdateInBatch(tenant)
+        }
+        importer.close()
+        and:
+        oma.select(Tenant.class).count() != 0
+        when:
+        oma.select(Tenant.class).iterateAll() { entity ->
+            importer.deleteNow(entity)
+        }
+        then:
+        oma.select(Tenant.class).count() == 0
+    }
+
+    def "deleteInBatch"() {
+        given:
+        String basicTenantName = "Importer_batchDelete"
+        and:
+        for (int i = 0; i < 200; i++) {
+            Context context = Context.create().set(Tenant.NAME.getName(), basicTenantName + i)
+            Tenant tenant = importer.load(Tenant.class, context)
+            importer.createOrUpdateInBatch(tenant)
+        }
+        importer.close()
+        and:
+        oma.select(Tenant.class).count() != 0
+        when:
+        oma.select(Tenant.class).iterateAll() { entity ->
+            importer.deleteInBatch(entity)
+        }
+        and:
+        importer.close()
+        then:
+        oma.select(Tenant.class).count() == 0
+    }
 }

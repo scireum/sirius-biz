@@ -97,4 +97,18 @@ public interface ImportHandler<E extends BaseEntity<?>> {
      * @param entity the entity to update or persist.
      */
     void createOrUpdateInBatch(E entity);
+
+    /**
+     * Deletes the given entity.
+     *
+     * @param entity the entity to delete
+     */
+    void deleteNow(E entity);
+
+    /**
+     * Deletes the given entity - using a batch mode if possible.
+     *
+     * @param entity the entity to delete
+     */
+    void deleteInBatch(E entity);
 }

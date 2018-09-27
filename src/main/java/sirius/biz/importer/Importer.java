@@ -211,6 +211,29 @@ public class Importer implements Closeable {
     public void close() throws IOException {
         context.close();
     }
+
+    /**
+     * Deletes the given entity.
+     *
+     * @param entity the entity to delete
+     * @param <E>    the generic type of the entity
+     */
+    @SuppressWarnings("unchecked")
+    public <E extends BaseEntity<?>> void deleteNow(E entity) {
+        context.findHandler((Class<E>) entity.getClass()).deleteNow(entity);
+    }
+
+    /**
+     * Deletes the given entity - using a batch mode if possible.
+     *
+     * @param entity the entity to delete
+     * @param <E>    the generic type of the entity
+     */
+    @SuppressWarnings("unchecked")
+    public <E extends BaseEntity<?>> void deleteInBatch(E entity) {
+        context.findHandler((Class<E>) entity.getClass()).deleteInBatch(entity);
+    }
+
     /**
      * Resolves which {@link ImportHandler} to use for a given type.
      *
