@@ -8,7 +8,7 @@
 
 package sirius.biz.web;
 
-import sirius.biz.jdbc.tenants.Tenants;
+import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.db.jdbc.OMA;
 import sirius.db.mixing.BaseEntity;
@@ -156,9 +156,8 @@ public class BizController extends BasicController {
                                       .getProperties()
                                       .stream()
                                       .filter(property -> shouldAutoload(ctx, property))
-                                      .map((Property property) -> {
-                                          return Mapping.named(property.getName());
-                                      })
+                                      .map(Property::getName)
+                                      .map(Mapping::named)
                                       .collect(Collectors.toList());
 
         load(ctx, entity, columns);
@@ -433,7 +432,7 @@ public class BizController extends BasicController {
     protected <E extends BaseEntity<?>> E find(Class<E> type, String id) {
         if (BaseEntity.NEW.equals(id) && BaseEntity.class.isAssignableFrom(type)) {
             try {
-                return type.newInstance();
+                return type.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
                 throw Exceptions.handle()
                                 .to(LOG)

@@ -41,7 +41,7 @@ public abstract class Transformable {
     public static <T extends Transformable> T parse(@Nonnull Class<T> type, @Nonnull byte[] data) {
         try {
             Transformer tx = getTransformer(type);
-            T result = type.newInstance();
+            T result = type.getDeclaredConstructor().newInstance();
             tx.fromBytes(result, data);
 
             return result;

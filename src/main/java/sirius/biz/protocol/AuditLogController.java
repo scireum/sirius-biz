@@ -49,7 +49,10 @@ public class AuditLogController extends BizController {
                                                Elastic.FILTERS.eq(AuditLogEntry.CAUSED_BY_USER,
                                                                   UserContext.getCurrentUser().getUserId())));
             } else {
-                query.eq(AuditLogEntry.TENANT, UserContext.getCurrentUser().getTenantId());
+                query.where(Elastic.FILTERS.or(Elastic.FILTERS.eq(AuditLogEntry.TENANT,
+                                                                  UserContext.getCurrentUser().getTenantId()),
+                                               Elastic.FILTERS.eq(AuditLogEntry.CAUSED_BY_USER,
+                                                                  UserContext.getCurrentUser().getUserId())));
             }
         }
 
@@ -65,8 +68,12 @@ public class AuditLogController extends BizController {
                               DateRange.thisWeek(),
                               DateRange.lastWeek());
         ph.withSearchFields(QueryField.contains(AuditLogEntry.USER),
-                            QueryField.contains(AuditLogEntry.IP),
-                            QueryField.contains(AuditLogEntry.MESSAGE));
+                            QueryField.contains(AuditLogEntry.USER_NAME),
+                            QueryField.contains(AuditLogEntry.CAUSED_BY_USER),
+                            QueryField.contains(AuditLogEntry.CAUSED_BY_USER_NAME),
+                            QueryField.contains(AuditLogEntry.TENANT),
+                            QueryField.contains(AuditLogEntry.TENANT_NAME),
+                            QueryField.contains(AuditLogEntry.IP));
 
         ctx.respondWith().template("templates/protocol/audit_logs.html.pasta", ph.asPage());
     }

@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 /**
  * Implements a {@link ClusterManager} by discovering and managing nodes via the {@link Interconnect}.
  */
-@Register(classes = {ClusterManager.class, InterconnectHandler.class})
+@Register(classes = {InterconnectClusterManager.class, ClusterManager.class, InterconnectHandler.class})
 public class InterconnectClusterManager implements ClusterManager, InterconnectHandler {
 
     private static final String MESSAGE_TYPE = "type";

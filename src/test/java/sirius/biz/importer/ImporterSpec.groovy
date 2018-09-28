@@ -1,7 +1,7 @@
 package sirius.biz.importer
 
-import sirius.biz.jdbc.tenants.Tenant
-import sirius.biz.jdbc.tenants.TenantsHelper
+import sirius.biz.tenants.Tenant
+import sirius.biz.tenants.TenantsHelper
 import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.commons.Context
@@ -49,17 +49,17 @@ class ImporterSpec extends BaseSpecification {
         thrown HandledException.class
     }
 
-    def "find or load tenant with importer"() {
+    def "find and load tenant with importer"() {
         when:
         Tenant tenant = TenantsHelper.getTestTenant()
         String newTenantName = "Test1234"
         and:
         Context context = Context.create().set(Tenant.NAME.getName(), newTenantName)
         and:
-        Tenant tenant1 = importer.findOrLoad(Tenant.class, context.set(Tenant.ID.getName(), tenant.getId()))
-        Tenant tenant2 = importer.findOrLoad(Tenant.class, context.set(Tenant.ID.getName(), NON_EXISTENT_TENANT_ID))
+        Tenant tenant1 = importer.findAndLoad(Tenant.class, context.set(Tenant.ID.getName(), tenant.getId()))
+        Tenant tenant2 = importer.findAndLoad(Tenant.class, context.set(Tenant.ID.getName(), NON_EXISTENT_TENANT_ID))
         then:
-        tenant1.getName() == tenant.getName()
+        tenant1.getName() == newTenantName
         tenant1.getId() == tenant.getId()
         and:
         tenant2.getName() == newTenantName
@@ -122,7 +122,9 @@ class ImporterSpec extends BaseSpecification {
         Tenant tenant = importer.load(Tenant.class, context)
         tenant = importer.createOrUpdateNow(tenant)
         when:
-        context = Context.create().set(Tenant.NAME.getName(), newTenantName + "new").set(Tenant.ID.getName(), tenant.getId())
+        context = Context.create().
+                set(Tenant.NAME.getName(), newTenantName + "new").
+                set(Tenant.ID.getName(), tenant.getId())
         tenant = importer.tryFind(Tenant.class, context).orElse(null)
         and:
         tenant = importer.load(Tenant.class, context, tenant)
@@ -166,12 +168,56 @@ class ImporterSpec extends BaseSpecification {
         }
         importer.close()
         when:
-        oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).contains(basicTenantName).build()).iterateAll { tenant ->
-            tenant.setName(tenant.getName() + "AFTERUPDATE")
-            importer.createOrUpdateInBatch(tenant)
-        }
+        oma.select(Tenant.class).
+                where(OMA.FILTERS.like(Tenant.NAME).contains(basicTenantName).build()).
+                iterateAll { tenant ->
+                    tenant.setName(tenant.getName() + "AFTERUPDATE")
+                    importer.createOrUpdateInBatch(tenant)
+                }
         importer.close()
         then:
         oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).contains("AFTERUPDATE").build()).count() == 200
+    }
+
+    def "deleteNow"() {
+        given:
+        String basicTenantName = "Importer_delete"
+        and:
+        for (int i = 0; i < 10; i++) {
+            Context context = Context.create().set(Tenant.NAME.getName(), basicTenantName + i)
+            Tenant tenant = importer.load(Tenant.class, context)
+            importer.createOrUpdateInBatch(tenant)
+        }
+        importer.close()
+        and:
+        oma.select(Tenant.class).count() != 0
+        when:
+        oma.select(Tenant.class).iterateAll() { entity ->
+            importer.deleteNow(entity)
+        }
+        then:
+        oma.select(Tenant.class).count() == 0
+    }
+
+    def "deleteInBatch"() {
+        given:
+        String basicTenantName = "Importer_batchDelete"
+        and:
+        for (int i = 0; i < 200; i++) {
+            Context context = Context.create().set(Tenant.NAME.getName(), basicTenantName + i)
+            Tenant tenant = importer.load(Tenant.class, context)
+            importer.createOrUpdateInBatch(tenant)
+        }
+        importer.close()
+        and:
+        oma.select(Tenant.class).count() != 0
+        when:
+        oma.select(Tenant.class).iterateAll() { entity ->
+            importer.deleteInBatch(entity)
+        }
+        and:
+        importer.close()
+        then:
+        oma.select(Tenant.class).count() == 0
     }
 }

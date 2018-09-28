@@ -16,7 +16,7 @@
 <i:pragma name="description" value="Renders a dropdown field for a codelist" />
 
 <w:singleSelect span="@span" name="@name" label="@label" help="@help" optional="@optional" required="@required" readonly="@readonly" adminOnly="@adminOnly" forceFullWidth="@forceFullWidth">
-    <i:for var="entry" type="sirius.biz.jdbc.codelists.CodeListEntry" items="@codeLists.getEntries(list)">
+    <i:for var="entry" type="sirius.biz.codelists.CodeListEntry" items="@codeLists.getEntries(list)">
         <option value="@entry.getCode()" @if(entry.getCode().equals(value)) {selected="selected"} >@entry.getValue()</option>
     </i:for>
 </w:singleSelect>

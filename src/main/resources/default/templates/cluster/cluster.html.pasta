@@ -1,0 +1,90 @@
+<i:arg type="List" name="keys"/>
+<i:arg type="Map" name="descriptions"/>
+<i:arg type="List" name="nodes"/>
+<i:arg type="List" name="locks"/>
+
+<w:page title="Cluster State">
+    <i:block name="breadcrumbs">
+        <li><a href="/system/cluster">Cluster State</a></li>
+    </i:block>
+
+    <w:pageHeader title="Cluster State"/>
+
+    <w:heading>Background Jobs</w:heading>
+    <i:for type="String" var="job" items="keys">
+        <w:subHeading>
+            @job <small class="muted">(@descriptions.get(job))</small>
+        </w:subHeading>
+        <table class="table table-striped">
+            <tr>
+                <th class="col-md-2">Node</th>
+                <th class="col-md-2">Globally Enabled</th>
+                <th class="col-md-2">Synchronizer</th>
+                <th class="col-md-2">Locally Enabled</th>
+                <th class="col-md-4">Execution Info</th>
+            </tr>
+            <i:for type="sirius.biz.cluster.BackgroundInfo" var="node" items="nodes">
+                <tr>
+                    <td>
+                        <b>@node.getNodeName()</b>
+                    </td>
+                    <i:local name="jobInfo"
+                             value="@node.getJobs().get(job).as(sirius.biz.cluster.BackgroundJobInfo.class)"/>
+                    <i:if test="jobInfo != null">
+                        <td>
+                            <i:if test="jobInfo.isGloballyEnabled()">
+                                <span class="label label-success">Yes</span>
+                                <small><a href="/system/cluster/global/disable/@job" class="link">Disable</a></small>
+                                <i:else>
+                                    <span class="label label-warning">No</span>
+                                    <small><a href="/system/cluster/global/enable/@job" class="link">Enable</a></small>
+                                </i:else>
+                            </i:if>
+                        </td>
+                        <td><span class="label label-default">@jobInfo.getSynchronizeType()</span></td>
+                        <td>
+                            <i:if test="jobInfo.isLocalOverwrite()">
+                                <span class="label label-warning">No</span>
+                                <small>
+                                    <a href="/system/cluster/local/enable/@node.getNodeName()/@job"
+                                       class="link">Enable</a>
+                                </small>
+                                <i:else>
+                                    <span class="label label-success">Yes</span>
+                                    <small>
+                                        <a href="/system/cluster/local/disable/@node.getNodeName()/@job" class="link">Disable</a>
+                                    </small>
+                                </i:else>
+                            </i:if>
+                        </td>
+                        <td>@jobInfo.getExecutionInfo()</td>
+                        <i:else>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </i:else>
+                    </i:if>
+                </tr>
+            </i:for>
+        </table>
+    </i:for>
+
+    <w:heading>Locks</w:heading>
+    <w:table data="locks">
+        <i:for type="sirius.biz.locks.LockInfo" var="lock" items="locks">
+            <tr>
+                <th><b>Name</b></th>
+                <th>Owner</th>
+                <th>Thread</th>
+                <th>Acquired</th>
+            </tr>
+            <tr>
+                <td><b>@lock.getName()</b></td>
+                <td>@lock.getOwner()</td>
+                <td>@lock.getThread()</td>
+                <td>@toUserString(lock.getAcquired())</td>
+            </tr>
+        </i:for>
+    </w:table>
+</w:page>

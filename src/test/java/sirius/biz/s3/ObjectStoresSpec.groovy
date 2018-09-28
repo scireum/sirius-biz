@@ -31,7 +31,7 @@ class ObjectStoresSpec extends BaseSpecification {
         Files.toString(file, Charsets.UTF_8) == Files.toString(download, Charsets.UTF_8)
         cleanup:
         sirius.kernel.commons.Files.delete(file)
-        sirius.kernel.commons.Files.delete((File)download)
+        sirius.kernel.commons.Files.delete((File) download)
     }
 
 }
