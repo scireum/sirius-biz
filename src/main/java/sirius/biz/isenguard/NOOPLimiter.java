@@ -8,7 +8,21 @@
 
 package sirius.biz.isenguard;
 
-public class JavaLimiter implements Limiter {
+import sirius.kernel.di.std.Register;
+
+import javax.annotation.Nonnull;
+
+/**
+ * Provides an "empty" implementation which doesn't perform any limiting at all.
+ */
+@Register(classes = {Limiter.class, NOOPLimiter.class}, framework = Isenguard.FRAMEWORK_ISENGUARD)
+public class NOOPLimiter implements Limiter {
+
+    @Nonnull
+    @Override
+    public String getName() {
+        return "noop";
+    }
 
     @Override
     public boolean isIPBLacklisted(String ip) {
@@ -17,21 +31,19 @@ public class JavaLimiter implements Limiter {
 
     @Override
     public void block(String ipAddress) {
-
+        // noop
     }
 
     @Override
     public void unblock(String ipAddress) {
-
+        // noop
     }
 
     @Override
-    public boolean increaseAndCheckLimit(String ip,
-                                         String key,
+    public boolean increaseAndCheckLimit(String key,
                                          int intervalInSeconds,
                                          int limit,
                                          Runnable limitReachedOnce) {
         return false;
     }
-
 }

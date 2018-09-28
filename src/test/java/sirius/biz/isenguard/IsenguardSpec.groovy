@@ -8,19 +8,39 @@
 
 package sirius.biz.isenguard
 
-import sirius.db.redis.Redis
+
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
+
+import java.util.concurrent.atomic.AtomicInteger
 
 class IsenguardSpec extends BaseSpecification {
 
     @Part
-    private static Redis redis
+    private static Isenguard isenguard
 
-    def "redis works"() {
+    def "rateLimitingWorks"() {
         when:
-        redis.exec({ -> "X" }, { db -> db.set("Tet", "1") })
+        def counter = new AtomicInteger()
+        isenguard.isRateLimitReached("127.0.0.1",
+                                     "test",
+                                     Isenguard.USE_LIMIT_FROM_CONFIG,
+                                     { -> counter.incrementAndGet() })
+        isenguard.isRateLimitReached("127.0.0.1", "test", Isenguard.USE_LIMIT_FROM_CONFIG,
+                                     { -> counter.incrementAndGet() })
+        isenguard.isRateLimitReached("127.0.0.1", "test", Isenguard.USE_LIMIT_FROM_CONFIG,
+                                     { -> counter.incrementAndGet() })
+        def fourth = isenguard.isRateLimitReached("127.0.0.1", "test", Isenguard.USE_LIMIT_FROM_CONFIG,
+                                                  { -> counter.incrementAndGet() })
+        def fifth = isenguard.isRateLimitReached("127.0.0.1", "test", Isenguard.USE_LIMIT_FROM_CONFIG,
+                                                 { -> counter.incrementAndGet() })
+        def sixth = isenguard.isRateLimitReached("127.0.0.1", "test", Isenguard.USE_LIMIT_FROM_CONFIG,
+                                                 { -> counter.incrementAndGet() })
         then:
-        "1" == redis.query({ -> "X" }, { db -> db.get("Tet") })
+        fourth == false
+        fifth == true
+        sixth == true
+        counter.get() == 1
     }
+
 }
