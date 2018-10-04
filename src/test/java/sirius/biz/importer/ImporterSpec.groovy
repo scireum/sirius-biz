@@ -4,7 +4,6 @@ import sirius.biz.tenants.Tenant
 import sirius.biz.tenants.TenantsHelper
 import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
-import sirius.kernel.commons.Context
 import sirius.kernel.di.std.Part
 import sirius.kernel.health.HandledException
 
@@ -31,7 +30,7 @@ class ImporterSpec extends BaseSpecification {
         when:
         Tenant tenant = TenantsHelper.getTestTenant()
         and:
-        Context context = Context.create().set(Tenant.ID.getName(), tenant.getId())
+        ImportContext context = ImportContext.create().set(Tenant.ID, tenant.getId())
         then:
         Tenant tenant1 = importer.findOrFail(Tenant.class, context)
         and:
@@ -42,7 +41,7 @@ class ImporterSpec extends BaseSpecification {
 
     def "fail on find non existent tenant with importer"() {
         when:
-        Context context = Context.create().set(Tenant.ID.getName(), NON_EXISTENT_TENANT_ID)
+        ImportContext context = ImportContext.create().set(Tenant.ID, NON_EXISTENT_TENANT_ID)
         and:
         importer.findOrFail(Tenant.class, context)
         then:
@@ -54,10 +53,10 @@ class ImporterSpec extends BaseSpecification {
         Tenant tenant = TenantsHelper.getTestTenant()
         String newTenantName = "Test1234"
         and:
-        Context context = Context.create().set(Tenant.NAME.getName(), newTenantName)
+        ImportContext context = ImportContext.create().set(Tenant.NAME, newTenantName)
         and:
-        Tenant tenant1 = importer.findAndLoad(Tenant.class, context.set(Tenant.ID.getName(), tenant.getId()))
-        Tenant tenant2 = importer.findAndLoad(Tenant.class, context.set(Tenant.ID.getName(), NON_EXISTENT_TENANT_ID))
+        Tenant tenant1 = importer.findAndLoad(Tenant.class, context.set(Tenant.ID, tenant.getId()))
+        Tenant tenant2 = importer.findAndLoad(Tenant.class, context.set(Tenant.ID, NON_EXISTENT_TENANT_ID))
         then:
         tenant1.getName() == newTenantName
         tenant1.getId() == tenant.getId()
@@ -72,7 +71,7 @@ class ImporterSpec extends BaseSpecification {
         when:
         String newTenantName = "Importer_Test123456471232"
         and:
-        Context context = Context.create().set(Tenant.NAME.getName(), newTenantName)
+        ImportContext context = ImportContext.create().set(Tenant.NAME, newTenantName)
         and:
         Tenant tenant = importer.findOrLoadAndCreate(Tenant.class, context)
         then:
@@ -88,9 +87,9 @@ class ImporterSpec extends BaseSpecification {
         and:
         Tenant tenant = TenantsHelper.getTestTenant()
         and:
-        Context context = Context.create().
-                set(Tenant.NAME.getName(), newTenantName).
-                set(Tenant.PARENT.getName(), tenant)
+        ImportContext context = ImportContext.create().
+                set(Tenant.NAME, newTenantName).
+                set(Tenant.PARENT, tenant)
         and:
         Tenant newTenant = importer.load(Tenant.class, context)
         then:
@@ -101,7 +100,7 @@ class ImporterSpec extends BaseSpecification {
         given:
         String newTenantName = "Importer_createOrUpdateNow_Test"
         and:
-        Context context = Context.create().set(Tenant.NAME.getName(), newTenantName)
+        ImportContext context = ImportContext.create().set(Tenant.NAME, newTenantName)
         when:
         !oma.select(Tenant.class).eq(Tenant.NAME, newTenantName).first().isPresent()
         and:
@@ -117,14 +116,14 @@ class ImporterSpec extends BaseSpecification {
         given:
         String newTenantName = "Importer_createOrUpdateNow_Test2"
         and:
-        Context context = Context.create().set(Tenant.NAME.getName(), newTenantName)
+        ImportContext context = ImportContext.create().set(Tenant.NAME, newTenantName)
         and:
         Tenant tenant = importer.load(Tenant.class, context)
         tenant = importer.createOrUpdateNow(tenant)
         when:
-        context = Context.create().
-                set(Tenant.NAME.getName(), newTenantName + "new").
-                set(Tenant.ID.getName(), tenant.getId())
+        context = ImportContext.create().
+                set(Tenant.NAME, newTenantName + "new").
+                set(Tenant.ID, tenant.getId())
         tenant = importer.tryFind(Tenant.class, context).orElse(null)
         and:
         tenant = importer.load(Tenant.class, context, tenant)
@@ -144,7 +143,7 @@ class ImporterSpec extends BaseSpecification {
         long tenantCount = oma.select(Tenant.class).count()
         when:
         for (int i = 0; i < 200; i++) {
-            Context context = Context.create().set(Tenant.NAME.getName(), basicTenantName + i)
+            ImportContext context = ImportContext.create().set(Tenant.NAME, basicTenantName + i)
             and:
             Tenant tenant = importer.load(Tenant.class, context)
             importer.createOrUpdateInBatch(tenant)
@@ -162,7 +161,7 @@ class ImporterSpec extends BaseSpecification {
         long tenantCount = oma.select(Tenant.class).count()
         and:
         for (int i = 0; i < 200; i++) {
-            Context context = Context.create().set(Tenant.NAME.getName(), basicTenantName + i)
+            ImportContext context = ImportContext.create().set(Tenant.NAME, basicTenantName + i)
             Tenant tenant = importer.load(Tenant.class, context)
             importer.createOrUpdateInBatch(tenant)
         }
@@ -184,19 +183,21 @@ class ImporterSpec extends BaseSpecification {
         String basicTenantName = "Importer_delete"
         and:
         for (int i = 0; i < 10; i++) {
-            Context context = Context.create().set(Tenant.NAME.getName(), basicTenantName + i)
+            ImportContext context = ImportContext.create().set(Tenant.NAME, basicTenantName + i)
             Tenant tenant = importer.load(Tenant.class, context)
             importer.createOrUpdateInBatch(tenant)
         }
         importer.close()
         and:
-        oma.select(Tenant.class).count() != 0
+        oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).count() == 10
         when:
-        oma.select(Tenant.class).iterateAll() { entity ->
-            importer.deleteNow(entity)
-        }
+        oma.select(Tenant.class).
+                where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).
+                iterateAll() { entity ->
+                    importer.deleteNow(entity)
+                }
         then:
-        oma.select(Tenant.class).count() == 0
+        oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).count() == 0
     }
 
     def "deleteInBatch"() {
@@ -204,20 +205,23 @@ class ImporterSpec extends BaseSpecification {
         String basicTenantName = "Importer_batchDelete"
         and:
         for (int i = 0; i < 200; i++) {
-            Context context = Context.create().set(Tenant.NAME.getName(), basicTenantName + i)
+            ImportContext context = ImportContext.create().set(Tenant.NAME, basicTenantName + i)
             Tenant tenant = importer.load(Tenant.class, context)
             importer.createOrUpdateInBatch(tenant)
         }
         importer.close()
         and:
-        oma.select(Tenant.class).count() != 0
+        oma.select(Tenant.class).
+                where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).count() == 200
         when:
-        oma.select(Tenant.class).iterateAll() { entity ->
-            importer.deleteInBatch(entity)
-        }
+        oma.select(Tenant.class).
+                where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).
+                iterateAll() { entity ->
+                    importer.deleteInBatch(entity)
+                }
         and:
         importer.close()
         then:
-        oma.select(Tenant.class).count() == 0
+        oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).count() == 0
     }
 }

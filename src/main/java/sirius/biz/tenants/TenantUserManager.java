@@ -260,18 +260,6 @@ public class TenantUserManager extends GenericUserManager {
     }
 
     @Override
-    public void attachToSession(@Nonnull UserInfo user, @Nonnull WebContext ctx) {
-        // If we're being a spy user (pretending to have a different user id or tenant),
-        // there is no need to update the session data - it would rather be error prone
-        // as we would screw up the session data with the user data being spyed.
-        if (user.hasPermission(PERMISSION_SPY_USER)) {
-            return;
-        }
-
-        super.attachToSession(user, ctx);
-    }
-
-    @Override
     public UserInfo findUserByName(@Nullable WebContext ctx, String user) {
         if (Strings.isEmpty(user)) {
             return null;
@@ -509,12 +497,16 @@ public class TenantUserManager extends GenericUserManager {
     }
 
     /**
-     * Records a login which has either happened within this user manager or externally.
+     * Handles an external login (e.g. via SAML).
      *
-     * @param user     the user which logged in
-     * @param external <tt>true</tt> if the login was performed via an external system like SAML, <tt>false</tt> otherwise
+     * @param user the user which logged in
      */
-    public void recordLogin(UserInfo user, boolean external) {
+    public void onExternalLogin(WebContext ctx, UserInfo user) {
+        updateLoginCookie(ctx, user);
+        recordLogin(user, true);
+    }
+
+    protected void recordLogin(UserInfo user, boolean external) {
         try {
             UserAccount account = (UserAccount) getUserObject(user);
             EntityDescriptor ed = mixing.getDescriptor(UserAccount.class);
@@ -636,10 +628,10 @@ public class TenantUserManager extends GenericUserManager {
         roles.addAll(user.getPermissions().getPermissions());
         roles.addAll(tenant.getPermissions().getPermissions());
         roles.add(UserInfo.PERMISSION_LOGGED_IN);
-        Set<String> transformedRoles = transformRoles(roles, false);
+        Set<String> transformedRoles = transformRoles(roles);
         if (isSystemTenant && transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
             roles.add(PERMISSION_SYSTEM_TENANT);
-            return transformRoles(roles, false);
+            return transformRoles(roles);
         }
         return transformedRoles;
     }

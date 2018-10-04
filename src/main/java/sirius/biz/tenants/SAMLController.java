@@ -101,10 +101,10 @@ public class SAMLController extends BizController {
             verifyUser(response, user);
         }
 
+
         UserContext userContext = UserContext.get();
         userContext.setCurrentUser(user);
-        userContext.attachUserToSession();
-        manager.recordLogin(user, true);
+        manager.onExternalLogin(ctx, user);
 
         ctx.respondWith().redirectToGet(ctx.get("goto").asString(wondergemRoot));
     }

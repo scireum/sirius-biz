@@ -351,7 +351,7 @@ public class UserAccountController extends BizController {
      */
     @Routed("/logout")
     public void logout(WebContext ctx) {
-        UserContext.get().getUserManager().detachFromSession(getUser(), ctx);
+        UserContext.get().getUserManager().logout(ctx);
         ctx.respondWith().redirectToGet(wondergemRoot);
     }
 
