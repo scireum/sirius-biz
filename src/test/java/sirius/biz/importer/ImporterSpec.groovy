@@ -189,13 +189,15 @@ class ImporterSpec extends BaseSpecification {
         }
         importer.close()
         and:
-        oma.select(Tenant.class).count() != 0
+        oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).count() == 10
         when:
-        oma.select(Tenant.class).iterateAll() { entity ->
-            importer.deleteNow(entity)
-        }
+        oma.select(Tenant.class).
+                where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).
+                iterateAll() { entity ->
+                    importer.deleteNow(entity)
+                }
         then:
-        oma.select(Tenant.class).count() == 0
+        oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).count() == 0
     }
 
     def "deleteInBatch"() {
@@ -209,14 +211,17 @@ class ImporterSpec extends BaseSpecification {
         }
         importer.close()
         and:
-        oma.select(Tenant.class).count() != 0
+        oma.select(Tenant.class).
+                where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).count() == 200
         when:
-        oma.select(Tenant.class).iterateAll() { entity ->
-            importer.deleteInBatch(entity)
-        }
+        oma.select(Tenant.class).
+                where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).
+                iterateAll() { entity ->
+                    importer.deleteInBatch(entity)
+                }
         and:
         importer.close()
         then:
-        oma.select(Tenant.class).count() == 0
+        oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).count() == 0
     }
 }
