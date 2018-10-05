@@ -49,6 +49,8 @@ public class ClusterController implements Controller {
     public static final String PERMISSION_SYSTEM_CLUSTER = "permission-system-cluster";
 
     public static final String RESPONSE_NAME = "name";
+    public static final String RESPONSE_LABEL = "label";
+    public static final String RESPONSE_CODE = "code";
     public static final String RESPONSE_DESCRIPTION = "description";
     public static final String RESPONSE_NODE_STATE = "nodeState";
     public static final String RESPONSE_UPTIME = "uptime";
@@ -104,7 +106,8 @@ public class ClusterController implements Controller {
         out.beginArray(RESPONSE_METRICS);
         for (Metric m : metrics.getMetrics()) {
             out.beginObject(RESPONSE_METRIC);
-            out.property(RESPONSE_NAME, m.getName());
+            out.property(RESPONSE_CODE, m.getCode());
+            out.property(RESPONSE_LABEL, m.getLabel());
             out.property(RESPONSE_VALUE, m.getValue());
             out.property(RESPONSE_UNIT, m.getUnit());
             out.property(RESPONSE_STATE, m.getState().name());

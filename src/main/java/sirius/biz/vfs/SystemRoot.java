@@ -99,7 +99,7 @@ public class SystemRoot implements VFSRoot {
         return new VirtualFile(parent, "stats").withInputStreamSupplier(() -> {
             StringBuilder sb = new StringBuilder();
             for (Metric metric : metrics.getMetrics()) {
-                sb.append(metric.getName());
+                sb.append(metric.getCode());
                 sb.append(": ");
                 sb.append(metric.getValueAsString());
                 sb.append("\n");
