@@ -34,7 +34,7 @@ public class WorkLoaderLoop extends BackgroundLoop {
     @Nonnull
     @Override
     public String getName() {
-        return "cluster-loader";
+        return "distributed-tasks-work-loader";
     }
 
     @Override
