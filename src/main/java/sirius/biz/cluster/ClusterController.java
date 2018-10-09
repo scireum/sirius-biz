@@ -9,8 +9,12 @@
 package sirius.biz.cluster;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.locks.Locks;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.CallContext;
+import sirius.kernel.async.DelayLine;
+import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.HandledException;
@@ -21,7 +25,13 @@ import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.health.Cluster;
 import sirius.web.http.WebContext;
+import sirius.web.security.Permission;
 import sirius.web.services.JSONStructuredOutput;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Responsible for cluster intercommunication and reporting.
@@ -33,7 +43,15 @@ import sirius.web.services.JSONStructuredOutput;
 @Register
 public class ClusterController implements Controller {
 
+    /**
+     * Names the permissions required to view and manage the cluster state.
+     */
+    public static final String PERMISSION_SYSTEM_CLUSTER = "permission-system-cluster";
+
     public static final String RESPONSE_NAME = "name";
+    public static final String RESPONSE_LABEL = "label";
+    public static final String RESPONSE_CODE = "code";
+    public static final String RESPONSE_DESCRIPTION = "description";
     public static final String RESPONSE_NODE_STATE = "nodeState";
     public static final String RESPONSE_UPTIME = "uptime";
     public static final String RESPONSE_METRICS = "metrics";
@@ -47,13 +65,26 @@ public class ClusterController implements Controller {
     public static final String RESPONSE_LOCAL_OVERWRITE = "localOverwrite";
     public static final String RESPONSE_GLOBALLY_ENABLED = "globallyEnabled";
     public static final String RESPONSE_EXECUTION_INFO = "executionInfo";
+    public static final String FLAG_ENABLE = "enable";
+    public static final String FLAG_DISABLE = "disable";
 
     @Part
     private Cluster cluster;
+
     @Part
     private Metrics metrics;
+
     @Part
     private NeighborhoodWatch neighborhoodWatch;
+
+    @Part
+    private InterconnectClusterManager clusterManager;
+
+    @Part
+    private DelayLine delayLine;
+
+    @Part
+    private Locks locks;
 
     @Override
     public void onError(WebContext ctx, HandledException error) {
@@ -75,7 +106,8 @@ public class ClusterController implements Controller {
         out.beginArray(RESPONSE_METRICS);
         for (Metric m : metrics.getMetrics()) {
             out.beginObject(RESPONSE_METRIC);
-            out.property(RESPONSE_NAME, m.getName());
+            out.property(RESPONSE_CODE, m.getCode());
+            out.property(RESPONSE_LABEL, m.getLabel());
             out.property(RESPONSE_VALUE, m.getValue());
             out.property(RESPONSE_UNIT, m.getUnit());
             out.property(RESPONSE_STATE, m.getState().name());
@@ -97,10 +129,11 @@ public class ClusterController implements Controller {
         out.property(RESPONSE_UPTIME, NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false));
 
         out.beginArray(RESPONSE_JOBS);
-        for (BackgroundJobInfo job : neighborhoodWatch.getLocalBackgroundInfo().getJobs()) {
+        for (BackgroundJobInfo job : neighborhoodWatch.getLocalBackgroundInfo().getJobs().values()) {
             out.beginObject(RESPONSE_JOB);
             out.property(RESPONSE_NAME, job.getName());
-            out.property(RESPONSE_LOCAL, job.getLocal().name());
+            out.property(RESPONSE_DESCRIPTION, job.getDescription());
+            out.property(RESPONSE_LOCAL, job.getSynchronizeType().name());
             out.property(RESPONSE_LOCAL_OVERWRITE, job.isLocalOverwrite());
             out.property(RESPONSE_GLOBALLY_ENABLED, job.isGloballyEnabled());
             out.property(RESPONSE_EXECUTION_INFO, job.getExecutionInfo());
@@ -115,7 +148,48 @@ public class ClusterController implements Controller {
      * @param ctx the request to handle
      */
     @Routed("/system/cluster")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void cluster(WebContext ctx) {
-        ctx.respondWith().template("templates/system/cluter.html.pasta", neighborhoodWatch.getClusterBackgroundInfo());
+        List<BackgroundInfo> clusterInfo = neighborhoodWatch.getClusterBackgroundInfo();
+        List<String> jobKeys = clusterInfo.stream()
+                                          .flatMap(node -> node.getJobs().keySet().stream())
+                                          .distinct()
+                                          .sorted(Comparator.naturalOrder())
+                                          .collect(Collectors.toList());
+        Map<String, String> descriptions = clusterInfo.stream()
+                                                      .flatMap(node -> node.getJobs().entrySet().stream())
+                                                      .map(e -> Tuple.create(e.getKey(), e.getValue().getDescription()))
+                                                      .collect(Collectors.toMap(Tuple::getFirst, Tuple::getSecond));
+        ctx.respondWith()
+           .template("templates/cluster/cluster.html.pasta", jobKeys, descriptions, clusterInfo, locks.getLocks());
+    }
+
+    /**
+     * Enables or disables a background job globally.
+     *
+     * @param ctx     the request to handle
+     * @param setting either "enable" or "disable" to control what to do
+     * @param jobKey  the jobKey to change
+     */
+    @Routed("/system/cluster/global/:1/:2")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void globalSwitch(WebContext ctx, String setting, String jobKey) {
+        neighborhoodWatch.changeGlobalEnabledFlag(jobKey, FLAG_ENABLE.equals(setting));
+        delayLine.callDelayed(Tasks.DEFAULT, 2, () -> ctx.respondWith().redirectTemporarily("/system/cluster"));
+    }
+
+    /**
+     * Enables or disables a background job globally.
+     *
+     * @param ctx     the request to handle
+     * @param setting either "enable" or "disable" to control what to do
+     * @param node    the node to change the setting for
+     * @param jobKey  the jobKey to change
+     */
+    @Routed("/system/cluster/local/:1/:2/:3")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void localSwitch(WebContext ctx, String setting, String node, String jobKey) {
+        neighborhoodWatch.changeLocalOverwrite(node, jobKey, FLAG_DISABLE.equals(setting));
+        delayLine.callDelayed(Tasks.DEFAULT, 2, () -> ctx.respondWith().redirectTemporarily("/system/cluster"));
     }
 }

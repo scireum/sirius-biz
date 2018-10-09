@@ -113,8 +113,8 @@ public class Locks implements MetricProvider {
         List<LockInfo> locks = getLocks();
         LocalDateTime limitForAcquired = LocalDateTime.now().minus(LONG_RUNNING_LOGS_THRESHOLD);
 
-        collector.metric("locks-count", "Active Locks", locks.size(), null);
-        collector.metric("locks-long-running",
+        collector.metric("locks_count", "locks-count", "Active Locks", locks.size(), null);
+        collector.metric("locks_long_running","locks-long-running",
                          "Long locks",
                          locks.stream().filter(l -> l.getAcquired().isBefore(limitForAcquired)).count(),
                          null);

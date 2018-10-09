@@ -19,6 +19,7 @@ import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 
 /**
@@ -32,7 +33,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     protected static Mixing mixing;
 
     protected EntityDescriptor descriptor;
-    protected ImportContext context;
+    protected ImporterContext context;
 
     /**
      * Creates a new instance for the given type of entities and import context.
@@ -40,7 +41,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @param clazz   the type of entities being handled
      * @param context the import context to use
      */
-    protected BaseImportHandler(Class<?> clazz, ImportContext context) {
+    protected BaseImportHandler(Class<?> clazz, ImporterContext context) {
         this.context = context;
         descriptor = mixing.getDescriptor(clazz);
     }
@@ -113,8 +114,8 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     }
 
     @Override
-    public E findOrLoad(Context data) {
-        return tryFind(data).orElse(load(data, newEntity()));
+    public E findAndLoad(Context data) {
+        return load(data, tryFind(data).orElse(newEntity()));
     }
 
     @Override
@@ -130,8 +131,8 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     @SuppressWarnings("unchecked")
     protected E newEntity() {
         try {
-            return (E) descriptor.getType().newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
+            return (E) descriptor.getType().getConstructor().newInstance();
+        } catch (NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
             throw Exceptions.handle()
                             .error(e)
                             .withSystemErrorMessage("Cannot create an instance of: %s", descriptor.getType().getName())

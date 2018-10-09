@@ -1,5 +1,5 @@
-<i:arg type="sirius.biz.jdbc.storage.BucketInfo" name="bucket"/>
-<i:arg type="sirius.biz.jdbc.storage.VirtualObject" name="object"/>
+<i:arg type="sirius.biz.storage.BucketInfo" name="bucket"/>
+<i:arg type="sirius.biz.storage.VirtualObject" name="object"/>
 <i:arg type="List" name="versions"/>
 
 <w:page title="@apply('%s: %s', bucket.getName(), object.getObjectKey())">
@@ -86,7 +86,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <i:for type="sirius.biz.jdbc.storage.VirtualObjectVersion" var="version" items="versions">
+                <i:for type="sirius.biz.storage.VirtualObjectVersion" var="version" items="versions">
                     <tr>
                         <td>
                             <i:if test="isFilled(version.getPhysicalKey())">

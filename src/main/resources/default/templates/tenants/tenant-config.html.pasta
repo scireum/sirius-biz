@@ -1,4 +1,4 @@
-<i:arg type="sirius.biz.jdbc.tenants.Tenant" name="tenant"/>
+<i:arg type="sirius.biz.tenants.Tenant" name="tenant"/>
 
 <i:invoke template="/templates/tenants/tenant.html.pasta" tenant="tenant" page="config">
     <div id="editor" style="height: 450px">@tenant.getPermissions().getConfigString()</div>

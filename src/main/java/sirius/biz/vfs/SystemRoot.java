@@ -9,7 +9,7 @@
 package sirius.biz.vfs;
 
 import com.google.common.base.Charsets;
-import sirius.biz.jdbc.tenants.TenantUserManager;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -99,7 +99,7 @@ public class SystemRoot implements VFSRoot {
         return new VirtualFile(parent, "stats").withInputStreamSupplier(() -> {
             StringBuilder sb = new StringBuilder();
             for (Metric metric : metrics.getMetrics()) {
-                sb.append(metric.getName());
+                sb.append(metric.getCode());
                 sb.append(": ");
                 sb.append(metric.getValueAsString());
                 sb.append("\n");

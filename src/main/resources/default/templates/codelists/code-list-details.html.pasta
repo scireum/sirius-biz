@@ -1,4 +1,4 @@
-<i:arg type="sirius.biz.jdbc.codelists.CodeList" name="codeList"/>
+<i:arg type="sirius.biz.codelists.CodeList" name="codeList"/>
 
 <i:invoke template="templates/codelists/code-list.html.pasta" codeList="codeList" page="details" inline="true">
     <w:editForm url="@apply('/code-list/%s/details', codeList.getIdAsString())">

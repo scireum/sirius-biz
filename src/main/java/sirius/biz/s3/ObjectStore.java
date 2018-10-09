@@ -44,6 +44,9 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Represents a S3 compatible object store which is commonly obtained via {@link ObjectStores}.
+ */
 public class ObjectStore {
 
     private static final String EXECUTOR_S3 = "s3";
@@ -97,7 +100,7 @@ public class ObjectStore {
         }
     }
 
-    public ObjectStore(ObjectStores stores, String name, AmazonS3Client client, String bucketSuffix) {
+    protected ObjectStore(ObjectStores stores, String name, AmazonS3Client client, String bucketSuffix) {
         this.stores = stores;
         this.name = name;
         this.client = client;
@@ -122,19 +125,47 @@ public class ObjectStore {
         return client;
     }
 
+    /**
+     * Transforms the given bucket name into the effective name.
+     *
+     * @param bucket the bucket name to use
+     * @return the effective bucket name (prefixes and suffixes applied if necessary)
+     */
     public BucketName getBucketName(String bucket) {
         return new BucketName(bucket, bucketSuffix);
     }
 
+    /**
+     * Returns the effective bucket name for the given bucket and year.
+     *
+     * @param bucket the bucket name to use
+     * @param year   the year to determine the name for
+     * @return the effective bucket name (prefixes and suffixes applied if necessary)
+     */
     public BucketName getBucketForYear(String bucket, int year) {
         return new BucketName(String.valueOf(year), bucket, bucketSuffix);
     }
 
+    /**
+     * Returns the effective bucket name for the given bucket and the current year.
+     * <p>
+     * This is a boilerplate for {@code getBucketForYear(bucket, LocalDate.now().getYear())}
+     *
+     * @param bucket the bucket name to use
+     * @return the effective bucket name (prefixes and suffixes applied if necessary)
+     */
     public BucketName getBucketForCurrentYear(String bucket) {
         LocalDate now = LocalDate.now();
         return getBucketForYear(bucket, now.getYear());
     }
 
+    /**
+     * Ensures that the given bucket exists.
+     * <p>
+     * The internal check is cached, therefore this method might be called frequently.
+     *
+     * @param bucket the bucket to check for
+     */
     public void ensureBucketExists(BucketName bucket) {
         if (!doesBucketExist(bucket)) {
             try {
@@ -149,14 +180,38 @@ public class ObjectStore {
         }
     }
 
+    /**
+     * Determines if the given bucket exists.
+     * <p>
+     * The internal check is cached, therefore this method might be called frequently.
+     *
+     * @param bucket the bucket to check for
+     * @return <tt>true</tt> if the bucket exists, <tt>false</tt> otehrwise
+     */
     public boolean doesBucketExist(BucketName bucket) {
         return stores.bucketCache.get(Tuple.create(name, bucket.getName()), this::checkExistence);
     }
 
+    /**
+     * Lists all known buckets (effective names).
+     *
+     * @return a list of all buckets in the given store
+     */
     public List<String> listBuckets() {
         return getClient().listBuckets().stream().map(Bucket::getName).collect(Collectors.toList());
     }
 
+    /**
+     * Iterates of all objects in a bucket.
+     * <p>
+     * Keep in mind that a bucket might contain a very large amount of objects. This method must be used with care and
+     * a lot of thought.
+     *
+     * @param bucket   the bucket to list objects for
+     * @param prefix   the object name prefix used to filter
+     * @param consumer the consumer to be supplied with each found object. As soon as <tt>false</tt> is returned,
+     *                 the iteration stops.
+     */
     public void listObjects(BucketName bucket, @Nullable String prefix, Function<S3ObjectSummary, Boolean> consumer) {
         ObjectListing objectListing = null;
         TaskContext taskContext = CallContext.getCurrent().get(TaskContext.class);
@@ -180,6 +235,12 @@ public class ObjectStore {
         } while (objectListing.isTruncated() && taskContext.isActive());
     }
 
+    /**
+     * Deletes the given object.
+     *
+     * @param bucket   the bucket to delete the object from
+     * @param objectId the object to delete
+     */
     public void deleteObject(BucketName bucket, String objectId) {
         try {
             getClient().deleteObject(bucket.getName(), objectId);
@@ -194,6 +255,13 @@ public class ObjectStore {
         }
     }
 
+    /**
+     * Deletes the given bucket.
+     * <p>
+     * Not that this will most probably not delete objects and therefore only work on empty buckets.
+     *
+     * @param bucket the bucket to delete
+     */
     public void deleteBucket(BucketName bucket) {
         try {
             getClient().deleteBucket(bucket.getName());
@@ -220,41 +288,29 @@ public class ObjectStore {
         }
     }
 
+    /**
+     * Generates a presigned download for the given object.
+     * <p>
+     * This can be used to {@link sirius.web.http.Response#tunnel(String)} the data to a client.
+     *
+     * @param bucket   the bucket in which the object resides
+     * @param objectId the object to generate the url for
+     * @return a download URL for the object
+     */
     public String objectUrl(BucketName bucket, String objectId) {
         GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket.getName(), objectId);
         return getClient().generatePresignedUrl(request).toString();
     }
 
-    public Upload uploadAsync(BucketName bucket, String objectId, File data, @Nullable ObjectMetadata metadata) {
-        try {
-            ensureBucketExists(bucket);
-            return transferManager.upload(new PutObjectRequest(bucket.getName(), objectId, data).withMetadata(metadata),
-                                          new MonitoringProgressListener(true));
-        } catch (Exception e) {
-            throw Exceptions.handle()
-                            .to(ObjectStores.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("An error occurred while trying to upload: %s/%s -",
-                                                    bucket.getName(),
-                                                    objectId)
-                            .handle();
-        }
-    }
-
-    public void upload(BucketName bucket, String objectId, File data, @Nullable ObjectMetadata metadata) {
-        try {
-            uploadAsync(bucket, objectId, data, metadata).waitForUploadResult();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw Exceptions.handle()
-                            .to(ObjectStores.LOG)
-                            .error(e)
-                            .withSystemErrorMessage(
-                                    "Got interrupted while waiting for an upload to complete: %s/%s - %s (%s)")
-                            .handle();
-        }
-    }
-
+    /**
+     * Downloads the given object into a temporary file.
+     * <p>
+     * Make sure to delete the file once it has been processed.
+     *
+     * @param bucket   the bucket in which the object resides
+     * @param objectId the object to download
+     * @return the downloaded object as file
+     */
     public File download(BucketName bucket, String objectId) {
         File dest = null;
         try {
@@ -287,6 +343,63 @@ public class ObjectStore {
         }
     }
 
+    /**
+     * Asynchronously uploads the given file as an object.
+     *
+     * @param bucket   the bucket to upload the file to
+     * @param objectId the object id to use
+     * @param data     the data to upload
+     * @param metadata the metadata for the object
+     * @return kind of a promise used to monitor the upload progress
+     */
+    public Upload uploadAsync(BucketName bucket, String objectId, File data, @Nullable ObjectMetadata metadata) {
+        try {
+            ensureBucketExists(bucket);
+            return transferManager.upload(new PutObjectRequest(bucket.getName(), objectId, data).withMetadata(metadata),
+                                          new MonitoringProgressListener(true));
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .to(ObjectStores.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("An error occurred while trying to upload: %s/%s -",
+                                                    bucket.getName(),
+                                                    objectId)
+                            .handle();
+        }
+    }
+
+    /**
+     * Synchronously uploads the given file.
+     *
+     * @param bucket   the bucket to upload the file to
+     * @param objectId the object id to use
+     * @param data     the data to upload
+     * @param metadata the metadata for the object
+     */
+    public void upload(BucketName bucket, String objectId, File data, @Nullable ObjectMetadata metadata) {
+        try {
+            uploadAsync(bucket, objectId, data, metadata).waitForUploadResult();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw Exceptions.handle()
+                            .to(ObjectStores.LOG)
+                            .error(e)
+                            .withSystemErrorMessage(
+                                    "Got interrupted while waiting for an upload to complete: %s/%s - %s (%s)")
+                            .handle();
+        }
+    }
+
+    /**
+     * Asynchronously uploads the given input stream as an object.
+     *
+     * @param bucket        the bucket to upload the file to
+     * @param objectId      the object id to use
+     * @param inputStream   the data to upload
+     * @param contentLength the total number of bytes to upload
+     * @param metadata      the metadata for the object
+     * @return kind of a promise used to monitor the upload progress
+     */
     public Upload uploadAsync(BucketName bucket,
                               String objectId,
                               InputStream inputStream,
@@ -312,6 +425,15 @@ public class ObjectStore {
         }
     }
 
+    /**
+     * Synchronously uploads the given input stream as an object.
+     *
+     * @param bucket        the bucket to upload the file to
+     * @param objectId      the object id to use
+     * @param inputStream   the data to upload
+     * @param contentLength the total number of bytes to upload
+     * @param metadata      the metadata for the object
+     */
     public void upload(BucketName bucket,
                        String objectId,
                        InputStream inputStream,

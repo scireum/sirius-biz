@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 /**
  * Implements a {@link ClusterManager} by discovering and managing nodes via the {@link Interconnect}.
  */
-@Register(classes = {ClusterManager.class, InterconnectHandler.class})
+@Register(classes = {InterconnectClusterManager.class, ClusterManager.class, InterconnectHandler.class})
 public class InterconnectClusterManager implements ClusterManager, InterconnectHandler {
 
     private static final String MESSAGE_TYPE = "type";
@@ -164,7 +164,7 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
         for (int i = 0; i < nodeMetrics.size(); i++) {
             try {
                 JSONObject metric = (JSONObject) nodeMetrics.get(i);
-                Metric m = new Metric(metric.getString(ClusterController.RESPONSE_NAME),
+                Metric m = new Metric(metric.getString(ClusterController.RESPONSE_CODE),metric.getString(ClusterController.RESPONSE_LABEL),
                                       metric.getDoubleValue(ClusterController.RESPONSE_VALUE),
                                       MetricState.valueOf(metric.getString(ClusterController.RESPONSE_STATE)),
                                       metric.getString(ClusterController.RESPONSE_UNIT));

@@ -50,6 +50,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
      * Names the permissions required to view the protocol.
      */
     public static final String PERMISSION_SYSTEM_PROTOCOLS = "permission-system-protocols";
+
     /**
      * Names the permissions required to view the system journal.
      */
@@ -147,6 +148,10 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
     }
 
     protected boolean shouldNotLog(LogMessage message) {
+        if (!Sirius.isRunning() || Sirius.isStartedAsTest()) {
+            return true;
+        }
+
         if (message == null || !message.isReceiverWouldLog()) {
             return true;
         }
@@ -155,7 +160,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             return true;
         }
 
-        return Sirius.isStartedAsTest() || isDisabled();
+        return isDisabled();
     }
 
     @Override

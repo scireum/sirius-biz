@@ -8,10 +8,10 @@
 
 package sirius.biz.vfs;
 
-import sirius.biz.jdbc.storage.BucketInfo;
-import sirius.biz.jdbc.storage.Storage;
-import sirius.biz.jdbc.storage.StoredObject;
-import sirius.biz.jdbc.tenants.Tenant;
+import sirius.biz.storage.BucketInfo;
+import sirius.biz.storage.Storage;
+import sirius.biz.storage.StoredObject;
+import sirius.biz.tenants.Tenant;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.UserContext;

@@ -24,6 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Provides a thin layer above S3 (or compatible stores).
+ * <p>
+ * The configuration is read from <tt>s3.stores.[name]</tt> in the system configuration.
  */
 @Register(classes = ObjectStores.class)
 public class ObjectStores {
@@ -67,6 +69,11 @@ public class ObjectStores {
     protected Average tunnels = new Average();
     protected Counter tunnelledBytes = new Counter();
 
+    /**
+     * Provides acccess to the default or <tt>system</tt> store.
+     *
+     * @return the object store which uses the configuration of <tt>system</tt>
+     */
     public ObjectStore store() {
         if (store == null) {
             store = createAndStore(NAME_SYSTEM_STORE);
@@ -75,6 +82,12 @@ public class ObjectStores {
         return store;
     }
 
+    /**
+     * Returns the object store with the given name.
+     *
+     * @param name the name to determine the configuration to use.
+     * @return the object store with the given configuration
+     */
     public ObjectStore getStore(String name) {
         ObjectStore result = stores.get(name);
         if (result != null) {
