@@ -8,18 +8,28 @@
 
 package sirius.biz.cluster.work;
 
-import org.jetbrains.annotations.NotNull;
 import sirius.kernel.async.AsyncExecutor;
 import sirius.kernel.async.BackgroundLoop;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * Responsible for loading available work into our local thread pool.
+ * <p>
+ * This loop checks if regular intervals if work if our local thread pool has free resources and also if work is
+ * available and schedules tasks accordingly. Also note, that once a task is completed,
+ * {@link #executeWork(DistributedTasks.DistributedTask)} immediatelly tries to find another task. Therefore the
+ * performance is not limited by the rather slow running background loop.
+ */
 @Register(classes = BackgroundLoop.class)
 public class WorkLoaderLoop extends BackgroundLoop {
 
@@ -38,66 +48,57 @@ public class WorkLoaderLoop extends BackgroundLoop {
     }
 
     @Override
-    protected double maxCallFrequency() {
+    public double maxCallFrequency() {
         return 1 / 5d;
     }
 
     @Override
-    protected void doWork() throws Exception {
-        try {
-            if (schedulerLock.tryLock(1, TimeUnit.SECONDS)) {
-                try {
-                    scheduleAvailableWork();
-                } finally {
-                    schedulerLock.unlock();
-                }
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    protected String doWork() throws Exception {
+        AtomicInteger tasksScheduled = new AtomicInteger(0);
+        locked(() -> tasksScheduled.set(scheduleAvailableWork()));
+        return tasksScheduled.get() == 0 ? null : Strings.apply("Scheduled %d tasks.", tasksScheduled.get());
     }
 
-    private void scheduleAvailableWork() throws Exception {
+    private int scheduleAvailableWork() {
         AsyncExecutor executor = getExecutor();
+        int tasksScheduled = 0;
         while (executor.getQueue().isEmpty() && executor.getActiveCount() < executor.getMaximumPoolSize()) {
-            Runnable work = distributedTasks.fetchWork();
-            if (work == null) {
-                return;
+            Optional<DistributedTasks.DistributedTask> work = distributedTasks.fetchWork();
+            if (work.isPresent()) {
+                executor.submit(() -> executeWork(work.get()));
+                tasksScheduled++;
+            } else {
+                return tasksScheduled;
             }
-
-            executor.submit(() -> executeWork(work));
         }
+
+        return tasksScheduled;
     }
 
-    @NotNull
     private AsyncExecutor getExecutor() {
         return tasks.executorService("distributed-tasks");
     }
 
-    private void executeWork(Runnable work) {
-        work.run();
-
-        scheduleNextWork();
-    }
-
-    private void scheduleNextWork() {
+    private void locked(Runnable runInLock) {
         try {
             if (schedulerLock.tryLock(1, TimeUnit.SECONDS)) {
                 try {
-                    Runnable nextWork = distributedTasks.fetchWork();
-                    if (nextWork != null) {
-                        getExecutor().submit(() -> executeWork(nextWork));
-                    }
+                    runInLock.run();
                 } finally {
                     schedulerLock.unlock();
                 }
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+    }
+
+    private void executeWork(DistributedTasks.DistributedTask work) {
+        work.execute();
+        scheduleNextWork();
+    }
+
+    private void scheduleNextWork() {
+        locked(() -> distributedTasks.fetchWork().ifPresent(work -> getExecutor().submit(() -> executeWork(work))));
     }
 }

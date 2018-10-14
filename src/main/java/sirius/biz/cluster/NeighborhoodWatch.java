@@ -9,6 +9,8 @@
 package sirius.biz.cluster;
 
 import com.alibaba.fastjson.JSONObject;
+import sirius.biz.cluster.work.DistributedQueueInfo;
+import sirius.biz.cluster.work.DistributedTasks;
 import sirius.db.redis.Redis;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.BackgroundLoop;
@@ -59,6 +61,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
     private static final String EXECUTION_ENABLED_SUFFIX = "-enabled";
     private static final String BACKGROUND_LOOP_PREFIX = "loop-";
     private static final String DAILY_TASK_PREFIX = "task-";
+    private static final String QUEUE_PREFIX = "queue-";
 
     private static final String MESSAGE_TYPE = "type";
     private static final String TYPE_GLOBAL = "global";
@@ -85,6 +88,9 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
 
     @Part
     private Timers timers;
+
+    @Part
+    private DistributedTasks distributedTasks;
 
     @Part
     private Interconnect interconnect;
@@ -273,6 +279,21 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         }
     }
 
+    public boolean isDistributedTaskQueueEnabled(String queue) {
+        String syncName = QUEUE_PREFIX + queue;
+
+        if (localOverwrite.containsKey(syncName)) {
+            return false;
+        }
+
+        SynchronizeType type = syncSettings.getOrDefault(syncName, SynchronizeType.LOCAL);
+        if (type == SynchronizeType.DISABLED) {
+            return false;
+        }
+
+        return isBackgroundJobGloballyEnabled(syncName);
+    }
+
     @Override
     public void initialize() throws Exception {
         Map<String, SynchronizeType> targetMap = new HashMap<>();
@@ -292,6 +313,13 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
                                                executionHour,
                                                executionHour));
             });
+        }
+
+        for (DistributedQueueInfo queue : distributedTasks.getQueues()) {
+            String key = QUEUE_PREFIX + queue.getName();
+            loadAndStoreSetting(key, targetMap);
+            descriptions.put(key,
+                             Strings.apply("DistributedTasks queue synchronized via %s", queue.getConcurrencyToken()));
         }
 
         syncSettings = targetMap;
