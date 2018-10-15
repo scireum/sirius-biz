@@ -144,7 +144,10 @@ public class CodeLists {
         if (Strings.isEmpty(codeList)) {
             throw new IllegalArgumentException("codeList must not be empty");
         }
-        CodeList cl = oma.select(CodeList.class).fields(SQLEntity.ID).eq(CodeList.CODE, codeList).queryFirst();
+        CodeList cl = oma.select(CodeList.class)
+                         .fields(SQLEntity.ID, CodeList.AUTO_FILL)
+                         .eq(CodeList.CODE, codeList)
+                         .queryFirst();
         if (cl == null) {
             Extension ext = Sirius.getSettings().getExtension("code-lists", codeList);
             cl = new CodeList();
