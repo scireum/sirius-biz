@@ -12,6 +12,7 @@ import sirius.biz.protocol.NoJournal;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
+import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.NestedList;
 import sirius.db.mixing.types.StringList;
 import sirius.db.mixing.types.StringListMap;
@@ -39,9 +40,12 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
     @NoJournal
     private final StringList searchPrefixes = new StringList();
 
+    @Transient
+    private boolean forceUpdateSearchPrefixes;
+
     @BeforeSave
     protected void updateSearchField() {
-        if (!isNew() && !isAnyMappingChanged()) {
+        if (!isNew() && !forceUpdateSearchPrefixes && !isAnyMappingChanged()) {
             return;
         }
 
@@ -109,5 +113,12 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
 
     public StringList getSearchPrefixes() {
         return searchPrefixes;
+    }
+
+    /**
+     * Forces the search prefixes to be recalculated on the next {@link BeforeSave} event.
+     */
+    public void forceUpdateOfSearchPrefixes() {
+        this.forceUpdateSearchPrefixes = true;
     }
 }
