@@ -120,18 +120,9 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
     }
 
     /**
-     * Returns whether the search prefixes will be definitely recalculated on the next {@link BeforeSave} event
-     *
-     * @return whether the search prefixes will be definitely recalculated on the next {@link BeforeSave} event
+     * Forces the search prefixes to be recalculated on the next {@link BeforeSave} event.
      */
-    public boolean isForceUpdateSearchPrefixes() {
-        return forceUpdateSearchPrefixes;
-    }
-
-    /**
-     * Forces the search prefixes to be recalculated on the next {@link BeforeSave} event
-     */
-    public void setForceUpdateSearchPrefixes(boolean forceUpdateSearchPrefixes) {
-        this.forceUpdateSearchPrefixes = forceUpdateSearchPrefixes;
+    public void forceUpdateOfSearchPrefixes() {
+        this.forceUpdateSearchPrefixes = true;
     }
 }
