@@ -45,11 +45,7 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
 
     @BeforeSave
     protected void updateSearchField() {
-        if (!isNew()
-            && !forceUpdateSearchPrefixes
-            && getDescriptor().isFetched(this,
-                                         getDescriptor().getProperty(SEARCH_PREFIXES))
-            && !isAnyMappingChanged()) {
+        if (!isNew() && !forceUpdateSearchPrefixes && !isAnyMappingChanged()) {
             return;
         }
 
