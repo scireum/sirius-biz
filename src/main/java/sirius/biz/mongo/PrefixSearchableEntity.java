@@ -12,6 +12,7 @@ import sirius.biz.protocol.NoJournal;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
+import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.NestedList;
 import sirius.db.mixing.types.StringList;
 import sirius.db.mixing.types.StringListMap;
@@ -39,10 +40,15 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
     @NoJournal
     private final StringList searchPrefixes = new StringList();
 
+    @Transient
+    private boolean forceUpdateSearchPrefixes;
+
     @BeforeSave
     protected void updateSearchField() {
         if (!isNew()
-            && getDescriptor().isFetched(this, getDescriptor().getProperty(SEARCH_PREFIXES))
+            && !forceUpdateSearchPrefixes
+            && getDescriptor().isFetched(this,
+                                         getDescriptor().getProperty(SEARCH_PREFIXES))
             && !isAnyMappingChanged()) {
             return;
         }
@@ -111,5 +117,21 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
 
     public StringList getSearchPrefixes() {
         return searchPrefixes;
+    }
+
+    /**
+     * Returns whether the search prefixes will be definitely recalculated on the next {@link BeforeSave} event
+     *
+     * @return whether the search prefixes will be definitely recalculated on the next {@link BeforeSave} event
+     */
+    public boolean isForceUpdateSearchPrefixes() {
+        return forceUpdateSearchPrefixes;
+    }
+
+    /**
+     * Forces the search prefixes to be recalculated on the next {@link BeforeSave} event
+     */
+    public void setForceUpdateSearchPrefixes(boolean forceUpdateSearchPrefixes) {
+        this.forceUpdateSearchPrefixes = forceUpdateSearchPrefixes;
     }
 }
