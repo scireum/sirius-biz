@@ -1,0 +1,52 @@
+/*
+ * Made with all the love in the world
+ * by scireum in Remshalden, Germany
+ *
+ * Copyright by scireum GmbH
+ * http://www.scireum.de - info@scireum.de
+ */
+
+package sirius.biz.cluster.work;
+
+import com.alibaba.fastjson.JSONObject;
+import sirius.kernel.commons.ComparableTuple;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.concurrent.PriorityBlockingQueue;
+
+/**
+ * Provides a local (single machine) implementation for a prioritized queue.
+ */
+class LocalPrioritizedQueue implements PrioritizedQueue {
+
+    private String queueName;
+    private PriorityBlockingQueue<ComparableTuple<Long, JSONObject>> queue = new PriorityBlockingQueue<>();
+
+    LocalPrioritizedQueue(String queueName) {
+        this.queueName = queueName;
+    }
+
+    @Override
+    public void offer(long priority, @Nonnull JSONObject task) {
+        if (!queue.offer(ComparableTuple.create(priority, task))) {
+            throw Exceptions.handle()
+                            .to(Log.BACKGROUND)
+                            .withSystemErrorMessage("The queue '%s' refused to accept '%s' as task", queueName, task)
+                            .handle();
+        }
+    }
+
+    @Nullable
+    @Override
+    public JSONObject poll() {
+        ComparableTuple<Long, JSONObject> head = queue.poll();
+        if (head != null) {
+            return head.getSecond();
+        } else {
+            return null;
+        }
+    }
+}
