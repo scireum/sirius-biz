@@ -10,8 +10,8 @@ package sirius.biz.model;
 
 import sirius.biz.codelists.CodeLists;
 import sirius.biz.web.Autoloaded;
-import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Composite;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
@@ -139,7 +139,7 @@ public class PersonData extends Composite {
      * @return the value for <tt>salutation</tt> from the <tt>salutations</tt> code list
      */
     public String getTranslatedSalutation() {
-        return codeLists.getValue("salutations", salutation);
+        return codeLists.getTranslatedValue("salutations", salutation);
     }
 
     public String getTitle() {
