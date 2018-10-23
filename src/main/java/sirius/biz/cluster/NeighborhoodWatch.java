@@ -279,6 +279,15 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         }
     }
 
+    /**
+     * Determines if the given queue is enabled.
+     * <p>
+     * Note that this only ensures that the queue isn't <tt>DISABLED</tt>. Both, <tt>LOCAL</tt> and <tt>CLUSTER</tt>
+     * behave the same as queues are inherent capable of clustering.
+     *
+     * @param queue the queue to check
+     * @return <tt>true</tt> if the queue is enabled, <tt>false</tt> otherwise
+     */
     public boolean isDistributedTaskQueueEnabled(String queue) {
         String syncName = QUEUE_PREFIX + queue;
 

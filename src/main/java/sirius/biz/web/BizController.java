@@ -141,6 +141,11 @@ public class BizController extends BasicController {
                 LOG.WARN("product.baseUrl is not filled. Please update the system configuration!");
             }
         }
+
+        if (UserContext.getSettings().getConfig().hasPath("tenant.baseUrl")) {
+            return UserContext.getSettings().get("tenant.baseUrl").asString();
+        }
+
         return baseUrl;
     }
 
