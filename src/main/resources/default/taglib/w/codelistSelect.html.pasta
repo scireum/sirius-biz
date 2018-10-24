@@ -17,6 +17,6 @@
 
 <w:singleSelect span="@span" name="@name" label="@label" help="@help" optional="@optional" required="@required" readonly="@readonly" adminOnly="@adminOnly" forceFullWidth="@forceFullWidth">
     <i:for var="entry" type="sirius.biz.codelists.CodeListEntry" items="@codeLists.getEntries(list)">
-        <option value="@entry.getCode()" @if(entry.getCode().equals(value)) {selected="selected"} >@entry.getValue()</option>
+        <option value="@entry.getCode()" @if(entry.getCode().equals(value)) {selected="selected"} >@entry.getTranslatedValue()</option>
     </i:for>
 </w:singleSelect>

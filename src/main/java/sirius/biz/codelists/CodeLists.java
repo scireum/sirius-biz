@@ -14,6 +14,7 @@ import sirius.kernel.Sirius;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -45,6 +46,20 @@ public class CodeLists {
     private OMA oma;
 
     private static final Log LOG = Log.get("codelists");
+
+    /**
+     * Returns the value translated from the given code list associated with the given code.
+     * <p>
+     * If no matching entry exists, the code itself will be returned.
+     *
+     * @param codeList the code list to search in
+     * @param code     the code to lookup
+     * @return the translated value associated with the code or the code itself if no value exists
+     */
+    @Nullable
+    public String getTranslatedValue(@Nonnull String codeList, @Nullable String code) {
+        return Value.of(getValue(codeList, code)).translate().getString();
+    }
 
     /**
      * Returns the value from the given code list associated with the given code.
