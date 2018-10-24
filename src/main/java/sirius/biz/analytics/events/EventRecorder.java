@@ -119,7 +119,7 @@ public class EventRecorder implements Startable, Stoppable {
      * @param event the event to record
      */
     public void record(@Nonnull Event event) {
-        if (!schema.isConfigured(Event.class.getAnnotation(Realm.class).value())) {
+        if (!configured) {
             return;
         }
 
