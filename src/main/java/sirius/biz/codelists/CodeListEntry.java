@@ -15,6 +15,7 @@ import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.annotations.Unique;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Priorized;
 
@@ -71,6 +72,16 @@ public class CodeListEntry extends BizEntity {
     @Length(1024)
     @NullAllowed
     private String description;
+
+    /**
+     * Returns the value of the entry which is translated via
+     * {@link Value#translate()}.
+     *
+     * @return the translated value
+     */
+    public String getTranslatedValue() {
+        return Value.of(value).translate().getString();
+    }
 
     public SQLEntityRef<CodeList> getCodeList() {
         return codeList;
