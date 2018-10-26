@@ -1,0 +1,88 @@
+<i:arg type="sirius.biz.process.Process" name="process"/>
+<i:arg type="int" name="numLogs"/>
+<i:arg type="Page" name="logs"/>
+
+<w:page title="@process.getTitle()">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/ps">@i18n("Process.plural")</a>
+        </li>
+        <li>
+            <a href="/ps/@process.getId()">@process.getTitle()</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader title="@process.getTitle()"/>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="well">
+                <div class="row">
+                    <div class="col-md-2">
+                        <b>@i18n("Process.scheduled")</b><br>
+                        @toUserString(process.getScheduled())
+                    </div>
+                    <i:if test="process.getStarted() != null">
+                        <div class="col-md-2">
+                            <b>@i18n("Process.started")</b><br>
+                            @toUserString(process.getStarted())
+                        </div>
+                    </i:if>
+                    <i:if test="process.getCompleted() != null">
+                        <div class="col-md-2">
+                            <b>@i18n("Process.completed")</b><br>
+                            @toUserString(process.getCompleted())
+                        </div>
+                    </i:if>
+                    <div class="col-md-2">
+                        <b>@i18n("Process.numLogs")</b><br>
+                        @numLogs
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <w:filterbox page="logs" baseUrl="@apply('/ps/%s', process.getId())"/>
+        </div>
+        <div class="col-md-9">
+            <w:table data="logs" colorized="true">
+                <thead>
+                <tr>
+                    <th/>
+                    <th>
+                        @i18n("ProcessLog.message")
+                    </th>
+                    <th class="align-right">
+                        @i18n("ProcessLog.timestamp")<br>
+                        <small class="muted">@i18n("ProcessLog.node")</small>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <i:for type="sirius.biz.process.ProcessLog" var="log" items="logs.getItems()">
+                    <tr class="@log.getRowClass()">
+                        <td/>
+                        <td>
+                            @log.getMessage()
+                        </td>
+                        <td class="align-right">
+                            @toUserString(log.getTimestamp())<br>
+                            <small class="muted">@log.getNode()</small>
+                        </td>
+                    </tr>
+                </i:for>
+                </tbody>
+            </w:table>
+
+            <w:pagination page="logs" baseUrl="@apply('/ps/%s', process.getId())"/>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <a href="/ps" class="btn"><i class="icon-chevron-left"></i> @i18n("NLS.back")</a>
+    </div>
+
+</w:page>

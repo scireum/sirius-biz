@@ -156,7 +156,7 @@ public class DistributedTasks {
                           .to(Log.BACKGROUND)
                           .error(e)
                           .withSystemErrorMessage(
-                                  "The DistributedTaskExecutor '%s' failed for the task '%s' with: %s (%s)",
+                                  "The DistributedTaskExecutor '%s' failed with: %s (%s) for the task '%s'",
                                   exec.getClass().getName(),
                                   task.toJSONString())
                           .handle();
@@ -211,7 +211,7 @@ public class DistributedTasks {
      */
     private DistributedQueueInfo loadQueueInfo(String queueName) {
         Extension config = Sirius.getSettings().getExtension("async.distributed.queues", queueName);
-        if (config.isDefault()) {
+        if (config == null || config.isDefault()) {
             LOG.WARN("Missing configuration for queue: %s", queueName);
             return new DistributedQueueInfo(queueName, null, null);
         }

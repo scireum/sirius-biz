@@ -1,0 +1,29 @@
+<i:arg type="sirius.biz.jobs.JobFactory" name="job"/>
+
+<w:page title="@job.getLabel()">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/jobs">@i18n("JobFactory.plural")</a>
+            <a href="/job/@job.getName()">@job.getLabel()</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader title="@job.getLabel()"/>
+
+    <i:if test="isFilled(job.getDescription())">
+        <div class="well">
+            @job.getDescription()
+        </div>
+    </i:if>
+
+    <w:editForm url="@apply('/job/%s', job.getName())">
+
+    </w:editForm>
+
+    <div class="form-actions">
+        <a class="btn btn-primary submit-link">
+            <i class="fa fa-check"></i> @i18n("JobFactory.execute")
+        </a>
+        <a href="/jobs" class="btn">@i18n("NLS.back")</a>
+    </div>
+</w:page>

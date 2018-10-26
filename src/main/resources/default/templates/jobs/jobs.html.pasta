@@ -1,0 +1,34 @@
+<i:arg type="Page" name="jobs"/>
+
+<w:page titleKey="JobFactory.plural">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/jobs">@i18n("JobFactory.plural")</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader titleKey="JobFactory.plural"/>
+
+    <w:tableSearchHeader page="jobs" baseUrl="/jobs"/>
+
+    <w:table data="jobs">
+        <thead>
+        <tr>
+            <th>
+                @i18n("Model.name")<br>
+                <small class="muted">@i18n("Model.description")</small>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <i:for type="sirius.biz.jobs.JobFactory" var="job" items="jobs.getItems()">
+            <tr>
+                <td>
+                    <a class="link" href="/job/@job.getName()">@job.getName()</a><br>
+                    <small class="muted">@job.getDescription()</small>
+                </td>
+            </tr>
+        </i:for>
+        </tbody>
+    </w:table>
+</w:page>
