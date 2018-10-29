@@ -185,7 +185,7 @@ public class EventRecorder implements Startable, Stoppable {
 
     /**
      * Inserts a single event by either creating a new {@link InsertQuery} or by appending a batch-insert for an
-     * existing once (there is one per event type in <tt>queries</tt>).
+     * existing one (there is one per event type in <tt>queries</tt>).
      *
      * @param ctx     the batch context
      * @param queries the map of perpared insert queries per event type
