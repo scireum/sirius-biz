@@ -47,7 +47,7 @@ public abstract class Event extends SQLEntity {
     private LocalDate eventDate;
 
     /**
-     * Contains the date and them when the event occurred.
+     * Contains the date and time when the event occurred.
      */
     private LocalDateTime eventTimestamp;
 
