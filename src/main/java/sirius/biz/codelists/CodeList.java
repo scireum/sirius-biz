@@ -11,11 +11,17 @@ package sirius.biz.codelists;
 import sirius.biz.jdbc.BizEntity;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.AfterDelete;
+import sirius.db.mixing.annotations.AfterSave;
+import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.annotations.Unique;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
+import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
 
 /**
  * Represents a list for name value pairs which can be managed by the user.
@@ -63,6 +69,24 @@ public class CodeList extends BizEntity {
     public static final Mapping AUTO_FILL = Mapping.named("autofill");
     @Autoloaded
     private boolean autofill = true;
+
+    @Part
+    private static CodeLists codeLists;
+
+    @BeforeSave
+    protected void checkName() {
+        if (Strings.isFilled(code) && code.contains("|")) {
+            throw Exceptions.createHandled().withNLSKey("CodeList.noPipeAllowed").handle();
+        }
+    }
+
+    @AfterSave
+    @AfterDelete
+    protected void flushCache() {
+        if (!isNew()) {
+            codeLists.valueCache.clear();
+        }
+    }
 
     public String getCode() {
         return code;
