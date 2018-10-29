@@ -333,4 +333,19 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
     public void deleteInBatch(E entity) {
         getDeleteQuery().delete(entity, true, true);
     }
+
+    @Override
+    public void commit() {
+        if (insertQuery != null) {
+            insertQuery.commit();
+        }
+
+        if (updateQuery != null) {
+            updateQuery.commit();
+        }
+
+        if (deleteQuery != null) {
+            deleteQuery.commit();
+        }
+    }
 }

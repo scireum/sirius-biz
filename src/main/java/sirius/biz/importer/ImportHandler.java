@@ -111,4 +111,9 @@ public interface ImportHandler<E extends BaseEntity<?>> {
      * @param entity the entity to delete
      */
     void deleteInBatch(E entity);
+
+    /**
+     * Forces a batch to be processed (independent of it size, as long as it isn't empty).
+     */
+    void commit();
 }
