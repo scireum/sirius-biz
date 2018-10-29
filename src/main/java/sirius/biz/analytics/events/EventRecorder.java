@@ -143,7 +143,7 @@ public class EventRecorder implements Startable, Stoppable {
      * An insertion run will be started if there are enough events in the buffer (more than {@link #MIN_BUFFER_SIZE})
      * or if enough time elapsed since the last insertion run (more than {@link #MAX_BUFFER_AGE}).
      *
-     * @return <tt>true</tt> if events where processed, <tt>false</tt> otherwise
+     * @return the number of inserted events
      */
     protected int processIfBufferIsFilled() {
         if (bufferedEvents.get() > MIN_BUFFER_SIZE
