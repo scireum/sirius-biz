@@ -16,13 +16,13 @@ import sirius.kernel.di.std.ConfigValue;
  */
 class ConfigBasedConnectionConfig implements ConnectionConfig {
 
-    @ConfigValue("storage.ftp.maxLoginFailures")
+    @ConfigValue("vfs.ftp.maxLoginFailures")
     private static int maxLoginFailures;
 
-    @ConfigValue("storage.ftp.maxClients")
+    @ConfigValue("vfs.ftp.maxClients")
     private static int maxClients;
 
-    @ConfigValue("storage.ftp.maxThreads")
+    @ConfigValue("vfs.ftp.maxThreads")
     private static int maxThreads;
 
     @Override
