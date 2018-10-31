@@ -11,12 +11,15 @@ package sirius.biz.codelists;
 import sirius.biz.jdbc.BizEntity;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.AfterDelete;
+import sirius.db.mixing.annotations.AfterSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.annotations.Unique;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Framework;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 
 /**
@@ -72,6 +75,17 @@ public class CodeListEntry extends BizEntity {
     @Length(1024)
     @NullAllowed
     private String description;
+
+    @Part
+    private static CodeLists codeLists;
+
+    @AfterSave
+    @AfterDelete
+    protected void flushCache() {
+        if (!isNew()) {
+            codeLists.valueCache.clear();
+        }
+    }
 
     /**
      * Returns the value of the entry which is translated via

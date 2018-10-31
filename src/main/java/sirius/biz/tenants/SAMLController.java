@@ -101,7 +101,6 @@ public class SAMLController extends BizController {
             verifyUser(response, user);
         }
 
-
         UserContext userContext = UserContext.get();
         userContext.setCurrentUser(user);
         manager.onExternalLogin(ctx, user);
@@ -181,7 +180,7 @@ public class SAMLController extends BizController {
         }
 
         for (String value : values.split(",")) {
-            if (Strings.isFilled(value) && Strings.areEqual(value, valueToCheck)) {
+            if (Strings.isFilled(value) && value.equalsIgnoreCase(valueToCheck)) {
                 return true;
             }
         }

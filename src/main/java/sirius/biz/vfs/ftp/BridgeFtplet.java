@@ -34,7 +34,7 @@ class BridgeFtplet implements Ftplet {
 
     private final Set<FtpSession> openSessions = Collections.synchronizedSet(new HashSet<FtpSession>());
 
-    @ConfigValue("storage.ftp.maxConnectionsPerIp")
+    @ConfigValue("vfs.ftp.maxConnectionsPerIp")
     private static int maxConnectionsPerIp;
 
     @Override

@@ -11,6 +11,8 @@ package sirius.biz.codelists;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SQLEntity;
 import sirius.kernel.Sirius;
+import sirius.kernel.cache.Cache;
+import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
@@ -42,10 +44,13 @@ public class CodeLists {
      */
     public static final String FRAMEWORK_CODE_LISTS = "biz.code-lists";
 
+    protected Cache<String, String> valueCache = CacheManager.createCoherentCache("codelists-values");
+
     @Part
     private OMA oma;
 
     private static final Log LOG = Log.get("codelists");
+
 
     /**
      * Returns the value translated from the given code list associated with the given code.
@@ -78,7 +83,9 @@ public class CodeLists {
             return null;
         }
 
-        return getValues(codeList, code).getFirst();
+        return valueCache.get(codeList + "|" + code, ignored -> {
+            return getValues(codeList, code).getFirst();
+        });
     }
 
     /**
