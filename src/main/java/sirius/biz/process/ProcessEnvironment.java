@@ -8,24 +8,41 @@
 
 package sirius.biz.process;
 
+import sirius.biz.elastic.AutoBatchLoop;
+import sirius.kernel.async.CallContext;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.RateLimit;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Average;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nullable;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 class ProcessEnvironment implements ProcessContext {
 
     private String processId;
 
     private RateLimit logLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
+    private RateLimit timingLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
+    private Map<String, Average> timings = new HashMap<>();
 
     @Part
     private static Processes processes;
 
     @Part
     private static Tasks tasks;
+
+    @Part
+    private static AutoBatchLoop autoBatch;
 
     protected ProcessEnvironment(String processId) {
         this.processId = processId;
@@ -40,42 +57,68 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void addTiming(String counter, long millis) {
+        timings.computeIfAbsent(counter, ignored -> new Average()).addValue(millis);
 
+        if (timingLimiter.check()) {
+            processes.addTimings(processId, getTimingsAsStrings());
+        }
+    }
+
+    private Map<String, String> getTimingsAsStrings() {
+        return timings.entrySet()
+                      .stream()
+                      .map(e -> Tuple.create(e.getKey(),
+                                             Strings.apply("%0.00d (%s)",
+                                                           e.getValue().getAvg(),
+                                                           e.getValue().getCount())))
+                      .collect(Collectors.toMap(Tuple::getFirst, Tuple::getSecond));
+    }
+
+    @Override
+    public void log(ProcessLog logEntry) {
+        try {
+            logEntry.setNode(CallContext.getNodeName());
+            logEntry.setTimestamp(LocalDateTime.now());
+            logEntry.getProcess().setId(processId);
+            logEntry.getDescriptor().beforeSave(logEntry);
+            autoBatch.insertAsync(logEntry);
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .withSystemErrorMessage("Failed to record a ProcessLog: %s - %s (%s)", logEntry)
+                      .error(e)
+                      .to(Log.BACKGROUND)
+                      .handle();
+        }
     }
 
     @Override
     public void warn(Object message) {
-
+        log(ProcessLog.warn(NLS.toUserString(message)));
     }
 
     @Override
     public void error(Object message) {
-
+        log(ProcessLog.error(NLS.toUserString(message)));
     }
 
     @Override
     public void handle(Exception e) {
-
+        log(ProcessLog.error(Exceptions.handle(Log.BACKGROUND, e).getMessage()));
     }
 
     @Override
     public boolean isErroneous() {
-        return false;
-    }
-
-    @Override
-    public void markRunning() {
-        processes.markStarted(processId);
+        return processes.fetchProcess(processId).map(Process::isErrorneous).orElse(true);
     }
 
     @Override
     public void markCompleted() {
-
+        processes.markCompleted(processId, getTimingsAsStrings());
     }
 
     @Override
     public void log(String message) {
-
+        log(ProcessLog.info(message));
     }
 
     @Override
@@ -90,7 +133,7 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void markErroneous() {
-
+        processes.markErrorneous(processId);
     }
 
     @Override
@@ -102,5 +145,15 @@ class ProcessEnvironment implements ProcessContext {
     public boolean isActive() {
         return processes.fetchProcess(processId).map(proc -> proc.getState() == ProcessState.RUNNING).orElse(false)
                && tasks.isRunning();
+    }
+
+    @Nullable
+    public String getUserId() {
+        return processes.fetchProcess(processId).map(Process::getUserId).orElse(null);
+    }
+
+    @Override
+    public void setCurrentStateMessage(String state) {
+        processes.setStateMessage(processId, state);
     }
 }

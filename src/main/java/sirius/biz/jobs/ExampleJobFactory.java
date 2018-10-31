@@ -20,7 +20,8 @@ public class ExampleJobFactory extends DefaultProcessJobFactory {
 
     @Override
     public void executeTask(ProcessContext process) {
-        System.out.println("I AM HERE");
+        process.log("Hello From the");
+        process.warn("OTHER SIDE");
     }
 
     @Override

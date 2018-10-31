@@ -47,7 +47,7 @@ public class ProcessController extends BizController {
         ElasticPageHelper<Process> ph = ElasticPageHelper.withQuery(query);
         ph.withContext(ctx);
         ph.addTermAggregation(Process.STATE, ProcessState.class);
-        ph.addTermAggregation(Process.COMPLETION_TYPE, ProcessCompletionType.class);
+      //TODO  ph.addBooleanFacet(Process.CANCELED.getName(), NLS.get("Process.canceled"));
         ph.addTermAggregation(Process.PROCESS_TYPE,
                               value -> NLS.getIfExists(value, NLS.getCurrentLang()).orElse(value));
         ph.addTimeAggregation(Process.SCHEDULED,

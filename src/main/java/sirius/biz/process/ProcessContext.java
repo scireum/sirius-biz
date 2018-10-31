@@ -52,6 +52,8 @@ public interface ProcessContext extends TaskContextAdapter {
 
     void handle(Exception e);
 
+    void log(ProcessLog logEntry);
+
     /**
      * Determines if the current task is erroneous
      *
@@ -59,7 +61,9 @@ public interface ProcessContext extends TaskContextAdapter {
      */
     boolean isErroneous();
 
-    void markRunning();
-
     void markCompleted();
+
+    void setCurrentStateMessage(String state);
+
+
 }

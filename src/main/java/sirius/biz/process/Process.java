@@ -66,13 +66,16 @@ public class Process extends SearchableEntity {
     @NullAllowed
     private LocalDateTime started;
 
+    public static final Mapping CANCELED = Mapping.named("canceled");
+    @NullAllowed
+    private LocalDateTime canceled;
+
     public static final Mapping COMPLETED = Mapping.named("completed");
     @NullAllowed
     private LocalDateTime completed;
 
-    public static final Mapping COMPLETION_TYPE = Mapping.named("completionType");
-    @NullAllowed
-    private ProcessCompletionType completionType;
+    public static final Mapping ERRORNEOUS = Mapping.named("errorneous");
+    private boolean errorneous;
 
     public static final Mapping STATE = Mapping.named("state");
     private ProcessState state;
@@ -81,20 +84,20 @@ public class Process extends SearchableEntity {
      * Determines the bootstrap CSS class to be used for rendering the row of this process.
      */
     public String getRowClass() {
+        //TODO wrooooong - fix logic
+        if (completed == null && state == ProcessState.SCHEDULED) {
+            return "default";
+        }
+
         if (completed == null && state == ProcessState.RUNNING) {
             return "info";
         }
-        if (completionType == ProcessCompletionType.SUCCESS) {
+
+        if (completed != null && !errorneous) {
             return "success";
         }
-        if (completionType == ProcessCompletionType.WARNING) {
-            return "warning";
-        }
-        if (completionType == ProcessCompletionType.FAILED) {
-            return "danger";
-        }
 
-        return "default";
+        return "warning";
     }
 
     public String getTitle() {
@@ -185,14 +188,6 @@ public class Process extends SearchableEntity {
         this.completed = completed;
     }
 
-    public ProcessCompletionType getCompletionType() {
-        return completionType;
-    }
-
-    public void setCompletionType(ProcessCompletionType completionType) {
-        this.completionType = completionType;
-    }
-
     public ProcessState getState() {
         return state;
     }
@@ -207,5 +202,21 @@ public class Process extends SearchableEntity {
 
     public void setStateMessage(String stateMessage) {
         this.stateMessage = stateMessage;
+    }
+
+    public boolean isErrorneous() {
+        return errorneous;
+    }
+
+    public void setErrorneous(boolean errorneous) {
+        this.errorneous = errorneous;
+    }
+
+    public LocalDateTime getCanceled() {
+        return canceled;
+    }
+
+    public void setCanceled(LocalDateTime canceled) {
+        this.canceled = canceled;
     }
 }

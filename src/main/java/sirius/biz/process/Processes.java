@@ -10,6 +10,7 @@ package sirius.biz.process;
 
 import com.alibaba.fastjson.JSONObject;
 import sirius.db.es.Elastic;
+import sirius.db.mixing.OptimisticLockException;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.TaskContextAdapter;
 import sirius.kernel.cache.Cache;
@@ -17,6 +18,7 @@ import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Log;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
@@ -32,7 +34,8 @@ public class Processes {
     @Part
     private Elastic elastic;
 
-    private Cache<String, Process> processCache = CacheManager.createCoherentCache("processes");
+    private Cache<String, Process> process1stLevelCache = CacheManager.createLocalCache("processes-first-level");
+    private Cache<String, Process> process2ndLevelCache = CacheManager.createCoherentCache("processes-second-level");
 
     public String createProcess(String title, UserInfo user, JSONObject context) {
         Process process = new Process();
@@ -59,86 +62,135 @@ public class Processes {
     }
 
     protected Optional<Process> fetchProcess(String processId) {
-        return Optional.of(processCache.get(processId, id -> elastic.find(Process.class, id).orElse(null)));
+        Process process = process1stLevelCache.get(processId);
+        if (process != null) {
+            return Optional.of(process);
+        }
+
+        return Optional.ofNullable(process2ndLevelCache.get(processId,
+                                                            id -> elastic.find(Process.class, id).orElse(null)));
     }
 
-    private void modify(String processId,
-                        Function<Process, Boolean> checker,
-                        Consumer<Process> modifier,
-                        boolean flush) {
-        if (flush) {
-            processCache.remove(processId);
+    private boolean modify(String processId,
+                           Function<Process, Boolean> checker,
+                           Consumer<Process> modifier,
+                           boolean flush) {
+        Process process = process1stLevelCache.get(processId);
+        if (process == null) {
+            process = elastic.find(Process.class, processId).orElse(null);
+        }
+
+        if (process == null) {
+            return false;
+        }
+
+        try {
+            int retries = 5;
+            while (retries-- > 0) {
+                if (!checker.apply(process)) {
+                    return false;
+                }
+                modifier.accept(process);
+                try {
+                    elastic.tryUpdate(process);
+                    process1stLevelCache.put(processId, process);
+                    return true;
+                } catch (OptimisticLockException e) {
+                    Wait.randomMillis(250, 500);
+                }
+            }
+
+            Log.BACKGROUND.WARN("Failed to update process %s after 5 attempts. Skipping update...", processId);
+            return false;
+        } finally {
+            if (flush) {
+                process2ndLevelCache.remove(processId);
+            }
         }
     }
 
-    private void modifyAndFlush(String processId, Function<Process, Boolean> checker, Consumer<Process> modifier) {
-        modify(processId, checker, modifier, true);
+    private boolean modifyAndFlush(String processId, Function<Process, Boolean> checker, Consumer<Process> modifier) {
+        return modify(processId, checker, modifier, true);
     }
 
-    private void modifyWithoutFlush(String processId, Function<Process, Boolean> checker, Consumer<Process> modifier) {
-        modify(processId, checker, modifier, false);
+    private boolean modifyWithoutFlush(String processId,
+                                       Function<Process, Boolean> checker,
+                                       Consumer<Process> modifier) {
+        return modify(processId, checker, modifier, false);
     }
 
-    protected void updateStatus(String processId, ProcessState newState) {
-        modifyAndFlush(processId,
-                       process -> process.getState().ordinal() < newState.ordinal(),
-                       process -> process.setState(newState));
+    protected boolean updateState(String processId, ProcessState newState) {
+        return modifyAndFlush(processId,
+                              process -> process.getState().ordinal() < newState.ordinal(),
+                              process -> process.setState(newState));
     }
 
-    protected void markStarted(String processId) {
-        modifyAndFlush(processId, process -> process.getState() == ProcessState.SCHEDULED, process -> {
+    protected boolean markStarted(String processId) {
+        return modifyAndFlush(processId, process -> process.getState() == ProcessState.SCHEDULED, process -> {
             process.setState(ProcessState.RUNNING);
             process.setStarted(LocalDateTime.now());
         });
     }
 
-    protected void markCanceled(String processId) {
-        modifyAndFlush(processId,
-                       process -> process.getState() == ProcessState.SCHEDULED
-                                  || process.getState() == ProcessState.RUNNING,
-                       process -> process.setState(ProcessState.CANCELED));
+    protected boolean markCanceled(String processId) {
+        return modifyAndFlush(processId,
+                              process -> process.getState() == ProcessState.SCHEDULED
+                                         || process.getState() == ProcessState.RUNNING,
+                              process -> {
+                                  process.setErrorneous(true);
+                                  process.setCanceled(LocalDateTime.now());
+                                  process.setState(ProcessState.CANCELED);
+                              });
     }
 
-    protected void markCompleted(String processId, ProcessCompletionType completionType, Map<String, String> timings) {
-        modifyAndFlush(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
+    protected boolean markErrorneous(String processId) {
+        return modifyAndFlush(processId,
+                              process -> !process.isErrorneous() && (process.getState() == ProcessState.SCHEDULED
+                                                                     || process.getState() == ProcessState.RUNNING),
+                              process -> process.setErrorneous(true));
+    }
+
+    protected boolean markCompleted(String processId, Map<String, String> timings) {
+        return modifyAndFlush(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             process.setState(ProcessState.TERMINATED);
             process.setCompleted(LocalDateTime.now());
-            process.setCompletionType(completionType);
+
             if (timings != null) {
                 process.getCounters().modify().putAll(timings);
             }
         });
     }
 
-    protected void addTimings(String processId, Map<String, String> timings) {
-        modifyWithoutFlush(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
+    protected boolean addTimings(String processId, Map<String, String> timings) {
+        return modifyWithoutFlush(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             process.getCounters().modify().putAll(timings);
         });
     }
 
-    protected void setStateMessage(String processId, String state) {
-        modifyWithoutFlush(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
+    protected boolean setStateMessage(String processId, String state) {
+        return modifyWithoutFlush(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             process.setStateMessage(state);
         });
     }
 
-    public void partiallyExecute(String processId, Consumer<ProcessContext> task) {
+    private void execute(String processId, Consumer<ProcessContext> task, boolean complete) {
         TaskContext taskContext = TaskContext.get();
         UserContext userContext = UserContext.get();
 
         TaskContextAdapter taskContextAdapterBackup = taskContext.getAdapter();
         UserInfo userInfoBackup = userContext.getUser();
 
-        ProcessEnvironment env = new ProcessEnvironment();
-        taskContext.setJob(env.getProcess().getIdAsString());
+        ProcessEnvironment env = new ProcessEnvironment(processId);
+        taskContext.setJob(processId);
         taskContext.setAdapter(env);
 
-        UserInfo user = userContext.getUserManager().findUserByUserId(env.getProcess().getUserId());
+        UserInfo user = userContext.getUserManager().findUserByUserId(env.getUserId());
         if (user != null) {
             userContext.setCurrentUser(user);
         }
 
         try {
+            markStarted(processId);
             if (env.isActive()) {
                 task.accept(env);
             }
@@ -147,13 +199,17 @@ public class Processes {
         } finally {
             taskContext.setAdapter(taskContextAdapterBackup);
             userContext.setCurrentUser(userInfoBackup);
+            if (complete) {
+                env.markCompleted();
+            }
         }
     }
 
+    public void partiallyExecute(String processId, Consumer<ProcessContext> task) {
+        execute(processId, task, false);
+    }
+
     public void execute(String processId, Consumer<ProcessContext> task) {
-        partiallyExecute(processId, ctx -> {
-            task.accept(ctx);
-            ctx.markCompleted();
-        });
+        execute(processId, task, true);
     }
 }
