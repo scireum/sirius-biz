@@ -42,7 +42,7 @@ public class DistributedTaskExecutorLoadAction implements ClassLoadAction {
         }
 
         try {
-            Object anInstance = aClass.newInstance();
+            Object anInstance = aClass.getDeclaredConstructor().newInstance();
             mutableGlobalContext.registerPart(anInstance.getClass().getName(),
                                               anInstance,
                                               DistributedTaskExecutor.class);
