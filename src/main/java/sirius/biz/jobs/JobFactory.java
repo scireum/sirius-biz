@@ -26,7 +26,7 @@ public interface JobFactory  extends Named, Priorized {
 
     List<String> getRequiredPermissions();
 
-    List<Parameter> getParameters();
+    List<Parameter<?>> getParameters();
 
     String execute(Function<String, Value> parameterProvider);
 }

@@ -84,7 +84,7 @@ public class TenantController extends BizController {
      * @return the translated description of the permission
      */
     public String getPermissionDescription(String role) {
-        return NLS.getIfExists("TenantPermission." + role + ".description", NLS.getCurrentLang()).orElse("");
+        return NLS.getIfExists("TenantPermission." + role + ".description", null).orElse("");
     }
 
     /**

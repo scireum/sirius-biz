@@ -30,7 +30,7 @@ public abstract class ProcessCommand implements Command {
                 processes.createProcessForCurrentUser(createTitle(argumentValues), createContext(argumentValues));
         tasks.defaultExecutor().fork(() -> processes.execute(processId, this::executeProcess));
 
-        output.apply("A process has been started on node %s: %s", CallContext.getNodeName(), "/process/" + processId);
+        output.apply("A process has been started on node %s: %s", CallContext.getNodeName(), "/ps/" + processId);
     }
 
     protected abstract String createTitle(Values args);

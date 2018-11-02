@@ -9,8 +9,10 @@
 package sirius.biz.process;
 
 import com.alibaba.fastjson.JSONObject;
+import sirius.biz.elastic.AutoBatchLoop;
 import sirius.db.es.Elastic;
 import sirius.db.mixing.OptimisticLockException;
+import sirius.kernel.async.CallContext;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.TaskContextAdapter;
 import sirius.kernel.cache.Cache;
@@ -18,6 +20,7 @@ import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -33,6 +36,9 @@ public class Processes {
 
     @Part
     private Elastic elastic;
+
+    @Part
+    private AutoBatchLoop autoBatch;
 
     private Cache<String, Process> process1stLevelCache = CacheManager.createLocalCache("processes-first-level");
     private Cache<String, Process> process2ndLevelCache = CacheManager.createCoherentCache("processes-second-level");
@@ -171,6 +177,26 @@ public class Processes {
         return modifyWithoutFlush(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             process.setStateMessage(state);
         });
+    }
+
+    public void log(String processId, ProcessLog logEntry) {
+        try {
+            if (logEntry.getType() == ProcessLogType.ERROR) {
+                markErrorneous(processId);
+            }
+
+            logEntry.setNode(CallContext.getNodeName());
+            logEntry.setTimestamp(LocalDateTime.now());
+            logEntry.getProcess().setId(processId);
+            logEntry.getDescriptor().beforeSave(logEntry);
+            autoBatch.insertAsync(logEntry);
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .withSystemErrorMessage("Failed to record a ProcessLog: %s - %s (%s)", logEntry)
+                      .error(e)
+                      .to(Log.BACKGROUND)
+                      .handle();
+        }
     }
 
     private void execute(String processId, Consumer<ProcessContext> task, boolean complete) {

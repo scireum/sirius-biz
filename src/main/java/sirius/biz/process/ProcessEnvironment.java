@@ -8,8 +8,6 @@
 
 package sirius.biz.process;
 
-import sirius.biz.elastic.AutoBatchLoop;
-import sirius.kernel.async.CallContext;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.RateLimit;
 import sirius.kernel.commons.Strings;
@@ -21,7 +19,6 @@ import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -40,9 +37,6 @@ class ProcessEnvironment implements ProcessContext {
 
     @Part
     private static Tasks tasks;
-
-    @Part
-    private static AutoBatchLoop autoBatch;
 
     protected ProcessEnvironment(String processId) {
         this.processId = processId;
@@ -68,7 +62,7 @@ class ProcessEnvironment implements ProcessContext {
         return timings.entrySet()
                       .stream()
                       .map(e -> Tuple.create(e.getKey(),
-                                             Strings.apply("%0.00d (%s)",
+                                             Strings.apply("%1.0f ms (%s)",
                                                            e.getValue().getAvg(),
                                                            e.getValue().getCount())))
                       .collect(Collectors.toMap(Tuple::getFirst, Tuple::getSecond));
@@ -76,19 +70,7 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void log(ProcessLog logEntry) {
-        try {
-            logEntry.setNode(CallContext.getNodeName());
-            logEntry.setTimestamp(LocalDateTime.now());
-            logEntry.getProcess().setId(processId);
-            logEntry.getDescriptor().beforeSave(logEntry);
-            autoBatch.insertAsync(logEntry);
-        } catch (Exception e) {
-            Exceptions.handle()
-                      .withSystemErrorMessage("Failed to record a ProcessLog: %s - %s (%s)", logEntry)
-                      .error(e)
-                      .to(Log.BACKGROUND)
-                      .handle();
-        }
+        processes.log(processId, logEntry);
     }
 
     @Override

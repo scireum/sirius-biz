@@ -14,9 +14,14 @@ import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.types.NestedList;
 import sirius.db.mixing.types.StringMap;
+import sirius.kernel.commons.Tuple;
+import sirius.kernel.nls.NLS;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Process extends SearchableEntity {
 
@@ -54,7 +59,7 @@ public class Process extends SearchableEntity {
     private String context;
 
     public static final Mapping LINKS = Mapping.named("links");
-    private final StringMap links = new StringMap();
+    private final NestedList<ProcessLink> links = new NestedList<>(ProcessLink.class);
 
     public static final Mapping COUNTERS = Mapping.named("counters");
     private final StringMap counters = new StringMap();
@@ -84,20 +89,51 @@ public class Process extends SearchableEntity {
      * Determines the bootstrap CSS class to be used for rendering the row of this process.
      */
     public String getRowClass() {
-        //TODO wrooooong - fix logic
-        if (completed == null && state == ProcessState.SCHEDULED) {
+        if (state == ProcessState.STANDBY || state == ProcessState.SCHEDULED) {
             return "default";
         }
 
-        if (completed == null && state == ProcessState.RUNNING) {
+        if (state == ProcessState.RUNNING && !errorneous) {
             return "info";
         }
 
-        if (completed != null && !errorneous) {
-            return "success";
+        if (state == ProcessState.CANCELED || (state == ProcessState.RUNNING && errorneous)) {
+            return "warning";
         }
 
-        return "warning";
+        if (errorneous) {
+            return "danger";
+        } else {
+            return "success";
+        }
+    }
+
+    public String getLabelClass() {
+        if (state == ProcessState.STANDBY || state == ProcessState.SCHEDULED) {
+            return "";
+        }
+
+        if (state == ProcessState.RUNNING && !errorneous) {
+            return "label-info";
+        }
+
+        if (state == ProcessState.CANCELED || (state == ProcessState.RUNNING && errorneous)) {
+            return "label-warning";
+        }
+
+        if (errorneous) {
+            return "label-danger";
+        } else {
+            return "label-success";
+        }
+    }
+
+    public List<Tuple<String, String>> getCounterList() {
+        return Tuple.fromMap(getCounters().data())
+                    .stream()
+                    .map(counter -> Tuple.create(NLS.getIfExists(counter.getFirst(), null).orElse(counter.getFirst()),
+                                                 counter.getSecond()))
+                    .collect(Collectors.toList());
     }
 
     public String getTitle() {
@@ -156,7 +192,7 @@ public class Process extends SearchableEntity {
         this.context = context;
     }
 
-    public StringMap getLinks() {
+    public NestedList<ProcessLink> getLinks() {
         return links;
     }
 

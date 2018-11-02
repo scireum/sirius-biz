@@ -14,7 +14,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
-import sirius.web.controller.Message;
 import sirius.web.controller.Page;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
@@ -39,15 +38,18 @@ public class JobsController extends BizController {
     @Routed("/job/:1")
     public void job(WebContext ctx, String jobType) {
         if (ctx.isSafePOST()) {
-            String redirectUri = jobs.execute(jobType, ctx::get);
-            if (Strings.isFilled(redirectUri)) {
-                ctx.respondWith().redirectToGet(redirectUri);
-            } else {
-                UserContext.message(Message.info("Dud"));
-                ctx.respondWith().redirectToGet("/jobs");
-            }
+            try {
+                String redirectUri = jobs.execute(jobType, ctx::get);
+                if (Strings.isFilled(redirectUri)) {
+                    ctx.respondWith().redirectToGet(redirectUri);
+                } else {
+                    ctx.respondWith().redirectToGet("/jobs");
+                }
 
-            return;
+                return;
+            } catch (Exception e) {
+                UserContext.handle(e);
+            }
         }
         ctx.respondWith().template("/templates/jobs/job.html.pasta", jobs.findFactory(jobType, JobFactory.class));
     }

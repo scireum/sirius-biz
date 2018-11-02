@@ -1,0 +1,9 @@
+<i:arg type="sirius.biz.params.Parameter" name="param"/>
+
+<w:textfield span="@param.getSpan()"
+             smallSpan="@param.getSmallSpan()"
+             name="@param.getName()"
+             label="@param.getTitle()"
+             help="@param.getDescription()"
+             value="@call.get(param.getName()).asString()"
+             required="@param.isRequired()"/>

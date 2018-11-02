@@ -12,6 +12,7 @@ import com.alibaba.fastjson.JSONObject;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.ProcessLog;
 import sirius.biz.process.Processes;
 import sirius.kernel.di.std.Part;
 
@@ -29,6 +30,8 @@ public abstract class BasicProcessJobFactory extends BasicJobFactory {
     @Override
     protected String executeWithContext(JSONObject context) {
         String processId = processes.createProcessForCurrentUser(getLabel(), context);
+
+        processes.log(processId, ProcessLog.info("Scheduled"));
 
         JSONObject executorContext =
                 new JSONObject().fluentPut(CONTEXT_PROCESS, processId).fluentPut(CONTEXT_JOB_FACTORY, getName());

@@ -63,7 +63,7 @@ public class ProcessLog extends SearchableEntity {
             return "success";
         }
 
-        return "";
+        return "default";
     }
 
     public static ProcessLog info(String message, Object... parameters) {

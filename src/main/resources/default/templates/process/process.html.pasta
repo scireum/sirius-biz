@@ -1,3 +1,4 @@
+<i:arg type="sirius.biz.process.ProcessController" name="controller"/>
 <i:arg type="sirius.biz.process.Process" name="process"/>
 <i:arg type="int" name="numLogs"/>
 <i:arg type="Page" name="logs"/>
@@ -12,42 +13,51 @@
         </li>
     </i:block>
 
-    <w:pageHeader title="@process.getTitle()"/>
-
-    <div class="row">
-        <div class="col-md-12">
-            <div class="well">
-                <div class="row">
-                    <div class="col-md-2">
-                        <b>@i18n("Process.scheduled")</b><br>
-                        @toUserString(process.getScheduled())
-                    </div>
-                    <i:if test="process.getStarted() != null">
-                        <div class="col-md-2">
-                            <b>@i18n("Process.started")</b><br>
-                            @toUserString(process.getStarted())
-                        </div>
-                    </i:if>
-                    <i:if test="process.getCompleted() != null">
-                        <div class="col-md-2">
-                            <b>@i18n("Process.completed")</b><br>
-                            @toUserString(process.getCompleted())
-                        </div>
-                    </i:if>
-                    <div class="col-md-2">
-                        <b>@i18n("Process.numLogs")</b><br>
-                        @numLogs
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <w:pageHeader>
+        <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
+            <i class="fa fa-refresh fa-spin" id="spinner"></i>
+        </i:if>
+        @process.getTitle()
+        <span class="label @process.getLabelClass()">@process.getState()</span>
+    </w:pageHeader>
 
     <div class="row">
         <div class="col-md-3">
+            <w:infobox titleKey="Model.details">
+                <i:if test="process.getState() == sirius.biz.process.ProcessState.STANDBY">
+                    <w:infoboxElement labelKey="Process.lastInteraction" value="@controller.formatTimestamp(process.getScheduled())"/>
+                    <i:else>
+                        <w:infoboxElement labelKey="Process.scheduled" value="@controller.formatTimestamp(process.getScheduled())"/>
+                        <w:infoboxElement labelKey="Process.waittime" value="@controller.formatDuration(process.getScheduled(), process.getStarted())"/>
+                        <w:infoboxElement labelKey="Process.runtime" value="@controller.formatDuration(process.getStarted(), process.getCompleted())"/>
+                        <w:infoboxElement labelKey="Process.completed" value="@controller.formatTimestamp(process.getCompleted())"/>
+                        <w:infoboxElement labelKey="Process.numLogs" value="@numLogs"/>
+                    </i:else>
+                </i:if>
+            </w:infobox>
+
+            <i:if test="@!process.getCounters().isEmpty()">
+                <w:infobox titleKey="Process.counters">
+                    <i:for type="Tuple" var="timing" items="process.getCounterList()">
+                        <w:infoboxElement label="@timing.getFirst().as(String.class)"
+                                          value="@timing.getSecond()"/>
+                    </i:for>
+                </w:infobox>
+            </i:if>
+
+
             <w:filterbox page="logs" baseUrl="@apply('/ps/%s', process.getId())"/>
         </div>
         <div class="col-md-9">
+            <i:if test="isFilled(process.getStateMessage())">
+                <w:helpbox>
+                    <i class="fa fa-info-circle"></i> <b>@i18n("Process.stateMessage"):</b>
+                    @process.getStateMessage()
+                </w:helpbox>
+            </i:if>
+
+            <w:tableSearchHeader page="logs" baseUrl="@apply('/ps/%s', process.getId())"/>
+
             <w:table data="logs" colorized="true">
                 <thead>
                 <tr>
@@ -69,7 +79,7 @@
                             @log.getMessage()
                         </td>
                         <td class="align-right">
-                            @toUserString(log.getTimestamp())<br>
+                            @controller.formatTimestamp(log.getTimestamp())<br>
                             <small class="muted">@log.getNode()</small>
                         </td>
                     </tr>

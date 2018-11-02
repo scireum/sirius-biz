@@ -17,7 +17,12 @@
     </i:if>
 
     <w:editForm url="@apply('/job/%s', job.getName())">
+        <div class="row">
+            <i:for type="sirius.biz.params.Parameter" var="param" items="job.getParameters()">
+                <i:dynamicInvoke template="@param.getTemplateName()" param="@param" />
+            </i:for>
 
+        </div>
     </w:editForm>
 
     <div class="form-actions">

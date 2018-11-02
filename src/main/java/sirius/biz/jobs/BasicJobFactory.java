@@ -32,14 +32,14 @@ public abstract class BasicJobFactory implements JobFactory {
 
     @Override
     public String getLabel() {
-        return NLS.getIfExists(getClass().getSimpleName() + ".label", NLS.getCurrentLang())
+        return NLS.getIfExists(getClass().getSimpleName() + ".label", null)
                   .orElse(getClass().getSimpleName());
     }
 
     @Nullable
     @Override
     public String getDescription() {
-        return NLS.getIfExists(getClass().getSimpleName() + ".description", NLS.getCurrentLang()).orElse(null);
+        return NLS.getIfExists(getClass().getSimpleName() + ".description", null).orElse(null);
     }
 
     @Override
@@ -50,18 +50,18 @@ public abstract class BasicJobFactory implements JobFactory {
     }
 
     @Override
-    public List<Parameter> getParameters() {
-        List<Parameter> result = new ArrayList<>();
+    public List<Parameter<?>> getParameters() {
+        List<Parameter<?>> result = new ArrayList<>();
         collectParameters(result::add);
         return result;
     }
 
-    protected abstract void collectParameters(Consumer<Parameter> parameterCollector);
+    protected abstract void collectParameters(Consumer<Parameter<?>> parameterCollector);
 
     @Override
     public String execute(Function<String, Value> parameterProvider) {
         JSONObject context = new JSONObject();
-        for (Parameter parameter : getParameters()) {
+        for (Parameter<?> parameter : getParameters()) {
             context.put(parameter.getName(), parameter.checkAndTransform(parameterProvider.apply(parameter.getName())));
         }
 

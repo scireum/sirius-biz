@@ -1,3 +1,4 @@
+<i:arg type="sirius.biz.process.ProcessController" name="controller"/>
 <i:arg type="Page" name="processes"/>
 
 <w:page titleKey="Process.plural">
@@ -29,8 +30,7 @@
                         <small class="muted">@i18n("Process.tenantName")</small>
                     </th>
                     <th class="align-right">
-                        @i18n("Process.scheduled")<br>
-                        @i18n("Process.completed")
+                        @i18n("Process.started")
                     </th>
                 </tr>
                 </thead>
@@ -47,8 +47,7 @@
                             <small class="muted">@process.getTenantName()</small>
                         </td>
                         <td class="align-right">
-                            @toUserString(process.getScheduled())<br>
-                            @toUserString(process.getCompleted())
+                            @controller.formatTimestamp(process.getScheduled())
                         </td>
                     </tr>
                 </i:for>
