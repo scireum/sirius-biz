@@ -20,6 +20,7 @@ import sirius.kernel.health.metrics.MetricState;
 import sirius.web.health.Cluster;
 import sirius.web.health.ClusterManager;
 import sirius.web.health.NodeInfo;
+import sirius.web.http.WebServer;
 import sirius.web.services.JSONCall;
 
 import javax.annotation.Nonnull;
@@ -91,7 +92,7 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
 
     private String getLocalAddress() {
         try {
-            return "http://" + InetAddress.getLocalHost().getHostAddress();
+            return "http://" + InetAddress.getLocalHost().getHostAddress() + ":" + WebServer.getPort();
         } catch (UnknownHostException e) {
             return "";
         }
@@ -164,7 +165,8 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
         for (int i = 0; i < nodeMetrics.size(); i++) {
             try {
                 JSONObject metric = (JSONObject) nodeMetrics.get(i);
-                Metric m = new Metric(metric.getString(ClusterController.RESPONSE_CODE),metric.getString(ClusterController.RESPONSE_LABEL),
+                Metric m = new Metric(metric.getString(ClusterController.RESPONSE_CODE),
+                                      metric.getString(ClusterController.RESPONSE_LABEL),
                                       metric.getDoubleValue(ClusterController.RESPONSE_VALUE),
                                       MetricState.valueOf(metric.getString(ClusterController.RESPONSE_STATE)),
                                       metric.getString(ClusterController.RESPONSE_UNIT));
