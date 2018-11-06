@@ -10,12 +10,8 @@ package sirius.biz.cluster
 
 import com.google.common.collect.ImmutableList
 import sirius.kernel.BaseSpecification
-import sirius.kernel.commons.Wait
 import sirius.web.controller.Message
 import spock.lang.Shared
-
-import java.lang.reflect.Field
-import java.lang.reflect.Modifier
 
 class RedisUserMessageCacheTest extends BaseSpecification {
 
@@ -24,18 +20,6 @@ class RedisUserMessageCacheTest extends BaseSpecification {
 
     @Shared
     def messages = ImmutableList.of(Message.error("Test error message"))
-
-    def setupSpec() {
-        //Mock TTL to 1 Second
-        Field field = RedisUserMessageCache.class.getDeclaredField("DEFAULT_TTL")
-        field.setAccessible(true)
-
-        Field modifiersField = Field.class.getDeclaredField("modifiers")
-        modifiersField.setAccessible(true)
-        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL)
-
-        field.set(null, 1)
-    }
 
     def "test put value and then get value works, but second get is null"() {
         given:
@@ -50,15 +34,4 @@ class RedisUserMessageCacheTest extends BaseSpecification {
         and:
         cache.getAndRemove(key) == null
     }
-
-    def "get after the expire time returns null"() {
-        given:
-        String key = "key" + System.currentTimeMillis()
-        when:
-        cache.put(key, messages)
-        Wait.seconds(1)
-        then:
-        cache.getAndRemove(key) == null
-    }
-
 }
