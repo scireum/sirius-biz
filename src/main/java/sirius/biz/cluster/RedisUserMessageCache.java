@@ -33,7 +33,7 @@ public class RedisUserMessageCache implements DistributedUserMessageCache {
     private static final long DEFAULT_TTL = Duration.ofMinutes(1).getSeconds();
 
     @Part
-    private Redis redis;
+    private static Redis redis;
 
     @Override
     public void put(String key, List<Message> value) {
