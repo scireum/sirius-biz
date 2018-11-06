@@ -9,7 +9,7 @@
     </w:menuSection>
 
     <w:menuSection>
-        <w:menuItem titleKey="AuditLogEntry.plural" url="/audit-log"/>
+        <w:menuItem titleKey="AuditLogEntry.plural" url="/audit-log" framework="biz.protocols"/>
         <w:permission permission="permission-system-protocols">
             <w:menuItem titleKey="LoggedMessage.plural" url="/system/logs" framework="biz.protocols"/>
             <w:menuItem titleKey="StoredIncident.plural" url="/system/errors" framework="biz.protocols"/>
