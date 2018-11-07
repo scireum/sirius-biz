@@ -1,0 +1,69 @@
+<i:arg type="sirius.biz.jobs.JobFactory" name="job"/>
+<i:arg type="Map" name="context"/>
+
+<w:page title="@job.getLabel()">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/jobs">@i18n("JobFactory.plural")</a>
+        </li>
+        <li>
+            <a href="/job/@job.getName()">@job.getLabel()</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader title="@job.getLabel()"/>
+
+    <div class="row">
+        <i:if test="!job.getParameters().isEmpty()">
+            <div class="col-md-3">
+                <w:editForm url="@apply('/job/%s', job.getName())">
+                    <div class="well">
+                        <div class="row">
+                            <i:for type="sirius.biz.params.Parameter" var="param" items="job.getParameters()">
+                                    <i:dynamicInvoke template="@param.getTemplateName()" param="@param" context="@context" />
+                            </i:for>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <a class="btn btn-primary submit-link btn-block">
+                                    <i class="fa fa-check"></i> @i18n("JobFactory.execute")
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </w:editForm>
+                <div>
+                    <a href="/jobs" class="btn btn-block">@i18n("NLS.back")</a>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <i:if test="isFilled(job.getDescription())">
+                    <div class="well">
+                        @job.getDescription()
+                    </div>
+                </i:if>
+                <div>
+                    <i:render name="body" />
+                </div>
+            </div>
+            <i:else>
+                <div class="col-md-10 col-md-offset-1">
+                    <i:if test="isFilled(job.getDescription())">
+                        <div class="well">
+                            @job.getDescription()
+                        </div>
+                    </i:if>
+                    <div>
+                        <i:render name="body" />
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="form-actions">
+                        <a href="/jobs" class="btn">@i18n("NLS.back")</a>
+                    </div>
+                </div>
+            </i:else>
+        </i:if>
+    </div>
+</w:page>

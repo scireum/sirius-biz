@@ -1,0 +1,30 @@
+<i:arg type="sirius.biz.jobs.JobFactory" name="job"/>
+<i:arg type="Map" name="context"/>
+<i:arg type="String" name="labels"/>
+<i:arg type="String" name="dataset"/>
+
+<i:invoke template="/templates/jobs/interactive-job.html.pasta" job="job" context="context">
+    <div class="well">
+        <canvas id="chart" class="chart" style="display: block" height="200"></canvas>
+    </div>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            @raw {
+                new Chart($('#chart').get(0).getContext("2d"), {
+                    data: {
+                        datasets: [{
+                            data: [ @dataset ],
+                            backgroundColor: ["#5cbae6","#b6d957","#fac364","#8cd3ff","#d998cb","#f2d249","#93b9c6","#ccc5a8","#52bacc","#dbdb46","#98aafb"]
+                        }],
+                        labels: [ @labels ]
+                    },
+                    type: 'doughnut',
+                    options: {
+                        startAngle: -0.55 * Math.PI
+                    }
+                });
+            }
+        });
+    </script>
+</i:invoke>

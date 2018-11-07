@@ -5,6 +5,8 @@
     <i:block name="breadcrumbs">
         <li>
             <a href="/jobs">@i18n("JobFactory.plural")</a>
+        </li>
+        <li>
             <a href="/job/@job.getName()">@job.getLabel()</a>
         </li>
     </i:block>
