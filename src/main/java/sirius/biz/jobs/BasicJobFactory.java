@@ -72,7 +72,13 @@ public abstract class BasicJobFactory implements JobFactory {
                 UserContext.handle(e);
             }
         }
-        request.respondWith().template("/templates/jobs/job.html.pasta", this);
+        Map<String, String> context = new HashMap<>();
+        try {
+            context = buildAndVerifyContext(request::get);
+        } catch (Exception e) {
+            UserContext.handle(e);
+        }
+        request.respondWith().template("/templates/jobs/job.html.pasta", this, context);
     }
 
     protected abstract void callInUI(WebContext request);
