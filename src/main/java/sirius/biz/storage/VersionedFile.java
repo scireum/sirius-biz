@@ -6,15 +6,12 @@ import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
-import sirius.kernel.commons.Explain;
 
 import java.time.LocalDateTime;
 
 /**
  * Entity holding meta information about a versioned file.
  */
-@Explain("No need to override the equals method. Mapping and property can have the same name, this is sirius standard.")
-@SuppressWarnings({"squid:S2160", "squid:MaximumInheritanceDepth", "squid:S1845"})
 public class VersionedFile extends SQLTenantAware {
 
     /**
