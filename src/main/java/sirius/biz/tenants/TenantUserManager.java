@@ -288,7 +288,7 @@ public class TenantUserManager extends GenericUserManager {
     /**
      * Tries to find a {@link UserInfo} for the given unique object name of a {@link UserAccount}.
      *
-     * @param accountId the unique object name of an <tt>UserAccount</tt> to resolve into a <tt>UserInfo</tt>
+     * @param accountId the unique object name of an <tt>UserAccount</tt> to resolveFromString into a <tt>UserInfo</tt>
      * @return the <tt>UserInfo</tt> representing the given account (will utilize caches if available) or <tt>null</tt>
      * if no such user exists
      */

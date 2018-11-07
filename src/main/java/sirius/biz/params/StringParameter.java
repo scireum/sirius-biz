@@ -10,7 +10,9 @@ package sirius.biz.params;
 
 import sirius.kernel.commons.Value;
 
-public class StringParameter extends Parameter<StringParameter> {
+import java.util.Optional;
+
+public class StringParameter extends Parameter<String,StringParameter> {
 
     public StringParameter(String name, String title) {
         super(name, title);
@@ -22,7 +24,12 @@ public class StringParameter extends Parameter<StringParameter> {
     }
 
     @Override
-    protected Object checkAndTransformValue(Value input) {
+    protected String checkAndTransformValue(Value input) {
         return input.getString();
+    }
+
+    @Override
+    protected Optional<String> resolveFromString(Value input) {
+        return input.asOptionalString();
     }
 }

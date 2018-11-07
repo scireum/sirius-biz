@@ -12,7 +12,7 @@ import sirius.kernel.nls.NLS;
 
 public enum ProcessState {
 
-    SCHEDULED, STANDBY, RUNNING, CANCELED, TERMINATED;
+    STANDBY, RUNNING, CANCELED, TERMINATED;
 
     @Override
     public String toString() {

@@ -36,15 +36,21 @@ public class Process extends SearchableEntity {
     @IndexMode(indexed = ESOption.FALSE, docValues = ESOption.FALSE)
     private String stateMessage;
 
+    public static final Mapping REQUIRED_PERMISSION = Mapping.named("requiredPermission");
+    @NullAllowed
+    private String requiredPermission;
+
     public static final Mapping PROCESS_TYPE = Mapping.named("processType");
     @NullAllowed
     private String processType;
 
     public static final Mapping USER_ID = Mapping.named("userId");
+    @NullAllowed
     private String userId;
 
     public static final Mapping USER_NAME = Mapping.named("userName");
     @SearchContent
+    @NullAllowed
     private String userName;
 
     public static final Mapping TENANT_ID = Mapping.named("tenantId");
@@ -55,17 +61,13 @@ public class Process extends SearchableEntity {
     private String tenantName;
 
     public static final Mapping CONTEXT = Mapping.named("context");
-    @IndexMode(indexed = ESOption.FALSE, docValues = ESOption.FALSE)
-    private String context;
+    private final StringMap context = new StringMap();
 
     public static final Mapping LINKS = Mapping.named("links");
     private final NestedList<ProcessLink> links = new NestedList<>(ProcessLink.class);
 
     public static final Mapping COUNTERS = Mapping.named("counters");
     private final StringMap counters = new StringMap();
-
-    public static final Mapping SCHEDULED = Mapping.named("scheduled");
-    private LocalDateTime scheduled;
 
     public static final Mapping STARTED = Mapping.named("started");
     @NullAllowed
@@ -89,8 +91,8 @@ public class Process extends SearchableEntity {
      * Determines the bootstrap CSS class to be used for rendering the row of this process.
      */
     public String getRowClass() {
-        if (state == ProcessState.STANDBY || state == ProcessState.SCHEDULED) {
-            return "default";
+        if (state == ProcessState.STANDBY) {
+            return "info";
         }
 
         if (state == ProcessState.RUNNING && !errorneous) {
@@ -104,12 +106,12 @@ public class Process extends SearchableEntity {
         if (errorneous) {
             return "danger";
         } else {
-            return "success";
+            return "default";
         }
     }
 
     public String getLabelClass() {
-        if (state == ProcessState.STANDBY || state == ProcessState.SCHEDULED) {
+        if (state == ProcessState.STANDBY) {
             return "";
         }
 
@@ -184,12 +186,8 @@ public class Process extends SearchableEntity {
         this.tenantName = tenantName;
     }
 
-    public String getContext() {
+    public StringMap getContext() {
         return context;
-    }
-
-    public void setContext(String context) {
-        this.context = context;
     }
 
     public NestedList<ProcessLink> getLinks() {
@@ -198,14 +196,6 @@ public class Process extends SearchableEntity {
 
     public StringMap getCounters() {
         return counters;
-    }
-
-    public LocalDateTime getScheduled() {
-        return scheduled;
-    }
-
-    public void setScheduled(LocalDateTime scheduled) {
-        this.scheduled = scheduled;
     }
 
     public LocalDateTime getStarted() {
@@ -254,5 +244,13 @@ public class Process extends SearchableEntity {
 
     public void setCanceled(LocalDateTime canceled) {
         this.canceled = canceled;
+    }
+
+    public String getRequiredPermission() {
+        return requiredPermission;
+    }
+
+    public void setRequiredPermission(String requiredPermission) {
+        this.requiredPermission = requiredPermission;
     }
 }

@@ -13,7 +13,10 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 
-public abstract class Parameter<P extends Parameter> {
+import java.util.Map;
+import java.util.Optional;
+
+public abstract class Parameter<V, P extends Parameter<V, P>> {
 
     protected String name;
     protected String title;
@@ -66,13 +69,13 @@ public abstract class Parameter<P extends Parameter> {
 
     public abstract String getTemplateName();
 
-    public Object checkAndTransform(Value input) {
+    public String checkAndTransform(Value input) {
         try {
-            Object result = checkAndTransformValue(input);
+            String result = checkAndTransformValue(input);
             if (Strings.isEmpty(result) && required) {
                 throw Exceptions.createHandled().withNLSKey("Parameter.required").set("name", getTitle()).handle();
             }
-            return null;
+            return result;
         } catch (IllegalArgumentException e) {
             throw Exceptions.createHandled()
                             .withNLSKey("Parameter.invalidValue")
@@ -82,7 +85,20 @@ public abstract class Parameter<P extends Parameter> {
         }
     }
 
-    protected abstract Object checkAndTransformValue(Value input) throws IllegalArgumentException;
+    protected abstract String checkAndTransformValue(Value input) throws IllegalArgumentException;
+
+    public Optional<V> get(Map<String, String> context) {
+        return resolveFromString(Value.of(context.get(getName())));
+    }
+
+    protected abstract Optional<V> resolveFromString(Value input);
+
+    public V require(Map<String, String> context) {
+        return get(context).orElseThrow(() -> Exceptions.createHandled()
+                                                        .withNLSKey("Parameter.required")
+                                                        .set("name", getTitle())
+                                                        .handle());
+    }
 
     public int getSpan() {
         return span;

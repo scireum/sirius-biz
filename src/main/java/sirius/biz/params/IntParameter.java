@@ -9,10 +9,11 @@
 package sirius.biz.params;
 
 import sirius.kernel.commons.Value;
-import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 
-public class IntParameter extends Parameter<IntParameter> {
+import java.util.Optional;
+
+public class IntParameter extends Parameter<Integer, IntParameter> {
 
     public IntParameter(String name, String title) {
         super(name, title);
@@ -24,7 +25,12 @@ public class IntParameter extends Parameter<IntParameter> {
     }
 
     @Override
-    protected Object checkAndTransformValue(Value input) {
-            return NLS.parseUserString(int.class, input.asString());
+    protected String checkAndTransformValue(Value input) {
+        return String.valueOf(NLS.parseUserString(int.class, input.asString()));
+    }
+
+    @Override
+    protected Optional<Integer> resolveFromString(Value input) {
+        return input.asOptionalInt();
     }
 }

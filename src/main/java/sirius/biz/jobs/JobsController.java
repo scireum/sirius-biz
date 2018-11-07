@@ -9,7 +9,6 @@
 package sirius.biz.jobs;
 
 import sirius.biz.web.BizController;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
@@ -17,7 +16,9 @@ import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Page;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
-import sirius.web.security.UserContext;
+import sirius.web.services.JSONStructuredOutput;
+
+import java.util.stream.Collectors;
 
 @Register(classes = Controller.class, framework = "") //TODO "jobs"
 public class JobsController extends BizController {
@@ -30,32 +31,18 @@ public class JobsController extends BizController {
     public void jobs(WebContext ctx) {
         Page<JobFactory> page = new Page<>();
         page.bindToRequest(ctx);
-        page.withItems(jobs.getAvailableJobs(page.getQuery()));
+        page.withItems(jobs.getAvailableJobs(page.getQuery()).collect(Collectors.toList()));
 
         ctx.respondWith().template("/templates/jobs/jobs.html.pasta", page);
     }
 
     @Routed("/job/:1")
     public void job(WebContext ctx, String jobType) {
-        if (ctx.isSafePOST()) {
-            try {
-                String redirectUri = jobs.execute(jobType, ctx::get);
-                if (Strings.isFilled(redirectUri)) {
-                    ctx.respondWith().redirectToGet(redirectUri);
-                } else {
-                    ctx.respondWith().redirectToGet("/jobs");
-                }
-
-                return;
-            } catch (Exception e) {
-                UserContext.handle(e);
-            }
-        }
-        ctx.respondWith().template("/templates/jobs/job.html.pasta", jobs.findFactory(jobType, JobFactory.class));
+        jobs.findFactory(jobType, JobFactory.class).runInUI(ctx);
     }
 
-    @Routed("/jobs/api/:1")
-    public void json(WebContext ctx, String jobType) {
-
+    @Routed(value = "/jobs/api/:1", jsonCall = true)
+    public void json(WebContext ctx, JSONStructuredOutput out, String jobType) {
+        jobs.findFactory(jobType, JobFactory.class).runInCall(ctx, out, ctx::get);
     }
 }

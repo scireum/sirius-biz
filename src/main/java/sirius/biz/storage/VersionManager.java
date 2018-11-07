@@ -82,7 +82,7 @@ public class VersionManager {
     /**
      * Returns the targeted {@link VirtualObject} and its known physical objects for versions.
      *
-     * @param downloadBuilder the buider which specifies the key and bucket of the virtual object to resolve
+     * @param downloadBuilder the buider which specifies the key and bucket of the virtual object to resolveFromString
      * @return a tuple containing the virtual object and a map with all loaded physical keys for versions (not
      * necessarily all that are available - as these are lazy loaded)
      */
@@ -115,7 +115,7 @@ public class VersionManager {
      * Fetches the pyhsical key for a version from the tuple retrieved via {@link #fetchPhysicalObjects(DownloadBuilder)}
      *
      * @param physicalObjects the map of already resolved keys
-     * @param version         the version to resolve, see {@link DownloadBuilder#withVersion(String)} for possible
+     * @param version         the version to resolveFromString, see {@link DownloadBuilder#withVersion(String)} for possible
      *                        values
      * @return the physical key. If no version exists, a new one will be comouted and the main version will be used in
      * the mean time

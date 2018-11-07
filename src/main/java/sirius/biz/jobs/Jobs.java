@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Register(classes = Jobs.class)
 public class Jobs {
@@ -32,25 +33,14 @@ public class Jobs {
     @PriorityParts(JobFactory.class)
     private List<JobFactory> factories;
 
-    public List<JobFactory> getAvailableJobs(@Nullable String query) {
+    public Stream<JobFactory> getAvailableJobs(@Nullable String query) {
         UserInfo currentUser = UserContext.getCurrentUser();
 
         return factories.stream()
                         .filter(factory -> factory.getRequiredPermissions()
                                                   .stream()
                                                   .allMatch(currentUser::hasPermission))
-                        .filter(factory -> Strings.isEmpty(query) || factory.getLabel().contains(query))
-                        .collect(Collectors.toList());
-    }
-
-    public String execute(String job, Function<String, Value> context) {
-        JobFactory factory = findFactory(job, JobFactory.class);
-        setupTaskContext(job);
-
-        UserInfo currentUser = UserContext.getCurrentUser();
-        factory.getRequiredPermissions().forEach(currentUser::assertPermission);
-
-        return factory.execute(context);
+                        .filter(factory -> Strings.isEmpty(query) || factory.getLabel().contains(query));
     }
 
     @SuppressWarnings("unchecked")
@@ -70,10 +60,4 @@ public class Jobs {
         return (J) result;
     }
 
-    protected void setupTaskContext(String factoryId) {
-        TaskContext taskContext = TaskContext.get();
-        taskContext.setSystem("JOBS");
-        taskContext.setSubSystem(factoryId);
-        taskContext.setJob("kernel");
-    }
 }

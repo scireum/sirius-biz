@@ -8,7 +8,12 @@
 
 package sirius.biz.process;
 
+import sirius.biz.params.Parameter;
 import sirius.kernel.async.TaskContextAdapter;
+import sirius.kernel.commons.Value;
+
+import java.util.Map;
+import java.util.Optional;
 
 public interface ProcessContext extends TaskContextAdapter {
 
@@ -65,5 +70,13 @@ public interface ProcessContext extends TaskContextAdapter {
 
     void setCurrentStateMessage(String state);
 
+    Map<String, String> getContext();
 
+    Value get(String name);
+
+    <V, P extends Parameter<V, P>> Optional<V> getParameter(Parameter<V, P> parameter);
+
+    <V, P extends Parameter<V, P>> V require(Parameter<V, P> parameter);
+
+    void addLink(ProcessLink link);
 }

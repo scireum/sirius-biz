@@ -18,8 +18,51 @@ public class ProcessLink extends Nested {
     private String uri;
 
     @NullAllowed
-    private String description;
-
-    @NullAllowed
     private String type;
+
+    private boolean output;
+
+    public static ProcessLink outputLink(String label, String uri) {
+        return additionalLink(label,uri).asOutput();
+    }
+
+    public static ProcessLink additionalLink(String label, String uri) {
+        return new ProcessLink().withLabel(label).withUri(uri).asOutput();
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public ProcessLink withLabel(String label) {
+        this.label = label;
+        return this;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public ProcessLink withUri(String uri) {
+        this.uri = uri;
+        return this;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public ProcessLink withType(String type) {
+        this.type = type;
+        return this;
+    }
+
+    public boolean isOutput() {
+        return output;
+    }
+
+    public ProcessLink asOutput() {
+        this.output = true;
+        return this;
+    }
 }

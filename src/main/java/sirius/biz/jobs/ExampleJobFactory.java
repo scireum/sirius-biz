@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs;
 
+import sirius.biz.jobs.batch.DefaultBatchProcessFactory;
 import sirius.biz.params.IntParameter;
 import sirius.biz.params.Parameter;
 import sirius.biz.params.StringParameter;
@@ -19,7 +20,7 @@ import javax.annotation.Nonnull;
 import java.util.function.Consumer;
 
 @Register(classes = JobFactory.class)
-public class ExampleJobFactory extends DefaultProcessJobFactory {
+public class ExampleJobFactory extends DefaultBatchProcessFactory {
 
     @Override
     public void executeTask(ProcessContext process) {
@@ -32,7 +33,7 @@ public class ExampleJobFactory extends DefaultProcessJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?,?>> parameterCollector) {
         parameterCollector.accept(new StringParameter("test", "Test").markRequired());
         parameterCollector.accept(new IntParameter("test1", "Test").markRequired());
     }

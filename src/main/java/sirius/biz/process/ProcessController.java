@@ -11,10 +11,12 @@ package sirius.biz.process;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.biz.web.ElasticPageHelper;
+import sirius.db.es.Elastic;
 import sirius.db.es.ElasticQuery;
 import sirius.db.mixing.DateRange;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Controller;
@@ -23,20 +25,25 @@ import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
+import sirius.web.services.JSONStructuredOutput;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @Register(classes = Controller.class)
 public class ProcessController extends BizController {
     //TODO
     private static final String PERMISSION_MANAGE_PROCESSES = "manage-processes";
 
+    @Part
+    private Processes processes;
+
     @Routed("/ps")
     @LoginRequired
     public void processes(WebContext ctx) {
-        ElasticQuery<Process> query = elastic.select(Process.class).orderDesc(Process.SCHEDULED);
+        ElasticQuery<Process> query = elastic.select(Process.class).orderDesc(Process.STARTED);
 
         UserInfo user = UserContext.getCurrentUser();
         //TODO make re-usable (the constant)
@@ -48,12 +55,15 @@ public class ProcessController extends BizController {
             query.eq(Process.USER_ID, user.getUserId());
         }
 
+        query.where(Elastic.FILTERS.oneInField(Process.REQUIRED_PERMISSION, new ArrayList<>(user.getPermissions()))
+                                   .orEmpty()
+                                   .build());
+
         ElasticPageHelper<Process> ph = ElasticPageHelper.withQuery(query);
         ph.withContext(ctx);
         ph.addTermAggregation(Process.STATE, ProcessState.class);
-        //TODO  ph.addBooleanFacet(Process.CANCELED.getName(), NLS.get("Process.canceled"));
         ph.addTermAggregation(Process.PROCESS_TYPE, value -> NLS.getIfExists(value, null).orElse(value));
-        ph.addTimeAggregation(Process.SCHEDULED,
+        ph.addTimeAggregation(Process.STARTED,
                               DateRange.lastFiveMinutes(),
                               DateRange.lastFiveteenMinutes(),
                               DateRange.lastTwoHours(),
@@ -71,15 +81,7 @@ public class ProcessController extends BizController {
     public void process(WebContext ctx, String processId) {
         Process process = find(Process.class, processId);
 
-        UserInfo user = UserContext.getCurrentUser();
-        //TODO make re-usable (the constant)
-        if (!user.hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
-            assertTenant(process.getTenantId());
-        }
-
-        if (!Strings.areEqual(user.getUserId(), process.getUserId())) {
-            assertPermission(PERMISSION_MANAGE_PROCESSES);
-        }
+        assertAccess(process);
 
         ElasticQuery<ProcessLog> query =
                 elastic.select(ProcessLog.class).eq(ProcessLog.PROCESS, process).orderDesc(ProcessLog.TIMESTAMP);
@@ -96,7 +98,21 @@ public class ProcessController extends BizController {
         ph.addTermAggregation(ProcessLog.NODE);
         ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
-        ctx.respondWith().template("templates/process/process.html.pasta", this,process, numLogs, ph.asPage());
+        ctx.respondWith().template("templates/process/process.html.pasta", this, process, numLogs, ph.asPage());
+    }
+
+    private void assertAccess(Process process) {
+        UserInfo user = UserContext.getCurrentUser();
+        //TODO make re-usable (the constant)
+        if (!user.hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+            assertTenant(process.getTenantId());
+        }
+
+        if (!Strings.areEqual(user.getUserId(), process.getUserId())) {
+            assertPermission(PERMISSION_MANAGE_PROCESSES);
+        }
+
+        assertPermission(process.getRequiredPermission());
     }
 
     public String formatTimestamp(LocalDateTime timestamp) {
@@ -118,5 +134,12 @@ public class ProcessController extends BizController {
 
         long absSeconds = Duration.between(from, to).getSeconds();
         return Strings.apply("%02d:%02d:%02d", absSeconds / 3600, (absSeconds % 3600) / 60, absSeconds % 60);
+    }
+
+    @Routed(value = "/ps/:1/api", jsonCall = true)
+    public void process(WebContext ctx, JSONStructuredOutput out, String processId) {
+        Process process = find(Process.class, processId);
+        assertAccess(process);
+        processes.outputAsJSON(processId, out);
     }
 }

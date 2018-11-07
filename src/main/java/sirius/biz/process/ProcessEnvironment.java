@@ -8,10 +8,13 @@
 
 package sirius.biz.process;
 
+import sirius.biz.params.Parameter;
+import sirius.db.mixing.types.StringMap;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.RateLimit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Average;
 import sirius.kernel.health.Exceptions;
@@ -19,8 +22,10 @@ import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -137,5 +142,33 @@ class ProcessEnvironment implements ProcessContext {
     @Override
     public void setCurrentStateMessage(String state) {
         processes.setStateMessage(processId, state);
+    }
+
+    @Override
+    public Map<String, String> getContext() {
+        return processes.fetchProcess(processId)
+                        .map(Process::getContext)
+                        .map(StringMap::data)
+                        .orElse(Collections.emptyMap());
+    }
+
+    @Override
+    public Value get(String name) {
+        return Value.of(getContext().get(name));
+    }
+
+    @Override
+    public <V, P extends Parameter<V, P>> Optional<V> getParameter(Parameter<V, P> parameter) {
+        return parameter.get(getContext());
+    }
+
+    @Override
+    public <V, P extends Parameter<V, P>> V require(Parameter<V, P> parameter) {
+        return parameter.require(getContext());
+    }
+
+    @Override
+    public void addLink(ProcessLink link) {
+        processes.addLink(processId, link);
     }
 }

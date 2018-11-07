@@ -12,12 +12,14 @@ import sirius.biz.params.Parameter;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Named;
 import sirius.kernel.di.std.Priorized;
+import sirius.web.http.WebContext;
+import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.function.Function;
 
-public interface JobFactory  extends Named, Priorized {
+public interface JobFactory extends Named, Priorized {
 
     String getLabel();
 
@@ -26,7 +28,11 @@ public interface JobFactory  extends Named, Priorized {
 
     List<String> getRequiredPermissions();
 
-    List<Parameter<?>> getParameters();
+    List<Parameter<?, ?>> getParameters();
 
-    String execute(Function<String, Value> parameterProvider);
+    void runInUI(WebContext request);
+
+    void runInCall(WebContext request, JSONStructuredOutput out, Function<String, Value> parameterProvider);
+
+    void runInBackground(Function<String, Value> parameterProvider);
 }

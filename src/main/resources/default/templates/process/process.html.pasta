@@ -25,16 +25,30 @@
         <div class="col-md-3">
             <w:infobox titleKey="Model.details">
                 <i:if test="process.getState() == sirius.biz.process.ProcessState.STANDBY">
-                    <w:infoboxElement labelKey="Process.lastInteraction" value="@controller.formatTimestamp(process.getScheduled())"/>
+                    <w:infoboxElement labelKey="Process.lastInteraction" value="@controller.formatTimestamp(process.getStarted())"/>
                     <i:else>
-                        <w:infoboxElement labelKey="Process.scheduled" value="@controller.formatTimestamp(process.getScheduled())"/>
-                        <w:infoboxElement labelKey="Process.waittime" value="@controller.formatDuration(process.getScheduled(), process.getStarted())"/>
+                        <w:infoboxElement labelKey="Process.started" value="@controller.formatTimestamp(process.getStarted())"/>
                         <w:infoboxElement labelKey="Process.runtime" value="@controller.formatDuration(process.getStarted(), process.getCompleted())"/>
                         <w:infoboxElement labelKey="Process.completed" value="@controller.formatTimestamp(process.getCompleted())"/>
                         <w:infoboxElement labelKey="Process.numLogs" value="@numLogs"/>
                     </i:else>
                 </i:if>
             </w:infobox>
+
+            <i:if test="!process.getLinks().isEmpty()">
+                <w:navbox labelKey="Model.links">
+                    <i:for type="sirius.biz.process.ProcessLink" var="link" items="process.getLinks()">
+                        <li>
+                            <i:if test="link.isOutput()">
+                                <a href="@link.getUri()" class="link">@link.getLabel()</a>
+                                <i:else>
+                                    <a href="@link.getUri()" class="link" target="_blank">@link.getLabel()</a>
+                                </i:else>
+                            </i:if>
+                        </li>
+                    </i:for>
+                </w:navbox>
+            </i:if>
 
             <i:if test="@!process.getCounters().isEmpty()">
                 <w:infobox titleKey="Process.counters">

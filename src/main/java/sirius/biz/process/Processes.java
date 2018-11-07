@@ -8,7 +8,6 @@
 
 package sirius.biz.process;
 
-import com.alibaba.fastjson.JSONObject;
 import sirius.biz.elastic.AutoBatchLoop;
 import sirius.db.es.Elastic;
 import sirius.db.mixing.OptimisticLockException;
@@ -24,12 +23,14 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
+import sirius.web.services.JSONStructuredOutput;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 @Register(classes = Processes.class)
 public class Processes {
@@ -43,17 +44,16 @@ public class Processes {
     private Cache<String, Process> process1stLevelCache = CacheManager.createLocalCache("processes-first-level");
     private Cache<String, Process> process2ndLevelCache = CacheManager.createCoherentCache("processes-second-level");
 
-    public String createProcess(String title, UserInfo user, JSONObject context) {
+    public String createProcess(String title, UserInfo user, Map<String, String> context) {
         Process process = new Process();
         process.setTitle(title);
         process.setUserId(user.getUserId());
         process.setUserName(user.getUserName());
         process.setTenantId(user.getTenantId());
         process.setTenantName(user.getTenantName());
+        process.setState(ProcessState.RUNNING);
         process.setStarted(LocalDateTime.now());
-        process.setState(ProcessState.SCHEDULED);
-        process.setScheduled(LocalDateTime.now());
-        process.setContext(context.toJSONString());
+        process.getContext().modify().putAll(context);
 
         elastic.update(process);
 
@@ -63,8 +63,44 @@ public class Processes {
         return process.getIdAsString();
     }
 
-    public String createProcessForCurrentUser(String title, JSONObject context) {
+    public String createProcessForCurrentUser(String title, Map<String, String> context) {
         return createProcess(title, UserContext.getCurrentUser(), context);
+    }
+
+    public void executeInStandbyProcess(String type,
+                                        Supplier<String> titleSupplier,
+                                        UserInfo user,
+                                        Consumer<ProcessContext> task) {
+        String processId = elastic.select(Process.class)
+                                  .eq(Process.STATE, ProcessState.STANDBY)
+                                  .eq(Process.TENANT_ID, user.getTenantId())
+                                  .eq(Process.PROCESS_TYPE, type)
+                                  .first()
+                                  .map(Process::getId)
+                                  .orElse(null);
+
+        if (processId == null) {
+            Process process = new Process();
+            process.setTitle(titleSupplier.get());
+            process.setProcessType(type);
+            process.setTenantId(user.getTenantId());
+            process.setTenantName(user.getTenantName());
+            process.setState(ProcessState.STANDBY);
+            process.setStarted(LocalDateTime.now());
+
+            elastic.update(process);
+
+            // Ensure that the process id is available and visible in Elasticsearch
+            Wait.millis(1500);
+
+            processId = process.getIdAsString();
+        } else {
+            modifyWithoutFlush(processId,
+                               process -> process.getState() == ProcessState.STANDBY,
+                               process -> process.setStarted(LocalDateTime.now()));
+        }
+
+        execute(processId, task, false);
     }
 
     protected Optional<Process> fetchProcess(String processId) {
@@ -131,28 +167,17 @@ public class Processes {
                               process -> process.setState(newState));
     }
 
-    protected boolean markStarted(String processId) {
-        return modifyAndFlush(processId, process -> process.getState() == ProcessState.SCHEDULED, process -> {
-            process.setState(ProcessState.RUNNING);
-            process.setStarted(LocalDateTime.now());
-        });
-    }
-
     protected boolean markCanceled(String processId) {
-        return modifyAndFlush(processId,
-                              process -> process.getState() == ProcessState.SCHEDULED
-                                         || process.getState() == ProcessState.RUNNING,
-                              process -> {
-                                  process.setErrorneous(true);
-                                  process.setCanceled(LocalDateTime.now());
-                                  process.setState(ProcessState.CANCELED);
-                              });
+        return modifyAndFlush(processId, process -> process.getState() == ProcessState.RUNNING, process -> {
+            process.setErrorneous(true);
+            process.setCanceled(LocalDateTime.now());
+            process.setState(ProcessState.CANCELED);
+        });
     }
 
     protected boolean markErrorneous(String processId) {
         return modifyAndFlush(processId,
-                              process -> !process.isErrorneous() && (process.getState() == ProcessState.SCHEDULED
-                                                                     || process.getState() == ProcessState.RUNNING),
+                              process -> !process.isErrorneous() && process.getState() == ProcessState.RUNNING,
                               process -> process.setErrorneous(true));
     }
 
@@ -176,6 +201,12 @@ public class Processes {
     protected boolean setStateMessage(String processId, String state) {
         return modifyWithoutFlush(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             process.setStateMessage(state);
+        });
+    }
+
+    public boolean addLink(String processId, ProcessLink link) {
+        return modifyWithoutFlush(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
+            process.getLinks().add(link);
         });
     }
 
@@ -210,13 +241,14 @@ public class Processes {
         taskContext.setJob(processId);
         taskContext.setAdapter(env);
 
-        UserInfo user = userContext.getUserManager().findUserByUserId(env.getUserId());
-        if (user != null) {
-            userContext.setCurrentUser(user);
+        if (env.getUserId() != null) {
+            UserInfo user = userContext.getUserManager().findUserByUserId(env.getUserId());
+            if (user != null) {
+                userContext.setCurrentUser(user);
+            }
         }
 
         try {
-            markStarted(processId);
             if (env.isActive()) {
                 task.accept(env);
             }
@@ -237,5 +269,37 @@ public class Processes {
 
     public void execute(String processId, Consumer<ProcessContext> task) {
         execute(processId, task, true);
+    }
+
+    public void outputAsJSON(String processId, JSONStructuredOutput out) {
+        Process process = fetchProcess(processId).orElseThrow(() -> Exceptions.createHandled()
+                                                                              .withSystemErrorMessage(
+                                                                                      "Unknown process id: %s",
+                                                                                      processId)
+                                                                              .handle());
+        out.property("id", processId);
+        out.property("title", process.getTitle());
+        out.property("state", process.getState());
+        out.property("started", process.getStarted());
+        out.property("completed", process.getCompleted());
+        out.property("errorneous", process.isErrorneous());
+        out.property("processType", process.getProcessType());
+        out.property("stateMessage", process.getStateMessage());
+        out.beginArray("counters");
+        for (Map.Entry<String, String> counter : process.getCounters()) {
+            out.beginObject("counter");
+            out.property("name", counter.getKey());
+            out.property("value", counter.getValue());
+            out.endObject();
+        }
+        out.endArray();
+        out.beginArray("links");
+        for (ProcessLink link : process.getLinks()) {
+            out.beginObject("link");
+            out.property("label", link.getLabel());
+            out.property("uri", link.getUri());
+            out.endObject();
+        }
+        out.endArray();
     }
 }

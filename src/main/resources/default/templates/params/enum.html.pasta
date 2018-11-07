@@ -1,0 +1,14 @@
+<i:arg type="sirius.biz.params.EnumParameter" name="param"/>
+<i:arg type="Map" name="context"/>
+
+<w:singleSelect span="@param.getSpan()"
+                smallSpan="@param.getSmallSpan()"
+                name="@param.getName()"
+                label="@param.getTitle()"
+                help="@param.getDescription()"
+                optional="@!param.isRequired()"
+                required="@param.isRequired()">
+    <i:for var="value" type="java.lang.Enum" items="@param.getValues()">
+        <option value="@value.name()" @selected="value == param.get(context).orElse(null)">@value</option>
+    </i:for>
+</w:singleSelect>
