@@ -1,0 +1,10 @@
+<i:arg type="sirius.biz.params.Parameter" name="param"/>
+<i:arg type="Map" name="context"/>
+
+<w:datefield span="@param.getSpan()"
+             smallSpan="@param.getSmallSpan()"
+             name="@param.getName()"
+             label="@param.getTitle()"
+             help="@param.getDescription()"
+             value="@toUserString(param.get(context).orElse(null))"
+             required="@param.isRequired()"/>
