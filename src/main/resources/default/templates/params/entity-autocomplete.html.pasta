@@ -1,0 +1,13 @@
+<i:arg type="sirius.biz.params.Parameter" name="param"/>
+<i:arg type="Map" name="context"/>
+
+<i:local name="sqlParam" value="@param.as(sirius.biz.params.SQLEntityParameter.class)"/>
+
+<w:autocompleteSingleSelect span="@param.getSpan()"
+                            smallSpan="@param.getSmallSpan()"
+                            name="@param.getName()"
+                            label="@param.getTitle()"
+                            help="@param.getDescription()"
+                            required="@param.isRequired()"
+                            optional="@!param.isRequired()"
+                            serviceUri="@sqlParam.getAutocompleteUri()"/>
