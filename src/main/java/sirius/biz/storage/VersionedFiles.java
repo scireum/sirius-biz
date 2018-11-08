@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 /**
  * Small helper class to access and create {@link VersionedFile versioned files}.
  */
-@Register(classes = VersionedFiles.class)
+@Register(classes = VersionedFiles.class, framework = Storage.FRAMEWORK_STORAGE)
 public class VersionedFiles {
 
     @Part
