@@ -387,6 +387,10 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
     }
 
     private BackgroundInfo parseBackgroundInfos(JSONObject jsonObject) {
+        if (jsonObject.getBooleanValue(InterconnectClusterManager.RESPONSE_ERROR)) {
+            return new BackgroundInfo(jsonObject.getString(InterconnectClusterManager.RESPONSE_NODE_NAME), "-");
+        }
+
         BackgroundInfo result = new BackgroundInfo(jsonObject.getString(InterconnectClusterManager.RESPONSE_NODE_NAME),
                                                    jsonObject.getString(ClusterController.RESPONSE_UPTIME));
         jsonObject.getJSONArray(ClusterController.RESPONSE_JOBS).forEach(job -> {

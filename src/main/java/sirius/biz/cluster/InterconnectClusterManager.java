@@ -137,7 +137,9 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
 
             return result;
         } catch (Exception e) {
-            return new JSONObject().fluentPut(RESPONSE_ERROR, true).fluentPut(RESPONSE_ERROR_MESAGE, e.getMessage());
+            return new JSONObject().fluentPut(RESPONSE_NODE_NAME, nodeName)
+                                   .fluentPut(RESPONSE_ERROR, true)
+                                   .fluentPut(RESPONSE_ERROR_MESAGE, e.getMessage());
         }
     }
 
