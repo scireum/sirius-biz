@@ -73,7 +73,7 @@
     <i:if test="locks != null">
         <w:heading>Locks</w:heading>
         <w:table data="locks.getLocks()">
-            <i:for type="sirius.biz.locks.LockInfo" var="lock" items="locks">
+            <i:for type="sirius.biz.locks.LockInfo" var="lock" items="locks.getLocks()">
                 <tr>
                     <th><b>Name</b></th>
                     <th>Owner</th>
