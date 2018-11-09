@@ -161,7 +161,7 @@ public class ClusterController implements Controller {
                                                                                 e -> e.getValue().getDescription(),
                                                                                 (a, b) -> a));
         ctx.respondWith()
-           .template("templates/cluster/cluster.html.pasta", jobKeys, descriptions, clusterInfo, locks.getLocks());
+           .template("templates/cluster/cluster.html.pasta", jobKeys, descriptions, clusterInfo, locks);
     }
 
     /**

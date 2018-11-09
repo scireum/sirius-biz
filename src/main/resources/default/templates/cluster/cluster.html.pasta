@@ -1,7 +1,7 @@
 <i:arg type="List" name="keys"/>
 <i:arg type="Map" name="descriptions"/>
 <i:arg type="List" name="nodes"/>
-<i:arg type="List" name="locks"/>
+<i:arg type="sirius.biz.locks.Locks" name="locks"/>
 
 <w:page title="Cluster State">
     <i:block name="breadcrumbs">
@@ -72,7 +72,7 @@
 
     <i:if test="locks != null">
         <w:heading>Locks</w:heading>
-        <w:table data="locks">
+        <w:table data="locks.getLocks()">
             <i:for type="sirius.biz.locks.LockInfo" var="lock" items="locks">
                 <tr>
                     <th><b>Name</b></th>
