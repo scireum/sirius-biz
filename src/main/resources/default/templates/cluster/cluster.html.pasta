@@ -70,21 +70,23 @@
         </table>
     </i:for>
 
-    <w:heading>Locks</w:heading>
-    <w:table data="locks">
-        <i:for type="sirius.biz.locks.LockInfo" var="lock" items="locks">
-            <tr>
-                <th><b>Name</b></th>
-                <th>Owner</th>
-                <th>Thread</th>
-                <th>Acquired</th>
-            </tr>
-            <tr>
-                <td><b>@lock.getName()</b></td>
-                <td>@lock.getOwner()</td>
-                <td>@lock.getThread()</td>
-                <td>@toUserString(lock.getAcquired())</td>
-            </tr>
-        </i:for>
-    </w:table>
+    <i:if test="locks != null">
+        <w:heading>Locks</w:heading>
+        <w:table data="locks">
+            <i:for type="sirius.biz.locks.LockInfo" var="lock" items="locks">
+                <tr>
+                    <th><b>Name</b></th>
+                    <th>Owner</th>
+                    <th>Thread</th>
+                    <th>Acquired</th>
+                </tr>
+                <tr>
+                    <td><b>@lock.getName()</b></td>
+                    <td>@lock.getOwner()</td>
+                    <td>@lock.getThread()</td>
+                    <td>@toUserString(lock.getAcquired())</td>
+                </tr>
+            </i:for>
+        </w:table>
+    </i:if>
 </w:page>
