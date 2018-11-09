@@ -14,7 +14,6 @@ import sirius.kernel.Sirius;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.DelayLine;
 import sirius.kernel.async.Tasks;
-import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.HandledException;
@@ -158,8 +157,9 @@ public class ClusterController implements Controller {
                                           .collect(Collectors.toList());
         Map<String, String> descriptions = clusterInfo.stream()
                                                       .flatMap(node -> node.getJobs().entrySet().stream())
-                                                      .map(e -> Tuple.create(e.getKey(), e.getValue().getDescription()))
-                                                      .collect(Collectors.toMap(Tuple::getFirst, Tuple::getSecond));
+                                                      .collect(Collectors.toMap(Map.Entry::getKey,
+                                                                                e -> e.getValue().getDescription(),
+                                                                                (a, b) -> a));
         ctx.respondWith()
            .template("templates/cluster/cluster.html.pasta", jobKeys, descriptions, clusterInfo, locks.getLocks());
     }
