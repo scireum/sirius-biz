@@ -96,7 +96,7 @@ public class Importer implements Closeable {
     /**
      * Tries to find an instance of the given type based on the given data.
      * <p>
-     * Note that the {@link ImportHandler} being used controls which values of <tt>data</tt> are used to resolve the
+     * Note that the {@link ImportHandler} being used controls which values of <tt>data</tt> are used to resolveFromString the
      * entity.
      *
      * @param type the type of entity to find

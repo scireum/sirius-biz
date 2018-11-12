@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Responsible for collecting and storing {@link Event events} for analytical and statistical purposes.
  * <p>
- * To minimize the impact on the running application and to maximize the performance, events are collected and queue.
+ * To minimize the impact on the running application and to maximize the performance, events are collected and queued.
  * This queue is batch processed in regular intervals (which greatly increases the performance of Clickhouse).
  * <p>
  * In case of a missing data store or a system overload condition (more events are generated than persisted), events
@@ -138,7 +138,7 @@ public class EventRecorder implements Startable, Stoppable {
     }
 
     /**
-     * Invoked periodically by the {@link EventProcessorLoop} to process events if necessarry.
+     * Invoked periodically by the {@link EventProcessorLoop} to process events if necessary.
      * <p>
      * An insertion run will be started if there are enough events in the buffer (more than {@link #MIN_BUFFER_SIZE})
      * or if enough time elapsed since the last insertion run (more than {@link #MAX_BUFFER_AGE}).
@@ -188,7 +188,7 @@ public class EventRecorder implements Startable, Stoppable {
      * existing one (there is one per event type in <tt>queries</tt>).
      *
      * @param ctx     the batch context
-     * @param queries the map of perpared insert queries per event type
+     * @param queries the map of prepared insert queries per event type
      * @param event   the event to insert
      */
     @SuppressWarnings("unchecked")
