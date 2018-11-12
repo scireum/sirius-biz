@@ -21,6 +21,7 @@ import sirius.kernel.health.metrics.MetricState;
 import sirius.web.health.Cluster;
 import sirius.web.health.ClusterManager;
 import sirius.web.health.NodeInfo;
+import sirius.web.http.WebServer;
 import sirius.web.services.JSONCall;
 
 import javax.annotation.Nonnull;
@@ -147,7 +148,9 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
 
             return result;
         } catch (Exception e) {
-            return new JSONObject().fluentPut(RESPONSE_ERROR, true).fluentPut(RESPONSE_ERROR_MESAGE, e.getMessage());
+            return new JSONObject().fluentPut(RESPONSE_NODE_NAME, nodeName)
+                                   .fluentPut(RESPONSE_ERROR, true)
+                                   .fluentPut(RESPONSE_ERROR_MESAGE, e.getMessage());
         }
     }
 

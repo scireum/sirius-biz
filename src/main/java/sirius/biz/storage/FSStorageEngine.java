@@ -98,6 +98,9 @@ public class FSStorageEngine implements PhysicalStorageEngine {
     @Nullable
     @Override
     public InputStream getData(String bucket, String physicalKey) {
+        if (Strings.isEmpty(physicalKey)) {
+            return null;
+        }
         File file = getFile(bucket, physicalKey);
 
         try {
