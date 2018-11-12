@@ -1,7 +1,7 @@
 <i:arg type="sirius.biz.process.ProcessController" name="controller"/>
 <i:arg type="sirius.biz.process.Process" name="process"/>
 <i:arg type="int" name="numLogs"/>
-<i:arg type="Page" name="logs"/>
+<i:arg type="String" name="page"/>
 
 <w:page title="@process.getTitle()">
     <i:block name="breadcrumbs">
@@ -33,34 +33,21 @@
                         <w:infoboxElement labelKey="Process.numLogs" value="@numLogs"/>
                     </i:else>
                 </i:if>
+                <i:extensions name="templates-process-details" process="@process"/>
             </w:infobox>
 
-            <i:if test="!process.getLinks().isEmpty()">
-                <w:navbox labelKey="Model.links">
-                    <i:for type="sirius.biz.process.ProcessLink" var="link" items="process.getLinks()">
-                        <li>
-                            <i:if test="link.isOutput()">
-                                <a href="@link.getUri()" class="link">@link.getLabel()</a>
-                                <i:else>
-                                    <a href="@link.getUri()" class="link" target="_blank">@link.getLabel()</a>
-                                </i:else>
-                            </i:if>
-                        </li>
-                    </i:for>
-                </w:navbox>
-            </i:if>
+            <w:navbox labelKey="Model.links">
+                <w:navboxLink labelKey="Model.details" url="@apply('/ps/%s', process.getId())" active="page == 'details'"/>
+                <w:navboxLink labelKey="Process.logs" url="@apply('/ps/%s/logs', process.getId())" active="page == 'logs'"/>
 
-            <i:if test="@!process.getCounters().isEmpty()">
-                <w:infobox titleKey="Process.counters">
-                    <i:for type="Tuple" var="timing" items="process.getCounterList()">
-                        <w:infoboxElement label="@timing.getFirst().as(String.class)"
-                                          value="@timing.getSecond()"/>
-                    </i:for>
-                </w:infobox>
-            </i:if>
+                <i:extensions name="templates-process-sidebar-menu" process="@process"/>
+            </w:navbox>
 
+            <i:extensions name="templates-process-sidebar-top" process="@process"/>
+            <i:render name="sidebar" />
+            <i:extensions name="templates-process-sidebar-bottom" process="@process"/>
 
-            <w:filterbox page="logs" baseUrl="@apply('/ps/%s', process.getId())"/>
+            <a href="/ps" class="btn btn-block">@i18n("NLS.back")</a>
         </div>
         <div class="col-md-9">
             <i:if test="isFilled(process.getStateMessage())">
@@ -70,43 +57,41 @@
                 </w:helpbox>
             </i:if>
 
-            <w:tableSearchHeader page="logs" baseUrl="@apply('/ps/%s', process.getId())"/>
-
-            <w:table data="logs" colorized="true">
-                <thead>
-                <tr>
-                    <th/>
-                    <th>
-                        @i18n("ProcessLog.message")
-                    </th>
-                    <th class="align-right">
-                        @i18n("ProcessLog.timestamp")<br>
-                        <small class="muted">@i18n("ProcessLog.node")</small>
-                    </th>
-                </tr>
-                </thead>
-                <tbody>
-                <i:for type="sirius.biz.process.ProcessLog" var="log" items="logs.getItems()">
-                    <tr class="@log.getRowClass()">
-                        <td/>
-                        <td>
-                            @log.getMessage()
-                        </td>
-                        <td class="align-right">
-                            @controller.formatTimestamp(log.getTimestamp())<br>
-                            <small class="muted">@log.getNode()</small>
-                        </td>
-                    </tr>
-                </i:for>
-                </tbody>
-            </w:table>
-
-            <w:pagination page="logs" baseUrl="@apply('/ps/%s', process.getId())"/>
+            <i:render name="body" />
         </div>
     </div>
 
-    <div class="form-actions">
-        <a href="/ps" class="btn"><i class="icon-chevron-left"></i> @i18n("NLS.back")</a>
-    </div>
+    <i:if test="controller.shouldAutorefresh(process)">
+        <div class="autorefresh"></div>
+    </i:if>
+    <script type="text/javascript">
+        function planUpdate() {
+            if ($('.autorefresh').length === 0) {
+                return;
+            }
 
+            setTimeout(function () {
+                $.ajax({
+                    url: location.href,
+                    success: function (response) {
+                        var container = $("<div></div>");
+                        container.html(response);
+                        var newContent = $(container).find(".wrap");
+                        if (newContent.length > 0) {
+                            $(".wrap").html(newContent);
+                        }
+
+                        planUpdate();
+                    },
+                    error: function(e) {
+                        planUpdate();
+                    }
+                });
+            }, 5000);
+        }
+
+        $(window).load(function () {
+            planUpdate();
+        });
+    </script>
 </w:page>

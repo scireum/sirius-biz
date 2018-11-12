@@ -16,12 +16,11 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.process.ProcessLink;
 import sirius.biz.process.ProcessLog;
 import sirius.biz.process.Processes;
-import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.web.http.WebContext;
 import sirius.web.services.JSONStructuredOutput;
 
-import java.util.function.Function;
+import java.util.Map;
 
 public abstract class BatchProcessJobFactory extends BasicJobFactory {
 
@@ -35,29 +34,29 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     protected DistributedTasks tasks;
 
     @Override
-    public void callInUI(WebContext request) {
-        String processId = startWithContext(request::get);
+    public void executeInUI(WebContext request, Map<String, String> context) {
+        String processId = startWithContext(context);
         request.respondWith().redirectToGet("/ps/" + processId);
     }
 
     @Override
-    public void runInCall(WebContext request, JSONStructuredOutput out, Function<String, Value> parameterProvider) {
-        String processId = startWithContext(parameterProvider);
+    protected void executeInCall(JSONStructuredOutput out, Map<String, String> context) {
+        String processId = startWithContext(context);
         processes.outputAsJSON(processId, out);
     }
 
     @Override
-    public void runInBackground(Function<String, Value> parameterProvider) {
-        startWithContext(parameterProvider);
+    protected void executeInBackground(Map<String, String> context) {
+        startWithContext(context);
     }
 
-    protected String startWithContext(Function<String, Value> parameterProvider) {
+    protected String startWithContext(Map<String, String> context) {
         checkPermissions();
-        String processId = processes.createProcessForCurrentUser(getLabel(), buildAndVerifyContext(parameterProvider));
+        String processId = processes.createProcessForCurrentUser(getLabel(), context);
         setupTaskContext();
 
-        processes.log(processId, ProcessLog.info("Scheduled"));
-        processes.addLink(processId, ProcessLink.outputLink("Job", "/job/" + getName()));
+        processes.log(processId, ProcessLog.info().withMessage("Scheduled"));
+        processes.addLink(processId, new ProcessLink().withLabel("Job").withUri("/job/" + getName()));
 
         JSONObject executorContext =
                 new JSONObject().fluentPut(CONTEXT_PROCESS, processId).fluentPut(CONTEXT_JOB_FACTORY, getName());
@@ -76,5 +75,5 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
 
     protected abstract boolean isPrioritized();
 
-    protected abstract void executeTask(ProcessContext process);
+    protected abstract void executeTask(ProcessContext process) throws Exception;
 }

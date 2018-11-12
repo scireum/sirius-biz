@@ -38,11 +38,11 @@ public class JobsController extends BizController {
 
     @Routed("/job/:1")
     public void job(WebContext ctx, String jobType) {
-        jobs.findFactory(jobType, JobFactory.class).runInUI(ctx);
+        jobs.findFactory(jobType, JobFactory.class).startInUI(ctx);
     }
 
     @Routed(value = "/jobs/api/:1", jsonCall = true)
     public void json(WebContext ctx, JSONStructuredOutput out, String jobType) {
-        jobs.findFactory(jobType, JobFactory.class).runInCall(ctx, out, ctx::get);
+        jobs.findFactory(jobType, JobFactory.class).startInCall(ctx, out, ctx::get);
     }
 }

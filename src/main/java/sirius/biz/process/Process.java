@@ -13,10 +13,14 @@ import sirius.biz.elastic.SearchableEntity;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.types.NestedList;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 
 import java.time.LocalDateTime;
@@ -66,6 +70,12 @@ public class Process extends SearchableEntity {
     public static final Mapping LINKS = Mapping.named("links");
     private final NestedList<ProcessLink> links = new NestedList<>(ProcessLink.class);
 
+    public static final Mapping OUTPUT_TABLES = Mapping.named("outputTables");
+    private final NestedList<ProcessOutputTable> outputTables = new NestedList<>(ProcessOutputTable.class);
+
+    public static final Mapping FILES = Mapping.named("files");
+    private final NestedList<ProcessFile> files = new NestedList<>(ProcessFile.class);
+
     public static final Mapping COUNTERS = Mapping.named("counters");
     private final StringMap counters = new StringMap();
 
@@ -86,6 +96,26 @@ public class Process extends SearchableEntity {
 
     public static final Mapping STATE = Mapping.named("state");
     private ProcessState state;
+
+    @Part
+    private static Processes processes;
+
+    @AfterDelete
+    protected void onDelete() {
+        files.forEach(file -> {
+            try {
+                processes.getStorage().delete(this, file);
+            } catch (Exception e) {
+                Exceptions.handle()
+                          .to(Log.BACKGROUND)
+                          .withSystemErrorMessage("Failed to delete process file: %s for process: %s - %s",
+                                                  file.getFileId(),
+                                                  getId(),
+                                                  e.getMessage())
+                          .handle();
+            }
+        });
+    }
 
     /**
      * Determines the bootstrap CSS class to be used for rendering the row of this process.
@@ -252,5 +282,13 @@ public class Process extends SearchableEntity {
 
     public void setRequiredPermission(String requiredPermission) {
         this.requiredPermission = requiredPermission;
+    }
+
+    public NestedList<ProcessOutputTable> getOutputTables() {
+        return outputTables;
+    }
+
+    public NestedList<ProcessFile> getFiles() {
+        return files;
     }
 }

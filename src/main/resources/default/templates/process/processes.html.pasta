@@ -29,9 +29,6 @@
                         @i18n("Process.userName")<br>
                         <small class="muted">@i18n("Process.tenantName")</small>
                     </th>
-                    <th>
-                        @i18n("Model.links")
-                    </th>
                     <th class="align-right">
                         @i18n("Process.started")
                     </th>
@@ -48,13 +45,6 @@
                         <td>
                             @process.getUserName()<br>
                             <small class="muted">@process.getTenantName()</small>
-                        </td>
-                        <td>
-                            <i:for type="sirius.biz.process.ProcessLink" var="link" items="process.getLinks()">
-                                <i:if test="link.isOutput()">
-                                    <div><a href="@link.getUri()">@link.getLabel()</a></div>
-                                </i:if>
-                            </i:for>
                         </td>
                         <td class="align-right">
                             @controller.formatTimestamp(process.getStarted())

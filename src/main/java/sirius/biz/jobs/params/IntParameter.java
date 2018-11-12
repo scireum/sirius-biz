@@ -6,15 +6,16 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.params;
+package sirius.biz.jobs.params;
 
 import sirius.kernel.commons.Value;
+import sirius.kernel.nls.NLS;
 
 import java.util.Optional;
 
-public class StringParameter extends Parameter<String,StringParameter> {
+public class IntParameter extends Parameter<Integer, IntParameter> {
 
-    public StringParameter(String name, String title) {
+    public IntParameter(String name, String title) {
         super(name, title);
     }
 
@@ -25,11 +26,12 @@ public class StringParameter extends Parameter<String,StringParameter> {
 
     @Override
     protected String checkAndTransformValue(Value input) {
-        return input.getString();
+        Integer value = NLS.parseUserString(Integer.class, input.asString());
+        return value != null ? String.valueOf(value) : null;
     }
 
     @Override
-    protected Optional<String> resolveFromString(Value input) {
-        return input.asOptionalString();
+    protected Optional<Integer> resolveFromString(Value input) {
+        return input.asOptionalInt();
     }
 }

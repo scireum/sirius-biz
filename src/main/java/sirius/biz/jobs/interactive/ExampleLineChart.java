@@ -15,13 +15,18 @@ import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiConsumer;
 
 @Register(classes = {JobFactory.class, TimeseriesChartJobFactory.class})
 public class ExampleLineChart extends TimeseriesChartJobFactory {
 
     @Override
-    public void provideData(Timeseries timeseries, Map<String, String> context, Dataset dataset) {
-        timeseries.getIntervals().forEach(i -> dataset.addValue( i.getStart().getYear()));
+    public void provideData(Timeseries timeseries,
+                            Map<String, String> context,
+                            Dataset dataset,
+                            Optional<BiConsumer<String, Object>> additionalMetrics) {
+        timeseries.getIntervals().forEach(i -> dataset.addValue(i.getStart().getYear()));
     }
 
     @Nonnull

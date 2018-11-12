@@ -8,7 +8,7 @@
 
 package sirius.biz.jobs;
 
-import sirius.biz.params.Parameter;
+import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Named;
 import sirius.kernel.di.std.Priorized;
@@ -30,9 +30,9 @@ public interface JobFactory extends Named, Priorized {
 
     List<Parameter<?, ?>> getParameters();
 
-    void runInUI(WebContext request);
+    void startInUI(WebContext request);
 
-    void runInCall(WebContext request, JSONStructuredOutput out, Function<String, Value> parameterProvider);
+    void startInCall(WebContext request, JSONStructuredOutput out, Function<String, Value> parameterProvider);
 
-    void runInBackground(Function<String, Value> parameterProvider);
+    void startInBackground(Function<String, Value> parameterProvider);
 }

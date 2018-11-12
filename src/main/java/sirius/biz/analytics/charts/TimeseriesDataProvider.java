@@ -8,12 +8,14 @@
 
 package sirius.biz.analytics.charts;
 
-import sirius.biz.params.EnumParameter;
-import sirius.biz.params.LocalDateParameter;
+import sirius.biz.jobs.params.EnumParameter;
+import sirius.biz.jobs.params.LocalDateParameter;
 import sirius.kernel.di.std.Named;
 
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiConsumer;
 
 public interface TimeseriesDataProvider extends Named {
 
@@ -25,5 +27,8 @@ public interface TimeseriesDataProvider extends Named {
     EnumParameter<Unit> PARAM_UNIT =
             new EnumParameter<>("unit", "$TimeseriesDataProvider.unit", Unit.class).withSpan(12, 12);
 
-    void provideData(Timeseries timeseries, Map<String, String> context, Dataset dataset);
+    void provideData(Timeseries timeseries,
+                     Map<String, String> context,
+                     Dataset dataset,
+                     Optional<BiConsumer<String, Object>> additionalMetrics);
 }

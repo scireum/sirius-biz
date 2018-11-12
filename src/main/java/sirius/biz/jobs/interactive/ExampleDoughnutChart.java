@@ -9,7 +9,7 @@
 package sirius.biz.jobs.interactive;
 
 import sirius.biz.jobs.JobFactory;
-import sirius.biz.params.Parameter;
+import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
@@ -27,7 +27,9 @@ public class ExampleDoughnutChart extends DougnutChartJobFactory {
     }
 
     @Override
-    protected void computeChartData(Map<String, String> context, BiConsumer<String, Number> valueConsumer) {
+    protected void computeChartData(Map<String, String> context,
+                                    BiConsumer<String, Number> valueConsumer,
+                                    BiConsumer<String, Object> additionalMetrics) {
         valueConsumer.accept("A", 30);
         valueConsumer.accept("B", 60);
         valueConsumer.accept("C", 90);

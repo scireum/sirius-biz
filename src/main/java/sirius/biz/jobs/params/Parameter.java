@@ -6,9 +6,8 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.params;
+package sirius.biz.jobs.params;
 
-import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
@@ -71,11 +70,7 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
 
     public String checkAndTransform(Value input) {
         try {
-            String result = checkAndTransformValue(input);
-            if (Strings.isEmpty(result) && required) {
-                throw Exceptions.createHandled().withNLSKey("Parameter.required").set("name", getTitle()).handle();
-            }
-            return result;
+           return checkAndTransformValue(input);
         } catch (IllegalArgumentException e) {
             throw Exceptions.createHandled()
                             .withNLSKey("Parameter.invalidValue")

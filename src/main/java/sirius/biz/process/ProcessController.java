@@ -8,6 +8,7 @@
 
 package sirius.biz.process;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.biz.web.ElasticPageHelper;
@@ -36,6 +37,7 @@ import java.util.ArrayList;
 public class ProcessController extends BizController {
     //TODO
     private static final String PERMISSION_MANAGE_PROCESSES = "manage-processes";
+    private static final long MIN_COMPLETION_TIME_TO_DISABLE_AUTO_REFRESH = 20;
 
     @Part
     private Processes processes;
@@ -78,7 +80,21 @@ public class ProcessController extends BizController {
 
     @Routed("/ps/:1")
     @LoginRequired
-    public void process(WebContext ctx, String processId) {
+    public void processDetails(WebContext ctx, String processId) {
+        Process process = find(Process.class, processId);
+
+        assertAccess(process);
+
+        ElasticQuery<ProcessLog> query =
+                elastic.select(ProcessLog.class).eq(ProcessLog.PROCESS, process).orderDesc(ProcessLog.TIMESTAMP);
+        int numLogs = (int) query.count();
+
+        ctx.respondWith().template("templates/process/process-details.html.pasta", this, process, numLogs, query.limit(5).queryList());
+    }
+
+    @Routed("/ps/:1/logs")
+    @LoginRequired
+    public void processLogs(WebContext ctx, String processId) {
         Process process = find(Process.class, processId);
 
         assertAccess(process);
@@ -90,7 +106,8 @@ public class ProcessController extends BizController {
         ElasticPageHelper<ProcessLog> ph = ElasticPageHelper.withQuery(query);
         ph.withContext(ctx);
         ph.addTermAggregation(ProcessLog.TYPE, ProcessLogType.class);
-        ph.addTermAggregation(ProcessLog.MESSAGE_TYPE, value -> NLS.getIfExists(value, null).orElse(value));
+        //TODO
+        ph.addTermAggregation(ProcessLog.MESSAGE_HANDLER, value -> NLS.getIfExists(value, null).orElse(value));
         ph.addTimeAggregation(ProcessLog.TIMESTAMP,
                               DateRange.lastFiveMinutes(),
                               DateRange.lastFiveteenMinutes(),
@@ -98,12 +115,28 @@ public class ProcessController extends BizController {
         ph.addTermAggregation(ProcessLog.NODE);
         ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
-        ctx.respondWith().template("templates/process/process.html.pasta", this, process, numLogs, ph.asPage());
+        ctx.respondWith().template("templates/process/process-logs.html.pasta", this, process, numLogs, ph.asPage());
+    }
+
+    @Routed("/ps/:1/file/:2")
+    @LoginRequired
+    public void downloadProcessFile(WebContext ctx, String processId, String fileId) {
+        Process process = find(Process.class, processId);
+        assertAccess(process);
+
+        for (ProcessFile file : process.getFiles()) {
+            if (Strings.areEqual(file.getFileId(), fileId)) {
+                processes.getStorage().serve(ctx, process, file);
+                return;
+            }
+        }
+
+        ctx.respondWith().error(HttpResponseStatus.NOT_FOUND);
     }
 
     private void assertAccess(Process process) {
         UserInfo user = UserContext.getCurrentUser();
-        //TODO make re-usable (the constant)
+        //TODO make re-usable (the constant) - even better use special permission and map via profile
         if (!user.hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
             assertTenant(process.getTenantId());
         }
@@ -134,6 +167,15 @@ public class ProcessController extends BizController {
 
         long absSeconds = Duration.between(from, to).getSeconds();
         return Strings.apply("%02d:%02d:%02d", absSeconds / 3600, (absSeconds % 3600) / 60, absSeconds % 60);
+    }
+
+    public boolean shouldAutorefresh(Process process) {
+        if (process.getCompleted() == null || process.getState() != ProcessState.TERMINATED) {
+            return true;
+        }
+
+        return Duration.between(process.getCompleted(), LocalDateTime.now()).getSeconds()
+               < MIN_COMPLETION_TIME_TO_DISABLE_AUTO_REFRESH;
     }
 
     @Routed(value = "/ps/:1/api", jsonCall = true)

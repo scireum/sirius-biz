@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.params;
+package sirius.biz.jobs.params;
 
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;

@@ -32,14 +32,16 @@ public abstract class BatchProcessTaskExecutor extends DistributedTaskExecutor {
         taskContext.setSubSystem(factoryId);
 
         processes.execute(context.getString(BatchProcessJobFactory.CONTEXT_PROCESS), process -> {
-            process.log(ProcessLog.info("Started"));
+            process.log(ProcessLog.info().withMessage("Started"));
             try {
                 jobs.findFactory(factoryId, BatchProcessJobFactory.class).executeTask(process);
+            } catch (Exception e) {
+                process.handle(e);
             } finally {
                 if (process.isErroneous()) {
-                    process.log(ProcessLog.warn("Done"));
+                    process.log(ProcessLog.warn().withMessage("Done"));
                 } else {
-                    process.log(ProcessLog.success("Done"));
+                    process.log(ProcessLog.success().withMessage("Done"));
                 }
             }
         });

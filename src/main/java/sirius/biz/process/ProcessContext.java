@@ -8,10 +8,11 @@
 
 package sirius.biz.process;
 
-import sirius.biz.params.Parameter;
+import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.async.TaskContextAdapter;
 import sirius.kernel.commons.Value;
 
+import java.io.File;
 import java.util.Map;
 import java.util.Optional;
 
@@ -41,20 +42,6 @@ public interface ProcessContext extends TaskContextAdapter {
      */
     void addTiming(String counter, long millis);
 
-    /**
-     * Adds a warning to the task log.
-     *
-     * @param message the message to log
-     */
-    void warn(Object message);
-
-    /**
-     * Adds an error to the task log.
-     *
-     * @param message the message to log
-     */
-    void error(Object message);
-
     void handle(Exception e);
 
     void log(ProcessLog logEntry);
@@ -79,4 +66,8 @@ public interface ProcessContext extends TaskContextAdapter {
     <V, P extends Parameter<V, P>> V require(Parameter<V, P> parameter);
 
     void addLink(ProcessLink link);
+
+    void addOutputTable(ProcessOutputTable table);
+
+    void addFile(String filename, File data);
 }

@@ -10,12 +10,14 @@ package sirius.biz.jobs.interactive;
 
 import sirius.biz.analytics.charts.Charts;
 import sirius.biz.analytics.charts.Dataset;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.ValueHolder;
 import sirius.web.http.WebContext;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public abstract class LinearChartJobFactory extends InteractiveJobFactory {
@@ -27,10 +29,15 @@ public abstract class LinearChartJobFactory extends InteractiveJobFactory {
     protected void generateResponse(WebContext request, Map<String, String> context) {
         ValueHolder<List<String>> labels = new ValueHolder<>(null);
         List<Dataset> datasets = new ArrayList<>();
+        List<Tuple<String, Object>> additionalMetrics = new ArrayList<>();
 
-        computeChartData(context, labels::set, datasets::add);
+        computeChartData(context,
+                         labels::set,
+                         datasets::add,
+                         (name, value) -> additionalMetrics.add(Tuple.create(name, value)));
 
-        request.respondWith().template(getTemplate(), this, context, Charts.formatLabels(labels.get()), datasets);
+        request.respondWith()
+               .template(getTemplate(), this, context, Charts.formatLabels(labels.get()), datasets, additionalMetrics);
     }
 
     protected String getTemplate() {
@@ -39,5 +46,6 @@ public abstract class LinearChartJobFactory extends InteractiveJobFactory {
 
     protected abstract void computeChartData(Map<String, String> context,
                                              Consumer<List<String>> labelConsumer,
-                                             Consumer<Dataset> datasetConsumer);
+                                             Consumer<Dataset> datasetConsumer,
+                                             BiConsumer<String, Object> additionalMetricConsumer);
 }

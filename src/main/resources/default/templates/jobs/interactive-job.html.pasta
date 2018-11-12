@@ -1,5 +1,6 @@
 <i:arg type="sirius.biz.jobs.JobFactory" name="job"/>
 <i:arg type="Map" name="context"/>
+<i:arg type="List" name="additionalMetrics"/>
 
 <w:page title="@job.getLabel()">
     <i:block name="breadcrumbs">
@@ -14,25 +15,34 @@
     <w:pageHeader title="@job.getLabel()"/>
 
     <div class="row">
-        <i:if test="!job.getParameters().isEmpty()">
+        <i:if test="!job.getParameters().isEmpty() || !additionalMetrics.isEmpty()">
             <div class="col-md-3">
-                <w:editForm url="@apply('/job/%s', job.getName())">
-                    <div class="well">
-                        <div class="row">
-                            <i:for type="sirius.biz.params.Parameter" var="param" items="job.getParameters()">
-                                    <i:dynamicInvoke template="@param.getTemplateName()" param="@param" context="@context" />
-                            </i:for>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <a class="btn btn-primary submit-link btn-block">
-                                    <i class="fa fa-check"></i> @i18n("JobFactory.execute")
-                                </a>
+                <i:if test="!job.getParameters().isEmpty()">
+                    <w:editForm url="@apply('/job/%s', job.getName())">
+                        <div class="well">
+                            <div class="row">
+                                <i:for type="sirius.biz.jobs.params.Parameter" var="param" items="job.getParameters()">
+                                        <i:dynamicInvoke template="@param.getTemplateName()" param="@param" context="@context" />
+                                </i:for>
                             </div>
-                        </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <a class="btn btn-primary submit-link btn-block">
+                                        <i class="fa fa-check"></i> @i18n("JobFactory.execute")
+                                    </a>
+                                </div>
+                            </div>
 
-                    </div>
-                </w:editForm>
+                        </div>
+                    </w:editForm>
+                </i:if>
+                <i:if test="!additionalMetrics.isEmpty()">
+                    <w:infobox titleKey="InteractiveJobFactory.additionalMetrics">
+                        <i:for type="Tuple" var="metric" items="additionalMetrics">
+                            <w:infoboxElement label="@toUserString(metric.getFirst())" value="@metric.getSecond()"/>
+                        </i:for>
+                    </w:infobox>
+                </i:if>
                 <div>
                     <a href="/jobs" class="btn btn-block">@i18n("NLS.back")</a>
                 </div>

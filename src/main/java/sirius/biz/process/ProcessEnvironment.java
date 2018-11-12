@@ -8,7 +8,7 @@
 
 package sirius.biz.process;
 
-import sirius.biz.params.Parameter;
+import sirius.biz.jobs.params.Parameter;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.RateLimit;
@@ -22,6 +22,7 @@ import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
+import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,18 +80,8 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
-    public void warn(Object message) {
-        log(ProcessLog.warn(NLS.toUserString(message)));
-    }
-
-    @Override
-    public void error(Object message) {
-        log(ProcessLog.error(NLS.toUserString(message)));
-    }
-
-    @Override
     public void handle(Exception e) {
-        log(ProcessLog.error(Exceptions.handle(Log.BACKGROUND, e).getMessage()));
+        log(ProcessLog.error().withMessage(Exceptions.handle(Log.BACKGROUND, e).getMessage()));
     }
 
     @Override
@@ -105,7 +96,7 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void log(String message) {
-        log(ProcessLog.info(message));
+        log(ProcessLog.info().withMessage(message));
     }
 
     @Override
@@ -170,5 +161,15 @@ class ProcessEnvironment implements ProcessContext {
     @Override
     public void addLink(ProcessLink link) {
         processes.addLink(processId, link);
+    }
+
+    @Override
+    public void addOutputTable(ProcessOutputTable table) {
+        processes.addOutputTable(processId, table);
+    }
+
+    @Override
+    public void addFile(String filename, File data) {
+        processes.addFile(processId, filename, data);
     }
 }

@@ -25,6 +25,7 @@ import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 import sirius.web.services.JSONStructuredOutput;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
@@ -208,6 +209,32 @@ public class Processes {
         return modifyWithoutFlush(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             process.getLinks().add(link);
         });
+    }
+
+    public boolean addOutputTable(String processId, ProcessOutputTable table) {
+        return modifyWithoutFlush(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
+            process.getOutputTables().add(table);
+        });
+    }
+
+    public boolean addFile(String processId, String filename, File data) {
+        Process process = fetchProcess(processId).orElse(null);
+        if (process == null) {
+            return false;
+        }
+
+        ProcessFile file = getStorage().upload(process, filename, data);
+        return modifyWithoutFlush(processId, proc -> true, proc -> {
+            proc.getFiles().add(file);
+        });
+    }
+
+
+    @Part
+    private ProcessFileStorage fileStorage;
+
+    public ProcessFileStorage getStorage() {
+        return fileStorage;
     }
 
     public void log(String processId, ProcessLog logEntry) {

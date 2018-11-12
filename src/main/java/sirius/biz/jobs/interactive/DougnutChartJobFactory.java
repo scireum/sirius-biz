@@ -17,25 +17,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
-public abstract class DougnutChartJobFactory extends InteractiveJobFactory {
+public abstract class DougnutChartJobFactory extends SingleDatasetChartJobFactory {
+
 
     @Override
-    protected void generateResponse(WebContext request, Map<String, String> context) {
-        List<String> labels = new ArrayList<>();
-        Dataset dataset = new Dataset("");
-
-        computeChartData(context, (label, value) -> {
-            labels.add(label);
-            dataset.addValue(value);
-        });
-
-        request.respondWith()
-               .template("/templates/jobs/dougnutchart.html.pasta",
-                         this,
-                         context,
-                         Charts.formatLabels(labels),
-                         dataset.getData());
+    protected String getTemplate() {
+        return "/templates/jobs/dougnutchart.html.pasta";
     }
 
-    protected abstract void computeChartData(Map<String, String> context, BiConsumer<String, Number> valueConsumer);
 }

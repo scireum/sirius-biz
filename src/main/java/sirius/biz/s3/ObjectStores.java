@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.S3ClientOptions;
 import sirius.kernel.Sirius;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Average;
@@ -95,6 +96,15 @@ public class ObjectStores {
         }
 
         return createAndStore(name);
+    }
+
+    public boolean isConfigured(String name) {
+        Extension extension = Sirius.getSettings().getExtension(STORES_EXTENSION_POINT, name);
+        if (extension == null || extension.isDefault()) {
+           return false;
+        }
+
+        return extension.get(KEY_END_POINT).isFilled();
     }
 
     protected synchronized ObjectStore createAndStore(String name) {
