@@ -91,7 +91,6 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
                 String nodeName = event.getString(MESSAGE_NAME);
                 if (!Strings.areEqual(members.put(nodeName, address), address)) {
                     Cluster.LOG.INFO("Discovered a new node: %s - %s", nodeName, address);
-                    members.put(nodeName, address);
                 }
             }
         } else if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_KILL)) {
