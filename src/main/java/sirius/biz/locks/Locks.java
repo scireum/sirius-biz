@@ -56,6 +56,21 @@ public class Locks implements MetricProvider {
     }
 
     /**
+     * Tries to acquire the given lock in the given timeslot.
+     * <p>
+     * A sane value for the timeout might be in the range of 5-50s, highly depending on the algorithm
+     * being protected by the lock. If the value is <tt>null</tt>, no retries will be performed.
+     *
+     * @param lockName       the name of the lock to acquire
+     * @param acquireTimeout the max duration during which retires will be performed
+     * @param lockTimeout    the max duration for which the lock will be kept before auto-releasing it
+     * @return <tt>true</tt> if the lock was acquired, <tt>false</tt> otherwise
+     */
+    public boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout, @Nonnull Duration lockTimeout) {
+        return manager.tryLock(lockName, acquireTimeout, lockTimeout);
+    }
+
+    /**
      * Boilerplate method to perform the given task while holding the given lock.
      * <p>
      * See {@link #tryLock(String, Duration)} for details on acquiring a lock.
@@ -114,7 +129,8 @@ public class Locks implements MetricProvider {
         LocalDateTime limitForAcquired = LocalDateTime.now().minus(LONG_RUNNING_LOGS_THRESHOLD);
 
         collector.metric("locks_count", "locks-count", "Active Locks", locks.size(), null);
-        collector.metric("locks_long_running","locks-long-running",
+        collector.metric("locks_long_running",
+                         "locks-long-running",
                          "Long locks",
                          locks.stream().filter(l -> l.getAcquired().isBefore(limitForAcquired)).count(),
                          null);

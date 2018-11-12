@@ -40,6 +40,12 @@ public abstract class BasicLockManager implements LockManager {
         }
     }
 
+    @Override
+    public boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout, @Nonnull Duration lockTimeout) {
+        // Ignore lock timeout as its not supported here
+        return tryLock(lockName, acquireTimeout);
+    }
+
     /**
      * If the lock is already aquired, this returns the initial amount of milliseconds to wait.
      *

@@ -65,6 +65,11 @@ public class SmartLockManager implements LockManager {
     }
 
     @Override
+    public boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout, @Nonnull Duration lockTimeout) {
+        return getDelegate().tryLock(lockName, acquireTimeout, lockTimeout);
+    }
+
+    @Override
     public boolean isLocked(@Nonnull String lock) {
         return getDelegate().isLocked(lock);
     }

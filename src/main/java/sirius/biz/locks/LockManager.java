@@ -25,11 +25,21 @@ public interface LockManager extends Named {
      *
      * @param lockName       the name of the lock to acquire.
      * @param acquireTimeout the max time to wait for a lock. Used <tt>null</tt> to immediatelly return if a lock
-     *                       cannot
-     *                       be obtained.
+     *                       cannot be obtained.
      * @return <tt>true</tt> if the lock was acquired, <tt>false</tt> otherwise
      */
     boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout);
+
+    /**
+     * Tries to acquire the lock with the given name within the given interval.
+     *
+     * @param lockName       the name of the lock to acquire.
+     * @param acquireTimeout the max time to wait for a lock. Used <tt>null</tt> to immediatelly return if a lock
+     *                       cannot be obtained.
+     * @param lockTimeout    the max duration for which the lock will be kept before auto-releasing it.
+     * @return <tt>true</tt> if the lock was acquired, <tt>false</tt> otherwise
+     */
+    boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout, @Nonnull Duration lockTimeout);
 
     /**
      * Determines if the lock is currently being locked.
