@@ -12,6 +12,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -62,6 +63,9 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
     @Part
     private Interconnect interconnect;
 
+    @ConfigValue("sirius.nodeAddress")
+    private String localNodeAddress;
+
     @Nonnull
     @Override
     public String getName() {
@@ -83,7 +87,11 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
         } else if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_PONG)) {
             String address = event.getString(MESSAGE_ADDRESS);
             if (!Strings.areEqual(address, getLocalAddress()) && Strings.isFilled(address)) {
-                members.put(event.getString(MESSAGE_NAME), address);
+                String nodeName = event.getString(MESSAGE_NAME);
+                if (!members.containsKey(nodeName)) {
+                    Cluster.LOG.INFO("Discovered a new node: %s - %s", nodeName, address);
+                    members.put(nodeName, address);
+                }
             }
         } else if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_KILL)) {
             members.remove(event.getString(MESSAGE_NAME));
@@ -92,7 +100,10 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
 
     private String getLocalAddress() {
         try {
-            return "http://" + InetAddress.getLocalHost().getHostAddress() + ":" + WebServer.getPort();
+            if (Strings.isEmpty(localNodeAddress)) {
+                localNodeAddress = "http://" + InetAddress.getLocalHost().getHostAddress();
+            }
+            return localNodeAddress;
         } catch (UnknownHostException e) {
             return "";
         }
@@ -145,6 +156,9 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
 
     @Override
     public List<NodeInfo> updateClusterState() {
+        if (lastPing == null) {
+            Cluster.LOG.INFO("Starting node discovery - I am %s - %s", CallContext.getNodeName(), getLocalAddress());
+        }
         if (lastPing == null || Duration.between(lastPing, LocalDateTime.now()).compareTo(PING_INTERVAL) >= 0) {
             sendPing();
         }
