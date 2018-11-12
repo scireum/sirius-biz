@@ -47,7 +47,7 @@ public class BucketInfo {
      */
     protected BucketInfo(Extension extension) {
         this.name = extension.getId();
-        this.description = NLS.getIfExists("Storage.bucket." + this.name, NLS.getCurrentLang()).orElse("");
+        this.description = NLS.getIfExists("Storage.bucket." + this.name, null).orElse("");
         this.permission = extension.get("permission").asString();
         this.canCreate = extension.get("canCreate").asBoolean();
         this.canEdit = extension.get("canEdit").asBoolean();

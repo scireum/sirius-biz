@@ -24,6 +24,7 @@
         <i:if test="!tenant.isNew()">
             <div class="col-md-3">
                 <w:infobox titleKey="Model.details">
+                    <w:infoboxElement labelKey="Model.name" value="@tenant.getName()"/>
                     <w:infoboxElement labelKey="Tenant.accountNumber" value="@tenant.getAccountNumber()"/>
                     <w:infoboxElement labelKey="AddressData.street" value="@tenant.getAddress().getStreet()"/>
                     <w:infoboxElement labelKey="AddressData.zip" value="@tenant.getAddress().getZip()"/>

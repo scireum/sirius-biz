@@ -14,6 +14,7 @@ import sirius.db.es.constraints.ElasticConstraint;
 import sirius.db.mixing.DateRange;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.cache.ValueComputer;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Watch;
 import sirius.web.controller.Facet;
@@ -64,6 +65,38 @@ public class ElasticPageHelper<E extends ElasticEntity>
         return addTermAggregation(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
                                   field,
                                   null,
+                                  ElasticQuery.DEFAULT_TERM_AGGREGATION_BUCKET_COUNT);
+    }
+
+    /**
+     * Adds a automatic facet for values in the given field.
+     *
+     * @param field      the field to aggregate on
+     * @param translator the translator used to convert field values into filter labels
+     * @return the helper itself for fluent method calls
+     */
+    public ElasticPageHelper<E> addTermAggregation(Mapping field, ValueComputer<String, String> translator) {
+        return addTermAggregation(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
+                                  field,
+                                  translator,
+                                  ElasticQuery.DEFAULT_TERM_AGGREGATION_BUCKET_COUNT);
+    }
+
+    /**
+     * Adds a automatic facet for values in the given field.
+     *
+     * @param field    the field to aggregate on
+     * @param enumType the type of enums in this field used for proper translation
+     * @return the helper itself for fluent method calls
+     */
+    public ElasticPageHelper<E> addTermAggregation(Mapping field, Class<? extends Enum<?>> enumType) {
+        return addTermAggregation(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
+                                  field,
+                                  value -> Arrays.stream(enumType.getEnumConstants())
+                                                 .filter(enumConst -> Strings.areEqual(enumConst.name(), value))
+                                                 .findFirst()
+                                                 .map(Object::toString)
+                                                 .orElse(value),
                                   ElasticQuery.DEFAULT_TERM_AGGREGATION_BUCKET_COUNT);
     }
 
