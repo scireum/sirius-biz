@@ -1,5 +1,7 @@
 package sirius.biz.storage
 
+import sirius.biz.storage.versions.VersionedFile
+import sirius.biz.storage.versions.VersionedFiles
 import sirius.biz.tenants.Tenant
 import sirius.biz.tenants.TenantsHelper
 import sirius.db.jdbc.OMA
@@ -11,7 +13,7 @@ import sirius.web.security.UserContext
 import java.time.Duration
 
 /**
- * Provides tests for {@link VersionedFiles}.
+ * Provides tests for {@link sirius.biz.storage.versions.VersionedFiles}.
  */
 class VersionedFilesSpec extends BaseSpecification {
     @Part

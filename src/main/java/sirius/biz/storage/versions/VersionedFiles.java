@@ -1,5 +1,7 @@
-package sirius.biz.storage;
+package sirius.biz.storage.versions;
 
+import sirius.biz.storage.Storage;
+import sirius.biz.storage.StoredObject;
 import sirius.biz.tenants.Tenant;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.di.std.ConfigValue;
