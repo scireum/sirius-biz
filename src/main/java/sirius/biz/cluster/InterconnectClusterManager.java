@@ -21,7 +21,6 @@ import sirius.kernel.health.metrics.MetricState;
 import sirius.web.health.Cluster;
 import sirius.web.health.ClusterManager;
 import sirius.web.health.NodeInfo;
-import sirius.web.http.WebServer;
 import sirius.web.services.JSONCall;
 
 import javax.annotation.Nonnull;
