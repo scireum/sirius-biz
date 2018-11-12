@@ -56,6 +56,7 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
     public static final String RESPONSE_NODE_NAME = "node";
     public static final String RESPONSE_ERROR = "error";
     public static final String RESPONSE_ERROR_MESAGE = "errorMesage";
+    private static final int HTTP_DEFAULT_PORT = 80;
 
     private Map<String, String> members = new ConcurrentHashMap<>();
     private LocalDateTime lastPing = null;
@@ -88,9 +89,8 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
             String address = event.getString(MESSAGE_ADDRESS);
             if (!Strings.areEqual(address, getLocalAddress()) && Strings.isFilled(address)) {
                 String nodeName = event.getString(MESSAGE_NAME);
-                if (!members.containsKey(nodeName)) {
+                if (!Strings.areEqual(members.put(nodeName, address), address)) {
                     Cluster.LOG.INFO("Discovered a new node: %s - %s", nodeName, address);
-                    members.put(nodeName, address);
                 }
             }
         } else if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_KILL)) {
@@ -101,7 +101,12 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
     private String getLocalAddress() {
         try {
             if (Strings.isEmpty(localNodeAddress)) {
-                localNodeAddress = "http://" + InetAddress.getLocalHost().getHostAddress();
+                int port = WebServer.getPort();
+                if (port != HTTP_DEFAULT_PORT) {
+                    localNodeAddress = "http://" + InetAddress.getLocalHost().getHostAddress() + ":" + port;
+                } else {
+                    localNodeAddress = "http://" + InetAddress.getLocalHost().getHostAddress();
+                }
             }
             return localNodeAddress;
         } catch (UnknownHostException e) {
