@@ -32,6 +32,7 @@ import sirius.web.controller.Message;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -85,7 +86,17 @@ public class BizController extends BasicController {
             throw invalidTenantException();
         }
 
-        if (!Objects.equals(UserContext.getCurrentUser().getTenantId(), tenantAware.getTenantAsString())) {
+        assertTenant(tenantAware.getTenantAsString());
+    }
+
+    /**
+     * Ensures that the tenant of the current user matches the given tenant id.
+     *
+     * @param tenantId the id to check
+     * @throws sirius.kernel.health.HandledException if the tenants do no match
+     */
+    protected void assertTenant(@Nonnull String tenantId) {
+        if (!Objects.equals(UserContext.getCurrentUser().getTenantId(), tenantId)) {
             throw invalidTenantException();
         }
     }
