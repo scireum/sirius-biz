@@ -21,6 +21,7 @@ import sirius.kernel.health.metrics.MetricState;
 import sirius.web.health.Cluster;
 import sirius.web.health.ClusterManager;
 import sirius.web.health.NodeInfo;
+import sirius.web.http.WebServer;
 import sirius.web.services.JSONCall;
 
 import javax.annotation.Nonnull;
@@ -55,6 +56,7 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
     public static final String RESPONSE_NODE_NAME = "node";
     public static final String RESPONSE_ERROR = "error";
     public static final String RESPONSE_ERROR_MESAGE = "errorMesage";
+    private static final int HTTP_DEFAULT_PORT = 80;
 
     private Map<String, String> members = new ConcurrentHashMap<>();
     private LocalDateTime lastPing = null;
@@ -100,7 +102,12 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
     private String getLocalAddress() {
         try {
             if (Strings.isEmpty(localNodeAddress)) {
-                localNodeAddress = "http://" + InetAddress.getLocalHost().getHostAddress();
+                int port = WebServer.getPort();
+                if (port != HTTP_DEFAULT_PORT) {
+                    localNodeAddress = "http://" + InetAddress.getLocalHost().getHostAddress() + ":" + port;
+                } else {
+                    localNodeAddress = "http://" + InetAddress.getLocalHost().getHostAddress();
+                }
             }
             return localNodeAddress;
         } catch (UnknownHostException e) {
