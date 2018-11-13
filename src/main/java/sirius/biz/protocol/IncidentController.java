@@ -38,6 +38,7 @@ public class IncidentController extends BizController {
                                                                                   .orderDesc(StoredIncident.LAST_OCCURRENCE));
         ph.withContext(ctx);
         ph.addTermAggregation(StoredIncident.CATEGORY);
+        ph.addTermAggregation(StoredIncident.NODE);
         ph.addTimeAggregation(StoredIncident.LAST_OCCURRENCE,
                               DateRange.lastFiveMinutes(),
                               DateRange.lastFiveteenMinutes(),
