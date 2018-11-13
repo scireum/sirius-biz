@@ -13,6 +13,7 @@ import sirius.biz.web.ElasticPageHelper;
 import sirius.db.mixing.DateRange;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.nls.NLS;
 import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
@@ -37,6 +38,9 @@ public class MailController extends BizController {
         ElasticPageHelper<MailProtocol> ph =
                 ElasticPageHelper.withQuery(elastic.select(MailProtocol.class).orderDesc(MailProtocol.TOD));
         ph.withContext(ctx);
+        ph.addBooleanFacet(MailProtocol.SUCCESS.getName(), NLS.get("MailProtocol.success"));
+        ph.addTermAggregation(MailProtocol.NODE);
+        ph.addTermAggregation(MailProtocol.TYPE);
         ph.addTimeAggregation(MailProtocol.TOD,
                               DateRange.lastFiveMinutes(),
                               DateRange.lastFiveteenMinutes(),
