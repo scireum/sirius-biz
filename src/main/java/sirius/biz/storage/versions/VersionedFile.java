@@ -8,14 +8,14 @@ import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
-import sirius.kernel.di.std.Register;
+import sirius.kernel.di.std.Framework;
 
 import java.time.LocalDateTime;
 
 /**
  * Entity holding meta information about a versioned file.
  */
-@Register(framework = Storage.FRAMEWORK_STORAGE)
+@Framework(Storage.FRAMEWORK_STORAGE)
 public class VersionedFile extends SQLTenantAware {
 
     /**
