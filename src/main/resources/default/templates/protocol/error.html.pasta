@@ -39,9 +39,30 @@
     <div class="row">
         <div class="col-md-12">
             <w:heading labelKey="StoredIncident.mdc" />
-            <div class="well">
-                <pre class="plain">@incident.getMdc()</pre>
-            </div>
+            <w:table data="@incident.getMdc().data().entrySet()">
+                <thead>
+                <tr>
+                    <th>
+                        @i18n("StoredIncident.mdc.name")
+                    </th>
+                    <th>
+                        @i18n("StoredIncident.mdc.value")
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <i:for var="mdc" items="incident.getMdc().data().entrySet()" type="java.util.Map$Entry">
+                    <tr>
+                        <td>
+                            @mdc.getKey()
+                        </td>
+                        <td>
+                            @mdc.getValue()
+                        </td>
+                    </tr>
+                </i:for>
+                </tbody>
+            </w:table>
         </div>
     </div>
     <div class="row">
