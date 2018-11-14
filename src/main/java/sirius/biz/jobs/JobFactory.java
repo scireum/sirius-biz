@@ -19,9 +19,13 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.function.Function;
 
+// Storage, Tenants, CodeLists (storage/per-tenant)
+
 public interface JobFactory extends Named, Priorized {
 
     String getLabel();
+
+    String getIcon();
 
     @Nullable
     String getDescription();
@@ -35,4 +39,6 @@ public interface JobFactory extends Named, Priorized {
     void startInCall(WebContext request, JSONStructuredOutput out, Function<String, Value> parameterProvider);
 
     void startInBackground(Function<String, Value> parameterProvider);
+
+    String getCategory();
 }

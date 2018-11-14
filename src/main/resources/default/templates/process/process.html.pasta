@@ -1,6 +1,4 @@
-<i:arg type="sirius.biz.process.ProcessController" name="controller"/>
 <i:arg type="sirius.biz.process.Process" name="process"/>
-<i:arg type="int" name="numLogs"/>
 <i:arg type="String" name="page"/>
 
 <w:page title="@process.getTitle()">
@@ -16,6 +14,9 @@
     <w:pageHeader>
         <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
             <i class="fa fa-refresh fa-spin" id="spinner"></i>
+            <i:else>
+                <i class="fa @process.getIcon()" id="spinner"></i>
+            </i:else>
         </i:if>
         @process.getTitle()
         <span class="label @process.getLabelClass()">@process.getState()</span>
@@ -25,20 +26,27 @@
         <div class="col-md-3">
             <w:infobox titleKey="Model.details">
                 <i:if test="process.getState() == sirius.biz.process.ProcessState.STANDBY">
-                    <w:infoboxElement labelKey="Process.lastInteraction" value="@controller.formatTimestamp(process.getStarted())"/>
+                    <w:infoboxElement labelKey="Process.lastInteraction" value="@process.getStartedAsString()"/>
                     <i:else>
-                        <w:infoboxElement labelKey="Process.started" value="@controller.formatTimestamp(process.getStarted())"/>
-                        <w:infoboxElement labelKey="Process.runtime" value="@controller.formatDuration(process.getStarted(), process.getCompleted())"/>
-                        <w:infoboxElement labelKey="Process.completed" value="@controller.formatTimestamp(process.getCompleted())"/>
-                        <w:infoboxElement labelKey="Process.numLogs" value="@numLogs"/>
+                        <w:infoboxElement labelKey="Process.userName" value="@process.getUserName()"/>
+                        <w:infoboxElement labelKey="Process.tenantName" value="@process.getTenantName()"/>
+                        <w:infoboxElement labelKey="Process.started" value="@process.getStartedAsString()"/>
+                        <w:infoboxElement labelKey="Process.runtime" value="@process.getRuntimeAsString()"/>
+                        <w:infoboxElement labelKey="Process.completed" value="@process.getCompletedAsString()"/>
                     </i:else>
                 </i:if>
                 <i:extensions name="templates-process-details" process="@process"/>
             </w:infobox>
 
             <w:navbox labelKey="Model.links">
-                <w:navboxLink labelKey="Model.details" url="@apply('/ps/%s', process.getId())" active="page == 'details'"/>
-                <w:navboxLink labelKey="Process.logs" url="@apply('/ps/%s/logs', process.getId())" active="page == 'logs'"/>
+                <w:navboxLink icon="fa-info-circle" labelKey="Model.details" url="@apply('/ps/%s', process.getId())" active="page == 'details'"/>
+                <w:navboxLink icon="fa-bars" labelKey="Process.logs" url="@apply('/ps/%s/logs', process.getId())" active="page == 'logs'"/>
+
+                <i:for type="sirius.biz.process.output.ProcessOutput" var="output" items="@process.getOutputs()">
+                    <w:navboxLink icon="@output.getIcon()" label="@output.getLabel()"
+                                  url="@apply('/ps/%s/output/%s', process.getId(), output.getName())"
+                                  active="page == 'output-' + output.getName()"/>
+                </i:for>
 
                 <i:extensions name="templates-process-sidebar-menu" process="@process"/>
             </w:navbox>
@@ -61,7 +69,7 @@
         </div>
     </div>
 
-    <i:if test="controller.shouldAutorefresh(process)">
+    <i:if test="process.shouldAutorefresh()">
         <div class="autorefresh"></div>
     </i:if>
     <script type="text/javascript">
@@ -79,6 +87,7 @@
                         var newContent = $(container).find(".wrap");
                         if (newContent.length > 0) {
                             $(".wrap").html(newContent);
+                            invokeResizeHandler();
                         }
 
                         planUpdate();
@@ -90,7 +99,7 @@
             }, 5000);
         }
 
-        $(window).load(function () {
+        $(document).ready(function () {
             planUpdate();
         });
     </script>

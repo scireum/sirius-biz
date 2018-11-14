@@ -10,9 +10,11 @@ package sirius.biz.jobs.interactive;
 
 import sirius.biz.analytics.charts.Charts;
 import sirius.biz.analytics.charts.Dataset;
+import sirius.biz.analytics.reports.Cell;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.ValueHolder;
 import sirius.web.http.WebContext;
+import sirius.web.security.UserContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,18 +28,32 @@ public abstract class LinearChartJobFactory extends InteractiveJobFactory {
     public static final String BAR_CHART_TEMPLATE = "/templates/jobs/barchart.html.pasta";
 
     @Override
+    public String getIcon() {
+        return "fa-area-chart";
+    }
+
+    @Override
     protected void generateResponse(WebContext request, Map<String, String> context) {
         ValueHolder<List<String>> labels = new ValueHolder<>(null);
         List<Dataset> datasets = new ArrayList<>();
-        List<Tuple<String, Object>> additionalMetrics = new ArrayList<>();
+        List<Tuple<String, Cell>> additionalMetrics = new ArrayList<>();
 
-        computeChartData(context,
-                         labels::set,
-                         datasets::add,
-                         (name, value) -> additionalMetrics.add(Tuple.create(name, value)));
+        try {
+            computeChartData(context,
+                             labels::set,
+                             datasets::add,
+                             (name, value) -> additionalMetrics.add(Tuple.create(name, value)));
+        } catch (Exception e) {
+            UserContext.handle(e);
+        }
 
         request.respondWith()
-               .template(getTemplate(), this, context, Charts.formatLabels(labels.get()), datasets, additionalMetrics);
+               .template(getTemplate(),
+                         this,
+                         context,
+                         Charts.formatLabels(labels.get()),
+                         datasets,
+                         additionalMetrics);
     }
 
     protected String getTemplate() {
@@ -47,5 +63,5 @@ public abstract class LinearChartJobFactory extends InteractiveJobFactory {
     protected abstract void computeChartData(Map<String, String> context,
                                              Consumer<List<String>> labelConsumer,
                                              Consumer<Dataset> datasetConsumer,
-                                             BiConsumer<String, Object> additionalMetricConsumer);
+                                             BiConsumer<String, Cell> additionalMetricConsumer);
 }

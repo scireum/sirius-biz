@@ -8,6 +8,7 @@
 
 package sirius.biz.analytics.charts;
 
+import sirius.biz.analytics.reports.Cell;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.LocalDateParameter;
 import sirius.kernel.di.std.Named;
@@ -30,5 +31,5 @@ public interface TimeseriesDataProvider extends Named {
     void provideData(Timeseries timeseries,
                      Map<String, String> context,
                      Dataset dataset,
-                     Optional<BiConsumer<String, Object>> additionalMetrics);
+                     Optional<BiConsumer<String, Cell>> additionalMetrics);
 }

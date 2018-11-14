@@ -11,7 +11,7 @@ package sirius.biz.jobs.batch;
 import com.alibaba.fastjson.JSONObject;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.jobs.Jobs;
-import sirius.biz.process.ProcessLog;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.Processes;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.di.std.Part;

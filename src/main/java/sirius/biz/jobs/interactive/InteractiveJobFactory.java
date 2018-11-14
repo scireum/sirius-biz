@@ -8,9 +8,13 @@
 
 package sirius.biz.jobs.interactive;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.analytics.reports.Cells;
 import sirius.biz.jobs.BasicJobFactory;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
 import sirius.web.controller.Message;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
@@ -40,6 +44,9 @@ public abstract class InteractiveJobFactory extends BasicJobFactory {
     @Part
     private Tasks tasks;
 
+    @Part
+    protected Cells cells;
+
     @Override
     public void startInUI(WebContext request) {
         checkPermissions();
@@ -52,7 +59,12 @@ public abstract class InteractiveJobFactory extends BasicJobFactory {
         });
 
         tasks.executor(INTERACTIVE_JOBS_EXECUTOR).fork(() -> {
-            generateResponse(request, context);
+            try {
+                generateResponse(request, context);
+            } catch (Exception e) {
+                request.respondWith()
+                       .error(HttpResponseStatus.INTERNAL_SERVER_ERROR, Exceptions.handle(Log.BACKGROUND, e));
+            }
         });
     }
 

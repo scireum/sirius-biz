@@ -9,6 +9,7 @@
 package sirius.biz.process;
 
 import sirius.db.mixing.Nested;
+import sirius.kernel.nls.NLS;
 
 public class ProcessLink extends Nested {
 
@@ -22,7 +23,7 @@ public class ProcessLink extends Nested {
     }
 
     public String getLabel() {
-        return label;
+        return NLS.smartGet(label);
     }
 
     public ProcessLink withUri(String uri) {

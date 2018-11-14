@@ -6,15 +6,15 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.process;
+package sirius.biz.process.logs;
 
 import sirius.kernel.nls.NLS;
 
-public enum ProcessLogType {
-    INFO, SUCCESS, WARNING, ERROR;
+public enum ProcessLogState {
+    OPEN, RESOLVED, IGNORED;
 
     @Override
     public String toString() {
-        return NLS.get(ProcessLogType.class.getSimpleName() + "." + name());
+        return NLS.get(ProcessLogState.class.getSimpleName() + "." + name());
     }
 }

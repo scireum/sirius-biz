@@ -54,7 +54,7 @@ public interface StoredObject {
     /**
      * Returns the reference to which this object belongs.
      *
-     * @return the reference, preferable an {@link sirius.db.mixing.Entity#getUniqueName()}
+     * @return the reference, preferable an {@link sirius.db.mixing.BaseEntity#getUniqueName()}
      * or <tt>null</tt> if there is no reference
      */
     @Nullable

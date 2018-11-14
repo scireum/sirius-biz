@@ -13,6 +13,7 @@ import sirius.biz.analytics.charts.Dataset;
 import sirius.biz.analytics.charts.Timeseries;
 import sirius.biz.analytics.charts.TimeseriesDataProvider;
 import sirius.biz.analytics.charts.Unit;
+import sirius.biz.analytics.reports.Cell;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.nls.NLS;
@@ -43,7 +44,7 @@ public abstract class TimeseriesChartJobFactory extends LinearChartJobFactory im
     protected void computeChartData(Map<String, String> context,
                                     Consumer<List<String>> labelConsumer,
                                     Consumer<Dataset> datasetConsumer,
-                                    BiConsumer<String, Object> additionalMetricConsumer) {
+                                    BiConsumer<String, Cell> additionalMetricConsumer) {
         LocalDate start = TimeseriesDataProvider.PARAM_START.require(context);
         LocalDate end = TimeseriesDataProvider.PARAM_END.require(context);
         Unit unit = TimeseriesDataProvider.PARAM_UNIT.get(context).orElse(null);

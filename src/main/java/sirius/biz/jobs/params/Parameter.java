@@ -56,21 +56,18 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
     }
 
     public String getTitle() {
-        return title.startsWith("$") ? NLS.get(title.substring(1)) : title;
+        return NLS.smartGet(title);
     }
 
     public String getDescription() {
-        if (description == null) {
-            return "";
-        }
-        return description.startsWith("$") ? NLS.get(description.substring(1)) : description;
+        return NLS.smartGet(description);
     }
 
     public abstract String getTemplateName();
 
     public String checkAndTransform(Value input) {
         try {
-           return checkAndTransformValue(input);
+            return checkAndTransformValue(input);
         } catch (IllegalArgumentException e) {
             throw Exceptions.createHandled()
                             .withNLSKey("Parameter.invalidValue")

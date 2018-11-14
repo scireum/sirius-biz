@@ -1,11 +1,7 @@
-<i:arg type="sirius.biz.process.ProcessController" name="controller"/>
 <i:arg type="sirius.biz.process.Process" name="process"/>
-<i:arg type="int" name="numLogs"/>
 <i:arg type="Page" name="logs"/>
 
 <i:invoke template="/templates/process/process.html.pasta"
-          controller="controller"
-          numLogs="numLogs"
           process="process"
           page="logs">
     <i:block name="sidebar">
@@ -30,21 +26,29 @@
             <th>
                 @i18n("ProcessLog.message")
             </th>
-            <th class="align-right">
+            <th class="align-right col-md-2 col-sm-3">
                 @i18n("ProcessLog.timestamp")<br>
                 <small class="muted">@i18n("ProcessLog.node")</small>
             </th>
         </tr>
         </thead>
         <tbody>
-        <i:for type="sirius.biz.process.ProcessLog" var="log" items="logs.getItems()">
+        <i:for type="sirius.biz.process.logs.ProcessLog" var="log" items="logs.getItems()">
             <tr class="@log.getRowClass()">
                 <td/>
                 <td>
-                    @log.getMessage()
+                    <div>
+                        <pre class="plain" style="white-space: pre-wrap">@log.getMessage()</pre>
+                    </div>
+                    <div>
+                        <i:for type="sirius.biz.process.logs.ProcessLogAction" var="action" items="log.getActions()">
+                            <a href="@action.getUri()?returnUrl=@urlEncode(apply('/ps/%s/logs?%s', process.getId(), logs.createQueryString()))"
+                               class="link link-inline"><i class="fa @action.getIcon()"></i> @action.getLabel()</a>
+                        </i:for>
+                    </div>
                 </td>
                 <td class="align-right">
-                    @controller.formatTimestamp(log.getTimestamp())<br>
+                    @log.getTimestampAsString()<br>
                     <small class="muted">@log.getNode()</small>
                 </td>
             </tr>

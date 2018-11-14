@@ -9,6 +9,7 @@
 package sirius.biz.jobs;
 
 import sirius.biz.web.BizController;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
@@ -18,6 +19,7 @@ import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.services.JSONStructuredOutput;
 
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 @Register(classes = Controller.class, framework = "") //TODO "jobs"
@@ -29,9 +31,9 @@ public class JobsController extends BizController {
     @Routed("/jobs")
     @DefaultRoute
     public void jobs(WebContext ctx) {
-        Page<JobFactory> page = new Page<>();
+        Page<Tuple<JobCategory, Collection<JobFactory>>> page = new Page<>();
         page.bindToRequest(ctx);
-        page.withItems(jobs.getAvailableJobs(page.getQuery()).collect(Collectors.toList()));
+        page.withItems(jobs.getAvailableJobsByCategory(page.getQuery()));
 
         ctx.respondWith().template("/templates/jobs/jobs.html.pasta", page);
     }

@@ -9,18 +9,28 @@
 package sirius.biz.process;
 
 import sirius.biz.elastic.AutoBatchLoop;
+import sirius.biz.process.logs.ProcessLog;
+import sirius.biz.process.logs.ProcessLogState;
+import sirius.biz.process.logs.ProcessLogType;
+import sirius.biz.process.output.ProcessOutput;
+import sirius.biz.protocol.JournalData;
 import sirius.db.es.Elastic;
 import sirius.db.mixing.OptimisticLockException;
 import sirius.kernel.async.CallContext;
+import sirius.kernel.async.DelayLine;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.TaskContextAdapter;
+import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
+import sirius.kernel.nls.NLS;
+import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 import sirius.web.services.JSONStructuredOutput;
@@ -28,6 +38,7 @@ import sirius.web.services.JSONStructuredOutput;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -40,14 +51,18 @@ public class Processes {
     private Elastic elastic;
 
     @Part
+    private DelayLine delayLine;
+
+    @Part
     private AutoBatchLoop autoBatch;
 
     private Cache<String, Process> process1stLevelCache = CacheManager.createLocalCache("processes-first-level");
     private Cache<String, Process> process2ndLevelCache = CacheManager.createCoherentCache("processes-second-level");
 
-    public String createProcess(String title, UserInfo user, Map<String, String> context) {
+    public String createProcess(String title, String icon, UserInfo user, Map<String, String> context) {
         Process process = new Process();
         process.setTitle(title);
+        process.setIcon(icon);
         process.setUserId(user.getUserId());
         process.setUserName(user.getUserName());
         process.setTenantId(user.getTenantId());
@@ -64,8 +79,8 @@ public class Processes {
         return process.getIdAsString();
     }
 
-    public String createProcessForCurrentUser(String title, Map<String, String> context) {
-        return createProcess(title, UserContext.getCurrentUser(), context);
+    public String createProcessForCurrentUser(String title, String icon, Map<String, String> context) {
+        return createProcess(title, icon, UserContext.getCurrentUser(), context);
     }
 
     public void executeInStandbyProcess(String type,
@@ -211,9 +226,9 @@ public class Processes {
         });
     }
 
-    public boolean addOutputTable(String processId, ProcessOutputTable table) {
+    public boolean addOutput(String processId, ProcessOutput output) {
         return modifyWithoutFlush(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
-            process.getOutputTables().add(table);
+            process.getOutputs().add(output);
         });
     }
 
@@ -228,7 +243,6 @@ public class Processes {
             proc.getFiles().add(file);
         });
     }
-
 
     @Part
     private ProcessFileStorage fileStorage;
@@ -245,6 +259,7 @@ public class Processes {
 
             logEntry.setNode(CallContext.getNodeName());
             logEntry.setTimestamp(LocalDateTime.now());
+            logEntry.setSortKey(System.currentTimeMillis());
             logEntry.getProcess().setId(processId);
             logEntry.getDescriptor().beforeSave(logEntry);
             autoBatch.insertAsync(logEntry);
@@ -328,5 +343,53 @@ public class Processes {
             out.endObject();
         }
         out.endArray();
+    }
+
+    public Optional<Process> fetchProcessForUser(String processId) {
+        Optional<Process> process = elastic.find(Process.class, processId);
+        if (!process.isPresent()) {
+            return Optional.empty();
+        }
+
+        UserInfo user = UserContext.getCurrentUser();
+        if (!user.hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES)) {
+            if (!Objects.equals(user.getTenantId(), process.get().getTenantId())) {
+                return Optional.empty();
+            }
+        }
+
+        if (!Strings.areEqual(user.getUserId(), process.get().getUserId())) {
+            if (user.hasPermission(ProcessController.PERMISSION_MANAGE_PROCESSES)) {
+                return Optional.empty();
+            }
+        }
+
+        if (!user.hasPermission(process.get().getRequiredPermission())) {
+            return Optional.empty();
+        }
+
+        return process;
+    }
+
+    public Optional<ProcessLog> fetchProcessLogForUser(String processLogId) {
+        Optional<ProcessLog> processLog = elastic.find(ProcessLog.class, processLogId);
+        if (!processLog.isPresent()) {
+            return Optional.empty();
+        }
+        if (!fetchProcessForUser(processLog.get().getProcess().getId()).isPresent()) {
+            return Optional.empty();
+        }
+
+        return processLog;
+    }
+
+    public void updateProcessLogStateAndReturn(ProcessLog processLog,
+                                               ProcessLogState newState,
+                                               WebContext ctx,
+                                               String returnUrl) {
+        processLog.withState(newState);
+        elastic.update(processLog);
+        JournalData.addJournalEntry(processLog, NLS.get("ProcessLog.state") + ": " + newState.toString());
+        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> ctx.respondWith().redirectToGet(returnUrl));
     }
 }

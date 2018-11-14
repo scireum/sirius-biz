@@ -6,25 +6,26 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.process;
+package sirius.biz.process.logs;
 
-import sirius.biz.elastic.SearchContent;
 import sirius.biz.elastic.SearchableEntity;
+import sirius.biz.process.Process;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.es.types.ElasticRef;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -33,20 +34,26 @@ import java.util.Optional;
 public class ProcessLog extends SearchableEntity {
 
     public static final Mapping PROCESS = Mapping.named("process");
+    public static final String ACTION_MARK_OPEN = "markOpen";
+    public static final String ACTION_MARK_RESOLVED = "markResolved";
+    public static final String ACTION_MARK_IGNORED = "markIgnored";
     private final ElasticRef<Process> process = ElasticRef.on(Process.class, BaseEntityRef.OnDelete.CASCADE);
 
     public static final Mapping TYPE = Mapping.named("type");
-    private ProcessLogType type;
+    private ProcessLogType type = ProcessLogType.INFO;
 
     public static final Mapping TIMESTAMP = Mapping.named("timestamp");
     private LocalDateTime timestamp;
 
+    public static final Mapping SORT_KEY = Mapping.named("sortKey");
+    private long sortKey;
+
     public static final Mapping NODE = Mapping.named("node");
     private String node;
 
-    public static final Mapping OUTPUT_TABLE = Mapping.named("outputTable");
+    public static final Mapping OUTPUT = Mapping.named("output");
     @NullAllowed
-    private String outputTable;
+    private String output;
 
     public static final Mapping MESSAGE_HANDLER = Mapping.named("messageHandler");
     @NullAllowed
@@ -63,7 +70,6 @@ public class ProcessLog extends SearchableEntity {
     private boolean systemMessage;
 
     public static final Mapping MESSAGE = Mapping.named("message");
-    @SearchContent
     @IndexMode(indexed = ESOption.FALSE, docValues = ESOption.FALSE)
     @NullAllowed
     private String message;
@@ -74,10 +80,36 @@ public class ProcessLog extends SearchableEntity {
     @Transient
     private ProcessLogHandler handler;
 
+    @BeforeSave
+    protected void onSave() {
+        StringBuilder searchContent = new StringBuilder();
+
+        // Only add the message if it isn't an i18n key or a JSON object...
+        if (Strings.isFilled(message) && !message.startsWith("$") && !message.startsWith("{")) {
+            searchContent.append(message).append(" ");
+        }
+
+        // Append the content of each non-internal context field
+        getContext().data().forEach((key, value) -> {
+            if (!key.startsWith("_")) {
+                searchContent.append(value).append(" ");
+            }
+        });
+
+        setSearchableContent(searchContent.toString());
+    }
+
+    public String getTimestampAsString() {
+        return Process.formatTimestamp(getTimestamp());
+    }
+
     /**
      * Determines the bootstrap CSS class to be used for rendering the row of this process.
      */
     public String getRowClass() {
+        if (state == ProcessLogState.IGNORED) {
+            return "default";
+        }
         if (type == ProcessLogType.ERROR) {
             return "danger";
         }
@@ -86,6 +118,9 @@ public class ProcessLog extends SearchableEntity {
         }
         if (type == ProcessLogType.SUCCESS) {
             return "success";
+        }
+        if (state == ProcessLogState.OPEN) {
+            return "info";
         }
 
         return "default";
@@ -112,10 +147,21 @@ public class ProcessLog extends SearchableEntity {
         return this;
     }
 
-    public ProcessLog into(String outputTable) {
-        this.outputTable = outputTable;
+    public ProcessLog withState(ProcessLogState state) {
+        this.state = state;
         return this;
     }
+
+    public ProcessLog markOpen() {
+        this.state = ProcessLogState.OPEN;
+        return this;
+    }
+
+    public ProcessLog into(String output) {
+        this.output = output;
+        return this;
+    }
+
     public ProcessLog withMessageHandler(ProcessLogHandler handler) {
         this.messageHandler = handler.getName();
         return this;
@@ -152,14 +198,14 @@ public class ProcessLog extends SearchableEntity {
 
     public Optional<ProcessLogHandler> getHandler() {
         if (handler == null && Strings.isFilled(messageHandler)) {
-            handler = ctx.findPart(messageHandler, ProcessLogHandler.class);
+            handler = ctx.getPart(messageHandler, ProcessLogHandler.class);
         }
 
         return Optional.ofNullable(handler);
     }
 
-    public String getOutputTable() {
-        return outputTable;
+    public String getOutput() {
+        return output;
     }
 
     @SuppressWarnings("unchecked")
@@ -175,13 +221,35 @@ public class ProcessLog extends SearchableEntity {
         return message;
     }
 
-    public List<Tuple<String, String>> getActions() {
-        return getHandler().map(h -> h.getActions(this)).orElse(Collections.emptyList());
+    public List<ProcessLogAction> getActions() {
+        return getHandler().map(h -> h.getActions(this)).orElseGet(this::getDefaultActions);
+    }
+
+    public List<ProcessLogAction> getDefaultActions() {
+        if (state == null) {
+            return Collections.emptyList();
+        }
+
+        List<ProcessLogAction> actions = new ArrayList<>(2);
+        if (state != ProcessLogState.OPEN) {
+            actions.add(new ProcessLogAction(this, ACTION_MARK_OPEN).withLabelKey("ProcessLog.actionMarkOpen")
+                                                                    .withIcon("fa-retweet"));
+        } else {
+            actions.add(new ProcessLogAction(this, ACTION_MARK_RESOLVED).withLabelKey("ProcessLog.actionMarkResolved")
+                                                                        .withIcon("fa-check-square-o "));
+            actions.add(new ProcessLogAction(this, ACTION_MARK_IGNORED).withLabelKey("ProcessLog.actionMarkIgnored")
+                                                                       .withIcon("fa-ban"));
+        }
+
+        return actions;
     }
 
     @Override
     public String toString() {
-        return NLS.toUserString(timestamp) + " (" + node + ") - " + type + ": " + message;
+        return NLS.fmtr("ProcessLog.format")
+                  .set("process", getProcess().getId())
+                  .set("timestamp", NLS.toUserString(getTimestamp()))
+                  .format();
     }
 
     public boolean isSystemMessage() {
@@ -200,7 +268,7 @@ public class ProcessLog extends SearchableEntity {
         return timestamp;
     }
 
-    protected void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -208,7 +276,23 @@ public class ProcessLog extends SearchableEntity {
         return node;
     }
 
-    protected void setNode(String node) {
+    public void setNode(String node) {
         this.node = node;
+    }
+
+    public ProcessLogState getState() {
+        return state;
+    }
+
+    public StringMap getContext() {
+        return context;
+    }
+
+    public void setSortKey(long sortKey) {
+        this.sortKey = sortKey;
+    }
+
+    public long getSortKey() {
+        return sortKey;
     }
 }

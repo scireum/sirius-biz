@@ -6,9 +6,9 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.process;
+package sirius.biz.process.logs;
 
-import sirius.kernel.commons.Tuple;
+import sirius.biz.process.Process;
 import sirius.kernel.di.std.Named;
 import sirius.web.http.WebContext;
 
@@ -20,7 +20,7 @@ public interface ProcessLogHandler extends Named {
 
     String formatMessage(ProcessLog log);
 
-    List<Tuple<String, String>> getActions(ProcessLog log);
+    List<ProcessLogAction> getActions(ProcessLog log);
 
-    void executeAction(WebContext request, ProcessLog log, String action);
+    boolean executeAction(WebContext request, Process process, ProcessLog log, String action, String returnUrl);
 }

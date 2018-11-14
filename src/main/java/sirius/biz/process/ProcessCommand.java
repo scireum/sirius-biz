@@ -30,13 +30,18 @@ public abstract class ProcessCommand implements Command {
         Values argumentValues = Values.of(args);
         Map<String, String> context = new HashMap<>();
         fillContext(argumentValues, context);
-        String processId = processes.createProcessForCurrentUser(createTitle(argumentValues), context);
+        String processId =
+                processes.createProcessForCurrentUser(createTitle(argumentValues), getIcon(argumentValues), context);
         tasks.defaultExecutor().fork(() -> processes.execute(processId, this::executeProcess));
 
         output.apply("A process has been started on node %s: %s", CallContext.getNodeName(), "/ps/" + processId);
     }
 
     protected abstract String createTitle(Values args);
+
+    protected String getIcon(Values args) {
+        return null;
+    }
 
     protected abstract void fillContext(Values args, Map<String, String> context);
 

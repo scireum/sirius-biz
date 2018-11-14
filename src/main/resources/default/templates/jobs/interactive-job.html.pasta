@@ -1,6 +1,7 @@
 <i:arg type="sirius.biz.jobs.JobFactory" name="job"/>
 <i:arg type="Map" name="context"/>
 <i:arg type="List" name="additionalMetrics"/>
+<i:arg type="boolean" name="fullWidth" default="false"/>
 
 <w:page title="@job.getLabel()">
     <i:block name="breadcrumbs">
@@ -39,7 +40,8 @@
                 <i:if test="!additionalMetrics.isEmpty()">
                     <w:infobox titleKey="InteractiveJobFactory.additionalMetrics">
                         <i:for type="Tuple" var="metric" items="additionalMetrics">
-                            <w:infoboxElement label="@toUserString(metric.getFirst())" value="@metric.getSecond()"/>
+                            <w:infoboxCell label="@toUserString(metric.getFirst())"
+                                           value="metric.getSecond().as(sirius.biz.analytics.reports.Cell.class)" />
                         </i:for>
                     </w:infobox>
                 </i:if>
@@ -58,7 +60,7 @@
                 </div>
             </div>
             <i:else>
-                <div class="col-md-10 col-md-offset-1">
+                <div class="@if (fullWidth) { col-md-12 } else { col-md-10 col-md-offset-1 }">
                     <i:if test="isFilled(job.getDescription())">
                         <div class="well">
                             @job.getDescription()

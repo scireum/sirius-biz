@@ -10,6 +10,7 @@ package sirius.biz.process;
 
 import sirius.biz.elastic.SearchContent;
 import sirius.biz.elastic.SearchableEntity;
+import sirius.biz.process.output.ProcessOutput;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
@@ -17,22 +18,32 @@ import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.types.NestedList;
 import sirius.db.mixing.types.StringMap;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class Process extends SearchableEntity {
 
+    private static final long MIN_COMPLETION_TIME_TO_DISABLE_AUTO_REFRESH = 20;
+    private static final Duration ACTIVE_INTERVAL = Duration.ofMinutes(5);
+
     public static final Mapping TITLE = Mapping.named("title");
     @SearchContent
     @IndexMode(indexed = ESOption.FALSE, docValues = ESOption.FALSE)
     private String title;
+
+    public static final Mapping ICON = Mapping.named("icon");
+    @NullAllowed
+    private String icon;
 
     public static final Mapping STATE_MESSAGE = Mapping.named("stateMessage");
     @SearchContent
@@ -70,8 +81,8 @@ public class Process extends SearchableEntity {
     public static final Mapping LINKS = Mapping.named("links");
     private final NestedList<ProcessLink> links = new NestedList<>(ProcessLink.class);
 
-    public static final Mapping OUTPUT_TABLES = Mapping.named("outputTables");
-    private final NestedList<ProcessOutputTable> outputTables = new NestedList<>(ProcessOutputTable.class);
+    public static final Mapping OUTPUTS = Mapping.named("outputs");
+    private final NestedList<ProcessOutput> outputs = new NestedList<>(ProcessOutput.class);
 
     public static final Mapping FILES = Mapping.named("files");
     private final NestedList<ProcessFile> files = new NestedList<>(ProcessFile.class);
@@ -117,12 +128,58 @@ public class Process extends SearchableEntity {
         });
     }
 
+    public static String formatTimestamp(LocalDateTime timestamp) {
+        if (timestamp == null) {
+            return "";
+        }
+
+        if (timestamp.toLocalDate().equals(LocalDate.now())) {
+            return NLS.toUserString(timestamp.toLocalTime());
+        }
+
+        return NLS.toUserString(timestamp);
+    }
+
+    protected String formatDuration(LocalDateTime from, LocalDateTime to) {
+        if (from == null || to == null) {
+            return "";
+        }
+
+        long absSeconds = Duration.between(from, to).getSeconds();
+        return Strings.apply("%02d:%02d:%02d", absSeconds / 3600, (absSeconds % 3600) / 60, absSeconds % 60);
+    }
+
+    public String getStartedAsString() {
+        return formatTimestamp(getStarted());
+    }
+
+    public String getCompletedAsString() {
+        return formatTimestamp(getCompleted());
+    }
+
+    public String getRuntimeAsString() {
+        return formatDuration(getStarted(), getCompleted());
+    }
+
+    public boolean shouldAutorefresh() {
+        if (getCompleted() == null || getState() != ProcessState.TERMINATED) {
+            return true;
+        }
+
+        return Duration.between(getCompleted(), LocalDateTime.now()).getSeconds()
+               < MIN_COMPLETION_TIME_TO_DISABLE_AUTO_REFRESH;
+    }
+
     /**
      * Determines the bootstrap CSS class to be used for rendering the row of this process.
      */
     public String getRowClass() {
         if (state == ProcessState.STANDBY) {
-            return "info";
+            if (Duration.between(getStarted(), LocalDateTime.now()).compareTo(ACTIVE_INTERVAL) <= 0) {
+                return "info";
+            } else {
+                return "default";
+            }
         }
 
         if (state == ProcessState.RUNNING && !errorneous) {
@@ -136,13 +193,17 @@ public class Process extends SearchableEntity {
         if (errorneous) {
             return "danger";
         } else {
-            return "default";
+            return "success";
         }
     }
 
     public String getLabelClass() {
         if (state == ProcessState.STANDBY) {
-            return "";
+            if (Duration.between(getStarted(), LocalDateTime.now()).compareTo(ACTIVE_INTERVAL) <= 0) {
+                return "label-info";
+            } else {
+                return "";
+            }
         }
 
         if (state == ProcessState.RUNNING && !errorneous) {
@@ -174,6 +235,22 @@ public class Process extends SearchableEntity {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getIcon() {
+        if (Strings.isEmpty(icon)) {
+            if (getState() == ProcessState.STANDBY) {
+                return "fa-retweet";
+            } else {
+                return "fa-cogs";
+            }
+        }
+
+        return icon;
+    }
+
+    public void setIcon(String icon) {
+        this.icon = icon;
     }
 
     public String getProcessType() {
@@ -284,8 +361,8 @@ public class Process extends SearchableEntity {
         this.requiredPermission = requiredPermission;
     }
 
-    public NestedList<ProcessOutputTable> getOutputTables() {
-        return outputTables;
+    public NestedList<ProcessOutput> getOutputs() {
+        return outputs;
     }
 
     public NestedList<ProcessFile> getFiles() {

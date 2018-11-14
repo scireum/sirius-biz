@@ -23,6 +23,7 @@ import sirius.web.controller.Page;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -174,15 +175,45 @@ public class ElasticPageHelper<E extends ElasticEntity>
             if (translator == null) {
                 translator = IDENTITY;
             }
-            if (facet.getItems().isEmpty()) {
-                for (Tuple<String, Integer> bucket : baseQuery.getAggregationBuckets(facet.getName())) {
-                    facet.addItem(bucket.getFirst(), translator.compute(bucket.getFirst()), bucket.getSecond());
-                }
+            fillFacet(facet, translator);
+        }
+    }
+
+    private void fillFacet(Facet facet, ValueComputer<String, String> translator) {
+        if (facet.getItems().isEmpty()) {
+            fillWithAggregationResults(facet, translator);
+        } else {
+            enhanceWithAggregationCounts(facet);
+        }
+    }
+
+    private void enhanceWithAggregationCounts(Facet facet) {
+        Map<String, Integer> counters = Tuple.toMap(baseQuery.getAggregationBuckets(facet.getName()));
+        Iterator<FacetItem> iter = facet.getAllItems().iterator();
+        while (iter.hasNext()) {
+            FacetItem item = iter.next();
+            int numberOfHits = counters.getOrDefault(item.getKey(), 0);
+            if (numberOfHits > 0 || item.isActive()) {
+                item.setCount(numberOfHits);
             } else {
-                Map<String, Integer> counters = Tuple.toMap(baseQuery.getAggregationBuckets(facet.getName()));
-                for (FacetItem item : facet.getItems()) {
-                    item.setCount(counters.getOrDefault(item.getKey(), 0));
-                }
+                // If the item has no matches and isn't an active filter - remove as
+                // it is unneccessary...
+                iter.remove();
+            }
+        }
+    }
+
+    private void fillWithAggregationResults(Facet facet, ValueComputer<String, String> translator) {
+        for (Tuple<String, Integer> bucket : baseQuery.getAggregationBuckets(facet.getName())) {
+            facet.addItem(bucket.getFirst(), translator.compute(bucket.getFirst()), bucket.getSecond());
+        }
+        if (facet.getItems().isEmpty()) {
+            // If we didn't find any aggregation value we have to check if a filter for this
+            // facet is active and artificially create an "0" item for this so that it can be
+            // disabled...
+            String filterValue = ctx.get(facet.getName()).asString();
+            if (Strings.isFilled(filterValue)) {
+                facet.addItem(filterValue, translator.compute(filterValue), 0);
             }
         }
     }

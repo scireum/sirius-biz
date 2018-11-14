@@ -9,10 +9,16 @@
 package sirius.biz.process;
 
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.process.logs.ProcessLog;
+import sirius.biz.process.output.ChartOutput;
+import sirius.biz.process.output.ProcessOutput;
+import sirius.biz.process.output.TableOutput;
 import sirius.kernel.async.TaskContextAdapter;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -67,7 +73,13 @@ public interface ProcessContext extends TaskContextAdapter {
 
     void addLink(ProcessLink link);
 
-    void addOutputTable(ProcessOutputTable table);
+    void addOutput(ProcessOutput table);
+
+    ChartOutput addCharts(String name, String label);
+
+    TableOutput addTable(String name, String label, List<Tuple<String, String>> columns);
+
+    void addLogOutput(String name, String label);
 
     void addFile(String filename, File data);
 }

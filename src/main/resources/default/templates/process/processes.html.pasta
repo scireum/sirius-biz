@@ -1,4 +1,3 @@
-<i:arg type="sirius.biz.process.ProcessController" name="controller"/>
 <i:arg type="Page" name="processes"/>
 
 <w:page titleKey="Process.plural">
@@ -39,7 +38,7 @@
                     <tr class="@process.getRowClass()">
                         <td />
                         <td>
-                            <a href="/ps/@process.getId()" class="link">@limit(process.getTitle(), 65)</a><br>
+                            <a href="/ps/@process.getId()" class="link"><i class="fa @process.getIcon()"></i> @limit(process.getTitle(), 65)</a><br>
                             <small class="muted">@limit('todo', 65)</small>
                         </td>
                         <td>
@@ -47,7 +46,8 @@
                             <small class="muted">@process.getTenantName()</small>
                         </td>
                         <td class="align-right">
-                            @controller.formatTimestamp(process.getStarted())
+                            @toSpokenDate(process.getStarted().toLocalDate())<br>
+                            <small class="muted">@toUserString(process.getStarted().toLocalTime())</small>
                         </td>
                     </tr>
                 </i:for>

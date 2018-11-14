@@ -10,6 +10,7 @@ package sirius.biz.jobs.interactive;
 
 import sirius.biz.analytics.charts.Dataset;
 import sirius.biz.analytics.charts.Timeseries;
+import sirius.biz.analytics.reports.Cell;
 import sirius.biz.jobs.JobFactory;
 import sirius.kernel.di.std.Register;
 
@@ -25,7 +26,7 @@ public class ExampleLineChart extends TimeseriesChartJobFactory {
     public void provideData(Timeseries timeseries,
                             Map<String, String> context,
                             Dataset dataset,
-                            Optional<BiConsumer<String, Object>> additionalMetrics) {
+                            Optional<BiConsumer<String, Cell>> additionalMetrics) {
         timeseries.getIntervals().forEach(i -> dataset.addValue(i.getStart().getYear()));
     }
 
@@ -33,5 +34,10 @@ public class ExampleLineChart extends TimeseriesChartJobFactory {
     @Override
     public String getName() {
         return "lines";
+    }
+
+    @Override
+    public String getCategory() {
+        return "export";
     }
 }

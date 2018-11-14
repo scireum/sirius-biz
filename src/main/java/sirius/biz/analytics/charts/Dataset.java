@@ -10,24 +10,23 @@ package sirius.biz.analytics.charts;
 
 import sirius.kernel.nls.NLS;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class Dataset {
 
     private String label;
-    private StringBuilder values = new StringBuilder();
+    private List<Number> values = new ArrayList<>();
 
     public Dataset(String label) {
         this.label = label;
     }
 
-    public void addValue(Number value) {
-        if (values.length() > 0) {
-            values.append(", ");
-        }
-        if (value == null) {
-            values.append("null");
-        } else {
-            values.append(NLS.toMachineString(value));
-        }
+    public Dataset addValue(Number value) {
+        values.add(value);
+        return this;
     }
 
     public String getLabel() {
@@ -35,6 +34,16 @@ public class Dataset {
     }
 
     public String getData() {
-        return values.toString();
+        return values.stream().map(value -> {
+            if (value == null) {
+                return "null";
+            } else {
+                return NLS.toMachineString(value);
+            }
+        }).collect(Collectors.joining(","));
+    }
+
+    public List<Number> getValues() {
+        return Collections.unmodifiableList(values);
     }
 }

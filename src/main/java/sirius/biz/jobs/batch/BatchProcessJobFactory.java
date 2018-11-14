@@ -14,8 +14,8 @@ import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.jobs.BasicJobFactory;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.ProcessLink;
-import sirius.biz.process.ProcessLog;
 import sirius.biz.process.Processes;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.kernel.di.std.Part;
 import sirius.web.http.WebContext;
 import sirius.web.services.JSONStructuredOutput;
@@ -32,6 +32,11 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
 
     @Part
     protected DistributedTasks tasks;
+
+    @Override
+    public String getIcon() {
+        return "fa-cogs";
+    }
 
     @Override
     public void executeInUI(WebContext request, Map<String, String> context) {
@@ -52,7 +57,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
 
     protected String startWithContext(Map<String, String> context) {
         checkPermissions();
-        String processId = processes.createProcessForCurrentUser(getLabel(), context);
+        String processId = processes.createProcessForCurrentUser(getLabel(), getIcon(), context);
         setupTaskContext();
 
         processes.log(processId, ProcessLog.info().withMessage("Scheduled"));

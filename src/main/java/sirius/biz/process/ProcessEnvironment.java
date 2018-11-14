@@ -9,6 +9,13 @@
 package sirius.biz.process;
 
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.process.logs.ProcessLog;
+import sirius.biz.process.output.ChartOutput;
+import sirius.biz.process.output.ChartProcessOutputType;
+import sirius.biz.process.output.LogsProcessOutputType;
+import sirius.biz.process.output.ProcessOutput;
+import sirius.biz.process.output.TableOutput;
+import sirius.biz.process.output.TableProcessOutputType;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.RateLimit;
@@ -25,6 +32,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -40,6 +48,12 @@ class ProcessEnvironment implements ProcessContext {
 
     @Part
     private static Processes processes;
+
+    @Part
+    private static TableProcessOutputType tableOutput;
+
+    @Part
+    private static ChartProcessOutputType chartOutput;
 
     @Part
     private static Tasks tasks;
@@ -164,8 +178,22 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
-    public void addOutputTable(ProcessOutputTable table) {
-        processes.addOutputTable(processId, table);
+    public void addOutput(ProcessOutput table) {
+        processes.addOutput(processId, table);
+    }
+
+    @Override
+    public void addLogOutput(String name, String label) {
+        addOutput(new ProcessOutput().withType(LogsProcessOutputType.TYPE).withName(name).withLabel(label));
+    }
+
+    public ChartOutput addCharts(String name, String label) {
+        return chartOutput.addCharts(this, name, label);
+    }
+
+    @Override
+    public TableOutput addTable(String name, String label, List<Tuple<String, String>> columns) {
+        return tableOutput.addTable(this, name, label, columns);
     }
 
     @Override

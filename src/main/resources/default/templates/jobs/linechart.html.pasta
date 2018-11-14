@@ -4,58 +4,23 @@
 <i:arg type="List" name="datasets"/>
 <i:arg type="List" name="additionalMetrics"/>
 
-<i:invoke template="/templates/jobs/interactive-job.html.pasta" job="job" context="context" additionalMetrics="additionalMetrics">
+<i:invoke template="/templates/jobs/interactive-job.html.pasta"
+          job="job"
+          context="context"
+          additionalMetrics="additionalMetrics">
     <div class="well">
         <canvas id="chart" class="chart" style="display: block" height="400"></canvas>
     </div>
 
     <script type="text/javascript">
-        $(document).ready(function () {
-            var options = {
-                responsive: true,
-                maintainAspectRatio: false,
-                bezierCurve: true,
-                legend: {
-                    display: @(datasets.size() > 1)
-                },
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            beginAtZero: true,
-                        }
-                    }],
-                    xAxes: [{
-                        ticks: {
-                            autoSkip: false
-                        }
-                    }]
+        @raw {
+            $(document).ready(function () {
+                var datasets = [];
+                @for(sirius.biz.analytics.charts.Dataset dataset : datasets) {
+                    datasets.push({ label: '@dataset.getLabel()', data: [ @raw { @dataset.getData() } ]});
                 }
-            };
-
-            var lineColors = [ "#fac364","#5cbae6","#b6d957","#8cd3ff","#d998cb","#f2d249","#93b9c6","#ccc5a8","#52bacc","#dbdb46","#98aafb" ];
-
-            new Chart($('#chart').get(0).getContext("2d"),
-                {
-                    type: 'line',
-                    data: {
-                        labels: [ @raw { @labels } ],
-                        datasets: [
-                            <i:for type="sirius.biz.analytics.charts.Dataset" var="dataset" items="datasets" state="state">
-                                {
-                                    backgroundColor: "rgba(180,180,180,0.2)",
-                                    borderColor: lineColors[@state.getRowIndex() % lineColors.length],
-                                    pointColor: lineColors[@state.getRowIndex() % lineColors.length],
-                                    pointStrokeColor: "#fff",
-                                    pointHighlightFill: "#fff",
-                                    pointHighlightStroke: lineColors[@state.getRowIndex() % lineColors.length],
-                                    label: '@dataset.getLabel()',
-                                    data: [ @raw { @dataset.getData() } ]
-                                } @if (!state.isLast()) {, }
-                            </i:for>
-                        ]
-                    },
-                    options: options
-                });
-        });
+                lineChart('#chart', [ @labels ], datasets);
+            });
+        }
     </script>
 </i:invoke>
