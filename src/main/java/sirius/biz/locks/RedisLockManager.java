@@ -40,7 +40,12 @@ public class RedisLockManager implements LockManager {
 
     @Override
     public boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout) {
-        return redis.tryLock(lockName, acquireTimeout, Duration.ofMinutes(30));
+        return tryLock(lockName, acquireTimeout, Duration.ofMinutes(30));
+    }
+
+    @Override
+    public boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout, @Nonnull Duration lockTimeout) {
+        return redis.tryLock(lockName, acquireTimeout, lockTimeout);
     }
 
     @Override
