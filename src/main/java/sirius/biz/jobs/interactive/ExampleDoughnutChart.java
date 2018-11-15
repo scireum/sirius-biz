@@ -42,6 +42,16 @@ public class ExampleDoughnutChart extends DougnutChartJobFactory {
     }
 
     @Override
+    protected boolean hasPresetFor(Object targetObject) {
+        return false;
+    }
+
+    @Override
+    protected void computePresetFor(Object targetObject, Map<String, Object> preset) {
+
+    }
+
+    @Override
     public String getCategory() {
         return "misc";
     }

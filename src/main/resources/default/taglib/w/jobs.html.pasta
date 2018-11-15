@@ -1,0 +1,12 @@
+<i:arg type="Object" name="target"/>
+<i:local name="jobs" value="@jobsService.getMatchingUIJobs(target)"/>
+<i:if test="!jobs.isEmpty()">
+    <w:navbox labelKey="Jobs.matchingJobs">
+        <i:for type="Tuple" var="linkAndJob" items="jobs">
+            <i:local name="link" value="linkAndJob.getFirst().as(String.class)"/>
+            <i:local name="job" value="linkAndJob.getSecond().as(sirius.biz.jobs.JobFactory.class)"/>
+
+            <w:navboxLink icon="@job.getIcon()" label="@job.getLabel()" url="@link"/>
+        </i:for>
+    </w:navbox>
+</i:if>

@@ -1,5 +1,6 @@
 package sirius.biz.params;
 
+import sirius.biz.jobs.params.Parameter;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SQLEntity;
 import sirius.kernel.di.std.Part;

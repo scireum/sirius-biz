@@ -13,6 +13,7 @@ import sirius.biz.jobs.batch.DefaultBatchProcessFactory;
 import sirius.biz.jobs.params.IntParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.StringParameter;
+import sirius.biz.process.Process;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.logs.ProcessLogState;
@@ -28,6 +29,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @Register(classes = JobFactory.class)
@@ -61,6 +63,16 @@ public class ExampleJobFactory extends DefaultBatchProcessFactory {
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
         parameterCollector.accept(new StringParameter("test", "Test").markRequired());
         parameterCollector.accept(new IntParameter("test1", "Test").markRequired());
+    }
+
+    @Override
+    protected boolean hasPresetFor(Object targetObject) {
+        return targetObject instanceof Process;
+    }
+
+    @Override
+    protected void computePresetFor(Object targetObject, Map<String, Object> preset) {
+        preset.put("test", ((Process)targetObject).getId());
     }
 
     @Nonnull

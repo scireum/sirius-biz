@@ -48,6 +48,11 @@ public abstract class InteractiveJobFactory extends BasicJobFactory {
     protected Cells cells;
 
     @Override
+    public boolean canStartInUI() {
+        return true;
+    }
+
+    @Override
     public void startInUI(WebContext request) {
         checkPermissions();
         setupTaskContext();
@@ -76,8 +81,18 @@ public abstract class InteractiveJobFactory extends BasicJobFactory {
     }
 
     @Override
+    public boolean canStartInCall() {
+        return false;
+    }
+
+    @Override
     protected void executeInCall(JSONStructuredOutput out, Map<String, String> context) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean canStartInBackground() {
+        return false;
     }
 
     @Override

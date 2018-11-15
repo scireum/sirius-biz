@@ -116,7 +116,7 @@ public class Processes {
                                process -> process.setStarted(LocalDateTime.now()));
         }
 
-        execute(processId, task, false);
+        partiallyExecute(processId, task);
     }
 
     protected Optional<Process> fetchProcess(String processId) {
@@ -282,16 +282,9 @@ public class Processes {
         ProcessEnvironment env = new ProcessEnvironment(processId);
         taskContext.setJob(processId);
         taskContext.setAdapter(env);
-
-        if (env.getUserId() != null) {
-            UserInfo user = userContext.getUserManager().findUserByUserId(env.getUserId());
-            if (user != null) {
-                userContext.setCurrentUser(user);
-            }
-        }
-
         try {
             if (env.isActive()) {
+                installUserOfProcess(userContext, env);
                 task.accept(env);
             }
         } catch (Exception e) {
@@ -301,6 +294,16 @@ public class Processes {
             userContext.setCurrentUser(userInfoBackup);
             if (complete) {
                 env.markCompleted();
+            }
+        }
+    }
+
+    private void installUserOfProcess(UserContext userContext, ProcessEnvironment env) {
+        if (env.getUserId() != null) {
+            UserInfo user = userContext.getUserManager().findUserByUserId(env.getUserId());
+            if (user != null) {
+                user = userContext.getUserManager().createUserWithTenant(user, env.getTenantId());
+                userContext.setCurrentUser(user);
             }
         }
     }

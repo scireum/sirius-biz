@@ -55,6 +55,8 @@
             <i:render name="sidebar" />
             <i:extensions name="templates-process-sidebar-bottom" process="@process"/>
 
+            <w:jobs target="process" />
+
             <a href="/ps" class="btn btn-block">@i18n("NLS.back")</a>
         </div>
         <div class="col-md-9">

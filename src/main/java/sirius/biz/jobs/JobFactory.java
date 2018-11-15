@@ -34,9 +34,18 @@ public interface JobFactory extends Named, Priorized {
 
     List<Parameter<?, ?>> getParameters();
 
+    @Nullable
+    String generatePresetUrl(Object targetObject);
+
+    boolean canStartInUI();
+
     void startInUI(WebContext request);
 
+    boolean canStartInCall();
+
     void startInCall(WebContext request, JSONStructuredOutput out, Function<String, Value> parameterProvider);
+
+    boolean canStartInBackground();
 
     void startInBackground(Function<String, Value> parameterProvider);
 

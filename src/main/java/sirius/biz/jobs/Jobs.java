@@ -34,7 +34,6 @@ import java.util.stream.Stream;
 @Register(classes = Jobs.class)
 public class Jobs {
 
-    //TODO enforce
     public static final String PERMISSION_EXECUTE_JOBS = "permission-execute-jobs";
 
     @Part
@@ -64,6 +63,9 @@ public class Jobs {
 
     public Stream<JobFactory> getAvailableJobs(@Nullable String query) {
         UserInfo currentUser = UserContext.getCurrentUser();
+        if (!currentUser.hasPermission(PERMISSION_EXECUTE_JOBS)) {
+            return Stream.empty();
+        }
 
         Stream<JobFactory> stream = factories.stream()
                                              .filter(factory -> factory.getRequiredPermissions()
@@ -77,11 +79,7 @@ public class Jobs {
         return stream;
     }
 
-    public List<Tuple<JobCategory, Collection<JobFactory>>> getAvailableJobsByCategory(@Nullable String query) {
-        return groupByCategory(getAvailableJobs(query));
-    }
-
-    private List<Tuple<JobCategory, Collection<JobFactory>>> groupByCategory(Stream<JobFactory> jobs) {
+    public List<Tuple<JobCategory, Collection<JobFactory>>> groupByCategory(Stream<JobFactory> jobs) {
         MultiMap<JobCategory, JobFactory> map = MultiMap.createOrdered();
         JobCategory defaultCategory = getCategories().get(JobCategory.CATEGORY_MISC);
         jobs.forEach(job -> {
@@ -94,8 +92,18 @@ public class Jobs {
                   .collect(Collectors.toList());
     }
 
+    public List<Tuple<String, JobFactory>> getMatchingUIJobs(Object target) {
+        return getAvailableJobs(null).filter(JobFactory::canStartInUI)
+                                     .map(job -> Tuple.create(job.generatePresetUrl(target), job))
+                                     .filter(tuple -> tuple.getFirst() != null)
+                                     .collect(Collectors.toList());
+    }
+
     @SuppressWarnings("unchecked")
     public <J extends JobFactory> J findFactory(String name, Class<J> expectedType) {
+        UserInfo currentUser = UserContext.getCurrentUser();
+        currentUser.assertPermission(PERMISSION_EXECUTE_JOBS);
+
         JobFactory result = ctx.getPart(name, JobFactory.class);
 
         if (result == null) {

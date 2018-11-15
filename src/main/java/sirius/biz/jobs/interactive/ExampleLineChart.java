@@ -30,6 +30,16 @@ public class ExampleLineChart extends TimeseriesChartJobFactory {
         timeseries.getIntervals().forEach(i -> dataset.addValue(i.getStart().getYear()));
     }
 
+    @Override
+    protected boolean hasPresetFor(Object targetObject) {
+        return false;
+    }
+
+    @Override
+    protected void computePresetFor(Object targetObject, Map<String, Object> preset) {
+
+    }
+
     @Nonnull
     @Override
     public String getName() {

@@ -39,9 +39,19 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     }
 
     @Override
+    public boolean canStartInUI() {
+        return true;
+    }
+
+    @Override
     public void executeInUI(WebContext request, Map<String, String> context) {
         String processId = startWithContext(context);
         request.respondWith().redirectToGet("/ps/" + processId);
+    }
+
+    @Override
+    public boolean canStartInCall() {
+        return true;
     }
 
     @Override
@@ -51,14 +61,17 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     }
 
     @Override
+    public boolean canStartInBackground() {
+        return true;
+    }
+
+    @Override
     protected void executeInBackground(Map<String, String> context) {
         startWithContext(context);
     }
 
     protected String startWithContext(Map<String, String> context) {
-        checkPermissions();
         String processId = processes.createProcessForCurrentUser(getLabel(), getIcon(), context);
-        setupTaskContext();
 
         processes.log(processId, ProcessLog.info().withMessage("Scheduled"));
         processes.addLink(processId, new ProcessLink().withLabel("Job").withUri("/job/" + getName()));

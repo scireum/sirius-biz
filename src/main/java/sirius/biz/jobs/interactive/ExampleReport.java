@@ -19,6 +19,7 @@ import sirius.kernel.di.std.Register;
 import javax.annotation.Nonnull;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -33,6 +34,16 @@ public class ExampleReport extends ReportJobFactory {
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+
+    }
+
+    @Override
+    protected boolean hasPresetFor(Object targetObject) {
+        return false;
+    }
+
+    @Override
+    protected void computePresetFor(Object targetObject, Map<String, Object> preset) {
 
     }
 

@@ -144,6 +144,11 @@ class ProcessEnvironment implements ProcessContext {
         return processes.fetchProcess(processId).map(Process::getUserId).orElse(null);
     }
 
+    @Nullable
+    public String getTenantId() {
+        return processes.fetchProcess(processId).map(Process::getTenantId).orElse(null);
+    }
+
     @Override
     public void setCurrentStateMessage(String state) {
         processes.setStateMessage(processId, state);

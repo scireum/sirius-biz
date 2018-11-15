@@ -20,7 +20,6 @@ import sirius.web.http.WebContext;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 @Register(classes = Controller.class, framework = "") //TODO "jobs"
 public class JobsController extends BizController {
@@ -33,7 +32,7 @@ public class JobsController extends BizController {
     public void jobs(WebContext ctx) {
         Page<Tuple<JobCategory, Collection<JobFactory>>> page = new Page<>();
         page.bindToRequest(ctx);
-        page.withItems(jobs.getAvailableJobsByCategory(page.getQuery()));
+        page.withItems(jobs.groupByCategory(jobs.getAvailableJobs(page.getQuery()).filter(JobFactory::canStartInUI)));
 
         ctx.respondWith().template("/templates/jobs/jobs.html.pasta", page);
     }

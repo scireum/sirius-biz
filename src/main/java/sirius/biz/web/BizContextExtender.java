@@ -55,7 +55,7 @@ public class BizContextExtender implements GlobalContextExtender {
     @Override
     public void collectTemplate(BiConsumer<String, Object> globalParameterCollector) {
         globalParameterCollector.accept("codeLists", codeLists);
-        globalParameterCollector.accept("jobs", jobs);
+        globalParameterCollector.accept("jobsService", jobs);
     }
 
     @Override
