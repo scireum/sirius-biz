@@ -38,6 +38,24 @@ class PrefixSearchableEntitySpec extends BaseSpecification {
         !tokens.contains("content")
     }
 
+    def "splitting with emails works"() {
+        given:
+        PrefixSearchableTestEntity e = new PrefixSearchableTestEntity()
+        when:
+        e.setTest(input)
+        and:
+        e.updateSearchField()
+        and:
+        List<String> tokens = e.getSearchPrefixes().modify().sort()
+        output.sort()
+        then:
+        tokens == output
+        where:
+        input      | output
+        "a.b@c.de" | ["a", "b", "c", "de", "a.b", "c.de", "a.b@c.de"]
+        "a24@x.de" | ["a24", "a", "x", "de", "x.de", "a24@x.de"]
+    }
+
     def "searching works"() {
         when:
         PrefixSearchableTestEntity e = new PrefixSearchableTestEntity()
