@@ -207,16 +207,7 @@ public class TenantUserManager extends GenericUserManager {
         return asUser(spyUser, extraRoles);
     }
 
-    /**
-     * Creates a copy of the given <tt>UserInfo</tt> with a new tenant id.
-     * <p>
-     * As a user can switch to other tenants, we must be able to create a "fake" user info, which contains the given
-     * tenant data.
-     *
-     * @param originalUser the user which is actually logged in
-     * @param tenantId     the id of the tenant to become
-     * @return a new user object, with the original user data but a modified tenant id and object
-     */
+    @Override
     public UserInfo createUserWithTenant(UserInfo originalUser, String tenantId) {
         if (Strings.isEmpty(tenantId) || Strings.areEqual(originalUser.getTenantId(), tenantId)) {
             return originalUser;
@@ -293,6 +284,7 @@ public class TenantUserManager extends GenericUserManager {
      * if no such user exists
      */
     @Nullable
+    @Override
     public UserInfo findUserByUserId(String accountId) {
         UserAccount account = fetchAccount(accountId, null);
         if (account == null) {
