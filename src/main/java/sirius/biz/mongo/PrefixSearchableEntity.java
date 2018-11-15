@@ -22,9 +22,9 @@ import sirius.db.mongo.MongoEntity;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -41,13 +41,13 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
     /**
      * Represents a regular expression which detects all character which aren't allowed in a search prefix.
      */
-    public static final Pattern NON_SEARCH_PREFIX_CHARACTER = Pattern.compile("[^\\p{L}\\d_\\-@.#]");
+    public static final Pattern SPLIT_TOKEN_LEVEL_1 = Pattern.compile("[^\\p{L}\\d_\\-.]");
 
     /**
      * Represents a regular expression which detects all characters which are allowed in a search prefix but still cause
      * a token to be splitted.
      */
-    public static final Pattern SPLIT_CHARACTER = Pattern.compile("[^\\p{L}]+");
+    public static final Pattern SPLIT_TOKEN_LEVEL_2 = Pattern.compile("[^\\p{L}]");
 
     /**
      * Contains manually maintained content to be added to the search field.
@@ -114,20 +114,20 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
             return;
         }
 
-        for (String subToken : NON_SEARCH_PREFIX_CHARACTER.matcher(input.toLowerCase()).replaceAll(" ").split(" ")) {
-            powerSet(subToken).forEach(this::appendSingleToken);
-        }
+        splitContent(input.toLowerCase()).forEach(this::appendSingleToken);
     }
 
-    private Set<String> powerSet(String token) {
+    private Set<String> splitContent(String input) {
         Set<String> result = new HashSet<>();
-        result.add(token);
+        result.add(input);
 
-        Matcher matcher = SPLIT_CHARACTER.matcher(token);
-        while (matcher.find()) {
-            result.addAll(powerSet(token.substring(0, matcher.start())));
-            result.addAll(powerSet(token.substring(matcher.end())));
+        for (String subToken : SPLIT_TOKEN_LEVEL_1.matcher(input).replaceAll(" ").split(" ")) {
+            result.add(subToken);
+
+            Collections.addAll(result, SPLIT_TOKEN_LEVEL_2.matcher(subToken.toLowerCase()).replaceAll(" ").split(" "));
         }
+
+        result.remove("");
         return result;
     }
 
