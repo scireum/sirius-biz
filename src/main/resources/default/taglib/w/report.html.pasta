@@ -1,0 +1,22 @@
+<i:arg type="sirius.biz.analytics.reports.Report" name="report"/>
+
+<w:table data="report.getRows()" class="table-bordered">
+    <thead>
+    <tr>
+        <i:for type="String" var="column" items="report.getLabels()">
+            <th class="align-center">@column</th>
+        </i:for>
+    </tr>
+    </thead>
+    <tbody>
+    <i:for type="Map" var="row" items="report.getRows()">
+        <tr>
+            <i:for type="String" var="column" items="report.getColumns()">
+                <i:raw>
+                    <td class="cell">@row.get(column).as(sirius.biz.analytics.reports.Cell.class).render()</td>
+                </i:raw>
+            </i:for>
+        </tr>
+    </i:for>
+    </tbody>
+</w:table>
