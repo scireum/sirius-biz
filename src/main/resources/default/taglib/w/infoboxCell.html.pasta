@@ -1,0 +1,20 @@
+<i:arg type="String" name="labelKey" default="" />
+<i:arg type="String" name="label" default="@i18n(labelKey)" />
+<i:arg type="sirius.biz.analytics.reports.Cell" name="value" default="" />
+<i:pragma name="inline" value="true" />
+<i:pragma name="description" value="Provides a line rendering a Cell within an infobox" />
+
+<i:if test="value != null && value.isFilled()">
+    <div class="row info-line">
+        <i:if test="isFilled(label)">
+            <div class="col-md-4 name">
+                @label
+            </div>
+        </i:if>
+        <div class="@if (isFilled(label)) { col-md-8 value } else { col-md-12 } word-wrap">
+            <div class="cell">
+                <i:raw>@value.render()</i:raw>
+            </div>
+        </div>
+    </div>
+</i:if>
