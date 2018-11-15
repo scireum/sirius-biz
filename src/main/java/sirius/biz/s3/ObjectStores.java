@@ -97,6 +97,21 @@ public class ObjectStores {
         return createAndStore(name);
     }
 
+    /**
+     * Determines if there is a (most probably) valid configuration present for the given object store.
+     *
+     * @param name the name of the store to check for a configuration
+     * @return <tt>true</tt> if there is at least a configuration present, <tt>false</tt> otherwise
+     */
+    public boolean isConfigured(String name) {
+        Extension extension = Sirius.getSettings().getExtension(STORES_EXTENSION_POINT, name);
+        if (extension == null || extension.isDefault()) {
+            return false;
+        }
+
+        return extension.get(KEY_END_POINT).isFilled();
+    }
+
     protected synchronized ObjectStore createAndStore(String name) {
         ObjectStore result = stores.get(name);
         if (result != null) {

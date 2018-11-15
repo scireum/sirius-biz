@@ -8,6 +8,7 @@
 
 package sirius.biz.protocol;
 
+import sirius.biz.elastic.AutoBatchLoop;
 import sirius.db.es.Elastic;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.CallContext;
@@ -58,6 +59,9 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
 
     @Part
     private Elastic elastic;
+
+    @Part
+    private AutoBatchLoop autoBatch;
 
     private volatile AtomicLong disabledUntil;
 
@@ -140,7 +144,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             msg.setNode(CallContext.getNodeName());
             msg.setUser(UserContext.getCurrentUser().getUserName());
 
-            elastic.update(msg);
+            autoBatch.insertAsync(msg);
         } catch (Exception e) {
             Exceptions.ignore(e);
             disableForOneMinute();

@@ -75,7 +75,7 @@ public class Sequences {
                     return id;
                 }
 
-                // Block a short random amount of time to resolveFromString conflicts with other waiting threads
+                // Block a short random amount of time to resolve conflicts with other waiting threads
                 Wait.randomMillis(50, 100);
             }
 
