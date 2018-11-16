@@ -254,7 +254,7 @@ public class DistributedTasks {
      * @param executor the executor to determine the queue for
      * @return the queue used by this executor
      */
-    protected String getQueueName(Class<? extends DistributedTaskExecutor> executor) {
+    public String getQueueName(Class<? extends DistributedTaskExecutor> executor) {
         if (queuePerExecutor == null) {
             queuePerExecutor = ctx.getParts(DistributedTaskExecutor.class)
                                   .stream()
@@ -272,7 +272,7 @@ public class DistributedTasks {
      * @return the config of the given queue
      * @throws sirius.kernel.health.HandledException if the queue is unknown
      */
-    private DistributedQueueInfo getQueueInfo(@Nonnull String queueName) {
+    public DistributedQueueInfo getQueueInfo(@Nonnull String queueName) {
         if (taskQueues == null) {
             getQueues();
         }
