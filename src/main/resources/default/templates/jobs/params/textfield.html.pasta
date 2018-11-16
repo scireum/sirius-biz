@@ -4,7 +4,7 @@
 <w:textfield span="@param.getSpan()"
              smallSpan="@param.getSmallSpan()"
              name="@param.getName()"
-             label="@param.getTitle()"
+             label="@param.getLabel()"
              help="@param.getDescription()"
              value="@toUserString(param.get(context).orElse(null))"
              required="@param.isRequired()"/>

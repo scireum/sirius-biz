@@ -4,7 +4,7 @@
 <w:singleSelect span="@param.getSpan()"
                 smallSpan="@param.getSmallSpan()"
                 name="@param.getName()"
-                label="@param.getTitle()"
+                label="@param.getLabel()"
                 help="@param.getDescription()"
                 optional="@!param.isRequired()"
                 required="@param.isRequired()">
