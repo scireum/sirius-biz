@@ -1,0 +1,40 @@
+<i:arg type="sirius.biz.analytics.reports.Cells" name="cells"/>
+<i:arg type="sirius.biz.process.Process" name="process"/>
+<i:arg type="Page" name="rows"/>
+<i:arg type="String" name="name"/>
+<i:arg type="List" name="columns"/>
+<i:arg type="List" name="labels"/>
+
+<i:invoke template="/templates/process/process.html.pasta"
+          process="process"
+          page="@apply('output-%s', name)">
+    <i:block name="sidebar">
+        <w:filterbox page="rows" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
+    </i:block>
+
+    <w:tableSearchHeader page="rows" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
+
+    <w:table data="rows" class="table-bordered">
+        <thead>
+        <tr>
+            <i:for type="String" var="column" items="labels">
+                <th class="align-center">@column</th>
+            </i:for>
+        </tr>
+        </thead>
+        <tbody>
+        <i:for type="sirius.biz.process.logs.ProcessLog" var="row" items="rows.getItems()">
+            <tr>
+                <i:for type="String" var="column" items="columns">
+                    <i:raw>
+                        <td class="cell">@cells.render(column, row.getContext().data())</td>
+                    </i:raw>
+                </i:for>
+            </tr>
+        </i:for>
+        </tbody>
+    </w:table>
+
+    <w:pagination page="rows" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
+
+</i:invoke>

@@ -1,0 +1,84 @@
+<i:arg type="sirius.biz.process.Process" name="process"/>
+<i:arg type="List" name="lastLogs"/>
+
+
+<i:invoke template="/templates/process/process.html.pasta"
+          process="process"
+          page="details">
+
+    <i:block name="sidebar">
+        <i:if test="!process.getLinks().isEmpty()">
+            <w:navbox labelKey="Process.externalLinks">
+                <i:for type="sirius.biz.process.ProcessLink" var="link" items="process.getLinks()">
+                    <li>
+                        <a href="@link.getUri()" class="link" target="_blank">
+                            <i class="fa fa-external-link"></i>
+                            @link.getLabel()
+                        </a>
+                    </li>
+                </i:for>
+            </w:navbox>
+        </i:if>
+
+        <i:if test="!process.getFiles().isEmpty()">
+            <w:navbox labelKey="Process.files">
+                <i:for type="sirius.biz.process.ProcessFile" var="file" items="process.getFiles()">
+                    <li>
+                        <a href="/ps/@process.getId()/file/@file.getFileId()" class="link" target="_blank">
+                            <i class="fa fa-file"></i>
+                            @file.getFilename()
+                            <small class="muted">(@formatSize(file.getSize()))</small>
+                        </a>
+                    </li>
+                </i:for>
+            </w:navbox>
+        </i:if>
+    </i:block>
+
+    <i:if test="!process.getCounters().isEmpty()">
+        <w:heading labelKey="Process.counters"/>
+        <div class="well">
+            <div class="row">
+                <i:for type="java.util.Map$Entry" var="counter" items="process.getCounters()">
+                    <div class="col-md-4">
+                        <w:metric name="@counter.getKey()" value="@counter.getValue()" size="mini" color="blue"/>
+                    </div>
+                </i:for>
+            </div>
+        </div>
+    </i:if>
+
+    <i:if test="!lastLogs.isEmpty()">
+        <w:heading labelKey="Process.lastLogs"/>
+        <w:table data="lastLogs" colorized="true">
+            <thead>
+            <tr>
+                <th/>
+                <th>
+                    @i18n("ProcessLog.message")
+                </th>
+                <th class="align-right">
+                    @i18n("ProcessLog.timestamp")<br>
+                    <small class="muted">@i18n("ProcessLog.node")</small>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <i:for type="sirius.biz.process.logs.ProcessLog" var="log" items="lastLogs">
+                <tr class="@log.getRowClass()">
+                    <td/>
+                    <td>
+                        <pre class="plain" style="white-space: pre-wrap">@log.getMessage()</pre>
+                    </td>
+                    <td class="align-right">
+                        @log.getTimestampAsString()<br>
+                        <small class="muted">@log.getNode()</small>
+                    </td>
+                </tr>
+            </i:for>
+            </tbody>
+        </w:table>
+    </i:if>
+
+
+</i:invoke>
