@@ -8,24 +8,22 @@
 
 package sirius.biz.cluster
 
-import com.google.common.collect.ImmutableList
+
 import sirius.kernel.BaseSpecification
+import sirius.kernel.di.std.Part
 import sirius.web.controller.Message
-import spock.lang.Shared
+import sirius.web.http.DistributedUserMessageCache
 
 class RedisUserMessageCacheTest extends BaseSpecification {
 
-    @Shared
-    def cache = new RedisUserMessageCache<>()
-
-    @Shared
-    def messages = ImmutableList.of(Message.error("Test error message"))
+    @Part
+    private static DistributedUserMessageCache cache
 
     def "test put value and then get value works, but second get is null"() {
         given:
         String key = "key" + System.currentTimeMillis()
         when:
-        cache.put(key, messages)
+        cache.put(key, Collections.singletonList(Message.error("Test error message")))
         then:
         List<Message> result = cache.getAndRemove(key)
         result.size() == 1
