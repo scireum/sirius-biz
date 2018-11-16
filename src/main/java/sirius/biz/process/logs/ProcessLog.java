@@ -10,6 +10,7 @@ package sirius.biz.process.logs;
 
 import sirius.biz.elastic.SearchableEntity;
 import sirius.biz.process.Process;
+import sirius.biz.process.Processes;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.es.types.ElasticRef;
@@ -21,6 +22,7 @@ import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
+import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
@@ -44,6 +46,7 @@ import java.util.Optional;
  * Also note that a log entry can be put into a {@link ProcessLogState} and therefore be used to keep track
  * of tasks / todos which were generated when executing the process.
  */
+@Framework(Processes.FRAMEWORK_PROCESSES)
 public class ProcessLog extends SearchableEntity {
 
     /**

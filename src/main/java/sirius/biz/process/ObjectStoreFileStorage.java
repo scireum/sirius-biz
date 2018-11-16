@@ -20,7 +20,7 @@ import sirius.web.http.WebContext;
 import java.io.File;
 
 //TODO maybe we should directly use Storage..
-@Register
+@Register(framework = Processes.FRAMEWORK_PROCESSES)
 public class ObjectStoreFileStorage implements ProcessFileStorage {
 
     @Part

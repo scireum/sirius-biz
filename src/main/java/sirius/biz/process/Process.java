@@ -20,6 +20,7 @@ import sirius.db.mixing.types.NestedList;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
  * are used to record logs and outputs of API calls or other re-occuring background events which need to communicate
  * with or report to their user / tenant.
  */
+@Framework(Processes.FRAMEWORK_PROCESSES)
 public class Process extends SearchableEntity {
 
     /**

@@ -48,8 +48,13 @@ import java.util.function.Supplier;
 /**
  * Provides the central facility to create and use {@link Process processes}.
  */
-@Register(classes = Processes.class)
+@Register(classes = Processes.class, framework = Processes.FRAMEWORK_PROCESSES)
 public class Processes {
+
+    /**
+     * Names the framework which must be enabled to activate the processes feature.
+     */
+    public static final String FRAMEWORK_PROCESSES = "biz.processes";
 
     @Part
     private Elastic elastic;
