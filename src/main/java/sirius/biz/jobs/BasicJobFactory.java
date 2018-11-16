@@ -42,6 +42,11 @@ public abstract class BasicJobFactory implements JobFactory {
 
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
+    /**
+     * Contains the {@link TaskContext#setSystem(String) system string} for jobs.
+     */
+    public static final String SYSTEM_JOBS = "JOBS";
+
     @Override
     public int getPriority() {
         return Priorized.DEFAULT_PRIORITY;
@@ -203,7 +208,7 @@ public abstract class BasicJobFactory implements JobFactory {
      */
     protected void setupTaskContext() {
         TaskContext taskContext = TaskContext.get();
-        taskContext.setSystem("JOBS");
+        taskContext.setSystem(SYSTEM_JOBS);
         taskContext.setSubSystem(getName());
         taskContext.setJob("kernel");
     }

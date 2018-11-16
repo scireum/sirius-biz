@@ -507,11 +507,11 @@ public class Processes {
      * @param out       the target to write the JSON to
      */
     public void outputAsJSON(String processId, JSONStructuredOutput out) {
-        Process process = fetchProcess(processId).orElseThrow(() -> Exceptions.createHandled()
-                                                                              .withSystemErrorMessage(
-                                                                                      "Unknown process id: %s",
-                                                                                      processId)
-                                                                              .handle());
+        Process process = fetchProcessForUser(processId).orElseThrow(() -> Exceptions.createHandled()
+                                                                                     .withSystemErrorMessage(
+                                                                                             "Unknown process id: %s",
+                                                                                             processId)
+                                                                                     .handle());
         out.property("id", processId);
         out.property("title", process.getTitle());
         out.property("state", process.getState());
@@ -550,7 +550,13 @@ public class Processes {
     public Optional<Process> fetchProcessForUser(String processId) {
         Optional<Process> process = elastic.find(Process.class, processId);
         if (!process.isPresent()) {
-            return Optional.empty();
+            // Maybe the given process id was just created and not visible in ES.
+            // Wait for a good second and retry once...
+            Wait.millis(1200);
+            process = elastic.find(Process.class, processId);
+            if (!process.isPresent()) {
+                return Optional.empty();
+            }
         }
 
         UserInfo user = UserContext.getCurrentUser();
