@@ -1,0 +1,37 @@
+<i:arg type="sirius.biz.process.output.ChartProcessOutputType" name="chartOutput"/>
+<i:arg type="sirius.biz.process.Process" name="process"/>
+<i:arg type="Page" name="charts"/>
+<i:arg type="String" name="name"/>
+
+<i:invoke template="/templates/process/process.html.pasta"
+          process="process"
+          page="@apply('output-%s', name)">
+
+
+    <i:for type="sirius.biz.process.logs.ProcessLog" var="chart" items="charts.getItems()">
+        <i:local name="id" value="@call.generateLocalId()" />
+        <div class="well">
+            <canvas id="chart-@id" class="chart" style="display: block" height="400"></canvas>
+        </div>
+
+        <script type="text/javascript">
+            @raw {
+                $(document).ready(function () {
+                    var chartData = @chartOutput.parseChartData(chart);
+                    if (chartData.type === 'line') {
+                        lineChart('#chart-@id', chartData.labels, chartData.lines);
+                    } else if (chartData.type === 'bar') {
+                        barChart('#chart-@id', chartData.labels, chartData.bars);
+                    } else if (chartData.type === 'polarArea') {
+                        $('#chart-@id').attr('height', 200);
+                        polarAreaChart('#chart-@id', chartData.labels, chartData.data);
+                    } else if (chartData.type === 'dougnut') {
+                        $('#chart-@id').attr('height', 180);
+                        dougnutChart('#chart-@id', chartData.labels, chartData.data);
+                    }
+                });
+            }
+        </script>
+    </i:for>
+
+</i:invoke>

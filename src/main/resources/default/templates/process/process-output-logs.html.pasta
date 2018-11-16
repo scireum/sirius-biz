@@ -1,0 +1,45 @@
+<i:arg type="sirius.biz.process.Process" name="process"/>
+<i:arg type="Page" name="logs"/>
+<i:arg type="String" name="name"/>
+
+<i:invoke template="/templates/process/process.html.pasta"
+          process="process"
+          page="@apply('output-%s', name)">
+    <i:block name="sidebar">
+        <w:filterbox page="logs" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
+    </i:block>
+
+    <w:tableSearchHeader page="logs" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
+
+    <w:table data="logs" colorized="true">
+        <thead>
+        <tr>
+            <th/>
+            <th>
+                @i18n("ProcessLog.message")
+            </th>
+            <th class="align-right">
+                @i18n("ProcessLog.timestamp")<br>
+                <small class="muted">@i18n("ProcessLog.node")</small>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <i:for type="sirius.biz.process.logs.ProcessLog" var="log" items="logs.getItems()">
+            <tr class="@log.getRowClass()">
+                <td/>
+                <td>
+                    <pre class="plain" style="white-space: pre-wrap">@log.getMessage()</pre>
+                </td>
+                <td class="align-right">
+                    @log.getTimestampAsString()<br>
+                    <small class="muted">@log.getNode()</small>
+                </td>
+            </tr>
+        </i:for>
+        </tbody>
+    </w:table>
+
+    <w:pagination page="logs" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
+
+</i:invoke>

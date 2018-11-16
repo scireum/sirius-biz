@@ -1,0 +1,61 @@
+<i:arg type="Page" name="processes"/>
+
+<w:page titleKey="Process.plural">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/ps">@i18n("Process.plural")</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader titleKey="Process.plural"/>
+
+    <div class="row">
+        <div class="col-md-3">
+            <w:filterbox page="processes" baseUrl="/ps"/>
+        </div>
+        <div class="col-md-9">
+            <w:tableSearchHeader page="processes" baseUrl="/ps"/>
+
+            <w:table data="processes" colorized="true">
+                <thead>
+                <tr>
+                    <th />
+                    <th>
+                        @i18n("Process.title")<br>
+                        <small class="muted">@i18n("Process.state")</small>
+                    </th>
+                    <th>
+                        @i18n("Process.userName")<br>
+                        <small class="muted">@i18n("Process.tenantName")</small>
+                    </th>
+                    <th class="align-right">
+                        @i18n("Process.started")
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <i:for type="sirius.biz.process.Process" var="process" items="processes.getItems()">
+                    <tr class="@process.getRowClass()">
+                        <td />
+                        <td>
+                            <a href="/ps/@process.getId()" class="link"><i class="fa @process.getIcon()"></i> @limit(process.getTitle(), 65)</a><br>
+                            <small class="muted">@limit('todo', 65)</small>
+                        </td>
+                        <td>
+                            @process.getUserName()<br>
+                            <small class="muted">@process.getTenantName()</small>
+                        </td>
+                        <td class="align-right">
+                            @toSpokenDate(process.getStarted().toLocalDate())<br>
+                            <small class="muted">@toUserString(process.getStarted().toLocalTime())</small>
+                        </td>
+                    </tr>
+                </i:for>
+                </tbody>
+            </w:table>
+
+            <w:pagination page="processes" baseUrl="/ps"/>
+        </div>
+    </div>
+
+</w:page>

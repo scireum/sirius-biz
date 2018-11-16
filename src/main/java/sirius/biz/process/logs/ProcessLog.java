@@ -1,0 +1,486 @@
+/*
+ * Made with all the love in the world
+ * by scireum in Remshalden, Germany
+ *
+ * Copyright by scireum GmbH
+ * http://www.scireum.de - info@scireum.de
+ */
+
+package sirius.biz.process.logs;
+
+import sirius.biz.elastic.SearchableEntity;
+import sirius.biz.process.Process;
+import sirius.db.es.annotations.ESOption;
+import sirius.db.es.annotations.IndexMode;
+import sirius.db.es.types.ElasticRef;
+import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.BeforeSave;
+import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.annotations.Transient;
+import sirius.db.mixing.types.BaseEntityRef;
+import sirius.db.mixing.types.StringMap;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.di.GlobalContext;
+import sirius.kernel.di.std.Part;
+import sirius.kernel.nls.NLS;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Represents a log entry recorded for a {@link Process}.
+ * <p>
+ * This can be either a "plain" log entry or an element of a {@link sirius.biz.process.output.ProcessOutput}
+ * defined by the process.
+ * <p>
+ * Note that even a "plain" log message provides quite some functionality as it can specify a {@link ProcessLogHandler}
+ * in {@link #handler} which can format the effective message to display and also provides possible actions for
+ * it.
+ * <p>
+ * Also note that a log entry can be put into a {@link ProcessLogState} and therefore be used to keep track
+ * of tasks / todos which were generated when executing the process.
+ */
+public class ProcessLog extends SearchableEntity {
+
+    /**
+     * Defines the name of the default action which simply toggles the state to {@link ProcessLogState#OPEN}.
+     */
+    public static final String ACTION_MARK_OPEN = "markOpen";
+
+    /**
+     * Defines the name of the default action which simply toggles the state to {@link ProcessLogState#RESOLVED}.
+     */
+    public static final String ACTION_MARK_RESOLVED = "markResolved";
+
+    /**
+     * Defines the name of the default action which simply toggles the state to {@link ProcessLogState#IGNORED}.
+     */
+    public static final String ACTION_MARK_IGNORED = "markIgnored";
+
+    /**
+     * Contains the process for which this log entry was created.
+     */
+    public static final Mapping PROCESS = Mapping.named("process");
+    private final ElasticRef<Process> process = ElasticRef.on(Process.class, BaseEntityRef.OnDelete.CASCADE);
+
+    /**
+     * Contains the type or severity of this log entry.
+     */
+    public static final Mapping TYPE = Mapping.named("type");
+    private ProcessLogType type = ProcessLogType.INFO;
+
+    /**
+     * Contains the timestamp when this log entry was recorded.
+     */
+    public static final Mapping TIMESTAMP = Mapping.named("timestamp");
+    private LocalDateTime timestamp;
+
+    /**
+     * Contains the timestamp as plain long (with millisecond resolution).
+     */
+    public static final Mapping SORT_KEY = Mapping.named("sortKey");
+    private long sortKey;
+
+    /**
+     * Contains the node on which this log entry was recorded.
+     */
+    public static final Mapping NODE = Mapping.named("node");
+    private String node;
+
+    /**
+     * Contains the name of the {@link sirius.biz.process.output.ProcessOutput}
+     * this entry belongs to.
+     */
+    public static final Mapping OUTPUT = Mapping.named("output");
+    @NullAllowed
+    private String output;
+
+    /**
+     * Contains the name of the {@link ProcessLogHandler} which is in charge of producing a
+     * message (if empty) and also providing actions for this entry.
+     */
+    public static final Mapping MESSAGE_HANDLER = Mapping.named("messageHandler");
+    @NullAllowed
+    private String messageHandler;
+
+    /**
+     * Contains the task state of this log entry. Remain null if there is no and was never a task associated with
+     * this entry.
+     */
+    public static final Mapping STATE = Mapping.named("state");
+    @NullAllowed
+    private ProcessLogState state;
+
+    /**
+     * Contains the context passed to the {@link ProcessLogHandler} or {@link sirius.biz.process.output.ProcessOutput}
+     */
+    public static final Mapping CONTEXT = Mapping.named("context");
+    private final StringMap context = new StringMap();
+
+    /**
+     * Determines if this is a system message which is not shown to "normal" users (ones which don't have
+     * {@link sirius.biz.process.ProcessController#PERMISSION_MANAGE_ALL_PROCESSES}).
+     */
+    public static final Mapping SYSTEM_MESSAGE = Mapping.named("systemMessage");
+    private boolean systemMessage;
+
+    /**
+     * Contains the log message to show. Can be <tt>null</tt> if either a {@link ProcessLogHandler} is
+     * present to generate one or if the entry belongs to a {@link sirius.biz.process.output.ProcessOutput}
+     * which might only be interested in the {@link #context}.
+     */
+    public static final Mapping MESSAGE = Mapping.named("message");
+    @IndexMode(indexed = ESOption.FALSE, docValues = ESOption.FALSE)
+    @NullAllowed
+    private String message;
+
+    @Part
+    private static GlobalContext ctx;
+
+    @Transient
+    private ProcessLogHandler handler;
+
+    @BeforeSave
+    protected void onSave() {
+        StringBuilder searchContent = new StringBuilder();
+
+        // Only add the message if it isn't an i18n key or a JSON object...
+        if (Strings.isFilled(message) && !message.startsWith("$") && !message.startsWith("{")) {
+            searchContent.append(message).append(" ");
+        }
+
+        // Append the content of each non-internal context field
+        getContext().data().forEach((key, value) -> {
+            if (!key.startsWith("_")) {
+                searchContent.append(value).append(" ");
+            }
+        });
+
+        setSearchableContent(searchContent.toString());
+    }
+
+    /**
+     * Returns the timestamp formatted as string.
+     *
+     * @return the timestamp formatted as string
+     */
+    public String getTimestampAsString() {
+        return Process.formatTimestamp(getTimestamp());
+    }
+
+    /**
+     * Determines the bootstrap CSS class to be used for rendering the row of this log entry.
+     *
+     * @return the bootstrap CSS class used to render this log message.
+     */
+    public String getRowClass() {
+        if (state == ProcessLogState.IGNORED) {
+            return "default";
+        }
+        if (type == ProcessLogType.ERROR) {
+            return "danger";
+        }
+        if (type == ProcessLogType.WARNING) {
+            return "warning";
+        }
+        if (type == ProcessLogType.SUCCESS) {
+            return "success";
+        }
+        if (state == ProcessLogState.OPEN) {
+            return "info";
+        }
+
+        return "default";
+    }
+
+    /**
+     * Creates a log entry which is initialized with {@link ProcessLogType#INFO}.
+     *
+     * @return a new log entry with a pre-populated type
+     */
+    public static ProcessLog info() {
+        return new ProcessLog().withType(ProcessLogType.INFO);
+    }
+
+    /**
+     * Creates a log entry which is initialized with {@link ProcessLogType#WARNING}.
+     *
+     * @return a new log entry with a pre-populated type
+     */
+    public static ProcessLog warn() {
+        return new ProcessLog().withType(ProcessLogType.WARNING);
+    }
+
+    /**
+     * Creates a log entry which is initialized with {@link ProcessLogType#ERROR}.
+     *
+     * @return a new log entry with a pre-populated type
+     */
+    public static ProcessLog error() {
+        return new ProcessLog().withType(ProcessLogType.ERROR);
+    }
+
+    /**
+     * Creates a log entry which is initialized with {@link ProcessLogType#SUCCESS}.
+     *
+     * @return a new log entry with a pre-populated type
+     */
+    public static ProcessLog success() {
+        return new ProcessLog().withType(ProcessLogType.SUCCESS);
+    }
+
+    /**
+     * Specifies the type for this log entry.
+     *
+     * @param type the type of this log entry
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog withType(ProcessLogType type) {
+        this.type = type;
+        return this;
+    }
+
+    /**
+     * Specifies the state for this log entry.
+     *
+     * @param state the state of this log entry
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog withState(ProcessLogState state) {
+        this.state = state;
+        return this;
+    }
+
+    /**
+     * Marks this entry as unresolved task.
+     *
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog markOpen() {
+        this.state = ProcessLogState.OPEN;
+        return this;
+    }
+
+    /**
+     * Specifies the {@link sirius.biz.process.output.ProcessOutput} to which this log entry belogs.
+     *
+     * @param output the name of the output this entry belongs to
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog into(String output) {
+        this.output = output;
+        return this;
+    }
+
+    /**
+     * Specifies the {@link ProcessLogHandler} to use (either for generating a message on demand or for providing
+     * {@link ProcessLogAction actions}.
+     *
+     * @param handler the handler to use for this entry.
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog withMessageHandler(ProcessLogHandler handler) {
+        this.messageHandler = handler.getName();
+        return this;
+    }
+
+    /**
+     * Provides a context which is either supplied to the {@link ProcessLogHandler} or
+     * {@link sirius.biz.process.output.ProcessOutput} / {@link sirius.biz.process.output.ProcessOutputType}.
+     * <p>
+     * Note that values which key start with an underscore are not added to the search index, everything else is
+     * searchable.
+     *
+     * @param contextToAdd the context to add to the log entry
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog withContext(Map<String, String> contextToAdd) {
+        this.context.modify().putAll(contextToAdd);
+        return this;
+    }
+
+    /**
+     * Provides a name/value pair which is either supplied to the {@link ProcessLogHandler} or
+     * {@link sirius.biz.process.output.ProcessOutput} / {@link sirius.biz.process.output.ProcessOutputType}.
+     * <p>
+     * Note that values which key start with an underscore are not added to the search index, everything else is
+     * searchable.
+     *
+     * @param key   the key to add to the context
+     * @param value the value to add to the context
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog withContext(String key, String value) {
+        this.context.modify().put(key, value);
+        return this;
+    }
+
+    /**
+     * Specifies the actual log message.
+     *
+     * @param message the message to log
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog withMessage(String message) {
+        this.message = message;
+        return this;
+    }
+
+    /**
+     * Specifies an NLS key which is then translated when the process log is rendered.
+     *
+     * @param key the NLS key to use as message
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog withNLSKey(String key) {
+        this.message = "$" + key;
+        return this;
+    }
+
+    /**
+     * Specifies a pattern and arguments to generate a formatted message just like
+     * {@link Strings#apply(String, Object...)}.
+     *
+     * @param message    the pattern to use
+     * @param parameters the arguments to supply to the pattern
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog withFormattedMessage(String message, Object... parameters) {
+        return withMessage(Strings.apply(message, parameters));
+    }
+
+    /**
+     * Marks this message as {@link #SYSTEM_MESSAGE}.
+     *
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog asSystemMessage() {
+        this.systemMessage = true;
+        return this;
+    }
+
+    /**
+     * Tries to determine the {@link ProcessLogHandler} which is in charge for this log entry.
+     *
+     * @return the handler wrapped as optional or an empty one if no handler is present
+     */
+    public Optional<ProcessLogHandler> getHandler() {
+        if (handler == null && Strings.isFilled(messageHandler)) {
+            handler = ctx.getPart(messageHandler, ProcessLogHandler.class);
+        }
+
+        return Optional.ofNullable(handler);
+    }
+
+    /**
+     * Determines the log message to show when displaying this log entry.
+     *
+     * @return the effective log message of this entry
+     */
+    @SuppressWarnings("unchecked")
+    public String getMessage() {
+        if (Strings.isEmpty(message)) {
+            return getHandler().map(h -> h.formatMessage(this)).orElse("");
+        }
+
+        if (message.startsWith("$")) {
+            return NLS.fmtr(message.substring(1)).set((Map<String, Object>) (Object) context.data()).format();
+        }
+
+        return message;
+    }
+
+    /**
+     * Returns the action available for this log entry.
+     *
+     * @return a list of actions available for this entry
+     */
+    public List<ProcessLogAction> getActions() {
+        return getHandler().map(h -> h.getActions(this)).orElseGet(this::getDefaultActions);
+    }
+
+    /**
+     * Generates the default actions based on the state of this entry.
+     *
+     * @return the default actions available based on the state of this entry. Might be empty of the state is
+     * <tt>null</tt>.
+     */
+    public List<ProcessLogAction> getDefaultActions() {
+        if (state == null) {
+            return Collections.emptyList();
+        }
+
+        List<ProcessLogAction> actions = new ArrayList<>(2);
+        if (state != ProcessLogState.OPEN) {
+            actions.add(new ProcessLogAction(this, ACTION_MARK_OPEN).withLabelKey("ProcessLog.actionMarkOpen")
+                                                                    .withIcon("fa-retweet"));
+        } else {
+            actions.add(new ProcessLogAction(this, ACTION_MARK_RESOLVED).withLabelKey("ProcessLog.actionMarkResolved")
+                                                                        .withIcon("fa-check-square-o "));
+            actions.add(new ProcessLogAction(this, ACTION_MARK_IGNORED).withLabelKey("ProcessLog.actionMarkIgnored")
+                                                                       .withIcon("fa-ban"));
+        }
+
+        return actions;
+    }
+
+    @Override
+    public String toString() {
+        return NLS.fmtr("ProcessLog.format")
+                  .set("process", getProcess().getId())
+                  .set("timestamp", NLS.toUserString(getTimestamp()))
+                  .format();
+    }
+
+    public String getOutput() {
+        return output;
+    }
+
+    public boolean isSystemMessage() {
+        return systemMessage;
+    }
+
+    public ElasticRef<Process> getProcess() {
+        return process;
+    }
+
+    public ProcessLogType getType() {
+        return type;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public String getNode() {
+        return node;
+    }
+
+    public void setNode(String node) {
+        this.node = node;
+    }
+
+    public ProcessLogState getState() {
+        return state;
+    }
+
+    public StringMap getContext() {
+        return context;
+    }
+
+    public void setSortKey(long sortKey) {
+        this.sortKey = sortKey;
+    }
+
+    public long getSortKey() {
+        return sortKey;
+    }
+}

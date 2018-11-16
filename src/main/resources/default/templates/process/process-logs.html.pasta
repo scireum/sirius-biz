@@ -1,0 +1,61 @@
+<i:arg type="sirius.biz.process.Process" name="process"/>
+<i:arg type="Page" name="logs"/>
+
+<i:invoke template="/templates/process/process.html.pasta"
+          process="process"
+          page="logs">
+    <i:block name="sidebar">
+        <i:if test="@!process.getCounters().isEmpty()">
+            <w:infobox titleKey="Process.counters">
+                <i:for type="Tuple" var="timing" items="process.getCounterList()">
+                    <w:infoboxElement label="@timing.getFirst().as(String.class)"
+                                      value="@timing.getSecond()"/>
+                </i:for>
+            </w:infobox>
+        </i:if>
+
+        <w:filterbox page="logs" baseUrl="@apply('/ps/%s/logs', process.getId())"/>
+    </i:block>
+
+    <w:tableSearchHeader page="logs" baseUrl="@apply('/ps/%s/logs', process.getId())"/>
+
+    <w:table data="logs" colorized="true">
+        <thead>
+        <tr>
+            <th/>
+            <th>
+                @i18n("ProcessLog.message")
+            </th>
+            <th class="align-right col-md-2 col-sm-3">
+                @i18n("ProcessLog.timestamp")<br>
+                <small class="muted">@i18n("ProcessLog.node")</small>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <i:for type="sirius.biz.process.logs.ProcessLog" var="log" items="logs.getItems()">
+            <tr class="@log.getRowClass()">
+                <td/>
+                <td>
+                    <div>
+                        <pre class="plain" style="white-space: pre-wrap">@log.getMessage()</pre>
+                    </div>
+                    <div>
+                        <i:for type="sirius.biz.process.logs.ProcessLogAction" var="action" items="log.getActions()">
+                            <a href="@action.getUri()?returnUrl=@urlEncode(apply('/ps/%s/logs?%s', process.getId(), logs.createQueryString()))"
+                               class="link link-inline"><i class="fa @action.getIcon()"></i> @action.getLabel()</a>
+                        </i:for>
+                    </div>
+                </td>
+                <td class="align-right">
+                    @log.getTimestampAsString()<br>
+                    <small class="muted">@log.getNode()</small>
+                </td>
+            </tr>
+        </i:for>
+        </tbody>
+    </w:table>
+
+    <w:pagination page="logs" baseUrl="@apply('/ps/%s/logs', process.getId())"/>
+
+</i:invoke>

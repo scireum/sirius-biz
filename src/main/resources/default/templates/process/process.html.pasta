@@ -1,0 +1,108 @@
+<i:arg type="sirius.biz.process.Process" name="process"/>
+<i:arg type="String" name="page"/>
+
+<w:page title="@process.getTitle()">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/ps">@i18n("Process.plural")</a>
+        </li>
+        <li>
+            <a href="/ps/@process.getId()">@process.getTitle()</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader>
+        <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
+            <i class="fa fa-refresh fa-spin" id="spinner"></i>
+            <i:else>
+                <i class="fa @process.getIcon()" id="spinner"></i>
+            </i:else>
+        </i:if>
+        @process.getTitle()
+        <span class="label @process.getLabelClass()">@process.getState()</span>
+    </w:pageHeader>
+
+    <div class="row">
+        <div class="col-md-3">
+            <w:infobox titleKey="Model.details">
+                <i:if test="process.getState() == sirius.biz.process.ProcessState.STANDBY">
+                    <w:infoboxElement labelKey="Process.lastInteraction" value="@process.getStartedAsString()"/>
+                    <i:else>
+                        <w:infoboxElement labelKey="Process.userName" value="@process.getUserName()"/>
+                        <w:infoboxElement labelKey="Process.tenantName" value="@process.getTenantName()"/>
+                        <w:infoboxElement labelKey="Process.started" value="@process.getStartedAsString()"/>
+                        <w:infoboxElement labelKey="Process.runtime" value="@process.getRuntimeAsString()"/>
+                        <w:infoboxElement labelKey="Process.completed" value="@process.getCompletedAsString()"/>
+                    </i:else>
+                </i:if>
+                <i:extensions name="templates-process-details" process="@process"/>
+            </w:infobox>
+
+            <w:navbox labelKey="Model.links">
+                <w:navboxLink icon="fa-info-circle" labelKey="Model.details" url="@apply('/ps/%s', process.getId())" active="page == 'details'"/>
+                <w:navboxLink icon="fa-bars" labelKey="Process.logs" url="@apply('/ps/%s/logs', process.getId())" active="page == 'logs'"/>
+
+                <i:for type="sirius.biz.process.output.ProcessOutput" var="output" items="@process.getOutputs()">
+                    <w:navboxLink icon="@output.getIcon()" label="@output.getLabel()"
+                                  url="@apply('/ps/%s/output/%s', process.getId(), output.getName())"
+                                  active="page == 'output-' + output.getName()"/>
+                </i:for>
+
+                <i:extensions name="templates-process-sidebar-menu" process="@process"/>
+            </w:navbox>
+
+            <i:extensions name="templates-process-sidebar-top" process="@process"/>
+            <i:render name="sidebar" />
+            <i:extensions name="templates-process-sidebar-bottom" process="@process"/>
+
+            <w:jobs target="process" />
+
+            <a href="/ps" class="btn btn-block">@i18n("NLS.back")</a>
+        </div>
+        <div class="col-md-9">
+            <i:if test="isFilled(process.getStateMessage())">
+                <w:helpbox>
+                    <i class="fa fa-info-circle"></i> <b>@i18n("Process.stateMessage"):</b>
+                    @process.getStateMessage()
+                </w:helpbox>
+            </i:if>
+
+            <i:render name="body" />
+        </div>
+    </div>
+
+    <i:if test="process.shouldAutorefresh()">
+        <div class="autorefresh"></div>
+    </i:if>
+    <script type="text/javascript">
+        function planUpdate() {
+            if ($('.autorefresh').length === 0) {
+                return;
+            }
+
+            setTimeout(function () {
+                $.ajax({
+                    url: location.href,
+                    success: function (response) {
+                        var container = $("<div></div>");
+                        container.html(response);
+                        var newContent = $(container).find(".wrap");
+                        if (newContent.length > 0) {
+                            $(".wrap").html(newContent);
+                            invokeResizeHandler();
+                        }
+
+                        planUpdate();
+                    },
+                    error: function(e) {
+                        planUpdate();
+                    }
+                });
+            }, 5000);
+        }
+
+        $(document).ready(function () {
+            planUpdate();
+        });
+    </script>
+</w:page>
