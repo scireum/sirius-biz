@@ -9,6 +9,7 @@
 package sirius.biz.web;
 
 import sirius.biz.codelists.CodeLists;
+import sirius.biz.jobs.Jobs;
 import sirius.db.es.Elastic;
 import sirius.db.jdbc.Databases;
 import sirius.db.jdbc.OMA;
@@ -48,9 +49,13 @@ public class BizContextExtender implements GlobalContextExtender {
     @Part
     private Elastic elastic;
 
+    @Part
+    private Jobs jobs;
+
     @Override
     public void collectTemplate(BiConsumer<String, Object> globalParameterCollector) {
         globalParameterCollector.accept("codeLists", codeLists);
+        globalParameterCollector.accept("jobsService", jobs);
     }
 
     @Override
