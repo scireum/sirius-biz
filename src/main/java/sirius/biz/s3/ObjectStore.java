@@ -289,13 +289,26 @@ public class ObjectStore {
     }
 
     /**
-     * Generates a presigned download for the given object.
+     * Generates a download URL for the given object.
+     * <p>
+     * This can be used to publish the data to a client.
+     *
+     * @param bucket   the bucket in which the object resides
+     * @param objectId the object to generate the url for
+     * @return a download URL for the object
+     */
+    public String url(BucketName bucket, String objectId) {
+        return getClient().getUrl(bucket.getName(), objectId).toString();
+    }
+
+    /**
+     * Generates a presigned download URL for the given object.
      * <p>
      * This can be used to {@link sirius.web.http.Response#tunnel(String)} the data to a client.
      *
      * @param bucket   the bucket in which the object resides
      * @param objectId the object to generate the url for
-     * @return a download URL for the object
+     * @return a presigned download URL for the object
      */
     public String objectUrl(BucketName bucket, String objectId) {
         GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket.getName(), objectId);
