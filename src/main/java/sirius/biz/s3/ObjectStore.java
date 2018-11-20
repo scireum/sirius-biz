@@ -13,6 +13,7 @@ import com.amazonaws.event.ProgressEvent;
 import com.amazonaws.event.ProgressEventType;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
@@ -291,7 +292,7 @@ public class ObjectStore {
     /**
      * Generates a download URL for the given object.
      * <p>
-     * This can be used to publish the data to a client.
+     * This can be used to offer a public URL to retrieve the object's data.
      *
      * @param bucket   the bucket in which the object resides
      * @param objectId the object to generate the url for
@@ -362,13 +363,44 @@ public class ObjectStore {
      * @param bucket   the bucket to upload the file to
      * @param objectId the object id to use
      * @param data     the data to upload
+     * @return kind of a promise used to monitor the upload progress
+     */
+    public Upload uploadAsync(BucketName bucket, String objectId, File data) {
+        return uploadAsync(bucket, objectId, data, null);
+    }
+
+    /**
+     * Asynchronously uploads the given file as an object.
+     *
+     * @param bucket   the bucket to upload the file to
+     * @param objectId the object id to use
+     * @param data     the data to upload
      * @param metadata the metadata for the object
      * @return kind of a promise used to monitor the upload progress
      */
     public Upload uploadAsync(BucketName bucket, String objectId, File data, @Nullable ObjectMetadata metadata) {
+        return uploadAsync(bucket, objectId, data, metadata, null);
+    }
+
+    /**
+     * Asynchronously uploads the given file as an object.
+     *
+     * @param bucket    the bucket to upload the file to
+     * @param objectId  the object id to use
+     * @param data      the data to upload
+     * @param metadata  the metadata for the object
+     * @param cannedAcl the cannedAcl for the object
+     * @return kind of a promise used to monitor the upload progress
+     */
+    public Upload uploadAsync(BucketName bucket,
+                              String objectId,
+                              File data,
+                              @Nullable ObjectMetadata metadata,
+                              @Nullable CannedAccessControlList cannedAcl) {
         try {
             ensureBucketExists(bucket);
-            return transferManager.upload(new PutObjectRequest(bucket.getName(), objectId, data).withMetadata(metadata),
+            return transferManager.upload(new PutObjectRequest(bucket.getName(), objectId, data).withMetadata(metadata)
+                                                                                                .withCannedAcl(cannedAcl),
                                           new MonitoringProgressListener(true));
         } catch (Exception e) {
             throw Exceptions.handle()
@@ -387,11 +419,39 @@ public class ObjectStore {
      * @param bucket   the bucket to upload the file to
      * @param objectId the object id to use
      * @param data     the data to upload
+     */
+    public void upload(BucketName bucket, String objectId, File data) {
+        upload(bucket, objectId, data, null);
+    }
+
+    /**
+     * Synchronously uploads the given file.
+     *
+     * @param bucket   the bucket to upload the file to
+     * @param objectId the object id to use
+     * @param data     the data to upload
      * @param metadata the metadata for the object
      */
     public void upload(BucketName bucket, String objectId, File data, @Nullable ObjectMetadata metadata) {
+        upload(bucket, objectId, data, metadata, null);
+    }
+
+    /**
+     * Synchronously uploads the given file.
+     *
+     * @param bucket    the bucket to upload the file to
+     * @param objectId  the object id to use
+     * @param data      the data to upload
+     * @param metadata  the metadata for the object
+     * @param cannedAcl the cannedAcl for the object
+     */
+    public void upload(BucketName bucket,
+                       String objectId,
+                       File data,
+                       @Nullable ObjectMetadata metadata,
+                       @Nullable CannedAccessControlList cannedAcl) {
         try {
-            uploadAsync(bucket, objectId, data, metadata).waitForUploadResult();
+            uploadAsync(bucket, objectId, data, metadata, cannedAcl).waitForUploadResult();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw Exceptions.handle()
@@ -410,6 +470,19 @@ public class ObjectStore {
      * @param objectId      the object id to use
      * @param inputStream   the data to upload
      * @param contentLength the total number of bytes to upload
+     * @return kind of a promise used to monitor the upload progress
+     */
+    public Upload uploadAsync(BucketName bucket, String objectId, InputStream inputStream, long contentLength) {
+        return uploadAsync(bucket, objectId, inputStream, contentLength, null);
+    }
+
+    /**
+     * Asynchronously uploads the given input stream as an object.
+     *
+     * @param bucket        the bucket to upload the file to
+     * @param objectId      the object id to use
+     * @param inputStream   the data to upload
+     * @param contentLength the total number of bytes to upload
      * @param metadata      the metadata for the object
      * @return kind of a promise used to monitor the upload progress
      */
@@ -418,6 +491,26 @@ public class ObjectStore {
                               InputStream inputStream,
                               long contentLength,
                               @Nullable ObjectMetadata metadata) {
+        return uploadAsync(bucket, objectId, inputStream, contentLength, metadata, null);
+    }
+
+    /**
+     * Asynchronously uploads the given input stream as an object.
+     *
+     * @param bucket        the bucket to upload the file to
+     * @param objectId      the object id to use
+     * @param inputStream   the data to upload
+     * @param contentLength the total number of bytes to upload
+     * @param metadata      the metadata for the object
+     * @param cannedAcl     the cannedAcl for the object
+     * @return kind of a promise used to monitor the upload progress
+     */
+    public Upload uploadAsync(BucketName bucket,
+                              String objectId,
+                              InputStream inputStream,
+                              long contentLength,
+                              @Nullable ObjectMetadata metadata,
+                              @Nullable CannedAccessControlList cannedAcl) {
         if (metadata == null) {
             metadata = new ObjectMetadata();
         }
@@ -425,7 +518,10 @@ public class ObjectStore {
         metadata.setContentLength(contentLength);
         try {
             ensureBucketExists(bucket);
-            return transferManager.upload(new PutObjectRequest(bucket.getName(), objectId, inputStream, metadata),
+            return transferManager.upload(new PutObjectRequest(bucket.getName(),
+                                                               objectId,
+                                                               inputStream,
+                                                               metadata).withCannedAcl(cannedAcl),
                                           new MonitoringProgressListener(true));
         } catch (Exception e) {
             throw Exceptions.handle()
@@ -445,6 +541,18 @@ public class ObjectStore {
      * @param objectId      the object id to use
      * @param inputStream   the data to upload
      * @param contentLength the total number of bytes to upload
+     */
+    public void upload(BucketName bucket, String objectId, InputStream inputStream, long contentLength) {
+        upload(bucket, objectId, inputStream, contentLength, null);
+    }
+
+    /**
+     * Synchronously uploads the given input stream as an object.
+     *
+     * @param bucket        the bucket to upload the file to
+     * @param objectId      the object id to use
+     * @param inputStream   the data to upload
+     * @param contentLength the total number of bytes to upload
      * @param metadata      the metadata for the object
      */
     public void upload(BucketName bucket,
@@ -452,8 +560,27 @@ public class ObjectStore {
                        InputStream inputStream,
                        long contentLength,
                        @Nullable ObjectMetadata metadata) {
+        upload(bucket, objectId, inputStream, contentLength, metadata, null);
+    }
+
+    /**
+     * Synchronously uploads the given input stream as an object.
+     *
+     * @param bucket        the bucket to upload the file to
+     * @param objectId      the object id to use
+     * @param inputStream   the data to upload
+     * @param contentLength the total number of bytes to upload
+     * @param metadata      the metadata for the object
+     * @param cannedAcl     the cannedAcl for the object
+     */
+    public void upload(BucketName bucket,
+                       String objectId,
+                       InputStream inputStream,
+                       long contentLength,
+                       @Nullable ObjectMetadata metadata,
+                       @Nullable CannedAccessControlList cannedAcl) {
         try {
-            uploadAsync(bucket, objectId, inputStream, contentLength, metadata).waitForUploadResult();
+            uploadAsync(bucket, objectId, inputStream, contentLength, metadata, cannedAcl).waitForUploadResult();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw Exceptions.handle()
