@@ -11,6 +11,9 @@ package sirius.biz.jobs.params;
 import sirius.biz.tenants.Tenant;
 import sirius.kernel.nls.NLS;
 
+/**
+ * Permits to select a {@link Tenant} as parameter.
+ */
 public class TenantParameter extends EntityParameter<Tenant> {
 
     /**

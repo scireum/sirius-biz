@@ -11,6 +11,9 @@ package sirius.biz.jobs.params;
 import sirius.biz.tenants.UserAccount;
 import sirius.kernel.nls.NLS;
 
+/**
+ * Permits to select a {@link UserAccount} as parameter.
+ */
 public class UserAccountParameter extends EntityParameter<UserAccount> {
 
     /**
