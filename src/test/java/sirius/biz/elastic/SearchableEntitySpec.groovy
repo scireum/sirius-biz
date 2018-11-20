@@ -11,6 +11,8 @@ package sirius.biz.elastic
 
 import sirius.kernel.BaseSpecification
 
+import java.util.stream.Collectors
+
 class SearchableEntitySpec extends BaseSpecification {
 
     def "tokenizing works"() {
@@ -36,6 +38,25 @@ class SearchableEntitySpec extends BaseSpecification {
         tokens.contains("local")
         !tokens.contains(
                 "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890")
+    }
+
+    def "splitting tokens works as intended"() {
+        given:
+        SearchableTestEntity e = new SearchableTestEntity()
+        when:
+        e.setTest(input)
+        and:
+        e.updateSearchField()
+        then:
+        Arrays.stream(e.getSearchField().split(" "))
+              .filter({ t -> t.length() > 0 })
+              .collect(Collectors.toList())
+              .sort() == output
+        where:
+        input                        | output
+        //"max.mustermann@website.com" | ["com", "max", "max.mustermann", "max.mustermann@website.com", "mustermann", "website", "website.com"]
+        "test-foobar"                | ["foobar", "test", "test-foobar"]
+        "test123@bla-bar.foo"        | ["bar", "bla", "bla-bar.foo", "foo", "test", "test123", "test123@bla-bar.foo"]
     }
 
 }

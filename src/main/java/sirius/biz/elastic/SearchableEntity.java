@@ -20,8 +20,12 @@ import sirius.db.mixing.types.NestedList;
 import sirius.db.mixing.types.StringList;
 import sirius.db.mixing.types.StringListMap;
 import sirius.db.mixing.types.StringMap;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -29,12 +33,10 @@ import java.util.regex.Pattern;
  * <p>
  * While indexing, we also performe some sanity checks like limiting the min and max width of generated tokens.
  * <p>
- * The tokenizer uses {@link SearchableEntity#NON_WORD_CHARACTER} to separate tokens and them provides them
- * in a whitespace separated format for digestion by Elasticsearch.
+ * The tokenizer uses {@link SearchableEntity#SPLIT_TOKEN_LEVEL_1} and {@link SearchableEntity#SPLIT_TOKEN_LEVEL_2} to
+ * separate tokens and provides them in a whitespace separated format for digestion by Elasticsearch.
  */
 public abstract class SearchableEntity extends ElasticEntity {
-
-    private static final Pattern NON_WORD_CHARACTER = Pattern.compile("[^\\p{L}]");
 
     /**
      * We will not index anything longer than 255 characters as it is pointless and might kill
@@ -46,6 +48,17 @@ public abstract class SearchableEntity extends ElasticEntity {
      * We also do not index short tokens, as they are dismissed by ES anyway
      */
     private static final int MIN_TOKEN_LENGTH = 2;
+
+    /**
+     * Represents a regular expression which detects all character which aren't allowed in a search prefix.
+     */
+    public static final Pattern SPLIT_TOKEN_LEVEL_1 = Pattern.compile("[^\\p{L}\\d_\\-.]");
+
+    /**
+     * Represents a regular expression which detects all characters which are allowed in a search prefix but still cause
+     * a token to be splitted.
+     */
+    public static final Pattern SPLIT_TOKEN_LEVEL_2 = Pattern.compile("[^\\p{L}]");
 
     /**
      * Contains manually maintained content to be added to the search field.
@@ -117,19 +130,32 @@ public abstract class SearchableEntity extends ElasticEntity {
      * @param output the builder to write to
      * @param value  the value to tokenize
      */
-    public static void addContentAsTokens(StringBuilder output, Object value) {
+    @SuppressWarnings("squid:S2259")
+    @Explain("input cannot be null due to Strings.isEmpty")
+    public void addContentAsTokens(StringBuilder output, Object value) {
         String input = value == null ? null : String.valueOf(value);
         if (Strings.isEmpty(input)) {
             return;
         }
 
-        String tokenInLowerCase = input.toLowerCase();
-        for (String subToken : NON_WORD_CHARACTER.matcher(tokenInLowerCase).replaceAll(" ").split(" ")) {
-            appendSingleToken(output, subToken);
-        }
+        splitContent(input.toLowerCase()).forEach(token -> this.appendSingleToken(output, token));
     }
 
-    private static void appendSingleToken(StringBuilder output, String subToken) {
+    private Set<String> splitContent(String input) {
+        Set<String> result = new HashSet<>();
+        result.add(input);
+
+        for (String subToken : SPLIT_TOKEN_LEVEL_1.matcher(input).replaceAll(" ").split(" ")) {
+            result.add(subToken);
+
+            Collections.addAll(result, SPLIT_TOKEN_LEVEL_2.matcher(subToken.toLowerCase()).replaceAll(" ").split(" "));
+        }
+
+        result.remove("");
+        return result;
+    }
+
+    private void appendSingleToken(StringBuilder output, String subToken) {
         int length = subToken.length();
         if (length >= MIN_TOKEN_LENGTH && length <= MAX_TOKEN_LENGTH) {
             output.append(" ");
