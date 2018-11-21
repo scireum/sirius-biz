@@ -289,13 +289,26 @@ public class ObjectStore {
     }
 
     /**
-     * Generates a presigned download for the given object.
+     * Generates a download URL for the given object.
+     * <p>
+     * This can be used to offer a public URL to retrieve the object's data.
+     *
+     * @param bucket   the bucket in which the object resides
+     * @param objectId the object to generate the url for
+     * @return a download URL for the object
+     */
+    public String url(BucketName bucket, String objectId) {
+        return getClient().getUrl(bucket.getName(), objectId).toString();
+    }
+
+    /**
+     * Generates a presigned download URL for the given object.
      * <p>
      * This can be used to {@link sirius.web.http.Response#tunnel(String)} the data to a client.
      *
      * @param bucket   the bucket in which the object resides
      * @param objectId the object to generate the url for
-     * @return a download URL for the object
+     * @return a presigned download URL for the object
      */
     public String objectUrl(BucketName bucket, String objectId) {
         GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket.getName(), objectId);
@@ -349,6 +362,18 @@ public class ObjectStore {
      * @param bucket   the bucket to upload the file to
      * @param objectId the object id to use
      * @param data     the data to upload
+     * @return kind of a promise used to monitor the upload progress
+     */
+    public Upload uploadAsync(BucketName bucket, String objectId, File data) {
+        return uploadAsync(bucket, objectId, data, null);
+    }
+
+    /**
+     * Asynchronously uploads the given file as an object.
+     *
+     * @param bucket   the bucket to upload the file to
+     * @param objectId the object id to use
+     * @param data     the data to upload
      * @param metadata the metadata for the object
      * @return kind of a promise used to monitor the upload progress
      */
@@ -374,6 +399,17 @@ public class ObjectStore {
      * @param bucket   the bucket to upload the file to
      * @param objectId the object id to use
      * @param data     the data to upload
+     */
+    public void upload(BucketName bucket, String objectId, File data) {
+        upload(bucket, objectId, data, null);
+    }
+
+    /**
+     * Synchronously uploads the given file.
+     *
+     * @param bucket   the bucket to upload the file to
+     * @param objectId the object id to use
+     * @param data     the data to upload
      * @param metadata the metadata for the object
      */
     public void upload(BucketName bucket, String objectId, File data, @Nullable ObjectMetadata metadata) {
@@ -388,6 +424,19 @@ public class ObjectStore {
                                     "Got interrupted while waiting for an upload to complete: %s/%s - %s (%s)")
                             .handle();
         }
+    }
+
+    /**
+     * Asynchronously uploads the given input stream as an object.
+     *
+     * @param bucket        the bucket to upload the file to
+     * @param objectId      the object id to use
+     * @param inputStream   the data to upload
+     * @param contentLength the total number of bytes to upload
+     * @return kind of a promise used to monitor the upload progress
+     */
+    public Upload uploadAsync(BucketName bucket, String objectId, InputStream inputStream, long contentLength) {
+        return uploadAsync(bucket, objectId, inputStream, contentLength, null);
     }
 
     /**
@@ -423,6 +472,18 @@ public class ObjectStore {
                                                     objectId)
                             .handle();
         }
+    }
+
+    /**
+     * Synchronously uploads the given input stream as an object.
+     *
+     * @param bucket        the bucket to upload the file to
+     * @param objectId      the object id to use
+     * @param inputStream   the data to upload
+     * @param contentLength the total number of bytes to upload
+     */
+    public void upload(BucketName bucket, String objectId, InputStream inputStream, long contentLength) {
+        upload(bucket, objectId, inputStream, contentLength, null);
     }
 
     /**
