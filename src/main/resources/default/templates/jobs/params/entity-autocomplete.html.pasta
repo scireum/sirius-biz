@@ -1,6 +1,5 @@
-<i:arg type="sirius.biz.jobs.params.Parameter" name="param"/>
+<i:arg type="sirius.biz.jobs.params.EntityParameter" name="param"/>
 <i:arg type="Map" name="context"/>
-<i:local name="entityParam" value="@param.as(sirius.biz.jobs.params.EntityParameter.class)"/>
 
 <w:autocompleteSingleSelect span="@param.getSpan()"
                             smallSpan="@param.getSmallSpan()"
@@ -9,9 +8,9 @@
                             help="@param.getDescription()"
                             required="@param.isRequired()"
                             optional="@!param.isRequired()"
-                            serviceUri="@entityParam.getAutocompleteUri()">
+                            serviceUri="@param.getAutocompleteUri()">
 
-    <i:local name="idAndLabel" value="entityParam.renderCurrentValue(context)" />
+    <i:local name="idAndLabel" value="param.renderCurrentValue(context)" />
     <i:if test="idAndLabel != null">
         <option value="@idAndLabel.getFirst()" selected="selected">
             @idAndLabel.getSecond()
