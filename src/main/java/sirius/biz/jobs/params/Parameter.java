@@ -47,9 +47,20 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
     }
 
     /**
+     * Specifies the label for the parameter.
+     *
+     * @param label the label of the parameter, which will be {@link NLS#smartGet(String) auto translated}
+     * @return the parameter itself for fluent method calls
+     */
+    public P withLabel(String label) {
+        this.label = label;
+        return self();
+    }
+
+    /**
      * Specifies a short description for the parameter.
      *
-     * @param description the descriptio for the parameter, which will be {@link NLS#smartGet(String) auto translated}
+     * @param description the description for the parameter, which will be {@link NLS#smartGet(String) auto translated}
      * @return the parameter itself for fluent method calls
      */
     public P withDescription(String description) {

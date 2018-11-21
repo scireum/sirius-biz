@@ -21,6 +21,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Message;
@@ -290,5 +291,28 @@ public class TenantController extends BizController {
         } else {
             throw Exceptions.createHandled().withSystemErrorMessage("Cannot determine current tenant!").handle();
         }
+    }
+
+    /**
+     * Autocompletion for Tenants.
+     *
+     * @param ctx the current request
+     */
+    @LoginRequired
+    @Routed("/tenants/autocomplete")
+    public void tenantsAutocomplete(final WebContext ctx) {
+        AutocompleteHelper.handle(ctx, (query, result) -> {
+            queryPossibleTenants(ctx).queryString(query,
+                                                  QueryField.contains(Tenant.NAME),
+                                                  QueryField.contains(Tenant.ACCOUNT_NUMBER),
+                                                  QueryField.contains(Tenant.ADDRESS.inner(AddressData.STREET)),
+                                                  QueryField.contains(Tenant.ADDRESS.inner(AddressData.CITY)))
+                                     .limit(10)
+                                     .iterateAll(tenant -> {
+                                         result.accept(new AutocompleteHelper.Completion(tenant.getIdAsString(),
+                                                                                         tenant.toString(),
+                                                                                         tenant.toString()));
+                                     });
+        });
     }
 }

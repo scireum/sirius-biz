@@ -142,6 +142,21 @@ public class Tenants {
     }
 
     /**
+     * Checks if the tenant aware entity belongs to the current tenant.
+     *
+     * @param tenantAware {@link TenantAware} entity to be asserted
+     */
+    public void assertTenant(TenantAware tenantAware) {
+        if (tenantAware == null) {
+            return;
+        }
+
+        if (!Objects.equals(tenantAware.getTenantAsString(), getCurrentTenant().map(Tenant::getIdAsString).orElse(null))) {
+            throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
+        }
+    }
+
+    /**
      * Checks if the tenant aware entity belongs to the current tenant or to its parent tenant.
      *
      * @param tenantAware {@link TenantAware} entity to be asserted
