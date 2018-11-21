@@ -132,16 +132,16 @@ public abstract class SearchableEntity extends ElasticEntity {
      */
     @SuppressWarnings("squid:S2259")
     @Explain("input cannot be null due to Strings.isEmpty")
-    public void addContentAsTokens(StringBuilder output, Object value) {
+    public static void addContentAsTokens(StringBuilder output, Object value) {
         String input = value == null ? null : String.valueOf(value);
         if (Strings.isEmpty(input)) {
             return;
         }
 
-        splitContent(input.toLowerCase()).forEach(token -> this.appendSingleToken(output, token));
+        splitContent(input.toLowerCase()).forEach(token -> SearchableEntity.appendSingleToken(output, token));
     }
 
-    private Set<String> splitContent(String input) {
+    private static Set<String> splitContent(String input) {
         Set<String> result = new HashSet<>();
         result.add(input);
 
@@ -155,7 +155,7 @@ public abstract class SearchableEntity extends ElasticEntity {
         return result;
     }
 
-    private void appendSingleToken(StringBuilder output, String subToken) {
+    private static void appendSingleToken(StringBuilder output, String subToken) {
         int length = subToken.length();
         if (length >= MIN_TOKEN_LENGTH && length <= MAX_TOKEN_LENGTH) {
             output.append(" ");
