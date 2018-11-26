@@ -16,6 +16,7 @@ import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.query.QueryField;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -244,12 +245,12 @@ public class TenantController extends BizController {
     @LoginRequired
     @Routed("/tenants/select/:1")
     public void selectTenant(final WebContext ctx, String id) {
-        if ("main".equals(id)) {
+        if ("main".equals(id) || Strings.areEqual(determineOriginalTenantId(ctx), id)) {
             auditLog.neutral("AuditLog.switchedToMainTenant").causedByCurrentUser().forCurrentUser().log();
 
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
                                 null);
-            ctx.respondWith().redirectTemporarily("/tenants/select");
+            ctx.respondWith().redirectTemporarily(ctx.get("goto").asString(wondergemRoot));
             return;
         }
 
@@ -272,7 +273,7 @@ public class TenantController extends BizController {
     }
 
     private SmartQuery<Tenant> queryPossibleTenants(WebContext ctx) {
-        String tenantId = ((TenantUserManager) UserContext.get().getUserManager()).getOriginalTenantId(ctx);
+        String tenantId = determineOriginalTenantId(ctx);
         Optional<Tenant> originalTenant = oma.find(Tenant.class, tenantId);
         if (originalTenant.isPresent()) {
             SmartQuery<Tenant> baseQuery = oma.select(Tenant.class);
@@ -280,17 +281,22 @@ public class TenantController extends BizController {
                 if (originalTenant.get().isCanAccessParent()) {
                     baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.and(OMA.FILTERS.eq(Tenant.PARENT, tenantId),
                                                                    OMA.FILTERS.eq(Tenant.PARENT_CAN_ACCESS, true)),
-                                                   OMA.FILTERS.eq(Tenant.ID,
-                                                                  originalTenant.get().getParent().getId())));
+                                                   OMA.FILTERS.eq(Tenant.ID, originalTenant.get().getParent().getId()),
+                                                   OMA.FILTERS.eq(Tenant.ID, tenantId)));
                 } else {
-                    baseQuery.where(OMA.FILTERS.and(OMA.FILTERS.eq(Tenant.PARENT, tenantId),
-                                                    OMA.FILTERS.eq(Tenant.PARENT_CAN_ACCESS, true)));
+                    baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.and(OMA.FILTERS.eq(Tenant.PARENT, tenantId),
+                                                                   OMA.FILTERS.eq(Tenant.PARENT_CAN_ACCESS, true)),
+                                                   OMA.FILTERS.eq(Tenant.ID, tenantId)));
                 }
             }
             return baseQuery;
         } else {
             throw Exceptions.createHandled().withSystemErrorMessage("Cannot determine current tenant!").handle();
         }
+    }
+
+    private String determineOriginalTenantId(WebContext ctx) {
+        return ((TenantUserManager) UserContext.get().getUserManager()).getOriginalTenantId(ctx);
     }
 
     /**
