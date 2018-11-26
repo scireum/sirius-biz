@@ -6,9 +6,14 @@
 
     <w:menuSection framework="biz.storage">
         <w:menuItem titleKey="StorageController.buckets" url="/storage" permission="permission-manage-files"/>
-        <w:menuItem titleKey="JobsController.jobs" url="/jobs" permission="permission-execute-jobs"/>
-        <w:menuItem titleKey="Process.plural" url="/ps" permission="permission-manage-jobs"/>
     </w:menuSection>
+
+    <i:if test="@isFrameworkEnabled('biz.jobs') && isFrameworkEnabled('biz.processes')">
+        <w:menuSection>
+            <w:menuItem titleKey="JobsController.jobs" url="/jobs" permission="permission-execute-jobs"/>
+            <w:menuItem titleKey="Process.plural" url="/ps" permission="permission-manage-jobs"/>
+        </w:menuSection>
+    </i:if>
 
     <w:menuSection>
         <w:menuItem titleKey="AuditLogEntry.plural" url="/audit-log" framework="biz.protocols"/>
