@@ -567,7 +567,7 @@ public class Processes {
         }
 
         if (!Strings.areEqual(user.getUserId(), process.get().getUserId())) {
-            if (user.hasPermission(ProcessController.PERMISSION_MANAGE_PROCESSES)) {
+            if (!user.hasPermission(ProcessController.PERMISSION_MANAGE_PROCESSES)) {
                 return Optional.empty();
             }
         }
