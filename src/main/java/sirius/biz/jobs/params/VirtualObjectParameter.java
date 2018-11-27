@@ -17,12 +17,19 @@ public class VirtualObjectParameter extends EntityParameter<VirtualObject> {
     @Part
     private static Storage storage;
 
+    private static final String DEFAULT_BUCKET = "work";
+
     /**
      * Provides a default file path to select for the parameter instance.
      * <p>
      * If no value for this parameter is selected, the default file path will be used.
      */
     private String defaultFilePath = "";
+
+    /**
+     * The bucket to find or store the selected {@link VirtualObject}.
+     */
+    private String bucketName = DEFAULT_BUCKET;
 
     /**
      * Creates a new parameter with the given name and label.
@@ -73,10 +80,10 @@ public class VirtualObjectParameter extends EntityParameter<VirtualObject> {
      * @return {@link Optional<VirtualObject>} the found virtual object or {@link Optional#empty()}
      */
     private Optional<VirtualObject> findFile(String key) {
-        Optional<StoredObject> file = storage.findByKey(tenants.getRequiredTenant(), "jobs", key);
+        Optional<StoredObject> file = storage.findByKey(tenants.getRequiredTenant(), getBucketName(), key);
 
         if (!file.isPresent() && Strings.isFilled(defaultFilePath)) {
-            file = storage.findByPath(tenants.getRequiredTenant(), "jobs", defaultFilePath);
+            file = storage.findByPath(tenants.getRequiredTenant(), getBucketName(), defaultFilePath);
         }
 
         return file.map(storedObject -> {
@@ -92,13 +99,35 @@ public class VirtualObjectParameter extends EntityParameter<VirtualObject> {
      * Setter for the default file path.
      *
      * @param path the default file path of an virtual object
+     * @return the instance itself for fluent method calls
      */
-    public void setDefaultFilePath(String path) {
+    public VirtualObjectParameter withDefaultName(String path) {
         this.defaultFilePath = path;
+        return this;
     }
 
     @Override
     public String getTemplateName() {
         return "/templates/jobs/params/virtual-object-autocomplete.html.pasta";
+    }
+
+    /**
+     * Retrieves the bucketName name to be used.
+     *
+     * @return the bucketName name to be used
+     */
+    public String getBucketName() {
+        return DEFAULT_BUCKET;
+    }
+
+    /**
+     * Setter for the bucket name to be used.
+     *
+     * @param bucketName the name of the bucket to be used for this parameter
+     * @return the instance itself for fluent method calls
+     */
+    public VirtualObjectParameter withBucketName(String bucketName) {
+        this.bucketName = bucketName;
+        return this;
     }
 }

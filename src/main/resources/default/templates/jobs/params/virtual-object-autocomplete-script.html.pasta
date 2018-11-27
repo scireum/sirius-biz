@@ -19,8 +19,9 @@
      *
      * @@param eventOnChange the on change event triggered by an file upload input element
      * @@param $select the jquery object of the autocomplete select
+     * @@param bucketName the name of the bucket to upload to
      */
-    function uploadFile(eventOnChange, $select) {
+    function uploadFile(eventOnChange, $select, bucketName) {
         if (!eventOnChange.target.files || eventOnChange.target.files.length === 0) {
             return;
         }
@@ -30,7 +31,7 @@
         formData.append('file', fileToUpload, fileToUpload.name);
 
         var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/storage/upload/jobs/?filename=' + encodeURIComponent(fileToUpload.name), true);
+        xhr.open('POST', '/storage/upload/' + bucketName + '/?filename=' + encodeURIComponent(fileToUpload.name), true);
 
         xhr.onload = function () {
             if (xhr.status === 200) {

@@ -1,4 +1,4 @@
-<i:arg type="sirius.biz.jobs.params.EntityParameter" name="param"/>
+<i:arg type="sirius.biz.jobs.params.VirtualObjectParameter" name="param"/>
 <i:arg type="Map" name="context"/>
 
 
@@ -29,7 +29,7 @@
     <script type="text/javascript">
         $(function () {
             $('#upload-@param.getName()').on('change', function (event) {
-                uploadFile(event, $('[name=@param.getName()]'));
+                uploadFile(event, $('[name=@param.getName()]'), "@param.getBucketName()");
             });
         });
     </script>
