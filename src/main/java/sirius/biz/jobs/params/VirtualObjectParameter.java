@@ -52,7 +52,7 @@ public class VirtualObjectParameter extends EntityParameter<VirtualObject> {
 
     @Override
     public String getAutocompleteUri() {
-        return "/storage/autocomplete/jobs";
+        return "/storage/autocomplete/" + getBucketName();
     }
 
     @Override
