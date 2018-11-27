@@ -15,7 +15,7 @@
     var onErrorneousFileUpload = Function();
 
     /**
-     * Uploads a file into the 'jobs' storage bucket.
+     * Uploads a file into the given storage bucket.
      *
      * @@param eventOnChange the on change event triggered by an file upload input element
      * @@param $select the jquery object of the autocomplete select
