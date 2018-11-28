@@ -81,4 +81,13 @@ class VersionedFilesSpec extends BaseSpecification {
         then:
         versionedFiles.getVersions(tenant, identifier).size() == 1
     }
+
+    def "reading out a null version returns an empty list as content"() {
+        given:
+        String identifier = "null-version-content"
+        when:
+        def nullContentFile = versionedFiles.createVersion(tenant, identifier, null, null)
+        then:
+        versionedFiles.getContent(nullContentFile).isEmpty()
+    }
 }
