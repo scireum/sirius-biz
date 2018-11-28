@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -104,6 +105,9 @@ public class VersionedFiles {
      * @return {@link List<String>} each string holding one line of the file content
      */
     public List<String> getContent(VersionedFile file) {
+        if (file.getStoredFile().isEmpty()) {
+            return Collections.emptyList();
+        }
         try (InputStream data = storage.getData(file.getStoredFile().getObject())) {
             return new BufferedReader(new InputStreamReader(data)).lines().collect(Collectors.toList());
         } catch (IOException e) {
