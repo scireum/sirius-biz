@@ -126,7 +126,9 @@ public class VersionedFiles {
         file.setUniqueIdentifier(uniqueIdentifier);
         file.setTimestamp(LocalDateTime.now());
         file.getTenant().setValue(tenant);
-        file.getStoredFile().setObject(generateNewFile(file, uniqueIdentifier, content));
+        if (content != null) {
+            file.getStoredFile().setObject(generateNewFile(file, uniqueIdentifier, content));
+        }
 
         oma.update(file);
 
