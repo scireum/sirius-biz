@@ -143,19 +143,20 @@ public class CodeLists {
      * @return the value and the additional value associated with the given code, wrapped as tuple
      */
     public Tuple<String, String> getValues(@Nonnull String codeList, @Nonnull String code) {
+        String trimmedCode = Strings.trim(code);
         CodeList cl = findOrCreateCodelist(codeList);
         CodeListEntry cle = oma.select(CodeListEntry.class)
                                .eq(CodeListEntry.CODE_LIST, cl)
-                               .eq(CodeListEntry.CODE, code)
+                               .eq(CodeListEntry.CODE, trimmedCode)
                                .queryFirst();
         if (cle == null) {
             if (!cl.isAutofill()) {
-                return Tuple.create(code, null);
+                return Tuple.create(trimmedCode, null);
             }
             cle = new CodeListEntry();
             cle.getCodeList().setValue(cl);
-            cle.setCode(code);
-            cle.setValue(code);
+            cle.setCode(trimmedCode);
+            cle.setValue(trimmedCode);
             oma.update(cle);
         }
 
