@@ -46,4 +46,17 @@ class ObjectStoresSpec extends BaseSpecification {
         stores.bucketCache.get(Tuple.create(stores.store().name,
                                             stores.store().getBucketName("not-exists").getName())) == null
     }
+
+    def "deleteBucket"() {
+        when:
+        stores.store().ensureBucketExists(stores.store().getBucketName("deleted"))
+        then:
+        stores.store().doesBucketExist(stores.store().getBucketName("deleted")) == true
+        when:
+        stores.store().deleteBucket(stores.store().getBucketName("deleted"))
+        then:
+        stores.store().doesBucketExist(stores.store().getBucketName("deleted")) == false
+        stores.bucketCache.get(Tuple.create(stores.store().name,
+                                            stores.store().getBucketName("deleted").getName())) == null
+    }
 }

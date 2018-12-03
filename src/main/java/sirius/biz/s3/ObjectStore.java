@@ -273,6 +273,7 @@ public class ObjectStore {
     public void deleteBucket(BucketName bucket) {
         try {
             getClient().deleteBucket(bucket.getName());
+            stores.bucketCache.remove(Tuple.create(name, bucket.getName()));
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
