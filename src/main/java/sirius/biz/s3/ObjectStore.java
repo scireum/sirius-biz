@@ -170,6 +170,7 @@ public class ObjectStore {
         if (!doesBucketExist(bucket)) {
             try {
                 client.createBucket(bucket.getName());
+                stores.bucketCache.put(Tuple.create(name, bucket.getName()), true);
             } catch (Exception e) {
                 Exceptions.handle()
                           .to(ObjectStores.LOG)
