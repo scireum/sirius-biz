@@ -249,8 +249,8 @@ public class ObjectStore {
                             .to(ObjectStores.LOG)
                             .error(e)
                             .withSystemErrorMessage("Failed to delete object %s from bucket %s - %s (%s)",
-                                                    bucket.getName(),
-                                                    objectId)
+                                                    objectId,
+                                                    bucket)
                             .handle();
         }
     }
@@ -339,9 +339,10 @@ public class ObjectStore {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
                             .error(e)
-                            .withSystemErrorMessage("Got interrupted while waiting for a download to complete:%s/%s -",
-                                                    bucket.getName(),
-                                                    objectId)
+                            .withSystemErrorMessage(
+                                    "Got interrupted while waiting for a download to complete: %s/%s - %s (%s)",
+                                    bucket,
+                                    objectId)
                             .handle();
         } catch (Exception e) {
             Files.delete(dest);
@@ -349,8 +350,8 @@ public class ObjectStore {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
                             .error(e)
-                            .withSystemErrorMessage("An error occurred while trying to download: %s/%s -",
-                                                    bucket.getName(),
+                            .withSystemErrorMessage("An error occurred while trying to download: %s/%s - %s (%s)",
+                                                    bucket,
                                                     objectId)
                             .handle();
         }
@@ -386,8 +387,8 @@ public class ObjectStore {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
                             .error(e)
-                            .withSystemErrorMessage("An error occurred while trying to upload: %s/%s -",
-                                                    bucket.getName(),
+                            .withSystemErrorMessage("An error occurred while trying to upload: %s/%s - %s (%s)",
+                                                    bucket,
                                                     objectId)
                             .handle();
         }
@@ -421,7 +422,9 @@ public class ObjectStore {
                             .to(ObjectStores.LOG)
                             .error(e)
                             .withSystemErrorMessage(
-                                    "Got interrupted while waiting for an upload to complete: %s/%s - %s (%s)")
+                                    "Got interrupted while waiting for an upload to complete: %s/%s - %s (%s)",
+                                    bucket,
+                                    objectId)
                             .handle();
         }
     }
@@ -467,8 +470,8 @@ public class ObjectStore {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
                             .error(e)
-                            .withSystemErrorMessage("An error occurred while trying to upload: %s/%s -",
-                                                    bucket.getName(),
+                            .withSystemErrorMessage("An error occurred while trying to upload: %s/%s - %s (%s)",
+                                                    bucket,
                                                     objectId)
                             .handle();
         }
@@ -507,7 +510,10 @@ public class ObjectStore {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
                             .error(e)
-                            .withSystemErrorMessage("Got interrupted while waiting for an upload to complete: %s (%s)")
+                            .withSystemErrorMessage(
+                                    "Got interrupted while waiting for an upload to complete: %s/%s - %s (%s)",
+                                    bucket,
+                                    objectId)
                             .handle();
         }
     }
