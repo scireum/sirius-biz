@@ -15,6 +15,7 @@ import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.async.TaskContext;
+import sirius.kernel.commons.Strings;
 import sirius.web.security.UserContext;
 
 import java.time.LocalDateTime;
@@ -30,7 +31,7 @@ public class TraceData extends Composite {
     public static final Mapping CREATED_BY = Mapping.named("createdBy");
     @NoJournal
     @NullAllowed
-    @Length(150)
+    @Length(50)
     private String createdBy;
 
     /**
@@ -47,7 +48,7 @@ public class TraceData extends Composite {
     public static final Mapping CREATED_IN = Mapping.named("createdIn");
     @NoJournal
     @NullAllowed
-    @Length(150)
+    @Length(50)
     private String createdIn;
 
     /**
@@ -83,11 +84,11 @@ public class TraceData extends Composite {
     protected void update() {
         if (!silent) {
             if (createdAt == null) {
-                createdBy = UserContext.getCurrentUser().getUserName();
+                createdBy = Strings.limit(UserContext.getCurrentUser().getUserName(), 50);
                 createdAt = LocalDateTime.now();
                 createdIn = TaskContext.get().getSystemString();
             }
-            changedBy = UserContext.getCurrentUser().getUserName();
+            changedBy = Strings.limit(UserContext.getCurrentUser().getUserName(), 50);
             changedAt = LocalDateTime.now();
             changedIn = TaskContext.get().getSystemString();
         }
