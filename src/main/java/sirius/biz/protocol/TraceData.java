@@ -86,11 +86,11 @@ public class TraceData extends Composite {
             if (createdAt == null) {
                 createdBy = Strings.limit(UserContext.getCurrentUser().getUserName(), 50);
                 createdAt = LocalDateTime.now();
-                createdIn = TaskContext.get().getSystemString();
+                createdIn = Strings.limit(TaskContext.get().getSystemString(), 150);
             }
             changedBy = Strings.limit(UserContext.getCurrentUser().getUserName(), 50);
             changedAt = LocalDateTime.now();
-            changedIn = TaskContext.get().getSystemString();
+            changedIn = Strings.limit(TaskContext.get().getSystemString(), 150);
         }
     }
 
