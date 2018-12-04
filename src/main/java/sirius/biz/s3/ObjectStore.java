@@ -186,10 +186,18 @@ public class ObjectStore {
      * The internal check is cached, therefore this method might be called frequently.
      *
      * @param bucket the bucket to check for
-     * @return <tt>true</tt> if the bucket exists, <tt>false</tt> otehrwise
+     * @return <tt>true</tt> if the bucket exists, <tt>false</tt> otherwise
      */
     public boolean doesBucketExist(BucketName bucket) {
-        return stores.bucketCache.get(Tuple.create(name, bucket.getName()), this::checkExistence);
+        Boolean cached = stores.bucketCache.get(Tuple.create(name, bucket.getName()));
+        if (cached != null) {
+            return cached;
+        }
+        boolean exists = this.checkExistence(bucket);
+        if (exists) {
+            stores.bucketCache.put(Tuple.create(name, bucket.getName()), exists);
+        }
+        return exists;
     }
 
     /**
@@ -265,6 +273,7 @@ public class ObjectStore {
     public void deleteBucket(BucketName bucket) {
         try {
             getClient().deleteBucket(bucket.getName());
+            stores.bucketCache.remove(Tuple.create(name, bucket.getName()));
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
@@ -274,14 +283,14 @@ public class ObjectStore {
         }
     }
 
-    private Boolean checkExistence(Tuple<String, String> storeAndBucket) {
+    private boolean checkExistence(BucketName bucket) {
         try {
-            return client.doesBucketExist(storeAndBucket.getSecond());
+            return client.doesBucketExist(bucket.getName());
         } catch (SdkClientException e) {
             Exceptions.handle()
                       .to(ObjectStores.LOG)
                       .error(e)
-                      .withSystemErrorMessage("Failed to check if %s exists: %s (%s)", storeAndBucket.getSecond())
+                      .withSystemErrorMessage("Failed to check if %s exists: %s (%s)", bucket)
                       .handle();
 
             return false;

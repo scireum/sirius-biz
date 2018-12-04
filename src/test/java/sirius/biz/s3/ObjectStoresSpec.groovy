@@ -11,6 +11,7 @@ package sirius.biz.s3
 import com.google.common.base.Charsets
 import com.google.common.io.Files
 import sirius.kernel.BaseSpecification
+import sirius.kernel.commons.Tuple
 import sirius.kernel.di.std.Part
 
 class ObjectStoresSpec extends BaseSpecification {
@@ -34,4 +35,28 @@ class ObjectStoresSpec extends BaseSpecification {
         sirius.kernel.commons.Files.delete((File) download)
     }
 
+    def "ensureBucketExists"() {
+        when:
+        stores.store().ensureBucketExists(stores.store().getBucketName("exists"))
+        then:
+        stores.store().doesBucketExist(stores.store().getBucketName("exists")) == true
+        stores.bucketCache.get(Tuple.create(stores.store().name,
+                                            stores.store().getBucketName("exists").getName())) == true
+        stores.store().doesBucketExist(stores.store().getBucketName("not-exists")) == false
+        stores.bucketCache.get(Tuple.create(stores.store().name,
+                                            stores.store().getBucketName("not-exists").getName())) == null
+    }
+
+    def "deleteBucket"() {
+        when:
+        stores.store().ensureBucketExists(stores.store().getBucketName("deleted"))
+        then:
+        stores.store().doesBucketExist(stores.store().getBucketName("deleted")) == true
+        when:
+        stores.store().deleteBucket(stores.store().getBucketName("deleted"))
+        then:
+        stores.store().doesBucketExist(stores.store().getBucketName("deleted")) == false
+        stores.bucketCache.get(Tuple.create(stores.store().name,
+                                            stores.store().getBucketName("deleted").getName())) == null
+    }
 }
