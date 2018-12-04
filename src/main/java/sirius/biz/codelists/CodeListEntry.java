@@ -40,7 +40,6 @@ public class CodeListEntry extends BizEntity {
      * Contains the code of the entry.
      */
     public static final Mapping CODE = Mapping.named("code");
-    @Trim
     @Length(50)
     @Unique(within = "codeList")
     private String code;
@@ -55,7 +54,6 @@ public class CodeListEntry extends BizEntity {
      * Contains the value associated with the code of this entry.
      */
     public static final Mapping VALUE = Mapping.named("value");
-    @Trim
     @Length(512)
     @NullAllowed
     private String value;
