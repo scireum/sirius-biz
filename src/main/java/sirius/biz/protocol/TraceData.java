@@ -48,7 +48,7 @@ public class TraceData extends Composite {
     public static final Mapping CREATED_IN = Mapping.named("createdIn");
     @NoJournal
     @NullAllowed
-    @Length(50)
+    @Length(150)
     private String createdIn;
 
     /**
@@ -57,7 +57,7 @@ public class TraceData extends Composite {
     public static final Mapping CHANGED_BY = Mapping.named("changedBy");
     @NoJournal
     @NullAllowed
-    @Length(150)
+    @Length(50)
     private String changedBy;
 
     /**
