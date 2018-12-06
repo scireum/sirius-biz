@@ -156,7 +156,16 @@ public class JournalData extends Composite {
         return false;
     }
 
+    /**
+     * Returns the URI shown in <tt>tracing.html.pasta</tt>.
+     *
+     * @return the URI which permits access to the journal of the attached entity (owner).
+     */
     public String getProtocolUri() {
+        if (owner.isNew()) {
+            return "";
+        }
+
         String type = Mixing.getNameForType(owner.getClass());
         String id = String.valueOf(owner.getId());
         String hash = JournalController.computeAuthHash(type, id);

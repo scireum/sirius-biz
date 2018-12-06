@@ -309,14 +309,14 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
 
         for (BackgroundLoop loop : loops) {
             String key = BACKGROUND_LOOP_PREFIX + loop.getName();
-            loadAndStoreSetting(key, targetMap);
+            loadAndStoreSetting(key, targetMap, true);
             descriptions.put(key, Strings.apply("BackgroundLoop running at %1.2f Hz", loop.maxCallFrequency()));
         }
 
         for (EveryDay task : dailyTasks) {
             timers.getExecutionHour(task).ifPresent(executionHour -> {
                 String key = DAILY_TASK_PREFIX + task.getConfigKeyName();
-                loadAndStoreSetting(key, targetMap);
+                loadAndStoreSetting(key, targetMap, true);
                 descriptions.put(key,
                                  Strings.apply("EveryDay task executing between %2d:00 and %2d:59",
                                                executionHour,
@@ -326,7 +326,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
 
         for (DistributedQueueInfo queue : distributedTasks.getQueues()) {
             String key = QUEUE_PREFIX + queue.getName();
-            loadAndStoreSetting(key, targetMap);
+            loadAndStoreSetting(key, targetMap, false);
             descriptions.put(key,
                              Strings.apply("DistributedTasks queue synchronized via %s", queue.getConcurrencyToken()));
         }
@@ -334,9 +334,11 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         syncSettings = targetMap;
     }
 
-    private void loadAndStoreSetting(String key, Map<String, SynchronizeType> targetMap) {
+    private void loadAndStoreSetting(String key, Map<String, SynchronizeType> targetMap, boolean warnIfMissing) {
         if (!Sirius.getSettings().getConfig().hasPath("orchestration." + key)) {
-            Cluster.LOG.WARN("No configuration found for orchestration." + key);
+            if (warnIfMissing) {
+                Cluster.LOG.WARN("No configuration found for orchestration." + key);
+            }
             targetMap.put(key, SynchronizeType.LOCAL);
             return;
         }
