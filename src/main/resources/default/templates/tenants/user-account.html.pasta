@@ -1,7 +1,7 @@
 <i:arg type="sirius.biz.tenants.UserAccount" name="account" />
 <i:arg type="String" name="page" />
 
-<w:page title="@account.toString()">
+<w:page title="@toUserString(account)">
     <i:block name="head">
         <script src="/assets/wondergem/ace/ace.js" type="text/javascript"></script>
     </i:block>
@@ -11,7 +11,7 @@
             <a href="/user-accounts">@i18n("UserAccount.plural")</a>
         </li>
         <li>
-            <a href="/user-account/@account.getId()">@account</a>
+            <a href="/user-account/@account.getIdAsString()">@account</a>
         </li>
 
         <i:render name="breadcrumbs" />
@@ -22,23 +22,23 @@
         <i:if test="!account.isNew()">
             <div class="col-md-3">
                 <w:infobox titleKey="Model.details">
-                    <w:infoboxElement labelKey="LoginData.username" value="@account.getLogin().getUsername()"/>
-                    <i:if test="account.hasName()">
-                        <w:infoboxElement labelKey="Model.name" value="@account.getPerson()"/>
+                    <w:infoboxElement labelKey="LoginData.username" value="@account.getUserAccountData().getLogin().getUsername()"/>
+                    <i:if test="account.getUserAccountData().hasName()">
+                        <w:infoboxElement labelKey="Model.name" value="@account.getUserAccountData().getPerson()"/>
                     </i:if>
-                    <w:infoboxElement labelKey="Model.email" value="@account.getEmail()"/>
+                    <w:infoboxElement labelKey="Model.email" value="@account.getUserAccountData().getEmail()"/>
 
-                    <i:if test="@account.getLogin().isDisplayGeneratedPassword()">
-                        <w:infoboxElement labelKey="LoginData.generatedPassword" value="@account.getLogin().getGeneratedPassword()"/>
+                    <i:if test="@account.getUserAccountData().getLogin().isDisplayGeneratedPassword()">
+                        <w:infoboxElement labelKey="LoginData.generatedPassword" value="@account.getUserAccountData().getLogin().getGeneratedPassword()"/>
 
                         <i:else>
-                            <i:if test="isFilled(account.getLogin().getGeneratedPassword())">
+                            <i:if test="isFilled(account.getUserAccountData().getLogin().getGeneratedPassword())">
                                 <w:infoboxElement labelKey="LoginData.generatedPassword" value="@i18n('LoginData.password.hiddenGeneratedShort')"/>
                             </i:if>
                         </i:else>
                     </i:if>
 
-                    <w:infoboxElement labelKey="LoginData.apiToken" value="@account.getLogin().getApiToken()"/>
+                    <w:infoboxElement labelKey="LoginData.apiToken" value="@account.getUserAccountData().getLogin().getApiToken()"/>
                     
                     <i:extensions name="templates-user-account-sidebar-infos" account="account" page="page"/>
                 </w:infobox>
@@ -46,8 +46,8 @@
                 <i:extensions name="templates-user-account-sidebar-additional" account="account" page="page"/>
 
                 <w:navbox labelKey="Model.links">
-                    <w:navboxLink labelKey="Model.details" url="@apply('/user-account/%s', account.getId())" active="page == 'details'"/>
-                    <w:navboxLink labelKey="Model.config" url="@apply('/user-account/%s/config', account.getId())" active="page == 'config'"/>
+                    <w:navboxLink labelKey="Model.details" url="@apply('/user-account/%s', account.getIdAsString())" active="page == 'details'"/>
+                    <w:navboxLink labelKey="Model.config" url="@apply('/user-account/%s/config', account.getIdAsString())" active="page == 'config'"/>
 
                     <i:extensions name="templates-user-account-sidebar-menu" account="account" page="page"/>
                 </w:navbox>

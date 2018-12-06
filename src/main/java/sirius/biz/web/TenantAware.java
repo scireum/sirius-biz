@@ -8,6 +8,10 @@
 
 package sirius.biz.web;
 
+import sirius.biz.tenants.Tenant;
+import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.Mapping;
+import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.health.Exceptions;
 
 import java.util.Objects;
@@ -18,12 +22,18 @@ import java.util.function.Supplier;
  */
 public interface TenantAware {
 
+    Mapping TENANT = Mapping.named("tenant");
+
     /**
      * Returns the tenant id as string.
      *
      * @return the tenant id as string
      */
     String getTenantAsString();
+
+    BaseEntityRef<?,?> getTenant();
+
+    Tenant<?> getShallowTenant();
 
     /**
      * Asserts that the given object has the same tenant as this object.
@@ -45,4 +55,8 @@ public interface TenantAware {
      * Installs the currently present tenant (in the {@link sirius.web.security.UserContext}) into this entity.
      */
     void fillWithCurrentTenant();
+
+    void withTenant(Tenant<?> tenant);
+
+
 }

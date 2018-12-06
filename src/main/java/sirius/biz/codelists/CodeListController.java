@@ -8,28 +8,28 @@
 
 package sirius.biz.codelists;
 
-import sirius.biz.tenants.TenantUserManager;
+import sirius.biz.codelists.jdbc.SQLCodeListEntry;
+import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
 import sirius.biz.web.SQLPageHelper;
+import sirius.db.jdbc.SQLEntity;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Priorized;
-import sirius.kernel.di.std.Register;
-import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
+import sirius.web.controller.Page;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
 
-import java.util.Optional;
-
 /**
  * Provides an editor GUI for managing code lists.
  */
-@Register(classes = Controller.class, framework = CodeLists.FRAMEWORK_CODE_LISTS)
-public class CodeListController extends BizController {
+public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, LE extends BaseEntity<I> & CodeListEntry<I, L>>
+        extends BizController {
 
-    private static final String PERMISSION_MANAGE_CODELISTS = "permission-manage-code-lists";
+    public static final String PERMISSION_MANAGE_CODELISTS = "permission-manage-code-lists";
 
     /**
      * Provides a list of all code lists.
@@ -38,17 +38,19 @@ public class CodeListController extends BizController {
      */
     @DefaultRoute
     @LoginRequired
-    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-lists")
     public void codeLists(WebContext ctx) {
-        SQLPageHelper<CodeList> ph = SQLPageHelper.withQuery(oma.select(CodeList.class).orderAsc(CodeList.CODE));
+        BasePageHelper<L, ?, ?, ?> ph = getListsAsPage();
         ph.withContext(ctx);
-        ph.withSearchFields(QueryField.contains(CodeList.CODE),
-                            QueryField.contains(CodeList.NAME),
-                            QueryField.contains(CodeList.DESCRIPTION));
+        ph.withSearchFields(QueryField.contains(CodeList.CODE_LIST_DATA.inner(CodeListData.CODE)),
+                            QueryField.contains(CodeList.CODE_LIST_DATA.inner(CodeListData.NAME)),
+                            QueryField.contains(CodeList.CODE_LIST_DATA.inner(CodeListData.DESCRIPTION)));
+
         ctx.respondWith().template("templates/codelists/code-lists.html.pasta", ph.asPage());
     }
+
+    protected abstract BasePageHelper<L, ?, ?, ?> getListsAsPage();
 
     /**
      * Provides an editor for a code list.
@@ -57,7 +59,6 @@ public class CodeListController extends BizController {
      * @param codeListId the id of the code list
      */
     @LoginRequired
-    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1")
     public void codeList(WebContext ctx, String codeListId) {
@@ -71,7 +72,6 @@ public class CodeListController extends BizController {
      * @param codeListId the id of the code list
      */
     @LoginRequired
-    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/details")
     public void codeListDetails(WebContext ctx, String codeListId) {
@@ -79,29 +79,36 @@ public class CodeListController extends BizController {
     }
 
     private void codeListHandler(WebContext ctx, String codeListId, boolean forceDetails) {
-        CodeList cl = findForTenant(CodeList.class, codeListId);
+        L codeList = findForTenant(getType(), codeListId);
 
-        if (cl.isNew() || forceDetails) {
-            boolean requestHandled = prepareSave(ctx).withAfterCreateURI("/code-list/${id}/details").saveEntity(cl);
+        if (codeList.isNew() || forceDetails) {
+            boolean requestHandled =
+                    prepareSave(ctx).withAfterCreateURI("/code-list/${id}/details").saveEntity(codeList);
             if (!requestHandled) {
-                ctx.respondWith().template("templates/codelists/code-list-details.html.pasta", cl);
+                ctx.respondWith().template("/templates/codelists/code-list-details.html.pasta", codeList);
             }
         } else {
-            renderCodeList(ctx, cl);
+            renderCodeList(ctx, codeList);
         }
     }
 
-    private void renderCodeList(WebContext ctx, CodeList cl) {
-        SQLPageHelper<CodeListEntry> ph = SQLPageHelper.withQuery(oma.select(CodeListEntry.class)
-                                                                     .eq(CodeListEntry.CODE_LIST, cl)
-                                                                     .orderAsc(CodeListEntry.CODE_LIST));
+    protected abstract Class<L> getType();
+
+    private void renderCodeList(WebContext ctx, L codeList) {
+        BasePageHelper<LE, ?,?,?> ph = getEntriesAsPage(codeList);
         ph.withContext(ctx);
-        ph.withSearchFields(QueryField.contains(CodeListEntry.CODE),
-                            QueryField.contains(CodeListEntry.VALUE),
-                            QueryField.contains(CodeListEntry.ADDITIONAL_VALUE),
-                            QueryField.contains(CodeListEntry.DESCRIPTION));
-        ctx.respondWith().template("templates/codelists/code-list-entries.html.pasta", cl, ph.asPage());
+        ph.withSearchFields(QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE)),
+                            QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE)),
+                            QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE)),
+                            QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION)));
+
+        ctx.respondWith()
+           .template("/templates/codelists/code-list-entries.html.pasta",
+                     codeList,
+                     ph.asPage());
     }
+
+    protected abstract BasePageHelper<LE, ?,?,?> getEntriesAsPage(L codeList);
 
     /**
      * Provides an editor for a code list entry.
@@ -113,32 +120,32 @@ public class CodeListController extends BizController {
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/entry")
     public void codeListEntry(WebContext ctx, String codeListId) {
-        CodeList cl = findForTenant(CodeList.class, codeListId);
+        L cl = findForTenant(getType(), codeListId);
         assertNotNew(cl);
+
         if (ctx.ensureSafePOST()) {
             if (ctx.get("code").isFilled()) {
                 String code = ctx.get("code").asString();
-                CodeListEntry cle = oma.select(CodeListEntry.class)
-                                       .eq(CodeListEntry.CODE_LIST, cl)
-                                       .eq(CodeListEntry.CODE, code)
-                                       .queryFirst();
-                if (cle == null) {
-                    cle = new CodeListEntry();
-                    cle.getCodeList().setValue(cl);
-                    cle.setCode(code);
-                }
-                cle.setPriority(ctx.get("priority").asInt(Priorized.DEFAULT_PRIORITY));
-                cle.setValue(ctx.get("value").isEmptyString() ? null : ctx.get("value").asString());
-                cle.setAdditionalValue(ctx.get("additionalValue").isEmptyString() ?
+                LE cle = findOrCreateEntry(cl, code);
+
+                cle.getCodeListEntryData().setPriority(ctx.get("priority").asInt(Priorized.DEFAULT_PRIORITY));
+                cle.getCodeListEntryData()
+                   .setValue(ctx.get("value").isEmptyString() ? null : ctx.get("value").asString());
+                cle.getCodeListEntryData()
+                   .setAdditionalValue(ctx.get("additionalValue").isEmptyString() ?
                                        null :
                                        ctx.get("additionalValue").asString());
-                cle.setDescription(ctx.get("description").isEmptyString() ? null : ctx.get("description").asString());
-                oma.update(cle);
+                cle.getCodeListEntryData()
+                   .setDescription(ctx.get("description").isEmptyString() ? null : ctx.get("description").asString());
+
+                cle.getMapper().update(cle);
                 showSavedMessage();
             }
         }
         renderCodeList(ctx, cl);
     }
+
+    protected abstract LE findOrCreateEntry(L codeList, String code);
 
     /**
      * Deletes a code list.
@@ -150,12 +157,13 @@ public class CodeListController extends BizController {
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/delete")
     public void deleteCodeList(WebContext ctx, String codeListId) {
-        Optional<CodeList> cl = tryFindForTenant(CodeList.class, codeListId);
-        if (cl.isPresent()) {
-            oma.delete(cl.get());
+        L cl = tryFindForTenant(getType(), codeListId).orElse(null);
+        if (cl != null) {
+            cl.getMapper().delete(cl);
             showDeletedMessage();
         }
-        codeLists(ctx);
+
+        ctx.respondWith().redirectToGet("/code-lists");
     }
 
     /**
@@ -169,15 +177,17 @@ public class CodeListController extends BizController {
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/delete-entry/:2")
     public void deleteCodeListEntry(WebContext ctx, String codeListId, String entryId) {
-        CodeList cl = findForTenant(CodeList.class, codeListId);
+        L cl = findForTenant(getType(), codeListId);
         assertNotNew(cl);
-        Optional<CodeListEntry> cle = oma.find(CodeListEntry.class, entryId);
-        if (cle.isPresent()) {
-            if (cle.get().getCodeList().is(cl)) {
-                oma.delete(cle.get());
-                showDeletedMessage();
-            }
+
+        LE cle = find(getEntryType(), entryId);
+        if (cle != null && cle.getCodeList().is(cl)) {
+            cle.getMapper().delete(cle);
+            showDeletedMessage();
         }
+
         renderCodeList(ctx, cl);
     }
+
+    protected abstract Class<LE> getEntryType();
 }

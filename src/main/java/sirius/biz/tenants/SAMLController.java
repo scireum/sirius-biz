@@ -9,13 +9,12 @@
 package sirius.biz.tenants;
 
 import sirius.biz.web.BizController;
+import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Lambdas;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
-import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
-import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.SAMLHelper;
@@ -31,8 +30,8 @@ import java.util.UUID;
 /**
  * Permis a login via SAML.
  */
-@Register(classes = Controller.class, framework = Tenants.FRAMEWORK_TENANTS)
-public class SAMLController extends BizController {
+public abstract class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+        extends BizController {
 
     @Part
     private SAMLHelper saml;
@@ -50,27 +49,39 @@ public class SAMLController extends BizController {
      */
     @Routed("/saml")
     public void saml(WebContext ctx) {
-        List<Tenant> tenants = obtainTenantsForSaml(ctx);
+        List<T> tenants = obtainTenantsForSaml(ctx);
 
         ctx.respondWith().template("/templates/tenants/saml.html.pasta", tenants);
     }
 
-    private List<Tenant> obtainTenantsForSaml(WebContext ctx) {
+    @SuppressWarnings("unchecked")
+    private List<T> obtainTenantsForSaml(WebContext ctx) {
         // If GET parameters are present, we create a "fake" tenant to provide a custom SAML target.
         // This can be used if several identity providers are available for a single tenant.
         // We can verify several tenants but we can only redirect to a single identity provider.
         // Therefore these parameters can be used to create a SAML request to a custom one.
         if (ctx.hasParameter("issuerName")) {
-            Tenant fakeTenant = new Tenant();
-            fakeTenant.setSamlRequestIssuerName(ctx.require("issuerName").asString());
-            fakeTenant.setSamlIssuerUrl(ctx.require("issuerUrl").asString().replace("javascript:", ""));
-            fakeTenant.setSamlIssuerIndex(ctx.get("issuerIndex").asString("0"));
-
-            return Collections.singletonList(fakeTenant);
+            return createFakeTenantForUserSubmittedData(ctx);
         }
 
-        return oma.select(Tenant.class).ne(Tenant.SAML_ISSUER_URL, null).orderAsc(Tenant.NAME).queryList();
+        return querySAMLTenants();
     }
+
+    protected List<T> createFakeTenantForUserSubmittedData(WebContext ctx) {
+        T fakeTenant = null;
+        try {
+            fakeTenant = getTenantClass().getDeclaredConstructor().newInstance();
+            fakeTenant.getTenantData().setSamlRequestIssuerName(ctx.require("issuerName").asString());
+            fakeTenant.getTenantData().setSamlIssuerUrl(ctx.require("issuerUrl").asString().replace("javascript:", ""));
+            fakeTenant.getTenantData().setSamlIssuerIndex(ctx.get("issuerIndex").asString("0"));
+        } catch (Exception e) {
+            Exceptions.handle(BizController.LOG, e);
+        }
+
+        return Collections.singletonList(fakeTenant);
+    }
+
+    protected abstract Class<T> getTenantClass();
 
     /**
      * Processes a SAML response and tries to create or update a user which is then logged in.
@@ -92,7 +103,8 @@ public class SAMLController extends BizController {
                             .handle();
         }
 
-        TenantUserManager manager = (TenantUserManager) UserContext.getCurrentScope().getUserManager();
+        TenantUserManager<?, ?, ?> manager =
+                (TenantUserManager<?, ?, ?>) UserContext.getCurrentScope().getUserManager();
         UserInfo user = manager.findUserByName(ctx, response.getNameId());
 
         if (user == null) {
@@ -113,32 +125,35 @@ public class SAMLController extends BizController {
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: No issuer in request!").handle();
         }
 
-        Tenant tenant = findTenant(response);
-
+        T tenant = findTenant(response);
         checkFingerprint(tenant, response);
-        UserAccount account = new UserAccount();
-        account.getTenant().setValue(tenant);
-        account.getLogin().setUsername(response.getNameId());
-        account.getLogin().setCleartextPassword(UUID.randomUUID().toString());
-        account.setExternalLoginRequired(true);
-        updateAccount(response, account);
-        oma.update(account);
 
-        TenantUserManager manager = (TenantUserManager) UserContext.getCurrentScope().getUserManager();
-        UserInfo user = manager.findUserByName(ctx, response.getNameId());
-        if (user == null) {
-            throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Failed to create a user").handle();
+        try {
+            U account = getUserClass().getDeclaredConstructor().newInstance();
+            account.getTenant().setValue(tenant);
+            account.getUserAccountData().getLogin().setUsername(response.getNameId());
+            account.getUserAccountData().getLogin().setCleartextPassword(UUID.randomUUID().toString());
+            account.getUserAccountData().setExternalLoginRequired(true);
+            updateAccount(response, account);
+            account.getMapper().update(account);
+
+            TenantUserManager<?, ?, ?> manager =
+                    (TenantUserManager<?, ?, ?>) UserContext.getCurrentScope().getUserManager();
+            UserInfo user = manager.findUserByName(ctx, response.getNameId());
+            if (user == null) {
+                throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Failed to create a user").handle();
+            }
+
+            return user;
+        } catch (Exception e) {
+            throw Exceptions.handle(BizController.LOG, e);
         }
-
-        return user;
     }
 
-    private Tenant findTenant(SAMLResponse response) {
-        for (Tenant tenant : oma.select(Tenant.class)
-                                .fields(Tenant.ID, Tenant.SAML_ISSUER_NAME, Tenant.SAML_FINGERPRINT)
-                                .ne(Tenant.SAML_ISSUER_NAME, null)
-                                .ne(Tenant.SAML_FINGERPRINT, null)
-                                .queryList()) {
+    protected abstract Class<U> getUserClass();
+
+    private T findTenant(SAMLResponse response) {
+        for (T tenant : querySAMLTenants()) {
             if (checkIssuer(tenant, response)) {
                 return tenant;
             }
@@ -150,9 +165,11 @@ public class SAMLController extends BizController {
                         .handle();
     }
 
+    protected abstract List<T> querySAMLTenants();
+
     private void verifyUser(SAMLResponse response, UserInfo user) {
-        UserAccount account = user.getUserObject(UserAccount.class);
-        Tenant tenant = account.getTenant().getValue();
+        U account = user.getUserObject(getUserClass());
+        T tenant = account.getTenant().getValue();
 
         if (!checkIssuer(tenant, response)) {
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Issuer mismatch!").handle();
@@ -161,17 +178,17 @@ public class SAMLController extends BizController {
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Fingerprint mismatch!").handle();
         }
 
-        account = oma.refreshOrFail(account);
+        account = account.getMapper().refreshOrFail(account);
         updateAccount(response, account);
-        oma.update(account);
+        account.getMapper().update(account);
     }
 
-    private boolean checkFingerprint(Tenant tenant, SAMLResponse response) {
-        return isInList(tenant.getSamlFingerprint(), response.getFingerprint());
+    private boolean checkFingerprint(T tenant, SAMLResponse response) {
+        return isInList(tenant.getTenantData().getSamlFingerprint(), response.getFingerprint());
     }
 
-    private boolean checkIssuer(Tenant tenant, SAMLResponse response) {
-        return isInList(tenant.getSamlIssuerName(), response.getIssuer());
+    private boolean checkIssuer(T tenant, SAMLResponse response) {
+        return isInList(tenant.getTenantData().getSamlIssuerName(), response.getIssuer());
     }
 
     private boolean isInList(String values, String valueToCheck) {
@@ -188,8 +205,8 @@ public class SAMLController extends BizController {
         return false;
     }
 
-    private void updateAccount(SAMLResponse response, UserAccount account) {
-        account.getPermissions().getPermissions().clear();
+    private void updateAccount(SAMLResponse response, U account) {
+        account.getUserAccountData().getPermissions().getPermissions().clear();
         response.getAttribute(SAMLResponse.ATTRIBUTE_GROUP)
                 .stream()
                 .filter(Strings::isFilled)
@@ -197,16 +214,20 @@ public class SAMLController extends BizController {
                 .map(String::trim)
                 .filter(Strings::isFilled)
                 .filter(role -> roles.contains(role))
-                .collect(Lambdas.into(account.getPermissions().getPermissions()));
+                .collect(Lambdas.into(account.getUserAccountData().getPermissions().getPermissions()));
 
         if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_GIVEN_NAME))) {
-            account.getPerson().setFirstname(response.getAttributeValue(SAMLResponse.ATTRIBUTE_GIVEN_NAME));
+            account.getUserAccountData()
+                   .getPerson()
+                   .setFirstname(response.getAttributeValue(SAMLResponse.ATTRIBUTE_GIVEN_NAME));
         }
         if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_SURNAME))) {
-            account.getPerson().setLastname(response.getAttributeValue(SAMLResponse.ATTRIBUTE_SURNAME));
+            account.getUserAccountData()
+                   .getPerson()
+                   .setLastname(response.getAttributeValue(SAMLResponse.ATTRIBUTE_SURNAME));
         }
         if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_EMAIL_ADDRESS))) {
-            account.setEmail(response.getAttributeValue(SAMLResponse.ATTRIBUTE_EMAIL_ADDRESS));
+            account.getUserAccountData().setEmail(response.getAttributeValue(SAMLResponse.ATTRIBUTE_EMAIL_ADDRESS));
         }
     }
 }

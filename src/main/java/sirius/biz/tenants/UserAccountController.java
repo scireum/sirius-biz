@@ -12,20 +12,17 @@ import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
 import sirius.biz.protocol.AuditLog;
+import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
-import sirius.biz.web.SQLPageHelper;
-import sirius.db.jdbc.SQLEntity;
-import sirius.db.jdbc.SmartQuery;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
-import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
-import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
@@ -38,13 +35,14 @@ import sirius.web.services.JSONStructuredOutput;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
  * Provides a GUI for managing user accounts.
  */
-@Register(classes = Controller.class, framework = Tenants.FRAMEWORK_TENANTS)
-public class UserAccountController extends BizController {
+public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+        extends BizController {
 
     /**
      * The permission required to add, modify or delete accounts
@@ -60,16 +58,16 @@ public class UserAccountController extends BizController {
     private static final String PARAM_REASON = "reason";
 
     @Part
-    private Mails mails;
+    protected Mails mails;
 
     @ConfigValue("product.wondergemRoot")
-    private String wondergemRoot;
+    protected String wondergemRoot;
 
     @ConfigValue("security.roles")
-    private List<String> roles;
+    protected List<String> roles;
 
     @Part
-    private AuditLog auditLog;
+    protected AuditLog auditLog;
 
     /**
      * Shows a list of all available users of the current tenant.
@@ -81,19 +79,20 @@ public class UserAccountController extends BizController {
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void accounts(WebContext ctx) {
-        SQLPageHelper<UserAccount> ph = SQLPageHelper.withQuery(tenants.forCurrentTenant(oma.select(UserAccount.class)
-                                                                                            .orderAsc(UserAccount.PERSON
-                                                                                                              .inner(PersonData.LASTNAME))
-                                                                                            .orderAsc(UserAccount.PERSON
-                                                                                                              .inner(PersonData.FIRSTNAME))));
+        BasePageHelper<U, ?, ?, ?> ph = getUsersAsPage();
         ph.withContext(ctx);
-        ph.withSearchFields(QueryField.contains(UserAccount.EMAIL),
-                            QueryField.contains(UserAccount.LOGIN.inner(LoginData.USERNAME)),
-                            QueryField.contains(UserAccount.PERSON.inner(PersonData.FIRSTNAME)),
-                            QueryField.contains(UserAccount.PERSON.inner(PersonData.LASTNAME)));
+        ph.withSearchFields(QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL)),
+                            QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                             .inner(LoginData.USERNAME)),
+                            QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
+                                                                             .inner(PersonData.FIRSTNAME)),
+                            QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
+                                                                             .inner(PersonData.LASTNAME)));
 
         ctx.respondWith().template("templates/tenants/user-accounts.html.pasta", ph.asPage());
     }
+
+    protected abstract BasePageHelper<U, ?, ?, ?> getUsersAsPage();
 
     /**
      * Shows an editor for the given account.
@@ -105,18 +104,24 @@ public class UserAccountController extends BizController {
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void account(WebContext ctx, String accountId) {
-        UserAccount userAccount = findForTenant(UserAccount.class, accountId);
+        U userAccount = findForTenant(getUserClass(), accountId);
 
         boolean requestHandled = prepareSave(ctx).withAfterCreateURI("/user-account/${id}")
                                                  .withAfterSaveURI("/user-accounts")
                                                  .withPreSaveHandler(isNew -> {
-                                                     userAccount.getPermissions().getPermissions().clear();
+                                                     userAccount.getUserAccountData()
+                                                                .getPermissions()
+                                                                .getPermissions()
+                                                                .clear();
                                                      for (String role : ctx.getParameters("roles")) {
                                                          // Ensure that only real roles end up in the permissions list,
                                                          // as roles, permissions and flags later end up in the same vector
                                                          // therefore we don't want nothing else but user roles in this list
                                                          if (getRoles().contains(role)) {
-                                                             userAccount.getPermissions().getPermissions().add(role);
+                                                             userAccount.getUserAccountData()
+                                                                        .getPermissions()
+                                                                        .getPermissions()
+                                                                        .add(role);
                                                          }
                                                      }
                                                  })
@@ -128,6 +133,8 @@ public class UserAccountController extends BizController {
         }
     }
 
+    protected abstract Class<U> getUserClass();
+
     /**
      * Shows an editor for the custom configuration of the given user.
      *
@@ -138,7 +145,7 @@ public class UserAccountController extends BizController {
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void accountConfig(WebContext ctx, String accountId) {
-        UserAccount userAccount = findForTenant(UserAccount.class, accountId);
+        U userAccount = findForTenant(getUserClass(), accountId);
         assertNotNew(userAccount);
         ctx.respondWith().template("templates/tenants/user-account-config.html.pasta", userAccount);
     }
@@ -154,13 +161,15 @@ public class UserAccountController extends BizController {
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void accountUpdate(WebContext ctx, JSONStructuredOutput out, String accountId) {
-        UserAccount userAccount = findForTenant(UserAccount.class, accountId);
+        U userAccount = findForTenant(getUserClass(), accountId);
         assertNotNew(userAccount);
         load(ctx, userAccount);
-        if (ctx.hasParameter(UserAccount.PERMISSIONS.inner(PermissionData.CONFIG_STRING).getName())) {
-            userAccount.getPermissions().getConfig();
+        if (ctx.hasParameter(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERMISSIONS)
+                                                          .inner(PermissionData.CONFIG_STRING)
+                                                          .getName())) {
+            userAccount.getUserAccountData().getPermissions().getConfig();
         }
-        oma.update(userAccount);
+        userAccount.getMapper().update(userAccount);
     }
 
     /**
@@ -202,7 +211,7 @@ public class UserAccountController extends BizController {
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void generatePassword(final WebContext ctx, String id) {
-        UserAccount userAccount = findForTenant(UserAccount.class, id);
+        U userAccount = findForTenant(getUserClass(), id);
 
         generateNewPassword(userAccount);
         UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
@@ -220,23 +229,25 @@ public class UserAccountController extends BizController {
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void generateAndSendPassword(final WebContext ctx, String id) {
-        UserAccount userAccount = findForTenant(UserAccount.class, id);
+        U userAccount = findForTenant(getUserClass(), id);
 
         generateNewPassword(userAccount);
 
-        if (userAccount.canSendGeneratedPassword()) {
+        if (userAccount.getUserAccountData().canSendGeneratedPassword()) {
             UserContext.message(Message.info(NLS.fmtr("UserAccountConroller.passwordGeneratedAndSent")
-                                                .set(PARAM_EMAIL, userAccount.getEmail())
+                                                .set(PARAM_EMAIL, userAccount.getUserAccountData().getEmail())
                                                 .format()));
 
             Context context = Context.create()
-                                     .set(PARAM_PASSWORD, userAccount.getLogin().getGeneratedPassword())
-                                     .set(PARAM_NAME, userAccount.getPerson().getAddressableName())
-                                     .set(PARAM_USERNAME, userAccount.getLogin().getUsername())
+                                     .set(PARAM_PASSWORD,
+                                          userAccount.getUserAccountData().getLogin().getGeneratedPassword())
+                                     .set(PARAM_NAME, userAccount.getUserAccountData().getPerson().getAddressableName())
+                                     .set(PARAM_USERNAME, userAccount.getUserAccountData().getLogin().getUsername())
                                      .set(PARAM_URL, getBaseUrl())
                                      .set(PARAM_ROOT, wondergemRoot);
             mails.createEmail()
-                 .to(userAccount.getEmail(), userAccount.getPerson().toString())
+                 .to(userAccount.getUserAccountData().getEmail(),
+                     userAccount.getUserAccountData().getPerson().toString())
                  .subject(NLS.get("mail-password.subject"))
                  .textTemplate("mail/useraccount/password.pasta", context)
                  .htmlTemplate("mail/useraccount/password.html.pasta", context)
@@ -248,23 +259,23 @@ public class UserAccountController extends BizController {
         accounts(ctx);
     }
 
-    private void generateNewPassword(UserAccount userAccount) {
+    private void generateNewPassword(U userAccount) {
         assertNotNew(userAccount);
 
-        if (!userAccount.isPasswordGenerationPossible()) {
+        if (!userAccount.getUserAccountData().isPasswordGenerationPossible()) {
             throw Exceptions.createHandled()
                             .withNLSKey("UserAccountConroller.cannotGeneratePasswordForOwnUser")
                             .handle();
         }
 
-        userAccount.getLogin().setGeneratedPassword(Strings.generatePassword());
-        oma.update(userAccount);
+        userAccount.getUserAccountData().getLogin().setGeneratedPassword(Strings.generatePassword());
+        userAccount.getMapper().update(userAccount);
 
         auditLog.neutral("AuditLog.passwordGenerated")
                 .causedByCurrentUser()
-                .forUser(userAccount.getUniqueName(), userAccount.getLogin().getUsername())
+                .forUser(userAccount.getUniqueName(), userAccount.getUserAccountData().getLogin().getUsername())
                 .forTenant(String.valueOf(userAccount.getTenant().getId()),
-                           userAccount.getTenant().getValue().getName())
+                           userAccount.getTenant().getValue().getTenantData().getName())
                 .log();
     }
 
@@ -276,10 +287,7 @@ public class UserAccountController extends BizController {
      */
     @Routed(value = "/forgotPassword", jsonCall = true)
     public void forgotPassword(final WebContext ctx, JSONStructuredOutput out) {
-        List<UserAccount> accounts = oma.select(UserAccount.class)
-                                        .eq(UserAccount.EMAIL, ctx.get(PARAM_EMAIL).asString())
-                                        .limit(2)
-                                        .queryList();
+        List<U> accounts = findUserAccountsWithEmail(ctx.get(PARAM_EMAIL).asString().toLowerCase());
         if (accounts.isEmpty()) {
             throw Exceptions.createHandled().withNLSKey("UserAccountController.noUserFoundForEmail").handle();
         }
@@ -288,43 +296,48 @@ public class UserAccountController extends BizController {
             throw Exceptions.createHandled().withNLSKey("UserAccountController.tooManyUsersFoundForEmail").handle();
         }
 
-        UserAccount account = accounts.get(0);
-        if (account.getLogin().isAccountLocked()) {
+        U account = accounts.get(0);
+        if (account.getUserAccountData().getLogin().isAccountLocked()) {
             auditLog.negative("AuditLog.resetPasswordRejected")
-                    .causedByUser(account.getUniqueName(), account.getLogin().getUsername())
-                    .forUser(account.getUniqueName(), account.getLogin().getUsername())
-                    .forTenant(account.getTenant().getValue().getIdAsString(), account.getTenant().getValue().getName())
+                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                    .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                    .forTenant(account.getTenant().getValue().getIdAsString(),
+                               account.getTenant().getValue().getTenantData().getName())
                     .log();
             throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
         }
-        account.getLogin().setGeneratedPassword(Strings.generatePassword());
-        oma.update(account);
+        account.getUserAccountData().getLogin().setGeneratedPassword(Strings.generatePassword());
+        account.getMapper().update(account);
 
         auditLog.neutral("AuditLog.resetPassword")
-                .causedByUser(account.getUniqueName(), account.getLogin().getUsername())
-                .forUser(account.getUniqueName(), account.getLogin().getUsername())
-                .forTenant(account.getTenant().getValue().getIdAsString(), account.getTenant().getValue().getName())
+                .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                .forTenant(account.getTenant().getValue().getIdAsString(),
+                           account.getTenant().getValue().getTenantData().getName())
                 .log();
 
-        if (Strings.isFilled(account.getEmail())) {
+        if (Strings.isFilled(account.getUserAccountData().getEmail())) {
             Context context = Context.create()
                                      .set(PARAM_REASON,
                                           NLS.fmtr("UserAccountController.forgotPassword.reason")
                                              .set("ip", ctx.getRemoteIP().toString())
                                              .format())
-                                     .set(PARAM_PASSWORD, account.getLogin().getGeneratedPassword())
-                                     .set(PARAM_NAME, account.getPerson().getAddressableName())
-                                     .set(PARAM_USERNAME, account.getLogin().getUsername())
+                                     .set(PARAM_PASSWORD,
+                                          account.getUserAccountData().getLogin().getGeneratedPassword())
+                                     .set(PARAM_NAME, account.getUserAccountData().getPerson().getAddressableName())
+                                     .set(PARAM_USERNAME, account.getUserAccountData().getLogin().getUsername())
                                      .set(PARAM_URL, getBaseUrl())
                                      .set(PARAM_ROOT, wondergemRoot);
             mails.createEmail()
-                 .to(account.getEmail(), account.getPerson().toString())
+                 .to(account.getUserAccountData().getEmail(), account.getUserAccountData().getPerson().toString())
                  .subject(NLS.get("mail-password.subject"))
                  .textTemplate("mail/useraccount/password.pasta", context)
                  .htmlTemplate("mail/useraccount/password.html.pasta", context)
                  .send();
         }
     }
+
+    protected abstract List<U> findUserAccountsWithEmail(String email);
 
     /**
      * Deletes the given account.
@@ -336,11 +349,16 @@ public class UserAccountController extends BizController {
     @Routed("/user-account/:1/delete")
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void deleteAdmin(final WebContext ctx, String id) {
-        Optional<UserAccount> account = tryFindForTenant(UserAccount.class, id);
-        if (account.isPresent()) {
-            oma.delete(account.get());
-            showDeletedMessage();
-        }
+        Optional<U> account = tryFindForTenant(getUserClass(), id);
+        account.ifPresent(u -> {
+            if (Objects.equals(getUser().getUserObject(UserAccount.class), u)) {
+                UserContext.message(Message.error(NLS.get("UserAccountController.cannotDeleteSelf")));
+            } else {
+                u.getMapper().delete(u);
+                showDeletedMessage();
+            }
+        });
+
         accounts(ctx);
     }
 
@@ -366,19 +384,24 @@ public class UserAccountController extends BizController {
     @Routed("/user-accounts/autocomplete")
     public void usersAutocomplete(final WebContext ctx) {
         AutocompleteHelper.handle(ctx, (query, result) -> {
-            oma.select(UserAccount.class)
-               .eq(UserAccount.TENANT, tenants.getRequiredTenant())
-               .queryString(query,
-                            QueryField.contains(UserAccount.EMAIL),
-                            QueryField.contains(UserAccount.LOGIN.inner(LoginData.USERNAME)),
-                            QueryField.contains(UserAccount.PERSON.inner(PersonData.FIRSTNAME)),
-                            QueryField.contains(UserAccount.PERSON.inner(PersonData.LASTNAME)))
-               .limit(10)
-               .iterateAll(userAccount -> {
-                   result.accept(new AutocompleteHelper.Completion(userAccount.getIdAsString(),
-                                                                   userAccount.toString(),
-                                                                   userAccount.toString()));
-               });
+            mixing.getDescriptor(getUserClass())
+                  .getMapper()
+                  .select(getUserClass())
+                  .eq(UserAccount.TENANT, tenants.getRequiredTenant())
+                  .queryString(query,
+                               QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL)),
+                               QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                                .inner(LoginData.USERNAME)),
+                               QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
+                                                                                .inner(PersonData.FIRSTNAME)),
+                               QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
+                                                                                .inner(PersonData.LASTNAME)))
+                  .limit(10)
+                  .iterateAll(userAccount -> {
+                      result.accept(new AutocompleteHelper.Completion(userAccount.getIdAsString(),
+                                                                      userAccount.toString(),
+                                                                      userAccount.toString()));
+                  });
         });
     }
 
@@ -391,32 +414,21 @@ public class UserAccountController extends BizController {
     @LoginRequired
     @Permission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT)
     public void selectUserAccounts(WebContext ctx) {
-        SmartQuery<UserAccount> baseQuery = oma.select(UserAccount.class)
-                                               .orderAsc(UserAccount.PERSON.inner(PersonData.LASTNAME))
-                                               .orderAsc(UserAccount.PERSON.inner(PersonData.FIRSTNAME));
-        if (!UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
-            baseQuery.eq(UserAccount.TENANT, tenants.getRequiredTenant());
-        }
-
-        baseQuery.fields(SQLEntity.ID,
-                         UserAccount.PERSON.inner(PersonData.LASTNAME),
-                         UserAccount.PERSON.inner(PersonData.FIRSTNAME),
-                         UserAccount.LOGIN.inner(LoginData.USERNAME),
-                         UserAccount.TENANT.join(Tenant.NAME),
-                         UserAccount.TENANT.join(Tenant.ACCOUNT_NUMBER));
-
-        SQLPageHelper<UserAccount> ph = SQLPageHelper.withQuery(baseQuery);
+        BasePageHelper<U, ?, ?, ?> ph = getSelectableUsersAsPage();
         ph.withContext(ctx);
-        ph.withSearchFields(QueryField.contains(UserAccount.PERSON.inner(PersonData.LASTNAME)),
-                            QueryField.contains(UserAccount.PERSON.inner(PersonData.FIRSTNAME)),
-                            QueryField.contains(UserAccount.LOGIN.inner(LoginData.USERNAME)),
-                            QueryField.contains(UserAccount.EMAIL),
-                            QueryField.contains(UserAccount.TENANT.join(Tenant.NAME)),
-                            QueryField.contains(UserAccount.TENANT.join(Tenant.ACCOUNT_NUMBER)));
+        ph.withSearchFields(QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
+                                                                             .inner(PersonData.LASTNAME)),
+                            QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
+                                                                             .inner(PersonData.FIRSTNAME)),
+                            QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                             .inner(LoginData.USERNAME)),
+                            QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL)));
 
         ctx.respondWith()
            .template("templates/tenants/select-user-account.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
     }
+
+    protected abstract BasePageHelper<U, ?, ?, ?> getSelectableUsersAsPage();
 
     private boolean isCurrentlySpying(WebContext ctx) {
         return ctx.getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX)
@@ -442,24 +454,26 @@ public class UserAccountController extends BizController {
 
         assertPermission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT);
 
-        UserAccount user = oma.find(UserAccount.class, id).orElse(null);
+        U user = mixing.getDescriptor(getUserClass()).getMapper().find(getUserClass(), id).orElse(null);
         if (user == null) {
             UserContext.get().addMessage(Message.error(NLS.get("UserAccountController.cannotBecomeUser")));
             selectUserAccounts(ctx);
-        } else {
-            if (!UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
-                assertTenant(user);
-            }
-
-            auditLog.neutral("AuditLog.selectedUser")
-                    .causedByCurrentUser()
-                    .forUser(user.getUniqueName(), user.getLogin().getUsername())
-                    .forTenant(String.valueOf(user.getTenant().getId()), user.getTenant().getValue().getName())
-                    .log();
-
-            ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
-                                user.getUniqueName());
-            ctx.respondWith().redirectTemporarily(ctx.get("goto").asString(wondergemRoot));
+            return;
         }
+
+        if (!UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+            assertTenant(user);
+        }
+
+        auditLog.neutral("AuditLog.selectedUser")
+                .causedByCurrentUser()
+                .forUser(user.getUniqueName(), user.getUserAccountData().getLogin().getUsername())
+                .forTenant(String.valueOf(user.getTenant().getId()),
+                           user.getTenant().getValue().getTenantData().getName())
+                .log();
+
+        ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
+                            user.getUniqueName());
+        ctx.respondWith().redirectTemporarily(ctx.get("goto").asString(wondergemRoot));
     }
 }

@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
 /**
  * Redirects unauthorized calls to the wondergem login page (for the default scope).
  */
-@Register(framework = Tenants.FRAMEWORK_TENANTS)
+@Register //TODO (framework = Tenants.FRAMEWORK_TENANTS)
 public class BizInterceptor implements Interceptor {
 
     @Override

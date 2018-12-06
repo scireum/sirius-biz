@@ -8,11 +8,10 @@
 
 package sirius.biz.web;
 
-import sirius.biz.tenants.Tenants;
+import sirius.biz.tenants.jdbc.SQLTenants;
 import sirius.db.es.Elastic;
 import sirius.db.jdbc.OMA;
 import sirius.db.mixing.BaseEntity;
-import sirius.db.mixing.BaseMapper;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
@@ -60,7 +59,7 @@ public class BizController extends BasicController {
     protected Elastic elastic;
 
     @Part
-    protected Tenants tenants;
+    protected SQLTenants tenants;
 
     @ConfigValue("product.baseUrl")
     private String baseUrl;
@@ -457,7 +456,7 @@ public class BizController extends BasicController {
                                 .handle();
             }
         }
-        Optional<E> result = ((BaseMapper<BaseEntity<?>, ?, ?>) mixing.getDescriptor(type).getMapper()).find(type, id);
+        Optional<E> result = mixing.getDescriptor(type).getMapper().find(type, id);
         if (!result.isPresent()) {
             throw Exceptions.createHandled().withNLSKey("BizController.unknownObject").set("id", id).handle();
         }
@@ -479,7 +478,7 @@ public class BizController extends BasicController {
         if (BaseEntity.NEW.equals(id)) {
             return Optional.empty();
         }
-        return ((BaseMapper<BaseEntity<?>, ?, ?>) mixing.getDescriptor(type).getMapper()).find(type, id);
+        return mixing.getDescriptor(type).getMapper().find(type, id);
     }
 
     /**

@@ -1,7 +1,7 @@
 <i:arg type="sirius.biz.tenants.UserAccount" name="account"/>
 
 <i:invoke template="/templates/tenants/user-account.html.pasta" account="account" page="config">
-    <div id="editor" style="height: 450px">@account.getPermissions().getConfigString()</div>
+    <div id="editor" style="height: 450px">@account.getUserAccountData().getPermissions().getConfigString()</div>
 
     <div class="form-actions">
         <a id="save" class="btn btn-primary">
@@ -15,8 +15,8 @@
         editor.setTheme("ace/theme/idle_fingers");
 
         $('#save').click(function() {
-            updateField('/user-account/@account.getId()/update',
-                'permissions_configString',
+            updateField('/user-account/@account.getIdAsString()/update',
+                'userAccountData_permissions_configString',
                 editor.getSession().getDocument().getValue());
         });
 

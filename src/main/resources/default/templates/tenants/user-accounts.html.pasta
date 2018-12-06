@@ -39,51 +39,51 @@
         </thead>
         <tbody>
         <i:for type="sirius.biz.tenants.UserAccount" var="account" items="accounts.getItems()">
-            <tr @if (account.getLogin().isAccountLocked()) { class="warning" }>
+            <tr @if (account.getUserAccountData().getLogin().isAccountLocked()) { class="warning" }>
                 <td>
                     <a class="link"
-                       href="/user-account/@account.getId()">@account.getLogin().getUsername()</a><br>
-                    <span class="muted">@account.getId()</span>
+                       href="/user-account/@account.getIdAsString()">@account.getUserAccountData().getLogin().getUsername()</a><br>
+                    <span class="muted">@account.getIdAsString()</span>
                 </td>
                 <td>
-                    @account.getPerson()
+                    @account.getUserAccountData().getPerson()
                 </td>
                 <td>
-                    @account.getEmail()
+                    @account.getUserAccountData().getEmail()
                 </td>
                 <td>
-                    <i:if test="@account.isPasswordGenerationPossible()">
-                        <i:if test="@account.canSendGeneratedPassword()">
-                            <a href="/user-account/@account.getId()/generate-and-send-password?@accounts.createQueryString()"
+                    <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
+                        <i:if test="@account.getUserAccountData().canSendGeneratedPassword()">
+                            <a href="/user-account/@account.getIdAsString()/generate-and-send-password?@accounts.createQueryString()"
                                class="link">
                                 <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generateAndSend")
                             </a>
                             <br>
                         </i:if>
 
-                        <a href="/user-account/@account.getId()/generate-password?@accounts.createQueryString()"
+                        <a href="/user-account/@account.getIdAsString()/generate-password?@accounts.createQueryString()"
                            class="link">
                             <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generate")
                         </a>
                         <br>
                     </i:if>
 
-                    <i:if test="@account.getLogin().isDisplayGeneratedPassword()">
-                        <span class="muted">@account.getLogin().getGeneratedPassword()</span>
+                    <i:if test="@account.getUserAccountData().getLogin().isDisplayGeneratedPassword()">
+                        <span class="muted">@account.getUserAccountData().getLogin().getGeneratedPassword()</span>
 
                         <i:else>
-                            <i:if test="isFilled(account.getLogin().getGeneratedPassword())">
+                            <i:if test="isFilled(account.getUserAccountData().getLogin().getGeneratedPassword())">
                                 <span class="muted">@i18n("LoginData.password.hiddenGenerated")</span>
                             </i:if>
                         </i:else>
                     </i:if>
                 </td>
                 <td class="align-right">
-                    @toUserString(account.getLogin().getLastLogin())<br>
-                    <span class="muted">@account.getLogin().getNumberOfLogins()</span>
+                    @toUserString(account.getUserAccountData().getLogin().getLastLogin())<br>
+                    <span class="muted">@account.getUserAccountData().getLogin().getNumberOfLogins()</span>
                 </td>
                 <td class="col-md-2 align-center">
-                    <w:deleteLink url="@apply('/user-account/%s/delete', account.getId())" page="accounts"/>
+                    <w:deleteLink url="@apply('/user-account/%s/delete', account.getIdAsString())" page="accounts"/>
                 </td>
             </tr>
         </i:for>

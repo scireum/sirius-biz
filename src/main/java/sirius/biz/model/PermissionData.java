@@ -13,6 +13,7 @@ import com.typesafe.config.ConfigFactory;
 import sirius.biz.web.Autoloaded;
 import sirius.biz.web.BizController;
 import sirius.db.jdbc.SQLEntity;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.annotations.BeforeSave;
@@ -37,7 +38,7 @@ public class PermissionData extends Composite {
      * Stores the associated user account or tenant for which the permissions and config is stored
      */
     @Transient
-    private final SQLEntity parent;
+    private final BaseEntity<?> parent;
 
     /**
      * Contains all permissions as a single string, separated with commas.
@@ -69,7 +70,7 @@ public class PermissionData extends Composite {
      *
      * @param parent the parent entity which contains this composite.
      */
-    public PermissionData(SQLEntity parent) {
+    public PermissionData(BaseEntity<?> parent) {
         this.parent = parent;
     }
 

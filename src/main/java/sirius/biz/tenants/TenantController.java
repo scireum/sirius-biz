@@ -11,17 +11,14 @@ package sirius.biz.tenants;
 import sirius.biz.model.AddressData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.protocol.AuditLog;
+import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
-import sirius.biz.web.SQLPageHelper;
-import sirius.db.jdbc.OMA;
-import sirius.db.jdbc.SmartQuery;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
-import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
-import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
@@ -38,8 +35,8 @@ import java.util.Optional;
 /**
  * Provides a GUI for managing tenants.
  */
-@Register(classes = Controller.class, framework = Tenants.FRAMEWORK_TENANTS)
-public class TenantController extends BizController {
+public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+        extends BizController {
 
     /**
      * Contains the permission required to manage tenants.
@@ -50,13 +47,13 @@ public class TenantController extends BizController {
      * Contains a list of all available features or permission which can be granted to a tenant.
      */
     @ConfigValue("security.tenantPermissions")
-    private List<String> permissions;
+    protected List<String> permissions;
 
     @ConfigValue("product.wondergemRoot")
-    private String wondergemRoot;
+    protected String wondergemRoot;
 
     @Part
-    private AuditLog auditLog;
+    protected AuditLog auditLog;
 
     /**
      * Returns all available features which can be assigned to a tenant.
@@ -97,15 +94,18 @@ public class TenantController extends BizController {
     @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void tenants(WebContext ctx) {
-        SQLPageHelper<Tenant> ph = SQLPageHelper.withQuery(oma.select(Tenant.class).orderAsc(Tenant.NAME));
+        BasePageHelper<T, ?, ?, ?> ph = getTenantsAsPage();
         ph.withContext(ctx);
-        ph.withSearchFields(QueryField.contains(Tenant.NAME),
-                            QueryField.contains(Tenant.ACCOUNT_NUMBER),
-                            QueryField.contains(Tenant.ADDRESS.inner(AddressData.STREET)),
-                            QueryField.contains(Tenant.ADDRESS.inner(AddressData.CITY)));
+        ph.withSearchFields(QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.NAME)),
+                            QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)),
+                            QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.STREET)),
+                            QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.CITY)));
 
         ctx.respondWith().template("templates/tenants/tenants.html.pasta", ph.asPage());
     }
+
+    protected abstract BasePageHelper<T, ?, ?, ?> getTenantsAsPage();
+
 
     /**
      * Provides an editor for updating a tenant.
@@ -117,17 +117,17 @@ public class TenantController extends BizController {
     @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void tenant(WebContext ctx, String tenantId) {
-        Tenant tenant = find(Tenant.class, tenantId);
+        T tenant = find(getTenantClass(), tenantId);
 
         SaveHelper saveHelper = prepareSave(ctx).withAfterCreateURI("/tenant/${id}").withAfterSaveURI("/tenants");
         saveHelper.withPreSaveHandler(isNew -> {
-            tenant.getPermissions().getPermissions().clear();
+            tenant.getTenantData().getPermissions().getPermissions().clear();
             for (String permission : ctx.getParameters("permissions")) {
                 // Ensure that only real permissions end up in the permissions list,
                 // as roles, permissions and flags later end up in the same vector
                 // therefore we don't want nothing else but tenant permissions in this list
                 if (getPermissions().contains(permission)) {
-                    tenant.getPermissions().getPermissions().add(permission);
+                    tenant.getTenantData().getPermissions().getPermissions().add(permission);
                 }
             }
         });
@@ -139,9 +139,15 @@ public class TenantController extends BizController {
                .template("templates/tenants/tenant-details.html.pasta",
                          tenant,
                          this,
-                         oma.select(Tenant.class).orderAsc(Tenant.NAME).ne(Tenant.ID, tenant.getId()).queryList());
+                         mixing.getDescriptor(getTenantClass())
+                               .getMapper()
+                               .select(getTenantClass())
+                               .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME))
+                               .queryList());
         }
     }
+
+    protected abstract Class<T> getTenantClass();
 
     /**
      * Provides a JSON API to change the settings of a tenant, including its configuration.
@@ -154,23 +160,25 @@ public class TenantController extends BizController {
     @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void tenantUpdate(WebContext ctx, JSONStructuredOutput out, String tenantId) {
-        Tenant tenant = find(Tenant.class, tenantId);
+        T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
         load(ctx, tenant);
-        if (ctx.hasParameter(Tenant.PERMISSIONS.inner(PermissionData.CONFIG_STRING).getName())) {
-            tenant.getPermissions().getConfig();
+        if (ctx.hasParameter(Tenant.TENANT_DATA.inner(TenantData.PERMISSIONS)
+                                               .inner(PermissionData.CONFIG_STRING)
+                                               .getName())) {
+            tenant.getTenantData().getPermissions().getConfig();
         }
-        tenant.getPermissions().getPermissions().clear();
+        tenant.getTenantData().getPermissions().getPermissions().clear();
         for (String permission : ctx.getParameters("permissions")) {
             // Ensure that only real roles end up in the permissions list,
             // as roles, permissions and flags later end up in the same vector
             // therefore we don't want nothing else but tenant permissions in this list
             if (getPermissions().contains(permission)) {
-                tenant.getPermissions().getPermissions().add(permission);
+                tenant.getTenantData().getPermissions().getPermissions().add(permission);
             }
         }
 
-        oma.update(tenant);
+        tenant.getMapper().update(tenant);
     }
 
     /**
@@ -183,7 +191,7 @@ public class TenantController extends BizController {
     @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void tenantConfig(WebContext ctx, String tenantId) {
-        Tenant tenant = find(Tenant.class, tenantId);
+        T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
         ctx.respondWith().template("templates/tenants/tenant-config.html.pasta", tenant);
     }
@@ -198,14 +206,17 @@ public class TenantController extends BizController {
     @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void deleteTenant(WebContext ctx, String tenantId) {
-        Optional<Tenant> t = oma.find(Tenant.class, tenantId);
-        if (t.isPresent()) {
-            if (t.get().equals(tenants.getRequiredTenant())) {
+        Optional<T> optionalTenant =
+                mixing.getDescriptor(getTenantClass()).getMapper().find(getTenantClass(), tenantId);
+
+        optionalTenant.ifPresent(tenant -> {
+            if (tenant.equals(tenants.getRequiredTenant())) {
                 throw Exceptions.createHandled().withNLSKey("TenantController.cannotDeleteSelf").handle();
             }
-            oma.delete(t.get());
+            tenant.getMapper().delete(tenant);
             showDeletedMessage();
-        }
+        });
+
         tenants(ctx);
     }
 
@@ -218,16 +229,29 @@ public class TenantController extends BizController {
     @LoginRequired
     @Permission(TenantUserManager.PERMISSION_SELECT_TENANT)
     public void selectTenants(WebContext ctx) {
-        SmartQuery<Tenant> baseQuery = queryPossibleTenants(ctx).orderAsc(Tenant.NAME);
-        SQLPageHelper<Tenant> ph = SQLPageHelper.withQuery(baseQuery);
+
+        BasePageHelper<T, ?, ?, ?> ph = getSelectableTenantsAsPage(ctx, determineCurrentTenant(ctx));
         ph.withContext(ctx);
-        ph.withSearchFields(QueryField.contains(Tenant.NAME),
-                            QueryField.contains(Tenant.ACCOUNT_NUMBER),
-                            QueryField.contains(Tenant.ADDRESS.inner(AddressData.STREET)),
-                            QueryField.contains(Tenant.ADDRESS.inner(AddressData.CITY)));
+        ph.withSearchFields(QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.NAME)),
+                            QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)),
+                            QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.STREET)),
+                            QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.CITY)));
 
         ctx.respondWith().template("templates/tenants/select-tenant.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
     }
+
+    private T determineCurrentTenant(WebContext ctx) {
+        String tenantId = ((TenantUserManager<?, ?, ?>) UserContext.get().getUserManager()).getOriginalTenantId(ctx);
+        return mixing.getDescriptor(getTenantClass())
+                     .getMapper()
+                     .find(getTenantClass(), tenantId)
+                     .orElseThrow(() -> Exceptions.createHandled()
+                                                  .withSystemErrorMessage("Cannot determine current tenant!")
+                                                  .handle());
+    }
+
+    protected abstract BasePageHelper<T, ?, ?, ?> getSelectableTenantsAsPage(WebContext ctx, T currentTenant);
+    //  SmartQuery<Tenant> baseQuery = queryPossibleTenants(ctx).orderAsc(Tenant.NAME);
 
     private boolean isCurrentlySpying(WebContext ctx) {
         return ctx.getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX)
@@ -254,10 +278,8 @@ public class TenantController extends BizController {
 
         assertPermission(TenantUserManager.PERMISSION_SELECT_TENANT);
 
-        SmartQuery<Tenant> baseQuery = queryPossibleTenants(ctx).eq(Tenant.ID, id);
-
-        Tenant tenant = baseQuery.queryFirst();
-        if (tenant == null) {
+        Optional<T> tenant = tryToSelectTenant(id, determineCurrentTenant(ctx));
+        if (!tenant.isPresent()) {
             UserContext.get().addMessage(Message.error(NLS.get("TenantController.cannotBecomeTenant")));
             selectTenants(ctx);
             return;
@@ -266,29 +288,37 @@ public class TenantController extends BizController {
         auditLog.neutral("AuditLog.selectedTenant").causedByCurrentUser().forCurrentUser().log();
 
         ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
-                            tenant.getIdAsString());
+                            tenant.get().getIdAsString());
         ctx.respondWith().redirectTemporarily(ctx.get("goto").asString(wondergemRoot));
     }
 
-    private SmartQuery<Tenant> queryPossibleTenants(WebContext ctx) {
-        String tenantId = ((TenantUserManager) UserContext.get().getUserManager()).getOriginalTenantId(ctx);
-        Optional<Tenant> originalTenant = oma.find(Tenant.class, tenantId);
-        if (originalTenant.isPresent()) {
-            SmartQuery<Tenant> baseQuery = oma.select(Tenant.class);
-            if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
-                if (originalTenant.get().isCanAccessParent()) {
-                    baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.and(OMA.FILTERS.eq(Tenant.PARENT, tenantId),
-                                                                   OMA.FILTERS.eq(Tenant.PARENT_CAN_ACCESS, true)),
-                                                   OMA.FILTERS.eq(Tenant.ID,
-                                                                  originalTenant.get().getParent().getId())));
-                } else {
-                    baseQuery.where(OMA.FILTERS.and(OMA.FILTERS.eq(Tenant.PARENT, tenantId),
-                                                    OMA.FILTERS.eq(Tenant.PARENT_CAN_ACCESS, true)));
-                }
-            }
-            return baseQuery;
-        } else {
-            throw Exceptions.createHandled().withSystemErrorMessage("Cannot determine current tenant!").handle();
-        }
-    }
+    protected abstract Optional<T> tryToSelectTenant(String id, T currentTenant);
+
+    //    {
+//        SmartQuery<T> baseQuery = queryPossibleTenants(ctx).eq(Tenant.ID, id);
+//
+//        return baseQuery.queryFirst();
+//    }
+//
+//    private SmartQuery<Tenant> queryPossibleTenants(WebContext ctx) {
+//        String tenantId = ((TenantUserManager<?, ?, ?>) UserContext.get().getUserManager()).getOriginalTenantId(ctx);
+//        Optional<Tenant> originalTenant = oma.find(Tenant.class, tenantId);
+//        if (originalTenant.isPresent()) {
+//            SmartQuery<Tenant> baseQuery = oma.select(Tenant.class);
+//            if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+//                if (originalTenant.get().isCanAccessParent()) {
+//                    baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.and(OMA.FILTERS.eq(Tenant.PARENT, tenantId),
+//                                                                   OMA.FILTERS.eq(Tenant.PARENT_CAN_ACCESS, true)),
+//                                                   OMA.FILTERS.eq(Tenant.ID,
+//                                                                  originalTenant.get().getParent().getId())));
+//                } else {
+//                    baseQuery.where(OMA.FILTERS.and(OMA.FILTERS.eq(Tenant.PARENT, tenantId),
+//                                                    OMA.FILTERS.eq(Tenant.PARENT_CAN_ACCESS, true)));
+//                }
+//            }
+//            return baseQuery;
+//        } else {
+//            throw Exceptions.createHandled().withSystemErrorMessage("Cannot determine current tenant!").handle();
+//        }
+//    }
 }

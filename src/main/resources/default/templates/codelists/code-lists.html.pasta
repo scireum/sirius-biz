@@ -29,7 +29,7 @@
         </tr>
         </thead>
         <tbody>
-        <i:for type="sirius.biz.codelists.CodeList" var="list" items="lists.getItems()">
+        <i:for type="sirius.biz.codelists.jdbc.SQLCodeList" var="list" items="lists.getItems()">
             <tr>
                 <td>
                     <a class="link" href="/code-list/@list.getId()">@list.getCode()</a><br>

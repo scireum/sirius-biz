@@ -18,8 +18,8 @@
 
     <properties>
         <sirius.kernel>12.0-rc36</sirius.kernel>
-        <sirius.web>19.0-rc39</sirius.web>
-        <sirius.db>5.0-rc39</sirius.db>
+        <sirius.web>DEVELOPMENT-SNAPSHOT</sirius.web>
+        <sirius.db>DEVELOPMENT-SNAPSHOT</sirius.db>
     </properties>
 
     <dependencies>
