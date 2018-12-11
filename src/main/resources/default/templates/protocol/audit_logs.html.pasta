@@ -1,7 +1,7 @@
 <i:arg type="Page" name="messages"/>
 <w:page titleKey="AuditLogEntry.plural">
     <i:block name="breadcrumbs">
-        <li><a href="/audit-logs">@i18n("AuditLogEntry.plural")</a></li>
+        <li><a href="/audit-log">@i18n("AuditLogEntry.plural")</a></li>
     </i:block>
 
     <w:pageHeader titleKey="AuditLogEntry.plural"/>
