@@ -136,6 +136,7 @@ public class ProcessController extends BizController {
 
         ElasticPageHelper<ProcessLog> ph = ElasticPageHelper.withQuery(query);
         ph.withContext(ctx);
+        ph.withPageSize(100);
         ph.addTermAggregation(ProcessLog.TYPE, ProcessLogType.class);
         ph.addTermAggregation(ProcessLog.STATE, ProcessLogState.class);
         ph.addTermAggregation(ProcessLog.MESSAGE_HANDLER, NLS::smartGet);
