@@ -66,6 +66,7 @@
 
                     $progress.addClass('hide');
                     $file.removeClass('hide');
+                    showOrHideResetButton();
                 },
                 onComplete: function (id, filename, responseJSON) {
                     clearMessages();
@@ -89,6 +90,8 @@
                     if (responseJSON.fileId) {
                         $storedObjectInput.val(responseJSON.fileId);
                     }
+
+                    showOrHideResetButton();
                 }
             });
 
@@ -164,7 +167,16 @@
                 }
 
                 $(this).blur();
+                showOrHideResetButton();
             });
+
+            var showOrHideResetButton = function() {
+                if ($preview.hasClass("hide")){
+                    $resetButton.addClass("hide");
+                } else {
+                    $resetButton.removeClass("hide");
+                }
+            };
 
             return this;
         };

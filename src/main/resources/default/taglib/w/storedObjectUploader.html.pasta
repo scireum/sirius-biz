@@ -75,11 +75,10 @@
         </div>
     </i:if>
 
-    <i:if test="@showResetButton">
-        <button type="button" class="btn btn-block btn-reset-js">
-            @i18n("StoredObject.resetBtn")
-        </button>
-    </i:if>
+
+    <button type="button" class="btn btn-block btn-reset-js @if(!showResetButton) { hide }">
+        @i18n("StoredObject.resetBtn")
+    </button>
 </div>
 
 <script type="text/javascript">
