@@ -8,6 +8,7 @@
 
 package sirius.biz.vfs.ftp;
 
+import org.apache.ftpserver.DataConnectionConfigurationFactory;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
 import org.apache.ftpserver.ftplet.FtpException;
@@ -37,6 +38,9 @@ public class FTPBridge {
 
     @ConfigValue("vfs.ftp.port")
     private int ftpPort;
+
+    @ConfigValue("vfs.ftp.passivePorts")
+    private String passivePorts;
 
     @ConfigValue("vfs.ftp.bindAddress")
     private String bindAddress;
@@ -122,8 +126,18 @@ public class FTPBridge {
     private void setupNetwork(ListenerFactory factory) {
         factory.setPort(ftpPort);
         factory.setIdleTimeout((int) idleTimeout.getSeconds());
+
         if (Strings.isFilled(bindAddress)) {
             factory.setServerAddress(bindAddress);
+        }
+
+        if (Strings.isFilled(passivePorts)) {
+            DataConnectionConfigurationFactory dataConnectionConfigurationFactory =
+                    new DataConnectionConfigurationFactory();
+
+            dataConnectionConfigurationFactory.setPassivePorts(passivePorts);
+
+            factory.setDataConnectionConfiguration(dataConnectionConfigurationFactory.createDataConnectionConfiguration());
         }
     }
 
