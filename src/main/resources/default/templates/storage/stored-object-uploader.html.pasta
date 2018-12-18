@@ -28,6 +28,7 @@
                 debug: false,
                 allowedExtensions: allowedExtensions,
                 multiple: false,
+                params: options.params,
                 messages: {
                     typeError: '@i18n("StoredObject.errInvalidExtension")',
                     sizeError: '@i18n("StoredObject.errTooLarge")',
