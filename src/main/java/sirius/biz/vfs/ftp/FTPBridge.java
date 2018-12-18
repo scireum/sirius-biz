@@ -45,6 +45,9 @@ public class FTPBridge {
     @ConfigValue("vfs.ftp.bindAddress")
     private String bindAddress;
 
+    @ConfigValue("vfs.ftp.passiveExternalAddress")
+    private String passiveExternalAddress;
+
     @ConfigValue("vfs.ftp.idleTimeout")
     private Duration idleTimeout;
 
@@ -131,14 +134,18 @@ public class FTPBridge {
             factory.setServerAddress(bindAddress);
         }
 
+        DataConnectionConfigurationFactory dataConnectionConfigurationFactory =
+                new DataConnectionConfigurationFactory();
+
         if (Strings.isFilled(passivePorts)) {
-            DataConnectionConfigurationFactory dataConnectionConfigurationFactory =
-                    new DataConnectionConfigurationFactory();
-
             dataConnectionConfigurationFactory.setPassivePorts(passivePorts);
-
-            factory.setDataConnectionConfiguration(dataConnectionConfigurationFactory.createDataConnectionConfiguration());
         }
+
+        if (Strings.isFilled(passiveExternalAddress)) {
+            dataConnectionConfigurationFactory.setPassiveExternalAddress(passiveExternalAddress);
+        }
+
+        factory.setDataConnectionConfiguration(dataConnectionConfigurationFactory.createDataConnectionConfiguration());
     }
 
     private void setupFtplets(FtpServerFactory serverFactory) {
