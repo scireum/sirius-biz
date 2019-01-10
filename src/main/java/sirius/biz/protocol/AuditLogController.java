@@ -67,7 +67,7 @@ public class AuditLogController extends BizController {
                               DateRange.yesterday(),
                               DateRange.thisWeek(),
                               DateRange.lastWeek());
-        ph.withSearchFields(QueryField.contains(StoredIncident.SEARCH_FIELD));
+        ph.withSearchFields(QueryField.contains(AuditLogEntry.SEARCH_FIELD));
 
         ctx.respondWith().template("templates/protocol/audit_logs.html.pasta", ph.asPage());
     }
