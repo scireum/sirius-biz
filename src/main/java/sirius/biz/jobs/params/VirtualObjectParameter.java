@@ -126,7 +126,7 @@ public class VirtualObjectParameter extends EntityParameter<VirtualObject> {
      * @return the bucketName name to be used
      */
     public String getBucketName() {
-        return DEFAULT_BUCKET;
+        return bucketName;
     }
 
     /**
