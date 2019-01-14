@@ -20,6 +20,7 @@ import sirius.db.mixing.annotations.BeforeDelete;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.annotations.Unique;
 import sirius.db.mixing.annotations.Versioned;
@@ -27,6 +28,13 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
+import sirius.web.http.IPRange;
+import sirius.web.http.WebContext;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Represents a tenant using the system.
@@ -153,6 +161,42 @@ public class Tenant extends BizEntity implements Journaled {
     private String samlFingerprint;
 
     /**
+     * Contains the ip range which must match the current users ip.
+     * <p>
+     * Multiple ip ranges can be stored comma-separated.
+     * Pattern of a valid ip range e.g. 192.168.192.1/32 or 192.168.168.0/24
+     */
+    public static final Mapping IP_RANGE = Mapping.named("ipRange");
+    @Trim
+    @Autoloaded
+    @NullAllowed
+    @Length(255)
+    private String ipRange;
+
+    /**
+     * The parsed ip ranges.
+     */
+    @Transient
+    private IPRange.RangeSet rangeSet;
+
+    /**
+     * Contains a comma-separated list of roles which should be kept if the
+     * user does not match the given ip range.
+     */
+    public static final Mapping ROLES_TO_KEEP = Mapping.named("rolesToKeep");
+    @Trim
+    @Autoloaded
+    @NullAllowed
+    @Length(512)
+    private String rolesToKeep;
+
+    /**
+     * Contains the data from rolesToKeep but as a {@link Set}.
+     */
+    @Transient
+    private Set<String> rolesToKeepSet;
+
+    /**
      * Contains the address of the tenant.
      */
     public static final Mapping ADDRESS = Mapping.named("address");
@@ -185,6 +229,49 @@ public class Tenant extends BizEntity implements Journaled {
         if (Strings.isFilled(samlFingerprint)) {
             samlFingerprint = samlFingerprint.replace(" ", "").toLowerCase();
         }
+
+        rangeSet = null;
+        rolesToKeepSet = null;
+    }
+
+    /**
+     * Checks if the ip of the request matches the ip range of the tenant.
+     *
+     * @param ctx the current request
+     * @return <tt>true</tt> if the ip address matches the range or if non was configured, <tt>false</tt> otherwise
+     */
+    public boolean matchesIPRange(WebContext ctx) {
+        if (Strings.isEmpty(ipRange)) {
+            return true;
+        }
+
+        if (rangeSet == null) {
+            try {
+                rangeSet = IPRange.paraseRangeSet(ipRange);
+            } catch (IllegalArgumentException e) {
+                // if an invalid range was configured we can not remove any permission
+                return true;
+            }
+        }
+
+        return rangeSet.accepts(ctx.getRemoteIP());
+    }
+
+    /**
+     * Calculates all roles the user should keep when the ip range check fails.
+     *
+     * @return {@link Set<String>} holding the roles to keep
+     */
+    public Set<String> getRolesToKeepAsSet() {
+        if (Strings.isEmpty(rolesToKeep)) {
+            return Collections.emptySet();
+        }
+
+        if (rolesToKeepSet == null) {
+            rolesToKeepSet = new HashSet<>(Arrays.asList(rolesToKeep.split(",")));
+        }
+
+        return rolesToKeepSet;
     }
 
     public String getName() {
@@ -285,6 +372,22 @@ public class Tenant extends BizEntity implements Journaled {
 
     public void setExternalLoginIntervalDays(Integer externalLoginIntervalDays) {
         this.externalLoginIntervalDays = externalLoginIntervalDays;
+    }
+
+    public String getIpRange() {
+        return ipRange;
+    }
+
+    public void setIpRange(String ipRange) {
+        this.ipRange = ipRange;
+    }
+
+    public String getRolesToKeep() {
+        return rolesToKeep;
+    }
+
+    public void setRolesToKeep(String rolesToKeep) {
+        this.rolesToKeep = rolesToKeep;
     }
 
     @Override

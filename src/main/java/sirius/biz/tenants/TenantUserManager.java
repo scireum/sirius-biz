@@ -12,7 +12,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.typesafe.config.Config;
 import sirius.biz.model.LoginData;
-import sirius.biz.model.PermissionData;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
 import sirius.db.jdbc.OMA;
@@ -29,7 +28,6 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
-import sirius.web.http.IPRange;
 import sirius.web.http.WebContext;
 import sirius.web.security.GenericUserManager;
 import sirius.web.security.ScopeInfo;
@@ -42,12 +40,11 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Provides a {@link UserManager} for {@link Tenant} and {@link UserAccount}.
@@ -326,25 +323,9 @@ public class TenantUserManager extends GenericUserManager {
         }
 
         return realUser.tryAs(Tenant.class)
-                       .map(Tenant::getPermissions)
-                       .map(PermissionData::getConfig)
-                       .filter(config -> config.hasPath("security.ipRanges"))
-                       .filter(config -> config.hasPath("security.rolesToKeep"))
-                       .map(config -> Tuple.create(config.getStringList("security.ipRanges"),
-                                                   config.getStringList("security.rolesToKeep")))
-                       .filter(data -> !matchesIPRange(ctx, data.getFirst()))
-                       .map(data -> removeRoles(info, data.getSecond()))
+                       .filter(tenant -> !tenant.matchesIPRange(ctx))
+                       .map(tenant -> removeRoles(info, tenant.getRolesToKeepAsSet()))
                        .orElse(info);
-    }
-
-    private boolean matchesIPRange(WebContext ctx, List<String> ranges) {
-        for (String range : ranges) {
-            if (IPRange.parseRange(range).matches(ctx.getRemoteIP())) {
-                return true;
-            }
-        }
-
-        return ranges.isEmpty();
     }
 
     /**
@@ -356,16 +337,20 @@ public class TenantUserManager extends GenericUserManager {
      * @param rolesToKeep the roles not to remove
      * @return the modified user info
      */
-    private UserInfo removeRoles(UserInfo info, List<String> rolesToKeep) {
-        List<String> roles = new ArrayList<>(rolesToKeep);
+    private UserInfo removeRoles(UserInfo info, Set<String> rolesToKeep) {
+        Set<String> oldRoles = info.getPermissions();
+
+        Set<String> roles = new HashSet<>();
         roles.add("flag-logged-in");
         roles.add("flag-out-of-ip-range");
 
-        return UserInfo.Builder.withUser(info)
-                               .withPermissions(roles.stream()
-                                                     .filter(role -> info.getPermissions().contains(role))
-                                                     .collect(Collectors.toSet()))
-                               .build();
+        for (String role : rolesToKeep) {
+            if (oldRoles.contains(role)) {
+                roles.add(role);
+            }
+        }
+
+        return UserInfo.Builder.withUser(info).withPermissions(roles).build();
     }
 
     /**

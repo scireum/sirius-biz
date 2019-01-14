@@ -29,6 +29,12 @@
             <w:textfield name="externalLoginIntervalDays" value="@toUserString(tenant.getExternalLoginIntervalDays())"
                          addonText="@i18n('Tenant.suffixDays')" labelKey="Tenant.externalLoginIntervalDays"
                          helpKey="Tenant.externalLoginIntervalDays.help"/>
+            
+            <w:textfield name="ipRange" value="@tenant.getIpRange()" labelKey="Tenant.ipRange"
+                         helpKey="Tenant.ipRange.help"/>
+
+            <w:textfield name="rolesToKeep" value="@tenant.getRolesToKeep()" labelKey="Tenant.rolesToKeep"
+                         helpKey="Tenant.rolesToKeep.help"/>
         </div>
         <w:subHeading labelKey="Tenant.saml"/>
         <div class="row">
