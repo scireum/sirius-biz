@@ -65,6 +65,12 @@ public class TenantUserManager extends GenericUserManager {
     public static final String PERMISSION_SYSTEM_TENANT = "flag-system-tenant";
 
     /**
+     * This flag permission is granted to all users which access the application from outside of
+     * the configured ip range.
+     */
+    public static final String PERMISSION_OUT_OF_IP_RANGE = "flag-out-of-ip-range";
+
+    /**
      * Contains the permission required to manage the system.
      * <p>
      * If this permission is granted for user accounts that belong to the system tenant, the PERMISSION_SYSTEM_TENANT
@@ -324,7 +330,7 @@ public class TenantUserManager extends GenericUserManager {
 
         return realUser.tryAs(Tenant.class)
                        .filter(tenant -> !tenant.matchesIPRange(ctx))
-                       .map(tenant -> removeRoles(info, tenant.getRolesToKeepAsSet()))
+                       .map(tenant -> createUserWithLimitedRoles(info, tenant.getRolesToKeepAsSet()))
                        .orElse(info);
     }
 
@@ -337,12 +343,12 @@ public class TenantUserManager extends GenericUserManager {
      * @param rolesToKeep the roles not to remove
      * @return the modified user info
      */
-    private UserInfo removeRoles(UserInfo info, Set<String> rolesToKeep) {
+    private UserInfo createUserWithLimitedRoles(UserInfo info, Set<String> rolesToKeep) {
         Set<String> oldRoles = info.getPermissions();
 
         Set<String> roles = new HashSet<>();
-        roles.add("flag-logged-in");
-        roles.add("flag-out-of-ip-range");
+        roles.add(UserInfo.PERMISSION_LOGGED_IN);
+        roles.add(PERMISSION_OUT_OF_IP_RANGE);
 
         for (String role : rolesToKeep) {
             if (oldRoles.contains(role)) {

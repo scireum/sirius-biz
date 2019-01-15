@@ -174,7 +174,7 @@ public class Tenant extends BizEntity implements Journaled {
     private String ipRange;
 
     /**
-     * The parsed ip ranges.
+     * Contains the parsed ip ranges.
      */
     @Transient
     private IPRange.RangeSet rangeSet;
