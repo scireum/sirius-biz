@@ -12,14 +12,23 @@
     </i:block>
 
     <w:pageHeader>
-        <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
-            <i class="fa fa-refresh fa-spin" id="spinner"></i>
-            <i:else>
-                <i class="fa @process.getIcon()" id="spinner"></i>
-            </i:else>
-        </i:if>
-        @process.getTitle()
-        <span class="label @process.getLabelClass()">@process.getState()</span>
+        <div class="row">
+            <div class="col-md-9">
+                <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
+                    <i class="fa fa-refresh fa-spin" id="spinner"></i>
+                    <i:else>
+                        <i class="fa @process.getIcon()" id="spinner"></i>
+                    </i:else>
+                </i:if>
+                @process.getTitle()
+                <span class="label @process.getLabelClass()">@process.getState()</span>
+            </div>
+            <div class="col-md-3 align-right">
+                <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
+                    <a class="btn btn-default" href="/ps/@process.getId()/cancel">@i18n("NLS.cancel")</a>
+                </i:if>
+            </div>
+        </div>
     </w:pageHeader>
 
     <div class="row">
