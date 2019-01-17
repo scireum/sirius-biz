@@ -151,6 +151,22 @@ public class ProcessController extends BizController {
     }
 
     /**
+     * Cancels the execution of the given process.
+     *
+     * @param ctx       the current request
+     * @param processId the id of the process to cancel
+     */
+    @Routed("/ps/:1/cancel")
+    @LoginRequired
+    public void cancelProcess(WebContext ctx, String processId) {
+        Process process = findAccessibleProcess(processId);
+
+        processes.markCanceled(process.getId());
+
+        processDetails(ctx, processId);
+    }
+
+    /**
      * Executes the given action for the given process and log entry.
      *
      * @param ctx          the current request

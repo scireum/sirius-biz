@@ -106,6 +106,15 @@ public class VirtualObjectParameter extends EntityParameter<VirtualObject> {
         return this;
     }
 
+    /**
+     * Getter of the default file path
+     *
+     * @return the set default file path
+     */
+    public String getDefaultFilePath() {
+        return defaultFilePath;
+    }
+
     @Override
     public String getTemplateName() {
         return "/templates/jobs/params/virtual-object-autocomplete.html.pasta";
@@ -117,7 +126,7 @@ public class VirtualObjectParameter extends EntityParameter<VirtualObject> {
      * @return the bucketName name to be used
      */
     public String getBucketName() {
-        return DEFAULT_BUCKET;
+        return bucketName;
     }
 
     /**
