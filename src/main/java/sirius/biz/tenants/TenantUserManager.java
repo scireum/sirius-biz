@@ -41,6 +41,7 @@ import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -62,6 +63,12 @@ public class TenantUserManager extends GenericUserManager {
      * company which owns / runs the system.
      */
     public static final String PERMISSION_SYSTEM_TENANT = "flag-system-tenant";
+
+    /**
+     * This flag permission is granted to all users which access the application from outside of
+     * the configured ip range.
+     */
+    public static final String PERMISSION_OUT_OF_IP_RANGE = "flag-out-of-ip-range";
 
     /**
      * Contains the permission required to manage the system.
@@ -291,6 +298,68 @@ public class TenantUserManager extends GenericUserManager {
             return null;
         }
         return asUser(account, null);
+    }
+
+    @Nonnull
+    @Override
+    public UserInfo bindToRequest(@Nonnull WebContext ctx) {
+        UserInfo info = super.bindToRequest(ctx);
+        return verifyIpRange(ctx, info);
+    }
+
+    /**
+     * Checks if the current user violates the configured ip range constraints.
+     * <p>
+     * Will remove permissions if the users ip address does not match the configured
+     * ip range.
+     * <p>
+     * This is a security feature to prevent unwanted access to certain features from anywhere but a valid ip range.
+     *
+     * @param ctx  the current request
+     * @param info the current user
+     * @return the current user but possibly with less permissions
+     */
+    private UserInfo verifyIpRange(WebContext ctx, UserInfo info) {
+        String actualUser = ctx.getSessionValue(scope.getScopeId() + "-user-id").asString();
+
+        UserAccount account = fetchAccount(actualUser, null);
+
+        if (account == null) {
+            return UserInfo.NOBODY;
+        }
+
+        Tenant tenant = account.getTenant().getValue();
+
+        if (tenant != null && !tenant.matchesIPRange(ctx)) {
+            return createUserWithLimitedRoles(info, tenant.getRolesToKeepAsSet());
+        }
+
+        return info;
+    }
+
+    /**
+     * Removes all roles from the given user other than the roles to keep.
+     * <p>
+     * Will only allow the user to keep roles defined in rolesToKeep. Will not give the user any other role.
+     *
+     * @param info        the user info to modify
+     * @param rolesToKeep the roles not to remove
+     * @return the modified user info
+     */
+    private UserInfo createUserWithLimitedRoles(UserInfo info, Set<String> rolesToKeep) {
+        Set<String> oldRoles = info.getPermissions();
+
+        Set<String> roles = new HashSet<>();
+        roles.add(UserInfo.PERMISSION_LOGGED_IN);
+        roles.add(PERMISSION_OUT_OF_IP_RANGE);
+
+        for (String role : rolesToKeep) {
+            if (oldRoles.contains(role)) {
+                roles.add(role);
+            }
+        }
+
+        return UserInfo.Builder.withUser(info).withPermissions(roles).build();
     }
 
     /**
