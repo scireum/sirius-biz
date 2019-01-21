@@ -29,7 +29,7 @@
         padding: 0;
     }
 
-    body, #bodyTable, #bodyCell, .bodyTable, .bodyCell {
+    body, #bodyTable, #bodyCell, #bodyInnerTable {
         height: 100%;
         margin: 0;
         padding: 0;
@@ -105,7 +105,7 @@
         table-layout: fixed !important;
     }
 
-    body, #bodyTable, .bodyTable {
+    body, #bodyTable {
         background-color: #ffffff;
     }
 
@@ -156,7 +156,8 @@
     }
 
     .logo {
-        max-width: 500px;
+        max-width: 100%;
+        max-height: 300px;
         padding-bottom: 0;
         display: inline !important;
         vertical-align: bottom;
@@ -314,10 +315,6 @@
     @@media only screen and (max-width: 480px) {
         .mcnImage {
             width: 100%;
-        }
-
-        .logo {
-            width: 50% !important;
         }
     }
 
