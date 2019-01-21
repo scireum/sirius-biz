@@ -27,6 +27,7 @@ import sirius.db.mixing.annotations.Versioned;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.http.IPRange;
 import sirius.web.http.WebContext;
@@ -250,6 +251,7 @@ public class Tenant extends BizEntity implements Journaled {
                 rangeSet = IPRange.paraseRangeSet(ipRange);
             } catch (IllegalArgumentException e) {
                 // if an invalid range was configured we can not remove any permission
+                Exceptions.ignore(e);
                 return true;
             }
         }

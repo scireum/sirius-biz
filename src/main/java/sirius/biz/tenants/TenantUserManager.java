@@ -320,7 +320,7 @@ public class TenantUserManager extends GenericUserManager {
      * @return the current user but possibly with less permissions
      */
     private UserInfo verifyIpRange(WebContext ctx, UserInfo info) {
-        String actualUser = ctx.getSessionValue("default-user-id").asString();
+        String actualUser = ctx.getSessionValue(scope.getScopeId() + "-user-id").asString();
 
         UserInfo realUser = findUserByUserId(actualUser);
 
