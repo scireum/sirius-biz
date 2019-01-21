@@ -322,16 +322,19 @@ public class TenantUserManager extends GenericUserManager {
     private UserInfo verifyIpRange(WebContext ctx, UserInfo info) {
         String actualUser = ctx.getSessionValue(scope.getScopeId() + "-user-id").asString();
 
-        UserInfo realUser = findUserByUserId(actualUser);
+        UserAccount account = fetchAccount(actualUser, null);
 
-        if (realUser == null) {
+        if (account == null) {
             return UserInfo.NOBODY;
         }
 
-        return realUser.tryAs(Tenant.class)
-                       .filter(tenant -> !tenant.matchesIPRange(ctx))
-                       .map(tenant -> createUserWithLimitedRoles(info, tenant.getRolesToKeepAsSet()))
-                       .orElse(info);
+        Tenant tenant = account.getTenant().getValue();
+
+        if (tenant != null && !tenant.matchesIPRange(ctx)) {
+            return createUserWithLimitedRoles(info, tenant.getRolesToKeepAsSet());
+        }
+
+        return info;
     }
 
     /**
