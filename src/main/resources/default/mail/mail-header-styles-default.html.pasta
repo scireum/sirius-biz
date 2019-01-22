@@ -11,7 +11,7 @@
 
     h1, h2, h3, h4, h5, h6 {
         display: block;
-        margin: 0;
+        margin: 10px 0;
         padding: 0;
         color: #424242;
         font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -19,6 +19,7 @@
         font-weight: bold;
         line-height: 125%;
         letter-spacing: normal;
+        text-align: left;
     }
 
     img, a img {
@@ -169,10 +170,6 @@
         font-size: 12px;
     }
 
-    .order-element-value {
-        font-size: 12px;
-    }
-
     .button {
         border-radius: 4px;
         text-decoration: none;
@@ -211,6 +208,9 @@
         background-color: #f3f3f3;
         border-top: 0;
         border-bottom: 0;
+    }
+
+    #templatePreheader .templateContainer {
         padding-top: 9px;
         padding-bottom: 9px;
     }
