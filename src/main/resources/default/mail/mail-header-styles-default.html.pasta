@@ -7,6 +7,12 @@
 
     table {
         border-collapse: collapse;
+        mso-table-lspace: 0;
+        mso-table-rspace: 0;
+    }
+
+    td {
+        vertical-align: top;
     }
 
     h1, h2, h3, h4, h5, h6 {
@@ -43,11 +49,6 @@
 
     img {
         -ms-interpolation-mode: bicubic;
-    }
-
-    table {
-        mso-table-lspace: 0;
-        mso-table-rspace: 0;
     }
 
     p, a, li, td, blockquote {
