@@ -134,11 +134,11 @@
         text-align: center;
     }
 
-    .align-left {
+    .align-left, .pull-left {
         text-align: left;
     }
 
-    .align-right {
+    .align-right, .pull-right {
         text-align: left;
     }
 
