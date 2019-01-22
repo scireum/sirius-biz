@@ -140,7 +140,7 @@
     }
 
     .align-right, .pull-right {
-        text-align: left;
+        text-align: right;
     }
 
     .align-top {
