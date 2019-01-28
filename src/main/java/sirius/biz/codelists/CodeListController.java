@@ -8,7 +8,6 @@
 
 package sirius.biz.codelists;
 
-import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BizController;
 import sirius.biz.web.SQLPageHelper;
 import sirius.db.mixing.query.QueryField;
@@ -38,7 +37,6 @@ public class CodeListController extends BizController {
      */
     @DefaultRoute
     @LoginRequired
-    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-lists")
     public void codeLists(WebContext ctx) {
@@ -57,7 +55,6 @@ public class CodeListController extends BizController {
      * @param codeListId the id of the code list
      */
     @LoginRequired
-    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1")
     public void codeList(WebContext ctx, String codeListId) {
@@ -71,7 +68,6 @@ public class CodeListController extends BizController {
      * @param codeListId the id of the code list
      */
     @LoginRequired
-    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/details")
     public void codeListDetails(WebContext ctx, String codeListId) {
