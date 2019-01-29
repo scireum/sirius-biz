@@ -12,9 +12,6 @@ import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantController;
 import sirius.biz.tenants.TenantData;
 import sirius.biz.tenants.TenantUserManager;
-import sirius.biz.tenants.jdbc.SQLTenant;
-import sirius.biz.tenants.jdbc.SQLTenants;
-import sirius.biz.tenants.jdbc.SQLUserAccount;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.OMA;
@@ -28,7 +25,7 @@ import java.util.Optional;
 /**
  * Provides a GUI for managing tenants.
  */
-@Register(classes = Controller.class, framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
+@Register(classes = {Controller.class, TenantController.class}, framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
 public class SQLTenantController extends TenantController<Long, SQLTenant, SQLUserAccount> {
 
     @Override
@@ -37,18 +34,13 @@ public class SQLTenantController extends TenantController<Long, SQLTenant, SQLUs
     }
 
     @Override
-    protected Class<SQLTenant> getTenantClass() {
-        return SQLTenant.class;
-    }
-
-    @Override
     protected BasePageHelper<SQLTenant, ?, ?, ?> getSelectableTenantsAsPage(WebContext ctx, SQLTenant currentTenant) {
         return SQLPageHelper.withQuery(queryPossibleTenants(currentTenant).orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME)));
     }
 
     @Override
-    protected Optional<SQLTenant> tryToSelectTenant(String id, SQLTenant currentTenant) {
-        return queryPossibleTenants(currentTenant).eq(SQLTenant.ID, id).first();
+    public Optional<SQLTenant> tryToSelectTenant(String id, Tenant<?> currentTenant) {
+        return queryPossibleTenants((SQLTenant) currentTenant).eq(SQLTenant.ID, id).first();
     }
 
     private SmartQuery<SQLTenant> queryPossibleTenants(SQLTenant currentTenant) {

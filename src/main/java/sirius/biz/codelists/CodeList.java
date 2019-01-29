@@ -13,6 +13,11 @@ import sirius.db.mixing.Mapping;
 
 public interface CodeList extends TenantAware {
 
+    boolean isNew();
+
+    String getIdAsString();
+
     Mapping CODE_LIST_DATA = Mapping.named("codeListData");
     CodeListData getCodeListData();
+
 }

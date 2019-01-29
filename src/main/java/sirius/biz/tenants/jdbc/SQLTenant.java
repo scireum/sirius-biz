@@ -51,4 +51,9 @@ public class SQLTenant extends BizEntity implements Tenant<Long> {
     public JournalData getJournal() {
         return journal;
     }
+
+    @Override
+    public String toString() {
+        return getTenantData().toString();
+    }
 }

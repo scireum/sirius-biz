@@ -8,6 +8,7 @@
 
 package sirius.biz.web;
 
+import sirius.biz.tenants.Tenants;
 import sirius.biz.tenants.jdbc.SQLTenants;
 import sirius.db.es.Elastic;
 import sirius.db.jdbc.OMA;
@@ -59,7 +60,7 @@ public class BizController extends BasicController {
     protected Elastic elastic;
 
     @Part
-    protected SQLTenants tenants;
+    protected Tenants<?,?,?> tenants;
 
     @ConfigValue("product.baseUrl")
     private String baseUrl;
@@ -443,7 +444,6 @@ public class BizController extends BasicController {
      * @return the requested entity or a new one, if id was <tt>new</tt>
      * @throws sirius.kernel.health.HandledException if either the id is unknown or a new instance cannot be created
      */
-    @SuppressWarnings("unchecked")
     protected <E extends BaseEntity<?>> E find(Class<E> type, String id) {
         if (BaseEntity.NEW.equals(id) && BaseEntity.class.isAssignableFrom(type)) {
             try {
@@ -473,7 +473,6 @@ public class BizController extends BasicController {
      * was found
      * or if the id was <tt>new</tt>
      */
-    @SuppressWarnings("unchecked")
     protected <E extends BaseEntity<?>> Optional<E> tryFind(Class<E> type, String id) {
         if (BaseEntity.NEW.equals(id)) {
             return Optional.empty();

@@ -11,7 +11,6 @@ package sirius.biz.tenants.jdbc;
 import sirius.biz.model.LoginData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantUserManager;
-import sirius.biz.tenants.Tenants;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
 import sirius.biz.web.BizController;
@@ -64,40 +63,10 @@ public class SQLTenantUserManager extends TenantUserManager<Long, SQLTenant, SQL
     }
 
     @Override
-    protected SQLTenant loadTenant(String tenantId) {
-        return oma.find(SQLTenant.class, tenantId).orElse(null);
-    }
-
-    @Override
-    protected Optional<SQLUserAccount> loadAccountByName(String user) {
-        return oma.select(SQLUserAccount.class)
-                  .eq(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.USERNAME), user.toLowerCase())
-                  .one();
-    }
-
-    @Override
-    protected SQLUserAccount loadAccount(@Nonnull String accountId) {
-        return (SQLUserAccount) oma.resolve(accountId).orElse(null);
-    }
-
-    @Override
-    protected SQLTenant loadTenantOfAccount(SQLUserAccount account) {
-        return oma.find(SQLTenant.class, account.getTenant().getId())
-                  .orElseThrow(() -> new IllegalStateException(Strings.apply("Tenant %s for UserAccount %s vanished!",
-                                                                             account.getTenant().getId(),
-                                                                             account.getId())));
-    }
-
-    @Override
-    protected Class<SQLUserAccount> getUserAccountType() {
-        return SQLUserAccount.class;
-    }
-
-    @Override
     protected void recordLogin(UserInfo user, boolean external) {
         try {
             SQLUserAccount account = getUserObject(user);
-            EntityDescriptor ed = mixing.getDescriptor(getUserAccountType());
+            EntityDescriptor ed = mixing.getDescriptor(getUserClass());
 
             String numberOfLoginsField = ed.getProperty(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                      .inner(LoginData.NUMBER_OF_LOGINS))

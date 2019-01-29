@@ -72,4 +72,22 @@ class VersionedFilesSpec extends BaseSpecification {
         and:
         versionedFiles.getVersions(tenant, identifier).size() == maxNumberOfVersions
     }
+
+    def "null as version content does not cause an exception"() {
+        given:
+        String identifier = "null-version"
+        when:
+        versionedFiles.createVersion(tenant, identifier, null, null)
+        then:
+        versionedFiles.getVersions(tenant, identifier).size() == 1
+    }
+
+    def "reading out a null version returns an empty list as content"() {
+        given:
+        String identifier = "null-version-content"
+        when:
+        def nullContentFile = versionedFiles.createVersion(tenant, identifier, null, null)
+        then:
+        versionedFiles.getContent(nullContentFile).isEmpty()
+    }
 }

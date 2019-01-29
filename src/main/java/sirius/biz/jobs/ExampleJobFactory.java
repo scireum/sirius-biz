@@ -13,6 +13,8 @@ import sirius.biz.jobs.batch.DefaultBatchProcessFactory;
 import sirius.biz.jobs.params.IntParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.StringParameter;
+import sirius.biz.jobs.params.TenantParameter;
+import sirius.biz.jobs.params.UserAccountParameter;
 import sirius.biz.process.Process;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
@@ -45,6 +47,7 @@ public class ExampleJobFactory extends DefaultBatchProcessFactory {
 
     @Override
     public void executeTask(ProcessContext process) throws Exception {
+        System.out.println(process.getParameter(new UserAccountParameter("test", "Test")).get().getUserAccountData().getLogin());
         TableOutput tableOutput = process.addTable("test", "Test", Arrays.asList(Tuple.create("a", "A")));
         tableOutput.addCells(Arrays.asList(cells.of("Käse hallo")));
         process.log(ProcessLog.error().withMessage("Hello From the").withState(ProcessLogState.OPEN));
@@ -66,7 +69,7 @@ public class ExampleJobFactory extends DefaultBatchProcessFactory {
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
-        parameterCollector.accept(new StringParameter("test", "Test").markRequired());
+        parameterCollector.accept(new UserAccountParameter("test", "Test").markRequired());
         parameterCollector.accept(new IntParameter("test1", "Test").markRequired());
     }
 

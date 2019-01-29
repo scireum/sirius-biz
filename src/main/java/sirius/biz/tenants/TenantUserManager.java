@@ -14,7 +14,6 @@ import com.typesafe.config.Config;
 import sirius.biz.model.LoginData;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
-import sirius.db.jdbc.OMA;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.cache.Cache;
@@ -38,6 +37,7 @@ import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -60,6 +60,12 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
      * company which owns / runs the system.
      */
     public static final String PERMISSION_SYSTEM_TENANT = "flag-system-tenant";
+
+    /**
+     * This flag permission is granted to all users which access the application from outside of
+     * the configured ip range.
+     */
+    public static final String PERMISSION_OUT_OF_IP_RANGE = "flag-out-of-ip-range";
 
     /**
      * Contains the permission required to manage the system.
@@ -108,7 +114,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     protected final boolean acceptApiTokens;
 
     @Part
-    protected static OMA oma;
+    protected static Tenants<?, ?, ?> tenants;
 
     @Part
     protected static Mixing mixing;
@@ -215,8 +221,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
     protected U cloneUser(UserInfo originalUser) {
         try {
-            U currentUser = originalUser.getUserObject(getUserAccountType());
-            U modifiedUser = getUserAccountType().getDeclaredConstructor().newInstance();
+            U currentUser = originalUser.getUserObject(getUserClass());
+            U modifiedUser = getUserClass().getDeclaredConstructor().newInstance();
             modifiedUser.setId(currentUser.getId());
             modifiedUser.getUserAccountData()
                         .getLogin()
@@ -241,7 +247,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return (T) tenantsCache.get(tenantId, this::loadTenant);
     }
 
-    protected abstract T loadTenant(String tenantId);
+    protected T loadTenant(String tenantId) {
+        return mixing.getDescriptor(getTenantClass()).getMapper().find(getTenantClass(), tenantId).orElse(null);
+    }
 
     /**
      * Determines the original tenant ID.
@@ -275,7 +283,15 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return asUser(account, null);
     }
 
-    protected abstract Optional<U> loadAccountByName(String user);
+    @SuppressWarnings("unchecked")
+    protected Optional<U> loadAccountByName(String user) {
+        return (Optional<U>) (Object) mixing.getDescriptor(getUserClass())
+                                   .getMapper()
+                                   .select(getUserClass())
+                                   .eq(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                    .inner(LoginData.USERNAME), user.toLowerCase())
+                                   .one();
+    }
 
     /**
      * Tries to find a {@link UserInfo} for the given unique object name of a {@link UserAccount}.
@@ -292,6 +308,68 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             return null;
         }
         return asUser(account, null);
+    }
+
+    @Nonnull
+    @Override
+    public UserInfo bindToRequest(@Nonnull WebContext ctx) {
+        UserInfo info = super.bindToRequest(ctx);
+        return verifyIpRange(ctx, info);
+    }
+
+    /**
+     * Checks if the current user violates the configured ip range constraints.
+     * <p>
+     * Will remove permissions if the users ip address does not match the configured
+     * ip range.
+     * <p>
+     * This is a security feature to prevent unwanted access to certain features from anywhere but a valid ip range.
+     *
+     * @param ctx  the current request
+     * @param info the current user
+     * @return the current user but possibly with less permissions
+     */
+    private UserInfo verifyIpRange(WebContext ctx, UserInfo info) {
+        String actualUser = ctx.getSessionValue(scope.getScopeId() + "-user-id").asString();
+
+        U account = fetchAccount(actualUser, null);
+
+        if (account == null) {
+            return UserInfo.NOBODY;
+        }
+
+        T tenant = account.getTenant().getValue();
+
+        if (tenant != null && !tenant.getTenantData().matchesIPRange(ctx)) {
+            return createUserWithLimitedRoles(info, tenant.getTenantData().getRolesToKeepAsSet());
+        }
+
+        return info;
+    }
+
+    /**
+     * Removes all roles from the given user other than the roles to keep.
+     * <p>
+     * Will only allow the user to keep roles defined in rolesToKeep. Will not give the user any other role.
+     *
+     * @param info        the user info to modify
+     * @param rolesToKeep the roles not to remove
+     * @return the modified user info
+     */
+    private UserInfo createUserWithLimitedRoles(UserInfo info, Set<String> rolesToKeep) {
+        Set<String> oldRoles = info.getPermissions();
+
+        Set<String> roles = new HashSet<>();
+        roles.add(UserInfo.PERMISSION_LOGGED_IN);
+        roles.add(PERMISSION_OUT_OF_IP_RANGE);
+
+        for (String role : rolesToKeep) {
+            if (oldRoles.contains(role)) {
+                roles.add(role);
+            }
+        }
+
+        return UserInfo.Builder.withUser(info).withPermissions(roles).build();
     }
 
     /**
@@ -331,7 +409,19 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return account;
     }
 
-    protected abstract U loadAccount(@Nonnull String accountId);
+    @SuppressWarnings("unchecked")
+    protected U loadAccount(@Nonnull String accountId) {
+        return (U) mixing.getDescriptor(getUserClass()).getMapper().resolve(accountId).orElse(null);
+    }
+
+    protected T loadTenantOfAccount(U account) {
+        return mixing.getDescriptor(getTenantClass())
+                     .getMapper()
+                     .find(getTenantClass(), account.getTenant().getId())
+                     .orElseThrow(() -> new IllegalStateException(Strings.apply("Tenant %s for UserAccount %s vanished!",
+                                                                                account.getTenant().getId(),
+                                                                                account.getId())));
+    }
 
     @SuppressWarnings("unchecked")
     private T fetchTenant(U account, @Nullable U accountFromDB) {
@@ -363,8 +453,6 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
         return tenantFromCache;
     }
-
-    protected abstract T loadTenantOfAccount(U account);
 
     protected UserInfo asUser(U account, List<String> extraRoles) {
         Set<String> roles = computeRoles(null, account.getUniqueName());
@@ -400,7 +488,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             return null;
         }
 
-        U account = result.getUserObject(getUserAccountType());
+        U account = result.getUserObject(getUserClass());
         if (account.getUserAccountData().isExternalLoginRequired() && !isWithinInterval(account.getUserAccountData()
                                                                                                .getLogin()
                                                                                                .getLastExternalLogin(),
@@ -447,7 +535,15 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return null;
     }
 
-    protected abstract Class<U> getUserAccountType();
+    @SuppressWarnings("unchecked")
+    protected Class<T> getTenantClass() {
+        return (Class<T>) tenants.getTenantClass();
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Class<U> getUserClass() {
+        return (Class<U>) tenants.getUserClass();
+    }
 
     /**
      * Checks if the given password of the given {@link UserAccount}  is correct.
@@ -468,6 +564,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     /**
      * Handles an external login (e.g. via SAML).
      *
+     * @param ctx  the current request
      * @param user the user which logged in
      */
     public void onExternalLogin(WebContext ctx, UserInfo user) {
@@ -484,7 +581,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
     @Override
     protected UserSettings getUserSettings(UserSettings scopeSettings, UserInfo userInfo) {
-        U user = userInfo.getUserObject(getUserAccountType());
+        U user = userInfo.getUserObject(getUserClass());
         if (user.getUserAccountData().getPermissions().getConfig() == null) {
             if (user.getTenant().getValue().getTenantData().getPermissions().getConfig() == null) {
                 return scopeSettings;

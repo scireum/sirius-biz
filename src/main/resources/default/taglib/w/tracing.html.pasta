@@ -3,7 +3,7 @@
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders a trace button and the trace information for a TracedEntity"/>
 
-<i:if test="trace.getCreatedAt() != null">
+<i:if test="trace.getCreatedAt() != null && (journal == null || isFilled(journal.getProtocolUri()))">
     <span data-toggle="collapse" data-target=".tracing" class="btn pull-right"><i class="fa fa-info"></i></span>
 
     <div class="clearfix"></div>

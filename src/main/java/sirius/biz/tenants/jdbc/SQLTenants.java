@@ -26,13 +26,18 @@ public class SQLTenants extends Tenants<Long, SQLTenant, SQLUserAccount> {
     /**
      * Names the framework which must be enabled to activate the tenant based user management.
      */
-    public static final String FRAMEWORK_TENANTS_JDBC = "biz.tenants.jdbc";
+    public static final String FRAMEWORK_TENANTS_JDBC = "biz.tenants-jdbc";
 
     @Part
     private OMA oma;
 
     @Override
-    protected Class<SQLUserAccount> getUserClass() {
+    public Class<SQLTenant> getTenantClass() {
+        return SQLTenant.class;
+    }
+
+    @Override
+    public Class<SQLUserAccount> getUserClass() {
         return SQLUserAccount.class;
     }
 

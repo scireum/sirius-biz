@@ -35,6 +35,11 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
 
 //    public static final String FRAMEWORK_TENANTS_MONGO = "biz.tenants.mongo";
 
+    /**
+     * Names the framework which must be enabled to activate the tenant based user management.
+     */
+    public static final String FRAMEWORK_TENANTS = "biz.tenants";
+
     @Part
     protected Mixing mixing;
 
@@ -55,7 +60,9 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
         return Optional.empty();
     }
 
-    protected abstract Class<U> getUserClass();
+    public abstract Class<T> getTenantClass();
+
+    public abstract Class<U> getUserClass();
 
     /**
      * Returns the current user or throws an exception if no user is currently available.
@@ -142,6 +149,21 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
     }
 
     /**
+     * Checks if the tenant aware entity belongs to the current tenant.
+     *
+     * @param tenantAware {@link TenantAware} entity to be asserted
+     */
+    public void assertTenant(TenantAware tenantAware) {
+        if (tenantAware == null) {
+            return;
+        }
+
+        if (!Objects.equals(tenantAware.getTenantAsString(), getCurrentTenant().map(Tenant::getIdAsString).orElse(null))) {
+            throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
+        }
+    }
+
+    /**
      * Checks if the tenant aware entity belongs to the current tenant or to its parent tenant.
      *
      * @param tenantAware {@link TenantAware} entity to be asserted
@@ -173,4 +195,5 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
     public <E extends BaseEntity<?> & TenantAware, Q extends Query<Q, E, ?>> Q forCurrentTenant(Q qry) {
         return qry.eq(TenantAware.TENANT, getRequiredTenant());
     }
+
 }

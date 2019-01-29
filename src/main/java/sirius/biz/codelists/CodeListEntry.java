@@ -12,7 +12,14 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.BaseEntityRef;
 
+/**
+ * Represents a en entry in a {@link CodeList}.
+ * <p>
+ * This is the database representation of the data supplied by {@link CodeLists}.
+ */
 public interface CodeListEntry<I, L extends BaseEntity<I> & CodeList> {
+
+    String getIdAsString();
 
     Mapping CODE_LIST = Mapping.named("codeList");
 

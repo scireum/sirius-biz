@@ -9,8 +9,6 @@
 package sirius.biz.codelists.jdbc;
 
 import sirius.biz.codelists.CodeLists;
-import sirius.db.jdbc.OMA;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 @Register(classes = {CodeLists.class, SQLCodeLists.class}, framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
@@ -19,10 +17,7 @@ public class SQLCodeLists extends CodeLists<Long, SQLCodeList, SQLCodeListEntry>
     /**
      * Names the framework which must be enabled to activate the code lists feature.
      */
-    public static final String FRAMEWORK_CODE_LISTS_JDBC = "biz.code-lists.jdbc";
-
-    @Part
-    private OMA oma;
+    public static final String FRAMEWORK_CODE_LISTS_JDBC = "biz.code-lists-jdbc";
 
     @Override
     protected Class<SQLCodeListEntry> getEntryType() {

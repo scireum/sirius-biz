@@ -14,7 +14,9 @@ import sirius.kernel.commons.Lambdas;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.SAMLHelper;
@@ -30,7 +32,8 @@ import java.util.UUID;
 /**
  * Permis a login via SAML.
  */
-public abstract class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+@Register(classes = Controller.class, framework = Tenants.FRAMEWORK_TENANTS)
+public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {
 
     @Part
@@ -54,7 +57,6 @@ public abstract class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U e
         ctx.respondWith().template("/templates/tenants/saml.html.pasta", tenants);
     }
 
-    @SuppressWarnings("unchecked")
     private List<T> obtainTenantsForSaml(WebContext ctx) {
         // If GET parameters are present, we create a "fake" tenant to provide a custom SAML target.
         // This can be used if several identity providers are available for a single tenant.
@@ -81,7 +83,10 @@ public abstract class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U e
         return Collections.singletonList(fakeTenant);
     }
 
-    protected abstract Class<T> getTenantClass();
+    @SuppressWarnings("unchecked")
+    protected Class<T> getTenantClass() {
+        return (Class<T>) tenants.getTenantClass();
+    }
 
     /**
      * Processes a SAML response and tries to create or update a user which is then logged in.
@@ -150,7 +155,10 @@ public abstract class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U e
         }
     }
 
-    protected abstract Class<U> getUserClass();
+    @SuppressWarnings("unchecked")
+    protected Class<U> getUserClass() {
+        return (Class<U>) tenants.getUserClass();
+    }
 
     private T findTenant(SAMLResponse response) {
         for (T tenant : querySAMLTenants()) {
@@ -165,7 +173,16 @@ public abstract class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U e
                         .handle();
     }
 
-    protected abstract List<T> querySAMLTenants();
+    @SuppressWarnings("unchecked")
+    protected List<T> querySAMLTenants() {
+        return (List<T>) (Object) mixing.getDescriptor(getTenantClass())
+                                        .getMapper()
+                                        .select(getTenantClass())
+                                        .ne(Tenant.TENANT_DATA.inner(TenantData.SAML_ISSUER_NAME), null)
+                                        .ne(Tenant.TENANT_DATA.inner(TenantData.SAML_FINGERPRINT), null)
+                                        .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME))
+                                        .queryList();
+    }
 
     private void verifyUser(SAMLResponse response, UserInfo user) {
         U account = user.getUserObject(getUserClass());

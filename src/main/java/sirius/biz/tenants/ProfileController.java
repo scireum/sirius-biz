@@ -9,10 +9,13 @@
 package sirius.biz.tenants;
 
 import sirius.biz.protocol.AuditLog;
+import sirius.biz.tenants.jdbc.SQLTenants;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
@@ -22,7 +25,8 @@ import sirius.web.security.UserManager;
 /**
  * Provides functionality to modify accounts.
  */
-public abstract class ProfileController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+@Register(classes = Controller.class, framework = Tenants.FRAMEWORK_TENANTS)
+public class ProfileController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {
 
     private static final String PARAM_OLD_PASSWORD = "oldPassword";
@@ -51,7 +55,10 @@ public abstract class ProfileController<I, T extends BaseEntity<I> & Tenant<I>, 
         }
     }
 
-    protected abstract Class<U> getUserClass();
+    @SuppressWarnings("unchecked")
+    protected Class<U> getUserClass() {
+        return (Class<U>)tenants.getUserClass();
+    }
 
     /**
      * Shows a page where an account can change the password.

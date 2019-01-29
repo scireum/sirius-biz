@@ -92,6 +92,11 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         ctx.respondWith().template("templates/tenants/user-accounts.html.pasta", ph.asPage());
     }
 
+    @SuppressWarnings("unchecked")
+    protected Class<U> getUserClass() {
+        return (Class<U>) tenants.getUserClass();
+    }
+
     protected abstract BasePageHelper<U, ?, ?, ?> getUsersAsPage();
 
     /**
@@ -132,8 +137,6 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             ctx.respondWith().template("templates/tenants/user-account-details.html.pasta", userAccount, this);
         }
     }
-
-    protected abstract Class<U> getUserClass();
 
     /**
      * Shows an editor for the custom configuration of the given user.
@@ -337,7 +340,15 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         }
     }
 
-    protected abstract List<U> findUserAccountsWithEmail(String email);
+    @SuppressWarnings("unchecked")
+    protected List<U> findUserAccountsWithEmail(String email) {
+        return (List<U>) (Object) mixing.getDescriptor(getUserClass())
+                                        .getMapper()
+                                        .select(getUserClass())
+                                        .eq(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL), email)
+                                        .limit(2)
+                                        .queryList();
+    }
 
     /**
      * Deletes the given account.

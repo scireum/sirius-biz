@@ -15,10 +15,12 @@ import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.QueryField;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
@@ -106,7 +108,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
 
     protected abstract BasePageHelper<T, ?, ?, ?> getTenantsAsPage();
 
-
     /**
      * Provides an editor for updating a tenant.
      *
@@ -147,7 +148,10 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         }
     }
 
-    protected abstract Class<T> getTenantClass();
+    @SuppressWarnings("unchecked")
+    protected Class<T> getTenantClass() {
+        return (Class<T>)tenants.getTenantClass();
+    }
 
     /**
      * Provides a JSON API to change the settings of a tenant, including its configuration.
@@ -229,7 +233,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     @LoginRequired
     @Permission(TenantUserManager.PERMISSION_SELECT_TENANT)
     public void selectTenants(WebContext ctx) {
-
         BasePageHelper<T, ?, ?, ?> ph = getSelectableTenantsAsPage(ctx, determineCurrentTenant(ctx));
         ph.withContext(ctx);
         ph.withSearchFields(QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.NAME)),
@@ -240,8 +243,8 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         ctx.respondWith().template("templates/tenants/select-tenant.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
     }
 
-    private T determineCurrentTenant(WebContext ctx) {
-        String tenantId = ((TenantUserManager<?, ?, ?>) UserContext.get().getUserManager()).getOriginalTenantId(ctx);
+    public T determineCurrentTenant(WebContext ctx) {
+        String tenantId = determineOriginalTenantId(ctx);
         return mixing.getDescriptor(getTenantClass())
                      .getMapper()
                      .find(getTenantClass(), tenantId)
@@ -249,6 +252,13 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
                                                   .withSystemErrorMessage("Cannot determine current tenant!")
                                                   .handle());
     }
+
+    @SuppressWarnings("unchecked")
+    private String determineOriginalTenantId(WebContext ctx) {
+        return ((TenantUserManager<I, T, U>) UserContext.get().getUserManager()).getOriginalTenantId(ctx);
+    }
+
+    public abstract Optional<T> tryToSelectTenant(String id, Tenant<?> currentTenant);
 
     protected abstract BasePageHelper<T, ?, ?, ?> getSelectableTenantsAsPage(WebContext ctx, T currentTenant);
     //  SmartQuery<Tenant> baseQuery = queryPossibleTenants(ctx).orderAsc(Tenant.NAME);
@@ -267,12 +277,12 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     @LoginRequired
     @Routed("/tenants/select/:1")
     public void selectTenant(final WebContext ctx, String id) {
-        if ("main".equals(id)) {
+        if ("main".equals(id) || Strings.areEqual(determineOriginalTenantId(ctx), id)) {
             auditLog.neutral("AuditLog.switchedToMainTenant").causedByCurrentUser().forCurrentUser().log();
 
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
                                 null);
-            ctx.respondWith().redirectTemporarily("/tenants/select");
+            ctx.respondWith().redirectTemporarily(ctx.get("goto").asString(wondergemRoot));
             return;
         }
 
@@ -292,33 +302,29 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         ctx.respondWith().redirectTemporarily(ctx.get("goto").asString(wondergemRoot));
     }
 
-    protected abstract Optional<T> tryToSelectTenant(String id, T currentTenant);
+    /**
+     * Autocompletion for Tenants.
+     *
+     * @param ctx the current request
+     */
+    @LoginRequired
+    @Routed("/tenants/autocomplete")
+    public void tenantsAutocomplete(final WebContext ctx) {
+        AutocompleteHelper.handle(ctx, (query, result) -> {
+            BasePageHelper<T, ?, ?, ?> ph = getSelectableTenantsAsPage(ctx, determineCurrentTenant(ctx));
+            ph.withContext(ctx);
+            ph.withSearchFields(QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.NAME)),
+                                QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)),
+                                QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS)
+                                                                      .inner(AddressData.STREET)),
+                                QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS)
+                                                                      .inner(AddressData.CITY)));
 
-    //    {
-//        SmartQuery<T> baseQuery = queryPossibleTenants(ctx).eq(Tenant.ID, id);
-//
-//        return baseQuery.queryFirst();
-//    }
-//
-//    private SmartQuery<Tenant> queryPossibleTenants(WebContext ctx) {
-//        String tenantId = ((TenantUserManager<?, ?, ?>) UserContext.get().getUserManager()).getOriginalTenantId(ctx);
-//        Optional<Tenant> originalTenant = oma.find(Tenant.class, tenantId);
-//        if (originalTenant.isPresent()) {
-//            SmartQuery<Tenant> baseQuery = oma.select(Tenant.class);
-//            if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
-//                if (originalTenant.get().isCanAccessParent()) {
-//                    baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.and(OMA.FILTERS.eq(Tenant.PARENT, tenantId),
-//                                                                   OMA.FILTERS.eq(Tenant.PARENT_CAN_ACCESS, true)),
-//                                                   OMA.FILTERS.eq(Tenant.ID,
-//                                                                  originalTenant.get().getParent().getId())));
-//                } else {
-//                    baseQuery.where(OMA.FILTERS.and(OMA.FILTERS.eq(Tenant.PARENT, tenantId),
-//                                                    OMA.FILTERS.eq(Tenant.PARENT_CAN_ACCESS, true)));
-//                }
-//            }
-//            return baseQuery;
-//        } else {
-//            throw Exceptions.createHandled().withSystemErrorMessage("Cannot determine current tenant!").handle();
-//        }
-//    }
+            ph.asPage().getItems().forEach(tenant -> {
+                result.accept(new AutocompleteHelper.Completion(tenant.getIdAsString(),
+                                                                tenant.toString(),
+                                                                tenant.toString()));
+            });
+        });
+    }
 }

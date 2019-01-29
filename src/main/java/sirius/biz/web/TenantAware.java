@@ -33,7 +33,6 @@ public interface TenantAware {
 
     BaseEntityRef<?,?> getTenant();
 
-    Tenant<?> getShallowTenant();
 
     /**
      * Asserts that the given object has the same tenant as this object.

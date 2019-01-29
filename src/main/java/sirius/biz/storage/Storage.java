@@ -421,6 +421,9 @@ public class Storage {
                            @Nullable String md5,
                            long size) {
         VirtualObject object = (VirtualObject) file;
+        if (Strings.isFilled(md5) && Strings.areEqual(object.getMd5(), md5)) {
+            return;
+        }
         String newPhysicalKey = keyGen.generateId();
         String oldPhysicalKey = object.getPhysicalKey();
         try {

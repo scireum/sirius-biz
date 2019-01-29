@@ -1,4 +1,4 @@
-<i:arg type="sirius.biz.codelists.jdbc.SQLCodeList" name="codeList"/>
+<i:arg type="sirius.biz.codelists.CodeList" name="codeList"/>
 <i:arg type="String" name="page"/>
 
 <w:page titleKey="Model.codeList">
@@ -11,21 +11,21 @@
         </li>
     </i:block>
 
-    <w:pageHeader>@codeList.toString()</w:pageHeader>
+    <w:pageHeader>@codeList.getCodeListData().getName()</w:pageHeader>
 
     <i:if test="!codeList.isNew()">
         <div class="col-md-3">
             <w:navbox labelKey="Model.details">
                 <li>
-                    @codeList.getName() (@codeList.getCode())
+                    @codeList.getCodeListData().getName() (@codeList.getCodeListData().getCode())
                 </li>
-                <li class="small muted">@codeList.getDescription()</li>
+                <li class="small muted">@codeList.getCodeListData().getDescription()</li>
                 <li class="nav-header"></li>
                 <w:navboxLink labelKey="Model.details"
-                              url="@apply('/code-list/%s/details', codeList.getId())"
+                              url="@apply('/code-list/%s/details', codeList.getIdAsString())"
                               active="page == 'details'"/>
                 <w:navboxLink labelKey="CodeListEntry.plural"
-                              url="@apply('/code-list/%s', codeList.getId())"
+                              url="@apply('/code-list/%s', codeList.getIdAsString())"
                               active="page == 'entries'"/>
             </w:navbox>
             <a href="/code-lists" class="btn btn-block">@i18n("NLS.back")</a>

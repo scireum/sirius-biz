@@ -16,10 +16,12 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.web.security.MessageProvider;
 
-public interface UserAccount<I, T extends BaseEntity<I> & Tenant<I>> extends MessageProvider, Traced, Journaled, TenantAware {
+public interface UserAccount<I, T extends BaseEntity<I> & Tenant<I>>
+        extends MessageProvider, Traced, Journaled, TenantAware {
 
     Mapping TENANT = Mapping.named("tenant");
 
+    @Override
     BaseEntityRef<I, T> getTenant();
 
     Mapping USER_ACCOUNT_DATA = Mapping.named("userAccountData");

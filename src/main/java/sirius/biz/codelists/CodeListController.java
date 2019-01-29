@@ -15,6 +15,7 @@ import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.QueryField;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Page;
@@ -30,6 +31,9 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
         extends BizController {
 
     public static final String PERMISSION_MANAGE_CODELISTS = "permission-manage-code-lists";
+
+    @Part
+    private CodeLists<I, L , LE> codeLists;
 
     /**
      * Provides a list of all code lists.
@@ -79,7 +83,7 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
     }
 
     private void codeListHandler(WebContext ctx, String codeListId, boolean forceDetails) {
-        L codeList = findForTenant(getType(), codeListId);
+        L codeList = findForTenant(codeLists.getListType(), codeListId);
 
         if (codeList.isNew() || forceDetails) {
             boolean requestHandled =
@@ -91,8 +95,6 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
             renderCodeList(ctx, codeList);
         }
     }
-
-    protected abstract Class<L> getType();
 
     private void renderCodeList(WebContext ctx, L codeList) {
         BasePageHelper<LE, ?,?,?> ph = getEntriesAsPage(codeList);
@@ -120,7 +122,7 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/entry")
     public void codeListEntry(WebContext ctx, String codeListId) {
-        L cl = findForTenant(getType(), codeListId);
+        L cl = findForTenant(codeLists.getListType(), codeListId);
         assertNotNew(cl);
 
         if (ctx.ensureSafePOST()) {
@@ -157,7 +159,7 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/delete")
     public void deleteCodeList(WebContext ctx, String codeListId) {
-        L cl = tryFindForTenant(getType(), codeListId).orElse(null);
+        L cl = tryFindForTenant(codeLists.getListType(), codeListId).orElse(null);
         if (cl != null) {
             cl.getMapper().delete(cl);
             showDeletedMessage();
@@ -177,10 +179,10 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/delete-entry/:2")
     public void deleteCodeListEntry(WebContext ctx, String codeListId, String entryId) {
-        L cl = findForTenant(getType(), codeListId);
+        L cl = findForTenant(codeLists.getListType(), codeListId);
         assertNotNew(cl);
 
-        LE cle = find(getEntryType(), entryId);
+        LE cle = find(codeLists.getEntryType(), entryId);
         if (cle != null && cle.getCodeList().is(cl)) {
             cle.getMapper().delete(cle);
             showDeletedMessage();
@@ -189,5 +191,4 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
         renderCodeList(ctx, cl);
     }
 
-    protected abstract Class<LE> getEntryType();
 }

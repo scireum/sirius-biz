@@ -17,13 +17,12 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>12.0-rc36</sirius.kernel>
-        <sirius.web>DEVELOPMENT-SNAPSHOT</sirius.web>
-        <sirius.db>DEVELOPMENT-SNAPSHOT</sirius.db>
+        <sirius.kernel>DEVELOPMENT-SNAPSHOT</sirius.kernel>
+        <sirius.web>19.8</sirius.web>
+        <sirius.db>5.3</sirius.db>
     </properties>
 
     <dependencies>
-
         <dependency>
             <groupId>com.scireum</groupId>
             <artifactId>sirius-kernel</artifactId>

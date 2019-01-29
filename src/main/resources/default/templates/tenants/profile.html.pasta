@@ -51,7 +51,7 @@
 
     <w:formBar>
         <div class="pull-right">
-            <a class="btn" href="/profile/password"></a>
+            <a class="btn" href="/profile/password">@i18n("Model.password.set")</a>
         </div>
     </w:formBar>
 </w:page>

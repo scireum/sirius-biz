@@ -15,7 +15,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 
-@Register
+@Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
 public class SQLTenantAutoSetup implements AutoSetupRule {
 
     @Part
@@ -33,7 +33,6 @@ public class SQLTenantAutoSetup implements AutoSetupRule {
         AutoSetup.LOG.INFO("Creating system tenant....");
         SQLTenant tenant = new SQLTenant();
         tenant.getTenantData().setName("System Tenant");
-//                tenant.getTenantData().getTrace().setSilent(true);
         oma.update(tenant);
 
         AutoSetup.LOG.INFO("Creating user 'system' with password 'system'....");

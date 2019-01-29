@@ -186,10 +186,18 @@ public class ObjectStore {
      * The internal check is cached, therefore this method might be called frequently.
      *
      * @param bucket the bucket to check for
-     * @return <tt>true</tt> if the bucket exists, <tt>false</tt> otehrwise
+     * @return <tt>true</tt> if the bucket exists, <tt>false</tt> otherwise
      */
     public boolean doesBucketExist(BucketName bucket) {
-        return stores.bucketCache.get(Tuple.create(name, bucket.getName()), this::checkExistence);
+        Boolean cached = stores.bucketCache.get(Tuple.create(name, bucket.getName()));
+        if (cached != null) {
+            return cached;
+        }
+        boolean exists = this.checkExistence(bucket);
+        if (exists) {
+            stores.bucketCache.put(Tuple.create(name, bucket.getName()), exists);
+        }
+        return exists;
     }
 
     /**
@@ -249,8 +257,8 @@ public class ObjectStore {
                             .to(ObjectStores.LOG)
                             .error(e)
                             .withSystemErrorMessage("Failed to delete object %s from bucket %s - %s (%s)",
-                                                    bucket.getName(),
-                                                    objectId)
+                                                    objectId,
+                                                    bucket)
                             .handle();
         }
     }
@@ -265,6 +273,7 @@ public class ObjectStore {
     public void deleteBucket(BucketName bucket) {
         try {
             getClient().deleteBucket(bucket.getName());
+            stores.bucketCache.remove(Tuple.create(name, bucket.getName()));
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
@@ -274,14 +283,14 @@ public class ObjectStore {
         }
     }
 
-    private Boolean checkExistence(Tuple<String, String> storeAndBucket) {
+    private boolean checkExistence(BucketName bucket) {
         try {
-            return client.doesBucketExist(storeAndBucket.getSecond());
+            return client.doesBucketExist(bucket.getName());
         } catch (SdkClientException e) {
             Exceptions.handle()
                       .to(ObjectStores.LOG)
                       .error(e)
-                      .withSystemErrorMessage("Failed to check if %s exists: %s (%s)", storeAndBucket.getSecond())
+                      .withSystemErrorMessage("Failed to check if %s exists: %s (%s)", bucket)
                       .handle();
 
             return false;
@@ -289,13 +298,26 @@ public class ObjectStore {
     }
 
     /**
-     * Generates a presigned download for the given object.
+     * Generates a download URL for the given object.
+     * <p>
+     * This can be used to offer a public URL to retrieve the object's data.
+     *
+     * @param bucket   the bucket in which the object resides
+     * @param objectId the object to generate the url for
+     * @return a download URL for the object
+     */
+    public String url(BucketName bucket, String objectId) {
+        return getClient().getUrl(bucket.getName(), objectId).toString();
+    }
+
+    /**
+     * Generates a presigned download URL for the given object.
      * <p>
      * This can be used to {@link sirius.web.http.Response#tunnel(String)} the data to a client.
      *
      * @param bucket   the bucket in which the object resides
      * @param objectId the object to generate the url for
-     * @return a download URL for the object
+     * @return a presigned download URL for the object
      */
     public String objectUrl(BucketName bucket, String objectId) {
         GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket.getName(), objectId);
@@ -326,9 +348,10 @@ public class ObjectStore {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
                             .error(e)
-                            .withSystemErrorMessage("Got interrupted while waiting for a download to complete:%s/%s -",
-                                                    bucket.getName(),
-                                                    objectId)
+                            .withSystemErrorMessage(
+                                    "Got interrupted while waiting for a download to complete: %s/%s - %s (%s)",
+                                    bucket,
+                                    objectId)
                             .handle();
         } catch (Exception e) {
             Files.delete(dest);
@@ -336,11 +359,23 @@ public class ObjectStore {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
                             .error(e)
-                            .withSystemErrorMessage("An error occurred while trying to download: %s/%s -",
-                                                    bucket.getName(),
+                            .withSystemErrorMessage("An error occurred while trying to download: %s/%s - %s (%s)",
+                                                    bucket,
                                                     objectId)
                             .handle();
         }
+    }
+
+    /**
+     * Asynchronously uploads the given file as an object.
+     *
+     * @param bucket   the bucket to upload the file to
+     * @param objectId the object id to use
+     * @param data     the data to upload
+     * @return kind of a promise used to monitor the upload progress
+     */
+    public Upload uploadAsync(BucketName bucket, String objectId, File data) {
+        return uploadAsync(bucket, objectId, data, null);
     }
 
     /**
@@ -361,11 +396,22 @@ public class ObjectStore {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
                             .error(e)
-                            .withSystemErrorMessage("An error occurred while trying to upload: %s/%s -",
-                                                    bucket.getName(),
+                            .withSystemErrorMessage("An error occurred while trying to upload: %s/%s - %s (%s)",
+                                                    bucket,
                                                     objectId)
                             .handle();
         }
+    }
+
+    /**
+     * Synchronously uploads the given file.
+     *
+     * @param bucket   the bucket to upload the file to
+     * @param objectId the object id to use
+     * @param data     the data to upload
+     */
+    public void upload(BucketName bucket, String objectId, File data) {
+        upload(bucket, objectId, data, null);
     }
 
     /**
@@ -385,9 +431,24 @@ public class ObjectStore {
                             .to(ObjectStores.LOG)
                             .error(e)
                             .withSystemErrorMessage(
-                                    "Got interrupted while waiting for an upload to complete: %s/%s - %s (%s)")
+                                    "Got interrupted while waiting for an upload to complete: %s/%s - %s (%s)",
+                                    bucket,
+                                    objectId)
                             .handle();
         }
+    }
+
+    /**
+     * Asynchronously uploads the given input stream as an object.
+     *
+     * @param bucket        the bucket to upload the file to
+     * @param objectId      the object id to use
+     * @param inputStream   the data to upload
+     * @param contentLength the total number of bytes to upload
+     * @return kind of a promise used to monitor the upload progress
+     */
+    public Upload uploadAsync(BucketName bucket, String objectId, InputStream inputStream, long contentLength) {
+        return uploadAsync(bucket, objectId, inputStream, contentLength, null);
     }
 
     /**
@@ -418,11 +479,23 @@ public class ObjectStore {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
                             .error(e)
-                            .withSystemErrorMessage("An error occurred while trying to upload: %s/%s -",
-                                                    bucket.getName(),
+                            .withSystemErrorMessage("An error occurred while trying to upload: %s/%s - %s (%s)",
+                                                    bucket,
                                                     objectId)
                             .handle();
         }
+    }
+
+    /**
+     * Synchronously uploads the given input stream as an object.
+     *
+     * @param bucket        the bucket to upload the file to
+     * @param objectId      the object id to use
+     * @param inputStream   the data to upload
+     * @param contentLength the total number of bytes to upload
+     */
+    public void upload(BucketName bucket, String objectId, InputStream inputStream, long contentLength) {
+        upload(bucket, objectId, inputStream, contentLength, null);
     }
 
     /**
@@ -446,7 +519,10 @@ public class ObjectStore {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
                             .error(e)
-                            .withSystemErrorMessage("Got interrupted while waiting for an upload to complete: %s (%s)")
+                            .withSystemErrorMessage(
+                                    "Got interrupted while waiting for an upload to complete: %s/%s - %s (%s)",
+                                    bucket,
+                                    objectId)
                             .handle();
         }
     }

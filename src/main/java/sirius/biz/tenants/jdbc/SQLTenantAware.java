@@ -27,20 +27,10 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
      */
     private final SQLEntityRef<SQLTenant> tenant = SQLEntityRef.on(SQLTenant.class, SQLEntityRef.OnDelete.CASCADE);
 
+    @Override
     public SQLEntityRef<SQLTenant> getTenant() {
         return tenant;
     }
-
-    public Tenant<?> getShallowTenant() {
-        if (tenant.isValueLoaded()) {
-            return tenant.getValue();
-        } else {
-            SQLTenant shallowTenant = new SQLTenant();
-            shallowTenant.setId(tenant.getId());
-            return shallowTenant;
-        }
-    }
-
 
     @Override
     public String getTenantAsString() {

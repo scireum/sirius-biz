@@ -29,20 +29,20 @@
         </tr>
         </thead>
         <tbody>
-        <i:for type="sirius.biz.codelists.jdbc.SQLCodeList" var="list" items="lists.getItems()">
+        <i:for type="sirius.biz.codelists.CodeList" var="list" items="lists.getItems()">
             <tr>
                 <td>
-                    <a class="link" href="/code-list/@list.getId()">@list.getCode()</a><br>
-                    <small class="muted">@list.getId()</small>
+                    <a class="link" href="/code-list/@list.getIdAsString()">@list.getCodeListData().getCode()</a><br>
+                    <small class="muted">@list.getIdAsString()</small>
                 </td>
                 <td>
-                    @list.getName()
+                    @list.getCodeListData().getName()
                 </td>
                 <td>
-                    @list.getDescription()
+                    @list.getCodeListData().getDescription()
                 </td>
                 <td class="col-md-2 align-center">
-                    <w:deleteLink url="@apply('/code-list/%s/delete?%s', list.getId(), lists.createQueryString())"/>
+                    <w:deleteLink url="@apply('/code-list/%s/delete?%s', list.getIdAsString(), lists.createQueryString())"/>
                 </td>
             </tr>
         </i:for>

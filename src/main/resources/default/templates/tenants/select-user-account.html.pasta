@@ -33,17 +33,17 @@
         <i:for type="sirius.biz.tenants.UserAccount" var="selectableUser" items="users.getItems()">
             <tr>
                 <td>
-                    <i:if test="selectableUser.hasName()">
-                        <a class="link" href="/user-accounts/select/@selectableUser.getId()">@selectableUser.getPerson()</a><br>
-                        <small class="muted">@selectableUser.getLogin().getUsername()</small>
+                    <i:if test="selectableUser.getUserAccountData().hasName()">
+                        <a class="link" href="/user-accounts/select/@selectableUser.getIdAsString()">@selectableUser.getUserAccountData().getPerson()</a><br>
+                        <small class="muted">@selectableUser.getUserAccountData().getLogin().getUsername()</small>
                         <i:else>
-                            <a class="link" href="/user-accounts/select/@selectableUser.getId()">@selectableUser.getLogin().getUsername()</a>
+                            <a class="link" href="/user-accounts/select/@selectableUser.getIdAsString()">@selectableUser.getUserAccountData().getLogin().getUsername()</a>
                         </i:else>
                     </i:if>
                 </td>
                 <td>
-                    @selectableUser.getTenant().getValue().as(sirius.biz.tenants.Tenant.class).getName()<br>
-                    @selectableUser.getTenant().getValue().as(sirius.biz.tenants.Tenant.class).getAccountNumber()
+                    @selectableUser.getTenant().getValue().as(sirius.biz.tenants.Tenant.class).getTenantData().getName()<br>
+                    @selectableUser.getTenant().getValue().as(sirius.biz.tenants.Tenant.class).getTenantData().getAccountNumber()
                 </td>
             </tr>
         </i:for>

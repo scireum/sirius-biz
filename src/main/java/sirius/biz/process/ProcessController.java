@@ -136,6 +136,7 @@ public class ProcessController extends BizController {
 
         ElasticPageHelper<ProcessLog> ph = ElasticPageHelper.withQuery(query);
         ph.withContext(ctx);
+        ph.withPageSize(100);
         ph.addTermAggregation(ProcessLog.TYPE, ProcessLogType.class);
         ph.addTermAggregation(ProcessLog.STATE, ProcessLogState.class);
         ph.addTermAggregation(ProcessLog.MESSAGE_HANDLER, NLS::smartGet);
@@ -147,6 +148,22 @@ public class ProcessController extends BizController {
         ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
         ctx.respondWith().template("templates/process/process-logs.html.pasta", process, ph.asPage());
+    }
+
+    /**
+     * Cancels the execution of the given process.
+     *
+     * @param ctx       the current request
+     * @param processId the id of the process to cancel
+     */
+    @Routed("/ps/:1/cancel")
+    @LoginRequired
+    public void cancelProcess(WebContext ctx, String processId) {
+        Process process = findAccessibleProcess(processId);
+
+        processes.markCanceled(process.getId());
+
+        processDetails(ctx, processId);
     }
 
     /**

@@ -27,16 +27,6 @@ public class SQLCodeListController extends CodeListController<Long, SQLCodeList,
     }
 
     @Override
-    protected Class<SQLCodeList> getType() {
-        return SQLCodeList.class;
-    }
-
-    @Override
-    protected Class<SQLCodeListEntry> getEntryType() {
-        return SQLCodeListEntry.class;
-    }
-
-    @Override
     protected BasePageHelper<SQLCodeListEntry, ?, ?, ?> getEntriesAsPage(SQLCodeList codeList) {
         return SQLPageHelper.withQuery(oma.select(SQLCodeListEntry.class)
                                           .eq(SQLCodeListEntry.CODE_LIST, codeList)

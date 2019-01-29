@@ -25,7 +25,13 @@ import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.annotations.Unique;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.web.http.IPRange;
+import sirius.web.http.WebContext;
+
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Represents a tenant using the system.
@@ -62,7 +68,7 @@ public class TenantData extends Composite implements Journaled {
     /**
      * Determines the interval in days, after which a user needs to login again, via an external system.
      * <p>
-     * Note that this is only enforced if {@link UserAccountData#externalLoginRequired} is <tt>true</tt>.
+     * Note that this is only enforced if {@link UserAccountData#isExternalLoginRequired()} is <tt>true</tt>.
      */
     public static final Mapping EXTERNAL_LOGIN_INTERVAL_DAYS = Mapping.named("externalLoginIntervalDays");
     @Autoloaded
@@ -145,6 +151,42 @@ public class TenantData extends Composite implements Journaled {
     private String samlFingerprint;
 
     /**
+     * Contains the ip range which must match the current users ip.
+     * <p>
+     * Multiple ip ranges can be stored comma-separated.
+     * Pattern of a valid ip range e.g. 192.168.192.1/32 or 192.168.168.0/24
+     */
+    public static final Mapping IP_RANGE = Mapping.named("ipRange");
+    @Trim
+    @Autoloaded
+    @NullAllowed
+    @Length(255)
+    private String ipRange;
+
+    /**
+     * Contains the parsed ip ranges.
+     */
+    @Transient
+    private IPRange.RangeSet rangeSet;
+
+    /**
+     * Contains a comma-separated list of roles which should be kept if the
+     * user does not match the given ip range.
+     */
+    public static final Mapping ROLES_TO_KEEP = Mapping.named("rolesToKeep");
+    @Trim
+    @Autoloaded
+    @NullAllowed
+    @Length(512)
+    private String rolesToKeep;
+
+    /**
+     * Contains the data from rolesToKeep but as a {@link Set}.
+     */
+    @Transient
+    private Set<String> rolesToKeepSet;
+
+    /**
      * Contains the address of the tenant.
      */
     public static final Mapping ADDRESS = Mapping.named("address");
@@ -178,12 +220,57 @@ public class TenantData extends Composite implements Journaled {
         if (journal.hasJournaledChanges()) {
             //TODO
 //            TenantUserManager.flushCacheForTenant(this);
-            tenants.flushTenantChildrenCache();
+         //   tenants.flushTenantChildrenCache();
         }
 
         if (Strings.isFilled(samlFingerprint)) {
             samlFingerprint = samlFingerprint.replace(" ", "").toLowerCase();
         }
+    }
+
+    /**
+     * Checks if the ip of the request matches the ip range of the tenant.
+     *
+     * @param ctx the current request
+     * @return <tt>true</tt> if the ip address matches the range or if non was configured, <tt>false</tt> otherwise
+     */
+    public boolean matchesIPRange(WebContext ctx) {
+        if (Strings.isEmpty(ipRange)) {
+            return true;
+        }
+
+        if (rangeSet == null) {
+            try {
+                rangeSet = IPRange.parseRangeSet(ipRange);
+            } catch (IllegalArgumentException e) {
+                // if an invalid range was configured we can not remove any permission
+                Exceptions.ignore(e);
+                return true;
+            }
+        }
+
+        return rangeSet.accepts(ctx.getRemoteIP());
+    }
+
+    /**
+     * Calculates all roles the user should keep when the ip range check fails.
+     *
+     * @return {@link Set<String>} holding the roles to keep
+     */
+    public Set<String> getRolesToKeepAsSet() {
+        if (rolesToKeepSet == null) {
+            rolesToKeepSet = new TreeSet<>();
+            if (Strings.isFilled(rolesToKeep)) {
+                for (String permission : rolesToKeep.split(",")) {
+                    permission = permission.trim();
+                    if (Strings.isFilled(permission)) {
+                        rolesToKeepSet.add(permission);
+                    }
+                }
+            }
+        }
+
+        return rolesToKeepSet;
     }
 
     public String getName() {
@@ -280,6 +367,22 @@ public class TenantData extends Composite implements Journaled {
 
     public void setExternalLoginIntervalDays(Integer externalLoginIntervalDays) {
         this.externalLoginIntervalDays = externalLoginIntervalDays;
+    }
+
+    public String getIpRange() {
+        return ipRange;
+    }
+
+    public void setIpRange(String ipRange) {
+        this.ipRange = ipRange;
+    }
+
+    public String getRolesToKeep() {
+        return rolesToKeep;
+    }
+
+    public void setRolesToKeep(String rolesToKeep) {
+        this.rolesToKeep = rolesToKeep;
     }
 
     @Override
