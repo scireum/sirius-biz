@@ -1,1 +1,6 @@
-<w:menuItem titleKey="CodeList.plural" url="/code-lists" permission="permission-manage-code-lists" framework="biz.code-lists"/>
+<w:menuItem titleKey="CodeList.plural" url="/code-lists"
+            permission="permission-manage-code-lists"
+            framework="biz.code-lists-jdbc"/>
+<w:menuItem titleKey="CodeList.plural" url="/code-lists"
+            permission="permission-manage-code-lists"
+            framework="biz.code-lists-mongo"/>

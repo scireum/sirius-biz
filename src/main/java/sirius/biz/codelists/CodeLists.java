@@ -8,8 +8,13 @@
 
 package sirius.biz.codelists;
 
-import sirius.db.jdbc.OMA;
-import sirius.db.jdbc.SQLEntity;
+import sirius.biz.codelists.jdbc.SQLCodeListEntry;
+import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.Tenants;
+import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.BaseMapper;
+import sirius.db.mixing.Mixing;
+import sirius.db.mixing.query.Query;
 import sirius.kernel.Sirius;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
@@ -18,10 +23,11 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
-import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.kernel.settings.Extension;
+import sirius.web.security.ScopeInfo;
+import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -35,22 +41,55 @@ import java.util.List;
  * <p>
  * The required data is stored via {@link CodeList} and {@link CodeListEntry}. The {@link CodeListController} is used
  * to provide an administration GUI for the user.
+ *
+ * @param <I> the type of database IDs used by the concrete implementation
+ * @param <L> the effective entity type used to represent code lists
+ * @param <E> the effective entity type used to represent code list entries
  */
-@Register(classes = CodeLists.class, framework = CodeLists.FRAMEWORK_CODE_LISTS)
-public class CodeLists {
-
-    /**
-     * Names the framework which must be enabled to activate the code lists feature.
-     */
-    public static final String FRAMEWORK_CODE_LISTS = "biz.code-lists";
+public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L>> {
 
     protected Cache<String, String> valueCache = CacheManager.createCoherentCache("codelists-values");
 
+    protected static final Log LOG = Log.get("codelists");
+
     @Part
-    private OMA oma;
+    private Tenants<?, ?, ?> tenants;
 
-    private static final Log LOG = Log.get("codelists");
+    @Part
+    private Mixing mixing;
 
+    private BaseMapper<L, ?, ?> listMapper;
+    private BaseMapper<E, ?, ?> entryMapper;
+
+    /**
+     * Returns the effective entity class used to represent code lists.
+     *
+     * @return the effective implementation of {@link CodeList}
+     */
+    protected abstract Class<L> getListType();
+
+    /**
+     * Returns the effective entity class used to represent code list entries.
+     *
+     * @return the effective implementation of {@link CodeListEntry}
+     */
+    protected abstract Class<E> getEntryType();
+
+    @SuppressWarnings("unchecked")
+    private <Q extends Query<Q, L, ?>> Q createListQuery() {
+        if (listMapper == null) {
+            listMapper = mixing.getDescriptor(getListType()).getMapper();
+        }
+        return (Q) listMapper.select(getListType());
+    }
+
+    @SuppressWarnings("unchecked")
+    private <Q extends Query<Q, E, ?>> Q createEntryQuery() {
+        if (entryMapper == null) {
+            entryMapper = mixing.getDescriptor(getEntryType()).getMapper();
+        }
+        return (Q) entryMapper.select(getEntryType());
+    }
 
     /**
      * Returns the value translated from the given code list associated with the given code.
@@ -83,7 +122,9 @@ public class CodeLists {
             return null;
         }
 
-        return valueCache.get(codeList + "|" + code, ignored -> {
+        Tenant<?> tenant = getCurrentTenant();
+
+        return valueCache.get(tenant.getIdAsString() + codeList + "|" + code, ignored -> {
             return getValues(codeList, code).getFirst();
         });
     }
@@ -95,13 +136,15 @@ public class CodeLists {
      * @param code     the code to check
      * @return <tt>true</tt> if the code exists, <tt>false</tt> otherwise
      */
+    @SuppressWarnings("squid:S2637")
+    @Explain("The null check is enforced by isEmpty")
     public boolean hasValue(@Nonnull String codeList, @Nullable String code) {
         if (Strings.isEmpty(code)) {
             return false;
         }
 
-        CodeList cl = findOrCreateCodelist(codeList);
-        return oma.select(CodeListEntry.class).eq(CodeListEntry.CODE_LIST, cl).eq(CodeListEntry.CODE, code).exists();
+        L cl = findOrCreateCodelist(codeList);
+        return queryEntry(cl, code).exists();
     }
 
     /**
@@ -114,11 +157,8 @@ public class CodeLists {
      * @throws sirius.kernel.health.HandledException if no entry exists for the given code
      */
     public String getRequiredValue(@Nonnull String codeList, @Nonnull String code) {
-        CodeList cl = findOrCreateCodelist(codeList);
-        CodeListEntry cle = oma.select(CodeListEntry.class)
-                               .eq(CodeListEntry.CODE_LIST, cl)
-                               .eq(CodeListEntry.CODE, code)
-                               .queryFirst();
+        L cl = findOrCreateCodelist(codeList);
+        E cle = queryEntry(cl, code).queryFirst();
 
         if (cle == null) {
             throw Exceptions.handle()
@@ -129,7 +169,12 @@ public class CodeLists {
                             .handle();
         }
 
-        return cle.getValue();
+        return cle.getCodeListEntryData().getValue();
+    }
+
+    protected Query<?, E, ?> queryEntry(L list, @Nonnull String code) {
+        return createEntryQuery().eq(SQLCodeListEntry.CODE_LIST, list)
+                                 .eq(SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE), code);
     }
 
     /**
@@ -143,48 +188,64 @@ public class CodeLists {
      * @return the value and the additional value associated with the given code, wrapped as tuple
      */
     public Tuple<String, String> getValues(@Nonnull String codeList, @Nonnull String code) {
-        CodeList cl = findOrCreateCodelist(codeList);
-        CodeListEntry cle = oma.select(CodeListEntry.class)
-                               .eq(CodeListEntry.CODE_LIST, cl)
-                               .eq(CodeListEntry.CODE, code)
-                               .queryFirst();
+        L cl = findOrCreateCodelist(codeList);
+        E cle = queryEntry(cl, code).queryFirst();
+
         if (cle == null) {
-            if (!cl.isAutofill()) {
+            if (!cl.getCodeListData().isAutofill()) {
                 return Tuple.create(code, null);
             }
-            cle = new CodeListEntry();
-            cle.getCodeList().setValue(cl);
-            cle.setCode(code);
-            cle.setValue(code);
-            oma.update(cle);
+            cle = createEntry(cl, code);
+            cle.getMapper().update(cle);
         }
 
-        return Tuple.create(cle.getValue(), cle.getAdditionalValue());
+        return Tuple.create(cle.getCodeListEntryData().getValue(), cle.getCodeListEntryData().getAdditionalValue());
     }
 
-    private CodeList findOrCreateCodelist(@Nonnull String codeList) {
+    protected E createEntry(L cl, String code) {
+        try {
+            E entry = getEntryType().getDeclaredConstructor().newInstance();
+            entry.getCodeList().setValue(cl);
+            entry.getCodeListEntryData().setCode(code);
+            return entry;
+        } catch (Exception e) {
+            throw Exceptions.handle(LOG, e);
+        }
+    }
+
+    private L findOrCreateCodelist(@Nonnull String codeList) {
         if (Strings.isEmpty(codeList)) {
             throw new IllegalArgumentException("codeList must not be empty");
         }
-        CodeList cl = oma.select(CodeList.class)
-                         .fields(SQLEntity.ID, CodeList.AUTO_FILL)
-                         .eq(CodeList.CODE, codeList)
-                         .queryFirst();
+
+        L cl = createListQuery().eq(CodeList.TENANT, getCurrentTenant())
+                                .eq(CodeList.CODE_LIST_DATA.inner(CodeListData.CODE), codeList)
+                                .queryFirst();
         if (cl == null) {
             Extension ext = Sirius.getSettings().getExtension("code-lists", codeList);
-            cl = new CodeList();
-            cl.setCode(codeList);
-            cl.setName(codeList);
+            cl = createCodeList(getCurrentTenant(), codeList);
             if (ext != null && !ext.isDefault()) {
-                cl.setName(ext.get("name").asString());
-                cl.setDescription(ext.get("description").asString());
-                cl.setAutofill(ext.get("autofill").asBoolean());
+                cl.getCodeListData().setName(ext.get("name").asString());
+                cl.getCodeListData().setDescription(ext.get("description").asString());
+                cl.getCodeListData().setAutofill(ext.get("autofill").asBoolean());
             }
 
-            oma.update(cl);
+            cl.getMapper().update(cl);
         }
 
         return cl;
+    }
+
+    private L createCodeList(@Nonnull Tenant<?> tenant, String codeList) {
+        try {
+            L list = getListType().getDeclaredConstructor().newInstance();
+            list.withTenant(tenant);
+            list.getCodeListData().setCode(codeList);
+            list.getCodeListData().setName(codeList);
+            return list;
+        } catch (Exception e) {
+            throw Exceptions.handle(LOG, e);
+        }
     }
 
     /**
@@ -193,12 +254,44 @@ public class CodeLists {
      * @param codeList the code list to fetch entries from
      * @return a list of all avilable entries in the given code list, sorted by priority
      */
-    public List<CodeListEntry> getEntries(@Nonnull String codeList) {
-        CodeList cl = findOrCreateCodelist(codeList);
-        return oma.select(CodeListEntry.class)
-                  .eq(CodeListEntry.CODE_LIST, cl)
-                  .orderAsc(CodeListEntry.PRIORITY)
-                  .orderAsc(CodeListEntry.CODE)
-                  .queryList();
+    public List<E> getEntries(@Nonnull String codeList) {
+        L cl = findOrCreateCodelist(codeList);
+        return createEntryQuery().eq(CodeListEntry.CODE_LIST, cl)
+                                 .orderAsc(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.PRIORITY))
+                                 .orderAsc(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE))
+                                 .queryList();
+    }
+
+    /**
+     * Determines the effective current tenant.
+     * <p>
+     * This also gracefully handles scopes other than the current tenant as long as there is an adapter to make it
+     * match a {@link CodeListTenantProvider}.
+     *
+     * @return the current tenant to be used to determine which code lists to operate on.
+     */
+    private Tenant<?> getCurrentTenant() {
+        if (UserContext.getCurrentScope() == ScopeInfo.DEFAULT_SCOPE) {
+            return tenants.getRequiredTenant();
+        }
+
+        Tenant<?> currentTenant = UserContext.getCurrentScope().as(CodeListTenantProvider.class).getCurrentTenant();
+
+        if (currentTenant == null) {
+            throw Exceptions.handle()
+                            .to(LOG)
+                            .withSystemErrorMessage("Cannot determine the effective tenant for scope %!",
+                                                    UserContext.getCurrentScope().getScopeId())
+                            .handle();
+        }
+
+        return currentTenant;
+    }
+
+    /**
+     * Completely clears the cache holding all known values.
+     */
+    public void clearCache() {
+        valueCache.clear();
     }
 }

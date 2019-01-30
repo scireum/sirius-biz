@@ -8,134 +8,43 @@
 
 package sirius.biz.codelists;
 
-import sirius.biz.jdbc.BizEntity;
-import sirius.db.jdbc.SQLEntityRef;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.annotations.AfterDelete;
-import sirius.db.mixing.annotations.AfterSave;
-import sirius.db.mixing.annotations.Length;
-import sirius.db.mixing.annotations.NullAllowed;
-import sirius.db.mixing.annotations.Trim;
-import sirius.db.mixing.annotations.Unique;
-import sirius.kernel.commons.Value;
-import sirius.kernel.di.std.Framework;
-import sirius.kernel.di.std.Part;
-import sirius.kernel.di.std.Priorized;
+import sirius.db.mixing.types.BaseEntityRef;
+import sirius.kernel.commons.Explain;
 
 /**
- * Represents a en entry in a {@link CodeList}.
+ * Provides the database independent interface for describing a code list entry.
  * <p>
- * This is the database representation of the data supplied by {@link CodeLists}.
+ * Note that all fields are represented via {@link CodeListEntryData}.
+ *
+ * @param <I> the type of database IDs used by the concrete implementation
+ * @param <L> the effective entity type used to represent code lists
  */
-@Framework(CodeLists.FRAMEWORK_CODE_LISTS)
-public class CodeListEntry extends BizEntity {
+@SuppressWarnings("squid:S1214")
+@Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real enttiy.")
+public interface CodeListEntry<I, L extends BaseEntity<I> & CodeList> {
 
     /**
-     * References the code list this entrd belongs to.
+     * Represents the reference of the code list to which this entry belongs.
      */
-    public static final Mapping CODE_LIST = Mapping.named("codeList");
-    private final SQLEntityRef<CodeList> codeList = SQLEntityRef.on(CodeList.class, SQLEntityRef.OnDelete.CASCADE);
+    Mapping CODE_LIST = Mapping.named("codeList");
 
     /**
-     * Contains the code of the entry.
+     * Contains the composite which holds the actual entry data.
      */
-    public static final Mapping CODE = Mapping.named("code");
-    @Length(50)
-    @Unique(within = "codeList")
-    private String code;
+    Mapping CODE_LIST_ENTRY_DATA = Mapping.named("codeListEntryData");
 
     /**
-     * Contains the priority of the entry used for sorting
-     */
-    public static final Mapping PRIORITY = Mapping.named("priority");
-    private int priority = Priorized.DEFAULT_PRIORITY;
-
-    /**
-     * Contains the value associated with the code of this entry.
-     */
-    public static final Mapping VALUE = Mapping.named("value");
-    @Length(512)
-    @NullAllowed
-    private String value;
-
-    /**
-     * Contains the additional value associated with the code of this entry.
-     */
-    public static final Mapping ADDITIONAL_VALUE = Mapping.named("additionalValue");
-    @Length(512)
-    @NullAllowed
-    private String additionalValue;
-
-    /**
-     * Contains a description of the value or the entry.
-     */
-    public static final Mapping DESCRIPTION = Mapping.named("description");
-    @Length(1024)
-    @NullAllowed
-    private String description;
-
-    @Part
-    private static CodeLists codeLists;
-
-    @AfterSave
-    @AfterDelete
-    protected void flushCache() {
-        if (!isNew()) {
-            codeLists.valueCache.clear();
-        }
-    }
-
-    /**
-     * Returns the value of the entry which is translated via
-     * {@link Value#translate()}.
+     * Returns a string representation of the entity ID.
+     * <p>
+     * If the entity is new, "new" will be returned.
      *
-     * @return the translated value
+     * @return the entity ID as string or "new" if the entity {@link BaseEntity#isNew()}.
      */
-    public String getTranslatedValue() {
-        return Value.of(value).translate().getString();
-    }
+    String getIdAsString();
 
-    public SQLEntityRef<CodeList> getCodeList() {
-        return codeList;
-    }
+    BaseEntityRef<I, L> getCodeList();
 
-    public String getValue() {
-        return value;
-    }
-
-    public void setValue(String value) {
-        this.value = value;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getAdditionalValue() {
-        return additionalValue;
-    }
-
-    public void setAdditionalValue(String additionalValue) {
-        this.additionalValue = additionalValue;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public int getPriority() {
-        return priority;
-    }
-
-    public void setPriority(int priority) {
-        this.priority = priority;
-    }
+    CodeListEntryData getCodeListEntryData();
 }

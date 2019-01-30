@@ -8,115 +8,39 @@
 
 package sirius.biz.codelists;
 
-import sirius.biz.jdbc.BizEntity;
-import sirius.biz.web.Autoloaded;
+import sirius.biz.web.TenantAware;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.annotations.AfterDelete;
-import sirius.db.mixing.annotations.AfterSave;
-import sirius.db.mixing.annotations.BeforeSave;
-import sirius.db.mixing.annotations.Length;
-import sirius.db.mixing.annotations.NullAllowed;
-import sirius.db.mixing.annotations.Trim;
-import sirius.db.mixing.annotations.Unique;
-import sirius.kernel.commons.Strings;
-import sirius.kernel.di.std.Framework;
-import sirius.kernel.di.std.Part;
-import sirius.kernel.health.Exceptions;
+import sirius.kernel.commons.Explain;
 
 /**
- * Represents a list for name value pairs which can be managed by the user.
+ * Provides the database independent interface for describing a code list.
  * <p>
- * This is the database representation of the data supplied by {@link CodeLists}.
+ * Note that all fields are represented via {@link CodeListData}.
  */
-@Framework(CodeLists.FRAMEWORK_CODE_LISTS)
-public class CodeList extends BizEntity {
+@SuppressWarnings("squid:S1214")
+@Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real enttiy.")
+public interface CodeList extends TenantAware {
 
     /**
-     * Contains the unique code or short name which identifies the code list.
+     * Contains the effective fields which are mapped by the appropriate mapper depending on the actual entity type.
      */
-    public static final Mapping CODE = Mapping.named("code");
-    @Trim
-    @Autoloaded
-    @Length(50)
-    @Unique
-    private String code;
+    Mapping CODE_LIST_DATA = Mapping.named("codeListData");
+
+    CodeListData getCodeListData();
 
     /**
-     * Contains a descriptive name of the list which is show in the administration GUI.
+     * Determines if the entity is new (not yet written to the database).
+     *
+     * @return <tt>true</tt> if the entity has not been written to the database yes, <tt>false</tt> otherwise
      */
-    public static final Mapping NAME = Mapping.named("name");
-    @Trim
-    @Autoloaded
-    @NullAllowed
-    @Length(150)
-    private String name;
+    boolean isNew();
 
     /**
-     * Contains a description of the purpose and use of the code list.
-     */
-    public static final Mapping DESCRIPTION = Mapping.named("description");
-    @Trim
-    @Autoloaded
-    @NullAllowed
-    @Length(1024)
-    private String description;
-
-    /**
-     * Determines if yet unknown entries should be auto created with an identity mapping.
+     * Returns a string representation of the entity ID.
      * <p>
-     * Using this approach, the code list will fill itself and a user can provide descriptive texts later.
+     * If the entity is new, "new" will be returned.
+     *
+     * @return the entity ID as string or "new" if the entity {@link #isNew()}.
      */
-    public static final Mapping AUTO_FILL = Mapping.named("autofill");
-    @Autoloaded
-    private boolean autofill = true;
-
-    @Part
-    private static CodeLists codeLists;
-
-    @BeforeSave
-    protected void checkName() {
-        if (Strings.isFilled(code) && code.contains("|")) {
-            throw Exceptions.createHandled().withNLSKey("CodeList.noPipeAllowed").handle();
-        }
-    }
-
-    @AfterSave
-    @AfterDelete
-    protected void flushCache() {
-        if (!isNew()) {
-            codeLists.valueCache.clear();
-        }
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public boolean isAutofill() {
-        return autofill;
-    }
-
-    public void setAutofill(boolean autofill) {
-        this.autofill = autofill;
-    }
+    String getIdAsString();
 }

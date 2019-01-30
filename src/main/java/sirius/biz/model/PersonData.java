@@ -72,7 +72,7 @@ public class PersonData extends Composite {
     private String lastname;
 
     @Part
-    private static CodeLists codeLists;
+    private static CodeLists<?,?,?> codeLists;
 
     /**
      * Generates a string which is used to address the person.
