@@ -3,6 +3,7 @@ package sirius.biz.storage.versions;
 import sirius.biz.storage.Storage;
 import sirius.biz.storage.StoredObject;
 import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.jdbc.SQLTenant;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -48,7 +49,7 @@ public class VersionedFiles {
      * @param uniqueIdentifier the identifier of the versioned file
      * @return {@link List<VersionedFile>} list of versioned files (sorted: most current first)
      */
-    public List<VersionedFile> getVersions(Tenant tenant, String uniqueIdentifier) {
+    public List<VersionedFile> getVersions(SQLTenant tenant, String uniqueIdentifier) {
         return oma.select(VersionedFile.class)
                   .eq(VersionedFile.TENANT, tenant)
                   .eq(VersionedFile.UNIQUE_IDENTIFIER, uniqueIdentifier)
@@ -63,7 +64,7 @@ public class VersionedFiles {
      * @param uniqueIdentifier the identifier of the versioned file
      * @return boolean <tt>true</tt> if there are any versions, <tt>false</tt> otherwise
      */
-    public boolean hasVersions(Tenant tenant, String uniqueIdentifier) {
+    public boolean hasVersions(SQLTenant tenant, String uniqueIdentifier) {
         return oma.select(VersionedFile.class)
                   .eq(VersionedFile.TENANT, tenant)
                   .eq(VersionedFile.UNIQUE_IDENTIFIER, uniqueIdentifier)
@@ -76,7 +77,7 @@ public class VersionedFiles {
      * @param tenant           the owning tenant
      * @param uniqueIdentifier the identifier of the versioned file
      */
-    public void deleteVersions(Tenant tenant, String uniqueIdentifier) {
+    public void deleteVersions(SQLTenant tenant, String uniqueIdentifier) {
         oma.select(VersionedFile.class)
            .eq(VersionedFile.TENANT, tenant)
            .eq(VersionedFile.UNIQUE_IDENTIFIER, uniqueIdentifier)
@@ -90,7 +91,7 @@ public class VersionedFiles {
      * @param versionId the database id of the versioned file entity
      * @return the found {@link VersionedFile}
      */
-    public VersionedFile getFile(Tenant tenant, String versionId) {
+    public VersionedFile getFile(SQLTenant tenant, String versionId) {
         return oma.select(VersionedFile.class)
                   .eq(VersionedFile.ID, versionId)
                   .eq(VersionedFile.TENANT, tenant)
@@ -124,7 +125,7 @@ public class VersionedFiles {
      * @param comment          the comment explaining the changes of the current version
      * @return {@link VersionedFile} the versioned file
      */
-    public VersionedFile createVersion(Tenant tenant, String uniqueIdentifier, String content, String comment) {
+    public VersionedFile createVersion(SQLTenant tenant, String uniqueIdentifier, String content, String comment) {
         VersionedFile file = new VersionedFile();
         file.setComment(comment);
         file.setUniqueIdentifier(uniqueIdentifier);

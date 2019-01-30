@@ -2,7 +2,7 @@ package sirius.biz.storage.versions;
 
 import sirius.biz.storage.Storage;
 import sirius.biz.storage.StoredObjectRef;
-import sirius.biz.tenants.SQLTenantAware;
+import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;

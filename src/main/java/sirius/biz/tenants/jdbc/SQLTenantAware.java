@@ -6,12 +6,12 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants;
+package sirius.biz.tenants.jdbc;
 
 import sirius.biz.jdbc.BizEntity;
+import sirius.biz.tenants.Tenant;
 import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.SQLEntityRef;
-import sirius.db.mixing.Mapping;
 import sirius.kernel.di.std.Part;
 
 /**
@@ -20,15 +20,15 @@ import sirius.kernel.di.std.Part;
 public abstract class SQLTenantAware extends BizEntity implements TenantAware {
 
     @Part
-    private static Tenants tenants;
+    private static SQLTenants tenants;
 
     /**
      * Contains the tenant the entity belongs to.
      */
-    public static final Mapping TENANT = Mapping.named("tenant");
-    private final SQLEntityRef<Tenant> tenant = SQLEntityRef.on(Tenant.class, SQLEntityRef.OnDelete.CASCADE);
+    private final SQLEntityRef<SQLTenant> tenant = SQLEntityRef.on(SQLTenant.class, SQLEntityRef.OnDelete.CASCADE);
 
-    public SQLEntityRef<Tenant> getTenant() {
+    @Override
+    public SQLEntityRef<SQLTenant> getTenant() {
         return tenant;
     }
 
@@ -40,5 +40,10 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
     @Override
     public void fillWithCurrentTenant() {
         getTenant().setValue(tenants.getRequiredTenant());
+    }
+
+    @Override
+    public void withTenant(Tenant<?> tenant) {
+        getTenant().setValue((SQLTenant) tenant);
     }
 }
