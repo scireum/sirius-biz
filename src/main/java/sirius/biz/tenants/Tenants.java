@@ -29,11 +29,12 @@ import java.util.Optional;
  * Helps for extract the current {@link UserAccount} and {@link Tenant}.
  * <p>
  * Also some boiler plate methods are provided to perform some assertions.
+ *
+ * @param <I> the type of database IDs used by the concrete implementation
+ * @param <T> specifies the effective entity type used to represent Tenants
+ * @param <U> specifies the effective entity type used to represent UserAccounts
  */
 public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>> {
-
-
-//    public static final String FRAMEWORK_TENANTS_MONGO = "biz.tenants.mongo";
 
     /**
      * Names the framework which must be enabled to activate the tenant based user management.
@@ -60,8 +61,18 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
         return Optional.empty();
     }
 
+    /**
+     * Returns the effective entity class used to represent tenants.
+     *
+     * @return the effective implementation of {@link Tenant}
+     */
     public abstract Class<T> getTenantClass();
 
+    /**
+     * Returns the effective entity class used to represent user accounts.
+     *
+     * @return the effective implementation of {@link UserAccount}
+     */
     public abstract Class<U> getUserClass();
 
     /**
@@ -158,7 +169,8 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
             return;
         }
 
-        if (!Objects.equals(tenantAware.getTenantAsString(), getCurrentTenant().map(Tenant::getIdAsString).orElse(null))) {
+        if (!Objects.equals(tenantAware.getTenantAsString(),
+                            getCurrentTenant().map(Tenant::getIdAsString).orElse(null))) {
             throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
         }
     }
@@ -195,5 +207,4 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
     public <E extends BaseEntity<?> & TenantAware, Q extends Query<Q, E, ?>> Q forCurrentTenant(Q qry) {
         return qry.eq(TenantAware.TENANT, getRequiredTenant());
     }
-
 }

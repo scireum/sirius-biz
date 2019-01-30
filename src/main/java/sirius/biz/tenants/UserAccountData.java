@@ -86,6 +86,11 @@ public class UserAccountData extends Composite implements MessageProvider {
     @Part
     private static Mails ms;
 
+    /**
+     * Creates a new instance referenced by the given entity.
+     *
+     * @param userObject the entity to which this user data belongs
+     */
     public UserAccountData(BaseEntity<?> userObject) {
         this.userObject = userObject;
         this.permissions = new PermissionData(userObject);
@@ -112,20 +117,18 @@ public class UserAccountData extends Composite implements MessageProvider {
                             .set("field", NLS.get("LoginData.username"))
                             .handle();
         }
-//TODO
-//        userObject.assertUnique(LOGIN.inner(LoginData.USERNAME), getLogin().getUsername());
+
+        userObject.assertUnique(UserAccount.USER_ACCOUNT_DATA.inner(LOGIN).inner(LoginData.USERNAME), getLogin().getUsername());
     }
 
     @AfterSave
     protected void onModify() {
-        //TODO
-//        TenantUserManager.flushCacheForUserAccount(this);
+        TenantUserManager.flushCacheForUserAccount((UserAccount<?,?>)userObject);
     }
 
     @AfterDelete
     protected void onDelete() {
-        //TODO
-//        TenantUserManager.flushCacheForUserAccount(this);
+        TenantUserManager.flushCacheForUserAccount((UserAccount<?,?>)userObject);
     }
 
     /**
@@ -152,12 +155,15 @@ public class UserAccountData extends Composite implements MessageProvider {
         // The TenantUserManager redirects all calls for "Transformable" from "UserInfo" to its manager object.
         // As the Tenant is requested often, we provide a shortcut for "user.as(UserAccount.class).getTenant().getValue()"
         // in the form of "user.as(Tenant.class)"
-        if (Tenant.class == adapterType) {
-            //TODO
-//            return Optional.ofNullable((A) getTenant().getValue());
+        if (Tenant.class.isAssignableFrom(adapterType)) {
+            return Optional.ofNullable((A) getTenant());
         }
 
         return super.tryAs(adapterType);
+    }
+
+    protected Tenant<?> getTenant() {
+        return ((UserAccount<?,?>)userObject).getTenant().getValue();
     }
 
     @Override
@@ -165,7 +171,7 @@ public class UserAccountData extends Composite implements MessageProvider {
         // The TenantUserManager redirects all calls for "Transformable" from "UserInfo" to its manager object.
         // As the Tenant is requested often, we provide a shortcut for "user.as(UserAccount.class).getTenant().getValue()"
         // in the form of "user.as(Tenant.class)"
-        if (Tenant.class == type) {
+        if (Tenant.class.isAssignableFrom(type)) {
             return true;
         }
 
@@ -204,17 +210,16 @@ public class UserAccountData extends Composite implements MessageProvider {
     }
 
     private void warnAboutForcedLogout(Consumer<Message> messageConsumer) {
-        //TODO
-//        if (isExternalLoginRequired()) {
-//            if (isNearInterval(getLogin().getLastExternalLogin(),
-//                               getTenant().getValue().getExternalLoginIntervalDays())) {
-//                messageConsumer.accept(Message.info(NLS.get("UserAccount.forcedExternalLoginNear")));
-//                return;
-//            }
-//        }
-//        if (isNearInterval(getLogin().getLastLogin(), getTenant().getValue().getLoginIntervalDays())) {
-//            messageConsumer.accept(Message.info(NLS.get("UserAccount.forcedLogoutNear")));
-//        }
+        if (isExternalLoginRequired()) {
+            if (isNearInterval(getLogin().getLastExternalLogin(),
+                               getTenant().getTenantData().getExternalLoginIntervalDays())) {
+                messageConsumer.accept(Message.info(NLS.get("UserAccount.forcedExternalLoginNear")));
+                return;
+            }
+        }
+        if (isNearInterval(getLogin().getLastLogin(), getTenant().getTenantData().getLoginIntervalDays())) {
+            messageConsumer.accept(Message.info(NLS.get("UserAccount.forcedLogoutNear")));
+        }
     }
 
     private boolean isNearInterval(LocalDateTime dateTime, Integer requiredInterval) {
@@ -245,9 +250,7 @@ public class UserAccountData extends Composite implements MessageProvider {
      * @return <tt>true</tt> if generated passwords can be sent to the user, <tt>false</tt> otherwise
      */
     public boolean canSendGeneratedPassword() {
-//        TODO
-//        return Strings.isFilled(email) && userObject.isUnique(EMAIL, email);
-        return false;
+        return Strings.isFilled(email) && userObject.isUnique(EMAIL, email);
     }
 
     public PersonData getPerson() {
