@@ -24,6 +24,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -84,7 +85,7 @@ public class PermissionData extends Composite {
         if (permissions == null) {
             compilePermissions();
         }
-        return permissions;
+        return Collections.unmodifiableSet(permissions);
     }
 
     private void compilePermissions() {
