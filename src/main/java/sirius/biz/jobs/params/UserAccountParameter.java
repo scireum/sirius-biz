@@ -8,13 +8,25 @@
 
 package sirius.biz.jobs.params;
 
+import sirius.biz.tenants.Tenants;
 import sirius.biz.tenants.UserAccount;
+import sirius.db.mixing.Mixing;
+import sirius.kernel.commons.Value;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
+
+import java.util.Optional;
 
 /**
  * Permits to select a {@link UserAccount} as parameter.
  */
-public class UserAccountParameter extends EntityParameter<UserAccount> {
+public class UserAccountParameter extends Parameter<UserAccount<?, ?>, UserAccountParameter> {
+
+    @Part
+    private static Tenants<?, ?, ?> tenants;
+
+    @Part
+    private static Mixing mixing;
 
     /**
      * Creates a new parameter with the given name and label.
@@ -26,22 +38,25 @@ public class UserAccountParameter extends EntityParameter<UserAccount> {
         super(name, label);
     }
 
-    /**
-     * Creates a new parameter with the given name.
-     *
-     * @param name the name of the parameter
-     */
-    public UserAccountParameter(String name) {
-        super(name);
+    @Override
+    public String getTemplateName() {
+        return "/templates/jobs/params/user-account.html.pasta";
     }
 
     @Override
-    public String getAutocompleteUri() {
-        return "/user-accounts/autocomplete";
+    protected String checkAndTransformValue(Value input) {
+        return resolveFromString(input).map(UserAccount::getIdAsString).orElse(null);
     }
 
     @Override
-    protected Class<UserAccount> getType() {
-        return UserAccount.class;
+    protected Optional<UserAccount<?, ?>> resolveFromString(Value input) {
+        UserAccount<?, ?> user = mixing.getDescriptor(tenants.getUserClass())
+                                       .getMapper()
+                                       .find(tenants.getUserClass(), input.asString())
+                                       .orElse(null);
+        if (user == null || !user.getTenant().is(tenants.getRequiredTenant())) {
+            return Optional.empty();
+        }
+        return Optional.of(user);
     }
 }
