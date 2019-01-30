@@ -10,13 +10,13 @@ package sirius.biz.tenants;
 
 import sirius.biz.web.BizController;
 import sirius.biz.web.TenantAware;
-import sirius.db.jdbc.OMA;
-import sirius.db.jdbc.SQLEntityRef;
-import sirius.db.jdbc.SmartQuery;
+import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.Mixing;
+import sirius.db.mixing.query.Query;
+import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.di.std.Part;
-import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -30,8 +30,10 @@ import java.util.Optional;
  * <p>
  * Also some boiler plate methods are provided to perform some assertions.
  */
-@Register(classes = Tenants.class, framework = Tenants.FRAMEWORK_TENANTS)
-public class Tenants {
+public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>> {
+
+
+//    public static final String FRAMEWORK_TENANTS_MONGO = "biz.tenants.mongo";
 
     /**
      * Names the framework which must be enabled to activate the tenant based user management.
@@ -39,9 +41,9 @@ public class Tenants {
     public static final String FRAMEWORK_TENANTS = "biz.tenants";
 
     @Part
-    private OMA oma;
+    protected Mixing mixing;
 
-    private Cache<String, Boolean> tenantsWithChildren = CacheManager.createCoherentCache("tenants-children");
+    protected Cache<String, Boolean> tenantsWithChildren = CacheManager.createCoherentCache("tenants-children");
 
     /**
      * Returns the current user as {@link UserAccount} which is logged in.
@@ -49,14 +51,18 @@ public class Tenants {
      * @return the current user wrapped as {@link Optional} or an empty optional, if no user is logged in.
      */
     @Nonnull
-    public Optional<UserAccount> getCurrentUser() {
+    public Optional<U> getCurrentUser() {
         UserInfo user = UserContext.getCurrentUser();
         if (user.isLoggedIn()) {
-            return Optional.ofNullable(user.getUserObject(UserAccount.class));
+            return Optional.ofNullable(user.getUserObject(getUserClass()));
         }
 
         return Optional.empty();
     }
+
+    public abstract Class<T> getTenantClass();
+
+    public abstract Class<U> getUserClass();
 
     /**
      * Returns the current user or throws an exception if no user is currently available.
@@ -64,8 +70,8 @@ public class Tenants {
      * @return the currently logged in user
      */
     @Nonnull
-    public UserAccount getRequiredUser() {
-        Optional<UserAccount> ua = getCurrentUser();
+    public U getRequiredUser() {
+        Optional<U> ua = getCurrentUser();
         if (ua.isPresent()) {
             return ua.get();
         }
@@ -90,7 +96,7 @@ public class Tenants {
      * @return the tenant of the current user wrapped as {@link Optional} or an empty optional, if no user is logged in.
      */
     @Nonnull
-    public Optional<Tenant> getCurrentTenant() {
+    public Optional<T> getCurrentTenant() {
         return getCurrentUser().flatMap(u -> Optional.ofNullable(u.getTenant().getValue()));
     }
 
@@ -100,8 +106,8 @@ public class Tenants {
      * @return the tenant of the currently logged in user
      */
     @Nonnull
-    public Tenant getRequiredTenant() {
-        Optional<Tenant> t = getCurrentTenant();
+    public T getRequiredTenant() {
+        Optional<T> t = getCurrentTenant();
         if (t.isPresent()) {
             return t.get();
         }
@@ -129,10 +135,11 @@ public class Tenants {
      * @return <tt>true</tt> if the given tenant has children, <tt>false</tt> if there are no children, or if the tenant
      * id is unknown.
      */
-    public boolean hasChildTenants(long tenantId) {
-        return tenantsWithChildren.get(String.valueOf(tenantId),
-                                       id -> oma.select(Tenant.class).eq(Tenant.PARENT, tenantId).exists());
+    public boolean hasChildTenants(I tenantId) {
+        return tenantsWithChildren.get(String.valueOf(tenantId), id -> checkIfHasChildTenants(tenantId));
     }
+
+    protected abstract boolean checkIfHasChildTenants(I tenantId);
 
     /**
      * Flushes the cache which determines if a tenant has children or not.
@@ -169,8 +176,8 @@ public class Tenants {
         if (!Objects.equals(tenantAware.getTenantAsString(), getCurrentTenant().map(Tenant::getIdAsString).orElse(null))
             && !Objects.equals(tenantAware.getTenantAsString(),
                                getCurrentTenant().map(Tenant::getParent)
-                                                 .filter(SQLEntityRef::isFilled)
-                                                 .map(SQLEntityRef::getId)
+                                                 .filter(BaseEntityRef::isFilled)
+                                                 .map(BaseEntityRef::getId)
                                                  .map(String::valueOf)
                                                  .orElse(null))) {
             throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
@@ -185,7 +192,8 @@ public class Tenants {
      * @return the query with an additional constraint filtering on the current tenant
      * @throws sirius.kernel.health.HandledException if there is currently no user / tenant available
      */
-    public <E extends SQLTenantAware> SmartQuery<E> forCurrentTenant(SmartQuery<E> qry) {
-        return qry.eq(SQLTenantAware.TENANT, getRequiredTenant());
+    public <E extends BaseEntity<?> & TenantAware, Q extends Query<Q, E, ?>> Q forCurrentTenant(Q qry) {
+        return qry.eq(TenantAware.TENANT, getRequiredTenant());
     }
+
 }

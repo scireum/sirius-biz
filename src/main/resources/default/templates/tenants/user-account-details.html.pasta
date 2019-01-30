@@ -5,30 +5,30 @@
     <w:editForm url="@apply('/user-account/%s', account.getIdAsString())">
 
         <div class="row">
-            <w:textfield name="email" value="@account.getEmail()" labelKey="Model.email" required="true"
+            <w:textfield name="userAccountData_email" value="@account.getUserAccountData().getEmail()" labelKey="Model.email" required="true"
                          helpKey="UserAccount.email.help"/>
-            <w:textfield name="login_username" value="@account.getLogin().getUsername()" labelKey="LoginData.username"
+            <w:textfield name="luserAccountData_ogin_username" value="@account.getUserAccountData().getLogin().getUsername()" labelKey="LoginData.username"
                          helpKey="UserAccount.username.help"/>
         </div>
 
         <div class="row">
-            <w:codelistSelect name="person_salutation" list="salutations" value="@account.getPerson().getSalutation()"
+            <w:codelistSelect name="userAccountData_person_salutation" list="salutations" value="@account.getUserAccountData().getPerson().getSalutation()"
                               labelKey="PersonData.salutation"/>
-            <w:textfield name="person_title" value="@account.getPerson().getTitle()" labelKey="PersonData.title"/>
+            <w:textfield name="userAccountData_person_title" value="@account.getUserAccountData().getPerson().getTitle()" labelKey="PersonData.title"/>
         </div>
         <div class="row">
-            <w:textfield name="person_firstname" value="@account.getPerson().getFirstname()"
+            <w:textfield name="userAccountData_person_firstname" value="@account.getUserAccountData().getPerson().getFirstname()"
                          labelKey="PersonData.firstname"/>
-            <w:textfield name="person_lastname" value="@account.getPerson().getLastname()"
+            <w:textfield name="userAccountData_person_lastname" value="@account.getUserAccountData().getPerson().getLastname()"
                          labelKey="PersonData.lastname"/>
         </div>
         <div class="row">
             <div class="col-md-6">
                 <w:heading labelKey="Model.security"/>
                 <div class="row">
-                    <w:checkbox span="12" name="login_accountLocked" value="account.getLogin().isAccountLocked()"
+                    <w:checkbox span="12" name="userAccountData_login_accountLocked" value="account.getUserAccountData().getLogin().isAccountLocked()"
                                 labelKey="LoginData.accountLocked"/>
-                    <w:checkbox span="12" name="externalLoginRequired" value="account.isExternalLoginRequired()"
+                    <w:checkbox span="12" name="userAccountData_externalLoginRequired" value="account.getUserAccountData().isExternalLoginRequired()"
                                 labelKey="UserAccount.externalLoginRequired" helpKey="UserAccount.externalLoginRequired.help"/>
                 </div>
 
@@ -39,7 +39,7 @@
                     <div class="checkbox">
                         <label>
                             <input type="checkbox" name="roles" value="@role"
-                                   @if (account.getPermissions().getPermissions().contains(role)) { checked="checked"
+                                   @if (account.getUserAccountData().getPermissions().getPermissions().contains(role)) { checked="checked"
                                    }/>
                             @controller.getRoleName(role)
                             <span class="help-block checkbox-help"> @controller.getRoleDescription(role)</span>

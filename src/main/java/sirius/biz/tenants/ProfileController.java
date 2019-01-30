@@ -10,6 +10,7 @@ package sirius.biz.tenants;
 
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
+import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -22,9 +23,14 @@ import sirius.web.security.UserManager;
 
 /**
  * Provides functionality to modify accounts.
+ *
+ * @param <I> specifies the effective type of database IDs used by the concrete implementation
+ * @param <T> specifies the effective entity type used to represent Tenants
+ * @param <U> specifies the effective entity type used to represent UserAccounts
  */
 @Register(classes = Controller.class, framework = Tenants.FRAMEWORK_TENANTS)
-public class ProfileController extends BizController {
+public class ProfileController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+        extends BizController {
 
     private static final String PARAM_OLD_PASSWORD = "oldPassword";
     private static final String PARAM_NEW_PASSWORD = "newPassword";
@@ -41,7 +47,8 @@ public class ProfileController extends BizController {
     @LoginRequired
     @Routed("/profile")
     public void profile(WebContext ctx) {
-        UserAccount userAccount = oma.refreshOrFail(getUser().getUserObject(UserAccount.class));
+        U userAccount = getUser().getUserObject(getUserClass());
+        userAccount = userAccount.getMapper().refreshOrFail(userAccount);
         assertNotNew(userAccount);
 
         boolean requestHandled = prepareSave(ctx).saveEntity(userAccount);
@@ -49,6 +56,11 @@ public class ProfileController extends BizController {
         if (!requestHandled) {
             ctx.respondWith().template("/templates/tenants/profile.html.pasta", userAccount);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Class<U> getUserClass() {
+        return (Class<U>) tenants.getUserClass();
     }
 
     /**
@@ -59,7 +71,8 @@ public class ProfileController extends BizController {
     @LoginRequired
     @Routed("/profile/password")
     public void profileChangePassword(WebContext ctx) {
-        UserAccount userAccount = oma.refreshOrFail(getUser().getUserObject(UserAccount.class));
+        U userAccount = getUser().getUserObject(getUserClass());
+        userAccount = userAccount.getMapper().refreshOrFail(userAccount);
         assertNotNew(userAccount);
 
         if (ctx.ensureSafePOST()) {
@@ -69,13 +82,20 @@ public class ProfileController extends BizController {
                 String confirmation = ctx.get(PARAM_CONFIRMATION).asString();
 
                 validateOldPassword(oldPassword, userAccount);
-                userAccount.getLogin().verifyPassword(newPassword, confirmation, userAccount.getMinPasswordLength());
-                userAccount.getLogin().setCleartextPassword(newPassword);
-                oma.update(userAccount);
+                userAccount.getUserAccountData()
+                           .getLogin()
+                           .verifyPassword(newPassword,
+                                           confirmation,
+                                           userAccount.getUserAccountData().getMinPasswordLength());
+                userAccount.getUserAccountData().getLogin().setCleartextPassword(newPassword);
+                userAccount.getMapper().update(userAccount);
 
                 auditLog.neutral("AuditLog.passwordChange").causedByCurrentUser().forCurrentUser().log();
 
                 showSavedMessage();
+
+                ctx.respondWith().redirectToGet("/profile");
+                return;
             } catch (Exception e) {
                 auditLog.neutral("AuditLog.passwordChangeFailed").causedByCurrentUser().forCurrentUser().log();
 
@@ -93,11 +113,13 @@ public class ProfileController extends BizController {
      * @param userAccount the user account to validate the old password for
      * @throws sirius.kernel.health.HandledException if the old password is invalid
      */
-    private void validateOldPassword(String oldPassword, UserAccount userAccount) {
+    @SuppressWarnings("unchecked")
+    private void validateOldPassword(String oldPassword, U userAccount) {
         UserManager userManager = UserContext.get().getUserManager();
 
-        if (!(userManager instanceof TenantUserManager && ((TenantUserManager) userManager).checkPassword(userAccount,
-                                                                                                          oldPassword))) {
+        if (!(userManager instanceof TenantUserManager && ((TenantUserManager<I, T, U>) userManager).checkPassword(
+                userAccount,
+                oldPassword))) {
             throw Exceptions.createHandled().withNLSKey("ProfileController.invalidOldPassword").handle();
         }
     }
