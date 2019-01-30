@@ -88,7 +88,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>> extends Parameter
 
     @SuppressWarnings("unchecked")
     protected BaseMapper<V, ?, ?> getMapper() {
-        return (BaseMapper<V, ?, ?>) descriptor.getMapper();
+        return descriptor.getMapper();
     }
 
     /**
