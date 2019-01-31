@@ -36,15 +36,15 @@
         <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants.getItems()">
             <tr>
                 <td>
-                    <a class="link" href="/tenants/select/@tenant.getId()">@tenant.getName()</a><br>
-                    <small class="muted">@tenant.getId()</small>
+                    <a class="link" href="/tenants/select/@tenant.getIdAsString()">@tenant.getTenantData().getName()</a><br>
+                    <small class="muted">@tenant.getIdAsString()</small>
                 </td>
                 <td>
-                    @tenant.getAccountNumber()
+                    @tenant.getTenantData().getAccountNumber()
                 </td>
                 <td>
-                    @tenant.getAddress().getStreet()<br>
-                    @tenant.getAddress().getZip() @tenant.getAddress().getCity()
+                    @tenant.getTenantData().getAddress().getStreet()<br>
+                    @tenant.getTenantData().getAddress().getZip() @tenant.getTenantData().getAddress().getCity()
                 </td>
             </tr>
         </i:for>

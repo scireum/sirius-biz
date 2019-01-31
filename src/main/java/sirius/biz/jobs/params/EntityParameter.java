@@ -46,7 +46,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>> extends Parameter
     protected static Elastic elastic;
 
     @Part
-    protected static Tenants tenants;
+    protected static Tenants<?, ?, ?> tenants;
 
     protected EntityDescriptor descriptor;
 
@@ -86,9 +86,13 @@ public abstract class EntityParameter<V extends BaseEntity<?>> extends Parameter
      */
     protected abstract Class<V> getType();
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Returns the mapper which is to be used to the entity represented by this parameter.
+     *
+     * @return the mapper of the represented entity
+     */
     protected BaseMapper<V, ?, ?> getMapper() {
-        return (BaseMapper<V, ?, ?>) descriptor.getMapper();
+        return descriptor.getMapper();
     }
 
     /**

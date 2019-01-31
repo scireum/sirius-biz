@@ -12,7 +12,6 @@ import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.db.jdbc.OMA;
 import sirius.db.mixing.BaseEntity;
-import sirius.db.mixing.BaseMapper;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
@@ -60,7 +59,7 @@ public class BizController extends BasicController {
     protected Elastic elastic;
 
     @Part
-    protected Tenants tenants;
+    protected Tenants<?, ?, ?> tenants;
 
     @ConfigValue("product.baseUrl")
     private String baseUrl;
@@ -444,7 +443,6 @@ public class BizController extends BasicController {
      * @return the requested entity or a new one, if id was <tt>new</tt>
      * @throws sirius.kernel.health.HandledException if either the id is unknown or a new instance cannot be created
      */
-    @SuppressWarnings("unchecked")
     protected <E extends BaseEntity<?>> E find(Class<E> type, String id) {
         if (BaseEntity.NEW.equals(id) && BaseEntity.class.isAssignableFrom(type)) {
             try {
@@ -457,7 +455,7 @@ public class BizController extends BasicController {
                                 .handle();
             }
         }
-        Optional<E> result = ((BaseMapper<BaseEntity<?>, ?, ?>) mixing.getDescriptor(type).getMapper()).find(type, id);
+        Optional<E> result = mixing.getDescriptor(type).getMapper().find(type, id);
         if (!result.isPresent()) {
             throw Exceptions.createHandled().withNLSKey("BizController.unknownObject").set("id", id).handle();
         }
@@ -474,12 +472,11 @@ public class BizController extends BasicController {
      * was found
      * or if the id was <tt>new</tt>
      */
-    @SuppressWarnings("unchecked")
     protected <E extends BaseEntity<?>> Optional<E> tryFind(Class<E> type, String id) {
         if (BaseEntity.NEW.equals(id)) {
             return Optional.empty();
         }
-        return ((BaseMapper<BaseEntity<?>, ?, ?>) mixing.getDescriptor(type).getMapper()).find(type, id);
+        return mixing.getDescriptor(type).getMapper().find(type, id);
     }
 
     /**

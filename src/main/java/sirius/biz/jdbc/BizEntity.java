@@ -10,6 +10,7 @@ package sirius.biz.jdbc;
 
 import sirius.biz.protocol.NoJournal;
 import sirius.biz.protocol.TraceData;
+import sirius.biz.protocol.Traced;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.Mapping;
 
@@ -18,7 +19,7 @@ import sirius.db.mixing.Mapping;
  * <p>
  * Provides built in {@link TraceData}
  */
-public abstract class BizEntity extends SQLEntity {
+public abstract class BizEntity extends SQLEntity implements Traced {
 
     /**
      * Contains tracing data which records which user created and last edited the entity
@@ -26,6 +27,7 @@ public abstract class BizEntity extends SQLEntity {
     public static final Mapping TRACE = Mapping.named("trace");
     private final TraceData trace = new TraceData();
 
+    @Override
     public TraceData getTrace() {
         return trace;
     }

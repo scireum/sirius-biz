@@ -3,8 +3,8 @@
     <w:menuItem titleKey="UserAccount.plural" url="/user-accounts" permission="permission-manage-user-accounts"/>
 </w:menuSection>
 <w:menuSection framework="biz.tenants">
-    <w:menuItem titleKey="ProfileController.myProfile" url="/profile" />
-    <w:menuItem titleKey="Model.password.set" url="/profile/password" />
+    <w:menuItem titleKey="ProfileController.myProfile" url="/profile"/>
+    <w:menuItem titleKey="Model.password.set" url="/profile/password"/>
 </w:menuSection>
 <w:menuSection framework="biz.tenants">
     <w:menuItem titleKey="Tenant.select" url="/tenants/select" permission="permission-select-tenant"/>

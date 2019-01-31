@@ -31,7 +31,7 @@ import java.util.regex.PatternSyntaxException;
 public class InternationalAddressData extends AddressData {
 
     @Part
-    private static CodeLists cls;
+    private static CodeLists<?, ?, ?> cls;
 
     @Transient
     private boolean verifyZip;

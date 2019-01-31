@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists
 
+import sirius.biz.codelists.jdbc.SQLCodeListEntry
 import sirius.biz.tenants.TenantsHelper
 import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
@@ -31,7 +32,7 @@ class CodeListsSpec extends BaseSpecification {
         given:
         TenantsHelper.installTestTenant()
         when:
-        List<CodeListEntry> entries = cl.getEntries("test")
+        List<SQLCodeListEntry> entries = cl.getEntries("test")
         then:
         entries.isEmpty()
     }

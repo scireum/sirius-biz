@@ -1,7 +1,7 @@
 <i:arg type="sirius.biz.tenants.Tenant" name="tenant"/>
 <i:arg type="String" name="page"/>
 
-<w:page title="@tenant.toString()">
+<w:page title="@toUserString(tenant)">
     <i:block name="head">
         <script src="/assets/wondergem/ace/ace.js" type="text/javascript"></script>
     </i:block>
@@ -11,33 +11,33 @@
             <a href="/tenants">@i18n("Tenant.plural")</a>
         </li>
         <li>
-            <a href="/tenant/@tenant.getId()">@tenant</a>
+            <a href="/tenant/@tenant.getIdAsString()">@tenant</a>
         </li>
     </i:block>
 
     <w:pageHeader>
-        @i18n("Model.tenant"): @tenant.getName()
-        <small>@tenant.getAccountNumber()</small>
+        @i18n("Model.tenant"): @tenant.getTenantData().getName()
+        <small>@tenant.getTenantData().getAccountNumber()</small>
     </w:pageHeader>
 
     <div class="row">
         <i:if test="!tenant.isNew()">
             <div class="col-md-3">
                 <w:infobox titleKey="Model.details">
-                    <w:infoboxElement labelKey="Model.name" value="@tenant.getName()"/>
-                    <w:infoboxElement labelKey="Tenant.accountNumber" value="@tenant.getAccountNumber()"/>
-                    <w:infoboxElement labelKey="AddressData.street" value="@tenant.getAddress().getStreet()"/>
-                    <w:infoboxElement labelKey="AddressData.zip" value="@tenant.getAddress().getZip()"/>
-                    <w:infoboxElement labelKey="AddressData.city" value="@tenant.getAddress().getCity()"/>
+                    <w:infoboxElement labelKey="Model.name" value="@tenant.getTenantData().getName()"/>
+                    <w:infoboxElement labelKey="Tenant.accountNumber" value="@tenant.getTenantData().getAccountNumber()"/>
+                    <w:infoboxElement labelKey="AddressData.street" value="@tenant.getTenantData().getAddress().getStreet()"/>
+                    <w:infoboxElement labelKey="AddressData.zip" value="@tenant.getTenantData().getAddress().getZip()"/>
+                    <w:infoboxElement labelKey="AddressData.city" value="@tenant.getTenantData().getAddress().getCity()"/>
 
                     <i:extensions name="templates-tenant-sidebar-infos" tenant="tenant" page="page"/>
                 </w:infobox>
 
 
                 <w:navbox labelKey="Model.links">
-                    <w:navboxLink labelKey="Model.details" url="@apply('/tenant/%s', tenant.getId())"
+                    <w:navboxLink labelKey="Model.details" url="@apply('/tenant/%s', tenant.getIdAsString())"
                                   active="page == 'details'"/>
-                    <w:navboxLink labelKey="Model.config" url="@apply('/tenant/%s/config', tenant.getId())"
+                    <w:navboxLink labelKey="Model.config" url="@apply('/tenant/%s/config', tenant.getIdAsString())"
                                   active="page == 'config'"/>
 
                     <i:extensions name="templates-tenant-sidebar-menu" tenant="tenant" page="page"/>

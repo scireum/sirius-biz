@@ -8,7 +8,7 @@
 
 package sirius.biz.importer;
 
-import sirius.biz.tenants.SQLTenantAware;
+import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.batch.DeleteQuery;
 import sirius.db.jdbc.batch.FindQuery;

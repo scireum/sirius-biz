@@ -14,9 +14,7 @@ import com.typesafe.config.Config;
 import sirius.biz.model.LoginData;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
-import sirius.db.jdbc.OMA;
-import sirius.db.jdbc.SQLQuery;
-import sirius.db.mixing.EntityDescriptor;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
@@ -24,7 +22,6 @@ import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
-import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
@@ -33,7 +30,6 @@ import sirius.web.security.GenericUserManager;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserInfo;
 import sirius.web.security.UserManager;
-import sirius.web.security.UserManagerFactory;
 import sirius.web.security.UserSettings;
 
 import javax.annotation.Nonnull;
@@ -41,6 +37,7 @@ import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -52,8 +49,13 @@ import java.util.Set;
  * in the system config.
  * <p>
  * This is the default user manager for the default scope in <tt>sirius-biz</tt>.
+ *
+ * @param <I> the type of database IDs used by the concrete implementation
+ * @param <T> specifies the effective entity type used to represent Tenants
+ * @param <U> specifies the effective entity type used to represent UserAccounts
  */
-public class TenantUserManager extends GenericUserManager {
+public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+        extends GenericUserManager {
 
     /**
      * This flag permission is granted to all users which belong to the system tenant.
@@ -62,6 +64,12 @@ public class TenantUserManager extends GenericUserManager {
      * company which owns / runs the system.
      */
     public static final String PERMISSION_SYSTEM_TENANT = "flag-system-tenant";
+
+    /**
+     * This flag permission is granted to all users which access the application from outside of
+     * the configured ip range.
+     */
+    public static final String PERMISSION_OUT_OF_IP_RANGE = "flag-out-of-ip-range";
 
     /**
      * Contains the permission required to manage the system.
@@ -105,25 +113,25 @@ public class TenantUserManager extends GenericUserManager {
      */
     public static final String SPY_ID_SUFFIX = "-spy-id";
 
-    private final String systemTenant;
-    private final String defaultSalt;
-    private final boolean acceptApiTokens;
-    private final boolean autocreateTenant;
+    protected final String systemTenant;
+    protected final String defaultSalt;
+    protected final boolean acceptApiTokens;
 
     @Part
-    private static OMA oma;
+    protected static Tenants<?, ?, ?> tenants;
 
     @Part
-    private static Mixing mixing;
+    protected static Mixing mixing;
 
     @Part
-    private static AuditLog auditLog;
+    protected static AuditLog auditLog;
 
-    private static Cache<String, Set<String>> rolesCache = CacheManager.createCoherentCache("tenants-roles");
-    private static Cache<String, UserAccount> userAccountCache = CacheManager.createCoherentCache("tenants-users");
-    private static Cache<String, Tenant> tenantsCache = CacheManager.createCoherentCache("tenants-tenants");
+    protected static Cache<String, Set<String>> rolesCache = CacheManager.createCoherentCache("tenants-roles");
+    protected static Cache<String, UserAccount<?, ?>> userAccountCache =
+            CacheManager.createCoherentCache("tenants-users");
+    protected static Cache<String, Tenant<?>> tenantsCache = CacheManager.createCoherentCache("tenants-tenants");
 
-    private static Cache<String, Tuple<UserSettings, String>> configCache =
+    protected static Cache<String, Tuple<UserSettings, String>> configCache =
             CacheManager.createCoherentCache("tenants-configs");
 
     protected TenantUserManager(ScopeInfo scope, Extension config) {
@@ -131,20 +139,6 @@ public class TenantUserManager extends GenericUserManager {
         this.systemTenant = config.get("system-tenant").asString();
         this.defaultSalt = config.get("default-salt").asString("");
         this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(true);
-        this.autocreateTenant = config.get("autocreate-tenant").asBoolean(true);
-    }
-
-    /**
-     * Creates a new user manager for the given scope and configuration.
-     */
-    @Register(name = "tenants", framework = Tenants.FRAMEWORK_TENANTS)
-    public static class Factory implements UserManagerFactory {
-
-        @Nonnull
-        @Override
-        public UserManager createManager(@Nonnull ScopeInfo scope, @Nonnull Extension config) {
-            return new TenantUserManager(scope, config);
-        }
     }
 
     /**
@@ -152,7 +146,7 @@ public class TenantUserManager extends GenericUserManager {
      *
      * @param account the account to flush
      */
-    public static void flushCacheForUserAccount(UserAccount account) {
+    public static void flushCacheForUserAccount(UserAccount<?, ?> account) {
         rolesCache.remove(account.getUniqueName());
         userAccountCache.remove(account.getUniqueName());
         configCache.remove(account.getUniqueName());
@@ -163,7 +157,7 @@ public class TenantUserManager extends GenericUserManager {
      *
      * @param tenant the tenant to flush
      */
-    public static void flushCacheForTenant(Tenant tenant) {
+    public static void flushCacheForTenant(Tenant<?> tenant) {
         tenantsCache.remove(tenant.getIdAsString());
         configCache.remove(tenant.getUniqueName());
         configCache.removeIf(cachedValue -> Strings.areEqual(cachedValue.getValue().getSecond(),
@@ -194,7 +188,7 @@ public class TenantUserManager extends GenericUserManager {
     }
 
     private UserInfo becomeSpyUser(String spyId, UserInfo rootUser) {
-        UserAccount spyUser = fetchAccount(spyId, null);
+        U spyUser = fetchAccount(spyId, null);
         if (spyUser == null) {
             return null;
         }
@@ -212,19 +206,13 @@ public class TenantUserManager extends GenericUserManager {
         if (Strings.isEmpty(tenantId) || Strings.areEqual(originalUser.getTenantId(), tenantId)) {
             return originalUser;
         }
-        Tenant tenant = fetchTenant(tenantId);
+        T tenant = fetchTenant(tenantId);
         if (tenant == null) {
             return originalUser;
         }
 
         // Copy all relevant data into a new object (outside of the cache)...
-        UserAccount currentUser = originalUser.getUserObject(UserAccount.class);
-        UserAccount modifiedUser = new UserAccount();
-        modifiedUser.setId(currentUser.getId());
-        modifiedUser.getLogin().setUsername(currentUser.getLogin().getUsername());
-        modifiedUser.setEmail(currentUser.getEmail());
-        modifiedUser.getPermissions().setConfigString(currentUser.getPermissions().getConfigString());
-        modifiedUser.getPermissions().getPermissions().addAll(currentUser.getPermissions().getPermissions());
+        U modifiedUser = cloneUser(originalUser);
 
         // And overwrite with the new tenant...
         modifiedUser.getTenant().setValue(tenant);
@@ -235,9 +223,36 @@ public class TenantUserManager extends GenericUserManager {
         return asUserWithRoles(modifiedUser, roles);
     }
 
+    protected U cloneUser(UserInfo originalUser) {
+        try {
+            U currentUser = originalUser.getUserObject(getUserClass());
+            U modifiedUser = getUserClass().getDeclaredConstructor().newInstance();
+            modifiedUser.setId(currentUser.getId());
+            modifiedUser.getUserAccountData()
+                        .getLogin()
+                        .setUsername(currentUser.getUserAccountData().getLogin().getUsername());
+            modifiedUser.getUserAccountData().setEmail(currentUser.getUserAccountData().getEmail());
+            modifiedUser.getUserAccountData()
+                        .getPermissions()
+                        .setConfigString(currentUser.getUserAccountData().getPermissions().getConfigString());
+            modifiedUser.getUserAccountData()
+                        .getPermissions()
+                        .getPermissions()
+                        .addAll(currentUser.getUserAccountData().getPermissions().getPermissions());
+            return modifiedUser;
+        } catch (Exception e) {
+            throw Exceptions.handle(BizController.LOG, e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     @Nullable
-    private Tenant fetchTenant(String tenantId) {
-        return tenantsCache.get(tenantId, i -> oma.find(Tenant.class, i).orElse(null));
+    protected T fetchTenant(String tenantId) {
+        return (T) tenantsCache.get(tenantId, this::loadTenant);
+    }
+
+    protected T loadTenant(String tenantId) {
+        return mixing.getDescriptor(getTenantClass()).getMapper().find(getTenantClass(), tenantId).orElse(null);
     }
 
     /**
@@ -256,24 +271,31 @@ public class TenantUserManager extends GenericUserManager {
             return null;
         }
 
-        Optional<UserAccount> optionalAccount =
-                oma.select(UserAccount.class).eq(UserAccount.LOGIN.inner(LoginData.USERNAME), user.toLowerCase()).one();
+        Optional<U> optionalAccount = loadAccountByName(user.toLowerCase());
 
         if (!optionalAccount.isPresent()) {
-            optionalAccount = createSystemTenantIfNonExistent();
-            if (!optionalAccount.isPresent()) {
-                return null;
-            }
+            return null;
         }
-        if (optionalAccount.get().getLogin().isAccountLocked()) {
+        if (optionalAccount.get().getUserAccountData().getLogin().isAccountLocked()) {
             throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
         }
 
-        UserAccount account = fetchAccount(optionalAccount.get().getUniqueName(), optionalAccount.get());
+        U account = fetchAccount(optionalAccount.get().getUniqueName(), optionalAccount.get());
         if (account == null) {
             return null;
         }
         return asUser(account, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Optional<U> loadAccountByName(String user) {
+        return (Optional<U>) (Object) mixing.getDescriptor(getUserClass())
+                                            .getMapper()
+                                            .select(getUserClass())
+                                            .eq(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                             .inner(LoginData.USERNAME),
+                                                user.toLowerCase())
+                                            .one();
     }
 
     /**
@@ -286,11 +308,73 @@ public class TenantUserManager extends GenericUserManager {
     @Nullable
     @Override
     public UserInfo findUserByUserId(String accountId) {
-        UserAccount account = fetchAccount(accountId, null);
+        U account = fetchAccount(accountId, null);
         if (account == null) {
             return null;
         }
         return asUser(account, null);
+    }
+
+    @Nonnull
+    @Override
+    public UserInfo bindToRequest(@Nonnull WebContext ctx) {
+        UserInfo info = super.bindToRequest(ctx);
+        return verifyIpRange(ctx, info);
+    }
+
+    /**
+     * Checks if the current user violates the configured ip range constraints.
+     * <p>
+     * Will remove permissions if the users ip address does not match the configured
+     * ip range.
+     * <p>
+     * This is a security feature to prevent unwanted access to certain features from anywhere but a valid ip range.
+     *
+     * @param ctx  the current request
+     * @param info the current user
+     * @return the current user but possibly with less permissions
+     */
+    private UserInfo verifyIpRange(WebContext ctx, UserInfo info) {
+        String actualUser = ctx.getSessionValue(scope.getScopeId() + "-user-id").asString();
+
+        U account = fetchAccount(actualUser, null);
+
+        if (account == null) {
+            return UserInfo.NOBODY;
+        }
+
+        T tenant = account.getTenant().getValue();
+
+        if (tenant != null && !tenant.getTenantData().matchesIPRange(ctx)) {
+            return createUserWithLimitedRoles(info, tenant.getTenantData().getRolesToKeepAsSet());
+        }
+
+        return info;
+    }
+
+    /**
+     * Removes all roles from the given user other than the roles to keep.
+     * <p>
+     * Will only allow the user to keep roles defined in rolesToKeep. Will not give the user any other role.
+     *
+     * @param info        the user info to modify
+     * @param rolesToKeep the roles not to remove
+     * @return the modified user info
+     */
+    private UserInfo createUserWithLimitedRoles(UserInfo info, Set<String> rolesToKeep) {
+        Set<String> oldRoles = info.getPermissions();
+
+        Set<String> roles = new HashSet<>();
+        roles.add(UserInfo.PERMISSION_LOGGED_IN);
+        roles.add(PERMISSION_OUT_OF_IP_RANGE);
+
+        for (String role : rolesToKeep) {
+            if (oldRoles.contains(role)) {
+                roles.add(role);
+            }
+        }
+
+        return UserInfo.Builder.withUser(info).withPermissions(roles).build();
     }
 
     /**
@@ -304,15 +388,16 @@ public class TenantUserManager extends GenericUserManager {
      * @param givenAccount a fresh version from the database to check cache integrity
      * @return the most current version from the cache to re-use computed fields if possible
      */
+    @SuppressWarnings("unchecked")
     @Nullable
-    private UserAccount fetchAccount(@Nonnull String accountId, @Nullable UserAccount givenAccount) {
-        UserAccount account;
-        UserAccount accountFromDB = givenAccount;
-        UserAccount accountFromCache = userAccountCache.get(accountId);
+    private U fetchAccount(@Nonnull String accountId, @Nullable U givenAccount) {
+        U account;
+        U accountFromDB = givenAccount;
+        U accountFromCache = (U) userAccountCache.get(accountId);
         if (accountFromCache == null || (accountFromDB != null
                                          && accountFromDB.getVersion() > accountFromCache.getVersion())) {
             if (accountFromDB == null) {
-                accountFromDB = (UserAccount) oma.resolve(accountId).orElse(null);
+                accountFromDB = loadAccount(accountId);
                 if (accountFromDB == null) {
                     return null;
                 }
@@ -329,21 +414,32 @@ public class TenantUserManager extends GenericUserManager {
         return account;
     }
 
-    private Tenant fetchTenant(UserAccount account, @Nullable UserAccount accountFromDB) {
-        Tenant tenantFromCache = tenantsCache.get(String.valueOf(account.getTenant().getId()));
+    @SuppressWarnings("unchecked")
+    protected U loadAccount(@Nonnull String accountId) {
+        return (U) mixing.getDescriptor(getUserClass()).getMapper().resolve(accountId).orElse(null);
+    }
 
-        // if we found a tenant and no database object is present - we don't need
+    protected T loadTenantOfAccount(U account) {
+        return mixing.getDescriptor(getTenantClass())
+                     .getMapper()
+                     .find(getTenantClass(), account.getTenant().getId())
+                     .orElseThrow(() -> new IllegalStateException(Strings.apply("Tenant %s for UserAccount %s vanished!",
+                                                                                account.getTenant().getId(),
+                                                                                account.getId())));
+    }
+
+    @SuppressWarnings("unchecked")
+    private T fetchTenant(U account, @Nullable U accountFromDB) {
+        T tenantFromCache = (T) tenantsCache.get(String.valueOf(account.getTenant().getId()));
+
+        // If we found a tenant and no database object is present - we don't need
         // to check for updates or changes, just return the cached value.
         if (tenantFromCache != null && accountFromDB == null) {
             return tenantFromCache;
         }
 
-        // ...otherwise, let's check if our cached instance is stil up to date
-        Tenant tenantFromDB = oma.find(Tenant.class, account.getTenant().getId())
-                                 .orElseThrow(() -> new IllegalStateException(Strings.apply(
-                                         "Tenant %s for UserAccount %s vanished!",
-                                         account.getTenant().getId(),
-                                         account.getId())));
+        // ...otherwise, let's check if our cached instance is still up to date
+        T tenantFromDB = loadTenantOfAccount(account);
 
         // Only actually use the instance from the database if we either have no cached value
         // or if it is outdated. Otherwise the cached instance is preferred, because it might contain
@@ -363,42 +459,7 @@ public class TenantUserManager extends GenericUserManager {
         return tenantFromCache;
     }
 
-    private Optional<UserAccount> createSystemTenantIfNonExistent() {
-        try {
-            if (autocreateTenant && !oma.select(Tenant.class).exists()) {
-                BizController.LOG.INFO("No tenant is present, creating system tenant....");
-                Tenant tenant = new Tenant();
-                tenant.setName("System Tenant");
-                tenant.getTrace().setSilent(true);
-                oma.update(tenant);
-
-                BizController.LOG.INFO(
-                        "No user account is present, creating system / system - Please change the password now!");
-                UserAccount ua = new UserAccount();
-                ua.getTenant().setValue(oma.select(Tenant.class).orderAsc(Tenant.ID).queryFirst());
-                ua.setEmail("system@localhost.local");
-                ua.getLogin().setUsername("system");
-                ua.getLogin().setCleartextPassword("system");
-                ua.getTrace().setSilent(true);
-                // This should be enough to grant us more roles via the UI
-                ua.getPermissions().getPermissions().add("administrator");
-                ua.getPermissions().getPermissions().add("user-administrator");
-                oma.update(ua);
-
-                return Optional.of(ua);
-            }
-        } catch (Exception e) {
-            Exceptions.handle()
-                      .to(BizController.LOG)
-                      .error(e)
-                      .withSystemErrorMessage("Cannot initialize tenants or user accounts: %s (%s)")
-                      .handle();
-        }
-
-        return Optional.empty();
-    }
-
-    protected UserInfo asUser(UserAccount account, List<String> extraRoles) {
+    protected UserInfo asUser(U account, List<String> extraRoles) {
         Set<String> roles = computeRoles(null, account.getUniqueName());
         if (extraRoles != null) {
             // Make a copy so that we do not modify the cached set...
@@ -408,11 +469,11 @@ public class TenantUserManager extends GenericUserManager {
         return asUserWithRoles(account, roles);
     }
 
-    private UserInfo asUserWithRoles(UserAccount account, Set<String> roles) {
+    private UserInfo asUserWithRoles(U account, Set<String> roles) {
         return UserInfo.Builder.createUser(account.getUniqueName())
-                               .withUsername(account.getLogin().getUsername())
+                               .withUsername(account.getUserAccountData().getLogin().getUsername())
                                .withTenantId(String.valueOf(account.getTenant().getId()))
-                               .withTenantName(account.getTenant().getValue().getName())
+                               .withTenantName(account.getTenant().getValue().getTenantData().getName())
                                .withLang(NLS.getDefaultLanguage())
                                .withPermissions(roles)
                                .withSettingsSupplier(ui -> getUserSettings(getScopeSettings(), ui))
@@ -432,44 +493,61 @@ public class TenantUserManager extends GenericUserManager {
             return null;
         }
 
-        UserAccount account = result.getUserObject(UserAccount.class);
-        if (account.isExternalLoginRequired() && !isWithinInterval(account.getLogin().getLastExternalLogin(),
-                                                                   account.getTenant()
-                                                                          .getValue()
-                                                                          .getExternalLoginIntervalDays())) {
+        U account = result.getUserObject(getUserClass());
+        if (account.getUserAccountData().isExternalLoginRequired() && !isWithinInterval(account.getUserAccountData()
+                                                                                               .getLogin()
+                                                                                               .getLastExternalLogin(),
+                                                                                        account.getTenant()
+                                                                                               .getValue()
+                                                                                               .getTenantData()
+                                                                                               .getExternalLoginIntervalDays())) {
             auditLog.negative("AuditLog.externalLoginRequired")
-                    .causedByUser(account.getUniqueName(), account.getLogin().getUsername())
-                    .forUser(account.getUniqueName(), account.getLogin().getUsername())
-                    .forTenant(String.valueOf(account.getTenant().getId()), account.getTenant().getValue().getName())
+                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                    .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                    .forTenant(String.valueOf(account.getTenant().getId()),
+                               account.getTenant().getValue().getTenantData().getName())
                     .log();
             throw Exceptions.createHandled().withNLSKey("UserAccount.externalLoginMustBePerformed").handle();
         }
 
-        LoginData loginData = account.getLogin();
+        LoginData loginData = account.getUserAccountData().getLogin();
         if (acceptApiTokens && Strings.areEqual(password, loginData.getApiToken())) {
             auditLog.neutral("AuditLog.apiTokenLogin")
-                    .causedByUser(account.getUniqueName(), account.getLogin().getUsername())
-                    .forUser(account.getUniqueName(), account.getLogin().getUsername())
-                    .forTenant(String.valueOf(account.getTenant().getId()), account.getTenant().getValue().getName())
+                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                    .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                    .forTenant(String.valueOf(account.getTenant().getId()),
+                               account.getTenant().getValue().getTenantData().getName())
                     .log();
             return result;
         }
 
         if (loginData.checkPassword(password, defaultSalt)) {
             auditLog.neutral("AuditLog.passwordLogin")
-                    .causedByUser(account.getUniqueName(), account.getLogin().getUsername())
-                    .forUser(account.getUniqueName(), account.getLogin().getUsername())
-                    .forTenant(String.valueOf(account.getTenant().getId()), account.getTenant().getValue().getName())
+                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                    .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                    .forTenant(String.valueOf(account.getTenant().getId()),
+                               account.getTenant().getValue().getTenantData().getName())
                     .log();
             return result;
         }
 
         auditLog.negative("AuditLog.loginRejected")
-                .forUser(account.getUniqueName(), account.getLogin().getUsername())
-                .forTenant(String.valueOf(account.getTenant().getId()), account.getTenant().getValue().getName())
+                .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                .forTenant(String.valueOf(account.getTenant().getId()),
+                           account.getTenant().getValue().getTenantData().getName())
                 .log();
 
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Class<T> getTenantClass() {
+        return (Class<T>) tenants.getTenantClass();
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Class<U> getUserClass() {
+        return (Class<U>) tenants.getUserClass();
     }
 
     /**
@@ -479,8 +557,8 @@ public class TenantUserManager extends GenericUserManager {
      * @param password    the password to validate
      * @return <tt>true</tt> if the password is valid, <tt>false</tt> otherwise
      */
-    public boolean checkPassword(UserAccount userAccount, String password) {
-        return userAccount.getLogin().checkPassword(password, defaultSalt);
+    public boolean checkPassword(U userAccount, String password) {
+        return userAccount.getUserAccountData().getLogin().checkPassword(password, defaultSalt);
     }
 
     @Override
@@ -491,6 +569,7 @@ public class TenantUserManager extends GenericUserManager {
     /**
      * Handles an external login (e.g. via SAML).
      *
+     * @param ctx  the current request
      * @param user the user which logged in
      */
     public void onExternalLogin(WebContext ctx, UserInfo user) {
@@ -498,78 +577,32 @@ public class TenantUserManager extends GenericUserManager {
         recordLogin(user, true);
     }
 
-    protected void recordLogin(UserInfo user, boolean external) {
-        try {
-            UserAccount account = (UserAccount) getUserObject(user);
-            EntityDescriptor ed = mixing.getDescriptor(UserAccount.class);
-
-            String numberOfLoginsField =
-                    ed.getProperty(UserAccount.LOGIN.inner(LoginData.NUMBER_OF_LOGINS)).getPropertyName();
-            String lastLoginField = ed.getProperty(UserAccount.LOGIN.inner(LoginData.LAST_LOGIN)).getPropertyName();
-
-            if (external) {
-                String lastExternalLoginField =
-                        ed.getProperty(UserAccount.LOGIN.inner(LoginData.LAST_EXTERNAL_LOGIN)).getPropertyName();
-                SQLQuery qry = oma.getDatabase(Mixing.DEFAULT_REALM)
-                                  .createQuery("UPDATE "
-                                               + ed.getRelationName()
-                                               + " SET "
-                                               + numberOfLoginsField
-                                               + " = "
-                                               + numberOfLoginsField
-                                               + " + 1, "
-                                               + lastExternalLoginField
-                                               + " = ${lastExternalLogin}, "
-                                               + lastLoginField
-                                               + " = ${lastLogin} WHERE id = ${id}");
-                qry.set("lastExternalLogin", LocalDateTime.now());
-                qry.set("lastLogin", LocalDateTime.now());
-                qry.set("id", account.getId());
-                qry.executeUpdate();
-            } else {
-                SQLQuery qry = oma.getDatabase(Mixing.DEFAULT_REALM)
-                                  .createQuery("UPDATE "
-                                               + ed.getRelationName()
-                                               + " SET "
-                                               + numberOfLoginsField
-                                               + " = "
-                                               + numberOfLoginsField
-                                               + " + 1, "
-                                               + lastLoginField
-                                               + " = ${lastLogin} WHERE id = ${id}");
-                qry.set("lastLogin", LocalDateTime.now());
-                qry.set("id", account.getId());
-                qry.executeUpdate();
-            }
-        } catch (Exception e) {
-            Exceptions.handle(BizController.LOG, e);
-        }
-    }
+    protected abstract void recordLogin(UserInfo user, boolean external);
 
     @Override
-    protected Object getUserObject(UserInfo userInfo) {
+    protected U getUserObject(UserInfo userInfo) {
         return fetchAccount(userInfo.getUserId(), null);
     }
 
     @Override
     protected UserSettings getUserSettings(UserSettings scopeSettings, UserInfo userInfo) {
-        UserAccount user = userInfo.getUserObject(UserAccount.class);
-        if (user.getPermissions().getConfig() == null) {
-            if (user.getTenant().getValue().getPermissions().getConfig() == null) {
+        U user = userInfo.getUserObject(getUserClass());
+        if (user.getUserAccountData().getPermissions().getConfig() == null) {
+            if (user.getTenant().getValue().getTenantData().getPermissions().getConfig() == null) {
                 return scopeSettings;
             }
 
             return configCache.get(user.getTenant().getUniqueObjectName(), i -> {
                 Config cfg = scopeSettings.getConfig();
-                cfg = user.getTenant().getValue().getPermissions().getConfig().withFallback(cfg);
+                cfg = user.getTenant().getValue().getTenantData().getPermissions().getConfig().withFallback(cfg);
                 return Tuple.create(new UserSettings(cfg), user.getTenant().getUniqueObjectName());
             }).getFirst();
         }
 
         return configCache.get(user.getUniqueName(), i -> {
             Config cfg = scopeSettings.getConfig();
-            cfg = user.getTenant().getValue().getPermissions().getConfig().withFallback(cfg);
-            cfg = user.getPermissions().getConfig().withFallback(cfg);
+            cfg = user.getTenant().getValue().getTenantData().getPermissions().getConfig().withFallback(cfg);
+            cfg = user.getUserAccountData().getPermissions().getConfig().withFallback(cfg);
             return Tuple.create(new UserSettings(cfg), user.getTenant().getUniqueObjectName());
         }).getFirst();
     }
@@ -578,24 +611,28 @@ public class TenantUserManager extends GenericUserManager {
     @SuppressWarnings({"squid:S1126", "RedundantIfStatement"})
     @Explain("Using explicit abort conditions and a final true makes all checks obvious")
     protected boolean isUserStillValid(String userId) {
-        UserAccount user = fetchAccount(userId, null);
+        U user = fetchAccount(userId, null);
 
         if (user == null) {
             return false;
         }
 
-        if (user.getLogin().isAccountLocked()) {
+        if (user.getUserAccountData().getLogin().isAccountLocked()) {
             return false;
         }
 
-        if (!isWithinInterval(user.getLogin().getLastLogin(), user.getTenant().getValue().getLoginIntervalDays())) {
+        if (!isWithinInterval(user.getUserAccountData().getLogin().getLastLogin(),
+                              user.getTenant().getValue().getTenantData().getLoginIntervalDays())) {
             return false;
         }
 
-        if (user.isExternalLoginRequired() && !isWithinInterval(user.getLogin().getLastExternalLogin(),
-                                                                user.getTenant()
-                                                                    .getValue()
-                                                                    .getExternalLoginIntervalDays())) {
+        if (user.getUserAccountData().isExternalLoginRequired() && !isWithinInterval(user.getUserAccountData()
+                                                                                         .getLogin()
+                                                                                         .getLastExternalLogin(),
+                                                                                     user.getTenant()
+                                                                                         .getValue()
+                                                                                         .getTenantData()
+                                                                                         .getExternalLoginIntervalDays())) {
             return false;
         }
 
@@ -615,10 +652,10 @@ public class TenantUserManager extends GenericUserManager {
         return actualInterval < requiredInterval;
     }
 
-    private Set<String> computeRoles(UserAccount user, Tenant tenant, boolean isSystemTenant) {
+    private Set<String> computeRoles(U user, T tenant, boolean isSystemTenant) {
         Set<String> roles = Sets.newTreeSet();
-        roles.addAll(user.getPermissions().getPermissions());
-        roles.addAll(tenant.getPermissions().getPermissions());
+        roles.addAll(user.getUserAccountData().getPermissions().getPermissions());
+        roles.addAll(tenant.getTenantData().getPermissions().getPermissions());
         roles.add(UserInfo.PERMISSION_LOGGED_IN);
         Set<String> transformedRoles = transformRoles(roles);
         if (isSystemTenant && transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
@@ -635,7 +672,7 @@ public class TenantUserManager extends GenericUserManager {
             return cachedRoles;
         }
 
-        UserAccount user = fetchAccount(userId, null);
+        U user = fetchAccount(userId, null);
         Set<String> roles;
         if (user != null) {
             roles = computeRoles(user,
@@ -652,22 +689,22 @@ public class TenantUserManager extends GenericUserManager {
     @Nonnull
     @Override
     protected String computeUsername(@Nullable WebContext ctx, String userId) {
-        UserAccount account = fetchAccount(userId, null);
+        U account = fetchAccount(userId, null);
         if (account == null) {
             return "(unknown)";
         } else {
-            return account.getLogin().getUsername();
+            return account.getUserAccountData().getLogin().getUsername();
         }
     }
 
     @Nonnull
     @Override
     protected String computeTenantname(@Nullable WebContext ctx, String tenantId) {
-        Tenant tenant = fetchTenant(tenantId);
+        T tenant = fetchTenant(tenantId);
         if (tenant == null) {
             return "(unknown)";
         } else {
-            return tenant.getName();
+            return tenant.getTenantData().getName();
         }
     }
 

@@ -11,7 +11,7 @@ package sirius.biz.vfs;
 import sirius.biz.storage.BucketInfo;
 import sirius.biz.storage.Storage;
 import sirius.biz.storage.StoredObject;
-import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.jdbc.SQLTenant;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.UserContext;
@@ -49,7 +49,7 @@ public class WorkRoot implements VFSRoot {
         if (bucket.isCanCreate()) {
             workDir.withCreateFileHandler(name -> {
                 StoredObject newFile =
-                        storage.findOrCreateObjectByPath(UserContext.getCurrentUser().as(Tenant.class), WORK, name);
+                        storage.findOrCreateObjectByPath(UserContext.getCurrentUser().as(SQLTenant.class), WORK, name);
                 return storage.updateFile(newFile);
             });
         }
@@ -62,7 +62,7 @@ public class WorkRoot implements VFSRoot {
         BucketInfo bucket = storage.getBucket(WORK).orElse(null);
 
         AtomicInteger maxFiles = new AtomicInteger(MAX_FILES_IN_FTP);
-        storage.list(bucket, UserContext.getCurrentUser().as(Tenant.class), file -> {
+        storage.list(bucket, UserContext.getCurrentUser().as(SQLTenant.class), file -> {
             childCollector.accept(transform(parent, file));
             return maxFiles.decrementAndGet() > 0;
         });
