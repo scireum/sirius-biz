@@ -11,7 +11,6 @@ package sirius.biz.mongo;
 import sirius.biz.protocol.NoJournal;
 import sirius.biz.protocol.TraceData;
 import sirius.biz.protocol.Traced;
-import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mongo.MongoEntity;
 
