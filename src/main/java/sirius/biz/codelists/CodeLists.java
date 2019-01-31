@@ -208,6 +208,7 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
             E entry = getEntryType().getDeclaredConstructor().newInstance();
             entry.getCodeList().setValue(cl);
             entry.getCodeListEntryData().setCode(code);
+            entry.getCodeListEntryData().setValue(code);
             return entry;
         } catch (Exception e) {
             throw Exceptions.handle(LOG, e);
