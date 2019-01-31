@@ -19,6 +19,7 @@ import sirius.db.mongo.Mango;
 import sirius.kernel.di.std.Framework;
 import sirius.web.controller.Message;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -42,6 +43,21 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
      */
     public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal = new JournalData(this);
+
+    @Override
+    public <A> Optional<A> tryAs(Class<A> adapterType) {
+        Optional<A> result = getUserAccountData().tryAs(adapterType);
+        if (result.isPresent()) {
+            return result;
+        }
+
+        return super.tryAs(adapterType);
+    }
+
+    @Override
+    public boolean is(Class<?> type) {
+        return getUserAccountData().is(type) || super.is(type);
+    }
 
     @Override
     public UserAccountData getUserAccountData() {
