@@ -249,6 +249,14 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         ctx.respondWith().template("templates/tenants/select-tenant.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
     }
 
+    /**
+     * Determines the currently active tenant.
+     * <p>
+     * If "spying" is active, this will still return the underlying original tenant.
+     *
+     * @param ctx the request to load the session data from
+     * @return the original tenant which is logged in
+     */
     public T determineCurrentTenant(WebContext ctx) {
         String tenantId = determineOriginalTenantId(ctx);
         return mixing.getDescriptor(getTenantClass())

@@ -40,6 +40,10 @@ import java.util.Optional;
 
 /**
  * Provides a GUI for managing user accounts.
+ *
+ * @param <I> the type of database IDs used by the concrete implementation
+ * @param <T> specifies the effective entity type used to represent Tenants
+ * @param <U> specifies the effective entity type used to represent UserAccounts
  */
 public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {

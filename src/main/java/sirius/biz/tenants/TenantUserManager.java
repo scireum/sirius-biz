@@ -49,6 +49,10 @@ import java.util.Set;
  * in the system config.
  * <p>
  * This is the default user manager for the default scope in <tt>sirius-biz</tt>.
+ *
+ * @param <I> the type of database IDs used by the concrete implementation
+ * @param <T> specifies the effective entity type used to represent Tenants
+ * @param <U> specifies the effective entity type used to represent UserAccounts
  */
 public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends GenericUserManager {
@@ -286,11 +290,12 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @SuppressWarnings("unchecked")
     protected Optional<U> loadAccountByName(String user) {
         return (Optional<U>) (Object) mixing.getDescriptor(getUserClass())
-                                   .getMapper()
-                                   .select(getUserClass())
-                                   .eq(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                                    .inner(LoginData.USERNAME), user.toLowerCase())
-                                   .one();
+                                            .getMapper()
+                                            .select(getUserClass())
+                                            .eq(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                             .inner(LoginData.USERNAME),
+                                                user.toLowerCase())
+                                            .one();
     }
 
     /**

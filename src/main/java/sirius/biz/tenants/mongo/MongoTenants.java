@@ -11,13 +11,12 @@ package sirius.biz.tenants.mongo;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.tenants.UserAccount;
-import sirius.db.jdbc.OMA;
 import sirius.db.mongo.Mango;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 /**
- * Helps for extract the current {@link UserAccount} and {@link Tenant}.
+ * Helps to extract the current {@link UserAccount} and {@link Tenant}.
  * <p>
  * Also some boiler plate methods are provided to perform some assertions.
  */

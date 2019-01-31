@@ -15,6 +15,9 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 
+/**
+ * Creates an initial tenant and user if none are available.
+ */
 @Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
 public class SQLTenantAutoSetup implements AutoSetupRule {
 

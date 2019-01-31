@@ -10,7 +10,6 @@ package sirius.biz.codelists.jdbc;
 
 import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeListData;
-import sirius.biz.codelists.CodeLists;
 import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.kernel.di.std.Framework;
 
@@ -26,5 +25,4 @@ public class SQLCodeList extends SQLTenantAware implements CodeList {
     public CodeListData getCodeListData() {
         return codeListData;
     }
-
 }

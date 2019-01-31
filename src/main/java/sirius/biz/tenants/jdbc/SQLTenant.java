@@ -18,6 +18,9 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.di.std.Framework;
 
+/**
+ * Reprensents the JDBC/SQL implementation of {@link Tenant}.
+ */
 @Framework(SQLTenants.FRAMEWORK_TENANTS_JDBC)
 public class SQLTenant extends BizEntity implements Tenant<Long> {
 

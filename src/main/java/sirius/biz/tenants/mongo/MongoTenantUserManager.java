@@ -32,7 +32,7 @@ import java.time.LocalDateTime;
 /**
  * Provides a {@link UserManager} for {@link Tenant} and {@link UserAccount}.
  * <p>
- * The user managed can be installed by setting the <tt>manager</tt> property of the scope to <tt>tenants</tt>
+ * The user manager can be installed by setting the <tt>manager</tt> property of the scope to <tt>tenants</tt>
  * in the system config.
  * <p>
  * This is the default user manager for the default scope in <tt>sirius-biz</tt>.

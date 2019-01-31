@@ -18,7 +18,6 @@ import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SQLQuery;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -30,12 +29,11 @@ import sirius.web.security.UserManagerFactory;
 
 import javax.annotation.Nonnull;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 /**
  * Provides a {@link UserManager} for {@link Tenant} and {@link UserAccount}.
  * <p>
- * The user managed can be installed by setting the <tt>manager</tt> property of the scope to <tt>tenants</tt>
+ * The user manager can be installed by setting the <tt>manager</tt> property of the scope to <tt>tenants</tt>
  * in the system config.
  * <p>
  * This is the default user manager for the default scope in <tt>sirius-biz</tt>.
