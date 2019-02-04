@@ -31,4 +31,9 @@ class LocalFifoQueue implements FifoQueue {
     public JSONObject poll() {
         return queue.poll();
     }
+
+    @Override
+    public int size() {
+        return queue.size();
+    }
 }

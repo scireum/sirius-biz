@@ -289,6 +289,23 @@ public class DistributedTasks {
     }
 
     /**
+     * Returns the number of tasks in the given queue.
+     *
+     * @param queueName the name of the queue to return the number of waiting tasks for
+     * @return the number of tasks in the given queue
+     * @throws sirius.kernel.health.HandledException if the queue is unknown
+     */
+    public int getQueueLength(@Nonnull String queueName) {
+        DistributedQueueInfo queueInfo = getQueueInfo(queueName);
+
+        if (queueInfo.isPrioritized()) {
+            return prioritizedQueues.get(queueName).size();
+        } else {
+            return fifos.get(queueName).size();
+        }
+    }
+
+    /**
      * Creates a new FIFO queue.
      *
      * @param queue the queue to create
