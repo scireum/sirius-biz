@@ -117,7 +117,7 @@ public class VersionManager {
      * @param physicalObjects the map of already resolved keys
      * @param version         the version to resolve, see {@link DownloadBuilder#withVersion(String)} for possible
      *                        values
-     * @return the physical key. If no version exists, a new one will be comouted and the main version will be used in
+     * @return the physical key. If no version exists, a new one will be computed and the main version will be used in
      * the mean time
      */
     protected String fetchVersion(Tuple<VirtualObject, Map<String, String>> physicalObjects, String version) {

@@ -189,13 +189,14 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
      */
     public Tuple<String, String> getValues(@Nonnull String codeList, @Nonnull String code) {
         L cl = findOrCreateCodelist(codeList);
-        E cle = queryEntry(cl, code).queryFirst();
+        String effectiveCode = Strings.trim(code);
+        E cle = queryEntry(cl, effectiveCode).queryFirst();
 
         if (cle == null) {
             if (!cl.getCodeListData().isAutofill()) {
-                return Tuple.create(code, null);
+                return Tuple.create(effectiveCode, null);
             }
-            cle = createEntry(cl, code);
+            cle = createEntry(cl, effectiveCode);
             cle.getMapper().update(cle);
         }
 
@@ -207,6 +208,7 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
             E entry = getEntryType().getDeclaredConstructor().newInstance();
             entry.getCodeList().setValue(cl);
             entry.getCodeListEntryData().setCode(code);
+            entry.getCodeListEntryData().setValue(code);
             return entry;
         } catch (Exception e) {
             throw Exceptions.handle(LOG, e);
