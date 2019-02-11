@@ -319,7 +319,12 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @Override
     public UserInfo bindToRequest(@Nonnull WebContext ctx) {
         UserInfo info = super.bindToRequest(ctx);
-        return verifyIpRange(ctx, info);
+        if (info.isLoggedIn()) {
+            // We only need to verify the IP range for users being logged in....
+            return verifyIpRange(ctx, info);
+        } else {
+            return info;
+        }
     }
 
     /**
@@ -340,7 +345,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         U account = fetchAccount(actualUser, null);
 
         if (account == null) {
-            return UserInfo.NOBODY;
+            return defaultUser;
         }
 
         T tenant = account.getTenant().getValue();
