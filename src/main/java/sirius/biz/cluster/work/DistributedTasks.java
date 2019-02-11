@@ -245,7 +245,11 @@ public class DistributedTasks {
 
         data.put(KEY_EXECUTOR, executor.getName());
 
-        fifos.computeIfAbsent(queueName, this::createFifo).offer(data);
+        getFifo(queueName).offer(data);
+    }
+
+    protected FifoQueue getFifo(String queueName) {
+        return fifos.computeIfAbsent(queueName, this::createFifo);
     }
 
     /**
@@ -299,9 +303,9 @@ public class DistributedTasks {
         DistributedQueueInfo queueInfo = getQueueInfo(queueName);
 
         if (queueInfo.isPrioritized()) {
-            return prioritizedQueues.get(queueName).size();
+            return getPrioritizedQueue(queueName).size();
         } else {
-            return fifos.get(queueName).size();
+            return getFifo(queueName).size();
         }
     }
 
@@ -350,7 +354,11 @@ public class DistributedTasks {
         data.put(KEY_EXECUTOR, executor.getName());
         data.put(KEY_PENALTY_TOKEN, penaltyToken);
 
-        prioritizedQueues.computeIfAbsent(queueName, this::createPrioritizedQueue).offer(priority, data);
+        getPrioritizedQueue(queueName).offer(priority, data);
+    }
+
+    protected PrioritizedQueue getPrioritizedQueue(String queueName) {
+        return prioritizedQueues.computeIfAbsent(queueName, this::createPrioritizedQueue);
     }
 
     /**
