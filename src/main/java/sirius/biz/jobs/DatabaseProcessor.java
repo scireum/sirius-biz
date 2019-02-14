@@ -36,6 +36,11 @@ public class DatabaseProcessor implements LineBasedProcessor {
     private Limit currentLimit;
 
     /**
+     * Runnable action to be called each time the limit is reached.
+     */
+    private Runnable runnable;
+
+    /**
      * Creates a new database processor
      *
      * @param query the query to iterate over
@@ -44,6 +49,17 @@ public class DatabaseProcessor implements LineBasedProcessor {
     public DatabaseProcessor(SQLQuery query, int limit) {
         this.query = query;
         this.limit = limit;
+    }
+
+    /**
+     * Runnable action to be called each time the limit is reached.
+     *
+     * @param runnable the action to be executed
+     * @return the processor itself for fluent method calls
+     */
+    public DatabaseProcessor withRunnable(Runnable runnable) {
+        this.runnable = runnable;
+        return this;
     }
 
     @Override
@@ -57,6 +73,10 @@ public class DatabaseProcessor implements LineBasedProcessor {
             currentLimit = new Limit(itemsToSkip, limit);
             try {
                 hasMore = runQuery(rowProcessor, lineNumber, errorHandler);
+
+                if (runnable != null) {
+                    runnable.run();
+                }
             } catch (Exception e) {
                 if (!errorHandler.test(e)) {
                     throw e;
@@ -90,7 +110,7 @@ public class DatabaseProcessor implements LineBasedProcessor {
 
         query.iterateAll(row -> {
             try {
-                // if unlimited
+                // has more if this iteration found at least one item and the limit is not unlimited
                 hasMore.set(currentLimit.getMaxItems() > 0);
 
                 if (lineNumber.get() < 1) {
