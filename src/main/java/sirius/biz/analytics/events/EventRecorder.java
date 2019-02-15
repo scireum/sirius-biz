@@ -20,6 +20,8 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
+import sirius.kernel.health.metrics.MetricProvider;
+import sirius.kernel.health.metrics.MetricsCollector;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -40,8 +42,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * In case of a missing data store or a system overload condition (more events are generated than persisted), events
  * will be dropped as we favor system stability over perfect metrics.
  */
-@Register(classes = {EventRecorder.class, Startable.class, Stoppable.class})
-public class EventRecorder implements Startable, Stoppable {
+@Register(classes = {EventRecorder.class, Startable.class, Stoppable.class, MetricProvider.class})
+public class EventRecorder implements Startable, Stoppable, MetricProvider {
 
     /**
      * Determines the max number of events to keep in the queue.
@@ -95,6 +97,15 @@ public class EventRecorder implements Startable, Stoppable {
             process();
             configured = false;
         }
+    }
+
+    @Override
+    public void gather(MetricsCollector metricsCollector) {
+        metricsCollector.metric("events_buffer_usage",
+                                "events_buffer_usage",
+                                "Event Buffer Usage",
+                                100 * bufferedEvents.doubleValue() / MAX_BUFFER_SIZE,
+                                "%");
     }
 
     /**
