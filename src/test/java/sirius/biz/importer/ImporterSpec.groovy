@@ -1,7 +1,9 @@
 package sirius.biz.importer
 
 import sirius.biz.tenants.Tenant
+import sirius.biz.tenants.TenantData
 import sirius.biz.tenants.TenantsHelper
+import sirius.biz.tenants.jdbc.SQLTenant
 import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
@@ -28,70 +30,70 @@ class ImporterSpec extends BaseSpecification {
 
     def "find existent tenant with importer"() {
         when:
-        Tenant tenant = TenantsHelper.getTestTenant()
+        SQLTenant tenant = TenantsHelper.getTestTenant()
         and:
-        ImportContext context = ImportContext.create().set(Tenant.ID, tenant.getId())
+        ImportContext context = ImportContext.create().set(SQLTenant.ID, tenant.getId())
         then:
-        Tenant tenant1 = importer.findOrFail(Tenant.class, context)
+        SQLTenant tenant1 = importer.findOrFail(SQLTenant.class, context)
         and:
         tenant.getId() == tenant1.getId()
         and:
-        tenant.getName() == tenant1.getName()
+        tenant.getTenantData().getName() == tenant1.getTenantData().getName()
     }
 
     def "fail on find non existent tenant with importer"() {
         when:
-        ImportContext context = ImportContext.create().set(Tenant.ID, NON_EXISTENT_TENANT_ID)
+        ImportContext context = ImportContext.create().set(SQLTenant.ID, NON_EXISTENT_TENANT_ID)
         and:
-        importer.findOrFail(Tenant.class, context)
+        importer.findOrFail(SQLTenant.class, context)
         then:
         thrown HandledException.class
     }
 
     def "find and load tenant with importer"() {
         when:
-        Tenant tenant = TenantsHelper.getTestTenant()
+        SQLTenant tenant = TenantsHelper.getTestTenant()
         String newTenantName = "Test1234"
         and:
-        ImportContext context = ImportContext.create().set(Tenant.NAME, newTenantName)
+        ImportContext context = ImportContext.create().set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName)
         and:
-        Tenant tenant1 = importer.findAndLoad(Tenant.class, context.set(Tenant.ID, tenant.getId()))
-        Tenant tenant2 = importer.findAndLoad(Tenant.class, context.set(Tenant.ID, NON_EXISTENT_TENANT_ID))
+        Tenant tenant1 = importer.findAndLoad(SQLTenant.class, context.set(SQLTenant.ID, tenant.getId()))
+        Tenant tenant2 = importer.findAndLoad(SQLTenant.class, context.set(SQLTenant.ID, NON_EXISTENT_TENANT_ID))
         then:
-        tenant1.getName() == newTenantName
+        tenant1.getTenantData().getName() == newTenantName
         tenant1.getId() == tenant.getId()
         and:
-        tenant2.getName() == newTenantName
+        tenant2.getTenantData().getName() == newTenantName
         tenant2.isNew()
         and:
-        !oma.select(Tenant.class).eq(Tenant.ID, NON_EXISTENT_TENANT_ID).first().isPresent()
+        !oma.select(SQLTenant.class).eq(SQLTenant.ID, NON_EXISTENT_TENANT_ID).first().isPresent()
     }
 
     def "findOrLoadAndCreate tenant with importer"() {
         when:
         String newTenantName = "Importer_Test123456471232"
         and:
-        ImportContext context = ImportContext.create().set(Tenant.NAME, newTenantName)
+        ImportContext context = ImportContext.create().set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName)
         and:
-        Tenant tenant = importer.findOrLoadAndCreate(Tenant.class, context)
+        SQLTenant tenant = importer.findOrLoadAndCreate(SQLTenant.class, context)
         then:
-        tenant.getName() == newTenantName
+        tenant.getTenantData().getName() == newTenantName
         !tenant.isNew()
         and:
-        oma.select(Tenant.class).eq(Tenant.ID, tenant.getId()).first().isPresent()
+        oma.select(SQLTenant.class).eq(SQLTenant.ID, tenant.getId()).first().isPresent()
     }
 
     def "load parent tenant entity ref with importer"() {
         when:
         String newTenantName = "Importer_Test_Load"
         and:
-        Tenant tenant = TenantsHelper.getTestTenant()
+        SQLTenant tenant = TenantsHelper.getTestTenant()
         and:
         ImportContext context = ImportContext.create().
-                set(Tenant.NAME, newTenantName).
+                set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).
                 set(Tenant.PARENT, tenant)
         and:
-        Tenant newTenant = importer.load(Tenant.class, context)
+        SQLTenant newTenant = importer.load(SQLTenant.class, context)
         then:
         newTenant.getParent().getId() == tenant.getId()
     }
@@ -100,82 +102,101 @@ class ImporterSpec extends BaseSpecification {
         given:
         String newTenantName = "Importer_createOrUpdateNow_Test"
         and:
-        ImportContext context = ImportContext.create().set(Tenant.NAME, newTenantName)
+        ImportContext context = ImportContext.create().set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName)
         when:
-        !oma.select(Tenant.class).eq(Tenant.NAME, newTenantName).first().isPresent()
+        !oma.select(SQLTenant.class).
+                eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).
+                first().
+                isPresent()
         and:
-        Tenant tenant = importer.load(Tenant.class, context)
+        SQLTenant tenant = importer.load(SQLTenant.class, context)
         importer.createOrUpdateNow(tenant)
         then:
         !tenant.isNew()
         and:
-        oma.select(Tenant.class).eq(Tenant.NAME, newTenantName).first().isPresent()
+        oma.select(SQLTenant.class).
+                eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).
+                first().
+                isPresent()
     }
 
     def "createOrUpdateNow updating tenant"() {
         given:
         String newTenantName = "Importer_createOrUpdateNow_Test2"
         and:
-        ImportContext context = ImportContext.create().set(Tenant.NAME, newTenantName)
+        ImportContext context = ImportContext.create().set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName)
         and:
-        Tenant tenant = importer.load(Tenant.class, context)
+        SQLTenant tenant = importer.load(SQLTenant.class, context)
         tenant = importer.createOrUpdateNow(tenant)
         when:
         context = ImportContext.create().
-                set(Tenant.NAME, newTenantName + "new").
-                set(Tenant.ID, tenant.getId())
-        tenant = importer.tryFind(Tenant.class, context).orElse(null)
+                set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName + "new").
+                set(SQLTenant.ID, tenant.getId())
+        tenant = importer.tryFind(SQLTenant.class, context).orElse(null)
         and:
-        tenant = importer.load(Tenant.class, context, tenant)
+        tenant = importer.load(SQLTenant.class, context, tenant)
         importer.createOrUpdateNow(tenant)
         then:
-        !oma.select(Tenant.class).eq(Tenant.NAME, newTenantName).first().isPresent()
+        !oma.select(SQLTenant.class).
+                eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName).
+                first().
+                isPresent()
         and:
-        oma.select(Tenant.class).eq(Tenant.NAME, newTenantName + "new").first().isPresent()
+        oma.select(SQLTenant.class).
+                eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName + "new").
+                first().
+                isPresent()
         and:
-        oma.select(Tenant.class).eq(Tenant.NAME, newTenantName + "new").queryFirst().getId() == tenant.getId()
+        oma.select(SQLTenant.class).
+                eq(SQLTenant.TENANT_DATA.inner(TenantData.NAME), newTenantName + "new").
+                queryFirst().
+                getId() == tenant.getId()
     }
 
     def "createOrUpdate in batch inserting tenants"() {
         given:
         String basicTenantName = "Importer_batchInsert"
         and:
-        long tenantCount = oma.select(Tenant.class).count()
+        long tenantCount = oma.select(SQLTenant.class).count()
         when:
         for (int i = 0; i < 200; i++) {
-            ImportContext context = ImportContext.create().set(Tenant.NAME, basicTenantName + i)
+            ImportContext context = ImportContext.create().
+                    set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
             and:
-            Tenant tenant = importer.load(Tenant.class, context)
+            SQLTenant tenant = importer.load(SQLTenant.class, context)
             importer.createOrUpdateInBatch(tenant)
         }
         and:
         importer.close()
         then:
-        tenantCount + 200 == oma.select(Tenant.class).count()
+        tenantCount + 200 == oma.select(SQLTenant.class).count()
     }
 
     def "createOrUpdate in batch updating tenants"() {
         given:
         String basicTenantName = "Importer_batchUpdate"
         and:
-        long tenantCount = oma.select(Tenant.class).count()
+        long tenantCount = oma.select(SQLTenant.class).count()
         and:
         for (int i = 0; i < 200; i++) {
-            ImportContext context = ImportContext.create().set(Tenant.NAME, basicTenantName + i)
-            Tenant tenant = importer.load(Tenant.class, context)
+            ImportContext context = ImportContext.create().
+                    set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
+            SQLTenant tenant = importer.load(SQLTenant.class, context)
             importer.createOrUpdateInBatch(tenant)
         }
         importer.close()
         when:
-        oma.select(Tenant.class).
-                where(OMA.FILTERS.like(Tenant.NAME).contains(basicTenantName).build()).
+        oma.select(SQLTenant.class).
+                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).contains(basicTenantName).build()).
                 iterateAll { tenant ->
-                    tenant.setName(tenant.getName() + "AFTERUPDATE")
+                    tenant.getTenantData().setName(tenant.getTenantData().getName() + "AFTERUPDATE")
                     importer.createOrUpdateInBatch(tenant)
                 }
         importer.close()
         then:
-        oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).contains("AFTERUPDATE").build()).count() == 200
+        oma.select(SQLTenant.class).
+                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).contains("AFTERUPDATE").build()).
+                count() == 200
     }
 
     def "deleteNow"() {
@@ -183,21 +204,32 @@ class ImporterSpec extends BaseSpecification {
         String basicTenantName = "Importer_delete"
         and:
         for (int i = 0; i < 10; i++) {
-            ImportContext context = ImportContext.create().set(Tenant.NAME, basicTenantName + i)
-            Tenant tenant = importer.load(Tenant.class, context)
+            ImportContext context = ImportContext.create().
+                    set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
+            SQLTenant tenant = importer.load(SQLTenant.class, context)
             importer.createOrUpdateInBatch(tenant)
         }
         importer.close()
         and:
-        oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).count() == 10
+        oma.select(SQLTenant.class).
+                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
+                              startsWith(basicTenantName).
+                              build()).
+                count() == 10
         when:
-        oma.select(Tenant.class).
-                where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).
+        oma.select(SQLTenant.class).
+                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
+                              startsWith(basicTenantName).
+                              build()).
                 iterateAll() { entity ->
                     importer.deleteNow(entity)
                 }
         then:
-        oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).count() == 0
+        oma.select(SQLTenant.class).
+                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
+                              startsWith(basicTenantName).
+                              build()).
+                count() == 0
     }
 
     def "deleteInBatch"() {
@@ -205,23 +237,32 @@ class ImporterSpec extends BaseSpecification {
         String basicTenantName = "Importer_batchDelete"
         and:
         for (int i = 0; i < 200; i++) {
-            ImportContext context = ImportContext.create().set(Tenant.NAME, basicTenantName + i)
-            Tenant tenant = importer.load(Tenant.class, context)
+            ImportContext context = ImportContext.create().
+                    set(SQLTenant.TENANT_DATA.inner(TenantData.NAME), basicTenantName + i)
+            Tenant tenant = importer.load(SQLTenant.class, context)
             importer.createOrUpdateInBatch(tenant)
         }
         importer.close()
         and:
-        oma.select(Tenant.class).
-                where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).count() == 200
+        oma.select(SQLTenant.class).
+                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
+                              startsWith(basicTenantName).
+                              build()).count() == 200
         when:
-        oma.select(Tenant.class).
-                where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).
+        oma.select(SQLTenant.class).
+                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
+                              startsWith(basicTenantName).
+                              build()).
                 iterateAll() { entity ->
                     importer.deleteInBatch(entity)
                 }
         and:
         importer.close()
         then:
-        oma.select(Tenant.class).where(OMA.FILTERS.like(Tenant.NAME).startsWith(basicTenantName).build()).count() == 0
+        oma.select(SQLTenant.class).
+                where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
+                              startsWith(basicTenantName).
+                              build()).
+                count() == 0
     }
 }

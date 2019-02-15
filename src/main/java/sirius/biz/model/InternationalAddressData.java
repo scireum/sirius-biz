@@ -31,7 +31,7 @@ import java.util.regex.PatternSyntaxException;
 public class InternationalAddressData extends AddressData {
 
     @Part
-    private static CodeLists cls;
+    private static CodeLists<?, ?, ?> cls;
 
     @Transient
     private boolean verifyZip;
@@ -101,7 +101,7 @@ public class InternationalAddressData extends AddressData {
             if (!Pattern.compile(zipRegEx).matcher(getZip()).matches()) {
                 throw Exceptions.createHandled()
                                 .withNLSKey("AddressData.badZip")
-                                .set("name", fieldLabel)
+                                .set("name", determineFieldLabel())
                                 .set("zip", getZip())
                                 .handle();
             }

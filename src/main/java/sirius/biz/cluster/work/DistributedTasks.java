@@ -245,7 +245,11 @@ public class DistributedTasks {
 
         data.put(KEY_EXECUTOR, executor.getName());
 
-        fifos.computeIfAbsent(queueName, this::createFifo).offer(data);
+        getFifo(queueName).offer(data);
+    }
+
+    protected FifoQueue getFifo(String queueName) {
+        return fifos.computeIfAbsent(queueName, this::createFifo);
     }
 
     /**
@@ -286,6 +290,23 @@ public class DistributedTasks {
         }
 
         return queueInfo;
+    }
+
+    /**
+     * Returns the number of tasks in the given queue.
+     *
+     * @param queueName the name of the queue to return the number of waiting tasks for
+     * @return the number of tasks in the given queue
+     * @throws sirius.kernel.health.HandledException if the queue is unknown
+     */
+    public int getQueueLength(@Nonnull String queueName) {
+        DistributedQueueInfo queueInfo = getQueueInfo(queueName);
+
+        if (queueInfo.isPrioritized()) {
+            return getPrioritizedQueue(queueName).size();
+        } else {
+            return getFifo(queueName).size();
+        }
     }
 
     /**
@@ -333,7 +354,11 @@ public class DistributedTasks {
         data.put(KEY_EXECUTOR, executor.getName());
         data.put(KEY_PENALTY_TOKEN, penaltyToken);
 
-        prioritizedQueues.computeIfAbsent(queueName, this::createPrioritizedQueue).offer(priority, data);
+        getPrioritizedQueue(queueName).offer(priority, data);
+    }
+
+    protected PrioritizedQueue getPrioritizedQueue(String queueName) {
+        return prioritizedQueues.computeIfAbsent(queueName, this::createPrioritizedQueue);
     }
 
     /**

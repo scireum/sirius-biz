@@ -8,401 +8,67 @@
 
 package sirius.biz.tenants;
 
-import sirius.biz.jdbc.BizEntity;
-import sirius.biz.model.InternationalAddressData;
-import sirius.biz.model.PermissionData;
-import sirius.biz.protocol.JournalData;
 import sirius.biz.protocol.Journaled;
-import sirius.biz.web.Autoloaded;
-import sirius.db.jdbc.SQLEntityRef;
+import sirius.biz.protocol.Traced;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.annotations.BeforeDelete;
-import sirius.db.mixing.annotations.BeforeSave;
-import sirius.db.mixing.annotations.Length;
-import sirius.db.mixing.annotations.NullAllowed;
-import sirius.db.mixing.annotations.Transient;
-import sirius.db.mixing.annotations.Trim;
-import sirius.db.mixing.annotations.Unique;
-import sirius.db.mixing.annotations.Versioned;
-import sirius.kernel.commons.Strings;
-import sirius.kernel.di.std.Framework;
-import sirius.kernel.di.std.Part;
-import sirius.kernel.health.Exceptions;
-import sirius.kernel.nls.NLS;
-import sirius.web.http.IPRange;
-import sirius.web.http.WebContext;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import sirius.db.mixing.types.BaseEntityRef;
+import sirius.kernel.commons.Explain;
 
 /**
- * Represents a tenant using the system.
+ * Provides the database independent interface for describing a tenant which uses the system.
  * <p>
- * Helps to support multi tenancy for SaaS platforms.
+ * Note that all fields are represented via {@link TenantData}.
+ *
+ * @param <I> the type used to represent database IDs
  */
-@Framework(Tenants.FRAMEWORK_TENANTS)
-@Versioned
-public class Tenant extends BizEntity implements Journaled {
+@SuppressWarnings("squid:S1214")
+@Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real enttiy.")
+public interface Tenant<I> extends Traced, Journaled {
 
     /**
-     * Contains the parent tenant of this tenant.
+     * Contains the mapping used to identify the parent tenant of the current one.
      */
-    public static final Mapping PARENT = Mapping.named("parent");
-    @Autoloaded
-    @NullAllowed
-    private final SQLEntityRef<Tenant> parent = SQLEntityRef.on(Tenant.class, SQLEntityRef.OnDelete.SET_NULL);
+    Mapping PARENT = Mapping.named("parent");
 
     /**
-     * Determines if the parent tenant can become this tenant by calling "/tenants/select".
+     * Contains the effective fields which are mapped by the appropriate mapper depending on the actual entity type.
      */
-    public static final Mapping PARENT_CAN_ACCESS = Mapping.named("parentCanAccess");
-    @Autoloaded
-    private boolean parentCanAccess = false;
+    Mapping TENANT_DATA = Mapping.named("tenantData");
+
+    BaseEntityRef<I, ? extends Tenant<I>> getParent();
+
+    TenantData getTenantData();
 
     /**
-     * Determines if this tenant can become its tenant by calling "/tenants/select".
-     */
-    public static final Mapping CAN_ACCESS_PARENT = Mapping.named("canAccessParent");
-    @Autoloaded
-    private boolean canAccessParent = false;
-
-    /**
-     * Determines the interval in days, after which a user needs to login again.
-     */
-    public static final Mapping LOGIN_INTERVAL_DAYS = Mapping.named("loginIntervalDays");
-    @Autoloaded
-    @NullAllowed
-    private Integer loginIntervalDays;
-
-    /**
-     * Determines the interval in days, after which a user needs to login again, via an extenal system.
+     * Returns a string representation of the entity ID.
      * <p>
-     * Note that this is only enforced if {@link UserAccount#externalLoginRequired} is <tt>true</tt>.
-     */
-    public static final Mapping EXTERNAL_LOGIN_INTERVAL_DAYS = Mapping.named("externalLoginIntervalDays");
-    @Autoloaded
-    @NullAllowed
-    private Integer externalLoginIntervalDays;
-
-    /**
-     * Contains the name of the tenant.
-     */
-    public static final Mapping NAME = Mapping.named("name");
-    @Trim
-    @Unique
-    @Autoloaded
-    @Length(255)
-    private String name;
-
-    /**
-     * Contains the customer number assigned to the tenant.
-     */
-    public static final Mapping ACCOUNT_NUMBER = Mapping.named("accountNumber");
-    @Trim
-    @Unique
-    @Autoloaded
-    @NullAllowed
-    @Length(50)
-    private String accountNumber;
-
-    /**
-     * Contains the name of the system which is used as the SAML provider.
-     */
-    public static final Mapping SAML_REQUEST_ISSUER_NAME = Mapping.named("samlRequestIssuerName");
-    @Trim
-    @Autoloaded
-    @NullAllowed
-    @Length(50)
-    private String samlRequestIssuerName;
-
-    /**
-     * Contains the URL of the SAML provider.
-     */
-    public static final Mapping SAML_ISSUER_URL = Mapping.named("samlIssuerUrl");
-    @Trim
-    @Autoloaded
-    @NullAllowed
-    @Length(255)
-    private String samlIssuerUrl;
-
-    /**
-     * Contains the endpoint index at the SAML provider.
-     */
-    public static final Mapping SAML_ISSUER_INDEX = Mapping.named("samlIssuerIndex");
-    @Trim
-    @Autoloaded
-    @NullAllowed
-    @Length(10)
-    private String samlIssuerIndex;
-
-    /**
-     * Contains the issuer name within a SAML assertion.
-     * <p>
-     * If several SAML providers are used, multiple values can be separated by a <tt>,</tt>.
-     */
-    public static final Mapping SAML_ISSUER_NAME = Mapping.named("samlIssuerName");
-    @Trim
-    @Autoloaded
-    @NullAllowed
-    @Length(50)
-    private String samlIssuerName;
-
-    /**
-     * Contains the SHA-1 fingerprint of the X509 certificate which is used to sign the SAML assertions.
-     * <p>
-     * If several SAML providers are used, multiple values can be separated by a <tt>,</tt>.
-     */
-    public static final Mapping SAML_FINGERPRINT = Mapping.named("samlFingerprint");
-    @Trim
-    @Autoloaded
-    @NullAllowed
-    @Length(255)
-    private String samlFingerprint;
-
-    /**
-     * Contains the ip range which must match the current users ip.
-     * <p>
-     * Multiple ip ranges can be stored comma-separated.
-     * Pattern of a valid ip range e.g. 192.168.192.1/32 or 192.168.168.0/24
-     */
-    public static final Mapping IP_RANGE = Mapping.named("ipRange");
-    @Trim
-    @Autoloaded
-    @NullAllowed
-    @Length(255)
-    private String ipRange;
-
-    /**
-     * Contains the parsed ip ranges.
-     */
-    @Transient
-    private IPRange.RangeSet rangeSet;
-
-    /**
-     * Contains a comma-separated list of roles which should be kept if the
-     * user does not match the given ip range.
-     */
-    public static final Mapping ROLES_TO_KEEP = Mapping.named("rolesToKeep");
-    @Trim
-    @Autoloaded
-    @NullAllowed
-    @Length(512)
-    private String rolesToKeep;
-
-    /**
-     * Contains the data from rolesToKeep but as a {@link Set}.
-     */
-    @Transient
-    private Set<String> rolesToKeepSet;
-
-    /**
-     * Contains the address of the tenant.
-     */
-    public static final Mapping ADDRESS = Mapping.named("address");
-    private final InternationalAddressData address =
-            new InternationalAddressData(InternationalAddressData.Requirements.NONE, null);
-
-    /**
-     * Contains the features and individual config assigned to the tenant.
-     */
-    public static final Mapping PERMISSIONS = Mapping.named("permissions");
-    private final PermissionData permissions = new PermissionData(this);
-
-    /**
-     * Used to record changes on fields of the tenant.
-     */
-    public static final Mapping JOURNAL = Mapping.named("journal");
-    private final JournalData journal = new JournalData(this);
-
-    @Part
-    private static Tenants tenants;
-
-    @BeforeSave
-    @BeforeDelete
-    protected void onModify() {
-        if (journal.hasJournaledChanges()) {
-            TenantUserManager.flushCacheForTenant(this);
-            tenants.flushTenantChildrenCache();
-        }
-
-        if (Strings.isFilled(samlFingerprint)) {
-            samlFingerprint = samlFingerprint.replace(" ", "").toLowerCase();
-        }
-
-        rangeSet = null;
-        rolesToKeepSet = null;
-    }
-
-    /**
-     * Checks if the ip of the request matches the ip range of the tenant.
+     * If the entity is new, "new" will be returned.
      *
-     * @param ctx the current request
-     * @return <tt>true</tt> if the ip address matches the range or if non was configured, <tt>false</tt> otherwise
+     * @return the entity ID as string or "new" if the entity {@link #isNew()}.
      */
-    public boolean matchesIPRange(WebContext ctx) {
-        if (Strings.isEmpty(ipRange)) {
-            return true;
-        }
-
-        if (rangeSet == null) {
-            try {
-                rangeSet = IPRange.paraseRangeSet(ipRange);
-            } catch (IllegalArgumentException e) {
-                // if an invalid range was configured we can not remove any permission
-                Exceptions.ignore(e);
-                return true;
-            }
-        }
-
-        return rangeSet.accepts(ctx.getRemoteIP());
-    }
+    String getIdAsString();
 
     /**
-     * Calculates all roles the user should keep when the ip range check fails.
+     * Returns an unique name of this entity.
+     * <p>
+     * This unique string representation of this entity is made up of its type along with its id.
      *
-     * @return {@link Set<String>} holding the roles to keep
+     * @return an unique representation of this entity or an empty string if the entity was not written to the
+     * database yet
      */
-    public Set<String> getRolesToKeepAsSet() {
-        if (Strings.isEmpty(rolesToKeep)) {
-            return Collections.emptySet();
-        }
+    String getUniqueName();
 
-        if (rolesToKeepSet == null) {
-            rolesToKeepSet = new HashSet<>(Arrays.asList(rolesToKeep.split(",")));
-        }
+    /**
+     * Returns the version of the entity.
+     *
+     * @return the version of the entity
+     */
+    int getVersion();
 
-        return rolesToKeepSet;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getAccountNumber() {
-        return accountNumber;
-    }
-
-    public void setAccountNumber(String accountNumber) {
-        this.accountNumber = accountNumber;
-    }
-
-    public InternationalAddressData getAddress() {
-        return address;
-    }
-
-    public PermissionData getPermissions() {
-        return permissions;
-    }
-
-    public SQLEntityRef<Tenant> getParent() {
-        return parent;
-    }
-
-    public boolean isParentCanAccess() {
-        return parentCanAccess;
-    }
-
-    public void setParentCanAccess(boolean parentCanAccess) {
-        this.parentCanAccess = parentCanAccess;
-    }
-
-    public boolean isCanAccessParent() {
-        return canAccessParent;
-    }
-
-    public void setCanAccessParent(boolean canAccessParent) {
-        this.canAccessParent = canAccessParent;
-    }
-
-    public String getSamlIssuerName() {
-        return samlIssuerName;
-    }
-
-    public void setSamlIssuerName(String samlIssuerName) {
-        this.samlIssuerName = samlIssuerName;
-    }
-
-    public String getSamlIssuerUrl() {
-        return samlIssuerUrl;
-    }
-
-    public void setSamlIssuerUrl(String samlIssuerUrl) {
-        this.samlIssuerUrl = samlIssuerUrl;
-    }
-
-    public String getSamlIssuerIndex() {
-        return samlIssuerIndex;
-    }
-
-    public void setSamlIssuerIndex(String samlIssuerIndex) {
-        this.samlIssuerIndex = samlIssuerIndex;
-    }
-
-    public String getSamlFingerprint() {
-        return samlFingerprint;
-    }
-
-    public void setSamlFingerprint(String samlFingerprint) {
-        this.samlFingerprint = samlFingerprint;
-    }
-
-    public String getSamlRequestIssuerName() {
-        return samlRequestIssuerName;
-    }
-
-    public void setSamlRequestIssuerName(String samlRequestIssuerName) {
-        this.samlRequestIssuerName = samlRequestIssuerName;
-    }
-
-    public Integer getLoginIntervalDays() {
-        return loginIntervalDays;
-    }
-
-    public void setLoginIntervalDays(Integer loginIntervalDays) {
-        this.loginIntervalDays = loginIntervalDays;
-    }
-
-    public Integer getExternalLoginIntervalDays() {
-        return externalLoginIntervalDays;
-    }
-
-    public void setExternalLoginIntervalDays(Integer externalLoginIntervalDays) {
-        this.externalLoginIntervalDays = externalLoginIntervalDays;
-    }
-
-    public String getIpRange() {
-        return ipRange;
-    }
-
-    public void setIpRange(String ipRange) {
-        this.ipRange = ipRange;
-    }
-
-    public String getRolesToKeep() {
-        return rolesToKeep;
-    }
-
-    public void setRolesToKeep(String rolesToKeep) {
-        this.rolesToKeep = rolesToKeep;
-    }
-
-    @Override
-    public JournalData getJournal() {
-        return journal;
-    }
-
-    @Override
-    public String toString() {
-        if (Strings.isFilled(name)) {
-            return name;
-        }
-
-        return NLS.get("Model.tenant");
-    }
+    /**
+     * Determines if the entity is new (not yet written to the database).
+     *
+     * @return <tt>true</tt> if the entity has not been written to the database yes, <tt>false</tt> otherwise
+     */
+    boolean isNew();
 }

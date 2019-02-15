@@ -112,4 +112,12 @@ class RedisPrioritizedQueue implements PrioritizedQueue {
             return null;
         });
     }
+
+    @Override
+    public int size() {
+        return redis.query(() -> "Determine length of " + queueName, db -> {
+            Long result = db.zcard(getRedisQueueName());
+            return result == null ? 0 : (int) (long) result;
+        });
+    }
 }

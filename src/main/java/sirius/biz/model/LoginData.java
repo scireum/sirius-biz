@@ -315,4 +315,9 @@ public class LoginData extends Composite {
     public void setApiToken(String apiToken) {
         this.apiToken = apiToken;
     }
+
+    @Override
+    public String toString() {
+        return username;
+    }
 }

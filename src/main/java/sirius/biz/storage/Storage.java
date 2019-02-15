@@ -13,8 +13,8 @@ import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.Files;
-import sirius.biz.tenants.Tenant;
 import sirius.biz.protocol.TraceData;
+import sirius.biz.tenants.jdbc.SQLTenant;
 import sirius.db.KeyGenerator;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
@@ -84,7 +84,8 @@ public class Storage {
 
     private static final Pattern NON_URL_CHARACTERS = Pattern.compile("[^a-zA-Z0-9_.]");
 
-    private static Cache<String, VirtualObject> virtualObjectCache = CacheManager.createCoherentCache("virtual-objects");
+    private static Cache<String, VirtualObject> virtualObjectCache =
+            CacheManager.createCoherentCache("virtual-objects");
 
     @Part
     private OMA oma;
@@ -162,7 +163,7 @@ public class Storage {
      * @return the object in the given bucket with the given key wrapped as optional or an empty optional if no such
      * object exists.
      */
-    public Optional<StoredObject> findByKey(@Nullable Tenant tenant, String bucket, String key) {
+    public Optional<StoredObject> findByKey(@Nullable SQLTenant tenant, String bucket, String key) {
         VirtualObject cachedObject = virtualObjectCache.get(key);
 
         if (cachedObject != null) {
@@ -195,7 +196,7 @@ public class Storage {
         virtualObjectCache.remove(virtualObject.getObjectKey());
     }
 
-    private boolean checkIntegrity(VirtualObject virtualObject, @Nullable Tenant tenant, String bucket) {
+    private boolean checkIntegrity(VirtualObject virtualObject, @Nullable SQLTenant tenant, String bucket) {
         return (tenant == null || virtualObject.getTenant().is(tenant)) && virtualObject.getBucket().equals(bucket);
     }
 
@@ -206,7 +207,9 @@ public class Storage {
      * @param tenant   the tenant to filter on
      * @param iterator the iterator to process the objects
      */
-    public void list(@Nullable BucketInfo bucket, @Nullable Tenant tenant, Function<StoredObject, Boolean> iterator) {
+    public void list(@Nullable BucketInfo bucket,
+                     @Nullable SQLTenant tenant,
+                     Function<StoredObject, Boolean> iterator) {
         if (bucket == null || !UserContext.getCurrentUser().hasPermission(bucket.getPermission())) {
             return;
         }
@@ -247,7 +250,7 @@ public class Storage {
      * @return the object in the given bucket with the given path wrapped as optional or an empty optional if no such
      * object exists.
      */
-    public Optional<StoredObject> findByPath(Tenant tenant, String bucketName, String path) {
+    public Optional<StoredObject> findByPath(SQLTenant tenant, String bucketName, String path) {
         String normalizedPath = normalizePath(path);
 
         if (normalizedPath == null) {
@@ -266,7 +269,7 @@ public class Storage {
      * @param path       the path used to lookup the object
      * @return the object in the given bucket with the given path which was either found or newly created
      */
-    public StoredObject findOrCreateObjectByPath(Tenant tenant, String bucketName, String path) {
+    public StoredObject findOrCreateObjectByPath(SQLTenant tenant, String bucketName, String path) {
         String normalizedPath = normalizePath(path);
 
         VirtualObject result = findWithNormalizedPath(tenant, bucketName, normalizedPath);
@@ -282,7 +285,7 @@ public class Storage {
         return result;
     }
 
-    private VirtualObject findWithNormalizedPath(Tenant tenant, String bucketName, String normalizedPath) {
+    private VirtualObject findWithNormalizedPath(SQLTenant tenant, String bucketName, String normalizedPath) {
         return oma.select(VirtualObject.class)
                   .eq(VirtualObject.TENANT, tenant)
                   .eq(VirtualObject.BUCKET, bucketName)
@@ -303,7 +306,7 @@ public class Storage {
      * @return the newly created object which has {@link VirtualObject#TEMPORARY} set to <tt>true</tt>. Therefore the
      * referencing entity must be saved to set this flag to <tt>false</tt> via {@link StoredObjectRefProperty}.
      */
-    public StoredObject createTemporaryObject(Tenant tenant,
+    public StoredObject createTemporaryObject(SQLTenant tenant,
                                               String bucketName,
                                               @Nullable String reference,
                                               @Nullable String path) {
@@ -321,7 +324,7 @@ public class Storage {
     /**
      * Deletes all automatically created objects except the given one.
      * <p>
-     * Removes automatically created object ({@link #createTemporaryObject(Tenant, String, String, String)})
+     * Removes automatically created object ({@link #createTemporaryObject(SQLTenant, String, String, String)})
      * if the reference is updated or the referencing entity is deleted.
      *
      * @param reference         the reference (field+id of the entity) being referenced
@@ -341,7 +344,7 @@ public class Storage {
     }
 
     /**
-     * If an object is created using {@link #createTemporaryObject(Tenant, String, String, String)} it is marked
+     * If an object is created using {@link #createTemporaryObject(SQLTenant, String, String, String)} it is marked
      * as an temporary upload up until the referencing entity is saved.
      * <p>
      * The {@link StoredObjectRef} and its {@link StoredObjectRefProperty} will then invoke this method to make

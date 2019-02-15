@@ -11,6 +11,7 @@ package sirius.biz.storage;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.protocol.TraceData;
+import sirius.biz.tenants.jdbc.SQLTenant;
 import sirius.biz.web.BizController;
 import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.OMA;
@@ -236,9 +237,9 @@ public class StorageController extends BizController {
 
             String name = ctx.get("filename").asString(ctx.get("qqfile").asString());
             if (bucket.isCanCreate()) {
-                file = storage.findOrCreateObjectByPath(tenants.getRequiredTenant(), bucketName, name);
+                file = storage.findOrCreateObjectByPath((SQLTenant) tenants.getRequiredTenant(), bucketName, name);
             } else {
-                file = storage.findByPath(tenants.getRequiredTenant(), bucketName, name)
+                file = storage.findByPath((SQLTenant) tenants.getRequiredTenant(), bucketName, name)
                               .orElseThrow(() -> Exceptions.createHandled()
                                                            .withNLSKey("StorageController.cannotAccessBucket")
                                                            .set("bucket", bucketName)
@@ -286,7 +287,7 @@ public class StorageController extends BizController {
                 throw cannotAccessBucketException(bucketName);
             }
 
-            StoredObject file = storage.findByKey(tenants.getRequiredTenant(), bucketName, objectId)
+            StoredObject file = storage.findByKey((SQLTenant) tenants.getRequiredTenant(), bucketName, objectId)
                                        .orElseThrow(() -> cannotAccessBucketException(bucketName));
 
             try {
@@ -333,7 +334,7 @@ public class StorageController extends BizController {
                 throw cannotAccessBucketException(bucketName);
             }
             String name = ctx.get("filename").asString(ctx.get("qqfile").asString());
-            file = storage.createTemporaryObject(tenants.getRequiredTenant(),
+            file = storage.createTemporaryObject((SQLTenant) tenants.getRequiredTenant(),
                                                  bucketName,
                                                  NO_REFERENCE.equals(reference) ? null : reference,
                                                  name);
@@ -403,7 +404,7 @@ public class StorageController extends BizController {
     }
 
     private StoredObject findObjectByKey(String bucket, String objectKey) {
-        return storage.findByKey(tenants.getRequiredTenant(), bucket, objectKey)
+        return storage.findByKey((SQLTenant)tenants.getRequiredTenant(), bucket, objectKey)
                       .orElseThrow(() -> Exceptions.createHandled()
                                                    .withNLSKey("BizController.unknownObject")
                                                    .set("id", objectKey)

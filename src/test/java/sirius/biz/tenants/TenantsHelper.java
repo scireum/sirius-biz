@@ -9,6 +9,10 @@
 package sirius.biz.tenants;
 
 import sirius.biz.model.LoginData;
+import sirius.biz.tenants.jdbc.SQLTenant;
+import sirius.biz.tenants.jdbc.SQLTenantUserManager;
+import sirius.biz.tenants.jdbc.SQLTenants;
+import sirius.biz.tenants.jdbc.SQLUserAccount;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -33,10 +37,10 @@ public class TenantsHelper {
     private static List<String> features;
 
     @Part
-    private static Tenants tenants;
+    private static SQLTenants tenants;
 
-    private static Tenant testTenant;
-    private static UserAccount testUser;
+    private static SQLTenant testTenant;
+    private static SQLUserAccount testUser;
 
     private TenantsHelper() {
     }
@@ -50,18 +54,18 @@ public class TenantsHelper {
         }
 
         UserContext.get()
-                   .setCurrentUser(((TenantUserManager) UserContext.get().getUserManager()).asUser(getTestUser(),
-                                                                                                   null));
+                   .setCurrentUser(((SQLTenantUserManager) UserContext.get().getUserManager()).asUser(getTestUser(),
+                                                                                                      null));
     }
 
     private static void setupTestTenant() {
         oma.getReadyFuture().await(Duration.ofSeconds(60));
 
-        testTenant = oma.select(Tenant.class).eq(Tenant.NAME, "Test").queryFirst();
+        testTenant = oma.select(SQLTenant.class).eq(Tenant.TENANT_DATA.inner(TenantData.NAME), "Test").queryFirst();
         if (testTenant == null) {
-            testTenant = new Tenant();
-            testTenant.setName("Test");
-            testTenant.getPermissions().getPermissions().addAll(features);
+            testTenant = new SQLTenant();
+            testTenant.getTenantData().setName("Test");
+            testTenant.getTenantData().getPermissions().getPermissions().addAll(features);
             oma.update(testTenant);
         }
     }
@@ -69,14 +73,16 @@ public class TenantsHelper {
     private static void setupTestUser() {
         oma.getReadyFuture().await(Duration.ofSeconds(60));
 
-        testUser = oma.select(UserAccount.class).eq(UserAccount.LOGIN.inner(LoginData.USERNAME), "test").queryFirst();
+        testUser = oma.select(SQLUserAccount.class)
+                      .eq(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.USERNAME), "test")
+                      .queryFirst();
         if (testUser == null) {
-            testUser = new UserAccount();
+            testUser = new SQLUserAccount();
             testUser.getTenant().setValue(getTestTenant());
-            testUser.getLogin().setUsername("test");
-            testUser.getLogin().setCleartextPassword("test");
-            testUser.getPermissions().getPermissions().addAll(roles);
-            testUser.setEmail("test@test.test");
+            testUser.getUserAccountData().getLogin().setUsername("test");
+            testUser.getUserAccountData().getLogin().setCleartextPassword("test");
+            testUser.getUserAccountData().getPermissions().getPermissions().addAll(roles);
+            testUser.getUserAccountData().setEmail("test@test.test");
             oma.update(testUser);
         }
     }
@@ -88,7 +94,7 @@ public class TenantsHelper {
      */
     public static void installBackendUser(TestRequest request) {
         request.setSessionValue("default-tenant-id", getTestTenant().getId());
-        request.setSessionValue("default-tenant-name", getTestTenant().getName());
+        request.setSessionValue("default-tenant-name", getTestTenant().getTenantData().getName());
         request.setSessionValue("default-user-id", getTestUser().getUniqueName());
     }
 
@@ -102,7 +108,7 @@ public class TenantsHelper {
      *
      * @return Tenant for tests
      */
-    public static Tenant getTestTenant() {
+    public static SQLTenant getTestTenant() {
         if (testTenant != null) {
             return testTenant;
         }
@@ -117,7 +123,7 @@ public class TenantsHelper {
      *
      * @return UserAccount for tests
      */
-    public static UserAccount getTestUser() {
+    public static SQLUserAccount getTestUser() {
         if (testUser != null) {
             return testUser;
         }

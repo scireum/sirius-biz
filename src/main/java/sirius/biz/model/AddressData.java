@@ -52,8 +52,21 @@ public class AddressData extends Composite {
 
     @Transient
     protected final Requirements requirements;
+
     @Transient
     protected String fieldLabel;
+
+    /**
+     * Contains a temporary field label which can be used to
+     * show messages based on the context the {@link AddressData}
+     * is handled.
+     * <p>
+     * This can be used to show a customized property for the field
+     * label when the {@link AddressData} is used in another context
+     * than is is usually used.
+     */
+    @Transient
+    protected String temporaryFieldLabel;
 
     /**
      * Contains the street and street number.
@@ -107,16 +120,45 @@ public class AddressData extends Composite {
             if (requirements == Requirements.FULL_ADDRESS) {
                 throw Exceptions.createHandled()
                                 .withNLSKey("AddressData.fullAddressRequired")
-                                .set("name", fieldLabel)
+                                .set("name", determineFieldLabel())
                                 .handle();
             }
             if (!allEmpty && requirements == Requirements.NOT_PARTIAL) {
                 throw Exceptions.createHandled()
                                 .withNLSKey("AddressData.partialAddressRejected")
-                                .set("name", fieldLabel)
+                                .set("name", determineFieldLabel())
                                 .handle();
             }
         }
+    }
+
+    /**
+     * Sets the temporary field label to show a customized
+     * field label for special contexts.
+     *
+     * @param temporaryFieldLabel the temporary field label to set
+     */
+    public void setTemporaryFieldLabel(String temporaryFieldLabel) {
+        this.temporaryFieldLabel = temporaryFieldLabel;
+    }
+
+    /**
+     * Resets the temporary field label to use the regular field label again.
+     */
+    public void resetTemporaryFieldLabel() {
+        temporaryFieldLabel = null;
+    }
+
+    /**
+     * Determines the field label to use for showing messages.
+     *
+     * @return the field label to use to show messages
+     */
+    protected String determineFieldLabel() {
+        if (Strings.isFilled(temporaryFieldLabel)) {
+            return temporaryFieldLabel;
+        }
+        return fieldLabel;
     }
 
     /**

@@ -1,0 +1,19 @@
+<i:arg type="sirius.biz.jobs.params.TenantParameter" name="param"/>
+<i:arg type="Map" name="context"/>
+
+<w:autocompleteSingleSelect span="@param.getSpan()"
+                            smallSpan="@param.getSmallSpan()"
+                            name="@param.getName()"
+                            label="@param.getLabel()"
+                            help="@param.getDescription()"
+                            required="@param.isRequired()"
+                            optional="@!param.isRequired()"
+                            serviceUri="/tenants/autocomplete">
+
+    <i:local name="current" value="param.get(context).orElse(null).as(sirius.biz.tenants.Tenant.class)" />
+    <i:if test="current != null">
+        <option value="@current.getIdAsString()" selected="selected">
+            @current
+        </option>
+    </i:if>
+</w:autocompleteSingleSelect>

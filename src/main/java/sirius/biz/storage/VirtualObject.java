@@ -8,7 +8,7 @@
 
 package sirius.biz.storage;
 
-import sirius.biz.tenants.SQLTenantAware;
+import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.db.KeyGenerator;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;

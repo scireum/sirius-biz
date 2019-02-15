@@ -32,4 +32,11 @@ interface FifoQueue {
      */
     @Nullable
     JSONObject poll();
+
+    /**
+     * Returns the number of elements in the queue.
+     *
+     * @return the number of elements in the queue
+     */
+    int size();
 }

@@ -197,10 +197,6 @@ class BridgeFile implements FtpFile {
 
     @Override
     public String toString() {
-        if (file != null) {
-            return file.getPath();
-        }
-
-        return parent.getPath() + "/" + childName;
+        return getAbsolutePath();
     }
 }
