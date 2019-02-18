@@ -20,6 +20,8 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.es.Elastic;
 import sirius.db.mixing.EntityDescriptor;
+import sirius.db.mixing.Mixing;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -39,16 +41,22 @@ public class MoveIndexAliasJobFactory extends BatchProcessJobFactory {
     @Part
     private Elastic elastic;
 
+    @Part
+    private Mixing mixing;
+
     private ElasticEntityDescriptorParameter entityDescriptorParameter =
             (ElasticEntityDescriptorParameter) new ElasticEntityDescriptorParameter("ed",
                                                                                     "$MoveIndexAliasJobFactory.descriptorParameter")
                     .markRequired();
-    private StringParameter stringParameter =
+    private StringParameter destinationParameter =
             new StringParameter("destination", "$MoveIndexAliasJobFactory.destinationParameter").markRequired();
 
     @Override
     protected String createProcessTitle(Map<String, String> context) {
-        return "MoveIndexAlias";
+        return Strings.apply("Moving active elasticsearch alias from index '%s' to '%s'",
+                             Strings.join(elastic.getLowLevelClient()
+                                                 .getIndicesForAlias(mixing.getDescriptor(context.get("ed"))), ","),
+                             context.get("destination"));
     }
 
     @Override
@@ -58,7 +66,7 @@ public class MoveIndexAliasJobFactory extends BatchProcessJobFactory {
 
     @Override
     protected void executeTask(ProcessContext process) throws Exception {
-        String destination = process.getParameter(stringParameter)
+        String destination = process.getParameter(destinationParameter)
                                     .orElseThrow(() -> Exceptions.handle()
                                                                  .withSystemErrorMessage("No destination index given!")
                                                                  .handle());
@@ -73,7 +81,7 @@ public class MoveIndexAliasJobFactory extends BatchProcessJobFactory {
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
-        parameterCollector.accept(stringParameter);
+        parameterCollector.accept(destinationParameter);
         parameterCollector.accept(entityDescriptorParameter);
     }
 

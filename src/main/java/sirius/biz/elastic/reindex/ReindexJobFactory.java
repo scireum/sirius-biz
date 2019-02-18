@@ -20,6 +20,7 @@ import sirius.biz.tenants.TenantUserManager;
 import sirius.db.es.Elastic;
 import sirius.db.es.IndexMappings;
 import sirius.db.mixing.EntityDescriptor;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -51,7 +52,7 @@ public class ReindexJobFactory extends BatchProcessJobFactory {
 
     @Override
     protected String createProcessTitle(Map<String, String> context) {
-        return "Reindex";
+        return Strings.apply("Reindexing mapping '%s'", context.get("ed"));
     }
 
     @Override

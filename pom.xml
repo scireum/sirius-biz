@@ -19,7 +19,7 @@
     <properties>
         <sirius.kernel>12.4.1</sirius.kernel>
         <sirius.web>20.1.1</sirius.web>
-        <sirius.db>6.0</sirius.db>
+        <sirius.db>6.1</sirius.db>
     </properties>
 
     <dependencies>
