@@ -9,12 +9,14 @@
 package sirius.biz.elastic.reindex;
 
 import sirius.biz.cluster.work.DistributedTaskExecutor;
+import sirius.biz.jobs.JobCategory;
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.BatchProcessJobFactory;
 import sirius.biz.jobs.batch.DefaultBatchProcessTaskExecutor;
 import sirius.biz.jobs.params.ElasticEntityDescriptorParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.db.es.Elastic;
 import sirius.db.es.IndexMappings;
 import sirius.db.mixing.EntityDescriptor;
@@ -22,6 +24,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
 import java.time.LocalDate;
@@ -32,6 +35,7 @@ import java.util.function.Consumer;
  * Implements a job which reindexes a given index in elastic.
  */
 @Register(classes = JobFactory.class)
+@Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
 public class ReindexJobFactory extends BatchProcessJobFactory {
 
     @Part
@@ -40,7 +44,10 @@ public class ReindexJobFactory extends BatchProcessJobFactory {
     @Part
     private IndexMappings mappings;
 
-    private ElasticEntityDescriptorParameter entityDescriptorParameter = null;
+    private ElasticEntityDescriptorParameter entityDescriptorParameter =
+            (ElasticEntityDescriptorParameter) new ElasticEntityDescriptorParameter("ed",
+                                                                                    "$ReindexJobFactory.descriptorParameter")
+                    .markRequired();
 
     @Override
     protected String createProcessTitle(Map<String, String> context) {
@@ -82,11 +89,6 @@ public class ReindexJobFactory extends BatchProcessJobFactory {
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
-        if (entityDescriptorParameter == null) {
-            entityDescriptorParameter = new ElasticEntityDescriptorParameter("ed", NLS.get("ReindexJobFactory.descriptorParameter"));
-            entityDescriptorParameter.markRequired();
-        }
-
         parameterCollector.accept(entityDescriptorParameter);
     }
 
@@ -102,7 +104,7 @@ public class ReindexJobFactory extends BatchProcessJobFactory {
 
     @Override
     public String getCategory() {
-        return "MAINTENANCE";
+        return JobCategory.CATEGORY_MISC;
     }
 
     @Nonnull
