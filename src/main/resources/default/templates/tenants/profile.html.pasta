@@ -14,7 +14,7 @@
             <div class="col-md-8">
                 <div class="row">
                     <w:textfield span="12"
-                                 name="email"
+                                 name="userAccountData_email"
                                  value="@userAccount.getUserAccountData().getEmail()"
                                  labelKey="Model.email"
                                  readonly="true"/>
@@ -22,23 +22,23 @@
                 <div class="row">
                     <w:codelistSelect
                             span="6"
-                            name="person_salutation"
+                            name="userAccountData_person_salutation"
                             value="@userAccount.getUserAccountData().getPerson().getSalutation()"
                             labelKey="PersonData.salutation"
                             list="salutations"
                             optional="true"/>
                     <w:textfield span="6"
-                                 name="person_title"
+                                 name="userAccountData_person_title"
                                  value="@userAccount.getUserAccountData().getPerson().getTitle()"
                                  labelKey="PersonData.title"/>
                 </div>
                 <div class="row">
                     <w:textfield span="6"
-                                 name="person_firstname"
+                                 name="userAccountData_person_firstname"
                                  value="@userAccount.getUserAccountData().getPerson().getFirstname()"
                                  labelKey="PersonData.firstname"/>
                     <w:textfield span="6"
-                                 name="person_lastname"
+                                 name="userAccountData_person_lastname"
                                  value="@userAccount.getUserAccountData().getPerson().getLastname()"
                                  labelKey="PersonData.lastname"/>
                 </div>
