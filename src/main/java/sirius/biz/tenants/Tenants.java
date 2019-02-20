@@ -16,6 +16,7 @@ import sirius.db.mixing.query.Query;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.web.security.UserContext;
@@ -164,13 +165,16 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      *
      * @param tenantAware {@link TenantAware} entity to be asserted
      */
+    @SuppressWarnings("squid:S1612")
+    @Explain(
+            "Calling a method reference with generics causes a known bug in JDK. See JDK-8191655 and https://stackoverflow.com/a/47471284/9758089")
     public void assertTenant(TenantAware tenantAware) {
         if (tenantAware == null) {
             return;
         }
 
         if (!Objects.equals(tenantAware.getTenantAsString(),
-                            getCurrentTenant().map(Tenant::getIdAsString).orElse(null))) {
+                            getCurrentTenant().map(tenant -> tenant.getIdAsString()).orElse(null))) {
             throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
         }
     }
@@ -180,18 +184,22 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      *
      * @param tenantAware {@link TenantAware} entity to be asserted
      */
+    @SuppressWarnings("squid:S1612")
+    @Explain(
+            "Calling a method reference with generics causes a known bug in JDK. See JDK-8191655 and https://stackoverflow.com/a/47471284/9758089")
     public void assertTenantOrParentTenant(TenantAware tenantAware) {
         if (tenantAware == null) {
             return;
         }
 
-        if (!Objects.equals(tenantAware.getTenantAsString(), getCurrentTenant().map(Tenant::getIdAsString).orElse(null))
-            && !Objects.equals(tenantAware.getTenantAsString(),
-                               getCurrentTenant().map(Tenant::getParent)
-                                                 .filter(BaseEntityRef::isFilled)
-                                                 .map(BaseEntityRef::getId)
-                                                 .map(String::valueOf)
-                                                 .orElse(null))) {
+        if (!Objects.equals(tenantAware.getTenantAsString(),
+                            getCurrentTenant().map(tenant -> tenant.getIdAsString()).orElse(null)) && !Objects.equals(
+                tenantAware.getTenantAsString(),
+                getCurrentTenant().map(tenant -> tenant.getParent())
+                                  .filter(BaseEntityRef::isFilled)
+                                  .map(BaseEntityRef::getId)
+                                  .map(String::valueOf)
+                                  .orElse(null))) {
             throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
         }
     }
