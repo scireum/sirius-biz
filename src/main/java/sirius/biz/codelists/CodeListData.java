@@ -43,7 +43,7 @@ public class CodeListData extends Composite {
     @Trim
     @Autoloaded
     @Length(50)
-    @Unique
+    @Unique(within = "tenant")
     private String code;
 
     /**
