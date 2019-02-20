@@ -42,9 +42,11 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
 
     @Override
     public <A> Optional<A> tryAs(Class<A> adapterType) {
-        Optional<A> result = getUserAccountData().tryAs(adapterType);
-        if (result.isPresent()) {
-            return result;
+        if (getUserAccountData().is(adapterType)) {
+            Optional<A> result = getUserAccountData().tryAs(adapterType);
+            if (result.isPresent()) {
+                return result;
+            }
         }
 
         return super.tryAs(adapterType);
