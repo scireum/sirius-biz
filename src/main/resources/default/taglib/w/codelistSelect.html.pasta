@@ -10,13 +10,12 @@
 <i:arg name="required" type="boolean" default="false"/>
 <i:arg name="readonly" type="boolean" default="false"/>
 <i:arg name="adminOnly" type="boolean" default="false"/>
-<i:arg name="forceFullWidth" type="boolean" default="false"/>
 
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders a dropdown field for a codelist"/>
 
 <w:singleSelect span="@span" name="@name" label="@label" help="@help" optional="@optional" required="@required"
-                readonly="@readonly" adminOnly="@adminOnly" forceFullWidth="@forceFullWidth">
+                readonly="@readonly" adminOnly="@adminOnly">
     <i:for var="entry" type="sirius.biz.codelists.CodeListEntry" items="@codeLists.getEntries(list)">
         <option value="@entry.getCodeListEntryData().getCode()"
                 @selected="entry.getCodeListEntryData().getCode().equals(value)">
