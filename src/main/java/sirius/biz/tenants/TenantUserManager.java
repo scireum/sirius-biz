@@ -653,7 +653,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             return false;
         }
 
-        long actualInterval = Duration.between(LocalDateTime.now(), dateTime).toDays();
+        long actualInterval = Duration.between(dateTime, LocalDateTime.now()).toDays();
         return actualInterval < requiredInterval;
     }
 

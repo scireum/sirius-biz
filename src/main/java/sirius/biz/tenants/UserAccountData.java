@@ -231,7 +231,7 @@ public class UserAccountData extends Composite implements MessageProvider {
             return true;
         }
 
-        long actualInterval = Duration.between(LocalDateTime.now(), dateTime).toDays();
+        long actualInterval = Duration.between(dateTime, LocalDateTime.now()).toDays();
         return actualInterval >= requiredInterval - 3;
     }
 
