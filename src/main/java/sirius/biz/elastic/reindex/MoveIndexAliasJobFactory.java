@@ -8,11 +8,8 @@
 
 package sirius.biz.elastic.reindex;
 
-import sirius.biz.cluster.work.DistributedTaskExecutor;
-import sirius.biz.jobs.JobCategory;
 import sirius.biz.jobs.JobFactory;
-import sirius.biz.jobs.batch.BatchProcessJobFactory;
-import sirius.biz.jobs.batch.DefaultBatchProcessTaskExecutor;
+import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.ElasticEntityDescriptorParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.StringParameter;
@@ -24,7 +21,6 @@ import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.health.Exceptions;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
@@ -36,7 +32,7 @@ import java.util.function.Consumer;
  */
 @Register(classes = JobFactory.class)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
-public class MoveIndexAliasJobFactory extends BatchProcessJobFactory {
+public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
 
     @Part
     private Elastic elastic;
@@ -46,35 +42,28 @@ public class MoveIndexAliasJobFactory extends BatchProcessJobFactory {
 
     private ElasticEntityDescriptorParameter entityDescriptorParameter =
             (ElasticEntityDescriptorParameter) new ElasticEntityDescriptorParameter("ed",
-                                                                                    "$MoveIndexAliasJobFactory.descriptorParameter")
+                                                                                    "Entity")
                     .markRequired();
     private StringParameter destinationParameter =
-            new StringParameter("destination", "$MoveIndexAliasJobFactory.destinationParameter").markRequired();
+            new StringParameter("destination", "Destination").markRequired();
+
+    @Override
+    public String getLabel() {
+        return "ES: Move Index Alias";
+    }
 
     @Override
     protected String createProcessTitle(Map<String, String> context) {
         return Strings.apply("Moving active elasticsearch alias from index '%s' to '%s'",
                              Strings.join(elastic.getLowLevelClient()
-                                                 .getIndicesForAlias(mixing.getDescriptor(context.get("ed"))), ","),
-                             context.get("destination"));
+                                                 .getIndicesForAlias(entityDescriptorParameter.require(context)), ","),
+                             destinationParameter.require(context));
     }
 
     @Override
-    protected Class<? extends DistributedTaskExecutor> getExecutor() {
-        return DefaultBatchProcessTaskExecutor.class;
-    }
-
-    @Override
-    protected void executeTask(ProcessContext process) throws Exception {
-        String destination = process.getParameter(destinationParameter)
-                                    .orElseThrow(() -> Exceptions.handle()
-                                                                 .withSystemErrorMessage("No destination index given!")
-                                                                 .handle());
-        EntityDescriptor ed = process.getParameter(entityDescriptorParameter)
-                                     .orElseThrow(() -> Exceptions.handle()
-                                                                  .withSystemErrorMessage(
-                                                                          "Can't resolve entity-descriptor.")
-                                                                  .handle());
+    protected void execute(ProcessContext process) throws Exception {
+        String destination = process.require(destinationParameter);
+        EntityDescriptor ed = process.require(entityDescriptorParameter);
 
         process.log(elastic.getLowLevelClient().moveActiveAlias(ed, destination).toJSONString());
     }
@@ -83,21 +72,6 @@ public class MoveIndexAliasJobFactory extends BatchProcessJobFactory {
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
         parameterCollector.accept(destinationParameter);
         parameterCollector.accept(entityDescriptorParameter);
-    }
-
-    @Override
-    protected boolean hasPresetFor(Object targetObject) {
-        return false;
-    }
-
-    @Override
-    protected void computePresetFor(Object targetObject, Map<String, Object> preset) {
-        // nothing to do yet
-    }
-
-    @Override
-    public String getCategory() {
-        return JobCategory.CATEGORY_MISC;
     }
 
     @Nonnull
