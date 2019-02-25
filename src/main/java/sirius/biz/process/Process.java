@@ -86,7 +86,9 @@ public class Process extends SearchableEntity {
     private String requiredPermission;
 
     /**
-     * Contains the type of the process which is used to identify the right standby process to use.
+     * Contains the type of the process.
+     * <p>
+     *     This can be filled by any process but is rquired for standby processes to identify which process to use.
      */
     public static final Mapping PROCESS_TYPE = Mapping.named("processType");
     @NullAllowed

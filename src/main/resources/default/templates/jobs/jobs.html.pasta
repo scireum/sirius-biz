@@ -22,30 +22,32 @@
 
     <w:tableSearchHeader page="jobs" baseUrl="/jobs"/>
 
-    <div class="row">
-        <i:for type="Tuple" var="categoryAndJobs" items="jobs.getItems()">
-            <div class="col-md-6 col-xs-12">
-                <div class="well">
-                    <i:local name="category"
-                             value="categoryAndJobs.getFirst().as(sirius.biz.jobs.JobCategory.class)"/>
-                    <h4>
-                        <i class="fa @category.getIcon()"></i>
-                        <span>@category.getLabel()</span>
-                    </h4>
+    <i:for type="List" var="blocks" items="blockwise(jobs.getItems(), 2)">
+        <div class="row">
+            <i:for type="Tuple" var="categoryAndJobs" items="blocks">
+                <div class="col-md-6 col-xs-12">
+                    <div class="well">
+                        <i:local name="category"
+                                 value="categoryAndJobs.getFirst().as(sirius.biz.jobs.JobCategory.class)"/>
+                        <h4>
+                            <i class="fa @category.getIcon()"></i>
+                            <span>@category.getLabel()</span>
+                        </h4>
 
-                    <i:for type="sirius.biz.jobs.JobFactory"
-                           var="job"
-                           items="categoryAndJobs.getSecond().as(java.util.Collection.class)">
-                        <div class="job">
-                            <a class="link" href="/job/@job.getName()">
-                                <i class="fa @job.getIcon()"></i>
-                                @job.getLabel()
-                            </a><br>
-                            <small class="muted">@job.getDescription()</small>
-                        </div>
-                    </i:for>
+                        <i:for type="sirius.biz.jobs.JobFactory"
+                               var="job"
+                               items="categoryAndJobs.getSecond().as(java.util.Collection.class)">
+                            <div class="job">
+                                <a class="link" href="/job/@job.getName()">
+                                    <i class="fa @job.getIcon()"></i>
+                                    @job.getLabel()
+                                </a><br>
+                                <small class="muted">@job.getDescription()</small>
+                            </div>
+                        </i:for>
+                    </div>
                 </div>
-            </div>
-        </i:for>
-    </div>
+            </i:for>
+        </div>
+    </i:for>
 </w:page>

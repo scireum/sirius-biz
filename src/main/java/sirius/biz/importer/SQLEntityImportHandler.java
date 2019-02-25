@@ -20,57 +20,41 @@ import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
-import sirius.kernel.di.std.Register;
+import sirius.kernel.commons.Value;
+import sirius.kernel.commons.ValueHolder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
  * Provides a base implementation and also generic handler for all {@link SQLEntity JDBC/SQL entities}.
  * <p>
- * Subclasses might most probably want to overwrite: {@link #getMappingsToFind()}, {@link #getMappingsToLoad()} and
- * maybe {@link #tryFindByExample(SQLEntity)} if a more complex lookup is necessary.
+ * Subclasses might most probably want to overwrite:
+ * {@link #determineCacheKey(SQLEntity)} and {@link #getAutoImportMappings()}
+ * as well as maybe {@link #parseProperty(BaseEntity, Property, Value, Context)}.
  *
  * @param <E> the type of entity being handled by this handler
  */
-public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandler<E> {
-
-    /**
-     * Makes the {@link SQLEntityImportHandler} available as "last resort" for all {@link SQLEntity JDBC/SQL entities}.
-     */
-    @Register
-    public static class SQLEntityImportHandlerFactory implements ImportHandlerFactory {
-
-        @Override
-        public int getPriority() {
-            return 999;
-        }
-
-        @Override
-        public boolean accepts(Class<?> type) {
-            return SQLEntity.class.isAssignableFrom(type);
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public ImportHandler<?> create(Class<?> type, ImporterContext context) {
-            return new SQLEntityImportHandler<>(type, context);
-        }
-    }
+public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandler<E> {
 
     protected static final Mapping[] MAPPING_ARRAY = new Mapping[0];
 
-    protected FindQuery<E> findQuery;
     protected UpdateQuery<E> updateQuery;
     protected InsertQuery<E> insertQuery;
     protected DeleteQuery<E> deleteQuery;
 
+    protected List<Tuple<Predicate<E>, Supplier<FindQuery<E>>>> findQueries = new ArrayList<>();
+    protected Mapping[] mappingsToLoadForFind;
     protected Mapping[] mappingsToLoad;
-    protected Mapping[] mappingsToFind;
+    protected Mapping[] mappingsToUpdate;
     protected Mapping[] mappingsToCompare;
 
     /**
@@ -81,27 +65,29 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
      */
     protected SQLEntityImportHandler(Class<?> clazz, ImporterContext context) {
         super(clazz, context);
+        collectFindQueries((p, q) -> findQueries.add(Tuple.create(p, q)));
         this.mappingsToCompare = getMappingsToCompare().toArray(MAPPING_ARRAY);
-        this.mappingsToLoad = getMappingsToLoad().toArray(MAPPING_ARRAY);
+        this.mappingsToLoad = getAutoImportMappings().toArray(MAPPING_ARRAY);
+        this.mappingsToUpdate = getMappingsToUpdate().toArray(MAPPING_ARRAY);
+        this.mappingsToLoadForFind = getMappingsToLoadForFind().toArray(MAPPING_ARRAY);
+    }
 
-        if (newEntity() instanceof SQLTenantAware) {
-            List<Mapping> tmp = new ArrayList<>();
-            tmp.add(SQLTenantAware.TENANT);
-            tmp.addAll(getMappingsToFind());
-            this.mappingsToFind = tmp.toArray(MAPPING_ARRAY);
-        } else {
-            this.mappingsToFind = getMappingsToFind().toArray(MAPPING_ARRAY);
-        }
+    protected List<Mapping> getMappingsToUpdate() {
+        return descriptor.getProperties()
+                         .stream()
+                         .map(Property::getName)
+                         .map(Mapping::named)
+                         .filter(mapping -> !SQLEntity.ID.equals(mapping))
+                         .collect(Collectors.toList());
     }
 
     /**
-     * Returns a list of mappings to use (compare) if an entity is being looked up.
-     *
-     * @return a list of mappings used by <tt>find</tt>
+     * Provides a list of mappings, which each is used to compute a {@link FindQuery}.
+     * <p>
+     * Using this approach, several find queries based on different field combinations can be used to execute
+     * find.
      */
-    protected List<Mapping> getMappingsToFind() {
-        return Collections.singletonList(SQLEntity.ID);
-    }
+    protected abstract void collectFindQueries(BiConsumer<Predicate<E>, Supplier<FindQuery<E>>> queryConsumer);
 
     /**
      * Returns a list of mappings to use (compare) if an entity is being updated.
@@ -113,17 +99,14 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
     }
 
     /**
-     * Returns a list of mappings to load for <tt>INSERT</tt> or <tt>UPDATE</tt>
+     * Returns a list of mappings to load for a {@link #tryFindByExample(SQLEntity) find}.
      *
      * @return the list of mappings to update in this entity
      */
-    protected List<Mapping> getMappingsToLoad() {
-        return descriptor.getProperties()
-                         .stream()
-                         .map(Property::getName)
-                         .filter(Predicate.isEqual(SQLEntity.ID.getName()).negate())
-                         .map(Mapping::named)
-                         .collect(Collectors.toList());
+    protected Collection<Mapping> getMappingsToLoadForFind() {
+        return findQueries.stream()
+                          .flatMap(qry -> qry.getSecond().get().getFilterMappings().stream().map(Mapping::named))
+                          .collect(Collectors.toSet());
     }
 
     @Override
@@ -143,7 +126,30 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
 
     @Override
     public Optional<E> tryFind(Context data) {
-        return tryFindByExample(load(data, mappingsToFind));
+        for (Tuple<Predicate<E>, Supplier<FindQuery<E>>> predicateAndQuery : findQueries) {
+            Optional<E> result = tryFindByExample(load(data, mappingsToLoadForFind), predicateAndQuery);
+            if (result.isPresent()) {
+                return result;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    protected boolean containsAllRequiredFields(Context data, Mapping[] mappings) {
+        return Arrays.stream(mappings).map(Mapping::toString).allMatch(data::containsKey);
+    }
+
+    private Optional<E> tryFindByExample(E example, Tuple<Predicate<E>, Supplier<FindQuery<E>>> predicateAndQuery) {
+        if (!predicateAndQuery.getFirst().test(example)) {
+            return Optional.empty();
+        }
+
+        if (!(predicateAndQuery.getSecond() instanceof ValueHolder<?>)) {
+            predicateAndQuery.setSecond(new ValueHolder<>(predicateAndQuery.getSecond().get()));
+        }
+
+        return predicateAndQuery.getSecond().get().find(example);
     }
 
     /**
@@ -153,13 +159,20 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
      * @return a matching entity wrapped as optional or an empty optional if no match is available
      */
     protected Optional<E> tryFindByExample(E example) {
-        return getFindQuery().find(example);
+        for (Tuple<Predicate<E>, Supplier<FindQuery<E>>> predicateAndQuery : findQueries) {
+            Optional<E> result = tryFindByExample(example, predicateAndQuery);
+            if (result.isPresent()) {
+                return result;
+            }
+        }
+
+        return Optional.empty();
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Optional<E> tryFindInCache(Context data) {
-        E example = load(data, mappingsToFind);
+        E example = load(data, mappingsToLoadForFind);
         Tuple<Class<?>, String> cacheKey = Tuple.create(descriptor.getType(), determineCacheKey(example));
         if (Strings.isFilled(cacheKey.getSecond())) {
             Object result = context.getLocalCache().getIfPresent(cacheKey);
@@ -168,7 +181,7 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
             }
         }
 
-        Optional<E> result = tryFindByExample(load(data, mappingsToFind));
+        Optional<E> result = tryFindByExample(load(data, mappingsToLoadForFind));
         if (result.isPresent() && Strings.isFilled(cacheKey)) {
             context.getLocalCache().put(cacheKey, result.get());
         }
@@ -178,6 +191,8 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
 
     /**
      * Determines the cache key used by {@link #tryFindInCache(Context)} to find an instance in the cache.
+     * <p>
+     * Note that this isn't implemented by default and has to be overwritten by subclasses which want to support caching.
      *
      * @param example the entity to derive the cache key from
      * @return a unique string representation used for cache lookups or <tt>null</tt> to indicate that either caching
@@ -185,7 +200,7 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
      * cache lookup.
      */
     protected String determineCacheKey(E example) {
-        return example.isNew() ? null : example.getIdAsString();
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -202,25 +217,18 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
      * Determines if and how the given entity needs to be persisted.
      * <p>
      * If the given entity was already persisted, an update is pushed to the database. If the entity is
-     * {@link BaseEntity#isNew() new}, we try to {@link #tryFindByExample(SQLEntity) find} a persistent version and
-     * update this entity. If no match was found, an insert is performed.
+     * {@link BaseEntity#isNew() new}, an insert is performed.
      *
      * @param entity the entity to update or create
-     * @param batch  <tt>true</tt> if batch updates /creates should be used, <tt>false</tt> otherwise
+     * @param batch  <tt>true</tt> if batch updates / creates should be used, <tt>false</tt> otherwise
      * @return the updated or created entity or, if batch updates are active, the given entity
      */
     protected E createOrUpdate(E entity, boolean batch) {
-        E entityToUpdate = entity;
         if (entity.isNew()) {
-            entityToUpdate = tryFindByExample(entity).orElse(null);
-            if (entityToUpdate == null) {
-                return createIfChanged(entity, batch);
-            }
-
-            updatePersistentEntity(entity, entityToUpdate);
+            return createIfChanged(entity, batch);
+        } else {
+            return updateIfChanged(entity, batch);
         }
-
-        return updateIfChanged(entityToUpdate, batch);
     }
 
     /**
@@ -267,20 +275,6 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
     }
 
     /**
-     * Creates the prepared statement as {@link FindQuery} used to lookup entities.
-     *
-     * @return the find query to use
-     */
-    @SuppressWarnings("unchecked")
-    protected FindQuery<E> getFindQuery() {
-        if (findQuery == null) {
-            findQuery = context.getBatchContext().findQuery((Class<E>) descriptor.getType(), mappingsToFind);
-        }
-
-        return findQuery;
-    }
-
-    /**
      * Creates the prepared statement as {@link UpdateQuery} used to update entities.
      *
      * @return the update query to use
@@ -290,7 +284,7 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
         if (updateQuery == null) {
             updateQuery = context.getBatchContext()
                                  .updateQuery((Class<E>) descriptor.getType(), mappingsToCompare)
-                                 .withUpdatedMappings(mappingsToLoad);
+                                 .withUpdatedMappings(mappingsToUpdate);
         }
 
         return updateQuery;
@@ -304,7 +298,8 @@ public class SQLEntityImportHandler<E extends SQLEntity> extends BaseImportHandl
     @SuppressWarnings("unchecked")
     protected InsertQuery<E> getInsertQuery() {
         if (insertQuery == null) {
-            insertQuery = context.getBatchContext().insertQuery((Class<E>) descriptor.getType(), true, mappingsToLoad);
+            insertQuery =
+                    context.getBatchContext().insertQuery((Class<E>) descriptor.getType(), true, mappingsToUpdate);
         }
 
         return insertQuery;

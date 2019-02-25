@@ -39,7 +39,7 @@
                         <td />
                         <td>
                             <a href="/ps/@process.getId()" class="link"><i class="fa @process.getIcon()"></i> @limit(process.getTitle(), 65)</a><br>
-                            <small class="muted">@limit('todo', 65)</small>
+                            <small class="muted">@limit(process.getStateMessage(), 65)</small>
                         </td>
                         <td>
                             @process.getUserName()<br>

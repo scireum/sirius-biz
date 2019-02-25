@@ -119,11 +119,16 @@ public abstract class BasicJobFactory implements JobFactory {
 
     /**
      * Determines if this job can compute a preset of parameters for the given target.
+     * <p>
+     * If this method is overwritten to return <tt>true</tt> {@link #computePresetFor(Object, Map)} also must be
+     * overwritten.
      *
      * @param targetObject the target object to check
      * @return <tt>true</tt> if the given object can be used to compute a preset of parameters from
      */
-    protected abstract boolean hasPresetFor(Object targetObject);
+    protected boolean hasPresetFor(Object targetObject) {
+        return false;
+    }
 
     /**
      * Computes the parameter values from the given target object.
@@ -131,7 +136,9 @@ public abstract class BasicJobFactory implements JobFactory {
      * @param targetObject the object to compute the parameters from
      * @param preset       used to be supplied with the computed parameters which are then encoded into the preset URL
      */
-    protected abstract void computePresetFor(Object targetObject, Map<String, Object> preset);
+    protected void computePresetFor(Object targetObject, Map<String, Object> preset) {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void startInUI(WebContext request) {

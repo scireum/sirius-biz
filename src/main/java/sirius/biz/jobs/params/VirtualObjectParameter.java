@@ -3,20 +3,27 @@ package sirius.biz.jobs.params;
 import sirius.biz.storage.Storage;
 import sirius.biz.storage.StoredObject;
 import sirius.biz.storage.VirtualObject;
+import sirius.biz.tenants.Tenants;
 import sirius.biz.tenants.jdbc.SQLTenant;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
  * Provides a base class to implement autocomplete parameters for {@link VirtualObject entities}.
  */
-public class VirtualObjectParameter extends EntityParameter<VirtualObject> {
+public class VirtualObjectParameter extends Parameter<VirtualObject, VirtualObjectParameter> {
+
     @Part
     private static Storage storage;
+
+    @Part
+    private static Tenants<?, ?, ?> tenants;
 
     private static final String DEFAULT_BUCKET = "work";
 
@@ -48,17 +55,31 @@ public class VirtualObjectParameter extends EntityParameter<VirtualObject> {
      * @param name the name of the parameter
      */
     public VirtualObjectParameter(String name) {
-        super(name);
+        super(name, "$VirtualObjectParameter.label");
     }
 
-    @Override
+    /**
+     * Returns the autocompletion URL used to determine suggestions for inputs provided by the user.
+     *
+     * @return the autocomplete URL used to provide suggestions for user input
+     */
     public String getAutocompleteUri() {
         return "/storage/autocomplete/" + getBucketName();
     }
 
-    @Override
-    protected Class<VirtualObject> getType() {
-        return VirtualObject.class;
+    /**
+     * Converts a selected value into an id and label to be shown in the editor.
+     *
+     * @param context the parameter values used to read the selected value from
+     * @return a tuple containing the id and label of the selected value or <tt>null</tt> if no valid value is selected
+     */
+    public Tuple<String, String> renderCurrentValue(Map<String, String> context) {
+        VirtualObject entity = get(context).orElse(null);
+        if (entity == null) {
+            return null;
+        }
+
+        return Tuple.create(entity.getIdAsString(), entity.toString());
     }
 
     @Override
@@ -81,10 +102,10 @@ public class VirtualObjectParameter extends EntityParameter<VirtualObject> {
      * @return {@link Optional<VirtualObject>} the found virtual object or {@link Optional#empty()}
      */
     private Optional<VirtualObject> findFile(String key) {
-        Optional<StoredObject> file = storage.findByKey((SQLTenant)tenants.getRequiredTenant(), getBucketName(), key);
+        Optional<StoredObject> file = storage.findByKey((SQLTenant) tenants.getRequiredTenant(), getBucketName(), key);
 
         if (!file.isPresent() && Strings.isFilled(defaultFilePath)) {
-            file = storage.findByPath((SQLTenant)tenants.getRequiredTenant(), getBucketName(), defaultFilePath);
+            file = storage.findByPath((SQLTenant) tenants.getRequiredTenant(), getBucketName(), defaultFilePath);
         }
 
         return file.map(storedObject -> {
