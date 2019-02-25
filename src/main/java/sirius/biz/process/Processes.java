@@ -87,13 +87,18 @@ public class Processes {
     /**
      * Creates a new process.
      *
+     * @param type    the type of the process (which can be used for filtering in the backend)
      * @param title   the title to show in the UI
      * @param icon    the icon to use for this process
      * @param user    the user that belongs to the process
      * @param context the context passed into the process
      * @return the newly created process
      */
-    public String createProcess(String title, String icon, UserInfo user, Map<String, String> context) {
+    public String createProcess(@Nullable String type,
+                                String title,
+                                String icon,
+                                UserInfo user,
+                                Map<String, String> context) {
         Process process = new Process();
         process.setTitle(title);
         process.setIcon(icon);
@@ -102,6 +107,7 @@ public class Processes {
         process.setTenantId(user.getTenantId());
         process.setTenantName(user.getTenantName());
         process.setState(ProcessState.RUNNING);
+        process.setProcessType(type);
         process.setStarted(LocalDateTime.now());
         process.getContext().modify().putAll(context);
 
@@ -115,13 +121,17 @@ public class Processes {
     /**
      * Creates a new process for the currently active user.
      *
+     * @param type    the type of the process (which can be used for filtering in the backend)
      * @param title   the title to show in the UI
      * @param icon    the icon to use for this process
      * @param context the context passed into the process
      * @return the newly created process
      */
-    public String createProcessForCurrentUser(String title, String icon, Map<String, String> context) {
-        return createProcess(title, icon, UserContext.getCurrentUser(), context);
+    public String createProcessForCurrentUser(@Nullable String type,
+                                              String title,
+                                              String icon,
+                                              Map<String, String> context) {
+        return createProcess(type, title, icon, UserContext.getCurrentUser(), context);
     }
 
     /**
@@ -444,8 +454,8 @@ public class Processes {
     /**
      * Await until the process really exists.
      * <p>
-     * As {@link #createProcess(String, String, UserInfo, Map)} performs an insert into ES without any delay,
-     * the same process might not yet be visible on another node (due to the 1s insert delay of ES). Therefore
+     * As {@link #createProcess(String, String, String, String, UserInfo, Map)} performs an insert into ES without any
+     * delay, the same process might not yet be visible on another node (due to the 1s insert delay of ES). Therefore
      * we check the existence of the process and wait a certain amount of time if it doesn't exist.
      * <p>
      * Note that this isn't necessarry on the same node and therefore actually bypassed, as the 1st level

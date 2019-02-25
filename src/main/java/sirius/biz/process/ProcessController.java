@@ -85,7 +85,7 @@ public class ProcessController extends BizController {
         ElasticPageHelper<Process> ph = ElasticPageHelper.withQuery(query);
         ph.withContext(ctx);
         ph.addTermAggregation(Process.STATE, ProcessState.class);
-        ph.addTermAggregation(Process.PROCESS_TYPE, value -> NLS.getIfExists(value, null).orElse(value));
+        ph.addTermAggregation(Process.PROCESS_TYPE, value -> NLS.getIfExists(value, null).orElse(null));
         ph.addTimeAggregation(Process.STARTED,
                               DateRange.lastFiveMinutes(),
                               DateRange.lastFiveteenMinutes(),
@@ -139,7 +139,7 @@ public class ProcessController extends BizController {
         ph.withPageSize(100);
         ph.addTermAggregation(ProcessLog.TYPE, ProcessLogType.class);
         ph.addTermAggregation(ProcessLog.STATE, ProcessLogState.class);
-        ph.addTermAggregation(ProcessLog.MESSAGE_HANDLER, NLS::smartGet);
+        ph.addTermAggregation(ProcessLog.MESSAGE_HANDLER, value -> NLS.getIfExists(value, null).orElse(null));
         ph.addTimeAggregation(ProcessLog.TIMESTAMP,
                               DateRange.lastFiveMinutes(),
                               DateRange.lastFiveteenMinutes(),
@@ -160,10 +160,8 @@ public class ProcessController extends BizController {
     @LoginRequired
     public void cancelProcess(WebContext ctx, String processId) {
         Process process = findAccessibleProcess(processId);
-
         processes.markCanceled(process.getId());
-
-        processDetails(ctx, processId);
+        ctx.respondWith().redirectToGet("/ps/" + process);
     }
 
     /**
