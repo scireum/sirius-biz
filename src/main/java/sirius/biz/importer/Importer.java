@@ -94,6 +94,16 @@ public class Importer implements Closeable {
     }
 
     /**
+     * Returns the dictionary used / understood by the handler of the given type.
+     *
+     * @param type the type to determine the dictionary for
+     * @return the dictionary used by the {@link ImportHandler} of the given type
+     */
+    public ImportDictionary getDictionary(Class<? extends BaseEntity<?>> type) {
+        return context.findHandler(type).getDictionary();
+    }
+
+    /**
      * Tries to find an instance of the given type based on the given data.
      * <p>
      * Note that the {@link ImportHandler} being used controls which values of <tt>data</tt> are used to resolve the
@@ -242,8 +252,16 @@ public class Importer implements Closeable {
      * @return the appropriate handler for this type
      * @throws sirius.kernel.health.HandledException if no appropriate handler is available
      */
-    @SuppressWarnings("unchecked")
     public <E extends BaseEntity<?>> ImportHandler<E> findHandler(Class<E> type) {
         return context.findHandler(type);
+    }
+
+    /**
+     * Provides access to the underlying importer context.
+     *
+     * @return the context used by this importer
+     */
+    public ImporterContext getContext() {
+        return context;
     }
 }
