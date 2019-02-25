@@ -16,6 +16,7 @@ import sirius.biz.jobs.params.StringParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.es.Elastic;
+import sirius.db.es.IndexMappings;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Strings;
@@ -39,6 +40,9 @@ public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
 
     @Part
     private Mixing mixing;
+
+    @Part
+    private IndexMappings mappings;
 
     private ElasticEntityDescriptorParameter entityDescriptorParameter =
             (ElasticEntityDescriptorParameter) new ElasticEntityDescriptorParameter("ed",
@@ -66,6 +70,12 @@ public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
         EntityDescriptor ed = process.require(entityDescriptorParameter);
 
         process.log(elastic.getLowLevelClient().moveActiveAlias(ed, destination).toJSONString());
+        elastic.getLowLevelClient().getIndicesForAlias(ed).forEach(index -> {
+            process.log(Strings.apply("Setting dynamic mapping mode to 'strict' for index '%s'.", index));
+            // set the dynamic mapping mode to 'strict' as most probably it is currently set to 'false' which was used
+            // during reindexing
+            mappings.createMapping(ed, index, IndexMappings.DynamicMapping.STRICT);
+        });
     }
 
     @Override

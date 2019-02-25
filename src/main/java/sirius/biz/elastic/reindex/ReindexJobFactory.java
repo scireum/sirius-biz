@@ -43,9 +43,8 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     private IndexMappings mappings;
 
     private ElasticEntityDescriptorParameter entityDescriptorParameter =
-            (ElasticEntityDescriptorParameter) new ElasticEntityDescriptorParameter("ed",
-                                                                                    "Entity")
-                    .markRequired();
+
+            (ElasticEntityDescriptorParameter) new ElasticEntityDescriptorParameter("ed", "Entity").markRequired();
 
     @Override
     public String getLabel() {
@@ -60,11 +59,16 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     @Override
     protected void execute(ProcessContext process) throws Exception {
         EntityDescriptor ed = process.require(entityDescriptorParameter);
-
         String nextIndex = determineNextIndexName(ed);
-        mappings.createMapping(ed, nextIndex);
+        // set the dynamic mapping mode to "false", so that legacy fields in documents are just ignored and don't
+        // cause the reindex process to abort
+        mappings.createMapping(ed, nextIndex, IndexMappings.DynamicMapping.FALSE);
         process.log("Created index: " + nextIndex);
-        process.log(elastic.getLowLevelClient().reindex(ed, nextIndex).toJSONString());
+
+        elastic.getLowLevelClient().reindex(ed, nextIndex, response -> {
+        }, exception -> {
+        });
+        process.log("Started a reindex job in elasticsearch, check the task API to see the progress ...");
     }
 
     private String determineNextIndexName(EntityDescriptor ed) {
