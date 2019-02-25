@@ -93,6 +93,11 @@ public class Importer implements Closeable {
         return context.findHandler(type).load(data, entity);
     }
 
+    public ImportDictionary getDictionary(Class<? extends BaseEntity<?>> type) {
+        return context.findHandler(type).getDictionary();
+    }
+
+
     /**
      * Tries to find an instance of the given type based on the given data.
      * <p>
@@ -242,8 +247,11 @@ public class Importer implements Closeable {
      * @return the appropriate handler for this type
      * @throws sirius.kernel.health.HandledException if no appropriate handler is available
      */
-    @SuppressWarnings("unchecked")
     public <E extends BaseEntity<?>> ImportHandler<E> findHandler(Class<E> type) {
         return context.findHandler(type);
+    }
+
+    public ImporterContext getContext() {
+        return context;
     }
 }

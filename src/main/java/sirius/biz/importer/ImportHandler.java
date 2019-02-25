@@ -30,6 +30,13 @@ import java.util.Optional;
 public interface ImportHandler<E extends BaseEntity<?>> {
 
     /**
+     * Returns the dictionary which can be used to map aliases when importing or exporting fields.
+     *
+     * @return the dictionary to be used when mapping incoming data
+     */
+    ImportDictionary getDictionary();
+
+    /**
      * Fills the given entity it using the supplied <tt>data</tt>.
      *
      * @param data   used to fill the newly created entity

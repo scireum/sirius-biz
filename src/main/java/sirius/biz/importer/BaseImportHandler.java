@@ -15,12 +15,17 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.properties.BaseEntityRefProperty;
+import sirius.kernel.Sirius;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.settings.Extension;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Provides a base implementation for all import handlers which mainly takes care of the convenience methods.
@@ -53,7 +58,6 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @param mappings the list of properties to load
      * @return a newly created and not yet persisted entity with values loaded from <tt>data</tt>
      */
-    @SuppressWarnings("unchecked")
     protected E load(Context data, Mapping... mappings) {
         return load(data, newEntity(), mappings);
     }
@@ -66,10 +70,24 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @param mappings the list of properties to load
      * @return a newly created and not yet persisted entity with values loaded from <tt>data</tt>
      */
-    @SuppressWarnings("unchecked")
     protected E load(Context data, E entity, Mapping... mappings) {
-        Arrays.stream(mappings).map(descriptor::getProperty).forEach(property -> loadProperty(entity, property, data));
+        Arrays.stream(mappings).forEach(mapping -> loadMapping(entity, mapping, data));
         return entity;
+    }
+
+    /**
+     * Loads the given mapping into the given entity from the given data source.
+     *
+     * @param entity  the entity to fill
+     * @param mapping the mapping to load
+     * @param data    the data source to read the value from
+     */
+    protected void loadMapping(E entity, Mapping mapping, Context data) {
+        if (!data.containsKey(mapping.getName())) {
+            return;
+        }
+
+        loadProperty(entity, descriptor.getProperty(mapping), data);
     }
 
     /**
@@ -80,12 +98,22 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @param data     the data source to read the value from
      */
     protected void loadProperty(E entity, Property property, Context data) {
-        if (!data.containsKey(property.getName())) {
-            return;
-        }
-
-        property.parseValue(entity, data.getValue(property.getName()));
+        parseProperty(entity, property, data.getValue(property.getName()), data);
         ensureTenantMatch(entity, property);
+    }
+
+    /**
+     * Parses the value for the given property.
+     * <p>
+     * Overwrite this method for smart / complext properties - especially to load referenced entities.
+     *
+     * @param entity   the entity to fill
+     * @param property the property to parse
+     * @param value    the value to parse
+     * @param data     the full context which is being imported
+     */
+    protected void parseProperty(E entity, Property property, Value value, Context data) {
+        property.parseValue(entity, value);
     }
 
     /**
@@ -138,5 +166,41 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
                             .withSystemErrorMessage("Cannot create an instance of: %s", descriptor.getType().getName())
                             .handle();
         }
+    }
+
+    @Override
+    public ImportDictionary getDictionary() {
+        ImportDictionary dict = new ImportDictionary(field -> {
+            Property property = descriptor.findProperty(field);
+            if (property != null) {
+                return property.getLabel();
+            } else {
+                return field;
+            }
+        });
+
+        loadAliases(dict);
+
+        return dict;
+    }
+
+    protected void loadAliases(ImportDictionary dict) {
+        Extension aliases = Sirius.getSettings()
+                                  .getExtension("importer.aliases", descriptor.getType().getSimpleName().toLowerCase());
+        descriptor.getProperties().stream().map(Property::getName).forEach(mapping -> {
+            dict.withAlias(mapping, mapping);
+            if (aliases.getConfig().hasPath(mapping)) {
+                aliases.getStringList(mapping).forEach(alias -> dict.withAlias(mapping, alias));
+            }
+        });
+    }
+
+    protected List<Mapping> getAutoImportMappings() {
+        return descriptor.getProperties()
+                         .stream()
+                         .filter(property -> property.getAnnotation(AutoImport.class).isPresent())
+                         .map(Property::getName)
+                         .map(Mapping::named)
+                         .collect(Collectors.toList());
     }
 }

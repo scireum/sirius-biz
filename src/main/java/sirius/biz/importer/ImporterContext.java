@@ -63,11 +63,11 @@ public class ImporterContext {
      */
     @SuppressWarnings("unchecked")
     public <E extends BaseEntity<?>> ImportHandler<E> findHandler(Class<E> type) {
-        return (ImportHandler<E>) handlers.computeIfAbsent(type, this::lookupHandler);
+        return (ImportHandler<E>) handlers.computeIfAbsent(type, aType -> lookupHandler(aType, aType));
     }
 
     @SuppressWarnings("unchecked")
-    private ImportHandler<?> lookupHandler(Class<?> type) {
+    private ImportHandler<?> lookupHandler(Class<?> type, Class<?> baseType) {
         for (ImportHandlerFactory factory : factories) {
             if (factory.accepts(type)) {
                 return factory.create(type, this);
@@ -75,12 +75,21 @@ public class ImporterContext {
         }
 
         if (type.getSuperclass() != null && !type.getSuperclass().equals(type)) {
-            return lookupHandler(type.getSuperclass());
+            return lookupHandler(type.getSuperclass(), baseType);
         } else {
             throw Exceptions.createHandled()
-                            .withSystemErrorMessage("Cannot find an import handler for type: %s", type)
+                            .withSystemErrorMessage("Cannot find an import handler for type: %s", baseType)
                             .handle();
         }
+    }
+
+    /**
+     * Provides access to the importer for which this context was created.
+     *
+     * @return the imported associated with this context
+     */
+    public Importer getImporter() {
+        return importer;
     }
 
     /**
@@ -102,6 +111,10 @@ public class ImporterContext {
         if (batchContext != null) {
             batchContext.close();
         }
+    }
+
+    public boolean hasBatchContext() {
+        return batchContext != null;
     }
 
     /**
