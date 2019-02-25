@@ -184,6 +184,13 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         return dict;
     }
 
+    /**
+     * Determines the aliases and writes them into the given dictionary.
+     * <p>
+     * This will consult the system configuration under <tt>importer.aliases.ENTITY</tt>.
+     *
+     * @param dict the import dictionary to fill.
+     */
     protected void loadAliases(ImportDictionary dict) {
         Extension aliases = Sirius.getSettings()
                                   .getExtension("importer.aliases", descriptor.getType().getSimpleName().toLowerCase());
@@ -195,6 +202,12 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         });
     }
 
+    /**
+     * Determines all mappings which wear an {@link AutoImport} annotation.
+     *
+     * @return all mappings which wear the <tt>AutoImport</tt> annotation and are therefore to be considered to load
+     * when updating or creating an entity.
+     */
     protected List<Mapping> getAutoImportMappings() {
         return descriptor.getProperties()
                          .stream()

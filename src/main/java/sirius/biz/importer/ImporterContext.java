@@ -10,6 +10,7 @@ package sirius.biz.importer;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import sirius.biz.jobs.batch.ImportJob;
 import sirius.db.jdbc.batch.BatchContext;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
@@ -113,6 +114,16 @@ public class ImporterContext {
         }
     }
 
+    /**
+     * Determines if the underlying batch context has been initialized at all.
+     * <p>
+     * As some import might only target MongoDB, the batch context will remain untouched. As some reporting facilities
+     * only call <tt>getBatchContext</tt> only to report its usage, this method can be used to prevent initializing
+     * and empty context just to report it to the user.
+     *
+     * @return <tt>true</tt> if the batch context has been used, <tt>false</tt> otherwise
+     * @see ImportJob#close()
+     */
     public boolean hasBatchContext() {
         return batchContext != null;
     }
