@@ -9,6 +9,7 @@
 package sirius.biz.model;
 
 import sirius.biz.codelists.CodeLists;
+import sirius.biz.importer.AutoImport;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
@@ -37,6 +38,7 @@ public class PersonData extends Composite {
     @Trim
     @Autoloaded
     @NullAllowed
+    @AutoImport
     private String title;
 
     /**
@@ -49,6 +51,7 @@ public class PersonData extends Composite {
     @Autoloaded
     @NullAllowed
     @Trim
+    @AutoImport
     private String salutation;
 
     /**
@@ -59,6 +62,7 @@ public class PersonData extends Composite {
     @Trim
     @Autoloaded
     @NullAllowed
+    @AutoImport
     private String firstname;
 
     /**
@@ -69,6 +73,7 @@ public class PersonData extends Composite {
     @Trim
     @Autoloaded
     @NullAllowed
+    @AutoImport
     private String lastname;
 
     @Part
