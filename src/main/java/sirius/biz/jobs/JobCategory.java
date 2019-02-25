@@ -20,26 +20,37 @@ public class JobCategory {
 
     /**
      * Contains the name of the default category which contains all import jobs.
+     * <p>
+     * Note that there is a {@link sirius.biz.jobs.batch.ImportBatchProcessFactory} readily available.
      */
     public static final String CATEGORY_IMPORT = "import";
 
     /**
      * Contains the name of the default category which contains all export jobs.
+     * <p>
+     * Note that there is a {@link sirius.biz.jobs.batch.ExportBatchProcessFactory} readily available.
      */
     public static final String CATEGORY_EXPORT = "export";
 
     /**
      * Contains the name of the default category which contains all report and analytics jobs.
+     * <p>
+     * Note that there is a {@link sirius.biz.jobs.batch.ReportBatchProcessFactory} readily available.
      */
     public static final String CATEGORY_REPORT = "report";
 
     /**
      * Contains the name of the default category which contains all checks and data quality jobs.
+     * <p>
+     * Note that there is a {@link sirius.biz.jobs.batch.CheckBatchProcessFactory} readily available.
      */
     public static final String CATEGORY_CHECK = "check";
 
     /**
      * Contains the name of the default category which contains all jobs that fit no other category.
+     * <p>
+     * Note that there is a {@link sirius.biz.jobs.batch.DefaultBatchProcessFactory} readily available,
+     * which can be used for miscellaneous tasks.
      */
     public static final String CATEGORY_MISC = "misc";
 
