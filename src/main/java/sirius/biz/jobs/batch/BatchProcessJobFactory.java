@@ -26,10 +26,19 @@ import java.util.Map;
 /**
  * Provides a base implementation for batch jobs which are executed as
  * {@link sirius.biz.cluster.work.DistributedTasks.DistributedTask} within a process {@link Process}.
+ * <p>
+ * This will instantiate a subclass of {@link BatchJob} which will then be executed.
  */
 public abstract class BatchProcessJobFactory extends BasicJobFactory {
 
+    /**
+     * Used to store and retrieve the process id which of this batch job.
+     */
     public static final String CONTEXT_PROCESS = "process";
+
+    /**
+     * Used to store and retrieve the job factory which is responsible for executing the actual task.
+     */
     public static final String CONTEXT_JOB_FACTORY = "jobFactory";
 
     @Part
@@ -83,7 +92,10 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
      * @return the id of the newly created process
      */
     protected String startWithContext(Map<String, String> context) {
-        String processId = processes.createProcessForCurrentUser(createProcessTitle(context), getIcon(), context);
+        String processId = processes.createProcessForCurrentUser(getClass().getSimpleName() + ".label",
+                                                                 createProcessTitle(context),
+                                                                 getIcon(),
+                                                                 context);
         logScheduledMessage(processId);
         addLinkToJob(processId);
         createAndScheduleDistributedTask(processId);
@@ -159,5 +171,11 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
      * @param process the context of the previously generated process to communicate with the outside world
      * @throws Exception in case of any error which should abort this job
      */
-    protected abstract void executeTask(ProcessContext process) throws Exception;
+    protected void executeTask(ProcessContext process) throws Exception {
+        try (BatchJob job = createJob(process)) {
+            job.execute();
+        }
+    }
+
+    protected abstract BatchJob createJob(ProcessContext process) throws Exception;
 }
