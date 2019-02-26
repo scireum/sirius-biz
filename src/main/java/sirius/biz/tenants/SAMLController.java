@@ -250,5 +250,11 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
         if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_EMAIL_ADDRESS))) {
             account.getUserAccountData().setEmail(response.getAttributeValue(SAMLResponse.ATTRIBUTE_EMAIL_ADDRESS));
         }
+
+        // If a generated password was previously set, force a random password so that the
+        // "please change your password" warning goes away.
+        if (Strings.isFilled(account.getUserAccountData().getLogin().getGeneratedPassword())) {
+            account.getUserAccountData().getLogin().setCleartextPassword(UUID.randomUUID().toString());
+        }
     }
 }

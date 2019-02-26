@@ -17,6 +17,7 @@ import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Page;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
+import sirius.web.security.LoginRequired;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.util.Collection;
@@ -37,6 +38,7 @@ public class JobsController extends BizController {
      */
     @Routed("/jobs")
     @DefaultRoute
+    @LoginRequired
     public void jobs(WebContext ctx) {
         Page<Tuple<JobCategory, Collection<JobFactory>>> page = new Page<>();
         page.bindToRequest(ctx);
@@ -52,6 +54,7 @@ public class JobsController extends BizController {
      * @param jobType the name of the job to launch
      */
     @Routed("/job/:1")
+    @LoginRequired
     public void job(WebContext ctx, String jobType) {
         jobs.findFactory(jobType, JobFactory.class).startInUI(ctx);
     }
