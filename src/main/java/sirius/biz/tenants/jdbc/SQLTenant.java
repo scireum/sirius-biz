@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.jdbc;
 
+import sirius.biz.importer.AutoImport;
 import sirius.biz.jdbc.BizEntity;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.tenants.Tenant;
@@ -28,6 +29,7 @@ public class SQLTenant extends BizEntity implements Tenant<Long> {
      * Contains the parent tenant of this tenant.
      */
     @Autoloaded
+    @AutoImport
     @NullAllowed
     private final SQLEntityRef<SQLTenant> parent = SQLEntityRef.on(SQLTenant.class, SQLEntityRef.OnDelete.SET_NULL);
 
