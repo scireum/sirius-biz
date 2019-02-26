@@ -8,6 +8,7 @@
 
 package sirius.biz.model;
 
+import sirius.biz.importer.AutoImport;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Composite;
@@ -75,6 +76,7 @@ public class AddressData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
+    @AutoImport
     @Length(255)
     private String street;
 
@@ -85,6 +87,7 @@ public class AddressData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
+    @AutoImport
     @Length(9)
     private String zip;
 
@@ -95,6 +98,7 @@ public class AddressData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
+    @AutoImport
     @Length(255)
     private String city;
 

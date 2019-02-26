@@ -25,7 +25,11 @@ class ImporterSpec extends BaseSpecification {
     }
 
     def setup() {
-        importer = new Importer()
+        importer = new Importer("ImporterSpec")
+    }
+
+    def cleanup() {
+        importer.close()
     }
 
     def "find existent tenant with importer"() {

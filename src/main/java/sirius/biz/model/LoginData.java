@@ -11,6 +11,7 @@ package sirius.biz.model;
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
+import sirius.biz.importer.AutoImport;
 import sirius.biz.protocol.NoJournal;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Composite;
@@ -48,6 +49,7 @@ public class LoginData extends Composite {
     @Autoloaded
     @Length(150)
     @NullAllowed
+    @AutoImport
     private String username;
 
     /**
@@ -78,6 +80,7 @@ public class LoginData extends Composite {
     @Trim
     @Length(50)
     @NullAllowed
+    @AutoImport
     private String generatedPassword;
 
     /**
@@ -128,6 +131,7 @@ public class LoginData extends Composite {
      */
     public static final Mapping ACCOUNT_LOCKED = Mapping.named("accountLocked");
     @Autoloaded
+    @AutoImport
     private boolean accountLocked;
 
     @Transient

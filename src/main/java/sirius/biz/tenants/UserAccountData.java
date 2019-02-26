@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import sirius.biz.importer.AutoImport;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
@@ -56,6 +57,7 @@ public class UserAccountData extends Composite implements MessageProvider {
     @Autoloaded
     @Length(150)
     @NullAllowed
+    @AutoImport
     private String email;
 
     /**
@@ -81,6 +83,7 @@ public class UserAccountData extends Composite implements MessageProvider {
      */
     public static final Mapping EXTERNAL_LOGIN_REQUIRED = Mapping.named("externalLoginRequired");
     @Autoloaded
+    @AutoImport
     private boolean externalLoginRequired = false;
 
     @Part
@@ -231,7 +234,7 @@ public class UserAccountData extends Composite implements MessageProvider {
             return true;
         }
 
-        long actualInterval = Duration.between(LocalDateTime.now(), dateTime).toDays();
+        long actualInterval = Duration.between(dateTime, LocalDateTime.now()).toDays();
         return actualInterval >= requiredInterval - 3;
     }
 

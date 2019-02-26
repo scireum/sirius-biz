@@ -8,11 +8,8 @@
 
 package sirius.biz.elastic.reindex;
 
-import sirius.biz.cluster.work.DistributedTaskExecutor;
-import sirius.biz.jobs.JobCategory;
 import sirius.biz.jobs.JobFactory;
-import sirius.biz.jobs.batch.BatchProcessJobFactory;
-import sirius.biz.jobs.batch.DefaultBatchProcessTaskExecutor;
+import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.ElasticEntityDescriptorParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
@@ -37,7 +34,7 @@ import java.util.function.Consumer;
  */
 @Register(classes = JobFactory.class)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
-public class ReindexJobFactory extends BatchProcessJobFactory {
+public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
 
     @Part
     private Elastic elastic;
@@ -46,32 +43,31 @@ public class ReindexJobFactory extends BatchProcessJobFactory {
     private IndexMappings mappings;
 
     private ElasticEntityDescriptorParameter entityDescriptorParameter =
-            (ElasticEntityDescriptorParameter) new ElasticEntityDescriptorParameter("ed",
-                                                                                    "$ReindexJobFactory.descriptorParameter")
-                    .markRequired();
+            (ElasticEntityDescriptorParameter) new ElasticEntityDescriptorParameter("ed", "Entity").markRequired();
+
+    @Override
+    public String getLabel() {
+        return "ES: Reindex";
+    }
 
     @Override
     protected String createProcessTitle(Map<String, String> context) {
-        return Strings.apply("Reindexing mapping '%s'", context.get("ed"));
+        return Strings.apply("Reindexing mapping '%s'", entityDescriptorParameter.require(context).getRelationName());
     }
 
     @Override
-    protected Class<? extends DistributedTaskExecutor> getExecutor() {
-        return DefaultBatchProcessTaskExecutor.class;
-    }
-
-    @Override
-    protected void executeTask(ProcessContext process) throws Exception {
-        EntityDescriptor ed = process.getParameter(entityDescriptorParameter)
-                                     .orElseThrow(() -> Exceptions.handle()
-                                                                  .withSystemErrorMessage(
-                                                                          "Can't resolve entity-descriptor.")
-                                                                  .handle());
-
+    protected void execute(ProcessContext process) throws Exception {
+        EntityDescriptor ed = process.require(entityDescriptorParameter);
         String nextIndex = determineNextIndexName(ed);
-        mappings.createMapping(ed, nextIndex);
-        process.log("Created index " + nextIndex);
-        process.log(elastic.getLowLevelClient().reindex(ed, nextIndex).toJSONString());
+        // set the dynamic mapping mode to "false", so that legacy fields in documents are just ignored and don't
+        // cause the reindex process to abort
+        mappings.createMapping(ed, nextIndex, IndexMappings.DynamicMapping.FALSE);
+        process.log("Created index: " + nextIndex);
+
+        elastic.getLowLevelClient().reindex(ed, nextIndex, response -> {
+        }, exception -> {
+        });
+        process.log("Started a reindex job in elasticsearch, check the task API to see the progress ...");
     }
 
     private String determineNextIndexName(EntityDescriptor ed) {
@@ -91,21 +87,6 @@ public class ReindexJobFactory extends BatchProcessJobFactory {
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
         parameterCollector.accept(entityDescriptorParameter);
-    }
-
-    @Override
-    protected boolean hasPresetFor(Object targetObject) {
-        return false;
-    }
-
-    @Override
-    protected void computePresetFor(Object targetObject, Map<String, Object> preset) {
-        // nothing to do yet
-    }
-
-    @Override
-    public String getCategory() {
-        return JobCategory.CATEGORY_MISC;
     }
 
     @Nonnull

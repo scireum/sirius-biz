@@ -18,8 +18,8 @@
 
     <properties>
         <sirius.kernel>12.6</sirius.kernel>
-        <sirius.web>21.0</sirius.web>
-        <sirius.db>6.2</sirius.db>
+        <sirius.web>22.0</sirius.web>
+        <sirius.db>7.0</sirius.db>
     </properties>
 
     <dependencies>
