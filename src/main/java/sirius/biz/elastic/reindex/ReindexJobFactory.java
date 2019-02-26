@@ -43,7 +43,6 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     private IndexMappings mappings;
 
     private ElasticEntityDescriptorParameter entityDescriptorParameter =
-
             (ElasticEntityDescriptorParameter) new ElasticEntityDescriptorParameter("ed", "Entity").markRequired();
 
     @Override
