@@ -26,7 +26,7 @@ public class MongoUserAccountImportJobFactory extends LineBasedImportJobFactory 
 
     @Override
     protected LineBasedImportJob createJob(ProcessContext process) {
-        return new LineBasedImportJob(this, MongoUserAccount.class, process);
+        return new LineBasedImportJob(fileParameter, MongoUserAccount.class, process);
     }
 
     @Nonnull

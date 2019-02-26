@@ -9,6 +9,7 @@
 package sirius.biz.jobs.batch.file;
 
 import sirius.biz.jobs.batch.ImportJob;
+import sirius.biz.jobs.params.VirtualObjectParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.Storage;
 import sirius.biz.storage.VirtualObject;
@@ -25,21 +26,22 @@ public abstract class FileImportJob extends ImportJob {
     private static Storage storage;
 
     private FileImportJobFactory factory;
+    private VirtualObjectParameter fileParameter;
 
     /**
      * Creates a new job for the given factory and process context.
      *
-     * @param factory the factory which created the job
-     * @param process the process context in which the job is executed
+     * @param fileParameter the parameter which is used to derive the import file from
+     * @param process       the process context in which the job is executed
      */
-    protected FileImportJob(FileImportJobFactory factory, ProcessContext process) {
+    protected FileImportJob(VirtualObjectParameter fileParameter, ProcessContext process) {
         super(process);
-        this.factory = factory;
+        this.fileParameter = fileParameter;
     }
 
     @Override
     public void execute() throws Exception {
-        VirtualObject file = process.require(factory.getFileParameter());
+        VirtualObject file = process.require(fileParameter);
         try (InputStream in = storage.getData(file)) {
             executeForStream(file.getFilename(), in);
         }

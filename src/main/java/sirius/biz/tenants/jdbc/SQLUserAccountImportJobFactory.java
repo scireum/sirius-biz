@@ -24,7 +24,7 @@ public class SQLUserAccountImportJobFactory extends LineBasedImportJobFactory {
 
     @Override
     protected LineBasedImportJob createJob(ProcessContext process) {
-        return new LineBasedImportJob(this, SQLUserAccount.class, process);
+        return new LineBasedImportJob(fileParameter, SQLUserAccount.class, process);
     }
 
     @Nonnull

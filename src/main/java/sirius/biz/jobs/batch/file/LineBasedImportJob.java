@@ -10,6 +10,7 @@ package sirius.biz.jobs.batch.file;
 
 import sirius.biz.importer.ImportDictionary;
 import sirius.biz.importer.LineBasedAliases;
+import sirius.biz.jobs.params.VirtualObjectParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.db.mixing.BaseEntity;
@@ -41,15 +42,16 @@ public class LineBasedImportJob extends FileImportJob implements RowProcessor {
     private static Mixing mixing;
 
     /**
-     * Creates a new job for the given type, name and process.
+     * Creates a new job for the given factory, name and process.
      *
-     * @param type    the type of entities being imported
-     * @param process the process context itself
+     * @param fileParameter the parameter which is used to derive the import file from
+     * @param type          the type of entities being imported
+     * @param process       the process context itself
      */
-    public LineBasedImportJob(LineBasedImportJobFactory factory,
+    public LineBasedImportJob(VirtualObjectParameter fileParameter,
                               Class<? extends BaseEntity<?>> type,
                               ProcessContext process) {
-        super(factory, process);
+        super(fileParameter, process);
         this.dictionary = importer.getDictionary(type);
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);
