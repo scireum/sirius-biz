@@ -66,10 +66,25 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     protected SQLEntityImportHandler(Class<?> clazz, ImporterContext context) {
         super(clazz, context);
         collectFindQueries((p, q) -> findQueries.add(Tuple.create(p, q)));
+        collectFindQueriesFromExtenders(clazz, context);
+
         this.mappingsToCompare = getMappingsToCompare().toArray(MAPPING_ARRAY);
         this.mappingsToLoad = getAutoImportMappings().toArray(MAPPING_ARRAY);
         this.mappingsToUpdate = getMappingsToUpdate().toArray(MAPPING_ARRAY);
         this.mappingsToLoadForFind = getMappingsToLoadForFind().toArray(MAPPING_ARRAY);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void collectFindQueriesFromExtenders(Class<?> clazz, ImporterContext context) {
+        for (EntityImportHandlerExtender extender : extenders) {
+            if (extender instanceof SQLEntityImportHandlerExtender) {
+                SQLEntityImportHandlerExtender<E> sqlExtender = (SQLEntityImportHandlerExtender<E>) extender;
+                sqlExtender.collectFindQueries(this,
+                                               descriptor,
+                                               context,
+                                               (p, q) -> findQueries.add(Tuple.create(p, q)));
+            }
+        }
     }
 
     protected List<Mapping> getMappingsToUpdate() {
@@ -86,6 +101,9 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      * <p>
      * Using this approach, several find queries based on different field combinations can be used to execute
      * find.
+     * <p>
+     * Additional queries can also added by providing an {@link SQLEntityImportHandlerExtender} if extending
+     * the importer class itself isn't a viable option.
      */
     protected abstract void collectFindQueries(BiConsumer<Predicate<E>, Supplier<FindQuery<E>>> queryConsumer);
 
@@ -267,6 +285,10 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      * @return the updated entity or, if batch updates are active, the given entity
      */
     protected E updateIfChanged(E entity, boolean batch) {
+        // Invoke the beforeSave checks so that the change-detection below works for
+        // computed properties...
+        descriptor.beforeSave(entity);
+
         if (entity.isChanged(mappingsToLoad)) {
             getUpdateQuery().update(entity, true, batch);
         }
