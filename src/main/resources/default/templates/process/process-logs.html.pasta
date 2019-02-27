@@ -5,7 +5,7 @@
           process="process"
           page="logs">
     <i:block name="sidebar">
-        <i:if test="@!process.getCounters().isEmpty()">
+        <i:if test="@!process.getCounterList().isEmpty()">
             <w:infobox titleKey="Process.counters">
                 <i:for type="Tuple" var="timing" items="process.getCounterList()">
                     <w:infoboxElement label="@timing.getFirst().as(String.class)"
