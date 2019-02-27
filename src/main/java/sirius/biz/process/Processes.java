@@ -135,6 +135,33 @@ public class Processes {
     }
 
     /**
+     * Executes the given task in the standby process of the given type, for the currently active tenant.
+     * <p>
+     * If no matching standby process exists, one will be created.
+     * <p>
+     * Note that a tenant has to be present (a user has to be logged in) or an exception will be thrown.
+     *
+     * @param type          the type of the standby process to find or create
+     * @param titleSupplier a supplier which generates a title if the process has to be created
+     * @param task          the task to execute within the process
+     * @throws IllegalStateException if no user / tenant is present
+     */
+    public void executeInStandbyProcessForCurrentTenant(String type,
+                                                        Supplier<String> titleSupplier,
+                                                        Consumer<ProcessContext> task) {
+        UserInfo currentUser = UserContext.getCurrentUser();
+        if (!currentUser.isLoggedIn()) {
+            throw new IllegalStateException("Cannot execute a standby process without a user / tenant.");
+        }
+
+        executeInStandbyProcess(type,
+                                titleSupplier,
+                                currentUser.getTenantId(),
+                                () -> UserContext.getCurrentUser().getTenantName(),
+                                task);
+    }
+
+    /**
      * Executes the given task in the standby process of the given type, for the given tenant.
      * <p>
      * If no matching standby process exists, one will be created.
@@ -447,6 +474,8 @@ public class Processes {
             userContext.setCurrentUser(userInfoBackup);
             if (complete) {
                 env.markCompleted();
+            } else {
+                env.flushTimings();
             }
         }
     }
@@ -454,7 +483,7 @@ public class Processes {
     /**
      * Await until the process really exists.
      * <p>
-     * As {@link #createProcess(String, String, String, String, UserInfo, Map)} performs an insert into ES without any
+     * As {@link #createProcess(String, String, String, UserInfo, Map)} performs an insert into ES without any
      * delay, the same process might not yet be visible on another node (due to the 1s insert delay of ES). Therefore
      * we check the existence of the process and wait a certain amount of time if it doesn't exist.
      * <p>
