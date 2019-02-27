@@ -27,6 +27,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Average;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
@@ -327,13 +328,16 @@ public class Processes {
      * @param timings   timing which have been collected and not yet committed
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-    protected boolean markCompleted(String processId, @Nullable Map<String, String> timings) {
+    protected boolean markCompleted(String processId, @Nullable Map<String, Average> timings) {
         return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             process.setState(ProcessState.TERMINATED);
             process.setCompleted(LocalDateTime.now());
 
             if (timings != null) {
-                process.getCounters().modify().putAll(timings);
+                timings.forEach((key, avg) -> {
+                    process.getCounters().put(key, (int) avg.getCount());
+                    process.getTimings().put(key, (int) avg.getAvg());
+                });
             }
         });
     }
@@ -345,9 +349,12 @@ public class Processes {
      * @param timings   the timings (label, value) to store
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-    protected boolean addTimings(String processId, Map<String, String> timings) {
+    protected boolean addTimings(String processId, Map<String, Average> timings) {
         return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
-            process.getCounters().modify().putAll(timings);
+            timings.forEach((key, avg) -> {
+                process.getCounters().put(key, (int) avg.getCount());
+                process.getTimings().put(key, (int) avg.getAvg());
+            });
         });
     }
 
@@ -565,10 +572,11 @@ public class Processes {
         out.property("processType", process.getProcessType());
         out.property("stateMessage", process.getStateMessage());
         out.beginArray("counters");
-        for (Map.Entry<String, String> counter : process.getCounters()) {
+        for (String counter : process.getCounters().data().keySet()) {
             out.beginObject("counter");
-            out.property("name", counter.getKey());
-            out.property("value", counter.getValue());
+            out.property("name", counter);
+            out.property("counter", process.getCounters().get(counter).orElse(0));
+            out.property("avg", process.getTimings().get(counter).orElse(0));
             out.endObject();
         }
         out.endArray();
