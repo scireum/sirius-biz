@@ -35,12 +35,19 @@ import java.util.function.Consumer;
 public interface ProcessContext extends TaskContextAdapter {
 
     /**
+     * Returns the title of the underlying process.
+     *
+     * @return the title of the process
+     */
+    String getTitle();
+
+    /**
      * Logs the given message unless the method is called to frequently.
      * <p>
      * This method has an internal rate limit and can therefore be used by loops etc. to report the progress
      * every now and then.
      * <p>
-     * A caller can rely on the rate limit and therefore can invoke this method as often as desired. Howerver
+     * A caller can rely on the rate limit and therefore can invoke this method as often as desired. However
      * one must not rely on any message to be shown.
      *
      * @param message the message to add to the logs.

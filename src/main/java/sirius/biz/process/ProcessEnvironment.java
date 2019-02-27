@@ -86,6 +86,11 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
+    public String getTitle() {
+        return processes.fetchProcess(processId).map(Process::getTitle).orElse(null);
+    }
+
+    @Override
     public void log(ProcessLog logEntry) {
         processes.log(processId, logEntry);
     }
