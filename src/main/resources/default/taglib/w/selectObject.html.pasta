@@ -8,7 +8,6 @@
 <i:arg name="optional" type="boolean" default="false" />
 <i:arg name="required" type="boolean" default="false" />
 <i:arg name="strict" type="boolean" default="false" />
-<i:arg name="forceFullWidth" type="boolean" default="false" />
 
 <i:pragma name="inline" value="true" />
 <i:pragma name="description" value="Renders a selection for a file in the storage and offers an upload" />
@@ -16,45 +15,27 @@
 <i:local name="localId" value="call.generateLocalId()" />
 
 <div class="col-md-@span form-group">
-    <i:if test="isFilled(label)">
-        <label>
-            <span class="@if (required) { input-required }">
-                @label
-            </span>
-        </label>
-    </i:if>
+    <div class="row">
+        <w:autocompleteSingleSelect name="@name" id="@apply('select-%s', localId)" label="@label" help="@help"
+                                    serviceUri="@apply('/storage/autocomplete/%s', objectRef.getBucket())"
+                                    optional="@optional" required="@required" span="12" strict="@strict">
+            <i:if test="objectRef != null && objectRef.isFilled()">
+                <i:if test="objectRef.isURL()">
+                    <option value="@objectRef.getKey()" selected="selected">@objectRef.getKey()</option>
 
-    <select name="@name" class="form-control @user.signalFieldError(name)" id="select-@localId"
-            @if (strict) {
-            data-strict="true"
-            }
-            @if (optional) {
-            data-optional="true"
-            }
-            @if (forceFullWidth) {
-            style="width: 100%;"
-            }
-
-            @if (objectRef != null) {
-            data-autocomplete="/storage/autocomplete/@objectRef.getBucket()"
-            }
-    >
-        <i:if test="objectRef != null && objectRef.isFilled()">
-            <i:if test="objectRef.isURL()">
-                <option value="@objectRef.getKey()">@objectRef.getKey()</option>
-                <i:else>
-                    <option value="@objectRef.getKey()">@objectRef.getObject()</option>
-                </i:else>
+                    <i:else>
+                        <option value="@objectRef.getKey()" selected="selected">@objectRef.getObject()</option>
+                    </i:else>
+                </i:if>
             </i:if>
-        </i:if>
-    </select>
-    <input type="file" id="upload-@localId" style="display:none;" />
+        </w:autocompleteSingleSelect>
+    </div>
 
-    <i:if test="isFilled(help)">
-        <span class="help-block">@help</span>
-    </i:if>
+    <input type="file" id="upload-@localId" style="display:none;"/>
 
-    <a onclick="$('#upload-@localId').click()" class="link pointer" style="cursor: pointer">@i18n("StorageController.uploadFile")</a>
+    <a onclick="$('#upload-@localId').click()" class="link pointer" style="cursor: pointer">
+        @i18n("StorageController.uploadFile")
+    </a>
 </div>
 
 <script type="text/javascript">
