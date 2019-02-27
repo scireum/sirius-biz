@@ -483,7 +483,7 @@ public class Processes {
     /**
      * Await until the process really exists.
      * <p>
-     * As {@link #createProcess(String, String, String, String, UserInfo, Map)} performs an insert into ES without any
+     * As {@link #createProcess(String, String, String, UserInfo, Map)} performs an insert into ES without any
      * delay, the same process might not yet be visible on another node (due to the 1s insert delay of ES). Therefore
      * we check the existence of the process and wait a certain amount of time if it doesn't exist.
      * <p>
