@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import sirius.biz.importer.AutoImport;
 import sirius.biz.model.InternationalAddressData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.protocol.JournalData;
@@ -47,6 +48,7 @@ public class TenantData extends Composite implements Journaled {
      */
     public static final Mapping PARENT_CAN_ACCESS = Mapping.named("parentCanAccess");
     @Autoloaded
+    @AutoImport
     private boolean parentCanAccess = false;
 
     /**
@@ -54,6 +56,7 @@ public class TenantData extends Composite implements Journaled {
      */
     public static final Mapping CAN_ACCESS_PARENT = Mapping.named("canAccessParent");
     @Autoloaded
+    @AutoImport
     private boolean canAccessParent = false;
 
     /**
@@ -61,6 +64,7 @@ public class TenantData extends Composite implements Journaled {
      */
     public static final Mapping LOGIN_INTERVAL_DAYS = Mapping.named("loginIntervalDays");
     @Autoloaded
+    @AutoImport
     @NullAllowed
     private Integer loginIntervalDays;
 
@@ -71,6 +75,7 @@ public class TenantData extends Composite implements Journaled {
      */
     public static final Mapping EXTERNAL_LOGIN_INTERVAL_DAYS = Mapping.named("externalLoginIntervalDays");
     @Autoloaded
+    @AutoImport
     @NullAllowed
     private Integer externalLoginIntervalDays;
 
@@ -81,6 +86,7 @@ public class TenantData extends Composite implements Journaled {
     @Trim
     @Unique
     @Autoloaded
+    @AutoImport
     @Length(255)
     private String name;
 
@@ -91,6 +97,7 @@ public class TenantData extends Composite implements Journaled {
     @Trim
     @Unique
     @Autoloaded
+    @AutoImport
     @NullAllowed
     @Length(50)
     private String accountNumber;
@@ -101,6 +108,7 @@ public class TenantData extends Composite implements Journaled {
     public static final Mapping SAML_REQUEST_ISSUER_NAME = Mapping.named("samlRequestIssuerName");
     @Trim
     @Autoloaded
+    @AutoImport
     @NullAllowed
     @Length(50)
     private String samlRequestIssuerName;
@@ -111,6 +119,7 @@ public class TenantData extends Composite implements Journaled {
     public static final Mapping SAML_ISSUER_URL = Mapping.named("samlIssuerUrl");
     @Trim
     @Autoloaded
+    @AutoImport
     @NullAllowed
     @Length(255)
     private String samlIssuerUrl;
@@ -121,6 +130,7 @@ public class TenantData extends Composite implements Journaled {
     public static final Mapping SAML_ISSUER_INDEX = Mapping.named("samlIssuerIndex");
     @Trim
     @Autoloaded
+    @AutoImport
     @NullAllowed
     @Length(10)
     private String samlIssuerIndex;
@@ -133,6 +143,7 @@ public class TenantData extends Composite implements Journaled {
     public static final Mapping SAML_ISSUER_NAME = Mapping.named("samlIssuerName");
     @Trim
     @Autoloaded
+    @AutoImport
     @NullAllowed
     @Length(50)
     private String samlIssuerName;
@@ -145,6 +156,7 @@ public class TenantData extends Composite implements Journaled {
     public static final Mapping SAML_FINGERPRINT = Mapping.named("samlFingerprint");
     @Trim
     @Autoloaded
+    @AutoImport
     @NullAllowed
     @Length(255)
     private String samlFingerprint;
@@ -158,6 +170,7 @@ public class TenantData extends Composite implements Journaled {
     public static final Mapping IP_RANGE = Mapping.named("ipRange");
     @Trim
     @Autoloaded
+    @AutoImport
     @NullAllowed
     @Length(255)
     private String ipRange;
@@ -175,6 +188,7 @@ public class TenantData extends Composite implements Journaled {
     public static final Mapping ROLES_TO_KEEP = Mapping.named("rolesToKeep");
     @Trim
     @Autoloaded
+    @AutoImport
     @NullAllowed
     @Length(512)
     private String rolesToKeep;

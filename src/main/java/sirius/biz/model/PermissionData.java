@@ -10,6 +10,7 @@ package sirius.biz.model;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import sirius.biz.importer.AutoImport;
 import sirius.biz.web.Autoloaded;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
@@ -45,6 +46,7 @@ public class PermissionData extends Composite {
     public static final Mapping PERMISSION_STRING = Mapping.named("permissionString");
     @Autoloaded
     @NullAllowed
+    @AutoImport
     @Length(4096)
     private String permissionString;
 
@@ -82,22 +84,30 @@ public class PermissionData extends Composite {
      */
     public Set<String> getPermissions() {
         if (permissions == null) {
-            compilePermissions();
+            permissions = compilePermissionString(permissionString);
         }
 
         return permissions;
     }
 
-    private void compilePermissions() {
-        permissions = new TreeSet<>();
-        if (Strings.isFilled(permissionString)) {
-            for (String permission : permissionString.split(",")) {
+    /**
+     * Compiles a comma separated string into a set of permissions.
+     *
+     * @param data the string to parse
+     * @return the set of permissions in the string
+     */
+    public static Set<String> compilePermissionString(String data) {
+        Set<String> result = new TreeSet<>();
+        if (Strings.isFilled(data)) {
+            for (String permission : data.split(",")) {
                 permission = permission.trim();
                 if (Strings.isFilled(permission)) {
-                    permissions.add(permission);
+                    result.add(permission);
                 }
             }
         }
+
+        return result;
     }
 
     /**
