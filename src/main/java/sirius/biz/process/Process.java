@@ -365,7 +365,7 @@ public class Process extends SearchableEntity {
         int counter = performanceCounters.get(key).orElse(0);
         int timing = timings.get(key).orElse(0);
 
-        return Tuple.create(NLS.getIfExists(key, null).orElse(key), Strings.apply("%s ms (%s", timing, counter));
+        return Tuple.create(NLS.getIfExists(key, null).orElse(key), Strings.apply("%s ms (%s)", timing, counter));
     }
 
     /**
