@@ -35,13 +35,13 @@
         </i:if>
     </i:block>
 
-    <i:if test="!process.getCounters().isEmpty()">
+    <i:if test="!process.getCounterList().isEmpty()">
         <w:heading labelKey="Process.counters"/>
         <div class="well">
             <div class="row">
-                <i:for type="java.util.Map$Entry" var="counter" items="process.getCounters()">
+                <i:for type="Tuple" var="counter" items="process.getCounterList()">
                     <div class="col-md-4">
-                        <w:metric name="@counter.getKey()" value="@counter.getValue()" size="mini" color="blue"/>
+                        <w:metric name="@counter.getFirst()" value="@counter.getSecond()" size="mini" color="blue"/>
                     </div>
                 </i:for>
             </div>
