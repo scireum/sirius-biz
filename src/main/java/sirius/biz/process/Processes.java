@@ -27,6 +27,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Average;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
@@ -144,7 +145,8 @@ public class Processes {
      * @param type          the type of the standby process to find or create
      * @param titleSupplier a supplier which generates a title if the process has to be created
      * @param task          the task to execute within the process
-     * @throws IllegalStateException if no user / tenant is present
+     * @throws IllegalStateException                 if no user / tenant is present
+     * @throws sirius.kernel.health.HandledException in case of an error which occurred while executing the task
      */
     public void executeInStandbyProcessForCurrentTenant(String type,
                                                         Supplier<String> titleSupplier,
@@ -171,6 +173,7 @@ public class Processes {
      * @param tenantId           the id of the tenant used to find the appropriate process
      * @param tenantNameSupplier a supplier which yields the name of the tenant if the process has to be created
      * @param task               the task to execute within the process
+     * @throws sirius.kernel.health.HandledException in case of an error which occurred while executing the task
      */
     public void executeInStandbyProcess(String type,
                                         Supplier<String> titleSupplier,
@@ -325,13 +328,16 @@ public class Processes {
      * @param timings   timing which have been collected and not yet committed
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-    protected boolean markCompleted(String processId, @Nullable Map<String, String> timings) {
+    protected boolean markCompleted(String processId, @Nullable Map<String, Average> timings) {
         return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             process.setState(ProcessState.TERMINATED);
             process.setCompleted(LocalDateTime.now());
 
             if (timings != null) {
-                process.getCounters().modify().putAll(timings);
+                timings.forEach((key, avg) -> {
+                    process.getCounters().put(key, (int) avg.getCount());
+                    process.getTimings().put(key, (int) avg.getAvg());
+                });
             }
         });
     }
@@ -343,9 +349,12 @@ public class Processes {
      * @param timings   the timings (label, value) to store
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-    protected boolean addTimings(String processId, Map<String, String> timings) {
+    protected boolean addTimings(String processId, Map<String, Average> timings) {
         return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
-            process.getCounters().modify().putAll(timings);
+            timings.forEach((key, avg) -> {
+                process.getCounters().put(key, (int) avg.getCount());
+                process.getTimings().put(key, (int) avg.getAvg());
+            });
         });
     }
 
@@ -450,6 +459,7 @@ public class Processes {
      * @param processId the process to execute within
      * @param task      the task to execute
      * @param complete  <tt>true</tt> to mark the process as completed once the task is done, <tt>false</tt> otherwise
+     * @throws sirius.kernel.health.HandledException in case of an error which occurred while executing the task
      */
     private void execute(String processId, Consumer<ProcessContext> task, boolean complete) {
         awaitProcess(processId);
@@ -468,7 +478,7 @@ public class Processes {
                 task.accept(env);
             }
         } catch (Exception e) {
-            env.handle(e);
+            throw env.handle(e);
         } finally {
             taskContext.setAdapter(taskContextAdapterBackup);
             userContext.setCurrentUser(userInfoBackup);
@@ -524,6 +534,7 @@ public class Processes {
      *
      * @param processId the process to execute the task in
      * @param task      the task to execute
+     * @throws sirius.kernel.health.HandledException in case of an error which occurred while executing the task
      */
     public void partiallyExecute(String processId, Consumer<ProcessContext> task) {
         execute(processId, task, false);
@@ -534,6 +545,7 @@ public class Processes {
      *
      * @param processId the process to execute the task in
      * @param task      the task to execute
+     * @throws sirius.kernel.health.HandledException in case of an error which occurred while executing the task
      */
     public void execute(String processId, Consumer<ProcessContext> task) {
         execute(processId, task, true);
@@ -560,10 +572,11 @@ public class Processes {
         out.property("processType", process.getProcessType());
         out.property("stateMessage", process.getStateMessage());
         out.beginArray("counters");
-        for (Map.Entry<String, String> counter : process.getCounters()) {
+        for (String counter : process.getCounters().data().keySet()) {
             out.beginObject("counter");
-            out.property("name", counter.getKey());
-            out.property("value", counter.getValue());
+            out.property("name", counter);
+            out.property("counter", process.getCounters().get(counter).orElse(0));
+            out.property("avg", process.getTimings().get(counter).orElse(0));
             out.endObject();
         }
         out.endArray();

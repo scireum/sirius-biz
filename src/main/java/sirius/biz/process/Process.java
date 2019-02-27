@@ -17,6 +17,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.types.NestedList;
+import sirius.db.mixing.types.StringIntMap;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
@@ -88,7 +89,7 @@ public class Process extends SearchableEntity {
     /**
      * Contains the type of the process.
      * <p>
-     *     This can be filled by any process but is rquired for standby processes to identify which process to use.
+     * This can be filled by any process but is rquired for standby processes to identify which process to use.
      */
     public static final Mapping PROCESS_TYPE = Mapping.named("processType");
     @NullAllowed
@@ -148,9 +149,19 @@ public class Process extends SearchableEntity {
 
     /**
      * Contains performance counters provided by the process.
+     * <p>
+     * Each counter contains the number of events recorded.
      */
     public static final Mapping COUNTERS = Mapping.named("counters");
-    private final StringMap counters = new StringMap();
+    private final StringIntMap counters = new StringIntMap();
+
+    /**
+     * Contains performance timiers provided by the process.
+     * <p>
+     * Each timing contains the average execution time in milliseconds.
+     */
+    public static final Mapping TIMINGS = Mapping.named("timings");
+    private final StringIntMap timings = new StringIntMap();
 
     /**
      * Contains the timestamp when the process was started.
@@ -347,11 +358,14 @@ public class Process extends SearchableEntity {
      * @return the list of performance counters recorded for this process
      */
     public List<Tuple<String, String>> getCounterList() {
-        return Tuple.fromMap(getCounters().data())
-                    .stream()
-                    .map(counter -> Tuple.create(NLS.getIfExists(counter.getFirst(), null).orElse(counter.getFirst()),
-                                                 counter.getSecond()))
-                    .collect(Collectors.toList());
+        return getCounters().data().keySet().stream().map(this::formatPerformanceCounter).collect(Collectors.toList());
+    }
+
+    private Tuple<String, String> formatPerformanceCounter(String key) {
+        int counter = counters.get(key).orElse(0);
+        int timing = timings.get(key).orElse(0);
+
+        return Tuple.create(NLS.getIfExists(key, null).orElse(key), Strings.apply("%s ms (%s", timing, counter));
     }
 
     /**
@@ -431,8 +445,12 @@ public class Process extends SearchableEntity {
         return links;
     }
 
-    public StringMap getCounters() {
+    public StringIntMap getCounters() {
         return counters;
+    }
+
+    public StringIntMap getTimings() {
+        return timings;
     }
 
     public LocalDateTime getStarted() {

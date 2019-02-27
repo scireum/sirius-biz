@@ -19,12 +19,12 @@ import sirius.biz.process.output.TableProcessOutputType;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.RateLimit;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Average;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 
@@ -47,7 +47,7 @@ class ProcessEnvironment implements ProcessContext {
 
     private RateLimit logLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
     private RateLimit timingLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
-    private Map<String, Average> timings = new HashMap<>();
+    private Map<String, Average> timings;
 
     @Part
     private static Processes processes;
@@ -68,21 +68,33 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void addTiming(String counter, long millis) {
-        timings.computeIfAbsent(counter, ignored -> new Average()).addValue(millis);
+        getTimings().computeIfAbsent(counter, ignored -> new Average()).addValue(millis);
 
         if (timingLimiter.check()) {
-            processes.addTimings(processId, getTimingsAsStrings());
+            processes.addTimings(processId, getTimings());
         }
     }
 
-    private Map<String, String> getTimingsAsStrings() {
-        return timings.entrySet()
-                      .stream()
-                      .map(e -> Tuple.create(e.getKey(),
-                                             Strings.apply("%1.0f ms (%s)",
-                                                           e.getValue().getAvg(),
-                                                           e.getValue().getCount())))
-                      .collect(Collectors.toMap(Tuple::getFirst, Tuple::getSecond));
+    protected Map<String, Average> getTimings() {
+        if (timings == null) {
+            timings = new HashMap<>();
+            loadPreviousTimings();
+        }
+
+        return timings;
+    }
+
+    private void loadPreviousTimings() {
+        processes.fetchProcess(processId).ifPresent(process -> {
+            process.getCounters().data().keySet().forEach(key -> {
+                int counter = process.getCounters().get(key).orElse(0);
+                int timing = process.getTimings().get(key).orElse(0);
+
+                Average average = new Average();
+                average.addValues(counter, counter * timing);
+                timings.put(key, average);
+            });
+        });
     }
 
     @Override
@@ -96,8 +108,10 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
-    public void handle(Exception e) {
-        log(ProcessLog.error().withMessage(Exceptions.handle(Log.BACKGROUND, e).getMessage()));
+    public HandledException handle(Exception e) {
+        HandledException handledException = Exceptions.handle(Log.BACKGROUND, e);
+        log(ProcessLog.error().withMessage(handledException.getMessage()));
+        return handledException;
     }
 
     @Override
@@ -107,15 +121,15 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void markCompleted() {
-        processes.markCompleted(processId, getTimingsAsStrings());
+        processes.markCompleted(processId, timings);
     }
 
     /**
      * Flushes all timings for a partial execution.
      */
     protected void flushTimings() {
-        if (!timings.isEmpty()) {
-            processes.addTimings(processId, getTimingsAsStrings());
+        if (timings != null) {
+            processes.addTimings(processId, timings);
         }
     }
 

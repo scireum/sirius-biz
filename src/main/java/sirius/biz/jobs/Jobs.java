@@ -34,7 +34,7 @@ import java.util.stream.Stream;
 /**
  * Provides a central place to find all available jobs.
  */
-@Register(classes = Jobs.class, framework = Jobs.FRAMEWORK_JOBS)
+@Register(classes = Jobs.class)
 public class Jobs {
 
     /**

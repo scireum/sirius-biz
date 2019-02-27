@@ -17,6 +17,7 @@ import sirius.kernel.async.TaskContextAdapter;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -71,8 +72,9 @@ public interface ProcessContext extends TaskContextAdapter {
      * This will invoke {@link Exceptions#handle()} and log the result.
      *
      * @param e the exception to handle
+     * @return the handled exception for further processing
      */
-    void handle(Exception e);
+    HandledException handle(Exception e);
 
     /**
      * Logs the given log entry.
