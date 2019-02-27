@@ -14,13 +14,24 @@ import sirius.biz.process.logs.ProcessLog;
 
 import java.io.IOException;
 
+/**
+ * Provides a base class for batch jobs which utilize an {@link Importer} to import data.
+ */
 public abstract class ImportJob extends BatchJob {
 
+    /**
+     * Contains the importer which can be used to import data
+     */
     protected final Importer importer;
 
-    protected ImportJob(String name, ProcessContext process) {
+    /**
+     * Creates a new job for the given process context.
+     *
+     * @param process the process context in which the job is executed
+     */
+    protected ImportJob(ProcessContext process) {
         super(process);
-        this.importer = new Importer(name);
+        this.importer = new Importer(process.getTitle());
     }
 
     @Override

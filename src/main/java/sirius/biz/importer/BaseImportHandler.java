@@ -17,15 +17,21 @@ import sirius.db.mixing.Property;
 import sirius.db.mixing.properties.BaseEntityRefProperty;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Lambdas;
 import sirius.kernel.commons.Value;
+import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.Parts;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * Provides a base implementation for all import handlers which mainly takes care of the convenience methods.
@@ -37,8 +43,12 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     @Part
     protected static Mixing mixing;
 
+    @Parts(EntityImportHandlerExtender.class)
+    protected static PartCollection<EntityImportHandlerExtender> extenders;
+
     protected EntityDescriptor descriptor;
     protected ImporterContext context;
+    protected Map<Mapping, BiConsumer<Context, Object>> loaders = new HashMap<>();
 
     /**
      * Creates a new instance for the given type of entities and import context.
@@ -46,9 +56,13 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @param clazz   the type of entities being handled
      * @param context the import context to use
      */
+    @SuppressWarnings("unchecked")
     protected BaseImportHandler(Class<?> clazz, ImporterContext context) {
         this.context = context;
         descriptor = mixing.getDescriptor(clazz);
+        for (EntityImportHandlerExtender extender : extenders) {
+            extender.collectLoaders((BaseImportHandler<BaseEntity<?>>) this, descriptor, context, loaders::put);
+        }
     }
 
     /**
@@ -82,12 +96,15 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @param mapping the mapping to load
      * @param data    the data source to read the value from
      */
+    @SuppressWarnings("unchecked")
     protected void loadMapping(E entity, Mapping mapping, Context data) {
         if (!data.containsKey(mapping.getName())) {
             return;
         }
 
-        loadProperty(entity, descriptor.getProperty(mapping), data);
+        BiConsumer<Context, Object> loader =
+                loaders.computeIfAbsent(mapping, m -> (d, e) -> loadProperty((E) e, descriptor.getProperty(m), d));
+        loader.accept(data, entity);
     }
 
     /**
@@ -204,16 +221,29 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
 
     /**
      * Determines all mappings which wear an {@link AutoImport} annotation.
+     * <p>
+     * Additional mappings can also added by providing an {@link EntityImportHandlerExtender} if extending
+     * the importer class itself isn't a viable option.
      *
      * @return all mappings which wear the <tt>AutoImport</tt> annotation and are therefore to be considered to load
      * when updating or creating an entity.
      */
+    @SuppressWarnings("unchecked")
     protected List<Mapping> getAutoImportMappings() {
-        return descriptor.getProperties()
-                         .stream()
-                         .filter(property -> property.getAnnotation(AutoImport.class).isPresent())
-                         .map(Property::getName)
-                         .map(Mapping::named)
-                         .collect(Collectors.toList());
+        List<Mapping> result = new ArrayList<>();
+        descriptor.getProperties()
+                  .stream()
+                  .filter(property -> property.getAnnotation(AutoImport.class).isPresent())
+                  .map(Property::getName)
+                  .map(Mapping::named)
+                  .collect(Lambdas.into(result));
+        for (EntityImportHandlerExtender extender : extenders) {
+            extender.collectAutoImportMappings((BaseImportHandler<BaseEntity<?>>) this,
+                                               descriptor,
+                                               context,
+                                               result::add);
+        }
+
+        return result;
     }
 }
