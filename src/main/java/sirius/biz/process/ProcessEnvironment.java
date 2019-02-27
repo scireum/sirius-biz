@@ -96,8 +96,10 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
-    public void handle(Exception e) {
-        log(ProcessLog.error().withMessage(Exceptions.handle(Log.BACKGROUND, e).getMessage()));
+    public HandledException handle(Exception e) {
+        HandledException handledException = Exceptions.handle(Log.BACKGROUND, e);
+        log(ProcessLog.error().withMessage(handledException.getMessage()));
+        return handledException;
     }
 
     @Override

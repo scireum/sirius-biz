@@ -144,7 +144,8 @@ public class Processes {
      * @param type          the type of the standby process to find or create
      * @param titleSupplier a supplier which generates a title if the process has to be created
      * @param task          the task to execute within the process
-     * @throws IllegalStateException if no user / tenant is present
+     * @throws IllegalStateException                 if no user / tenant is present
+     * @throws sirius.kernel.health.HandledException in case of an error which occurred while executing the task
      */
     public void executeInStandbyProcessForCurrentTenant(String type,
                                                         Supplier<String> titleSupplier,
@@ -171,6 +172,7 @@ public class Processes {
      * @param tenantId           the id of the tenant used to find the appropriate process
      * @param tenantNameSupplier a supplier which yields the name of the tenant if the process has to be created
      * @param task               the task to execute within the process
+     * @throws sirius.kernel.health.HandledException in case of an error which occurred while executing the task
      */
     public void executeInStandbyProcess(String type,
                                         Supplier<String> titleSupplier,
@@ -450,6 +452,7 @@ public class Processes {
      * @param processId the process to execute within
      * @param task      the task to execute
      * @param complete  <tt>true</tt> to mark the process as completed once the task is done, <tt>false</tt> otherwise
+     * @throws sirius.kernel.health.HandledException in case of an error which occurred while executing the task
      */
     private void execute(String processId, Consumer<ProcessContext> task, boolean complete) {
         awaitProcess(processId);
@@ -468,7 +471,7 @@ public class Processes {
                 task.accept(env);
             }
         } catch (Exception e) {
-            env.handle(e);
+            throw env.handle(e);
         } finally {
             taskContext.setAdapter(taskContextAdapterBackup);
             userContext.setCurrentUser(userInfoBackup);
@@ -524,6 +527,7 @@ public class Processes {
      *
      * @param processId the process to execute the task in
      * @param task      the task to execute
+     * @throws sirius.kernel.health.HandledException in case of an error which occurred while executing the task
      */
     public void partiallyExecute(String processId, Consumer<ProcessContext> task) {
         execute(processId, task, false);
@@ -534,6 +538,7 @@ public class Processes {
      *
      * @param processId the process to execute the task in
      * @param task      the task to execute
+     * @throws sirius.kernel.health.HandledException in case of an error which occurred while executing the task
      */
     public void execute(String processId, Consumer<ProcessContext> task) {
         execute(processId, task, true);
