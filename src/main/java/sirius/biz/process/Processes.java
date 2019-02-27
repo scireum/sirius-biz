@@ -447,6 +447,8 @@ public class Processes {
             userContext.setCurrentUser(userInfoBackup);
             if (complete) {
                 env.markCompleted();
+            } else {
+                env.flushTimings();
             }
         }
     }

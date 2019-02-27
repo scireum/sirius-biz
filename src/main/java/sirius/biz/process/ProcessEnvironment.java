@@ -110,6 +110,15 @@ class ProcessEnvironment implements ProcessContext {
         processes.markCompleted(processId, getTimingsAsStrings());
     }
 
+    /**
+     * Flushes all timings for a partial execution.
+     */
+    protected void flushTimings() {
+        if (!timings.isEmpty()) {
+            processes.addTimings(processId, getTimingsAsStrings());
+        }
+    }
+
     @Override
     public void log(String message) {
         log(ProcessLog.info().withMessage(message));
