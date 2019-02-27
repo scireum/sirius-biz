@@ -335,7 +335,7 @@ public class Processes {
 
             if (timings != null) {
                 timings.forEach((key, avg) -> {
-                    process.getCounters().put(key, (int) avg.getCount());
+                    process.getPerformanceCounters().put(key, (int) avg.getCount());
                     process.getTimings().put(key, (int) avg.getAvg());
                 });
             }
@@ -352,7 +352,7 @@ public class Processes {
     protected boolean addTimings(String processId, Map<String, Average> timings) {
         return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             timings.forEach((key, avg) -> {
-                process.getCounters().put(key, (int) avg.getCount());
+                process.getPerformanceCounters().put(key, (int) avg.getCount());
                 process.getTimings().put(key, (int) avg.getAvg());
             });
         });
@@ -572,10 +572,10 @@ public class Processes {
         out.property("processType", process.getProcessType());
         out.property("stateMessage", process.getStateMessage());
         out.beginArray("counters");
-        for (String counter : process.getCounters().data().keySet()) {
+        for (String counter : process.getPerformanceCounters().data().keySet()) {
             out.beginObject("counter");
             out.property("name", counter);
-            out.property("counter", process.getCounters().get(counter).orElse(0));
+            out.property("counter", process.getPerformanceCounters().get(counter).orElse(0));
             out.property("avg", process.getTimings().get(counter).orElse(0));
             out.endObject();
         }

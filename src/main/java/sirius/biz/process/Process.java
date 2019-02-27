@@ -152,8 +152,8 @@ public class Process extends SearchableEntity {
      * <p>
      * Each counter contains the number of events recorded.
      */
-    public static final Mapping COUNTERS = Mapping.named("counters");
-    private final StringIntMap counters = new StringIntMap();
+    public static final Mapping COUNTERS = Mapping.named("performanceCounters");
+    private final StringIntMap performanceCounters = new StringIntMap();
 
     /**
      * Contains performance timiers provided by the process.
@@ -358,14 +358,14 @@ public class Process extends SearchableEntity {
      * @return the list of performance counters recorded for this process
      */
     public List<Tuple<String, String>> getCounterList() {
-        return getCounters().data().keySet().stream().map(this::formatPerformanceCounter).collect(Collectors.toList());
+        return getPerformanceCounters().data().keySet().stream().map(this::formatPerformanceCounter).collect(Collectors.toList());
     }
 
     private Tuple<String, String> formatPerformanceCounter(String key) {
-        int counter = counters.get(key).orElse(0);
+        int counter = performanceCounters.get(key).orElse(0);
         int timing = timings.get(key).orElse(0);
 
-        return Tuple.create(NLS.getIfExists(key, null).orElse(key), Strings.apply("%s ms (%s", timing, counter));
+        return Tuple.create(NLS.getIfExists(key, null).orElse(key), Strings.apply("%s ms (%s)", timing, counter));
     }
 
     /**
@@ -445,8 +445,8 @@ public class Process extends SearchableEntity {
         return links;
     }
 
-    public StringIntMap getCounters() {
-        return counters;
+    public StringIntMap getPerformanceCounters() {
+        return performanceCounters;
     }
 
     public StringIntMap getTimings() {
