@@ -40,4 +40,8 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
         parameterCollector.accept(fileParameter);
     }
+
+    public VirtualObjectParameter getFileParameter() {
+        return fileParameter;
+    }
 }
