@@ -1,7 +1,7 @@
 <i:arg type="sirius.biz.codelists.CodeList" name="codeList" />
 <i:arg type="Page" name="entries" />
 
-<i:invoke template="templates/codelists/code-list.html.pasta" codeList="codeList" page="entries" inline="true">
+<i:invoke template="templates/biz/codelists/code-list.html.pasta" codeList="codeList" page="entries" inline="true">
     <w:tableSearchHeader page="entries" baseUrl="@apply('/code-list/%s', codeList.getIdAsString())">
         <a class="btn btn-primary" href="#" onclick="createEntry()">@i18n("Model.create")</a>
     </w:tableSearchHeader>

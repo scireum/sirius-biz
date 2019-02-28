@@ -139,7 +139,7 @@ public class VirtualObjectParameter extends Parameter<VirtualObject, VirtualObje
 
     @Override
     public String getTemplateName() {
-        return "/templates/jobs/params/virtual-object-autocomplete.html.pasta";
+        return "/templates/biz/jobs/params/virtual-object-autocomplete.html.pasta";
     }
 
     /**

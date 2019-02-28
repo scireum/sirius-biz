@@ -59,7 +59,7 @@ public class EnumParameter<E extends Enum<E>> extends Parameter<E, EnumParameter
 
     @Override
     public String getTemplateName() {
-        return "/templates/jobs/params/enum.html.pasta";
+        return "/templates/biz/jobs/params/enum.html.pasta";
     }
 
     @Override

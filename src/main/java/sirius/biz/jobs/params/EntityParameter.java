@@ -116,7 +116,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>> extends Parameter
 
     @Override
     public String getTemplateName() {
-        return "/templates/jobs/params/entity-autocomplete.html.pasta";
+        return "/templates/biz/jobs/params/entity-autocomplete.html.pasta";
     }
 
     @Override

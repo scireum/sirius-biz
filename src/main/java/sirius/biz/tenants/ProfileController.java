@@ -54,7 +54,7 @@ public class ProfileController<I, T extends BaseEntity<I> & Tenant<I>, U extends
         boolean requestHandled = prepareSave(ctx).saveEntity(userAccount);
 
         if (!requestHandled) {
-            ctx.respondWith().template("/templates/tenants/profile.html.pasta", userAccount);
+            ctx.respondWith().template("/templates/biz/tenants/profile.html.pasta", userAccount);
         }
     }
 
@@ -103,7 +103,7 @@ public class ProfileController<I, T extends BaseEntity<I> & Tenant<I>, U extends
             }
         }
 
-        ctx.respondWith().template("/templates/tenants/profile-change-password.html.pasta", userAccount);
+        ctx.respondWith().template("/templates/biz/tenants/profile-change-password.html.pasta", userAccount);
     }
 
     /**

@@ -20,6 +20,6 @@ public abstract class DougnutChartJobFactory extends SingleDatasetChartJobFactor
 
     @Override
     protected String getTemplate() {
-        return "/templates/jobs/dougnutchart.html.pasta";
+        return "/templates/biz/jobs/dougnutchart.html.pasta";
     }
 }

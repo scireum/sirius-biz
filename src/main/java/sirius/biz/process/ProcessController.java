@@ -96,7 +96,7 @@ public class ProcessController extends BizController {
                               DateRange.lastWeek());
         ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
-        ctx.respondWith().template("templates/process/processes.html.pasta", ph.asPage());
+        ctx.respondWith().template("templates/biz/process/processes.html.pasta", ph.asPage());
     }
 
     private Process findAccessibleProcess(String processId) {
@@ -118,7 +118,7 @@ public class ProcessController extends BizController {
         Process process = findAccessibleProcess(processId);
 
         ElasticQuery<ProcessLog> query = buildLogsQuery(process);
-        ctx.respondWith().template("templates/process/process-details.html.pasta", process, query.limit(5).queryList());
+        ctx.respondWith().template("templates/biz/process/process-details.html.pasta", process, query.limit(5).queryList());
     }
 
     /**
@@ -147,7 +147,7 @@ public class ProcessController extends BizController {
         ph.addTermAggregation(ProcessLog.NODE);
         ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
-        ctx.respondWith().template("templates/process/process-logs.html.pasta", process, ph.asPage());
+        ctx.respondWith().template("templates/biz/process/process-logs.html.pasta", process, ph.asPage());
     }
 
     /**

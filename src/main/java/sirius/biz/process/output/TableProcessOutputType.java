@@ -86,7 +86,7 @@ public class TableProcessOutputType implements ProcessOutputType {
                                      .collect(Collectors.toList());
 
         ctx.respondWith()
-           .template("/templates/process/process-output-table.html.pasta",
+           .template("/templates/biz/process/process-output-table.html.pasta",
                      cells,
                      process,
                      ph.asPage(),

@@ -3,7 +3,7 @@
 <i:arg type="sirius.biz.analytics.reports.Report" name="report"/>
 <i:arg type="List" name="additionalMetrics"/>
 
-<i:invoke template="/templates/jobs/interactive-job.html.pasta"
+<i:invoke template="/templates/biz/jobs/interactive-job.html.pasta"
           job="job"
           fullWidth="true"
           context="context"

@@ -93,7 +93,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                             QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                              .inner(PersonData.LASTNAME)));
 
-        ctx.respondWith().template("templates/tenants/user-accounts.html.pasta", ph.asPage());
+        ctx.respondWith().template("templates/biz/tenants/user-accounts.html.pasta", ph.asPage());
     }
 
     @SuppressWarnings("unchecked")
@@ -138,7 +138,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
 
         if (!requestHandled) {
             validate(userAccount);
-            ctx.respondWith().template("templates/tenants/user-account-details.html.pasta", userAccount, this);
+            ctx.respondWith().template("templates/biz/tenants/user-account-details.html.pasta", userAccount, this);
         }
     }
 
@@ -154,7 +154,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     public void accountConfig(WebContext ctx, String accountId) {
         U userAccount = findForTenant(getUserClass(), accountId);
         assertNotNew(userAccount);
-        ctx.respondWith().template("templates/tenants/user-account-config.html.pasta", userAccount);
+        ctx.respondWith().template("templates/biz/tenants/user-account-config.html.pasta", userAccount);
     }
 
     /**
@@ -440,7 +440,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                             QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL)));
 
         ctx.respondWith()
-           .template("templates/tenants/select-user-account.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
+           .template("templates/biz/tenants/select-user-account.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
     }
 
     protected abstract BasePageHelper<U, ?, ?, ?> getSelectableUsersAsPage();

@@ -109,7 +109,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
                             QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.STREET)),
                             QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.CITY)));
 
-        ctx.respondWith().template("templates/tenants/tenants.html.pasta", ph.asPage());
+        ctx.respondWith().template("templates/biz/tenants/tenants.html.pasta", ph.asPage());
     }
 
     protected abstract BasePageHelper<T, ?, ?, ?> getTenantsAsPage();
@@ -143,7 +143,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         if (!requestHandled) {
             validate(tenant);
             ctx.respondWith()
-               .template("templates/tenants/tenant-details.html.pasta",
+               .template("templates/biz/tenants/tenant-details.html.pasta",
                          tenant,
                          this,
                          mixing.getDescriptor(getTenantClass())
@@ -203,7 +203,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     public void tenantConfig(WebContext ctx, String tenantId) {
         T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
-        ctx.respondWith().template("templates/tenants/tenant-config.html.pasta", tenant);
+        ctx.respondWith().template("templates/biz/tenants/tenant-config.html.pasta", tenant);
     }
 
     /**
@@ -246,7 +246,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
                             QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.STREET)),
                             QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.CITY)));
 
-        ctx.respondWith().template("templates/tenants/select-tenant.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
+        ctx.respondWith().template("templates/biz/tenants/select-tenant.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
     }
 
     /**

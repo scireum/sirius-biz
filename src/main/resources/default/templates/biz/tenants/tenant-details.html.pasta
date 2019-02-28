@@ -2,7 +2,7 @@
 <i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 <i:arg type="List" name="tenants"/>
 
-<i:invoke template="/templates/tenants/tenant.html.pasta" tenant="tenant" page="details">
+<i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" page="details">
     <w:editForm url="@apply('/tenant/%s', tenant.getIdAsString())">
         <div class="row">
             <w:textfield span="12" name="tenantData_name" value="@tenant.getTenantData().getName()" labelKey="Model.name" required="true"/>

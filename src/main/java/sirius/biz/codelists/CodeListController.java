@@ -53,7 +53,7 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
                             QueryField.contains(CodeList.CODE_LIST_DATA.inner(CodeListData.NAME)),
                             QueryField.contains(CodeList.CODE_LIST_DATA.inner(CodeListData.DESCRIPTION)));
 
-        ctx.respondWith().template("templates/codelists/code-lists.html.pasta", ph.asPage());
+        ctx.respondWith().template("templates/biz/codelists/code-lists.html.pasta", ph.asPage());
     }
 
     protected abstract BasePageHelper<L, ?, ?, ?> getListsAsPage();
@@ -91,7 +91,7 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
             boolean requestHandled =
                     prepareSave(ctx).withAfterCreateURI("/code-list/${id}/details").saveEntity(codeList);
             if (!requestHandled) {
-                ctx.respondWith().template("/templates/codelists/code-list-details.html.pasta", codeList);
+                ctx.respondWith().template("/templates/biz/codelists/code-list-details.html.pasta", codeList);
             }
         } else {
             renderCodeList(ctx, codeList);
@@ -106,7 +106,7 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
                             QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE)),
                             QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION)));
 
-        ctx.respondWith().template("/templates/codelists/code-list-entries.html.pasta", codeList, ph.asPage());
+        ctx.respondWith().template("/templates/biz/codelists/code-list-entries.html.pasta", codeList, ph.asPage());
     }
 
     protected abstract BasePageHelper<E, ?, ?, ?> getEntriesAsPage(L codeList);

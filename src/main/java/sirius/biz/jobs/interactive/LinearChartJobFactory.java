@@ -30,12 +30,12 @@ public abstract class LinearChartJobFactory extends InteractiveJobFactory {
     /**
      * Contains the name of the template used to render line charts.
      */
-    public static final String LINE_CHART_TEMPLATE = "/templates/jobs/linechart.html.pasta";
+    public static final String LINE_CHART_TEMPLATE = "/templates/biz/jobs/linechart.html.pasta";
 
     /**
      * Contains the name of the template used to render bar charts.
      */
-    public static final String BAR_CHART_TEMPLATE = "/templates/jobs/barchart.html.pasta";
+    public static final String BAR_CHART_TEMPLATE = "/templates/biz/jobs/barchart.html.pasta";
 
     @Override
     public String getIcon() {

@@ -2,7 +2,7 @@
 <i:arg type="List" name="lastLogs"/>
 
 
-<i:invoke template="/templates/process/process.html.pasta"
+<i:invoke template="/templates/biz/process/process.html.pasta"
           process="process"
           page="details">
 
