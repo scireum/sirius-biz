@@ -1,7 +1,7 @@
 <i:arg type="sirius.biz.tenants.UserAccount" name="account"/>
 <i:arg type="sirius.biz.tenants.UserAccountController" name="controller"/>
 
-<i:invoke template="/templates/tenants/user-account.html.pasta" account="account" page="details">
+<i:invoke template="/templates/biz/tenants/user-account.html.pasta" account="account" page="details">
     <w:editForm url="@apply('/user-account/%s', account.getIdAsString())">
 
         <div class="row">

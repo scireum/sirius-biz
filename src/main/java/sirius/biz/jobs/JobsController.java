@@ -44,7 +44,7 @@ public class JobsController extends BizController {
         page.bindToRequest(ctx);
         page.withItems(jobs.groupByCategory(jobs.getAvailableJobs(page.getQuery()).filter(JobFactory::canStartInUI)));
 
-        ctx.respondWith().template("/templates/jobs/jobs.html.pasta", page);
+        ctx.respondWith().template("/templates/biz/jobs/jobs.html.pasta", page);
     }
 
     /**

@@ -3,7 +3,7 @@
 <i:arg type="Page" name="charts"/>
 <i:arg type="String" name="name"/>
 
-<i:invoke template="/templates/process/process.html.pasta"
+<i:invoke template="/templates/biz/process/process.html.pasta"
           process="process"
           page="@apply('output-%s', name)">
 

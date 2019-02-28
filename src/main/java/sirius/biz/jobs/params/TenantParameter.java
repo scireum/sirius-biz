@@ -39,7 +39,7 @@ public class TenantParameter extends Parameter<Tenant<?>, TenantParameter> {
 
     @Override
     public String getTemplateName() {
-        return "/templates/jobs/params/tenant.html.pasta";
+        return "/templates/biz/jobs/params/tenant.html.pasta";
     }
 
     @Override

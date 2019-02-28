@@ -75,7 +75,7 @@ public class JournalController extends BizController {
                               DateRange.lastWeek());
         ph.withSearchFields(QueryField.contains(JournalEntry.SEARCH_FIELD));
 
-        ctx.respondWith().template("templates/protocol/protocol.html.pasta", ph.asPage());
+        ctx.respondWith().template("templates/biz/protocol/protocol.html.pasta", ph.asPage());
     }
 
     /**
@@ -109,6 +109,6 @@ public class JournalController extends BizController {
                               DateRange.lastWeek());
         ph.withSearchFields(QueryField.contains(JournalEntry.SEARCH_FIELD));
 
-        ctx.respondWith().template("templates/protocol/entity_protocol.html.pasta", type, id, hash, ph.asPage());
+        ctx.respondWith().template("templates/biz/protocol/entity_protocol.html.pasta", type, id, hash, ph.asPage());
     }
 }

@@ -48,7 +48,7 @@ public class LocalDateParameter extends Parameter<LocalDate, LocalDateParameter>
 
     @Override
     public String getTemplateName() {
-        return "/templates/jobs/params/datefield.html.pasta";
+        return "/templates/biz/jobs/params/datefield.html.pasta";
     }
 
     @Override

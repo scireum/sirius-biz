@@ -4,7 +4,7 @@
 <i:arg type="List" name="datasets"/>
 <i:arg type="List" name="additionalMetrics"/>
 
-<i:invoke template="/templates/jobs/interactive-job.html.pasta"
+<i:invoke template="/templates/biz/jobs/interactive-job.html.pasta"
           job="job"
           context="context"
           additionalMetrics="additionalMetrics">
@@ -19,7 +19,7 @@
                 @for(sirius.biz.analytics.charts.Dataset dataset : datasets) {
                     datasets.push({ label: '@dataset.getLabel()', data: [ @raw { @dataset.getData() } ]});
                 }
-                barChart('#chart', [ @labels ], datasets);
+                lineChart('#chart', [ @labels ], datasets);
             });
         }
     </script>

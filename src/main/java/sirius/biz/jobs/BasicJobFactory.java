@@ -156,7 +156,7 @@ public abstract class BasicJobFactory implements JobFactory {
             return;
         }
 
-        request.respondWith().template("/templates/jobs/job.html.pasta", this, context);
+        request.respondWith().template("/templates/biz/jobs/job.html.pasta", this, context);
     }
 
     /**

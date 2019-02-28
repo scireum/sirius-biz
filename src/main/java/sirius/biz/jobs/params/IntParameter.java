@@ -30,7 +30,7 @@ public class IntParameter extends Parameter<Integer, IntParameter> {
 
     @Override
     public String getTemplateName() {
-        return "/templates/jobs/params/textfield.html.pasta";
+        return "/templates/biz/jobs/params/textfield.html.pasta";
     }
 
     @Override

@@ -79,6 +79,6 @@ public class LogsProcessOutputType implements ProcessOutputType {
         ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
         ctx.respondWith()
-           .template("/templates/process/process-output-logs.html.pasta", process, ph.asPage(), output.getName());
+           .template("/templates/biz/process/process-output-logs.html.pasta", process, ph.asPage(), output.getName());
     }
 }

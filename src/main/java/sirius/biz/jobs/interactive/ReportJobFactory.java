@@ -52,7 +52,7 @@ public abstract class ReportJobFactory extends InteractiveJobFactory {
     @SuppressWarnings("squid:S3400")
     @Explain("Maybe a subclass might want to supply a custom template")
     protected String getTemplate() {
-        return "/templates/jobs/report.html.pasta";
+        return "/templates/biz/jobs/report.html.pasta";
     }
 
     /**

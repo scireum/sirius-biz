@@ -1,6 +1,6 @@
 <i:arg type="sirius.biz.codelists.CodeList" name="codeList"/>
 
-<i:invoke template="templates/codelists/code-list.html.pasta" codeList="codeList" page="details" inline="true">
+<i:invoke template="templates/biz/codelists/code-list.html.pasta" codeList="codeList" page="details" inline="true">
     <w:editForm url="@apply('/code-list/%s/details', codeList.getIdAsString())">
         <div class="row">
             <w:textfield name="codeListData_code" value="@codeList.getCodeListData().getCode()" labelKey="Model.code" required="true" />

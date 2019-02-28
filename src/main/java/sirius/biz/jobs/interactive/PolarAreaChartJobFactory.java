@@ -20,6 +20,6 @@ public abstract class PolarAreaChartJobFactory extends SingleDatasetChartJobFact
 
     @Override
     protected String getTemplate() {
-        return "/templates/jobs/polarareachart.html.pasta";
+        return "/templates/biz/jobs/polarareachart.html.pasta";
     }
 }

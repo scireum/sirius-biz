@@ -1,7 +1,7 @@
 <i:arg type="sirius.biz.process.Process" name="process"/>
 <i:arg type="Page" name="logs"/>
 
-<i:invoke template="/templates/process/process.html.pasta"
+<i:invoke template="/templates/biz/process/process.html.pasta"
           process="process"
           page="logs">
     <i:block name="sidebar">

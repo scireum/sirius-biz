@@ -58,7 +58,7 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
     public void saml(WebContext ctx) {
         List<T> tenants = obtainTenantsForSaml(ctx);
 
-        ctx.respondWith().template("/templates/tenants/saml.html.pasta", tenants);
+        ctx.respondWith().template("/templates/biz/tenants/saml.html.pasta", tenants);
     }
 
     private List<T> obtainTenantsForSaml(WebContext ctx) {

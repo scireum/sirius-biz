@@ -31,7 +31,7 @@ public class EntityDescriptorParameter extends Parameter<EntityDescriptor, Entit
 
     @Override
     public String getTemplateName() {
-        return "/templates/jobs/params/entity-descriptors.html.pasta";
+        return "/templates/biz/jobs/params/entity-descriptors.html.pasta";
     }
 
     /**

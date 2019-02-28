@@ -78,7 +78,7 @@ public class ChartProcessOutputType implements ProcessOutputType {
         ElasticPageHelper<ProcessLog> ph = ElasticPageHelper.withQuery(query);
         ph.withContext(ctx);
         ctx.respondWith()
-           .template("/templates/process/process-output-chart.html.pasta",
+           .template("/templates/biz/process/process-output-chart.html.pasta",
                      this,
                      process,
                      ph.asPage(),

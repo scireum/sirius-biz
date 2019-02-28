@@ -40,7 +40,7 @@ public class UserAccountParameter extends Parameter<UserAccount<?, ?>, UserAccou
 
     @Override
     public String getTemplateName() {
-        return "/templates/jobs/params/user-account.html.pasta";
+        return "/templates/biz/jobs/params/user-account.html.pasta";
     }
 
     @Override

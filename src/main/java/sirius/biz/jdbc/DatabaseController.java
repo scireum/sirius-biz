@@ -63,7 +63,7 @@ public class DatabaseController extends BasicController {
     @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
     @Routed("/system/sql")
     public void sql(WebContext ctx) {
-        ctx.respondWith().template("templates/model/sql.html.pasta");
+        ctx.respondWith().template("templates/biz/model/sql.html.pasta");
     }
 
     /**
@@ -145,7 +145,7 @@ public class DatabaseController extends BasicController {
     @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
     @Routed("/system/schema")
     public void changes(WebContext ctx) {
-        ctx.respondWith().template("templates/model/schema.html.pasta");
+        ctx.respondWith().template("templates/biz/model/schema.html.pasta");
     }
 
     /**
