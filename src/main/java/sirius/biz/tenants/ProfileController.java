@@ -103,7 +103,7 @@ public class ProfileController<I, T extends BaseEntity<I> & Tenant<I>, U extends
             }
         }
 
-        ctx.respondWith().template("/templates/biz/biz/tenants/profile-change-password.html.pasta", userAccount);
+        ctx.respondWith().template("/templates/biz/tenants/profile-change-password.html.pasta", userAccount);
     }
 
     /**
