@@ -39,4 +39,22 @@ class EventRecorderSpec extends BaseSpecification {
         dbs.get("clickhouse").createQuery("SELECT * FROM testevent2").queryList().size() == 4
     }
 
+    def "bufferedEvents is reset after processing"() {
+        when:
+        recorder.record(new TestEvent1())
+        recorder.record(new TestEvent1())
+        recorder.record(new TestEvent1())
+        recorder.record(new TestEvent1())
+        and:
+        recorder.record(new TestEvent2())
+        recorder.record(new TestEvent2())
+        recorder.record(new TestEvent2())
+        recorder.record(new TestEvent2())
+        then:
+        recorder.bufferedEvents.get() == 8
+        and:
+        recorder.process() == 8
+        and:
+        recorder.bufferedEvents.get() == 0
+    }
 }
