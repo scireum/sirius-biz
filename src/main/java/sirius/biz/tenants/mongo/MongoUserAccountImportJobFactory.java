@@ -12,8 +12,10 @@ import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.LineBasedImportJob;
 import sirius.biz.jobs.batch.file.LineBasedImportJobFactory;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.tenants.UserAccountController;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
 
@@ -21,6 +23,7 @@ import javax.annotation.Nonnull;
  * Provides an import job for {@link MongoUserAccount user accounts} stored in MongoDB.
  */
 @Register(classes = JobFactory.class, framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
+@Permission(UserAccountController.PERMISSION_MANAGE_USER_ACCOUNTS)
 public class MongoUserAccountImportJobFactory extends LineBasedImportJobFactory {
 
     @Part
