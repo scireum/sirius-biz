@@ -134,13 +134,14 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
             return;
         }
 
-        if (bufferedEvents.incrementAndGet() > MAX_BUFFER_SIZE) {
+        if (bufferedEvents.get() >= MAX_BUFFER_SIZE) {
             return;
         }
 
         try {
             event.getDescriptor().beforeSave(event);
             buffer.offer(event);
+            bufferedEvents.incrementAndGet();
         } catch (HandledException e) {
             Exceptions.ignore(e);
         } catch (Exception e) {
@@ -176,14 +177,14 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
         int processedEvents = 0;
         try (BatchContext ctx = new BatchContext(() -> "Process recorded events.", Duration.ofMinutes(1))) {
             Map<Class<? extends Event>, InsertQuery<Event>> queries = new HashMap<>();
-            Event nextEvent = buffer.poll();
+            Event nextEvent = fetchBufferedEvent();
             while (nextEvent != null) {
                 processEvent(ctx, queries, nextEvent);
                 if (++processedEvents >= MAX_EVENTS_PER_PROCESS) {
                     return processedEvents;
                 }
 
-                nextEvent = buffer.poll();
+                nextEvent = fetchBufferedEvent();
             }
         } catch (HandledException e) {
             Exceptions.ignore(e);
