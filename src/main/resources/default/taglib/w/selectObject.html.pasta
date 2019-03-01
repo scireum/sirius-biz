@@ -16,9 +16,9 @@
 
 <div class="col-md-@span form-group">
     <div class="row">
-        <w:autocompleteSingleSelect name="@name" id="@apply('select-%s', localId)" label="@label" help="@help"
+        <w:autocompleteSingleSelect name="@name" label="@label" help="@help" span="12"
                                     serviceUri="@apply('/storage/autocomplete/%s', objectRef.getBucket())"
-                                    optional="@optional" required="@required" span="12" strict="@strict">
+                                    optional="@optional" required="@required" strict="@strict">
             <i:if test="objectRef != null && objectRef.isFilled()">
                 <i:if test="objectRef.isURL()">
                     <option value="@objectRef.getKey()" selected="selected">@objectRef.getKey()</option>
@@ -51,7 +51,7 @@
                     if (xhr.status === 200) {
                         var jsonResponse = JSON.parse(xhr.responseText);
                         var newState = new Option(file.name, jsonResponse.fileId, true, true);
-                        $('#select-@localId').append(newState).trigger('change');
+                        $('select[name=___name]').append(newState).trigger('change');
                     }
                 };
                 xhr.send(file);
