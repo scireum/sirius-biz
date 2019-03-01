@@ -31,12 +31,12 @@ import java.io.InputStream;
  * Utilizing {@link sirius.biz.importer.ImportHandler import handlers} this can be used as is in most cases. However
  * a subclass overwriting {@link #handleRow(int, Context)} might be required to perform some mappings.
  */
-public class LineBasedImportJob extends FileImportJob implements RowProcessor {
+public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob implements RowProcessor {
 
     protected final ImportDictionary dictionary;
     protected final EntityDescriptor descriptor;
     protected LineBasedAliases aliases;
-    protected Class<? extends BaseEntity<?>> type;
+    protected Class<E> type;
 
     @Part
     private static Mixing mixing;
@@ -48,9 +48,7 @@ public class LineBasedImportJob extends FileImportJob implements RowProcessor {
      * @param type          the type of entities being imported
      * @param process       the process context itself
      */
-    public LineBasedImportJob(VirtualObjectParameter fileParameter,
-                              Class<? extends BaseEntity<?>> type,
-                              ProcessContext process) {
+    public LineBasedImportJob(VirtualObjectParameter fileParameter, Class<E> type, ProcessContext process) {
         super(fileParameter, process);
         this.dictionary = importer.getDictionary(type);
         this.type = type;
@@ -90,6 +88,26 @@ public class LineBasedImportJob extends FileImportJob implements RowProcessor {
      * @param ctx   the row represented as context
      */
     protected void handleRow(int index, Context ctx) {
-        importer.createOrUpdateInBatch(importer.findAndLoad(type, ctx));
+        importer.createOrUpdateInBatch(fillAndVerify(findAndLoad(ctx)));
+    }
+
+    /**
+     * Completes the given entity and verifies the integrity of the data.
+     *
+     * @param entity the entity which has be loaded previously
+     * @return the filled and verified entity
+     */
+    protected E fillAndVerify(E entity) {
+        return entity;
+    }
+
+    /**
+     * Tries to resolve the context into an entity.
+     *
+     * @param ctx the context containing all relevant data
+     * @return the entity which was either found in he database or create using the given data
+     */
+    protected E findAndLoad(Context ctx) {
+        return importer.findAndLoad(type, ctx);
     }
 }

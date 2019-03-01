@@ -12,7 +12,11 @@ import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.LineBasedImportJob;
 import sirius.biz.jobs.batch.file.LineBasedImportJobFactory;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.tenants.TenantUserManager;
+import sirius.biz.tenants.UserAccountController;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
 
@@ -20,11 +24,23 @@ import javax.annotation.Nonnull;
  * Provides an import job for {@link SQLUserAccount user accounts} stored in a JDBC database.
  */
 @Register(classes = JobFactory.class, framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
+@Permission(UserAccountController.PERMISSION_MANAGE_USER_ACCOUNTS)
 public class SQLUserAccountImportJobFactory extends LineBasedImportJobFactory {
 
+    @Part
+    private SQLTenants tenants;
+
     @Override
-    protected LineBasedImportJob createJob(ProcessContext process) {
-        return new LineBasedImportJob(fileParameter, SQLUserAccount.class, process);
+    protected LineBasedImportJob<?> createJob(ProcessContext process) {
+        SQLTenant currentTenant = tenants.getRequiredTenant();
+
+        return new LineBasedImportJob<SQLUserAccount>(fileParameter, SQLUserAccount.class, process) {
+            @Override
+            protected SQLUserAccount fillAndVerify(SQLUserAccount entity) {
+                setOrVerify(entity, entity.getTenant(), currentTenant);
+                return super.fillAndVerify(entity);
+            }
+        };
     }
 
     @Nonnull
