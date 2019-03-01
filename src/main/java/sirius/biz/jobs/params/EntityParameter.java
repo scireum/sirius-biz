@@ -18,6 +18,7 @@ import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
 import sirius.db.mongo.Mango;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
@@ -31,7 +32,8 @@ import java.util.Optional;
  *
  * @param <V> the type of entities selectable by this parameter
  */
-public abstract class EntityParameter<V extends BaseEntity<?>> extends Parameter<V, EntityParameter<V>> {
+public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityParameter<V, P>>
+        extends Parameter<V, P> {
 
     @Part
     protected static Mixing mixing;
@@ -58,7 +60,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>> extends Parameter
      */
     protected EntityParameter(String name, String label) {
         super(name, label);
-        this.descriptor = mixing.getDescriptor(getType());
+        this.descriptor = getDescriptor();
     }
 
     /**
@@ -68,8 +70,15 @@ public abstract class EntityParameter<V extends BaseEntity<?>> extends Parameter
      */
     protected EntityParameter(String name) {
         super(name, "");
-        this.descriptor = mixing.getDescriptor(getType());
-        withLabel(descriptor.getLabel());
+    }
+
+    @Override
+    public String getLabel() {
+        if (Strings.isEmpty(label)) {
+            return getDescriptor().getLabel();
+        }
+
+        return label;
     }
 
     /**
@@ -92,7 +101,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>> extends Parameter
      * @return the mapper of the represented entity
      */
     protected BaseMapper<V, ?, ?> getMapper() {
-        return descriptor.getMapper();
+        return getDescriptor().getMapper();
     }
 
     /**
@@ -110,6 +119,12 @@ public abstract class EntityParameter<V extends BaseEntity<?>> extends Parameter
         return Tuple.create(entity.getIdAsString(), createLabel(entity));
     }
 
+    /**
+     * Derives a label to show for a selected entity.
+     *
+     * @param entity the entity to derive  the label from
+     * @return the label or textual representation to use for the given entity
+     */
     protected String createLabel(V entity) {
         return entity.toString();
     }
@@ -150,5 +165,13 @@ public abstract class EntityParameter<V extends BaseEntity<?>> extends Parameter
     @Explain("Parameter may be used by subclasses")
     protected boolean checkAccess(V entity) {
         return true;
+    }
+
+    private EntityDescriptor getDescriptor() {
+        if (descriptor == null) {
+            descriptor = mixing.getDescriptor(getType());
+        }
+
+        return descriptor;
     }
 }

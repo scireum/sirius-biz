@@ -36,7 +36,7 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      * @param name  the name of the parameter
      * @param label the label of the parameter, which will be {@link NLS#smartGet(String) auto translated}
      */
-    public Parameter(String name, String label) {
+    protected Parameter(String name, String label) {
         this.name = name;
         this.label = label;
     }
