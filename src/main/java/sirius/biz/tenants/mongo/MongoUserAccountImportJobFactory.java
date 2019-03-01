@@ -12,8 +12,7 @@ import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.LineBasedImportJob;
 import sirius.biz.jobs.batch.file.LineBasedImportJobFactory;
 import sirius.biz.process.ProcessContext;
-import sirius.biz.tenants.mongo.MongoTenants;
-import sirius.biz.tenants.mongo.MongoUserAccount;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
@@ -24,9 +23,20 @@ import javax.annotation.Nonnull;
 @Register(classes = JobFactory.class, framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
 public class MongoUserAccountImportJobFactory extends LineBasedImportJobFactory {
 
+    @Part
+    private MongoTenants tenants;
+
     @Override
-    protected LineBasedImportJob createJob(ProcessContext process) {
-        return new LineBasedImportJob(fileParameter, MongoUserAccount.class, process);
+    protected LineBasedImportJob<?> createJob(ProcessContext process) {
+        MongoTenant currentTenant = tenants.getRequiredTenant();
+
+        return new LineBasedImportJob<MongoUserAccount>(fileParameter, MongoUserAccount.class, process) {
+            @Override
+            protected MongoUserAccount fillAndVerify(MongoUserAccount entity) {
+                setOrVerify(entity, entity.getTenant(), currentTenant);
+                return super.fillAndVerify(entity);
+            }
+        };
     }
 
     @Nonnull
