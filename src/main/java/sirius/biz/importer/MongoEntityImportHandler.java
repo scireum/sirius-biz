@@ -104,6 +104,11 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
     }
 
     @Override
+    public void createNowOrUpdateInBatch(E entity) {
+        createOrUpdateNow(entity);
+    }
+
+    @Override
     public void deleteNow(E entity) {
         mango.delete(entity);
     }

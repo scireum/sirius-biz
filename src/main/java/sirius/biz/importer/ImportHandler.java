@@ -106,6 +106,18 @@ public interface ImportHandler<E extends BaseEntity<?>> {
     void createOrUpdateInBatch(E entity);
 
     /**
+     * Either persists or updates the given entity - using a batch update if possible.
+     * <p>
+     * If the entity doesn't exist yet, it will be immediatelly created. If it doesn exist,
+     * it will be updated in the next batch execution. This can be used to ensure that entities
+     * referenced by others are available but also that updates of non-critical fields are efficiently
+     * executed as a JDBC batch.
+     *
+     * @param entity the entity to update or persist.
+     */
+    void createNowOrUpdateInBatch(E entity);
+
+    /**
      * Deletes the given entity.
      *
      * @param entity the entity to delete
