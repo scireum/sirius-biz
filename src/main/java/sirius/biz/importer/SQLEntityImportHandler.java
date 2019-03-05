@@ -231,6 +231,12 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
         createOrUpdate(entity, true);
     }
 
+    @Override
+    public void createNowOrUpdateInBatch(E entity) {
+        boolean executeImmediatelly = entity.isNew() || entity.isChanged(mappingsToLoadForFind);
+        createOrUpdate(entity, !executeImmediatelly);
+    }
+
     /**
      * Determines if and how the given entity needs to be persisted.
      * <p>
