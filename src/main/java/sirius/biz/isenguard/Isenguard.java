@@ -93,9 +93,9 @@ public class Isenguard implements Firewall {
     }
 
     /**
-     * Determines if the rate limit of the given realm for the given IP is reached.
+     * Determines if the rate limit of the given realm for the given scope is reached.
      *
-     * @param ip            the ip which caused the event
+     * @param scope         the key which is used for grouping multiple events - e.g. the ip of the caller
      * @param realm         the realm which defines the limit and check-interval (<tt>isenguard.limit.[realm]</tt>
      * @param explicitLimit the explicit limit which overwrites the limit given in the config.
      *                      Use {@link #USE_LIMIT_FROM_CONFIG} if no explicit limit is set
@@ -103,10 +103,10 @@ public class Isenguard implements Firewall {
      * <tt>false</tt> otherwise. Note, that once the limit was reached, an {@link AuditLog audit log entry} will be
      * created.
      */
-    public boolean isRateLimitReached(String ip, String realm, int explicitLimit) {
-        return isRateLimitReached(ip, realm, explicitLimit, () -> {
-            LOG.WARN("IP: %s reached its rate-limit for realm '%s' and subsequent requests might be blocked...",
-                     ip,
+    public boolean isRateLimitReached(String scope, String realm, int explicitLimit) {
+        return isRateLimitReached(scope, realm, explicitLimit, () -> {
+            LOG.WARN("Scope %s reached its rate-limit for realm '%s' and subsequent requests might be blocked...",
+                     scope,
                      realm);
             auditLog.negative("Isenguard.limitReached").causedByCurrentUser().log();
         });
@@ -115,7 +115,7 @@ public class Isenguard implements Firewall {
     /**
      * Determines if the rate limit of the given realm for the given IP is reached.
      *
-     * @param ip               the ip which caused the event
+     * @param scope            the key which is used for grouping multiple events - e.g. the ip of the caller
      * @param realm            the realm which defines the limit and check-interval (<tt>isenguard.limit.[realm]</tt>
      * @param explicitLimit    the explicit limit which overwrites the limit given in the config.
      *                         Use {@link #USE_LIMIT_FROM_CONFIG} if no explicit limit is set
@@ -124,7 +124,7 @@ public class Isenguard implements Firewall {
      * @return <tt>true</tt> if the rate limit for the given ip, realm and check interval is reached,
      * <tt>false</tt> otherwise.
      */
-    public boolean isRateLimitReached(String ip, String realm, int explicitLimit, Runnable limitReachedOnce) {
+    public boolean isRateLimitReached(String scope, String realm, int explicitLimit, Runnable limitReachedOnce) {
         Tuple<Integer, Integer> limitSetting = limits.computeIfAbsent(realm, this::loadLimit);
         int intervalInSeconds = limitSetting.getSecond();
         int limitFromConfig = limitSetting.getFirst();
@@ -133,7 +133,7 @@ public class Isenguard implements Firewall {
             return false;
         }
 
-        return isRateLimitReached(ip,
+        return isRateLimitReached(scope,
                                   realm,
                                   intervalInSeconds,
                                   explicitLimit > 0 ? explicitLimit : limitFromConfig,
@@ -145,13 +145,13 @@ public class Isenguard implements Firewall {
         return Tuple.create(setting.getInt("limit"), (int) (setting.getMilliseconds("interval") / 1000));
     }
 
-    private boolean isRateLimitReached(String ip,
+    private boolean isRateLimitReached(String scope,
                                        String realm,
                                        int intervalInSeconds,
                                        int limit,
                                        Runnable limitReachedOnce) {
         long currentInterval = (System.currentTimeMillis() / 1000) / intervalInSeconds;
-        String key = ip + "-" + realm + "-" + currentInterval;
+        String key = scope + "-" + realm + "-" + currentInterval;
 
         return limiter.increaseAndCheckLimit(key, intervalInSeconds, limit, limitReachedOnce);
     }
