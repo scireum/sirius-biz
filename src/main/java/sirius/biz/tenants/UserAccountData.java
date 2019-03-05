@@ -253,7 +253,7 @@ public class UserAccountData extends Composite implements MessageProvider {
      * @return <tt>true</tt> if generated passwords can be sent to the user, <tt>false</tt> otherwise
      */
     public boolean canSendGeneratedPassword() {
-        return Strings.isFilled(email) && userObject.isUnique(EMAIL, email);
+        return Strings.isFilled(email) && userObject.isUnique(UserAccount.USER_ACCOUNT_DATA.inner(EMAIL), email);
     }
 
     public PersonData getPerson() {
