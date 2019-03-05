@@ -17,7 +17,7 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>12.6</sirius.kernel>
+        <sirius.kernel>12.9</sirius.kernel>
         <sirius.web>22.1</sirius.web>
         <sirius.db>7.4</sirius.db>
     </properties>
@@ -53,7 +53,6 @@
             <groupId>ru.yandex.clickhouse</groupId>
             <artifactId>clickhouse-jdbc</artifactId>
             <version>0.1.40</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
