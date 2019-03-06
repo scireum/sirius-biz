@@ -13,6 +13,7 @@ import sirius.biz.protocol.Traced;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.di.transformers.Transformable;
 
 /**
  * Provides the database independent interface for describing a tenant which uses the system.
@@ -23,7 +24,7 @@ import sirius.kernel.commons.Explain;
  */
 @SuppressWarnings("squid:S1214")
 @Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real enttiy.")
-public interface Tenant<I> extends Traced, Journaled {
+public interface Tenant<I> extends Transformable, Traced, Journaled {
 
     /**
      * Contains the mapping used to identify the parent tenant of the current one.
