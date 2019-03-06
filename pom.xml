@@ -17,10 +17,17 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>12.9</sirius.kernel>
-        <sirius.web>22.1</sirius.web>
-        <sirius.db>7.4</sirius.db>
+        <sirius.kernel>12.9.1</sirius.kernel>
+        <sirius.web>22.2.4</sirius.web>
+        <sirius.db>7.4.1</sirius.db>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>scireum-mvn</id>
+            <url>https://mvn.scireum.com</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
