@@ -17,7 +17,6 @@ import sirius.db.mixing.BaseMapper;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
 import sirius.db.mongo.Mango;
-import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
@@ -142,29 +141,25 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
     @Override
     protected String checkAndTransformValue(Value input) {
         V entity = getMapper().find(getType(), input.get()).orElse(null);
+
         if (entity == null) {
             return null;
         }
-        if (entity instanceof TenantAware) {
-            tenants.assertTenant((TenantAware) entity);
-        }
-        if (!checkAccess(entity)) {
-            return null;
-        }
+
+        assertAccess(entity);
 
         return entity.getIdAsString();
     }
 
     /**
-     * Determines if the current user may use the given entity as value for this parameter.
+     * Checks if the current user may use the given entity as value for this parameter.
      *
      * @param entity the entity to check
-     * @return <tt>true</tt> if the entity may be used as parameter value, <tt>false otherwise</tt>
      */
-    @SuppressWarnings("squid:S1172")
-    @Explain("Parameter may be used by subclasses")
-    protected boolean checkAccess(V entity) {
-        return true;
+    protected void assertAccess(V entity) {
+        if (entity instanceof TenantAware) {
+            tenants.assertTenant((TenantAware) entity);
+        }
     }
 
     private EntityDescriptor getDescriptor() {
