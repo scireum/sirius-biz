@@ -11,11 +11,9 @@ package sirius.biz.analytics.events;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Engine;
-import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Realm;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.async.CallContext;
-import sirius.kernel.commons.Strings;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -54,7 +52,6 @@ public abstract class Event extends SQLEntity {
     /**
      * Contains the name of the node on which the event occurred.
      */
-    @Length(50)
     private String node;
 
     /**
@@ -64,7 +61,7 @@ public abstract class Event extends SQLEntity {
     protected void fill() {
         eventTimestamp = LocalDateTime.now();
         eventDate = eventTimestamp.toLocalDate();
-        node = Strings.limit(CallContext.getNodeName(), 50);
+        node = CallContext.getNodeName();
     }
 
     public LocalDate getEventDate() {

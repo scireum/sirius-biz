@@ -13,7 +13,6 @@ import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.async.CallContext;
-import sirius.kernel.commons.Strings;
 import sirius.web.http.WebContext;
 
 /**
@@ -24,14 +23,12 @@ public class WebData extends Composite {
     /**
      * Stores the requested URL.
      */
-    @Length(255)
     @NullAllowed
     private String url;
 
     /**
      * Stores the User-Agent.
      */
-    @Length(255)
     @NullAllowed
     private String userAgent;
 
@@ -77,8 +74,8 @@ public class WebData extends Composite {
     protected void fill() {
         WebContext ctx = CallContext.getCurrent().get(WebContext.class);
         if (ctx.isValid()) {
-            url = Strings.limit(ctx.getRequestedURL(), 255, false);
-            userAgent = Strings.limit(ctx.getUserAgent().getUserAgentString(), 255, false);
+            url = ctx.getRequestedURL();
+            userAgent = ctx.getUserAgent().getUserAgentString();
             android = ctx.getUserAgent().isAndroid();
             ios = ctx.getUserAgent().isIOS();
             mobile = ctx.getUserAgent().isMobile();
