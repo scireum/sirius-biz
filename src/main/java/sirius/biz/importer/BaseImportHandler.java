@@ -160,12 +160,12 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
 
     @Override
     public E findAndLoad(Context data) {
-        return load(data, tryFind(data).orElse(newEntity()));
+        return load(data, tryFind(data).orElseGet(this::newEntity));
     }
 
     @Override
     public E findOrLoadAndCreate(Context data) {
-        return tryFind(data).orElse(createOrUpdateNow(load(data, newEntity())));
+        return tryFind(data).orElseGet(() -> createOrUpdateNow(load(data, newEntity())));
     }
 
     /**
