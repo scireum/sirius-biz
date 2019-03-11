@@ -174,6 +174,25 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     }
 
     /**
+     * Adds a facet with all constants of the given enum as filter values.
+     * <p>
+     * Note that all constants are shown, independent of whether matching values are available or not.
+     *
+     * @param name     the name of the field to filter an
+     * @param title    the title of the filter shown to the user
+     * @param enumType the enum used to determine the options (constants)
+     * @return the helper itself for fluent method calls
+     */
+    public B addEnumFacet(String name, String title, Class<? extends Enum<?>> enumType) {
+        Objects.requireNonNull(ctx);
+
+        Facet facet = new Facet(title, name, ctx.get(name).asString(), null);
+        Arrays.stream(enumType.getEnumConstants()).forEach(e -> facet.addItem(e.name(), e.toString(), -1));
+
+        return addFilterFacet(facet);
+    }
+
+    /**
      * Specifies the number of items shown on the page that gets rendered using this pageHelper.
      *
      * @param pageSize the number of items shown per page
