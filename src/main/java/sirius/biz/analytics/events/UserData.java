@@ -24,21 +24,20 @@ public class UserData extends Composite {
     /**
      * Stores the ID of the current user.
      */
-    @Length(255)
+    @Length(26)
     @NullAllowed
     private String userId;
 
     /**
      * Stores the ID of the current tenant.
      */
-    @Length(255)
+    @Length(26)
     @NullAllowed
     private String tenantId;
 
     /**
      * Stores the ID of the current scope.
      */
-    @Length(255)
     @NullAllowed
     private String scopeId;
 
