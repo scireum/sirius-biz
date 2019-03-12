@@ -11,6 +11,7 @@ package sirius.biz.importer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.nls.NLS;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -115,5 +116,20 @@ public class ImportDictionary {
         }
 
         return sb.toString();
+    }
+
+    private Map<String, String> getAliases() {
+        return Collections.unmodifiableMap(aliases);
+    }
+
+    /**
+     * Adds an other Dictionary to this Dictionary.
+     *
+     * @param otherDictionary the {@link ImportDictionary} which alias entries will be added to this dictionary
+     * @return the dictionary itself for fluent method calls
+     */
+    public ImportDictionary mergeDictionary(ImportDictionary otherDictionary) {
+        otherDictionary.getAliases().forEach(this::withAlias);
+        return this;
     }
 }
