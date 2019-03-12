@@ -61,7 +61,7 @@ public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob i
      * Adds the possibility to enhance a dicitonary during the setup of the job
      */
     @SuppressWarnings("squid:S1186")
-    @Explain("Do nothing by default since we only need this for imports which contain more then one Entity")
+    @Explain("Do nothing by default since we only need this for imports which contain more than one Entity")
     protected void enhanceDictionary() {
     }
 
