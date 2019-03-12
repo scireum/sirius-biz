@@ -64,7 +64,6 @@ public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob i
         return importer.getDictionary(type);
     }
 
-
     @Override
     protected void executeForStream(String filename, InputStream in) throws Exception {
         LineBasedProcessor.create(filename, in).run(this, error -> {
