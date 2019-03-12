@@ -17,6 +17,7 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Values;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
@@ -53,6 +54,15 @@ public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob i
         this.dictionary = importer.getDictionary(type);
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);
+        enhanceDictionary();
+    }
+
+    /**
+     * Adds the possibility to enhance a dicitonary during the setup of the job
+     */
+    @SuppressWarnings("squid:S1186")
+    @Explain("Do nothing by default since we only need this for imports which contain more than one Entity")
+    protected void enhanceDictionary() {
     }
 
     @Override
