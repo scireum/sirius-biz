@@ -129,7 +129,7 @@ public class ImportDictionary {
      * @return the dictionary itself for fluent method calls
      */
     public ImportDictionary mergeDictionary(ImportDictionary otherDictionary) {
-        otherDictionary.getAliases().forEach(this::withAlias);
+        otherDictionary.getAliases().forEach((alias, field) -> withAlias(field, alias));
         return this;
     }
 }
