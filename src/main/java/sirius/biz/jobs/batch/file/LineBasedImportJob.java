@@ -50,10 +50,20 @@ public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob i
      */
     public LineBasedImportJob(VirtualObjectParameter fileParameter, Class<E> type, ProcessContext process) {
         super(fileParameter, process);
-        this.dictionary = importer.getDictionary(type);
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);
+        this.dictionary = setUpDictionary();
     }
+
+    /**
+     * Adds the possibility to setup a custom made Dictionary
+     *
+     * @return the {@link ImportDictionary} which will be used when processing rows of the import file
+     */
+    protected ImportDictionary setUpDictionary() {
+        return importer.getDictionary(type);
+    }
+
 
     @Override
     protected void executeForStream(String filename, InputStream in) throws Exception {
