@@ -73,6 +73,18 @@ public class LoginData extends Composite {
     private String salt;
 
     /**
+     * Contains a generated string which is put into each client session of the user.
+     * <p>
+     * Once the user deciedes to change the password or to log out on all devices,
+     * the fingerprint is updated and all sessions containing the old finderprint
+     * are considered invalid.
+     */
+    public static final Mapping FINGERPRINT = Mapping.named("fingerprint");
+    @NoJournal
+    @NullAllowed
+    private String fingerprint;
+
+    /**
      * Contains the generated password as cleartext (so it can be reported to the user). Once the user
      * changes the password, this field will be set to <tt>null</tt>.
      */
@@ -145,6 +157,7 @@ public class LoginData extends Composite {
                 this.salt = Strings.generateCode(20);
                 this.passwordHash = hashPassword(salt, cleartextPassword);
                 this.generatedPassword = null;
+                this.fingerprint = null;
             }
         }
         if (Strings.isEmpty(passwordHash) && Strings.isEmpty(generatedPassword)) {
@@ -153,10 +166,23 @@ public class LoginData extends Composite {
         if (Strings.isFilled(generatedPassword)) {
             this.salt = Strings.generateCode(20);
             this.passwordHash = hashPassword(salt, generatedPassword);
+            this.fingerprint = null;
         }
         if (Strings.isEmpty(apiToken)) {
             this.apiToken = Strings.generateCode(32);
         }
+        if (Strings.isEmpty(fingerprint)) {
+            this.fingerprint = Strings.generateCode(12);
+        }
+    }
+
+
+    /**
+     * Resets the fingerprint so that the user will be logged out on all devices as
+     * all client sessions become invalid.
+     */
+    public void resetFingerprint() {
+        this.fingerprint = null;
     }
 
     /**
@@ -318,6 +344,10 @@ public class LoginData extends Composite {
 
     public void setApiToken(String apiToken) {
         this.apiToken = apiToken;
+    }
+
+    public String getFingerprint() {
+        return fingerprint;
     }
 
     @Override

@@ -113,8 +113,14 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
      */
     public static final String SPY_ID_SUFFIX = "-spy-id";
 
+    /**
+     * Contains the suffix used to store the fingerprint in the session.
+     *
+     * @see LoginData#FINGERPRINT
+     */
+    private static final String SUFFIX_FINGERPRINT = "-fingerprint";
+
     protected final String systemTenant;
-    protected final String defaultSalt;
     protected final boolean acceptApiTokens;
 
     @Part
@@ -613,31 +619,58 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     }
 
     @Override
+    public void updateLoginCookie(WebContext ctx, UserInfo user, boolean keepLogin) {
+        super.updateLoginCookie(ctx, user, keepLogin);
+        installFingerprintInSession(ctx,
+                                    user.getUserObject(UserAccount.class)
+                                        .getUserAccountData()
+                                        .getLogin()
+                                        .getFingerprint());
+    }
+
+    /**
+     * Installs the given fingerprint into the session of the given request.
+     * <p>
+     * This is made externally available so that the {@link ProfileController} can instantly
+     * update the fingerprint after the user changed its password. Otherwise an
+     * immediate logout would happen which would be kind of a strange user experience.
+     *
+     * @param ctx         the request used to update the session cookie
+     * @param fingerprint the new fingerprint to use
+     */
+    public void installFingerprintInSession(WebContext ctx, String fingerprint) {
+        ctx.setSessionValue(scope.getScopeId() + SUFFIX_FINGERPRINT, fingerprint);
+    }
+
+    @Override
     @SuppressWarnings({"squid:S1126", "RedundantIfStatement"})
     @Explain("Using explicit abort conditions and a final true makes all checks obvious")
-    protected boolean isUserStillValid(String userId) {
+    protected boolean isUserStillValid(String userId, WebContext ctx) {
         U user = fetchAccount(userId, null);
 
         if (user == null) {
             return false;
         }
 
-        if (user.getUserAccountData().getLogin().isAccountLocked()) {
+        LoginData loginData = user.getUserAccountData().getLogin();
+        TenantData tenantData = user.getTenant().getValue().getTenantData();
+
+        if (loginData.isAccountLocked()) {
             return false;
         }
 
-        if (!isWithinInterval(user.getUserAccountData().getLogin().getLastLogin(),
-                              user.getTenant().getValue().getTenantData().getLoginIntervalDays())) {
+        String fingerprintInSession = ctx.getSessionValue(scope.getScopeId() + SUFFIX_FINGERPRINT).asString();
+        if (Strings.isFilled(loginData.getFingerprint()) && !Strings.areEqual(loginData.getFingerprint(),
+                                                                              fingerprintInSession)) {
             return false;
         }
 
-        if (user.getUserAccountData().isExternalLoginRequired() && !isWithinInterval(user.getUserAccountData()
-                                                                                         .getLogin()
-                                                                                         .getLastExternalLogin(),
-                                                                                     user.getTenant()
-                                                                                         .getValue()
-                                                                                         .getTenantData()
-                                                                                         .getExternalLoginIntervalDays())) {
+        if (!isWithinInterval(loginData.getLastLogin(), tenantData.getLoginIntervalDays())) {
+            return false;
+        }
+
+        if (user.getUserAccountData().isExternalLoginRequired() && !isWithinInterval(loginData.getLastExternalLogin(),
+                                                                                     tenantData.getExternalLoginIntervalDays())) {
             return false;
         }
 
