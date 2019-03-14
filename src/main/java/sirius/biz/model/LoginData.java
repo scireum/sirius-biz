@@ -8,9 +8,6 @@
 
 package sirius.biz.model;
 
-import com.google.common.base.Charsets;
-import com.google.common.hash.Hashing;
-import com.google.common.io.BaseEncoding;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.protocol.NoJournal;
 import sirius.biz.web.Autoloaded;
@@ -23,12 +20,14 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Value;
+import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.health.Exceptions;
 import sirius.web.security.UserContext;
 
+import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Stores a username and encrypted password along with some trace data to support logins which can be embedded into
@@ -40,6 +39,30 @@ import java.time.LocalDateTime;
  * An example of an actual user is {@link sirius.biz.tenants.UserAccount}.
  */
 public class LoginData extends Composite {
+
+    /**
+     * Describes the possible outcome of {@link #verifyPassword(String, String, int)}.
+     */
+    public enum PasswordVerificationResult {
+
+        /**
+         * The given password was valid and is stored as strong cryptographic
+         * hash / KDF
+         */
+        VALID,
+
+        /**
+         * The given password was valid but is stored using a potentially weak
+         * hash function / KDF and should therefore be re-hashed using {@link #hashPassword(String, String)}
+         */
+        VALID_NEEDS_RE_HASH,
+
+        /**
+         * The given password is invalid.
+         */
+        INVALID
+
+    }
 
     /**
      * Contains the username used to identify the account.
@@ -149,6 +172,9 @@ public class LoginData extends Composite {
     @Transient
     private String cleartextPassword;
 
+    @PriorityParts(PasswordHashFunction.class)
+    private static List<PasswordHashFunction> hashFunctions;
+
     @BeforeSave
     protected void autofill() {
         if (Strings.isFilled(cleartextPassword)) {
@@ -223,22 +249,42 @@ public class LoginData extends Composite {
      * @param password the password to hash
      * @return a cryptographic one way hash based on the salt and password
      */
-    public static String hashPassword(String salt, String password) {
-        String hashInput = salt != null ? salt + password : password;
-        return BaseEncoding.base64().encode(Hashing.md5().hashString(hashInput, Charsets.UTF_8).asBytes());
+    public static String hashPassword(@Nonnull String salt, @Nonnull String password) {
+        if (Strings.isEmpty(salt)) {
+            throw new IllegalArgumentException("A salt is required when computing a password hash.");
+        }
+        if (Strings.isEmpty(password)) {
+            throw new IllegalArgumentException("Cannot compute a hash for an empty password.");
+        }
+        for (PasswordHashFunction hashFunction : hashFunctions) {
+            if (!hashFunction.isOutdated()) {
+                String hash = hashFunction.computeHash(salt, password);
+                if (Strings.isFilled(hash)) {
+                    return hash;
+                }
+            }
+        }
+
+        throw new IllegalStateException("No strong password hash function is available.");
     }
 
     /**
      * Checks if the given password is correct.
      *
-     * @param password    the password to validate
-     * @param defaultSalt the salt used as a fallback
-     * @return <tt>true</tt> if the password is valid, <tt>false</tt> otherwise
+     * @param password the password to validate
+     * @return a tuple where the first parameter determines if the password is valid
      */
-    public boolean checkPassword(String password, String defaultSalt) {
-        String givenPasswordHash = hashPassword(Value.of(salt).asString(defaultSalt), password);
+    public PasswordVerificationResult checkPassword(String password) {
+        for (PasswordHashFunction hashFunction : hashFunctions) {
+            String givenPasswordHash = hashFunction.computeHash(salt, password);
+            if (Strings.isFilled(givenPasswordHash) && Strings.areEqual(givenPasswordHash, passwordHash)) {
+                return hashFunction.isOutdated() ?
+                       PasswordVerificationResult.VALID_NEEDS_RE_HASH :
+                       PasswordVerificationResult.VALID;
+            }
+        }
 
-        return givenPasswordHash.equals(passwordHash);
+        return PasswordVerificationResult.INVALID;
     }
 
     /**

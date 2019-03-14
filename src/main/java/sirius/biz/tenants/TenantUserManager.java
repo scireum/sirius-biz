@@ -13,7 +13,6 @@ import com.google.common.collect.Sets;
 import com.typesafe.config.Config;
 import sirius.biz.model.LoginData;
 import sirius.biz.protocol.AuditLog;
-import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.cache.Cache;
@@ -23,6 +22,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.http.WebContext;
@@ -143,7 +143,6 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     protected TenantUserManager(ScopeInfo scope, Extension config) {
         super(scope, config);
         this.systemTenant = config.get("system-tenant").asString();
-        this.defaultSalt = config.get("default-salt").asString("");
         this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(true);
     }
 
@@ -522,13 +521,14 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             return result;
         }
 
-        if (loginData.checkPassword(password, defaultSalt)) {
-            auditLog.neutral("AuditLog.passwordLogin")
-                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forTenant(String.valueOf(account.getTenant().getId()),
-                               account.getTenant().getValue().getTenantData().getName())
-                    .log();
+        LoginData.PasswordVerificationResult pwResult = loginData.checkPassword(password);
+        if (pwResult != LoginData.PasswordVerificationResult.INVALID) {
+            completeAuditLogForUser(auditLog.neutral("AuditLog.passwordLogin"), account);
+
+            if (pwResult == LoginData.PasswordVerificationResult.VALID_NEEDS_RE_HASH) {
+                return updatePasswordHashing(result, password);
+            }
+
             return result;
         }
 
@@ -543,6 +543,24 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                .forTenant(String.valueOf(account.getTenant().getId()),
                           account.getTenant().getValue().getTenantData().getName())
                .log();
+    }
+
+    private UserInfo updatePasswordHashing(UserInfo info, String password) {
+        try {
+            U account = info.getUserObject(getUserClass());
+            U freshAccount = account.getDescriptor().getMapper().tryRefresh(account);
+            freshAccount.getUserAccountData().getLogin().setCleartextPassword(password);
+            freshAccount.getTrace().setSilent(true);
+            freshAccount.getDescriptor().getMapper().update(freshAccount);
+            completeAuditLogForUser(auditLog.neutral("AuditLog.passwordReHashed"), account);
+            return UserInfo.Builder.withUser(info)
+                                   .withPermissions(info.getPermissions())
+                                   .withUserSupplier(u -> freshAccount)
+                                   .build();
+        } catch (Exception e) {
+            Exceptions.handle(Log.APPLICATION, e);
+            return info;
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -563,7 +581,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
      * @return <tt>true</tt> if the password is valid, <tt>false</tt> otherwise
      */
     public boolean checkPassword(U userAccount, String password) {
-        return userAccount.getUserAccountData().getLogin().checkPassword(password, defaultSalt);
+        return userAccount.getUserAccountData().getLogin().checkPassword(password)
+               != LoginData.PasswordVerificationResult.INVALID;
     }
 
     @Override
