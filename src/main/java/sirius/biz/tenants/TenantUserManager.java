@@ -247,7 +247,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                         .addAll(currentUser.getUserAccountData().getPermissions().getPermissions());
             return modifiedUser;
         } catch (Exception e) {
-            throw Exceptions.handle(BizController.LOG, e);
+            throw Exceptions.handle(Log.APPLICATION, e);
         }
     }
 
@@ -512,23 +512,13 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                                                                                                .getValue()
                                                                                                .getTenantData()
                                                                                                .getExternalLoginIntervalDays())) {
-            auditLog.negative("AuditLog.externalLoginRequired")
-                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forTenant(String.valueOf(account.getTenant().getId()),
-                               account.getTenant().getValue().getTenantData().getName())
-                    .log();
+            completeAuditLogForUser(auditLog.negative("AuditLog.externalLoginRequired"), account);
             throw Exceptions.createHandled().withNLSKey("UserAccount.externalLoginMustBePerformed").handle();
         }
 
         LoginData loginData = account.getUserAccountData().getLogin();
         if (acceptApiTokens && Strings.areEqual(password, loginData.getApiToken())) {
-            auditLog.neutral("AuditLog.apiTokenLogin")
-                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forTenant(String.valueOf(account.getTenant().getId()),
-                               account.getTenant().getValue().getTenantData().getName())
-                    .log();
+            completeAuditLogForUser(auditLog.neutral("AuditLog.apiTokenLogin"), account);
             return result;
         }
 
@@ -542,13 +532,17 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             return result;
         }
 
-        auditLog.negative("AuditLog.loginRejected")
-                .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                .forTenant(String.valueOf(account.getTenant().getId()),
-                           account.getTenant().getValue().getTenantData().getName())
-                .log();
+        completeAuditLogForUser(auditLog.negative("AuditLog.loginRejected"), account);
 
         return null;
+    }
+
+    protected void completeAuditLogForUser(AuditLog.AuditLogBuilder builder, U account) {
+        builder.causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+               .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+               .forTenant(String.valueOf(account.getTenant().getId()),
+                          account.getTenant().getValue().getTenantData().getName())
+               .log();
     }
 
     @SuppressWarnings("unchecked")

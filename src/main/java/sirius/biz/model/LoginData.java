@@ -158,15 +158,15 @@ public class LoginData extends Composite {
                 this.passwordHash = hashPassword(salt, cleartextPassword);
                 this.generatedPassword = null;
                 this.fingerprint = null;
+                this.lastPasswordChange = LocalDateTime.now();
             }
         }
         if (Strings.isEmpty(passwordHash) && Strings.isEmpty(generatedPassword)) {
-            setGeneratedPassword(Strings.generatePassword());
-        }
-        if (Strings.isFilled(generatedPassword)) {
+            this.generatedPassword = Strings.generatePassword();
             this.salt = Strings.generateCode(20);
             this.passwordHash = hashPassword(salt, generatedPassword);
             this.fingerprint = null;
+            this.lastPasswordChange = LocalDateTime.now();
         }
         if (Strings.isEmpty(apiToken)) {
             this.apiToken = Strings.generateCode(32);
@@ -176,6 +176,14 @@ public class LoginData extends Composite {
         }
     }
 
+    /**
+     * Clears all internal fields so that a new password will be generated when the underlying entity is saved.
+     */
+    public void forceGenerationOfPassword() {
+        this.cleartextPassword = null;
+        this.passwordHash = null;
+        this.generatedPassword = null;
+    }
 
     /**
      * Resets the fingerprint so that the user will be logged out on all devices as
@@ -254,48 +262,22 @@ public class LoginData extends Composite {
      */
     public void setCleartextPassword(String cleartextPassword) {
         this.cleartextPassword = cleartextPassword;
-        this.lastPasswordChange = LocalDateTime.now();
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public String getSalt() {
-        return salt;
     }
 
     public String getGeneratedPassword() {
         return generatedPassword;
     }
 
-    public void setGeneratedPassword(String generatedPassword) {
-        this.generatedPassword = generatedPassword;
-        this.lastPasswordChange = LocalDateTime.now();
-    }
-
     public int getNumberOfLogins() {
         return numberOfLogins;
-    }
-
-    public void setNumberOfLogins(int numberOfLogins) {
-        this.numberOfLogins = numberOfLogins;
     }
 
     public LocalDateTime getLastLogin() {
         return lastLogin;
     }
 
-    public void setLastLogin(LocalDateTime lastLogin) {
-        this.lastLogin = lastLogin;
-    }
-
     public LocalDateTime getLastExternalLogin() {
         return lastExternalLogin;
-    }
-
-    public void setLastExternalLogin(LocalDateTime lastExternalLogin) {
-        this.lastExternalLogin = lastExternalLogin;
     }
 
     public LocalDateTime getLastPasswordChange() {
