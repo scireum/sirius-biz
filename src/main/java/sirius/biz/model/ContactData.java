@@ -8,6 +8,7 @@
 
 package sirius.biz.model;
 
+import sirius.biz.importer.AutoImport;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Composite;
@@ -48,6 +49,7 @@ public class ContactData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
+    @AutoImport
     @Length(150)
     private String email;
 
@@ -61,6 +63,7 @@ public class ContactData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
+    @AutoImport
     @Length(150)
     private String phone;
 
@@ -74,6 +77,7 @@ public class ContactData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
+    @AutoImport
     @Length(150)
     private String fax;
 
@@ -87,6 +91,7 @@ public class ContactData extends Composite {
     @Trim
     @NullAllowed
     @Autoloaded
+    @AutoImport
     @Length(150)
     private String mobile;
 
