@@ -263,7 +263,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      * @return the created entity or, if batch updates are active, the given entity
      */
     protected E createIfChanged(E entity, boolean batch) {
-        if (entity.isChanged(mappingsToLoad)) {
+        if (isChanged(entity)) {
             getInsertQuery().insert(entity, true, batch);
         }
 
@@ -295,11 +295,21 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
         // computed properties...
         descriptor.beforeSave(entity);
 
-        if (entity.isChanged(mappingsToLoad)) {
+        if (isChanged(entity)) {
             getUpdateQuery().update(entity, true, batch);
         }
 
         return entity;
+    }
+
+    /**
+     * Checks whether any property of the entity has changed.
+     *
+     * @param entity the entity to check
+     * @return <tt>true</tt> if any property checked is changed, <tt>false</tt> otherwise
+     */
+    protected boolean isChanged(E entity) {
+        return entity.isChanged(mappingsToLoad);
     }
 
     /**
