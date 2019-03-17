@@ -532,7 +532,10 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             return result;
         }
 
-        completeAuditLogForUser(auditLog.negative("AuditLog.loginRejected"), account);
+        auditLog.negative("AuditLog.loginRejected")
+                .forTenant(String.valueOf(account.getTenant().getId()),
+                           account.getTenant().getValue().getTenantData().getName())
+                .log();
 
         return null;
     }
