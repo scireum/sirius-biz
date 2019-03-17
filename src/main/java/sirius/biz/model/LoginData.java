@@ -378,6 +378,10 @@ public class LoginData extends Composite {
         return fingerprint;
     }
 
+    public String getSalt() {
+        return salt;
+    }
+
     @Override
     public String toString() {
         return username;
