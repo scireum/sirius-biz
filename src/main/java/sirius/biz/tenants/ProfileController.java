@@ -11,6 +11,7 @@ package sirius.biz.tenants;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -38,6 +39,9 @@ public class ProfileController<I, T extends BaseEntity<I> & Tenant<I>, U extends
 
     @Part
     private AuditLog auditLog;
+
+    @ConfigValue("product.wondergemRoot")
+    protected String wondergemRoot;
 
     /**
      * Shows a page where an account can change the user informations, e.g. mail, name, ...
@@ -119,7 +123,7 @@ public class ProfileController<I, T extends BaseEntity<I> & Tenant<I>, U extends
         userAccount.getUserAccountData().getLogin().resetFingerprint();
         userAccount.getMapper().update(userAccount);
 
-        ctx.respondWith().redirectToGet("/profile");
+        ctx.respondWith().redirectToGet(wondergemRoot);
     }
 
     /**
