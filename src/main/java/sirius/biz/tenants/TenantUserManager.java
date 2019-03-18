@@ -584,7 +584,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
      * @return <tt>true</tt> if the password is valid, <tt>false</tt> otherwise
      */
     public boolean checkPassword(U userAccount, String password) {
-        return userAccount.getUserAccountData().getLogin().checkPassword(password)
+        return userAccount.getUserAccountData()
+                          .getLogin()
+                          .checkPassword(userAccount.getUserAccountData().getLogin().getUsername(), password)
                != LoginData.PasswordVerificationResult.INVALID;
     }
 
