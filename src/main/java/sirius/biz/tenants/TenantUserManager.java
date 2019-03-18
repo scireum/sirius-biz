@@ -13,7 +13,6 @@ import com.google.common.collect.Sets;
 import com.typesafe.config.Config;
 import sirius.biz.model.LoginData;
 import sirius.biz.protocol.AuditLog;
-import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.cache.Cache;
@@ -23,6 +22,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.http.WebContext;
@@ -113,8 +113,14 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
      */
     public static final String SPY_ID_SUFFIX = "-spy-id";
 
+    /**
+     * Contains the suffix used to store the fingerprint in the session.
+     *
+     * @see LoginData#FINGERPRINT
+     */
+    private static final String SUFFIX_FINGERPRINT = "-fingerprint";
+
     protected final String systemTenant;
-    protected final String defaultSalt;
     protected final boolean acceptApiTokens;
 
     @Part
@@ -137,7 +143,6 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     protected TenantUserManager(ScopeInfo scope, Extension config) {
         super(scope, config);
         this.systemTenant = config.get("system-tenant").asString();
-        this.defaultSalt = config.get("default-salt").asString("");
         this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(true);
     }
 
@@ -241,7 +246,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                         .addAll(currentUser.getUserAccountData().getPermissions().getPermissions());
             return modifiedUser;
         } catch (Exception e) {
-            throw Exceptions.handle(BizController.LOG, e);
+            throw Exceptions.handle(Log.APPLICATION, e);
         }
     }
 
@@ -506,43 +511,59 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                                                                                                .getValue()
                                                                                                .getTenantData()
                                                                                                .getExternalLoginIntervalDays())) {
-            auditLog.negative("AuditLog.externalLoginRequired")
-                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forTenant(String.valueOf(account.getTenant().getId()),
-                               account.getTenant().getValue().getTenantData().getName())
-                    .log();
+            completeAuditLogForUser(auditLog.negative("AuditLog.externalLoginRequired"), account);
             throw Exceptions.createHandled().withNLSKey("UserAccount.externalLoginMustBePerformed").handle();
         }
 
         LoginData loginData = account.getUserAccountData().getLogin();
         if (acceptApiTokens && Strings.areEqual(password, loginData.getApiToken())) {
-            auditLog.neutral("AuditLog.apiTokenLogin")
-                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forTenant(String.valueOf(account.getTenant().getId()),
-                               account.getTenant().getValue().getTenantData().getName())
-                    .log();
+            completeAuditLogForUser(auditLog.neutral("AuditLog.apiTokenLogin"), account);
             return result;
         }
 
-        if (loginData.checkPassword(password, defaultSalt)) {
-            auditLog.neutral("AuditLog.passwordLogin")
-                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forTenant(String.valueOf(account.getTenant().getId()),
-                               account.getTenant().getValue().getTenantData().getName())
-                    .log();
+        LoginData.PasswordVerificationResult pwResult = loginData.checkPassword(user, password);
+        if (pwResult != LoginData.PasswordVerificationResult.INVALID) {
+            completeAuditLogForUser(auditLog.neutral("AuditLog.passwordLogin"), account);
+
+            if (pwResult == LoginData.PasswordVerificationResult.VALID_NEEDS_RE_HASH) {
+                return updatePasswordHashing(result, password);
+            }
+
             return result;
         }
 
         auditLog.negative("AuditLog.loginRejected")
-                .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                 .forTenant(String.valueOf(account.getTenant().getId()),
                            account.getTenant().getValue().getTenantData().getName())
                 .log();
 
         return null;
+    }
+
+    protected void completeAuditLogForUser(AuditLog.AuditLogBuilder builder, U account) {
+        builder.causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+               .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+               .forTenant(String.valueOf(account.getTenant().getId()),
+                          account.getTenant().getValue().getTenantData().getName())
+               .log();
+    }
+
+    private UserInfo updatePasswordHashing(UserInfo info, String password) {
+        try {
+            U account = info.getUserObject(getUserClass());
+            U freshAccount = account.getDescriptor().getMapper().tryRefresh(account);
+            freshAccount.getUserAccountData().getLogin().setCleartextPassword(password);
+            freshAccount.getTrace().setSilent(true);
+            freshAccount.getDescriptor().getMapper().update(freshAccount);
+            completeAuditLogForUser(auditLog.neutral("AuditLog.passwordReHashed"), account);
+            return UserInfo.Builder.withUser(info)
+                                   .withPermissions(info.getPermissions())
+                                   .withUserSupplier(u -> freshAccount)
+                                   .build();
+        } catch (Exception e) {
+            Exceptions.handle(Log.APPLICATION, e);
+            return info;
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -563,7 +584,10 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
      * @return <tt>true</tt> if the password is valid, <tt>false</tt> otherwise
      */
     public boolean checkPassword(U userAccount, String password) {
-        return userAccount.getUserAccountData().getLogin().checkPassword(password, defaultSalt);
+        return userAccount.getUserAccountData()
+                          .getLogin()
+                          .checkPassword(userAccount.getUserAccountData().getLogin().getUsername(), password)
+               != LoginData.PasswordVerificationResult.INVALID;
     }
 
     @Override
@@ -613,31 +637,58 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     }
 
     @Override
+    public void updateLoginCookie(WebContext ctx, UserInfo user, boolean keepLogin) {
+        super.updateLoginCookie(ctx, user, keepLogin);
+        installFingerprintInSession(ctx,
+                                    user.getUserObject(UserAccount.class)
+                                        .getUserAccountData()
+                                        .getLogin()
+                                        .getFingerprint());
+    }
+
+    /**
+     * Installs the given fingerprint into the session of the given request.
+     * <p>
+     * This is made externally available so that the {@link ProfileController} can instantly
+     * update the fingerprint after the user changed its password. Otherwise an
+     * immediate logout would happen which would be kind of a strange user experience.
+     *
+     * @param ctx         the request used to update the session cookie
+     * @param fingerprint the new fingerprint to use
+     */
+    public void installFingerprintInSession(WebContext ctx, String fingerprint) {
+        ctx.setSessionValue(scope.getScopeId() + SUFFIX_FINGERPRINT, fingerprint);
+    }
+
+    @Override
     @SuppressWarnings({"squid:S1126", "RedundantIfStatement"})
     @Explain("Using explicit abort conditions and a final true makes all checks obvious")
-    protected boolean isUserStillValid(String userId) {
+    protected boolean isUserStillValid(String userId, WebContext ctx) {
         U user = fetchAccount(userId, null);
 
         if (user == null) {
             return false;
         }
 
-        if (user.getUserAccountData().getLogin().isAccountLocked()) {
+        LoginData loginData = user.getUserAccountData().getLogin();
+        TenantData tenantData = user.getTenant().getValue().getTenantData();
+
+        if (loginData.isAccountLocked()) {
             return false;
         }
 
-        if (!isWithinInterval(user.getUserAccountData().getLogin().getLastLogin(),
-                              user.getTenant().getValue().getTenantData().getLoginIntervalDays())) {
+        String fingerprintInSession = ctx.getSessionValue(scope.getScopeId() + SUFFIX_FINGERPRINT).asString();
+        if (Strings.isFilled(loginData.getFingerprint()) && !Strings.areEqual(loginData.getFingerprint(),
+                                                                              fingerprintInSession)) {
             return false;
         }
 
-        if (user.getUserAccountData().isExternalLoginRequired() && !isWithinInterval(user.getUserAccountData()
-                                                                                         .getLogin()
-                                                                                         .getLastExternalLogin(),
-                                                                                     user.getTenant()
-                                                                                         .getValue()
-                                                                                         .getTenantData()
-                                                                                         .getExternalLoginIntervalDays())) {
+        if (!isWithinInterval(loginData.getLastLogin(), tenantData.getLoginIntervalDays())) {
+            return false;
+        }
+
+        if (user.getUserAccountData().isExternalLoginRequired() && !isWithinInterval(loginData.getLastExternalLogin(),
+                                                                                     tenantData.getExternalLoginIntervalDays())) {
             return false;
         }
 

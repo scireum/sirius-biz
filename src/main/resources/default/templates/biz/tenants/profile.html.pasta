@@ -52,6 +52,7 @@
     <w:formBar>
         <div class="pull-right">
             <a class="btn" href="/profile/password">@i18n("Model.password.set")</a>
+            <a class="btn btn-danger" href="/profile/changeFingerprint">@i18n("LoginData.changeFingerprint")</a>
         </div>
     </w:formBar>
 </w:page>
