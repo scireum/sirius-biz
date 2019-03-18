@@ -521,7 +521,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             return result;
         }
 
-        LoginData.PasswordVerificationResult pwResult = loginData.checkPassword(password);
+        LoginData.PasswordVerificationResult pwResult = loginData.checkPassword(user, password);
         if (pwResult != LoginData.PasswordVerificationResult.INVALID) {
             completeAuditLogForUser(auditLog.neutral("AuditLog.passwordLogin"), account);
 
