@@ -32,12 +32,15 @@ public interface PasswordHashFunction extends Priorized {
     /**
      * Computes the "hash" or cryptographic derivation of the given password which can be stored in a database.
      *
+     * @param username contains the username for which the password hash is being computed as some legacy
+     *                 implementations use it for their computation. Note that this is left empty when computing a new
+     *                 hash, as it is considered very bad practice to do so.
      * @param salt     the salt used to protect the password
      * @param password the password itself
      * @return the computed hash or <tt>null</tt> to indicate that the input data is invalid
      */
     @Nullable
-    String computeHash(@Nullable String salt, @Nonnull String password);
+    String computeHash(@Nullable String username, @Nullable String salt, @Nonnull String password);
 
     /**
      * Determines if this function is considered insecure.

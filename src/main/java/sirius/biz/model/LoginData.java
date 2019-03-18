@@ -258,7 +258,7 @@ public class LoginData extends Composite {
         }
         for (PasswordHashFunction hashFunction : hashFunctions) {
             if (!hashFunction.isOutdated()) {
-                String hash = hashFunction.computeHash(salt, password);
+                String hash = hashFunction.computeHash(null, salt, password);
                 if (Strings.isFilled(hash)) {
                     return hash;
                 }
@@ -271,12 +271,14 @@ public class LoginData extends Composite {
     /**
      * Checks if the given password is correct.
      *
+     * @param username the username for which the password was given - some legacy implementations use the username to
+     *                 derive the password hash
      * @param password the password to validate
      * @return a tuple where the first parameter determines if the password is valid
      */
-    public PasswordVerificationResult checkPassword(String password) {
+    public PasswordVerificationResult checkPassword(String username, String password) {
         for (PasswordHashFunction hashFunction : hashFunctions) {
-            String givenPasswordHash = hashFunction.computeHash(salt, password);
+            String givenPasswordHash = hashFunction.computeHash(username, salt, password);
             if (Strings.isFilled(givenPasswordHash) && Strings.areEqual(givenPasswordHash, passwordHash)) {
                 return hashFunction.isOutdated() ?
                        PasswordVerificationResult.VALID_NEEDS_RE_HASH :
@@ -380,6 +382,10 @@ public class LoginData extends Composite {
 
     public String getSalt() {
         return salt;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
     @Override
