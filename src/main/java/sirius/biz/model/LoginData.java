@@ -104,6 +104,7 @@ public class LoginData extends Composite {
      */
     public static final Mapping FINGERPRINT = Mapping.named("fingerprint");
     @NoJournal
+    @Length(50)
     @NullAllowed
     private String fingerprint;
 
