@@ -161,7 +161,7 @@ public class ProcessController extends BizController {
     public void cancelProcess(WebContext ctx, String processId) {
         Process process = findAccessibleProcess(processId);
         processes.markCanceled(process.getId());
-        ctx.respondWith().redirectToGet("/ps/" + process);
+        ctx.respondWith().redirectToGet("/ps/" + processId);
     }
 
     /**
