@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Declares the client API of a process.
@@ -67,6 +68,20 @@ public interface ProcessContext extends TaskContextAdapter {
     void addTiming(String counter, long millis);
 
     /**
+     * Increments the given performance counter by one and supplies a loop duration in milliseconds if the current
+     * process has debugging enabled.
+     * <p>
+     * The avarage value will be computed for the given counter and gives the user a rough estimate what the current
+     * task is doing.
+     *
+     * @param counter the counter to increment
+     * @param millis  the current duration for the block being counted
+     * @see Process#DEBUGGING
+     * @see Processes#changeDebugging(String, boolean)
+     */
+    void addDebugTiming(String counter, long millis);
+
+    /**
      * Handles the given exception.
      * <p>
      * This will invoke {@link Exceptions#handle()} and log the result.
@@ -82,6 +97,27 @@ public interface ProcessContext extends TaskContextAdapter {
      * @param logEntry the entry to log
      */
     void log(ProcessLog logEntry);
+
+    /**
+     * Logs the given log entry if the current process has debugging enabled.
+     *
+     * @param logEntry the entry to log
+     * @see Process#DEBUGGING
+     * @see Processes#changeDebugging(String, boolean)
+     */
+    void debug(ProcessLog logEntry);
+
+    /**
+     * Determines if the current process has debugging enabled.
+     * <p>
+     * Debugging can be enabled via the backend UI. This is mainly useful for long running processes or
+     * {@link Processes#executeInStandbyProcess(String, Supplier, String, Supplier, Consumer) standby} processes.
+     *
+     * @return <tt>true</tt> if debugging is enabled, <tt>false</tt> otherwise
+     * @see Process#DEBUGGING
+     * @see Processes#changeDebugging(String, boolean)
+     */
+    boolean isDebugging();
 
     /**
      * Determines if the current task is erroneous

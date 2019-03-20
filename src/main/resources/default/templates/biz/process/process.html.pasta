@@ -13,7 +13,7 @@
 
     <w:pageHeader>
         <div class="row">
-            <div class="col-md-9">
+            <div class="col-md-8">
                 <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
                     <i class="fa fa-refresh fa-spin" id="spinner"></i>
                     <i:else>
@@ -23,9 +23,15 @@
                 @process.getTitle()
                 <span class="label @process.getLabelClass()">@process.getState()</span>
             </div>
-            <div class="col-md-3 align-right">
+            <div class="col-md-4 align-right">
                 <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
-                    <a class="btn btn-default" href="/ps/@process.getId()/cancel">@i18n("NLS.cancel")</a>
+                    <i:if test="process.isDebugging()">
+                        <a class="btn btn-success" href="/ps/@process.getId()/toggleDebugging">@i18n("ProcessController.disableDebugging")</a>
+                        <i:else>
+                            <a class="btn btn-default" href="/ps/@process.getId()/toggleDebugging">@i18n("ProcessController.enableDebugging")</a>
+                        </i:else>
+                    </i:if>
+                    <a class="btn btn-danger" href="/ps/@process.getId()/cancel">@i18n("NLS.cancel")</a>
                 </i:if>
             </div>
         </div>
