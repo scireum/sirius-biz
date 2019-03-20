@@ -166,7 +166,12 @@ public class ProcessController extends BizController {
     public void cancelProcess(WebContext ctx, String processId) {
         Process process = findAccessibleProcess(processId);
         processes.markCanceled(process.getId());
-        ctx.respondWith().redirectToGet("/ps/" + processId);
+
+        // Give ES some time to digest the change before essentially reloading the page...
+        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> {
+            ctx.respondWith().redirectToGet("/ps/" + process.getId());
+        });
+    }
 
     /**
      * Cancels the execution of the given process.
