@@ -123,7 +123,8 @@ public class ProcessController extends BizController {
         Process process = findAccessibleProcess(processId);
 
         ElasticQuery<ProcessLog> query = buildLogsQuery(process);
-        ctx.respondWith().template("templates/biz/process/process-details.html.pasta", process, query.limit(5).queryList());
+        ctx.respondWith()
+           .template("templates/biz/process/process-details.html.pasta", process, query.limit(5).queryList());
     }
 
     /**
