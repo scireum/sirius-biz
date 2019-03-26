@@ -139,12 +139,16 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
 
         try {
             U account = getUserClass().getDeclaredConstructor().newInstance();
-            account.getTenant().setValue(tenant);
-            account.getUserAccountData().getLogin().setUsername(response.getNameId());
-            account.getUserAccountData().getLogin().setCleartextPassword(UUID.randomUUID().toString());
-            account.getUserAccountData().setExternalLoginRequired(true);
-            updateAccount(response, account);
-            account.getMapper().update(account);
+
+            UserContext userContext = UserContext.get();
+            userContext.runAs(userContext.getUserManager().findUserByUserId(account.getUniqueName()), () -> {
+                account.getTenant().setValue(tenant);
+                account.getUserAccountData().getLogin().setUsername(response.getNameId());
+                account.getUserAccountData().getLogin().setCleartextPassword(UUID.randomUUID().toString());
+                account.getUserAccountData().setExternalLoginRequired(true);
+                updateAccount(response, account);
+                account.getMapper().update(account);
+            });
 
             TenantUserManager<?, ?, ?> manager =
                     (TenantUserManager<?, ?, ?>) UserContext.getCurrentScope().getUserManager();
@@ -199,9 +203,12 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Fingerprint mismatch!").handle();
         }
 
-        account = account.getMapper().refreshOrFail(account);
-        updateAccount(response, account);
-        account.getMapper().update(account);
+        UserContext userContext = UserContext.get();
+        userContext.runAs(userContext.getUserManager().findUserByUserId(account.getUniqueName()), () -> {
+            U refreshedAccount = account.getMapper().refreshOrFail(account);
+            updateAccount(response, refreshedAccount);
+            refreshedAccount.getMapper().update(refreshedAccount);
+        });
     }
 
     private boolean checkFingerprint(T tenant, SAMLResponse response) {
@@ -227,38 +234,34 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
     }
 
     private void updateAccount(SAMLResponse response, U account) {
-        UserContext userContext = UserContext.get();
-        userContext.runAs(userContext.getUserManager().findUserByUserId(account.getUniqueName()), () -> {
+        account.getUserAccountData().getPermissions().getPermissions().clear();
+        response.getAttribute(SAMLResponse.ATTRIBUTE_GROUP)
+                .stream()
+                .filter(Strings::isFilled)
+                .flatMap(value -> Arrays.stream(value.split(",")))
+                .map(String::trim)
+                .filter(Strings::isFilled)
+                .filter(role -> roles.contains(role))
+                .collect(Lambdas.into(account.getUserAccountData().getPermissions().getPermissions()));
 
-            account.getUserAccountData().getPermissions().getPermissions().clear();
-            response.getAttribute(SAMLResponse.ATTRIBUTE_GROUP)
-                    .stream()
-                    .filter(Strings::isFilled)
-                    .flatMap(value -> Arrays.stream(value.split(",")))
-                    .map(String::trim)
-                    .filter(Strings::isFilled)
-                    .filter(role -> roles.contains(role))
-                    .collect(Lambdas.into(account.getUserAccountData().getPermissions().getPermissions()));
+        if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_GIVEN_NAME))) {
+            account.getUserAccountData()
+                   .getPerson()
+                   .setFirstname(response.getAttributeValue(SAMLResponse.ATTRIBUTE_GIVEN_NAME));
+        }
+        if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_SURNAME))) {
+            account.getUserAccountData()
+                   .getPerson()
+                   .setLastname(response.getAttributeValue(SAMLResponse.ATTRIBUTE_SURNAME));
+        }
+        if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_EMAIL_ADDRESS))) {
+            account.getUserAccountData().setEmail(response.getAttributeValue(SAMLResponse.ATTRIBUTE_EMAIL_ADDRESS));
+        }
 
-            if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_GIVEN_NAME))) {
-                account.getUserAccountData()
-                        .getPerson()
-                        .setFirstname(response.getAttributeValue(SAMLResponse.ATTRIBUTE_GIVEN_NAME));
-            }
-            if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_SURNAME))) {
-                account.getUserAccountData()
-                        .getPerson()
-                        .setLastname(response.getAttributeValue(SAMLResponse.ATTRIBUTE_SURNAME));
-            }
-            if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_EMAIL_ADDRESS))) {
-                account.getUserAccountData().setEmail(response.getAttributeValue(SAMLResponse.ATTRIBUTE_EMAIL_ADDRESS));
-            }
-
-            // If a generated password was previously set, force a random password so that the
-            // "please change your password" warning goes away.
-            if (Strings.isFilled(account.getUserAccountData().getLogin().getGeneratedPassword())) {
-                account.getUserAccountData().getLogin().setCleartextPassword(UUID.randomUUID().toString());
-            }
-        });
+        // If a generated password was previously set, force a random password so that the
+        // "please change your password" warning goes away.
+        if (Strings.isFilled(account.getUserAccountData().getLogin().getGeneratedPassword())) {
+            account.getUserAccountData().getLogin().setCleartextPassword(UUID.randomUUID().toString());
+        }
     }
 }
