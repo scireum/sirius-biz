@@ -322,6 +322,18 @@ public class Processes {
     }
 
     /**
+     * Marks a process as erroneous.
+     *
+     * @param processId the process to update
+     * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
+     */
+    protected boolean changeDebugging(String processId, boolean debuggingEnabled) {
+        return modify(processId,
+                      process -> process.getState() == ProcessState.RUNNING,
+                      process -> process.setDebugging(debuggingEnabled));
+    }
+
+    /**
      * Marks a process as completed.
      *
      * @param processId the process to update

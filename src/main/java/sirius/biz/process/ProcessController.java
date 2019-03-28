@@ -21,6 +21,8 @@ import sirius.db.es.Elastic;
 import sirius.db.es.ElasticQuery;
 import sirius.db.mixing.DateRange;
 import sirius.db.mixing.query.QueryField;
+import sirius.kernel.async.DelayLine;
+import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
@@ -58,6 +60,9 @@ public class ProcessController extends BizController {
 
     @Part
     private GlobalContext context;
+
+    @Part
+    private DelayLine delayLine;
 
     /**
      * Lists all processes visible to the current user.
@@ -118,7 +123,8 @@ public class ProcessController extends BizController {
         Process process = findAccessibleProcess(processId);
 
         ElasticQuery<ProcessLog> query = buildLogsQuery(process);
-        ctx.respondWith().template("templates/biz/process/process-details.html.pasta", process, query.limit(5).queryList());
+        ctx.respondWith()
+           .template("templates/biz/process/process-details.html.pasta", process, query.limit(5).queryList());
     }
 
     /**
@@ -161,7 +167,29 @@ public class ProcessController extends BizController {
     public void cancelProcess(WebContext ctx, String processId) {
         Process process = findAccessibleProcess(processId);
         processes.markCanceled(process.getId());
-        ctx.respondWith().redirectToGet("/ps/" + processId);
+
+        // Give ES some time to digest the change before essentially reloading the page...
+        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> {
+            ctx.respondWith().redirectToGet("/ps/" + process.getId());
+        });
+    }
+
+    /**
+     * Toggles (enables / disables) debug output for the given process.
+     *
+     * @param ctx       the current request
+     * @param processId the id of the process to enable or disable debugging for
+     */
+    @Routed("/ps/:1/toggleDebugging")
+    @LoginRequired
+    public void toggleDebugging(WebContext ctx, String processId) {
+        Process process = findAccessibleProcess(processId);
+        processes.changeDebugging(process.getId(), !process.isDebugging());
+
+        // Give ES some time to digest the change before essentially reloading the page...
+        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> {
+            ctx.respondWith().redirectToGet("/ps/" + process.getId());
+        });
     }
 
     /**

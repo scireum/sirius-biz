@@ -10,6 +10,7 @@ package sirius.biz.process;
 
 import sirius.biz.elastic.SearchContent;
 import sirius.biz.elastic.SearchableEntity;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
@@ -193,6 +194,18 @@ public class Process extends SearchableEntity {
     private boolean errorneous;
 
     /**
+     * Determines if this process has debugging enabled.
+     * <p>
+     * This permits to add tracing logs and other instrumentation which can be enabled on demand.
+     *
+     * @see Processes#changeDebugging(String, boolean)
+     * @see ProcessContext#debug(ProcessLog)
+     * @see ProcessContext#addDebugTiming(String, long)
+     */
+    public static final Mapping DEBUGGING = Mapping.named("debugging");
+    private boolean debugging;
+
+    /**
      * Contains the state of this process.
      */
     public static final Mapping STATE = Mapping.named("state");
@@ -358,7 +371,11 @@ public class Process extends SearchableEntity {
      * @return the list of performance counters recorded for this process
      */
     public List<Tuple<String, String>> getCounterList() {
-        return getPerformanceCounters().data().keySet().stream().map(this::formatPerformanceCounter).collect(Collectors.toList());
+        return getPerformanceCounters().data()
+                                       .keySet()
+                                       .stream()
+                                       .map(this::formatPerformanceCounter)
+                                       .collect(Collectors.toList());
     }
 
     private Tuple<String, String> formatPerformanceCounter(String key) {
@@ -491,6 +508,14 @@ public class Process extends SearchableEntity {
 
     public void setErrorneous(boolean errorneous) {
         this.errorneous = errorneous;
+    }
+
+    public boolean isDebugging() {
+        return debugging;
+    }
+
+    public void setDebugging(boolean debugging) {
+        this.debugging = debugging;
     }
 
     public LocalDateTime getCanceled() {

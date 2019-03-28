@@ -75,6 +75,13 @@ class ProcessEnvironment implements ProcessContext {
         }
     }
 
+    @Override
+    public void addDebugTiming(String counter, long millis) {
+        if (isDebugging()) {
+            addTiming(counter, millis);
+        }
+    }
+
     protected Map<String, Average> getTimings() {
         if (timings == null) {
             timings = new HashMap<>();
@@ -108,10 +115,22 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
+    public void debug(ProcessLog logEntry) {
+        if (isDebugging()) {
+            log(logEntry);
+        }
+    }
+
+    @Override
     public HandledException handle(Exception e) {
         HandledException handledException = Exceptions.handle(Log.BACKGROUND, e);
         log(ProcessLog.error().withMessage(handledException.getMessage()));
         return handledException;
+    }
+
+    @Override
+    public boolean isDebugging() {
+        return processes.fetchProcess(processId).map(Process::isDebugging).orElse(true);
     }
 
     @Override
