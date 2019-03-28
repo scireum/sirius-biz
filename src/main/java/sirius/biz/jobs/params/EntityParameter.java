@@ -49,7 +49,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
     @Part
     protected static Tenants<?, ?, ?> tenants;
 
-    protected EntityDescriptor descriptor;
+    private EntityDescriptor descriptor;
 
     /**
      * Creates a new parameter with the given name and label.
@@ -161,7 +161,13 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
         }
     }
 
-    private EntityDescriptor getDescriptor() {
+    /**
+     * Determines the {@link EntityDescriptor} for the
+     * set {@link #getType() parameter type}.
+     *
+     * @return the entity descriptor for the parameter type
+     */
+    protected EntityDescriptor getDescriptor() {
         if (descriptor == null) {
             descriptor = mixing.getDescriptor(getType());
         }
