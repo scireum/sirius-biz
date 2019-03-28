@@ -71,7 +71,7 @@ public interface ProcessContext extends TaskContextAdapter {
      * Increments the given performance counter by one and supplies a loop duration in milliseconds if the current
      * process has debugging enabled.
      * <p>
-     * The avarage value will be computed for the given counter and gives the user a rough estimate what the current
+     * The average value will be computed for the given counter and gives the user a rough estimate what the current
      * task is doing.
      *
      * @param counter the counter to increment

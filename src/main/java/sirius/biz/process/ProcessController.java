@@ -175,10 +175,10 @@ public class ProcessController extends BizController {
     }
 
     /**
-     * Cancels the execution of the given process.
+     * Toggles (enables / disables) debug output for the given process.
      *
      * @param ctx       the current request
-     * @param processId the id of the process to cancel
+     * @param processId the id of the process to enable or disable debugging for
      */
     @Routed("/ps/:1/toggleDebugging")
     @LoginRequired

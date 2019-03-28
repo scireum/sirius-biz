@@ -322,7 +322,7 @@ public class Processes {
     }
 
     /**
-     * Marks a process as errorneous.
+     * Marks a process as erroneous.
      *
      * @param processId the process to update
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
