@@ -59,7 +59,6 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
      */
     protected EntityParameter(String name, String label) {
         super(name, label);
-        this.descriptor = getDescriptor();
     }
 
     /**
