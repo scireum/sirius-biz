@@ -145,12 +145,16 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
 
         try {
             U account = getUserClass().getDeclaredConstructor().newInstance();
-            account.getTenant().setValue(tenant);
-            account.getUserAccountData().getLogin().setUsername(response.getNameId());
-            account.getUserAccountData().getLogin().setCleartextPassword(UUID.randomUUID().toString());
-            account.getUserAccountData().setExternalLoginRequired(true);
-            updateAccount(response, account);
-            account.getMapper().update(account);
+
+            UserContext userContext = UserContext.get();
+            userContext.runAs(userContext.getUserManager().findUserByUserId(account.getUniqueName()), () -> {
+                account.getTenant().setValue(tenant);
+                account.getUserAccountData().getLogin().setUsername(response.getNameId());
+                account.getUserAccountData().getLogin().setCleartextPassword(UUID.randomUUID().toString());
+                account.getUserAccountData().setExternalLoginRequired(true);
+                updateAccount(response, account);
+                account.getMapper().update(account);
+            });
 
             TenantUserManager<?, ?, ?> manager =
                     (TenantUserManager<?, ?, ?>) UserContext.getCurrentScope().getUserManager();
@@ -205,9 +209,12 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
             throw Exceptions.createHandled().withSystemErrorMessage("SAML Error: Fingerprint mismatch!").handle();
         }
 
-        account = account.getMapper().refreshOrFail(account);
-        updateAccount(response, account);
-        account.getMapper().update(account);
+        UserContext userContext = UserContext.get();
+        userContext.runAs(userContext.getUserManager().findUserByUserId(account.getUniqueName()), () -> {
+            U refreshedAccount = account.getMapper().refreshOrFail(account);
+            updateAccount(response, refreshedAccount);
+            refreshedAccount.getMapper().update(refreshedAccount);
+        });
     }
 
     private boolean checkFingerprint(T tenant, SAMLResponse response) {
