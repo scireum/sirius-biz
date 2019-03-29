@@ -32,6 +32,7 @@ import sirius.web.security.UserContext;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Provides a framework to map string values (<tt>codes</tt>) to values defined by the user.
@@ -122,11 +123,14 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
             return null;
         }
 
-        Tenant<?> tenant = getCurrentTenant();
-
-        return valueCache.get(tenant.getIdAsString() + codeList + "|" + code, ignored -> {
-            return getValues(codeList, code).getFirst();
+        return getCurrentTenant().map(tenant -> valueCache.get(tenant.getIdAsString() + codeList + "|" + code, ignored ->
+                getValues(codeList, code).getFirst()
+        )).orElseGet(() -> {
+            Exceptions.handle().to(LOG).withSystemErrorMessage("No Tenant for code list getValue call found. Make sure that a currentTenant is set.").handle();
+            return code;
         });
+
+
     }
 
     /**
@@ -220,12 +224,16 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
             throw new IllegalArgumentException("codeList must not be empty");
         }
 
-        L cl = createListQuery().eq(CodeList.TENANT, getCurrentTenant())
-                                .eq(CodeList.CODE_LIST_DATA.inner(CodeListData.CODE), codeList)
-                                .queryFirst();
+        Tenant<?> currentTenant = getCurrentTenant().orElseThrow(() -> Exceptions.handle().to(LOG).withNLSKey("CodeLists.noCurrentTenant").handle());
+
+        L cl = createListQuery().eq(CodeList.TENANT, currentTenant)
+                .eq(CodeList.CODE_LIST_DATA.inner(CodeListData.CODE), codeList)
+                .queryFirst();
+
         if (cl == null) {
             Extension ext = Sirius.getSettings().getExtension("code-lists", codeList);
-            cl = createCodeList(getCurrentTenant(), codeList);
+
+            cl = createCodeList(currentTenant, codeList);
             if (ext != null && !ext.isDefault()) {
                 cl.getCodeListData().setName(ext.get("name").asString());
                 cl.getCodeListData().setDescription(ext.get("description").asString());
@@ -270,11 +278,12 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
      * This also gracefully handles scopes other than the current tenant as long as there is an adapter to make it
      * match a {@link CodeListTenantProvider}.
      *
-     * @return the current tenant to be used to determine which code lists to operate on.
+     * @return optional of the current tenant to be used to determine which code lists to operate on.
      */
-    private Tenant<?> getCurrentTenant() {
+    @SuppressWarnings("unchecked")
+    private Optional<Tenant<?>> getCurrentTenant() {
         if (UserContext.getCurrentScope() == ScopeInfo.DEFAULT_SCOPE) {
-            return tenants.getRequiredTenant();
+            return (Optional<Tenant<?>>) tenants.getCurrentTenant();
         }
 
         Tenant<?> currentTenant = UserContext.getCurrentScope().as(CodeListTenantProvider.class).getCurrentTenant();
@@ -287,7 +296,7 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
                             .handle();
         }
 
-        return currentTenant;
+        return Optional.of(currentTenant);
     }
 
     /**
