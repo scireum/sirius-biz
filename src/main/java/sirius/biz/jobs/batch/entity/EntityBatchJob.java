@@ -11,7 +11,11 @@ package sirius.biz.jobs.batch.entity;
 import sirius.biz.jobs.batch.BatchJob;
 import sirius.biz.process.ProcessContext;
 import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.EntityDescriptor;
+import sirius.db.mixing.Mixing;
 import sirius.db.mixing.query.Query;
+import sirius.kernel.commons.Watch;
+import sirius.kernel.di.std.Part;
 
 /**
  * Base class for iterating over {@link BaseEntity entities} in the database
@@ -21,13 +25,22 @@ import sirius.db.mixing.query.Query;
  */
 public abstract class EntityBatchJob<E extends BaseEntity<?>> extends BatchJob {
 
+    protected final EntityDescriptor descriptor;
+    protected Class<E> type;
+
+    @Part
+    private static Mixing mixing;
+
     /**
      * Creates a new job for the given process context and entity class.
      *
      * @param process the process context in which the job is executed
+     * @param type    the type of entities being processed
      */
-    public EntityBatchJob(ProcessContext process) {
+    public EntityBatchJob(ProcessContext process, Class<E> type) {
         super(process);
+        this.type = type;
+        this.descriptor = mixing.getDescriptor(type);
     }
 
     @Override
@@ -36,12 +49,16 @@ public abstract class EntityBatchJob<E extends BaseEntity<?>> extends BatchJob {
     }
 
     private void handleEntity(E entity) {
-        if (process.isActive()) {
-            try {
-                processEntity(entity);
-            } catch (Exception e) {
-                process.handle(e);
-            }
+        if (!process.isActive()) {
+            return;
+        }
+        Watch w = Watch.start();
+        try {
+            processEntity(entity);
+        } catch (Exception e) {
+            process.handle(e);
+        } finally {
+            process.addTiming(descriptor.getPluralLabel(), w.elapsedMillis());
         }
     }
 
