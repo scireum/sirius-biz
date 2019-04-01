@@ -22,8 +22,9 @@ import sirius.kernel.di.std.Part;
  * to process them (e.g. for exporting).
  *
  * @param <E> the {@link BaseEntity entity} to iterate
+ * @param <Q> the {@link Query} to use for selects
  */
-public abstract class EntityBatchJob<E extends BaseEntity<?>> extends BatchJob {
+public abstract class EntityBatchJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> extends BatchJob {
 
     protected final EntityDescriptor descriptor;
     protected Class<E> type;
@@ -49,9 +50,6 @@ public abstract class EntityBatchJob<E extends BaseEntity<?>> extends BatchJob {
     }
 
     private void handleEntity(E entity) {
-        if (!process.isActive()) {
-            return;
-        }
         Watch w = Watch.start();
         try {
             processEntity(entity);
@@ -68,10 +66,9 @@ public abstract class EntityBatchJob<E extends BaseEntity<?>> extends BatchJob {
      * It it strongly advised to add an order by to ensure a consistent order
      * of the entities.
      *
-     * @param <Q> the query properties
      * @return the query to iterate over
      */
-    protected abstract <Q extends Query<?, E, ?>> Q createQuery();
+    protected abstract Q createQuery();
 
     /**
      * Processes a selected {@link BaseEntity entity}.
