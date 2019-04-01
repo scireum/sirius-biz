@@ -11,10 +11,7 @@ package sirius.biz.jobs.batch.entity;
 import sirius.biz.jobs.batch.BatchJob;
 import sirius.biz.process.ProcessContext;
 import sirius.db.mixing.BaseEntity;
-import sirius.db.mixing.BaseMapper;
-import sirius.db.mixing.Mixing;
 import sirius.db.mixing.query.Query;
-import sirius.kernel.di.std.Part;
 
 /**
  * Base class for iterating over {@link BaseEntity entities} in the database
@@ -24,45 +21,40 @@ import sirius.kernel.di.std.Part;
  */
 public abstract class EntityBatchJob<E extends BaseEntity<?>> extends BatchJob {
 
-    private Class<E> type;
-    private BaseMapper<E, ?, ?> entityMapper;
-
-    @Part
-    protected static Mixing mixing;
-
     /**
      * Creates a new job for the given process context and entity class.
      *
      * @param process the process context in which the job is executed
-     * @param type    the class of the entity
      */
-    public EntityBatchJob(ProcessContext process, Class<E> type) {
+    public EntityBatchJob(ProcessContext process) {
         super(process);
-        this.type = type;
     }
 
     @Override
     public void execute() throws Exception {
-        Query<?, E, ?> entityQuery = selectEntityQuery();
-        addQueryFilters(entityQuery);
-        entityQuery.iterateAll(this::processEntity);
+        createQuery().iterateAll(this::handleEntity);
     }
 
-    @SuppressWarnings("unchecked")
-    private <Q extends Query<Q, E, ?>> Q selectEntityQuery() {
-        if (entityMapper == null) {
-            entityMapper = mixing.getDescriptor(type).getMapper();
+    private void handleEntity(E entity) {
+        if (process.isActive()) {
+            try {
+                processEntity(entity);
+            } catch (Exception e) {
+                process.handle(e);
+            }
         }
-        return (Q) entityMapper.select(type);
     }
 
     /**
-     * Adds filters to the query to select the {@link BaseEntity entity}.
+     * Creates the query to select the entity which will be iterated over.
+     * <p>
+     * It it strongly advised to add an order by to ensure a consistent order
+     * of the entities.
      *
-     * @param query the query to add filters to
-     * @param <Q>   the query properties
+     * @param <Q> the query properties
+     * @return the query to iterate over
      */
-    protected abstract <Q extends Query<?, E, ?>> void addQueryFilters(Q query);
+    protected abstract <Q extends Query<?, E, ?>> Q createQuery();
 
     /**
      * Processes a selected {@link BaseEntity entity}.
