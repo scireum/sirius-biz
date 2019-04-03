@@ -43,12 +43,12 @@ import java.util.zip.GZIPInputStream;
 @Deprecated
 public abstract class CrunchlogProcessorJobFactory extends SimpleBatchProcessJobFactory {
 
-    @ConfigValue("curnchlogs.path")
+    @ConfigValue("crunchlogs.path")
     private String crunchlogPath;
 
     @Override
     protected String createProcessTitle(Map<String, String> context) {
-        return "Processing Crunchogs: " + getClass().getSimpleName();
+        return "Processing Crunchlogs: " + getClass().getSimpleName();
     }
 
     @Override
