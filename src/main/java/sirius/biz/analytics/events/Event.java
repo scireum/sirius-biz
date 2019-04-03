@@ -59,9 +59,22 @@ public abstract class Event extends SQLEntity {
      */
     @BeforeSave
     protected void fill() {
-        eventTimestamp = LocalDateTime.now();
+        if (eventTimestamp == null) {
+            eventTimestamp = LocalDateTime.now();
+        }
         eventDate = eventTimestamp.toLocalDate();
         node = CallContext.getNodeName();
+    }
+
+    /**
+     * Sets the eventTimestamp.
+     * <p>
+     * You DO NOT need to set this, if the timestamp should be now.
+     *
+     * @param eventTimestamp the {@link LocalDateTime} the evnt occured.
+     */
+    public void setEventTimestamp(LocalDateTime eventTimestamp) {
+        this.eventTimestamp = eventTimestamp;
     }
 
     public LocalDate getEventDate() {

@@ -123,4 +123,76 @@ public class WebData extends Composite {
     public long getResponseTime() {
         return responseTime;
     }
+
+    /**
+     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
+     *
+     * @param url the url
+     */
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    /**
+     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
+     *
+     * @param userAgent the userAgent
+     */
+    public void setUserAgent(String userAgent) {
+        this.userAgent = userAgent;
+    }
+
+    /**
+     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
+     *
+     * @param ios whether is IOS
+     */
+    public void setIos(boolean ios) {
+        this.ios = ios;
+    }
+
+    /**
+     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
+     *
+     * @param android whether is android
+     */
+    public void setAndroid(boolean android) {
+        this.android = android;
+    }
+
+    /**
+     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
+     *
+     * @param mobile whether is mobile
+     */
+    public void setMobile(boolean mobile) {
+        this.mobile = mobile;
+    }
+
+    /**
+     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
+     *
+     * @param phone whether is a phone
+     */
+    public void setPhone(boolean phone) {
+        this.phone = phone;
+    }
+
+    /**
+     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
+     *
+     * @param tablet whether is a tablet
+     */
+    public void setTablet(boolean tablet) {
+        this.tablet = tablet;
+    }
+
+    /**
+     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
+     *
+     * @param desktop whether is desktop
+     */
+    public void setDesktop(boolean desktop) {
+        this.desktop = desktop;
+    }
 }
