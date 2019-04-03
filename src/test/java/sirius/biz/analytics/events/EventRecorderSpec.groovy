@@ -21,6 +21,10 @@ class EventRecorderSpec extends BaseSpecification {
     private static Databases dbs
 
     def "events are recorded"() {
+        given:
+        EventRecorder recorder = new EventRecorder()
+        recorder.schema = this.recorder.schema
+        recorder.started()
         when:
         recorder.record(new TestEvent1())
         recorder.record(new TestEvent1())
@@ -40,6 +44,10 @@ class EventRecorderSpec extends BaseSpecification {
     }
 
     def "bufferedEvents-field is reset after processing"() {
+        given:
+        EventRecorder recorder = new EventRecorder()
+        recorder.schema = this.recorder.schema
+        recorder.started()
         when:
         recorder.record(new TestEvent1())
         recorder.record(new TestEvent1())
@@ -59,6 +67,10 @@ class EventRecorderSpec extends BaseSpecification {
     }
 
     def "bufferedEvents-field does not get larger as MAX_BUFFER_SIZE"() {
+        given:
+        EventRecorder recorder = new EventRecorder()
+        recorder.schema = this.recorder.schema
+        recorder.started()
         when:
         for (int i = 0; i < EventRecorder.MAX_BUFFER_SIZE + 20; i++) {
             recorder.record(new TestEvent1())
@@ -72,6 +84,10 @@ class EventRecorderSpec extends BaseSpecification {
     }
 
     def "bufferedEvents-field is not incremented if the Event throws exception on save"() {
+        given:
+        EventRecorder recorder = new EventRecorder()
+        recorder.schema = this.recorder.schema
+        recorder.started()
         when:
         recorder.record(new TestEvent3ThrowsExceptionOnSave())
         then:
