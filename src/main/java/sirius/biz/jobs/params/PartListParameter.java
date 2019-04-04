@@ -37,7 +37,7 @@ public class PartListParameter<E> extends Parameter<E, PartListParameter<E>> {
 
     @Override
     public String getTemplateName() {
-        return "/templates/jobs/params/part-list.html.pasta";
+        return "/templates/biz/jobs/params/part-list.html.pasta";
     }
 
     /**
