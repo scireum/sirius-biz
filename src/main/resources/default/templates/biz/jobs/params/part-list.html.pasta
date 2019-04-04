@@ -1,0 +1,15 @@
+<i:arg name="param" type="oxomi.items.quality.PartListParameter" />
+<i:arg name="context" type="Map" />
+
+<w:singleSelect span="@param.getSpan()"
+                smallSpan="@param.getSmallSpan()"
+                name="@param.getName()"
+                label="@param.getLabel()"
+                help="@param.getDescription()"
+                optional="@!param.isRequired()"
+                required="@param.isRequired()">
+    <i:for var="value" type="Object" items="@param.getValues()">
+        <option value="@value.getClass().getName()" @selected="value == param.get(context).orElse(null)">@value</option>
+    </i:for>
+</w:singleSelect>
+
