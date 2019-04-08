@@ -329,7 +329,8 @@ public class Processes {
      */
     protected boolean changeDebugging(String processId, boolean debuggingEnabled) {
         return modify(processId,
-                      process -> process.getState() == ProcessState.RUNNING,
+                      process -> process.getState() == ProcessState.RUNNING
+                                 || process.getState() == ProcessState.STANDBY,
                       process -> process.setDebugging(debuggingEnabled));
     }
 
