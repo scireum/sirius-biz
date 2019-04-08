@@ -17,7 +17,7 @@ import java.util.Optional;
 /**
  * Provides a parameter which accepts {@link Amount amounts}.
  */
-public class AmountParameter extends Parameter<Amount, AmountParameter> {
+public class AmountParameter extends TextParameter<Amount, AmountParameter> {
 
     /**
      * Creates a new parameter with the given name and label.
@@ -27,11 +27,6 @@ public class AmountParameter extends Parameter<Amount, AmountParameter> {
      */
     public AmountParameter(String name, String label) {
         super(name, label);
-    }
-
-    @Override
-    public String getTemplateName() {
-        return "/templates/biz/jobs/params/textfield.html.pasta";
     }
 
     @Override

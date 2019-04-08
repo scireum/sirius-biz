@@ -16,7 +16,7 @@ import java.util.Optional;
 /**
  * Represents a plain string parameter.
  */
-public class StringParameter extends Parameter<String, StringParameter> {
+public class StringParameter extends TextParameter<String, StringParameter> {
 
     /**
      * Creates a new parameter with the given name and label.
@@ -26,11 +26,6 @@ public class StringParameter extends Parameter<String, StringParameter> {
      */
     public StringParameter(String name, String label) {
         super(name, label);
-    }
-
-    @Override
-    public String getTemplateName() {
-        return "/templates/biz/jobs/params/textfield.html.pasta";
     }
 
     @Override

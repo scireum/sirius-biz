@@ -16,7 +16,7 @@ import java.util.Optional;
 /**
  * Provides a parameter which accepts integer numbers.
  */
-public class IntParameter extends Parameter<Integer, IntParameter> {
+public class IntParameter extends TextParameter<Integer, IntParameter> {
 
     /**
      * Creates a new parameter with the given name and label.
@@ -26,11 +26,6 @@ public class IntParameter extends Parameter<Integer, IntParameter> {
      */
     public IntParameter(String name, String label) {
         super(name, label);
-    }
-
-    @Override
-    public String getTemplateName() {
-        return "/templates/biz/jobs/params/textfield.html.pasta";
     }
 
     @Override
