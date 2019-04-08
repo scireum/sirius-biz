@@ -24,7 +24,7 @@
                 <span class="label @process.getLabelClass()">@process.getState()</span>
             </div>
             <div class="col-md-4 align-right">
-                <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
+                <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING || process.getState() == sirius.biz.process.ProcessState.STANDBY">
                     <i:if test="process.isDebugging()">
                         <a class="btn btn-success" href="/ps/@process.getId()/toggleDebugging">@i18n("ProcessController.disableDebugging")</a>
                         <i:else>
