@@ -33,7 +33,7 @@ public abstract class TextParameter<V, P extends TextParameter<V, P>> extends Pa
     /**
      * Specifies an addon text which is shown at the end of the input field.
      *
-     * @param addonText the addon test to show
+     * @param addonText the addon test to show, which will be {@link NLS#smartGet(String) auto translated}
      * @return the parameter itself for fluent method calls
      */
     public P withAddonText(String addonText) {
@@ -44,10 +44,11 @@ public abstract class TextParameter<V, P extends TextParameter<V, P>> extends Pa
     /**
      * Returns the addon text shown at the end of an input text field.
      *
-     * @return the text to show at the end of an input text field
+     * @return the {@link NLS#smartGet(String) auto translated} text to show at
+     * the end of an input text field
      */
     public String getAddonText() {
-        return addonText;
+        return NLS.smartGet(addonText);
     }
 
     @Override
