@@ -130,7 +130,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @param data     the full context which is being imported
      */
     protected void parseProperty(E entity, Property property, Value value, Context data) {
-        property.parseValue(entity, value);
+        property.parseValueFromImport(entity, value);
     }
 
     /**
