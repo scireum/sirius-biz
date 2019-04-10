@@ -286,7 +286,7 @@ public class Processes {
      * <p>
      * This will first try the 1st and 2nc level cache and then resort to Elasticsearch.
      * However, a fetched process is only put into the 2nd level cache once it was resolved
-     * as this has a lover lifespan and is appropriate for most reads.
+     * as this has a lower lifespan and is appropriate for most reads.
      *
      * @param processId the id of the process to fetch
      * @return the process with the given id wrapped as optional or an empty optional if no such process exists
@@ -433,12 +433,12 @@ public class Processes {
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     protected boolean addTimings(String processId, Map<String, Average> timings) {
-        return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
-            timings.forEach((key, avg) -> {
-                process.getPerformanceCounters().put(key, (int) avg.getCount());
-                process.getTimings().put(key, (int) avg.getAvg());
-            });
-        });
+        return modify(processId,
+                      process -> process.getState() != ProcessState.TERMINATED,
+                      process -> timings.forEach((key, avg) -> {
+                          process.getPerformanceCounters().put(key, (int) avg.getCount());
+                          process.getTimings().put(key, (int) avg.getAvg());
+                      }));
     }
 
     /**
@@ -449,9 +449,9 @@ public class Processes {
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     protected boolean setStateMessage(String processId, String state) {
-        return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
-            process.setStateMessage(state);
-        });
+        return modify(processId,
+                      process -> process.getState() != ProcessState.TERMINATED,
+                      process -> process.setStateMessage(state));
     }
 
     /**
@@ -462,9 +462,9 @@ public class Processes {
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     public boolean addLink(String processId, ProcessLink link) {
-        return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
-            process.getLinks().add(link);
-        });
+        return modify(processId,
+                      process -> process.getState() != ProcessState.TERMINATED,
+                      process -> process.getLinks().add(link));
     }
 
     /**
@@ -476,9 +476,9 @@ public class Processes {
      */
 
     public boolean addOutput(String processId, ProcessOutput output) {
-        return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
-            process.getOutputs().add(output);
-        });
+        return modify(processId,
+                      process -> process.getState() != ProcessState.TERMINATED,
+                      process -> process.getOutputs().add(output));
     }
 
     /**
@@ -497,9 +497,7 @@ public class Processes {
         }
 
         ProcessFile file = getStorage().upload(process, filename, data);
-        return modify(processId, proc -> true, proc -> {
-            proc.getFiles().add(file);
-        });
+        return modify(processId, proc -> true, proc -> proc.getFiles().add(file));
     }
 
     //TODO maybe use Storage
@@ -580,7 +578,7 @@ public class Processes {
      * delay, the same process might not yet be visible on another node (due to the 1s insert delay of ES). Therefore
      * we check the existence of the process and wait a certain amount of time if it doesn't exist.
      * <p>
-     * Note that this isn't necessarry on the same node and therefore actually bypassed, as the 1st level
+     * Note that this isn't necessary on the same node and therefore actually bypassed, as the 1st level
      * cache will be properly populated and therefore this check will immediatelly succeed.
      *
      * @param processId the process to check
