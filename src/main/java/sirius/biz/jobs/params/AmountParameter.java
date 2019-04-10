@@ -8,15 +8,16 @@
 
 package sirius.biz.jobs.params;
 
+import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
 import java.util.Optional;
 
 /**
- * Represents a plain string parameter.
+ * Provides a parameter which accepts {@link Amount amounts}.
  */
-public class StringParameter extends TextParameter<String, StringParameter> {
+public class AmountParameter extends TextParameter<Amount, AmountParameter> {
 
     /**
      * Creates a new parameter with the given name and label.
@@ -24,17 +25,18 @@ public class StringParameter extends TextParameter<String, StringParameter> {
      * @param name  the name of the parameter
      * @param label the label of the parameter, which will be {@link NLS#smartGet(String) auto translated}
      */
-    public StringParameter(String name, String label) {
+    public AmountParameter(String name, String label) {
         super(name, label);
     }
 
     @Override
     protected String checkAndTransformValue(Value input) {
-        return input.getString();
+        Amount value = NLS.parseUserString(Amount.class, input.asString());
+        return NLS.toMachineString(value);
     }
 
     @Override
-    protected Optional<String> resolveFromString(Value input) {
-        return input.asOptionalString();
+    protected Optional<Amount> resolveFromString(Value input) {
+        return Optional.of(input.getAmount());
     }
 }
