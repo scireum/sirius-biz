@@ -207,11 +207,6 @@ public class Processes {
     }
 
     private String createStandbyProcess(String type, String title, String tenantId, String tenantName) {
-        Process process = fetchStandbyProcess(type, tenantId);
-        if (process != null) {
-            return process.getIdAsString();
-        }
-
         ValueHolder<String> processId = new ValueHolder<>("");
 
         locks.tryLocked(LOCK_CREATE_STANDBY_PROCESS + "-" + type + "-" + tenantId, Duration.ofSeconds(30), () -> {
