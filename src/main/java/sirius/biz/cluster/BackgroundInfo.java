@@ -17,11 +17,13 @@ import java.util.Map;
  */
 public class BackgroundInfo {
     private String nodeName;
+    private boolean bleeding;
     private String uptime;
     protected Map<String, BackgroundJobInfo> jobs = new HashMap<>();
 
-    protected BackgroundInfo(String nodeName, String uptime) {
+    protected BackgroundInfo(String nodeName, boolean bleeding, String uptime) {
         this.nodeName = nodeName;
+        this.bleeding = bleeding;
         this.uptime = uptime;
     }
 
@@ -41,6 +43,10 @@ public class BackgroundInfo {
      */
     public String getUptime() {
         return uptime;
+    }
+
+    public boolean isBleeding() {
+        return bleeding;
     }
 
     /**
