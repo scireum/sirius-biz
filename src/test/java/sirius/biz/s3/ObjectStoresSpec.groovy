@@ -53,7 +53,7 @@ class ObjectStoresSpec extends BaseSpecification {
         URLConnection c = new URL(stores.store().
                                           objectUrl(stores.store().getBucketName("test"), "test")).openConnection()
         and:
-        downloadedData = new String(ByteStreams.toByteArray(c.getInputStream()), Charsets.UTF_8)
+        String downloadedData = new String(ByteStreams.toByteArray(c.getInputStream()), Charsets.UTF_8)
         then:
         Files.toString(file, Charsets.UTF_8) == Files.toString(download, Charsets.UTF_8)
         and:
