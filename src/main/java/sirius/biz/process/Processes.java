@@ -9,6 +9,7 @@
 package sirius.biz.process;
 
 import sirius.biz.elastic.AutoBatchLoop;
+import sirius.biz.locks.Locks;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.logs.ProcessLogState;
 import sirius.biz.process.logs.ProcessLogType;
@@ -24,6 +25,7 @@ import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -38,6 +40,7 @@ import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
@@ -57,6 +60,8 @@ public class Processes {
      */
     public static final String FRAMEWORK_PROCESSES = "biz.processes";
 
+    private static final String LOCK_CREATE_STANDBY_PROCESS = "lock-create-standby-process";
+
     @Part
     private Elastic elastic;
 
@@ -68,6 +73,9 @@ public class Processes {
 
     @Part
     private ProcessFileStorage fileStorage;
+
+    @Part
+    private Locks locks;
 
     /**
      * Due to some shortcomings in Elasticsearch (1 second delay until writes are visible), we need a layered cache
@@ -84,6 +92,13 @@ public class Processes {
      * to fetch "static" data (context, user, ...).
      */
     private Cache<String, Process> process2ndLevelCache = CacheManager.createCoherentCache("processes-second-level");
+
+    /**
+     * Due to the write delay in Elasticsearch, we need to cache processes of type {@link ProcessState#STANDBY} separately.
+     * <p>
+     * We don't provide a layered cache structure in this case as standby processes are long living and a limited set.
+     */
+    private Cache<String, Process> standbyProcessCache = CacheManager.createCoherentCache("standby-processes");
 
     /**
      * Creates a new process.
@@ -180,35 +195,85 @@ public class Processes {
                                         String tenantId,
                                         Supplier<String> tenantNameSupplier,
                                         Consumer<ProcessContext> task) {
-        String processId = elastic.select(Process.class)
-                                  .eq(Process.STATE, ProcessState.STANDBY)
-                                  .eq(Process.TENANT_ID, tenantId)
-                                  .eq(Process.PROCESS_TYPE, type)
-                                  .first()
-                                  .map(Process::getId)
-                                  .orElse(null);
+        Process process = fetchStandbyProcess(type, tenantId);
 
-        if (processId == null) {
-            Process process = new Process();
-            process.setTitle(titleSupplier.get());
-            process.setProcessType(type);
-            process.setTenantId(tenantId);
-            process.setTenantName(tenantNameSupplier.get());
-            process.setState(ProcessState.STANDBY);
-            process.setStarted(LocalDateTime.now());
-
-            elastic.update(process);
-            process1stLevelCache.put(process.getId(), process);
-            process2ndLevelCache.put(process.getId(), process);
-
-            processId = process.getIdAsString();
+        if (process == null) {
+            String processId = createStandbyProcess(type, titleSupplier.get(), tenantId, tenantNameSupplier.get());
+            partiallyExecute(processId, task);
         } else {
-            modify(processId,
-                   process -> process.getState() == ProcessState.STANDBY,
-                   process -> process.setStarted(LocalDateTime.now()));
+            modify(process.getId(), p -> p.getState() == ProcessState.STANDBY, p -> p.setStarted(LocalDateTime.now()));
+            partiallyExecute(process.getId(), task);
+        }
+    }
+
+    private String createStandbyProcess(String type, String title, String tenantId, String tenantName) {
+        ValueHolder<String> processId = new ValueHolder<>("");
+
+        locks.tryLocked(LOCK_CREATE_STANDBY_PROCESS + "-" + type + "-" + tenantId, Duration.ofSeconds(30), () -> {
+            Process p = fetchStandbyProcess(type, tenantId);
+            if (p != null) {
+                processId.set(p.getIdAsString());
+                return;
+            }
+
+            // Maybe another node recently created a matching standby process. Wait a reasonable amount of time so that the change
+            // becomes visible in elasticsearch/caches. As standby processes are rarely created it is legitimate to hold the lock
+            // while waiting.
+            Wait.millis(1200);
+
+            p = fetchStandbyProcess(type, tenantId);
+            if (p != null) {
+                processId.set(p.getIdAsString());
+                return;
+            }
+
+            p = new Process();
+
+            p.setTitle(title);
+            p.setProcessType(type);
+            p.setTenantId(tenantId);
+            p.setTenantName(tenantName);
+            p.setState(ProcessState.STANDBY);
+            p.setStarted(LocalDateTime.now());
+
+            elastic.update(p);
+            process1stLevelCache.put(p.getId(), p);
+            process2ndLevelCache.put(p.getId(), p);
+            standbyProcessCache.put(type + "-" + tenantId, p);
+
+            processId.set(p.getIdAsString());
+        });
+
+        return processId.get();
+    }
+
+    /**
+     * Resolves the given type and tenant id into a standby process.
+     * <p>
+     * This will first try the cache and then resort to Elasticsearch.
+     *
+     * @param type     the type of the standby process
+     * @param tenantId the tenant for which the process should be fetched
+     * @return the process with the given type for the given tenant wrapped as optional or an empty optional if no such process exists
+     */
+    @Nullable
+    protected Process fetchStandbyProcess(String type, String tenantId) {
+        Process process = standbyProcessCache.get(type + "-" + tenantId);
+        if (process != null) {
+            return process;
         }
 
-        partiallyExecute(processId, task);
+        process = elastic.select(Process.class)
+                         .eq(Process.STATE, ProcessState.STANDBY)
+                         .eq(Process.TENANT_ID, tenantId)
+                         .eq(Process.PROCESS_TYPE, type)
+                         .first()
+                         .orElse(null);
+        if (process != null) {
+            standbyProcessCache.put(type + "-" + tenantId, process);
+        }
+
+        return process;
     }
 
     /**
@@ -216,7 +281,7 @@ public class Processes {
      * <p>
      * This will first try the 1st and 2nc level cache and then resort to Elasticsearch.
      * However, a fetched process is only put into the 2nd level cache once it was resolved
-     * as this has a lover lifespan and is appropriate for most reads.
+     * as this has a lower lifespan and is appropriate for most reads.
      *
      * @param processId the id of the process to fetch
      * @return the process with the given id wrapped as optional or an empty optional if no such process exists
@@ -363,12 +428,12 @@ public class Processes {
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     protected boolean addTimings(String processId, Map<String, Average> timings) {
-        return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
-            timings.forEach((key, avg) -> {
-                process.getPerformanceCounters().put(key, (int) avg.getCount());
-                process.getTimings().put(key, (int) avg.getAvg());
-            });
-        });
+        return modify(processId,
+                      process -> process.getState() != ProcessState.TERMINATED,
+                      process -> timings.forEach((key, avg) -> {
+                          process.getPerformanceCounters().put(key, (int) avg.getCount());
+                          process.getTimings().put(key, (int) avg.getAvg());
+                      }));
     }
 
     /**
@@ -379,9 +444,9 @@ public class Processes {
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     protected boolean setStateMessage(String processId, String state) {
-        return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
-            process.setStateMessage(state);
-        });
+        return modify(processId,
+                      process -> process.getState() != ProcessState.TERMINATED,
+                      process -> process.setStateMessage(state));
     }
 
     /**
@@ -392,9 +457,9 @@ public class Processes {
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     public boolean addLink(String processId, ProcessLink link) {
-        return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
-            process.getLinks().add(link);
-        });
+        return modify(processId,
+                      process -> process.getState() != ProcessState.TERMINATED,
+                      process -> process.getLinks().add(link));
     }
 
     /**
@@ -406,9 +471,9 @@ public class Processes {
      */
 
     public boolean addOutput(String processId, ProcessOutput output) {
-        return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
-            process.getOutputs().add(output);
-        });
+        return modify(processId,
+                      process -> process.getState() != ProcessState.TERMINATED,
+                      process -> process.getOutputs().add(output));
     }
 
     /**
@@ -427,9 +492,7 @@ public class Processes {
         }
 
         ProcessFile file = getStorage().upload(process, filename, data);
-        return modify(processId, proc -> true, proc -> {
-            proc.getFiles().add(file);
-        });
+        return modify(processId, proc -> true, proc -> proc.getFiles().add(file));
     }
 
     //TODO maybe use Storage
@@ -510,7 +573,7 @@ public class Processes {
      * delay, the same process might not yet be visible on another node (due to the 1s insert delay of ES). Therefore
      * we check the existence of the process and wait a certain amount of time if it doesn't exist.
      * <p>
-     * Note that this isn't necessarry on the same node and therefore actually bypassed, as the 1st level
+     * Note that this isn't necessary on the same node and therefore actually bypassed, as the 1st level
      * cache will be properly populated and therefore this check will immediatelly succeed.
      *
      * @param processId the process to check
