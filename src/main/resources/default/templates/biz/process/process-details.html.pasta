@@ -68,7 +68,15 @@
                 <tr class="@log.getRowClass()">
                     <td/>
                     <td>
-                        <pre class="plain" style="white-space: pre-wrap">@log.getMessage()</pre>
+                        <div>
+                            <pre class="plain" style="white-space: pre-wrap">@log.getMessage()</pre>
+                        </div>
+                        <div>
+                            <i:for type="sirius.biz.process.logs.ProcessLogAction" var="action" items="log.getActions()">
+                                <a href="@action.getUri()?returnUrl=@urlEncode(apply('/ps/%s', process.getId()))"
+                                   class="link link-inline"><i class="fa @action.getIcon()"></i> @action.getLabel()</a>
+                            </i:for>
+                        </div>
                     </td>
                     <td class="align-right">
                         @log.getTimestampAsString()<br>
