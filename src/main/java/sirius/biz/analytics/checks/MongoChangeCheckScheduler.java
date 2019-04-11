@@ -48,7 +48,7 @@ public class MongoChangeCheckScheduler extends MongoAnalyticalTaskScheduler {
     @Override
     protected <E extends MongoEntity> void extendBatchQuery(MongoQuery<E> query) {
         if (!Traced.class.isAssignableFrom(query.getDescriptor().getType())) {
-            throw new IllegalArgumentException("Entitis for which 'ChangeChecks' are created must implement 'Traced'.");
+            throw new IllegalArgumentException("Entities for which 'ChangeChecks' are created must implement 'Traced'.");
         }
 
         query.where(QueryBuilder.FILTERS.gt(Traced.TRACE.inner(TraceData.CHANGED_AT),

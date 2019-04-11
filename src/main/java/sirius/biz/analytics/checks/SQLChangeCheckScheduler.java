@@ -48,7 +48,7 @@ public class SQLChangeCheckScheduler extends SQLAnalyticalTaskScheduler {
     @Override
     protected <E extends SQLEntity> void extendBatchQuery(SmartQuery<E> query) {
         if (!Traced.class.isAssignableFrom(query.getDescriptor().getType())) {
-            throw new IllegalArgumentException("Entitis for which 'ChangeChecks' are created must implement 'Traced'.");
+            throw new IllegalArgumentException("Entities for which 'ChangeChecks' are created must implement 'Traced'.");
         }
 
         query.where(OMA.FILTERS.gt(Traced.TRACE.inner(TraceData.CHANGED_AT), LocalDateTime.now().minusDays(1)));
