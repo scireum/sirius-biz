@@ -17,7 +17,7 @@ import java.time.LocalDate;
 /**
  * Provides a check which is executed once an entity has been changed.
  * <p>
- * Note that like {@link DailyCheck} this will also only be executed once per day but only match entitis which have
+ * Note that like {@link DailyCheck} this will also only be executed once per day but only matches entitis which have
  * been modified within the last 24 hours.
  * <p>
  * Subclasses must be {@link sirius.kernel.di.std.Register registered} as <b>ChangeCheck</b> to make them visible to
