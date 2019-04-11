@@ -11,6 +11,7 @@ package sirius.biz.analytics.scheduler;
 import com.alibaba.fastjson.JSONObject;
 import sirius.kernel.di.std.Named;
 
+import java.time.LocalDate;
 import java.util.function.Consumer;
 
 /**
@@ -23,22 +24,34 @@ import java.util.function.Consumer;
  * <p>
  * This is a two stage process, {@link #scheduleBatches(Consumer)} emits a list of JSON specification which can
  * be used as descriptions in {@link sirius.biz.cluster.work.DistributedTasks}. Once being executed, the description
- * is forwarded to {@link #collectBatch(JSONObject, Consumer)} which collects and emits all entities of the specified
- * batch to the effective executor of the analyical tasks.
- *
- * @param <E> the type of entities being scheduled
+ * is forwarded to {@link #executeBatch(JSONObject, LocalDate)} which collects all entities of the specified
+ * batch. In most implementations the scheduler will then pick all matchign {@link AnalyticalTask analytical tasks} and
+ * execute them on the entity.
  */
-public interface AnalyticsScheduler<E> extends Named {
+public interface AnalyticsScheduler extends Named {
 
     /**
-     * Determines if <b>best effort</b> scheduling is used for the tasks which are associated with this scheduler.
-     * <p>
-     * Best effort schedulers are only invoked (and thus their tasks scheduled) if the appropriate task queue
-     * ({@link AnalyticalEngine#QUEUE_ANALYTICS_BEST_EFFORT}) is empty. Therefore, if the system is overloaded,
-     * executions are simply skipped instead of adding work on top.
+     * Determines the executor to be used to invoke {@link #scheduleBatches(Consumer)}.
      *
-     * @return <tt>true</tt> if best effort execution is to be used, <tt>false</tt> if the execution must be
-     * guaranteed
+     * @return the executor which is in charge of scheduling new batches
+     */
+    Class<? extends AnalyticsSchedulerExecutor> getExecutorForScheduling();
+
+    /**
+     * Determines the executor to be used to invoke {@link #executeBatch(JSONObject, LocalDate)}.
+     *
+     * @return the executor which is in charge of executing the scheduled batches
+     */
+    Class<? extends AnalyticsBatchExecutor> getExecutorForTasks();
+
+    /**
+     * Determines if this scheduler uses a "best effort" approach.
+     * <p>
+     * <b>Best effort</b> schedulers will only schedule new batches of tasks if the underlying queue is empty. To
+     * ensure proper behaviour, the {@link #getExecutorForScheduling() scheduler executor} and the
+     * {@link #getExecutorForTasks() task executor} should use the same queue.
+     *
+     * @return <tt>true</tt> to enable "best effort" scheduling, <tt>false</tt> for guaranteed execution
      */
     boolean useBestEffortScheduling();
 
@@ -51,7 +64,7 @@ public interface AnalyticsScheduler<E> extends Named {
 
     /**
      * Emits several JSON objects which each describe a batch of appropriate size to be resolved by
-     * {@link #collectBatch(JSONObject, Consumer)}.
+     * {@link #executeBatch(JSONObject, LocalDate))}.
      * <p>
      * Note that the emitted JSON should be small - i.e. not contain a list or IDs but rather a start and end filter.
      *
@@ -60,11 +73,11 @@ public interface AnalyticsScheduler<E> extends Named {
     void scheduleBatches(Consumer<JSONObject> batchConsumer);
 
     /**
-     * Resolves a batch emitted by {@link #scheduleBatches(Consumer)} and emits all entities within this batch into
-     * the given consumer.
+     * Resolves a batch emitted by {@link #scheduleBatches(Consumer)} and executes all appropriate work for all
+     * entities within this batch.
      *
      * @param batchDescription the description which specifies which entities are in the batch
-     * @param entityConsumer   the consumer used to process each entity in the batch
+     * @param date             the date for which the execution was scheduled
      */
-    void collectBatch(JSONObject batchDescription, Consumer<E> entityConsumer);
+    void executeBatch(JSONObject batchDescription, LocalDate date);
 }
