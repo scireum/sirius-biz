@@ -9,6 +9,7 @@
 package sirius.biz.s3
 
 import com.google.common.base.Charsets
+import com.google.common.io.ByteStreams
 import com.google.common.io.Files
 import sirius.kernel.BaseSpecification
 import sirius.kernel.commons.Tuple
@@ -23,13 +24,40 @@ class ObjectStoresSpec extends BaseSpecification {
         File download
         when:
         File file = File.createTempFile("test", "")
-        Files.write("This is a test.", file, Charsets.UTF_8)
+        for (int i = 0; i < 10024; i++) {
+            Files.append("This is a test.", file, Charsets.UTF_8)
+        }
         and:
         stores.store().upload(stores.store().getBucketName("test"), "test", file, null)
         and:
         download = stores.store().download(stores.store().getBucketName("test"), "test")
         then:
         Files.toString(file, Charsets.UTF_8) == Files.toString(download, Charsets.UTF_8)
+        cleanup:
+        sirius.kernel.commons.Files.delete(file)
+        sirius.kernel.commons.Files.delete((File) download)
+    }
+
+    def "PUT and GET works"() {
+        File download
+        when:
+        File file = File.createTempFile("test", "")
+        for (int i = 0; i < 10024; i++) {
+            Files.append("This is a test.", file, Charsets.UTF_8)
+        }
+        and:
+        stores.store().upload(stores.store().getBucketName("test"), "test", file, null)
+        and:
+        download = stores.store().download(stores.store().getBucketName("test"), "test")
+        and:
+        URLConnection c = new URL(stores.store().
+                                          objectUrl(stores.store().getBucketName("test"), "test")).openConnection()
+        and:
+        String downloadedData = new String(ByteStreams.toByteArray(c.getInputStream()), Charsets.UTF_8)
+        then:
+        Files.toString(file, Charsets.UTF_8) == Files.toString(download, Charsets.UTF_8)
+        and:
+        downloadedData == Files.toString(file, Charsets.UTF_8)
         cleanup:
         sirius.kernel.commons.Files.delete(file)
         sirius.kernel.commons.Files.delete((File) download)

@@ -9,11 +9,14 @@
 package sirius.biz.cluster;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.locks.Locks;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.DelayLine;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.HandledException;
@@ -53,6 +56,7 @@ public class ClusterController implements Controller {
     public static final String RESPONSE_DESCRIPTION = "description";
     public static final String RESPONSE_NODE_STATE = "nodeState";
     public static final String RESPONSE_UPTIME = "uptime";
+    public static final String RESPONSE_BLEEDING = "bleeding";
     public static final String RESPONSE_METRICS = "metrics";
     public static final String RESPONSE_METRIC = "metric";
     public static final String RESPONSE_VALUE = "value";
@@ -66,6 +70,9 @@ public class ClusterController implements Controller {
     public static final String RESPONSE_EXECUTION_INFO = "executionInfo";
     public static final String FLAG_ENABLE = "enable";
     public static final String FLAG_DISABLE = "disable";
+
+    @ConfigValue("sirius.clusterToken")
+    private String clusterAPIToken;
 
     @Part
     private Cluster cluster;
@@ -84,6 +91,9 @@ public class ClusterController implements Controller {
 
     @Part
     private Locks locks;
+
+    @Part
+    private DistributedTasks distributedTasks;
 
     @Override
     public void onError(WebContext ctx, HandledException error) {
@@ -126,6 +136,7 @@ public class ClusterController implements Controller {
         out.property(RESPONSE_NAME, CallContext.getNodeName());
         out.property(RESPONSE_NODE_STATE, cluster.getNodeState().toString());
         out.property(RESPONSE_UPTIME, NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false));
+        out.property(RESPONSE_BLEEDING, neighborhoodWatch.isBleeding());
 
         out.beginArray(RESPONSE_JOBS);
         for (BackgroundJobInfo job : neighborhoodWatch.getLocalBackgroundInfo().getJobs().values()) {
@@ -165,6 +176,101 @@ public class ClusterController implements Controller {
     }
 
     /**
+     * Removes a node from the cluster member set.
+     * <p>
+     * Note that this should only be used to remove a non-existing node as an active node will be re-discovered
+     * almost instantly.
+     *
+     * @param ctx  the request to handle
+     * @param node the node to remove
+     */
+    @Routed("/system/cluster/kill/:1")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void kill(WebContext ctx, String node) {
+        clusterManager.killNode(node);
+        waitAndRedirectToClusterUI(ctx);
+    }
+
+    protected void waitAndRedirectToClusterUI(WebContext ctx) {
+        ctx.markAsLongCall();
+        delayLine.callDelayed(Tasks.DEFAULT, 2, () -> ctx.respondWith().redirectToGet("/system/cluster"));
+    }
+
+    /**
+     * Enables or disables bleeding out a node (disabling all upcoming background activities).
+     *
+     * @param ctx     the request to handle
+     * @param setting either "enable" or "disable" to control what to do
+     * @param node    the node to change the setting for
+     * @see NeighborhoodWatch#changeBleeding(String, boolean)
+     */
+    @Routed("/system/cluster/bleed/:1/:2")
+    @Permission(PERMISSION_SYSTEM_CLUSTER)
+    public void bleed(WebContext ctx, String setting, String node) {
+        neighborhoodWatch.changeBleeding(node, FLAG_ENABLE.equals(setting));
+        waitAndRedirectToClusterUI(ctx);
+    }
+
+    /**
+     * Provides an API to enable or disable bleeding out a node (disabling all upcoming background activities).
+     *
+     * @param ctx     the request to handle
+     * @param setting either "enable" or "disable" to control what to do
+     * @param node    the node to change the setting for
+     * @param token   the security token (verified against {@link #clusterAPIToken})
+     * @see NeighborhoodWatch#changeBleeding(String, boolean)
+     */
+    @Routed("/system/cluster/bleed/:1/:2/:3")
+    public void apiBleed(WebContext ctx, String setting, String node, String token) {
+        if (!Strings.areEqual(token, clusterAPIToken) || Strings.isEmpty(clusterAPIToken)) {
+            ctx.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+            return;
+        }
+
+        neighborhoodWatch.changeBleeding(node, FLAG_ENABLE.equals(setting));
+        waitAndRedirectToClusterUI(ctx);
+    }
+
+    /**
+     * Determines if the system is ready for processing requests.
+     * <p>
+     * This can be used as health check (e.g. for ha_proxy or varnish). This will return 200 OK as soon
+     * as the node has fully started up and start failing (with a 503 SERVICE UNAVAILABLE) as soon as bleeding out
+     * is started.
+     *
+     * @param ctx the request to handle
+     * @see NeighborhoodWatch#changeBleeding(String, boolean)
+     */
+    @Routed("/system/cluster/ready")
+    public void ready(WebContext ctx) {
+        if (Sirius.isRunning() && !neighborhoodWatch.isBleeding()) {
+            ctx.respondWith().direct(HttpResponseStatus.OK, "OK");
+        } else {
+            ctx.respondWith()
+               .error(HttpResponseStatus.SERVICE_UNAVAILABLE, "Service not fully started or bleeding out...");
+        }
+    }
+
+    /**
+     * Determines if the system is fully bled out and can be stopped.
+     * <p>
+     * Returns a 200 OK if the system can (most probably) be restarted or a 417 EXPECTATION FAILED otherwise.
+     *
+     * @param ctx the request to handle
+     * @see NeighborhoodWatch#changeBleeding(String, boolean)
+     */
+    @Routed("/system/cluster/halted")
+    public void halted(WebContext ctx) {
+        if (!Sirius.isRunning() || (neighborhoodWatch.isBleeding() && distributedTasks.getNumberOfActiveTasks() == 0)) {
+            ctx.respondWith().direct(HttpResponseStatus.OK, "OK");
+        } else {
+            ctx.respondWith()
+               .direct(HttpResponseStatus.EXPECTATION_FAILED,
+                       "Tasks running: " + distributedTasks.getNumberOfActiveTasks());
+        }
+    }
+
+    /**
      * Enables or disables a background job globally.
      *
      * @param ctx     the request to handle
@@ -175,7 +281,7 @@ public class ClusterController implements Controller {
     @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void globalSwitch(WebContext ctx, String setting, String jobKey) {
         neighborhoodWatch.changeGlobalEnabledFlag(jobKey, FLAG_ENABLE.equals(setting));
-        delayLine.callDelayed(Tasks.DEFAULT, 2, () -> ctx.respondWith().redirectTemporarily("/system/cluster"));
+        waitAndRedirectToClusterUI(ctx);
     }
 
     /**
@@ -190,6 +296,6 @@ public class ClusterController implements Controller {
     @Permission(PERMISSION_SYSTEM_CLUSTER)
     public void localSwitch(WebContext ctx, String setting, String node, String jobKey) {
         neighborhoodWatch.changeLocalOverwrite(node, jobKey, FLAG_DISABLE.equals(setting));
-        delayLine.callDelayed(Tasks.DEFAULT, 2, () -> ctx.respondWith().redirectTemporarily("/system/cluster"));
+        waitAndRedirectToClusterUI(ctx);
     }
 }
