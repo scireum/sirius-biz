@@ -60,7 +60,7 @@ public class IndicatorData extends Composite {
      * @return <tt>true</tt> if the indicator was not yet present
      */
     @SuppressWarnings("squid:S2250")
-    @Explain("There should only be some idicators present, so there is no performance hot spot expected.")
+    @Explain("There should only be some indicators present, so there is no performance hotspot expected.")
     public boolean updateIndication(String indicator, boolean newState) {
         return newState ? indications.add(indicator) : indications.remove(indicator);
     }
