@@ -61,11 +61,10 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
     @SuppressWarnings("unchecked")
     private MultiMap<Class<?>, AnalyticalTask<?>> determineTasks() {
         MultiMap<Class<?>, AnalyticalTask<?>> result = MultiMap.create();
-        context.getParts((Class<AnalyticalTask<?>>) getAnalyticalTaskType()).forEach(task -> {
-            if (isMatchingEntityType(task)) {
-                result.put(task.getType(), task);
-            }
-        });
+        context.getParts((Class<AnalyticalTask<?>>) getAnalyticalTaskType())
+               .stream()
+               .filter(this::isMatchingEntityType)
+               .forEach(task -> result.put(task.getType(), task));
 
         return result;
     }
