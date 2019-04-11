@@ -195,7 +195,7 @@ public interface Metrics {
     Map<String, Integer> queryFacts(BaseEntity<?> target);
 
     /**
-     * Queries all global facts for the given type with the given name.
+     * Queries all global facts.
      *
      * @return a map containing all known global facts
      */

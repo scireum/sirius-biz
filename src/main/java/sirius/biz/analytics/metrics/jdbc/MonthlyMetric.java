@@ -22,7 +22,7 @@ import sirius.kernel.di.std.Framework;
 public class MonthlyMetric extends YearlyMetric {
 
     /**
-     * Contains the month for which this metric is recorded
+     * Contains the month for which this metric is recorded.
      */
     public static final Mapping MONTH = Mapping.named("month");
     private int month;

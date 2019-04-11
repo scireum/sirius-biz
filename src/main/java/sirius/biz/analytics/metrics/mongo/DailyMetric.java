@@ -31,7 +31,7 @@ import sirius.kernel.di.std.Framework;
 public class DailyMetric extends MonthlyMetric {
 
     /**
-     * Contains the day of the month for which this metric is recorded
+     * Contains the day of the month for which this metric is recorded.
      */
     public static final Mapping DAY = Mapping.named("day");
     private int day;

@@ -25,7 +25,7 @@ import sirius.kernel.di.std.Framework;
 public class YearlyMetric extends Fact {
 
     /**
-     * Contains the year for the month for which this metric is recorded
+     * Contains the year for the month for which this metric is recorded.
      */
     public static final Mapping YEAR = Mapping.named("year");
     private int year;

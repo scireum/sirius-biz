@@ -1,7 +1,7 @@
 # Metrics Computation and Storage
 
 Provides a computation and storage framework for aggregated metrics.
-It most systems, metrics will be initially recorded as [events](../events).
+In most systems, metrics will be initially recorded as [events](../events).
 Using the underlying timeseries database **Clickhouse** this can be efficiently queried
 and used for intense comutations.
 
@@ -18,7 +18,7 @@ One of these frameworks (**biz.analytics.metrics-jdbc** or **biz.analytics.metri
 ## Computation
 
 To compute (aggregate) metrics for entities, [DailyMetricComputer](DailyMetricComputer.java) or [MonthlyMetricComputer](MonthlyMetricComputer.java)
-an be subclassed. Note that monthly metric computers are scheduled in a *best effort* manner
+can be subclassed. Note that monthly metric computers are scheduled in a *best effort* manner
 on a daily basis for the current month so that these aggregations are also available if possible.
 
 Additionally global metrics can be computed by subclassing [DailyGlobalMetricComputer](DailyGlobalMetricComputer.java)

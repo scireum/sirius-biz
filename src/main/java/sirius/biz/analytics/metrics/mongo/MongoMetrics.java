@@ -158,14 +158,14 @@ public class MongoMetrics extends BasicMetrics {
     }
 
     /**
-     * Executes the update for the given metic.
+     * Executes the update for the given metric.
      * <p>
      * If the given value is 0, the metric is deleted. Otherwise we attempt to update an existing metric value. If this
      * doesn't exist a new one will be created.
      *
      * @param type       the type of metric to insert
      * @param targetType the target type to insert
-     * @param targetId   the id of the target for which the metric is to be insert
+     * @param targetId   the id of the target for which the metric is to be inserted
      * @param value      the value to store
      * @param name       the name of the metric to insert
      * @param year       the year (if available) of the metric to insert

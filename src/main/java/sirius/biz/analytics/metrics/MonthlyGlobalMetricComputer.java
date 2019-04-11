@@ -19,7 +19,7 @@ import java.time.LocalDate;
  * they are visible to the framework.
  * <p>
  * Note that these computers are also invoked on a daily basis for the current month to update its value
- * (if possible - as nest effort scheduling is used).
+ * (if possible - as best effort scheduling is used).
  */
 public abstract class MonthlyGlobalMetricComputer {
 

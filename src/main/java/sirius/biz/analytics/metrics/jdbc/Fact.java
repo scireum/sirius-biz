@@ -45,7 +45,7 @@ public class Fact extends SQLEntity {
     private String name;
 
     /**
-     * Contains the value (amount) of the metric for the given month.
+     * Contains the value (amount) of the metric.
      */
     public static final Mapping VALUE = Mapping.named("value");
     private int value;
