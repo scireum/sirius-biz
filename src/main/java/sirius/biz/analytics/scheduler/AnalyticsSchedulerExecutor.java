@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 public abstract class AnalyticsSchedulerExecutor extends DistributedTaskExecutor {
 
     @Part
-    protected GlobalContext ctx;
+    protected GlobalContext globalContext;
 
     @Part
     protected DistributedTasks cluster;
@@ -37,7 +37,7 @@ public abstract class AnalyticsSchedulerExecutor extends DistributedTaskExecutor
     public void executeWork(JSONObject context) throws Exception {
         String schedulerName = context.getString(AnalyticalEngine.CONTEXT_SCHEDULER_NAME);
         LocalDate date = Value.of(context.get(AnalyticalEngine.CONTEXT_DATE)).asLocalDate(LocalDate.now());
-        AnalyticsScheduler scheduler = ctx.findPart(schedulerName, AnalyticsScheduler.class);
+        AnalyticsScheduler scheduler = globalContext.findPart(schedulerName, AnalyticsScheduler.class);
         scheduler.scheduleBatches(batch -> scheduleBatch(scheduler, date, batch));
     }
 

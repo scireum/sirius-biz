@@ -69,6 +69,7 @@ public class SQLEntityBatchEmitter {
             });
 
             JSONObject batch = new JSONObject();
+            batch.put(TYPE, Mixing.getNameForType(type));
             batch.put(START_ID, lastLimit.get());
             batch.put(END_ID, nextLimit.get());
             batchConsumer.accept(batch);
