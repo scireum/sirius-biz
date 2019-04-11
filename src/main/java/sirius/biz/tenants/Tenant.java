@@ -31,12 +31,12 @@ public interface Tenant<I> extends Transformable, Traced, Journaled {
      */
     Mapping PARENT = Mapping.named("parent");
 
+    BaseEntityRef<I, ? extends Tenant<I>> getParent();
+
     /**
      * Contains the effective fields which are mapped by the appropriate mapper depending on the actual entity type.
      */
     Mapping TENANT_DATA = Mapping.named("tenantData");
-
-    BaseEntityRef<I, ? extends Tenant<I>> getParent();
 
     TenantData getTenantData();
 

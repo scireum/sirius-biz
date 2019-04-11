@@ -10,10 +10,51 @@
 
     <w:pageHeader title="Cluster State"/>
 
+    <w:heading>Nodes</w:heading>
+    <table class="table table-striped">
+        <tr>
+            <th>Node</th>
+            <th>Uptime</th>
+            <th>Bleeding</th>
+            <th/>
+        </tr>
+        <i:for type="sirius.biz.cluster.BackgroundInfo" var="node" items="nodes">
+            <tr>
+                <td>
+                    <b>@node.getNodeName()</b>
+
+                </td>
+                <td>
+                    @node.getUptime()
+                </td>
+                <td>
+                    <i:if test="node.isBleeding()">
+                        <span class="label label-warning">Yes</span>
+                        <small><a href="/system/cluster/bleed/disable/@node.getNodeName()" class="link">Stop</a></small>
+                        <i:else>
+                            <span class="label label-info">No</span>
+                            <small><a href="/system/cluster/bleed/enable/@node.getNodeName()" class="link">Start</a>
+                            </small>
+                        </i:else>
+                    </i:if>
+                </td>
+                <td>
+                    <small>
+                        <a href="/system/cluster/kill/@node.getNodeName()" class="link link-danger"
+                           title="Remove as Cluster Member">
+                            Kill
+                        </a>
+                    </small>
+                </td>
+            </tr>
+        </i:for>
+    </table>
+
     <w:heading>Background Jobs</w:heading>
     <i:for type="String" var="job" items="keys">
         <w:subHeading>
-            @job <small class="muted">(@descriptions.get(job))</small>
+            @job
+            <small class="muted">(@descriptions.get(job))</small>
         </w:subHeading>
         <table class="table table-striped">
             <tr>

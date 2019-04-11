@@ -60,7 +60,7 @@ public class WorkLoaderLoop extends BackgroundLoop {
     }
 
     private int scheduleAvailableWork() {
-        AsyncExecutor executor = getExecutor();
+        AsyncExecutor executor = distributedTasks.getLocalExecutor();
         int tasksScheduled = 0;
         while (executor.getQueue().isEmpty() && executor.getActiveCount() < executor.getMaximumPoolSize()) {
             Optional<DistributedTasks.DistributedTask> work = distributedTasks.fetchWork();
@@ -73,10 +73,6 @@ public class WorkLoaderLoop extends BackgroundLoop {
         }
 
         return tasksScheduled;
-    }
-
-    private AsyncExecutor getExecutor() {
-        return tasks.executorService("distributed-tasks");
     }
 
     private void locked(Runnable runInLock) {
@@ -99,6 +95,8 @@ public class WorkLoaderLoop extends BackgroundLoop {
     }
 
     private void scheduleNextWork() {
-        locked(() -> distributedTasks.fetchWork().ifPresent(work -> getExecutor().submit(() -> executeWork(work))));
+        locked(() -> distributedTasks.fetchWork()
+                                     .ifPresent(work -> distributedTasks.getLocalExecutor()
+                                                                        .submit(() -> executeWork(work))));
     }
 }
