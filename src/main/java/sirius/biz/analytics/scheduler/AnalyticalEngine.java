@@ -86,7 +86,7 @@ public class AnalyticalEngine implements EveryDay {
     }
 
     /**
-     * Iterates over all known schedulers an, if scheduling is advised, queues an appropriate entry in the
+     * Iterates over all known schedulers and, if scheduling is advised, queues an appropriate entry in the
      * underlying {@link AnalyticsScheduler#getExecutorForScheduling() scheduling queue}.
      */
     private void queueSchedulers() {
