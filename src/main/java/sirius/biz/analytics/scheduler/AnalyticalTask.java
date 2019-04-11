@@ -8,29 +8,32 @@
 
 package sirius.biz.analytics.scheduler;
 
+import sirius.db.mixing.BaseEntity;
+
 import java.time.LocalDate;
 
 /**
- * Represents an analytical task which is executed for each of the entities and in the interval specified by the
- * referenced {@link AnalyticsScheduler scheduler}.
+ * Provides an analytical tasks which is executed on the given entity.
+ * <p>
+ * Subclasses (interfaces) of this need an {@link MongoAnalyticalTaskScheduler} and/or {@link SQLAnalyticalTaskScheduler}
+ * which schedules the execution of this task for all matching entities.
  *
- * @param <E> the type of entities processed by this task
+ * @param <E> the entity type to be processed by this task
  */
-public interface AnalyticalTask<E> {
+public interface AnalyticalTask<E extends BaseEntity<?>> {
 
     /**
-     * The scheduler which is used to schedules and executes this task for each of its entities.
+     * Returns the class of entities to be processed by this task.
      *
-     * @return the scheduler which will invoke this task
+     * @return the class of entities to be processed by this task
      */
-    Class<? extends AnalyticsScheduler<E>> getScheduler();
+    Class<E> getType();
 
     /**
-     * Performs the actual computation for the given entity and date.
+     * Executes the analytical task for the given entity and reference date.
      *
-     * @param target the entity to execute the computation for
-     * @param date   the date for which this execution was scheduled. Depending on the system load, this might not be
-     *               the current date.
+     * @param date   the data for which the task is to be executed
+     * @param entity the entity for which this task is to be executed
      */
-    void compute(E target, LocalDate date);
+    void compute(LocalDate date, E entity);
 }

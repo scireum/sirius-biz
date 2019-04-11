@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 /**
  * Defines a dataset which can be passed into a chart.
  * <p>
- * The main purpose is to format the given data into a representation which is usable in the JavaScript implemenation
+ * The main purpose is to format the given data into a representation which is usable in the JavaScript implementation
  * which renders the chart.
  */
 public class Dataset {

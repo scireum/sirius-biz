@@ -12,12 +12,16 @@ import com.alibaba.fastjson.JSONObject;
 import sirius.biz.cluster.NeighborhoodWatch;
 import sirius.db.redis.Redis;
 import sirius.kernel.Sirius;
+import sirius.kernel.async.AsyncExecutor;
+import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
+import sirius.kernel.health.metrics.MetricProvider;
+import sirius.kernel.health.metrics.MetricsCollector;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
@@ -58,8 +62,8 @@ import java.util.stream.Collectors;
  * Note that this implementation will use <tt>Redis</tt> for distributed environments but provides a local fallback
  * if no redis config is present.
  */
-@Register(classes = DistributedTasks.class)
-public class DistributedTasks {
+@Register(classes = {DistributedTasks.class, MetricProvider.class})
+public class DistributedTasks implements MetricProvider {
 
     private static final String KEY_EXECUTOR = "_executor";
     private static final String KEY_PENALTY_TOKEN = "_penalty_token";
@@ -70,10 +74,13 @@ public class DistributedTasks {
     public static final Log LOG = Log.get("distributed-tasks");
 
     @Part
-    private static NeighborhoodWatch orchestration;
+    private NeighborhoodWatch orchestration;
 
     @Part
-    private static Redis redis;
+    private Redis redis;
+
+    @Part
+    private Tasks tasks;
 
     @Part
     private static GlobalContext ctx;
@@ -119,6 +126,14 @@ public class DistributedTasks {
      * Contains the counters for each penalty token used by prioritized queues.
      */
     private NamedCounters penaltyTokens;
+
+    public int getNumberOfActiveTasks() {
+        return getLocalExecutor().getActiveCount();
+    }
+
+    protected AsyncExecutor getLocalExecutor() {
+        return tasks.executorService("distributed-tasks");
+    }
 
     /**
      * Represents an executable task.
@@ -567,5 +582,14 @@ public class DistributedTasks {
                 return fifoQueue.poll();
             }
         }
+    }
+
+    @Override
+    public void gather(MetricsCollector metricsCollector) {
+        metricsCollector.metric("active-distributed-tasks",
+                                "active-distributed-tasks",
+                                "Active Distributed Tasks",
+                                getLocalExecutor().getActiveCount(),
+                                null);
     }
 }
