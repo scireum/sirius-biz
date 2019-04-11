@@ -29,7 +29,7 @@ import java.util.function.Consumer;
 /**
  * Executes on a daily basis and invokes all {@link AnalyticsScheduler schedulers} (daily or once per month).
  * <p>
- * These schedulers can then create batches of tasks to be executed. Most commonly either this will either
+ * These schedulers can then create batches of tasks to be executed. Most commonly this will either
  * be a subclass of {@link MongoEntityBatchEmitter} or {@link SQLEntityBatchEmitter}. In most cases it is
  * advised to even subclass {@link MongoAnalyticalTaskScheduler} or {@link SQLAnalyticalTaskScheduler} for a specific
  * subclass of {@link AnalyticalTask}.
