@@ -20,7 +20,7 @@ import java.time.LocalDate;
  * the framework.
  * <p>
  * If this check will hit a large number of entities, consider using a {@link ChangeCheck} which is only invoked
- * for entities which changed in the last 24h.
+ * for entities that changed in the last 24h.
  *
  * @param <E> the type of entities being processed by this check.
  */

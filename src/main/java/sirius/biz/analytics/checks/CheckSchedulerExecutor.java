@@ -11,11 +11,11 @@ package sirius.biz.analytics.checks;
 import sirius.biz.analytics.scheduler.AnalyticsSchedulerExecutor;
 
 /**
- * Provides the batch executor which is used as bridge between the {@link sirius.biz.cluster.work.DistributedTasks}
+ * Provides the batch executor which is used as a bridge between the {@link sirius.biz.cluster.work.DistributedTasks}
  * framework and the schedulers of the checks framework.
  * <p>
- * This executor will be invoked for each scheduler and invoke the appropriate scheduler to create batches of entities
- * to be checked.
+ * This executor will be invoked for each scheduler and invokes the appropriate scheduler to create batches of entities
+ * so be checked.
  *
  * @see SQLDailyCheckScheduler
  * @see SQLChangeCheckScheduler
