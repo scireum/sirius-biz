@@ -53,25 +53,16 @@ public class IndicatorData extends Composite {
     }
 
     /**
-     * Sets the given indicator / indication to <tt>true</tt>.
+     * Sets or clears the given indicator / indication.
      *
      * @param indicator the indicator to set
+     * @param newState  <tt>true</tt> to set the indicator, <tt>false</tt> to clear it
      * @return <tt>true</tt> if the indicator was not yet present
-     */
-    public boolean setIndication(String indicator) {
-        return indications.add(indicator);
-    }
-
-    /**
-     * Clears the given indicator / indication.
-     *
-     * @param indicator the indicator to remove
-     * @return <tt>true</tt> if the indicator was present
      */
     @SuppressWarnings("squid:S2250")
     @Explain("There should only be some idicators present, so there is no performance hot spot expected.")
-    public boolean clearIndication(String indicator) {
-        return indications.remove(indicator);
+    public boolean updateIndication(String indicator, boolean newState) {
+        return newState ? indications.add(indicator) : indications.remove(indicator);
     }
 
     @BeforeSave
@@ -81,7 +72,7 @@ public class IndicatorData extends Composite {
                 executeIndicator(indicator);
             } catch (Exception e) {
                 Exceptions.handle(Log.BACKGROUND, e);
-                clearIndication(indicator.getName());
+                updateIndication(indicator.getName(), false);
             }
         }
     }
@@ -89,11 +80,7 @@ public class IndicatorData extends Composite {
     @SuppressWarnings("unchecked")
     private <E extends BaseEntity<?> & IndicatedEntity> void executeIndicator(Indicator<E> indicator) {
         if (indicator.getType().isAssignableFrom(owner.getClass()) && !indicator.isBatch()) {
-            if (indicator.executeFor((E) owner)) {
-                setIndication(indicator.getName());
-            } else {
-                clearIndication(indicator.getName());
-            }
+            updateIndication(indicator.getName(), indicator.executeFor((E) owner));
         }
     }
 

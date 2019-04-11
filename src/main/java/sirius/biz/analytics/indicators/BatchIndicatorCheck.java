@@ -40,14 +40,11 @@ public abstract class BatchIndicatorCheck<E extends BaseEntity<?> & IndicatedEnt
                   .filter(indicator -> indicator.getType().isAssignableFrom(entity.getClass()))
                   .forEach(indicator -> {
                       try {
-                          if (((Indicator<E>) indicator).executeFor(entity)) {
-                              entity.getIndicators().setIndication(indicator.getName());
-                          } else {
-                              entity.getIndicators().clearIndication(indicator.getName());
-                          }
+                          entity.getIndicators()
+                                .updateIndication(indicator.getName(), ((Indicator<E>) indicator).executeFor(entity));
                       } catch (Exception e) {
                           Exceptions.handle(Log.BACKGROUND, e);
-                          entity.getIndicators().clearIndication(indicator.getName());
+                          entity.getIndicators().updateIndication(indicator.getName(), false);
                       }
                   });
 
