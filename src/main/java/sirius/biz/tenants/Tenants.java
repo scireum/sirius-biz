@@ -209,6 +209,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      *
      * @param qry the query to extent
      * @param <E> the type of entities processed by the query
+     * @param <Q> the type of the query which is being extended
      * @return the query with an additional constraint filtering on the current tenant
      * @throws sirius.kernel.health.HandledException if there is currently no user / tenant available
      */

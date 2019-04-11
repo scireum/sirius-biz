@@ -166,6 +166,7 @@ public class MongoMetrics extends BasicMetrics {
      * @param type       the type of metric to insert
      * @param targetType the target type to insert
      * @param targetId   the id of the target for which the metric is to be insert
+     * @param value      the value to store
      * @param name       the name of the metric to insert
      * @param year       the year (if available) of the metric to insert
      * @param month      the month (if available) of the metric to insert

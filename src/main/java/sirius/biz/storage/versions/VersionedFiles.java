@@ -47,7 +47,7 @@ public class VersionedFiles {
      *
      * @param tenant           the owning tenant
      * @param uniqueIdentifier the identifier of the versioned file
-     * @return {@link List<VersionedFile>} list of versioned files (sorted: most current first)
+     * @return a list of versioned files (sorted: most current first)
      */
     public List<VersionedFile> getVersions(SQLTenant tenant, String uniqueIdentifier) {
         return oma.select(VersionedFile.class)
@@ -103,7 +103,7 @@ public class VersionedFiles {
      * Gets the content of the {@link VersionedFile}.
      *
      * @param file the {@link VersionedFile} holding the content
-     * @return {@link List<String>} each string holding one line of the file content
+     * @return a list of strings where each holds line of the file content
      */
     public List<String> getContent(VersionedFile file) {
         if (file.getStoredFile().isEmpty()) {
