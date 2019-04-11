@@ -125,6 +125,7 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      * @param input the input wrapped as <tt>Value</tt>
      *              * @return a serialized string version of the given input which can later be resolved using
      *              * {@link #resolveFromString(Value)}
+     * @return the value represented as string
      * @throws IllegalArgumentException in case of invalid data
      */
     protected abstract String checkAndTransformValue(Value input);

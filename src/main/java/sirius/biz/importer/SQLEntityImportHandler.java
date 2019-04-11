@@ -104,6 +104,8 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      * <p>
      * Additional queries can also added by providing an {@link SQLEntityImportHandlerExtender} if extending
      * the importer class itself isn't a viable option.
+     *
+     * @param queryConsumer the consumer to be supplied with queries
      */
     protected abstract void collectFindQueries(BiConsumer<Predicate<E>, Supplier<FindQuery<E>>> queryConsumer);
 

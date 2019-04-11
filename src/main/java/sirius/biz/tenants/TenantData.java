@@ -272,7 +272,7 @@ public class TenantData extends Composite implements Journaled {
     /**
      * Calculates all roles the user should keep when the ip range check fails.
      *
-     * @return {@link Set<String>} holding the roles to keep
+     * @return {@link Set} holding the roles to keep
      */
     public Set<String> getRolesToKeepAsSet() {
         if (rolesToKeepSet == null) {

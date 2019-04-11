@@ -390,6 +390,7 @@ public class Processes {
      * Marks a process as erroneous.
      *
      * @param processId the process to update
+     * @param debuggingEnabled determines if debugging should be enabled or disabled
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     protected boolean changeDebugging(String processId, boolean debuggingEnabled) {

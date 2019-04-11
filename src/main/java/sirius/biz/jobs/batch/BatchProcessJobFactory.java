@@ -25,7 +25,7 @@ import java.util.Map;
 
 /**
  * Provides a base implementation for batch jobs which are executed as
- * {@link sirius.biz.cluster.work.DistributedTasks.DistributedTask} within a process {@link Process}.
+ * {@link sirius.biz.cluster.work.DistributedTasks} within a process {@link Process}.
  * <p>
  * This will instantiate a subclass of {@link BatchJob} which will then be executed.
  */
@@ -85,7 +85,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     }
 
     /**
-     * Creates a {@link Process} and schedules a {@link sirius.biz.cluster.work.DistributedTasks.DistributedTask}
+     * Creates a {@link Process} and schedules a {@link sirius.biz.cluster.work.DistributedTasks task}
      * to execute the job (on this node or another one).
      *
      * @param context the parameters supplied by the user
