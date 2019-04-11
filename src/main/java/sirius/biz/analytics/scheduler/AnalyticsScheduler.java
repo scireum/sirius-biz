@@ -26,7 +26,7 @@ import java.util.function.Consumer;
  * be used as descriptions in {@link sirius.biz.cluster.work.DistributedTasks}. Once being executed, the description
  * is forwarded to {@link #executeBatch(JSONObject, LocalDate)} which collects all entities of the specified
  * batch. In most implementations the scheduler will then pick all matchign {@link AnalyticalTask analytical tasks} and
- * execute them on the entity.
+ * executes them on the entity.
  */
 public interface AnalyticsScheduler extends Named {
 
