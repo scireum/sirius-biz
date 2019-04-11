@@ -23,7 +23,7 @@ import javax.annotation.Nonnull;
 import java.time.LocalDate;
 
 /**
- * Provides the executor which is repsonsible for scheduling {@link MonthlyMetricComputer} instances which refer
+ * Provides the executor which is responsible for scheduling {@link MonthlyMetricComputer} instances which refer
  * to {@link sirius.db.mongo.MongoEntity mongo entities} on a monthly basis.
  */
 @Register(classes = AnalyticsScheduler.class)

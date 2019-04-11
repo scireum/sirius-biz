@@ -21,7 +21,7 @@ import sirius.kernel.di.std.Register;
 import javax.annotation.Nonnull;
 
 /**
- * Provides the executor which is repsonsible for scheduling {@link MonthlyMetricComputer} instances which refer
+ * Provides the executor which is responsible for scheduling {@link MonthlyMetricComputer} instances which refer
  * to {@link sirius.db.jdbc.SQLEntity sql entities} on a daily basis using the best effort principle.
  */
 @Register(classes = AnalyticsScheduler.class)

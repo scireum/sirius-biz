@@ -3,7 +3,7 @@
 Provides a computation and storage framework for aggregated metrics.
 In most systems, metrics will be initially recorded as [events](../events).
 Using the underlying timeseries database **Clickhouse** this can be efficiently queried
-and used for intense comutations.
+and used for intense computations.
 
 It is still advisable to compute and store some aggregations (number of X per month per entity)
 so that they can be readily displayed in dashboards without much computation.

@@ -22,7 +22,7 @@ import java.time.LocalDate;
 import java.util.function.Consumer;
 
 /**
- * Provides the executor which is repsonsible for scheduling {@link MonthlyGlobalMetricComputer} instances on a daily
+ * Provides the executor which is responsible for scheduling {@link MonthlyGlobalMetricComputer} instances on a daily
  * basis using the best effort principle.
  */
 @Register
