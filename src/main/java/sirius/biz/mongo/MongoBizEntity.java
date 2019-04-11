@@ -24,7 +24,6 @@ public abstract class MongoBizEntity extends MongoEntity implements Traced {
     /**
      * Contains tracing data which records which user created and last edited the entity
      */
-    public static final Mapping TRACE = Mapping.named("trace");
     private final TraceData trace = new TraceData();
 
     @Override

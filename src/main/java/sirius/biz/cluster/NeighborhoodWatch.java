@@ -13,10 +13,12 @@ import sirius.biz.cluster.work.DistributedQueueInfo;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.db.redis.Redis;
 import sirius.kernel.Sirius;
+import sirius.kernel.async.AsyncExecutor;
 import sirius.kernel.async.BackgroundLoop;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.Orchestration;
 import sirius.kernel.async.TaskContext;
+import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Lambdas;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
@@ -29,6 +31,7 @@ import sirius.kernel.nls.NLS;
 import sirius.kernel.timer.EveryDay;
 import sirius.kernel.timer.Timers;
 import sirius.web.health.Cluster;
+import sirius.web.http.WebContext;
 
 import javax.annotation.Nonnull;
 import java.time.Duration;
@@ -66,6 +69,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
     private static final String MESSAGE_TYPE = "type";
     private static final String TYPE_GLOBAL = "global";
     private static final String TYPE_LOCAL = "local";
+    private static final String TYPE_BLEED = "bleed";
     private static final String MESSAGE_NAME = "name";
     private static final String MESSAGE_ENABLED = "enabled";
     private static final String MESSAGE_NODE = "node";
@@ -90,10 +94,15 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
     private Timers timers;
 
     @Part
+    private Tasks tasks;
+
+    @Part
     private DistributedTasks distributedTasks;
 
     @Part
     private Interconnect interconnect;
+
+    private volatile boolean bleeding;
 
     private Map<String, SynchronizeType> syncSettings = Collections.emptyMap();
     private Map<String, String> descriptions = new ConcurrentHashMap<>();
@@ -123,6 +132,12 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
                 } else {
                     localOverwrite.remove(name);
                 }
+            }
+        }
+
+        if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_BLEED)) {
+            if (Strings.areEqual(event.getString(MESSAGE_NODE), CallContext.getNodeName())) {
+                bleeding = enabled;
             }
         }
     }
@@ -180,6 +195,39 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
                                               .fluentPut(MESSAGE_ENABLED, overwritten));
     }
 
+    /**
+     * Start bleeding out the given node so that it can be restarted soon.
+     * <p>
+     * A node which starts bleeding out, will report itself as "unhealthy" to an upfront reverse proxy via
+     * {@link ClusterController#ready(WebContext)}. Also, this node will stop picking up additional background work
+     * (especially no distributed tasks will be started).
+     * <p>
+     * In order to check if a node is most probably fully bled out, {@link ClusterController#halted(WebContext)}
+     * can be invoked.
+     * <p>
+     * If a restart or patch script is used to perform a rolling upgrade of a cluster, the process for a node would be
+     * to first invoke {@link ClusterController#apiBleed(WebContext, String, String, String)} then wait some time and
+     * regularly check {@link ClusterController#halted(WebContext)} until it reports "OK". The node can then be
+     * restarted in a save manner.
+     * <p>
+     * In order for this to work, an upstream load balancer has to use {@link ClusterController#ready(WebContext)}
+     * as health check for each node, as this will mark the node as unhealthy as soon as it starts bleeding out.
+     *
+     * @param node  the node to change
+     * @param bleed <tt>true</tt> to start bleeding out (disable) the job, <tt>false</tt> to abort bleeding out
+     * @see ClusterController#bleed(WebContext, String, String)
+     * @see ClusterController#apiBleed(WebContext, String, String, String)
+     * @see ClusterController#ready(WebContext)
+     * @see ClusterController#halted(WebContext)
+     */
+    public void changeBleeding(String node, boolean bleed) {
+        interconnect.dispatch(getName(),
+                              new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_BLEED)
+                                              .fluentPut(MESSAGE_NODE, node)
+                                              .fluentPut(MESSAGE_NAME, TYPE_BLEED)
+                                              .fluentPut(MESSAGE_ENABLED, bleed));
+    }
+
     @Override
     public boolean tryExecuteBackgroundLoop(String name) {
         String syncName = BACKGROUND_LOOP_PREFIX + name;
@@ -190,6 +238,13 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
 
         SynchronizeType type = syncSettings.getOrDefault(syncName, SynchronizeType.LOCAL);
         if (type == SynchronizeType.DISABLED) {
+            return false;
+        }
+
+        // When bleeding out, we only disable CLUSTERED background loops, as some
+        // (e.g. DelayLine, AutoBatch) need to continue running to support a save
+        // and sane shutdown of the node...
+        if (type == SynchronizeType.CLUSTER && bleeding) {
             return false;
         }
 
@@ -224,6 +279,10 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
     @Override
     public boolean shouldRunDailyTask(String name) {
         String syncName = DAILY_TASK_PREFIX + name;
+
+        if (bleeding) {
+            return false;
+        }
 
         if (localOverwrite.containsKey(syncName)) {
             return false;
@@ -290,6 +349,10 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
      */
     public boolean isDistributedTaskQueueEnabled(String queue) {
         String syncName = QUEUE_PREFIX + queue;
+
+        if (bleeding) {
+            return false;
+        }
 
         if (localOverwrite.containsKey(syncName)) {
             return false;
@@ -367,6 +430,19 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         return result;
     }
 
+    public boolean isBleeding() {
+        return bleeding;
+    }
+
+    public int getActiveBackgroundTasks() {
+        AsyncExecutor backgroundExecutor = tasks.executorService("background");
+        AsyncExecutor distributedTasksExecutor = tasks.executorService("distributed-tasks");
+        return backgroundExecutor.getActiveCount()
+               + backgroundExecutor.getQueue().size()
+               + distributedTasksExecutor.getActiveCount()
+               + distributedTasksExecutor.getQueue().size();
+    }
+
     /**
      * Returns a report of all local background activities.
      *
@@ -374,6 +450,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
      */
     public BackgroundInfo getLocalBackgroundInfo() {
         BackgroundInfo result = new BackgroundInfo(CallContext.getNodeName(),
+                                                   isBleeding(),
                                                    NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false));
 
         for (Map.Entry<String, SynchronizeType> job : syncSettings.entrySet()) {
@@ -390,10 +467,11 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
 
     private BackgroundInfo parseBackgroundInfos(JSONObject jsonObject) {
         if (jsonObject.getBooleanValue(InterconnectClusterManager.RESPONSE_ERROR)) {
-            return new BackgroundInfo(jsonObject.getString(InterconnectClusterManager.RESPONSE_NODE_NAME), "-");
+            return new BackgroundInfo(jsonObject.getString(InterconnectClusterManager.RESPONSE_NODE_NAME), false, "-");
         }
 
         BackgroundInfo result = new BackgroundInfo(jsonObject.getString(InterconnectClusterManager.RESPONSE_NODE_NAME),
+                                                   jsonObject.getBooleanValue(ClusterController.RESPONSE_BLEEDING),
                                                    jsonObject.getString(ClusterController.RESPONSE_UPTIME));
         jsonObject.getJSONArray(ClusterController.RESPONSE_JOBS).forEach(job -> {
             try {
