@@ -1,0 +1,42 @@
+version: "2"
+
+services:
+  redis:
+    image: redis:3.2
+    ports:
+      - "6379"
+    hostname: redis
+
+  mongo:
+    image: mongo:3.6.4
+    ports:
+      - "27017"
+    hostname: mongo
+
+  mysql:
+    image: mysql:5.5
+    ports:
+      - "3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    hostname: mysql
+  clickhouse:
+    image: yandex/clickhouse-server
+    ports:
+      - "8123"
+      - "9000"
+    hostname: clickhouse
+  elasticsearch:
+    image: elasticsearch:5.6.8
+    ports:
+      - "9200"
+    environment:
+      - xpack.security.enabled=false
+      - script.inline=true
+      - ES_JAVA_OPTS=-Xms32M -Xmx128M
+    hostname: es
+  s3-system:
+    image: scireum/s3-ninja:5.2.2
+    ports:
+      - 80
+    hostname: s3ninja

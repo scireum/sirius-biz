@@ -1,42 +1,72 @@
-# sirius-biz
+![sirius](https://raw.githubusercontent.com/scireum/sirius-kernel/master/docs/sirius.jpg)
 
-Provides a framework for building modern web based business applications.
+Welcome to the **business module** of the SIRIUS OpenSource framework created by [scireum GmbH](https://www.scireum.de). 
+To learn more about what SIRIUS is please refer to documentation of the [kernel module](https://github.com/scireum/sirius-kernel).
 
-If you have questions or are just curious, please feel welcome to join the chat room:
-[![Join the chat at https://gitter.im/scireum/sirius-kernel](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scireum/OpenSource?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# SIRIUS Business Module
 
-This is a module of the SIRIUS OpenSource project by scireum GmbH. For further information visit the project website: http://sirius-lib.net
+Provides a foundation for creating web based SaaS solutions. This module contains frameworks which permit to create
+rock solid business applications that can easily be clustered to achieve high avilability. Also a lot of common
+data objects and frameworks (multi tenancy, code lists, background jobs, storage, data import) are provided.
 
-## Usage 
-To use this library in your own project include:
-```
-<dependency>
-    <groupId>com.scireum</groupId>
-    <artifactId>sirius-biz</artifactId>
-    <version>PICK A VERSION</version>
-</dependency>
-```
-An overview of all versions can be found here: https://oss.sonatype.org/content/groups/public/com/scireum/sirius-biz/
+## Important files of this module: 
 
-## License
+* [Default configuration](src/main/resources/component-biz.conf)
+* [Maven setup](pom.xml)
+* [Development Settings](develop.conf)
+* [Docker Setup](docker-compose.yml)
 
-SIRIUS is licensed under the MIT License:
+## Frameworks
 
-> Permission is hereby granted, free of charge, to any person obtaining a copy
-> of this software and associated documentation files (the "Software"), to deal
-> in the Software without restriction, including without limitation the rights
-> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-> copies of the Software, and to permit persons to whom the Software is
-> furnished to do so, subject to the following conditions:
-> 
-> The above copyright notice and this permission notice shall be included in
-> all copies or substantial portions of the Software.
-> 
-> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-> THE SOFTWARE.
-
+* [HTTP/WebUI Helpers](src/main/java/sirius/biz/web)\
+Provides a set of base classes for generating CRUD controllers for **JDBC Databases**, ** MongoDB** and **Elasticsearch**.
+* [Model Helpers](src/main/java/sirius/biz/model)\
+Provides commonly used composites to be embedded in database entities.
+* [JDBC Helpers](src/main/java/sirius/biz/jdbc)\
+Provides a set of base classes for JDBC entities and a controller to view and update the database schema and to 
+directly perform **SQL** queries.
+* [MongoDB Helpers](src/main/java/sirius/biz/mongo)\
+Provides a set of base entities to be used with **MongoDB**.
+* [Elasticsearch Helpers](src/main/java/sirius/biz/elastic)\
+Contains base entities for Elasticsearch. Also, index maintenance jobs are provided to manage schema migrations which 
+are not supported by Elasticsearch directly.
+* [Cluster Management Facility](src/main/java/sirius/biz/cluster)\
+Provides an interconnect facility which is used to discover and to communicate with other cluster nodes.
+Also provides an orchestration layer for caches, cluster health and distributed cluster tasks.
+* [Isenguard](src/main/java/sirius/biz/isenguard)\
+Provides a clusterwide firewall and reate limiting facility based on **Redis**.
+* [Global Locks](src/main/java/sirius/biz/locks)\
+Contains a framework to manage cluster wide locks. Various strategies are provided to best match
+the system topology.
+* [Analytics Framework](src/main/java/sirius/biz/analytics)\
+Provides a collection for frameworks for acquiring, aggregating and reporting 
+analytical data.
+* [Jobs Frameworks](src/main/java/sirius/biz/jobs)\
+Permits to define jobs which can be started by users of the system. These are dispatched and executed via
+the [distributed tasks facility](src/main/java/sirius/biz/cluster/work) and can be monitored using
+[processes](src/main/java/sirius/biz/process).
+* [Process Facility](src/main/java/sirius/biz/process)\
+Provides a management and report facility for background activities performed for the system or individual users.
+* [Data Import Facility](src/main/java/sirius/biz/importer)\
+Contains a framework to load, convert and store data into database entities. Depending on the underlying database it
+permits to maximize performance by using prepared statements and batch updates.
+* [System Protocol Facility](src/main/java/sirius/biz/protocol)\
+Provides various facilities which record and store system events like log messages, sent mails, service incidents or 
+security related events. 
+* [Multi Tenant User Management](src/main/java/sirius/biz/tenants)\
+Provides a database independent model to represent multiple tenants and users which have access to the system.
+Currently implementations for **JDBC** and for **MongoDB** are available.
+* [Sequence Generators](src/main/java/sirius/biz/sequences)\
+Provides sequence generators for **JDBC** databases and **MongoDB**.
+* [Storage System](src/main/java/sirius/biz/storage)\
+Contains a facility which stores files / objects in an object store but keeps all metadata in
+either a **JDBC** database or **MongoDB** for efficient access. Also provides a management and maintenance UI.
+* [Virtual File System Layer](src/main/java/sirius/biz/vfs)\
+Provides an abstraction layer for virtual file systems which can be accessed via remote protocols like FTP(S).
+* [ObjectStore access](src/main/java/sirius/biz/s3)\
+Contains a thin abstraction layer for AWS compatible S3 object stores.
+* [Code lists](src/main/java/sirius/biz/codelists)\
+Permits to manage and access code lists which are either stored in **JDBC** databases or **MongoDB**.
+* [IBM i5 access](src/main/java/sirius/biz/i5)\
+Contains a mapping framework which permits to map records exchanged with an IBM i5 to Java classes. Also provides
+and connection pool and some metrics for i5 connections using **jt400**.
