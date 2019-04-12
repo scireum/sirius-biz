@@ -37,6 +37,13 @@ import java.util.function.Supplier;
 public interface ProcessContext extends TaskContextAdapter {
 
     /**
+     * Returns the id of the process context.
+     *
+     * @return the id of the process
+     */
+    String getProcessId();
+
+    /**
      * Returns the title of the underlying process.
      *
      * @return the title of the process
