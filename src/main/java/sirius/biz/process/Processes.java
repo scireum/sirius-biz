@@ -389,7 +389,7 @@ public class Processes {
     /**
      * Marks a process as erroneous.
      *
-     * @param processId the process to update
+     * @param processId        the process to update
      * @param debuggingEnabled determines if debugging should be enabled or disabled
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
@@ -409,8 +409,10 @@ public class Processes {
      */
     protected boolean markCompleted(String processId, @Nullable Map<String, Average> timings) {
         return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
-            process.setState(ProcessState.TERMINATED);
-            process.setCompleted(LocalDateTime.now());
+            if (process.getState() != ProcessState.STANDBY) {
+                process.setState(ProcessState.TERMINATED);
+                process.setCompleted(LocalDateTime.now());
+            }
 
             if (timings != null) {
                 timings.forEach((key, avg) -> {
