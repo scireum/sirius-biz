@@ -16,10 +16,26 @@ data objects and frameworks (multi tenancy, code lists, background jobs, storage
 * [Development Settings](develop.conf)
 * [Docker Setup](docker-compose.yml)
 
+## Using sirius-biz
+
+If **sirius-biz** is used in a custom project, the [docker-compose.yml](docker-compose.yml) and [develop.conf](develop.conf)
+are a good starting point for getting to pace quickly. Note that you can use the **Setup** class provided by
+*sirius-kernel* to start SIRIUS in your IDE locally.
+
+## Default UI
+
+Using the configuration provided above will enable a default user manager (and even create a default user "system" with password "system").
+After logging in, you can examine the built-in functions like the 
+[Console](http://localhost:9000/system/console), [SQL Debugger](http://localhost:9000/system/sql),
+ [SQL Schema Tool](http://localhost:9000/system/schema). You can also inspect the cluster state
+ using [Cluster](http://localhost:9000/system/cluster). Note that you can also access the
+ tooling provided by [sirius-web](https://github.com/scireum/sirius-web).
+
+
 ## Frameworks
 
 * [HTTP/WebUI Helpers](src/main/java/sirius/biz/web)\
-Provides a set of base classes for generating CRUD controllers for **JDBC Databases**, ** MongoDB** and **Elasticsearch**.
+Provides a set of base classes for generating CRUD controllers for **JDBC Databases**, **MongoDB** and **Elasticsearch**.
 * [Model Helpers](src/main/java/sirius/biz/model)\
 Provides commonly used composites to be embedded in database entities.
 * [JDBC Helpers](src/main/java/sirius/biz/jdbc)\
