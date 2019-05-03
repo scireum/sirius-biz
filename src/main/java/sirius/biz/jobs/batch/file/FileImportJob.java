@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.batch.file;
 
+import com.google.common.io.ByteStreams;
 import sirius.biz.jobs.batch.ImportJob;
 import sirius.biz.jobs.params.VirtualObjectParameter;
 import sirius.biz.process.ProcessContext;
@@ -15,9 +16,12 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.Storage;
 import sirius.biz.storage.VirtualObject;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -70,23 +74,43 @@ public abstract class FileImportJob extends ImportJob {
      * @throws Exception in case of an error during the import
      */
     protected void executeForZippedFile(InputStream in) throws Exception {
+        process.log(ProcessLog.info().withNLSKey("FileImportJob.importingZipFile"));
+
         try (ZipInputStream zipInputStream = new ZipInputStream(in)) {
+            boolean fileFound = false;
             ZipEntry entry = zipInputStream.getNextEntry();
 
-            while (entry != null && !canHandleFileExtension(Files.getFileExtension(entry.getName()))) {
+            while (entry != null) {
+                if (!isHiddenFile(entry.getName()) && canHandleFileExtension(Files.getFileExtension(entry.getName()))) {
+                    fileFound = true;
+
+                    process.log(ProcessLog.info()
+                                          .withNLSKey("FileImportJob.importingZippedFile")
+                                          .withContext("filename", entry.getName()));
+
+                    // Copy the entry data to another stream because executeForStream will close the given stream
+                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                    ByteStreams.copy(zipInputStream, byteArrayOutputStream);
+                    executeForStream(entry.getName(), new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
+                }
+
                 entry = zipInputStream.getNextEntry();
             }
 
-            if (entry == null) {
+            if (!fileFound) {
                 throw Exceptions.createHandled().withNLSKey("FileImportJob.noZippedFileFound").handle();
             }
-
-            process.log(ProcessLog.info()
-                                  .withNLSKey("FileImportJob.importingZippedFile")
-                                  .withContext("filename", entry.getName()));
-
-            executeForStream(entry.getName(), zipInputStream);
         }
+    }
+
+    private boolean isHiddenFile(String name) {
+        String fileName = Files.getFilenameAndExtension(name);
+
+        if (Strings.isEmpty(fileName)) {
+            return false;
+        }
+
+        return fileName.startsWith(".");
     }
 
     /**
