@@ -74,6 +74,11 @@ public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob i
     }
 
     @Override
+    protected boolean canHandleFileExtension(String fileExtension) {
+        return "xls".equals(fileExtension) || "xlsx".equals(fileExtension) || "csv".equals(fileExtension);
+    }
+
+    @Override
     public void handleRow(int index, Values row) {
         if (aliases == null) {
             aliases = new LineBasedAliases(row, dictionary);
