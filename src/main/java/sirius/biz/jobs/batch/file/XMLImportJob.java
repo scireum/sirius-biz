@@ -36,6 +36,11 @@ public abstract class XMLImportJob extends FileImportJob {
         reader.parse(in, this::resolveResource);
     }
 
+    @Override
+    protected boolean canHandleFileExtension(String fileExtension) {
+        return "xml".equals(fileExtension);
+    }
+
     /**
      * Registers handlers which are invoked for each appropriate node or sub tree parsed by the reader.
      *
