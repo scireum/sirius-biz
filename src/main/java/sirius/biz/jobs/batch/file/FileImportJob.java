@@ -11,11 +11,17 @@ package sirius.biz.jobs.batch.file;
 import sirius.biz.jobs.batch.ImportJob;
 import sirius.biz.jobs.params.VirtualObjectParameter;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.Storage;
 import sirius.biz.storage.VirtualObject;
+import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
 
 import java.io.InputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * Provides an import job which reads and imports a file.
@@ -42,9 +48,62 @@ public abstract class FileImportJob extends ImportJob {
     @Override
     public void execute() throws Exception {
         VirtualObject file = process.require(fileParameter);
+
+        if (!canHandleFileExtension(file.getFileExtension())) {
+            if ("zip".equalsIgnoreCase(file.getFileExtension())) {
+                try (InputStream in = storage.getData(file)) {
+                    executeForZippedFile(in);
+                }
+
+                return;
+            }
+
+            throw Exceptions.createHandled().withNLSKey("FileImportJob.fileNotSupported").handle();
+        }
+
         try (InputStream in = storage.getData(file)) {
             executeForStream(file.getFilename(), in);
         }
+    }
+
+    /**
+     * Performs the import for a zipped file.
+     *
+     * @param in the data to import
+     * @throws Exception in case of an error during the import
+     */
+    protected void executeForZippedFile(InputStream in) throws Exception {
+        process.log(ProcessLog.info().withNLSKey("FileImportJob.importingZipFile"));
+
+        try (ZipInputStream zipInputStream = new ZipInputStream(in)) {
+            ZipEntry entry = zipInputStream.getNextEntry();
+
+            while (entry != null) {
+                if (!isHiddenFile(entry.getName()) && canHandleFileExtension(Files.getFileExtension(entry.getName()))) {
+                    process.log(ProcessLog.info()
+                                          .withNLSKey("FileImportJob.importingZippedFile")
+                                          .withContext("filename", entry.getName()));
+
+                    executeForStream(entry.getName(), zipInputStream);
+
+                    return;
+                }
+
+                entry = zipInputStream.getNextEntry();
+            }
+
+            throw Exceptions.createHandled().withNLSKey("FileImportJob.noZippedFileFound").handle();
+        }
+    }
+
+    private boolean isHiddenFile(String name) {
+        String fileName = Files.getFilenameAndExtension(name);
+
+        if (Strings.isEmpty(fileName)) {
+            return false;
+        }
+
+        return fileName.startsWith(".");
     }
 
     /**
@@ -55,4 +114,12 @@ public abstract class FileImportJob extends ImportJob {
      * @throws Exception in case of an error during the import
      */
     protected abstract void executeForStream(String filename, InputStream in) throws Exception;
+
+    /**
+     * Determines if the given file extension can be handled by the import job.
+     *
+     * @param fileExtension the file extension to check
+     * @return <tt>true</tt> if it can be handled, <tt>false</tt> otherwise
+     */
+    protected abstract boolean canHandleFileExtension(String fileExtension);
 }
