@@ -40,7 +40,7 @@ public interface EntityImportHandlerExtender {
                                 EntityDescriptor descriptor,
                                 ImporterContext context,
                                 BiConsumer<Mapping, BiConsumer<Context, Object>> loaderCollector) {
-
+        // intentionally left empty as not all extenders will customize all methods
     }
 
     /**
@@ -55,6 +55,6 @@ public interface EntityImportHandlerExtender {
                                            EntityDescriptor descriptor,
                                            ImporterContext context,
                                            Consumer<Mapping> mappingConsumer) {
-
+        // intentionally left empty as not all extenders will customize all methods
     }
 }

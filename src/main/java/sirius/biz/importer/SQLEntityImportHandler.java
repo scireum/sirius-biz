@@ -66,7 +66,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     protected SQLEntityImportHandler(Class<?> clazz, ImporterContext context) {
         super(clazz, context);
         collectFindQueries((p, q) -> findQueries.add(Tuple.create(p, q)));
-        collectFindQueriesFromExtenders(clazz, context);
+        collectFindQueriesFromExtenders(context);
 
         this.mappingsToCompare = getMappingsToCompare().toArray(MAPPING_ARRAY);
         this.mappingsToLoad = getAutoImportMappings().toArray(MAPPING_ARRAY);
@@ -75,7 +75,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     }
 
     @SuppressWarnings("unchecked")
-    private void collectFindQueriesFromExtenders(Class<?> clazz, ImporterContext context) {
+    private void collectFindQueriesFromExtenders(ImporterContext context) {
         for (EntityImportHandlerExtender extender : extenders) {
             if (extender instanceof SQLEntityImportHandlerExtender) {
                 SQLEntityImportHandlerExtender<E> sqlExtender = (SQLEntityImportHandlerExtender<E>) extender;

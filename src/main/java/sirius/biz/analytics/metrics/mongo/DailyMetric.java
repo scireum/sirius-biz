@@ -8,7 +8,6 @@
 
 package sirius.biz.analytics.metrics.mongo;
 
-import sirius.biz.analytics.metrics.jdbc.SQLMetrics;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mongo.Mango;

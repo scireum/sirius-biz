@@ -25,7 +25,6 @@ public abstract class FileImportJob extends ImportJob {
     @Part
     private static Storage storage;
 
-    private FileImportJobFactory factory;
     private VirtualObjectParameter fileParameter;
 
     /**

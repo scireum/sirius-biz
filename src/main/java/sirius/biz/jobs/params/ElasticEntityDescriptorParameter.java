@@ -11,6 +11,7 @@ package sirius.biz.jobs.params;
 import sirius.db.es.ElasticEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
+import sirius.kernel.nls.NLS;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,6 +21,12 @@ import java.util.stream.Collectors;
  */
 public class ElasticEntityDescriptorParameter extends EntityDescriptorParameter {
 
+    /**
+     * Creates a new parameter with the given name and label.
+     *
+     * @param name  the name of the parameter
+     * @param label the label of the parameter, which will be {@link NLS#smartGet(String) auto translated}
+     */
     public ElasticEntityDescriptorParameter(String name, String label) {
         super(name, label);
     }
@@ -29,6 +36,7 @@ public class ElasticEntityDescriptorParameter extends EntityDescriptorParameter 
      *
      * @return the list of value defined by the enum type
      */
+    @Override
     public List<String> getValues() {
         return mixing.getDesciptors()
                      .stream()

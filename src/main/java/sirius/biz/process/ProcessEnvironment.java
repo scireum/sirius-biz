@@ -98,7 +98,7 @@ class ProcessEnvironment implements ProcessContext {
                 int timing = process.getTimings().get(key).orElse(0);
 
                 Average average = new Average();
-                average.addValues(counter, counter * timing);
+                average.addValues(counter, (double) counter * timing);
                 timings.put(key, average);
             });
         });

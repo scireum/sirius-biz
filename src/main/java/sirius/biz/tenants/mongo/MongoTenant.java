@@ -18,6 +18,9 @@ import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.di.std.Framework;
 
+/**
+ * Reprensents the MongoDB implementation of {@link Tenant}.
+ */
 @Framework(MongoTenants.FRAMEWORK_TENANTS_MONGO)
 public class MongoTenant extends MongoBizEntity implements Tenant<String> {
 

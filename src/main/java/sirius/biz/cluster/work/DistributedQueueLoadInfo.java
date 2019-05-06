@@ -16,6 +16,9 @@ import sirius.web.health.LoadInfoProvider;
 
 import java.util.function.Consumer;
 
+/**
+ * Provides {@link LoadInfo load infos} for all distributed task queues.
+ */
 @Register(classes = LoadInfoProvider.class)
 public class DistributedQueueLoadInfo extends CachingLoadInfoProvider {
 

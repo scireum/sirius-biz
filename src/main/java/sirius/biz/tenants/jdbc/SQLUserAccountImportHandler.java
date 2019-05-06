@@ -27,6 +27,9 @@ import java.util.function.Supplier;
  */
 public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserAccount> {
 
+    /**
+     * Provides the factory to instantiate this import handler.
+     */
     @Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
     public static class SQLUserAccountImportHandlerFactory implements ImportHandlerFactory {
 

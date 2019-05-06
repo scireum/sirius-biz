@@ -24,6 +24,9 @@ import java.util.Optional;
  */
 public class MongoUserAccountImportHandler extends MongoEntityImportHandler<MongoUserAccount> {
 
+    /**
+     * Provides the factory to instantiate this import handler.
+     */
     @Register(framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
     public static class MongoUserAccountImportHandlerFactory implements ImportHandlerFactory {
 

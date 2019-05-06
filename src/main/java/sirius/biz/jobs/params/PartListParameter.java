@@ -11,6 +11,7 @@ package sirius.biz.jobs.params;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.nls.NLS;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -30,6 +31,13 @@ public class PartListParameter<E> extends Parameter<E, PartListParameter<E>> {
 
     private Collection<E> parts;
 
+    /**
+     * Creates a new parameter with the given name and label.
+     *
+     * @param name  the name of the parameter
+     * @param label the label of the parameter, which will be {@link NLS#smartGet(String) auto translated}
+     * @param type  the type of parts being fetched
+     */
     public PartListParameter(String name, String label, Class<E> type) {
         super(name, label);
         this.type = type;

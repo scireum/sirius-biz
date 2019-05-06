@@ -21,6 +21,8 @@ import java.util.function.Supplier;
  * <p>
  * This might be useful for customizations or {@link sirius.db.mixing.annotations.Mixin mixins} which need to extend the
  * import process beyond adding fields.
+ *
+ * @param <E> the type of entities being processed by the import handler to be extended
  */
 public class SQLEntityImportHandlerExtender<E extends SQLEntity> implements EntityImportHandlerExtender {
 
@@ -32,9 +34,10 @@ public class SQLEntityImportHandlerExtender<E extends SQLEntity> implements Enti
      * @param context       the surrounding importer context
      * @param queryConsumer the collector which consumes additiona find queries
      */
-    void collectFindQueries(SQLEntityImportHandler<E> handler,
-                            EntityDescriptor descriptor,
-                            ImporterContext context,
-                            BiConsumer<Predicate<E>, Supplier<FindQuery<E>>> queryConsumer) {
+    public void collectFindQueries(SQLEntityImportHandler<E> handler,
+                                   EntityDescriptor descriptor,
+                                   ImporterContext context,
+                                   BiConsumer<Predicate<E>, Supplier<FindQuery<E>>> queryConsumer) {
+        // intentionally left empty as not all extenders will customize all methods
     }
 }

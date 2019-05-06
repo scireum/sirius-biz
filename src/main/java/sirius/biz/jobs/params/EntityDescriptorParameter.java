@@ -12,6 +12,7 @@ import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.nls.NLS;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,12 @@ public class EntityDescriptorParameter extends Parameter<EntityDescriptor, Entit
     @Part
     protected static Mixing mixing;
 
+    /**
+     * Creates a new parameter with the given name and label.
+     *
+     * @param name  the name of the parameter
+     * @param label the label of the parameter, which will be {@link NLS#smartGet(String) auto translated}
+     */
     public EntityDescriptorParameter(String name, String label) {
         super(name, label);
     }
