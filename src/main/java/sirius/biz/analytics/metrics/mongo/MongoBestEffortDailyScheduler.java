@@ -24,7 +24,7 @@ import javax.annotation.Nonnull;
  * Provides the executor which is responsible for scheduling {@link MonthlyMetricComputer} instances which refer
  * to {@link sirius.db.mongo.MongoEntity mongo entities} on a daily basis using the best effort principle.
  */
-@Register(classes = AnalyticsScheduler.class)
+@Register(classes = AnalyticsScheduler.class, framework = MongoMetrics.FRAMEWORK_MONGO_METRICS)
 public class MongoBestEffortDailyScheduler extends MongoAnalyticalTaskScheduler {
 
     @Override

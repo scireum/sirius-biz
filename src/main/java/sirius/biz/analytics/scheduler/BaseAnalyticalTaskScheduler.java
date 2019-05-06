@@ -10,6 +10,7 @@ package sirius.biz.analytics.scheduler;
 
 import com.alibaba.fastjson.JSONObject;
 import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.MultiMap;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
@@ -28,7 +29,12 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
     @Part
     protected GlobalContext context;
 
+    @Part
+    protected Mixing mixing;
+
     protected MultiMap<Class<?>, AnalyticalTask<?>> tasks;
+
+    private Boolean active;
 
     /**
      * Specifies the type of analytical tasks processed by this schedulder.
@@ -36,6 +42,18 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
      * @return the class of analytical tasks handled by this schedulder
      */
     protected abstract Class<?> getAnalyticalTaskType();
+
+    @Override
+    public boolean isActive() {
+        if (active == null) {
+            active = getTasks().values()
+                               .stream()
+                               .map(AnalyticalTask::getType)
+                               .anyMatch(entityType -> mixing.findDescriptor(entityType).isPresent());
+        }
+
+        return active.booleanValue();
+    }
 
     @SuppressWarnings("unchecked")
     @Override

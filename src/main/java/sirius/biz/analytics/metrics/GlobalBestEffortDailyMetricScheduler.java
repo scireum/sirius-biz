@@ -63,6 +63,11 @@ public class GlobalBestEffortDailyMetricScheduler implements AnalyticsScheduler 
         }
     }
 
+    @Override
+    public boolean isActive() {
+        return !computers.getParts().isEmpty();
+    }
+
     @Nonnull
     @Override
     public String getName() {

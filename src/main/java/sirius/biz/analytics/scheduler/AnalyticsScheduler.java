@@ -80,4 +80,13 @@ public interface AnalyticsScheduler extends Named {
      * @param date             the date for which the execution was scheduled
      */
     void executeBatch(JSONObject batchDescription, LocalDate date);
+
+    /**
+     * Determines if this scheduler is active.
+     * <p>
+     * There is no point in executing a scheduler for which no active {@link AnalyticalTask tasks} are present.
+     *
+     * @return <tt>true</tt> if the scheduler should be actively scheduled or <tt>false</tt> if it can be ignored
+     */
+    boolean isActive();
 }

@@ -64,6 +64,11 @@ public class GlobalGuaranteedMonthlyMetricScheduler implements AnalyticsSchedule
         }
     }
 
+    @Override
+    public boolean isActive() {
+        return !computers.getParts().isEmpty();
+    }
+
     @Nonnull
     @Override
     public String getName() {

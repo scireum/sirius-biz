@@ -93,6 +93,7 @@ public class AnalyticalEngine implements EveryDay {
         Map<String, Boolean> queueCache = new HashMap<>();
         schedulers.getParts()
                   .stream()
+                  .filter(AnalyticsScheduler::isActive)
                   .filter(scheduler -> shouldSchedule(scheduler, queueCache))
                   .forEach(this::queueScheduler);
     }
