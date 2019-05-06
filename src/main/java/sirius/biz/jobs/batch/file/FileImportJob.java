@@ -69,6 +69,7 @@ public abstract class FileImportJob extends ImportJob {
         try (ZipInputStream zipInputStream = new ZipInputStream(storage.getData(file))) {
             ZipEntry entry = zipInputStream.getNextEntry();
 
+            int filesImported = 0;
             while (entry != null) {
                 if (!isHiddenFile(entry.getName()) && canHandleFileExtension(Files.getFileExtension(entry.getName()))) {
                     process.log(ProcessLog.info()
@@ -76,12 +77,15 @@ public abstract class FileImportJob extends ImportJob {
                                           .withContext("filename", entry.getName()));
 
                     executeForStream(entry.getName(), new CloseShieldInputStream(zipInputStream));
+                    filesImported++;
                 }
 
                 entry = zipInputStream.getNextEntry();
             }
 
-            throw Exceptions.createHandled().withNLSKey("FileImportJob.noZippedFileFound").handle();
+            if (filesImported == 0) {
+                throw Exceptions.createHandled().withNLSKey("FileImportJob.noZippedFileFound").handle();
+            }
         }
     }
 
