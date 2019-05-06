@@ -44,7 +44,7 @@ public interface Tenant<I> extends Transformable, Traced, Journaled {
     BaseEntityRef<I, ? extends Tenant<I>> getParent();
 
     /**
-     * Provices access to the effective tenant data.
+     * Provides access to the effective tenant data.
      *
      * @return the tenant data composite which stores all values in a database independent manner.
      */
