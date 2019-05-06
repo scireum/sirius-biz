@@ -23,7 +23,7 @@ import sirius.kernel.di.std.Part;
  * {@link BatchProcessJobFactory}, resolves the attached process and invokes
  * {@link BatchProcessJobFactory#executeTask(ProcessContext)} to actually execute the job.
  */
-public abstract class BatchProcessTaskExecutor extends DistributedTaskExecutor {
+public abstract class BatchProcessTaskExecutor implements DistributedTaskExecutor {
 
     @Part
     private Processes processes;
