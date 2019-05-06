@@ -49,17 +49,19 @@ public abstract class FileImportJob extends ImportJob {
     public void execute() throws Exception {
         VirtualObject file = process.require(fileParameter);
 
-        try (InputStream in = storage.getData(file)) {
-            if (!canHandleFileExtension(file.getFileExtension()) && "zip".equalsIgnoreCase(file.getFileExtension())) {
-                executeForZippedFile(in);
+        if (!canHandleFileExtension(file.getFileExtension())) {
+            if ("zip".equalsIgnoreCase(file.getFileExtension())) {
+                try (InputStream in = storage.getData(file)) {
+                    executeForZippedFile(in);
+                }
 
                 return;
             }
 
-            if (!canHandleFileExtension(file.getFileExtension())) {
-                throw Exceptions.createHandled().withNLSKey("FileImportJob.fileNotSupported").handle();
-            }
+            throw Exceptions.createHandled().withNLSKey("FileImportJob.fileNotSupported").handle();
+        }
 
+        try (InputStream in = storage.getData(file)) {
             executeForStream(file.getFilename(), in);
         }
     }
