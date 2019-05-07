@@ -25,7 +25,6 @@ import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -198,53 +197,11 @@ public class Processes {
         Process process = fetchStandbyProcess(type, tenantId);
 
         if (process == null) {
-            String processId = createStandbyProcess(type, titleSupplier.get(), tenantId, tenantNameSupplier.get());
-            partiallyExecute(processId, task);
+            process = fetchStandbyProcessInLock(type, titleSupplier.get(), tenantId, tenantNameSupplier.get());
         } else {
             modify(process.getId(), p -> p.getState() == ProcessState.STANDBY, p -> p.setStarted(LocalDateTime.now()));
-            partiallyExecute(process.getId(), task);
         }
-    }
-
-    private String createStandbyProcess(String type, String title, String tenantId, String tenantName) {
-        ValueHolder<String> processId = new ValueHolder<>("");
-
-        locks.tryLocked(LOCK_CREATE_STANDBY_PROCESS + "-" + type + "-" + tenantId, Duration.ofSeconds(30), () -> {
-            Process p = fetchStandbyProcess(type, tenantId);
-            if (p != null) {
-                processId.set(p.getIdAsString());
-                return;
-            }
-
-            // Maybe another node recently created a matching standby process. Wait a reasonable amount of time so that the change
-            // becomes visible in elasticsearch/caches. As standby processes are rarely created it is legitimate to hold the lock
-            // while waiting.
-            Wait.millis(1200);
-
-            p = fetchStandbyProcess(type, tenantId);
-            if (p != null) {
-                processId.set(p.getIdAsString());
-                return;
-            }
-
-            p = new Process();
-
-            p.setTitle(title);
-            p.setProcessType(type);
-            p.setTenantId(tenantId);
-            p.setTenantName(tenantName);
-            p.setState(ProcessState.STANDBY);
-            p.setStarted(LocalDateTime.now());
-
-            elastic.update(p);
-            process1stLevelCache.put(p.getId(), p);
-            process2ndLevelCache.put(p.getId(), p);
-            standbyProcessCache.put(type + "-" + tenantId, p);
-
-            processId.set(p.getIdAsString());
-        });
-
-        return processId.get();
+        partiallyExecute(process.getId(), task);
     }
 
     /**
@@ -257,7 +214,7 @@ public class Processes {
      * @return the process with the given type for the given tenant wrapped as optional or an empty optional if no such process exists
      */
     @Nullable
-    protected Process fetchStandbyProcess(String type, String tenantId) {
+    private Process fetchStandbyProcess(String type, String tenantId) {
         Process process = standbyProcessCache.get(type + "-" + tenantId);
         if (process != null) {
             return process;
@@ -273,6 +230,70 @@ public class Processes {
             standbyProcessCache.put(type + "-" + tenantId, process);
         }
 
+        return process;
+    }
+
+    /**
+     * Tries to fetch the appropriate standby process while holding a lock and also after waiting an appropriate amount of time.
+     *
+     * @param type       the type of the standby process to find or create
+     * @param title      the title of the process
+     * @param tenantId   the id of the tenant used to find the appropriate process
+     * @param tenantName the name of the tenant
+     * @return the process which was either resolved after waiting an appropriate amount of time or created
+     */
+    private Process fetchStandbyProcessInLock(String type, String title, String tenantId, String tenantName) {
+        String lockName = LOCK_CREATE_STANDBY_PROCESS + "-" + type + "-" + tenantId;
+        if (!locks.tryLock(lockName, Duration.ofSeconds(30))) {
+            throw Exceptions.handle()
+                            .withSystemErrorMessage(
+                                    "Cannot acquire a lock (%s} to create or fetch a standby process of type %s for %s (%s)",
+                                    lockName,
+                                    type,
+                                    tenantName,
+                                    tenantId)
+                            .handle();
+        }
+        try {
+            // Maybe another node recently created a matching standby process. Wait a reasonable amount of time so that the change
+            // becomes visible in elasticsearch/caches. As standby processes are rarely created it is legitimate to hold the lock
+            // while waiting.
+            Wait.millis(1200);
+
+            Process process = fetchStandbyProcess(type, tenantId);
+            if (process != null) {
+                return process;
+            }
+
+            return createStandbyProcessInLock(type, title, tenantId, tenantName);
+        } finally {
+            locks.unlock(lockName);
+        }
+    }
+
+    /**
+     * Effectively creates a new standby process after we ensured, that it doesn't exist yet (and also isn't created elswhere in parallel).
+     *
+     * @param type       the type of the standby process to find or create
+     * @param title      the title of the process
+     * @param tenantId   the id of the tenant used to find the appropriate process
+     * @param tenantName the name of the tenant
+     * @return the newly created process
+     */
+    private Process createStandbyProcessInLock(String type, String title, String tenantId, String tenantName) {
+        Process process = new Process();
+
+        process.setTitle(title);
+        process.setProcessType(type);
+        process.setTenantId(tenantId);
+        process.setTenantName(tenantName);
+        process.setState(ProcessState.STANDBY);
+        process.setStarted(LocalDateTime.now());
+        elastic.update(process);
+
+        process1stLevelCache.put(process.getId(), process);
+        process2ndLevelCache.put(process.getId(), process);
+        standbyProcessCache.put(type + "-" + tenantId, process);
         return process;
     }
 

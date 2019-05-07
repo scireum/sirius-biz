@@ -22,7 +22,7 @@ import java.time.LocalDate;
  * This reads the scheduler name and date from each given task description and instructs the appropriate scheduler via
  * {@link AnalyticsScheduler#executeBatch(JSONObject, LocalDate)} to execute the specified batch.
  */
-public abstract class AnalyticsBatchExecutor extends DistributedTaskExecutor {
+public abstract class AnalyticsBatchExecutor implements DistributedTaskExecutor {
 
     @Part
     protected GlobalContext globalContext;

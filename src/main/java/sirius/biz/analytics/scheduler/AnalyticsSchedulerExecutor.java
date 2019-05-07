@@ -25,7 +25,7 @@ import java.util.function.Consumer;
  * {@link AnalyticsScheduler#scheduleBatches(Consumer)} to compute all batches to be executed. The emitted batches
  * are then submitted via {@link DistributedTasks} to be executed by the appropriate {@link AnalyticsBatchExecutor}.
  */
-public abstract class AnalyticsSchedulerExecutor extends DistributedTaskExecutor {
+public abstract class AnalyticsSchedulerExecutor implements DistributedTaskExecutor {
 
     @Part
     protected GlobalContext globalContext;

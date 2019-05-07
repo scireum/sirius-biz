@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
 public class LegacyMD5HashFunction implements PasswordHashFunction {
 
     @Override
-    public String computeHash(@Nonnull String username, @Nullable String salt, @Nonnull String password) {
+    public String computeHash(@Nullable String username, @Nullable String salt, @Nonnull String password) {
         String hashInput = salt != null ? salt + password : password;
         return BaseEncoding.base64().encode(Hashing.md5().hashString(hashInput, Charsets.UTF_8).asBytes());
     }

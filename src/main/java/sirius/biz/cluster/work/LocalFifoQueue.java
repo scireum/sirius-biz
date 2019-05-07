@@ -9,6 +9,7 @@
 package sirius.biz.cluster.work;
 
 import com.alibaba.fastjson.JSONObject;
+import sirius.kernel.commons.Explain;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -33,6 +34,8 @@ class LocalFifoQueue implements FifoQueue {
     }
 
     @Override
+    @SuppressWarnings("squid:S2250")
+    @Explain("This performance hotspot is acceptable as this is only a monitoring API")
     public int size() {
         return queue.size();
     }

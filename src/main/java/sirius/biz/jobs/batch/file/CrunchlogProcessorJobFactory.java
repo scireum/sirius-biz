@@ -69,31 +69,36 @@ public abstract class CrunchlogProcessorJobFactory extends SimpleBatchProcessJob
     }
 
     private void handleFile(File file, ProcessContext process) {
-        Watch w = Watch.start();
         process.log(ProcessLog.info()
                               .withFormattedMessage("Importing file: %s (%s)",
                                                     file.getAbsolutePath(),
                                                     NLS.formatSize(file.length())));
         try (BatchContext batchContext = new BatchContext(() -> "Process events from crunchlog.",
                                                           Duration.ofMinutes(5))) {
-            try (GZIPInputStream unzippedStream = new GZIPInputStream(new FileInputStream(file))) {
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(unzippedStream))) {
-                    Map<Class<? extends Event>, InsertQuery<Event>> queries = new HashMap<>();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        handleLine(line, process, batchContext, queries);
-                    }
-                }
-            } catch (IOException e) {
-                process.handle(e);
-            } finally {
-                process.addTiming("File", w.elapsedMillis());
-            }
+            handleFileInBatch(file, process, batchContext);
         } catch (IOException e) {
             process.handle(e);
         }
     }
 
+    private void handleFileInBatch(File file, ProcessContext process, BatchContext batchContext) {
+        Watch w = Watch.start();
+        try (GZIPInputStream unzippedStream = new GZIPInputStream(new FileInputStream(file))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(unzippedStream))) {
+                Map<Class<? extends Event>, InsertQuery<Event>> queries = new HashMap<>();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    handleLine(line, process, batchContext, queries);
+                }
+            }
+        } catch (IOException e) {
+            process.handle(e);
+        } finally {
+            process.addTiming("File", w.elapsedMillis());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
     private void handleLine(String line,
                             ProcessContext process,
                             BatchContext batchContext,

@@ -42,7 +42,7 @@ public class PBKDF2SHA256Function implements PasswordHashFunction {
 
     @Nullable
     @Override
-    public String computeHash(@Nonnull String username, @Nullable String salt, @Nonnull String password) {
+    public String computeHash(@Nullable String username, @Nullable String salt, @Nonnull String password) {
         try {
             if (Strings.isEmpty(salt)) {
                 return null;

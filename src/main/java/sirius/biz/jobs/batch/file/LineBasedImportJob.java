@@ -31,6 +31,8 @@ import java.io.InputStream;
  * <p>
  * Utilizing {@link sirius.biz.importer.ImportHandler import handlers} this can be used as is in most cases. However
  * a subclass overwriting {@link #handleRow(int, Context)} might be required to perform some mappings.
+ *
+ * @param <E> the type of entities being imported by this job
  */
 public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob implements RowProcessor {
 

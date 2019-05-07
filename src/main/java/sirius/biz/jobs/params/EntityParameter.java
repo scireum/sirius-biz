@@ -30,6 +30,7 @@ import java.util.Optional;
  * Provides a base class to implement autocomplete parameters for {@link BaseEntity entities}.
  *
  * @param <V> the type of entities selectable by this parameter
+ * @param <P> recursive type reference to support fluent method calls
  */
 public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityParameter<V, P>>
         extends Parameter<V, P> {
