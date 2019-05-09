@@ -83,6 +83,10 @@ public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob i
 
     @Override
     public void handleRow(int index, Values row) {
+        if (row.length() == 0) {
+            return;
+        }
+
         if (aliases == null) {
             aliases = new LineBasedAliases(row, dictionary);
             process.log(ProcessLog.info().withMessage(aliases.toString()));
