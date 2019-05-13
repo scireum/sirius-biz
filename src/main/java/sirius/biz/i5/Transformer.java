@@ -24,6 +24,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Helps to transform byte oriented record (sent and received from the i5) into Java objects.
@@ -119,30 +120,31 @@ public class Transformer {
     private int transform(Entry<Field, Transform> e, Object object, byte[] data, int offset) {
         Transform info = e.getValue();
         Field field = e.getKey();
+        AtomicInteger nextIndex = new AtomicInteger(offset);
         try {
             if (info.targetType() == AS400Bin4.class) {
                 AS400Bin4 mapper = new AS400Bin4();
+                nextIndex.addAndGet(mapper.getByteLength());
                 field.set(object, mapper.toObject(data, offset));
-                return offset + mapper.getByteLength();
             }
             if (info.targetType() == AS400Text.class) {
                 AS400Text mapper = new AS400Text(info.length());
+                nextIndex.addAndGet(mapper.getByteLength());
                 field.set(object, ((String) mapper.toObject(data, offset)).trim());
-                return offset + mapper.getByteLength();
             }
             if (info.targetType() == AS400ZonedDecimal.class) {
                 AS400ZonedDecimal mapper = new AS400ZonedDecimal(info.length(), info.decimal());
+                nextIndex.addAndGet(mapper.getByteLength());
                 field.set(object, mapper.toObject(data, offset));
-                return offset + mapper.getByteLength();
             }
             if (info.targetType() == AS400PackedDecimal.class) {
                 AS400PackedDecimal mapper = new AS400PackedDecimal(info.length(), info.decimal());
+                nextIndex.addAndGet(mapper.getByteLength());
                 field.set(object, mapper.toObject(data, offset));
-                return offset + mapper.getByteLength();
             }
             if (info.targetType() == Byte.class) {
+                nextIndex.addAndGet(info.length());
                 field.set(object, Arrays.copyOfRange(data, offset, info.length()));
-                return offset + info.length();
             }
             throw Exceptions.handle()
                             .to(I5Connector.LOG)
@@ -152,15 +154,26 @@ public class Transformer {
                                                     field.getName())
                             .handle();
         } catch (Exception ex) {
-            throw Exceptions.handle()
-                            .to(I5Connector.LOG)
-                            .error(ex)
-                            .withSystemErrorMessage("Error while transforming '%s.%s' to %s: %s (%s)",
-                                                    object.getClass().getName(),
-                                                    field.getName(),
-                                                    info.targetType().getName())
-                            .handle();
+            if (info.ignoreErrors()) {
+                I5Connector.LOG.FINE("Ignoring a conversion error for %s of %s: %s (%s)",
+                                     field.getName(),
+                                     object.getClass().getName(),
+                                     ex.getMessage(),
+                                     ex.getClass().getName());
+                Exceptions.ignore(ex);
+            } else {
+                throw Exceptions.handle()
+                                .to(I5Connector.LOG)
+                                .error(ex)
+                                .withSystemErrorMessage("Error while transforming '%s.%s' to %s: %s (%s)",
+                                                        object.getClass().getName(),
+                                                        field.getName(),
+                                                        info.targetType().getName())
+                                .handle();
+            }
         }
+
+        return nextIndex.get();
     }
 
     /**
