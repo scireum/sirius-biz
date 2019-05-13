@@ -126,33 +126,30 @@ public class Transformer {
                 AS400Bin4 mapper = new AS400Bin4();
                 nextIndex.addAndGet(mapper.getByteLength());
                 field.set(object, mapper.toObject(data, offset));
-            }
-            if (info.targetType() == AS400Text.class) {
+            } else if (info.targetType() == AS400Text.class) {
                 AS400Text mapper = new AS400Text(info.length());
                 nextIndex.addAndGet(mapper.getByteLength());
                 field.set(object, ((String) mapper.toObject(data, offset)).trim());
-            }
-            if (info.targetType() == AS400ZonedDecimal.class) {
+            } else if (info.targetType() == AS400ZonedDecimal.class) {
                 AS400ZonedDecimal mapper = new AS400ZonedDecimal(info.length(), info.decimal());
                 nextIndex.addAndGet(mapper.getByteLength());
                 field.set(object, mapper.toObject(data, offset));
-            }
-            if (info.targetType() == AS400PackedDecimal.class) {
+            } else if (info.targetType() == AS400PackedDecimal.class) {
                 AS400PackedDecimal mapper = new AS400PackedDecimal(info.length(), info.decimal());
                 nextIndex.addAndGet(mapper.getByteLength());
                 field.set(object, mapper.toObject(data, offset));
-            }
-            if (info.targetType() == Byte.class) {
+            } else if (info.targetType() == Byte.class) {
                 nextIndex.addAndGet(info.length());
                 field.set(object, Arrays.copyOfRange(data, offset, info.length()));
+            } else {
+                throw Exceptions.handle()
+                                .to(I5Connector.LOG)
+                                .withSystemErrorMessage("Cannot transform a field to type: %s (%s.%s)",
+                                                        info.targetType().getName(),
+                                                        object.getClass().getName(),
+                                                        field.getName())
+                                .handle();
             }
-            throw Exceptions.handle()
-                            .to(I5Connector.LOG)
-                            .withSystemErrorMessage("Cannot transform a field to type: %s (%s.%s)",
-                                                    info.targetType().getName(),
-                                                    object.getClass().getName(),
-                                                    field.getName())
-                            .handle();
         } catch (Exception ex) {
             if (info.ignoreErrors()) {
                 I5Connector.LOG.FINE("Ignoring a conversion error for %s of %s: %s (%s)",
