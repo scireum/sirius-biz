@@ -160,6 +160,7 @@ public class Transformer {
                                      object.getClass().getName(),
                                      ex.getMessage(),
                                      ex.getClass().getName());
+                Exceptions.ignore(ex);
             } else {
                 throw Exceptions.handle()
                                 .to(I5Connector.LOG)
