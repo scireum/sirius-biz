@@ -126,6 +126,7 @@ public class Transformer {
                 AS400Bin4 mapper = new AS400Bin4();
                 nextIndex.addAndGet(mapper.getByteLength());
                 field.set(object, mapper.toObject(data, offset));
+<<<<<<< HEAD
             } else if (info.targetType() == AS400Text.class) {
                 AS400Text mapper = new AS400Text(info.length());
                 nextIndex.addAndGet(mapper.getByteLength());
