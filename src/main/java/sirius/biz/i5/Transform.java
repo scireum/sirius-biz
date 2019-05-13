@@ -57,9 +57,9 @@ public @interface Transform {
     int decimal() default 0;
 
     /**
-     * Determines if errors during data conversion are ignored.
+     * Determines if errors during data conversions are ignored.
      * <p>
-     * This can be used to handle naturally evolving interfaces (where one system ich patched before the other).
+     * This can be used to handle naturally evolving interfaces (where one system is patched before the other).
      *
      * @return <tt>true</tt> to ignore a conversion error and stick with the initial value of the field,
      * <tt>false</tt> to throw an appropriate exception and abort the program call.
