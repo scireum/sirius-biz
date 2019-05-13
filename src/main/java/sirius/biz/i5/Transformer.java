@@ -126,25 +126,30 @@ public class Transformer {
                 AS400Bin4 mapper = new AS400Bin4();
                 nextIndex.addAndGet(mapper.getByteLength());
                 field.set(object, mapper.toObject(data, offset));
+                return nextIndex.get();
             }
             if (info.targetType() == AS400Text.class) {
                 AS400Text mapper = new AS400Text(info.length());
                 nextIndex.addAndGet(mapper.getByteLength());
                 field.set(object, ((String) mapper.toObject(data, offset)).trim());
+                return nextIndex.get();
             }
             if (info.targetType() == AS400ZonedDecimal.class) {
                 AS400ZonedDecimal mapper = new AS400ZonedDecimal(info.length(), info.decimal());
                 nextIndex.addAndGet(mapper.getByteLength());
                 field.set(object, mapper.toObject(data, offset));
+                return nextIndex.get();
             }
             if (info.targetType() == AS400PackedDecimal.class) {
                 AS400PackedDecimal mapper = new AS400PackedDecimal(info.length(), info.decimal());
                 nextIndex.addAndGet(mapper.getByteLength());
                 field.set(object, mapper.toObject(data, offset));
+                return nextIndex.get();
             }
             if (info.targetType() == Byte.class) {
                 nextIndex.addAndGet(info.length());
                 field.set(object, Arrays.copyOfRange(data, offset, info.length()));
+                return nextIndex.get();
             }
             throw Exceptions.handle()
                             .to(I5Connector.LOG)
