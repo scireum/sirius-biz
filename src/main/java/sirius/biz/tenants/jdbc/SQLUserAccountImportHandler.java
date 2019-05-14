@@ -64,4 +64,10 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
                                                      SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                      .inner(LoginData.USERNAME)));
     }
+    
+    @Override
+    protected boolean isChanged(SQLUserAccount entity) {
+        return super.isChanged(entity)
+                || entity.isChanged(SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.GENERATED_PASSWORD));
+    }
 }

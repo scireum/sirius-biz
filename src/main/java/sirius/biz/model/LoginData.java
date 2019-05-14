@@ -116,7 +116,6 @@ public class LoginData extends Composite {
     @Trim
     @Length(50)
     @NullAllowed
-    @AutoImport
     private String generatedPassword;
 
     /**
@@ -189,11 +188,7 @@ public class LoginData extends Composite {
             }
         }
         if (Strings.isEmpty(passwordHash) && Strings.isEmpty(generatedPassword)) {
-            this.generatedPassword = Strings.generatePassword();
-            this.salt = Strings.generateCode(20);
-            this.passwordHash = hashPassword(salt, generatedPassword);
-            this.fingerprint = null;
-            this.lastPasswordChange = LocalDateTime.now();
+            setGeneratedPassword(Strings.generatePassword());
         }
         if (Strings.isEmpty(apiToken)) {
             this.apiToken = Strings.generateCode(32);
@@ -351,6 +346,23 @@ public class LoginData extends Composite {
         }
 
         return Duration.between(lastPasswordChange, LocalDateTime.now()).compareTo(showGeneratedPasswordFor) < 0;
+    }
+
+    /**
+     * Enables a manually set "generated password"
+     * <p>
+     * This is necessary to ensure a correct password import.
+     *
+     * @param generatedPassword the password to set
+     */
+    public void setGeneratedPassword(String generatedPassword) {
+        if (Strings.isFilled(generatedPassword)) {
+            this.generatedPassword = generatedPassword;
+            this.salt = Strings.generateCode(20);
+            this.passwordHash = hashPassword(salt, generatedPassword);
+            this.fingerprint = null;
+            this.lastPasswordChange = LocalDateTime.now();
+        }
     }
 
     public boolean isAccountLocked() {
