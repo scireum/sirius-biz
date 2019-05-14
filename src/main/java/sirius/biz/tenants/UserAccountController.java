@@ -279,7 +279,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                             .handle();
         }
 
-        userAccount.getUserAccountData().getLogin().forceGenerationOfPassword(null);
+        userAccount.getUserAccountData().getLogin().forceGenerationOfPassword();
         userAccount.getMapper().update(userAccount);
 
         auditLog.neutral("AuditLog.passwordGenerated")
@@ -317,7 +317,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                     .log();
             throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
         }
-        account.getUserAccountData().getLogin().forceGenerationOfPassword(null);
+        account.getUserAccountData().getLogin().forceGenerationOfPassword();
 
         UserContext userContext = UserContext.get();
         userContext.runAs(userContext.getUserManager().findUserByUserId(account.getUniqueName()), () -> account.getMapper().update(account));

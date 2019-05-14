@@ -13,7 +13,6 @@ import sirius.biz.jobs.batch.file.LineBasedImportJob;
 import sirius.biz.jobs.batch.file.LineBasedImportJobFactory;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.UserAccountController;
-import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
@@ -39,13 +38,6 @@ public class SQLUserAccountImportJobFactory extends LineBasedImportJobFactory {
             protected SQLUserAccount fillAndVerify(SQLUserAccount entity) {
                 setOrVerify(entity, entity.getTenant(), currentTenant);
                 return super.fillAndVerify(entity);
-            }
-
-            @Override
-            protected SQLUserAccount findAndLoad(Context ctx) {
-                SQLUserAccount account = super.findAndLoad(ctx);
-                account.getUserAccountData().getLogin().forceGenerationOfPassword(null);
-                return account;
             }
         };
     }
