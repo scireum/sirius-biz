@@ -188,7 +188,7 @@ public class LoginData extends Composite {
             }
         }
         if (Strings.isEmpty(passwordHash) && Strings.isEmpty(generatedPassword)) {
-            setGeneratedPassword(Strings.generatePassword());
+            forceGenerationOfPassword(Strings.generatePassword());
         }
         if (Strings.isEmpty(apiToken)) {
             this.apiToken = Strings.generateCode(32);
@@ -200,12 +200,37 @@ public class LoginData extends Composite {
 
     /**
      * Clears all internal fields so that a new password will be generated when the underlying entity is saved.
+     *
+     * @deprecated use {@link LoginData#forceGenerationOfPassword(String)} instead
      */
+    @Deprecated
     public void forceGenerationOfPassword() {
+        forceGenerationOfPassword(null);
+    }
+
+    /**
+     * Clears all internal fields so that a new password will be generated when the underlying entity is saved.
+     * <p>
+     * This is necessary to ensure a correct password import.
+     * <p>
+     * If a new password is given the generated password is set to the parameter
+     *
+     * @param newGeneratedPassword the password to set
+     */
+    public void forceGenerationOfPassword(String newGeneratedPassword) {
         this.cleartextPassword = null;
         this.passwordHash = null;
         this.generatedPassword = null;
+
+        if (Strings.isFilled(newGeneratedPassword)) {
+            this.generatedPassword = newGeneratedPassword;
+            this.salt = Strings.generateCode(20);
+            this.passwordHash = hashPassword(salt, newGeneratedPassword);
+            this.fingerprint = null;
+            this.lastPasswordChange = LocalDateTime.now();
+        }
     }
+
 
     /**
      * Resets the fingerprint so that the user will be logged out on all devices as
@@ -346,23 +371,6 @@ public class LoginData extends Composite {
         }
 
         return Duration.between(lastPasswordChange, LocalDateTime.now()).compareTo(showGeneratedPasswordFor) < 0;
-    }
-
-    /**
-     * Enables a manually set "generated password"
-     * <p>
-     * This is necessary to ensure a correct password import.
-     *
-     * @param generatedPassword the password to set
-     */
-    public void setGeneratedPassword(String generatedPassword) {
-        if (Strings.isFilled(generatedPassword)) {
-            this.generatedPassword = generatedPassword;
-            this.salt = Strings.generateCode(20);
-            this.passwordHash = hashPassword(salt, generatedPassword);
-            this.fingerprint = null;
-            this.lastPasswordChange = LocalDateTime.now();
-        }
     }
 
     public boolean isAccountLocked() {
