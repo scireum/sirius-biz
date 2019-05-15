@@ -676,10 +676,10 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         roles.addAll(tenant.getTenantData().getPermissions().getPermissions());
         roles.add(UserInfo.PERMISSION_LOGGED_IN);
 
-        if (Strings.isFilled(tenant.getTenantData().getAccountNumber())){
+        if (Strings.isFilled(tenant.getTenantData().getAccountNumber())) {
             roles.add("tenant-" + tenant.getTenantData().getAccountNumber());
         }
-        
+
         Set<String> transformedRoles = transformRoles(roles);
         if (isSystemTenant && transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
             roles.add(PERMISSION_SYSTEM_TENANT);
