@@ -55,11 +55,12 @@ public class Transformer {
      *
      * @param object the object to fill
      * @param data   the received byte array
+     * @param ccsid  the CCSID (code page) to use. This is best determined via {@link I5Connection#getCcsid()}
      */
-    public void fromBytes(@Nonnull Object object, byte[] data) {
+    public void fromBytes(@Nonnull Object object, byte[] data, int ccsid) {
         int offset = 0;
         for (Map.Entry<Field, Transform> e : transforms.entrySet()) {
-            offset = transform(e, object, data, offset);
+            offset = transform(e, object, ccsid, data, offset);
         }
     }
 
@@ -68,21 +69,22 @@ public class Transformer {
      *
      * @param object      the object to take data from
      * @param destination the byte array to fill. Note that this has to have the correct length already.
+     * @param ccsid       the CCSID (code page) to use. This is best determined via {@link I5Connection#getCcsid()}
      */
-    public void toBytes(@Nonnull Object object, byte[] destination) {
+    public void toBytes(@Nonnull Object object, byte[] destination, int ccsid) {
         int offset = 0;
         for (Map.Entry<Field, Transform> e : transforms.entrySet()) {
-            offset = serialize(e, object, destination, offset);
+            offset = serialize(e, object, ccsid, destination, offset);
         }
     }
 
-    private int serialize(Entry<Field, Transform> e, Object object, byte[] data, int offset) {
+    private int serialize(Entry<Field, Transform> e, Object object, int ccsid, byte[] data, int offset) {
         Transform info = e.getValue();
         Field field = e.getKey();
         try {
             Object value = field.get(object);
             if (info.targetType() == AS400Text.class) {
-                AS400Text mapper = new AS400Text(info.length());
+                AS400Text mapper = new AS400Text(info.length(), ccsid);
                 mapper.toBytes(value == null ? "" : value, data, offset);
                 return offset + mapper.getByteLength();
             }
@@ -117,7 +119,7 @@ public class Transformer {
         }
     }
 
-    private int transform(Entry<Field, Transform> e, Object object, byte[] data, int offset) {
+    private int transform(Entry<Field, Transform> e, Object object, int ccsid, byte[] data, int offset) {
         Transform info = e.getValue();
         Field field = e.getKey();
         AtomicInteger nextIndex = new AtomicInteger(offset);
@@ -127,7 +129,7 @@ public class Transformer {
                 nextIndex.addAndGet(mapper.getByteLength());
                 field.set(object, mapper.toObject(data, offset));
             } else if (info.targetType() == AS400Text.class) {
-                AS400Text mapper = new AS400Text(info.length());
+                AS400Text mapper = new AS400Text(info.length(), ccsid);
                 nextIndex.addAndGet(mapper.getByteLength());
                 field.set(object, ((String) mapper.toObject(data, offset)).trim());
             } else if (info.targetType() == AS400ZonedDecimal.class) {
