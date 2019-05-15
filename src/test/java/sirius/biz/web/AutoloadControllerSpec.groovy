@@ -23,6 +23,7 @@ class AutoloadControllerSpec extends BaseSpecification {
         def response = TestRequest.SAFEPOST("/auto-load-controller/new")
                                   .withParameter("stringField", "string1")
                                   .withParameter("intField", 42)
+                                  .withParameter("listField", ["listItem1", "listItem2"])
                                   .execute()
         then:
         def id = response.getContentAsJson().get("id")
@@ -31,6 +32,9 @@ class AutoloadControllerSpec extends BaseSpecification {
         AutoLoadEntity entity = mango.find(AutoLoadEntity.class, id).get()
         entity.getStringField() == "string1"
         entity.getIntField() == 42
+        entity.getListField().size() == 2
+        entity.getListField().data().get(0) == "listItem1"
+        entity.getListField().data().get(1) == "listItem2"
     }
 
     def "test update with autoload"() {
@@ -38,11 +42,13 @@ class AutoloadControllerSpec extends BaseSpecification {
         AutoLoadEntity entity = new AutoLoadEntity()
         entity.setStringField("string-not-autoloaded")
         entity.setIntField(1337)
+        entity.getListField().modify().add("starterListItem")
         mango.update(entity)
         when:
         def response = TestRequest.SAFEPOST("/auto-load-controller/" + entity.getId())
                                   .withParameter("stringField", "string-autoloaded")
                                   .withParameter("intField", 1)
+                                  .withParameter("listField", ["listItem3", "listItem4"])
                                   .execute()
         then:
         def id = response.getContentAsJson().get("id")
@@ -51,5 +57,8 @@ class AutoloadControllerSpec extends BaseSpecification {
         AutoLoadEntity entity1 = mango.find(AutoLoadEntity.class, id).get()
         entity1.getStringField() == "string-autoloaded"
         entity1.getIntField() == 1
+        entity1.getListField().size() == 2
+        entity1.getListField().data().get(0) == "listItem3"
+        entity1.getListField().data().get(1) == "listItem4"
     }
 }

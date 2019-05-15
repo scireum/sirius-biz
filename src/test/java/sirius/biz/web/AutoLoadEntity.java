@@ -9,6 +9,7 @@
 package sirius.biz.web;
 
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.types.StringList;
 import sirius.db.mongo.MongoEntity;
 
 public class AutoLoadEntity extends MongoEntity {
@@ -20,6 +21,10 @@ public class AutoLoadEntity extends MongoEntity {
     @Autoloaded
     private int intField;
     public static final Mapping INT_FIELD = Mapping.named("intField");
+
+    @Autoloaded
+    private final StringList listField = new StringList();
+    public static final Mapping LIST_FIELD = Mapping.named("listField");
 
     public String getStringField() {
         return stringField;
@@ -35,5 +40,9 @@ public class AutoLoadEntity extends MongoEntity {
 
     public void setIntField(int intField) {
         this.intField = intField;
+    }
+
+    public StringList getListField() {
+        return listField;
     }
 }
