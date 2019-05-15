@@ -239,4 +239,13 @@ public class I5Connection implements Closeable {
     public String toString() {
         return pool + ": " + i5;
     }
+
+    /**
+     * Returns the CCSID (code page) used by the i5 at the other end.
+     *
+     * @return the CCSID to use when encoding or decoding strings
+     */
+    public int getCcsid() {
+        return i5.getCcsid();
+    }
 }
