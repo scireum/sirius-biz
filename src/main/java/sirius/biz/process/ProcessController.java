@@ -90,6 +90,11 @@ public class ProcessController extends BizController {
         ElasticPageHelper<Process> ph = ElasticPageHelper.withQuery(query);
         ph.withContext(ctx);
         ph.addTermAggregation(Process.STATE, ProcessState.class);
+        ph.addParameterFacet("reference",
+                             "reference-label",
+                             Process.REFERENCES,
+                             NLS.get("ProcessController.reference"),
+                             null);
         ph.addTermAggregation(Process.PROCESS_TYPE, value -> NLS.getIfExists(value, null).orElse(null));
         ph.addTimeAggregation(Process.STARTED,
                               DateRange.lastFiveMinutes(),
