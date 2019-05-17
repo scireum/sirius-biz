@@ -17,11 +17,10 @@ import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.properties.BaseEntityRefProperty;
 import sirius.db.mixing.properties.BooleanProperty;
-import sirius.db.mixing.properties.StringListProperty;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Value;
+import sirius.kernel.commons.Values;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -200,11 +199,7 @@ public class BizController extends BasicController {
             String propertyName = property.getName();
 
             try {
-                if (property instanceof StringListProperty) {
-                    property.parseValue(entity, Value.of(ctx.getParameters(propertyName)));
-                } else {
-                    property.parseValue(entity, ctx.get(propertyName));
-                }
+                property.parseValues(entity, Values.of(ctx.getParameters(propertyName)));
                 ensureTenantMatch(entity, property);
             } catch (HandledException e) {
                 UserContext.setFieldError(propertyName, ctx.get(propertyName));
