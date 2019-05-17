@@ -126,8 +126,8 @@ public class Jobs {
      * @param target the target to generate a preset URL for
      * @return a list of tuples containing the preset URL associated job for the given object
      */
-    public List<Tuple<String, JobFactory>> getMatchingUIJobs(Object target) {
-        return getAvailableJobs(null).filter(JobFactory::canStartInUI)
+    public List<Tuple<String, JobFactory>> getMatchingInteractiveJobs(Object target) {
+        return getAvailableJobs(null).filter(JobFactory::canStartInteractive)
                                      .map(job -> Tuple.create(job.generatePresetUrl(target), job))
                                      .filter(tuple -> tuple.getFirst() != null)
                                      .collect(Collectors.toList());

@@ -1,6 +1,6 @@
 <i:arg type="Object" name="target"/>
 <i:if test="jobsService != null">
-    <i:local name="jobs" value="@jobsService.getMatchingUIJobs(target)"/>
+    <i:local name="jobs" value="@jobsService.getMatchingInteractiveJobs(target)"/>
     <i:if test="!jobs.isEmpty()">
         <w:navbox labelKey="Jobs.matchingJobs">
             <i:for type="Tuple" var="linkAndJob" items="jobs">
