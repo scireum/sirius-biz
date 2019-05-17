@@ -14,6 +14,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.query.Query;
 import sirius.db.mixing.query.QueryField;
 import sirius.db.mixing.query.constraints.Constraint;
+import sirius.kernel.cache.ValueComputer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
@@ -24,6 +25,8 @@ import sirius.web.controller.Page;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -190,6 +193,45 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
         Arrays.stream(enumType.getEnumConstants()).forEach(e -> facet.addItem(e.name(), e.toString(), -1));
 
         return addFilterFacet(facet);
+    }
+
+    /**
+     * Adds a new facet which is only shown if the given parameter is present in the current {@link WebContext}.
+     * <p>
+     * This can be used to show (and keep) a special parameter in a table view. If the parameter isn't present,
+     * nothing will happen. If a value is given the parameter is shown as facet and it is also kept by using a
+     * facet and an additional hidden facet for its label.
+     *
+     * @param parameterName      the name of the parameter in the web request
+     * @param labelParameterName the name of the parameter which contains the label to show
+     * @param filterField        the name of the database field to filter on
+     * @param title              the label of the facet
+     * @param translator         if no label parameter is present, this translator is used to retrieve one
+     * @return the helper itself for fluent method calls
+     */
+    @SuppressWarnings("unchecked")
+    public B addParameterFacet(@Nonnull String parameterName,
+                               @Nullable String labelParameterName,
+                               @Nonnull Mapping filterField,
+                               @Nonnull String title,
+                               @Nullable ValueComputer<String, String> translator) {
+        Objects.requireNonNull(ctx);
+
+        String value = ctx.get(parameterName).asString();
+
+        if (Strings.isFilled(value)) {
+            Facet facet = new Facet(title, parameterName, value, translator);
+            Value labelAsValue = ctx.get(labelParameterName);
+            facet.addItem(value, labelAsValue.getString(), -1);
+            addFacet(facet, (f, q) -> q.eqIgnoreNull(filterField, f.getValue()));
+            if (labelAsValue.isFilled()) {
+                addFacet(new Facet(title, labelParameterName, labelAsValue.asString(), translator),
+                         (ignoredFacet, ignoredQuery) -> {
+                         });
+            }
+        }
+
+        return (B) this;
     }
 
     /**
