@@ -42,7 +42,8 @@ public class JobsController extends BizController {
     public void jobs(WebContext ctx) {
         Page<Tuple<JobCategory, Collection<JobFactory>>> page = new Page<>();
         page.bindToRequest(ctx);
-        page.withItems(jobs.groupByCategory(jobs.getAvailableJobs(page.getQuery()).filter(JobFactory::canStartInUI)));
+        page.withItems(jobs.groupByCategory(jobs.getAvailableJobs(page.getQuery())
+                                                .filter(JobFactory::canStartInteractive)));
 
         ctx.respondWith().template("/templates/biz/jobs/jobs.html.pasta", page);
     }
@@ -56,7 +57,7 @@ public class JobsController extends BizController {
     @Routed("/job/:1")
     @LoginRequired
     public void job(WebContext ctx, String jobType) {
-        jobs.findFactory(jobType, JobFactory.class).startInUI(ctx);
+        jobs.findFactory(jobType, JobFactory.class).startInteractively(ctx);
     }
 
     /**
@@ -68,6 +69,6 @@ public class JobsController extends BizController {
      */
     @Routed(value = "/jobs/api/:1", jsonCall = true)
     public void json(WebContext ctx, JSONStructuredOutput out, String jobType) {
-        jobs.findFactory(jobType, JobFactory.class).startInCall(ctx, out);
+        jobs.findFactory(jobType, JobFactory.class).startInBackground(ctx::get);
     }
 }
