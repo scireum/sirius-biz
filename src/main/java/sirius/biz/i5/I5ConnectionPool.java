@@ -13,6 +13,7 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.PooledObjectFactory;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
@@ -63,6 +64,8 @@ class I5ConnectionPool implements PooledObjectFactory<I5Connection> {
     }
 
     @Override
+    @SuppressWarnings("squid:S2095")
+    @Explain("We cannot close the i5 connection here as it is returned as PooledObject")
     public PooledObject<I5Connection> makeObject() throws Exception {
         try {
             Watch w = Watch.start();
