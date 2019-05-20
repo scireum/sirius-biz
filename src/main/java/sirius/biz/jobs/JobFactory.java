@@ -12,11 +12,13 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Named;
 import sirius.kernel.di.std.Priorized;
+import sirius.kernel.health.HandledException;
 import sirius.web.http.WebContext;
-import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -83,7 +85,7 @@ public interface JobFactory extends Named, Priorized {
      *
      * @return <tt>true</tt> if this job can be started in the ui
      */
-    boolean canStartInUI();
+    boolean canStartInteractive();
 
     /**
      * Starts this job by responding to the given request.
@@ -92,24 +94,7 @@ public interface JobFactory extends Named, Priorized {
      *
      * @param request the request to respond to
      */
-    void startInUI(WebContext request);
-
-    /**
-     * Determines if this job can be started via a JSON call.
-     *
-     * @return <tt>true</tt> if this job can be started via a call
-     */
-    boolean canStartInCall();
-
-    /**
-     * Starts this job and returns the result into the given JSON output.
-     * <p>
-     * Note that the job itself has to enforce its {@link #getRequiredPermissions()}.
-     *
-     * @param request the request which started the job
-     * @param out     the JSON output to populate
-     */
-    void startInCall(WebContext request, JSONStructuredOutput out);
+    void startInteractively(WebContext request);
 
     /**
      * Determines if this job can be started in the background.
@@ -124,8 +109,24 @@ public interface JobFactory extends Named, Priorized {
      * Note that the job itself has to enforce its {@link #getRequiredPermissions()}.
      *
      * @param parameterProvider the parameters provided to the job
+     * @return the id of the {@link sirius.biz.process.Process} which has been started to cover the execution or
+     * <tt>null</tt> if no process was used.
      */
-    void startInBackground(Function<String, Value> parameterProvider);
+    @Nullable
+    String startInBackground(Function<String, Value> parameterProvider);
+
+    /**
+     * Builds a context using values from the given <tt>parameterProvider</tt> and the
+     * {@link #getParameters() parameters} specified by this job.
+     *
+     * @param parameterProvider         used to provide parameter values
+     * @param enforceRequiredParameters determines if required parameters should be enforced
+     * @param errorConsumer             will be supplied with detected errors
+     * @return all provided parameters wrapped as context
+     */
+    Map<String, String> buildAndVerifyContext(Function<String, Value> parameterProvider,
+                                              boolean enforceRequiredParameters,
+                                              Consumer<HandledException> errorConsumer);
 
     /**
      * Returns the name of the {@link JobCategory} this job belongs to.
