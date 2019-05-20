@@ -8,6 +8,7 @@
 
 package sirius.biz.analytics.charts;
 
+import sirius.kernel.commons.Explain;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
@@ -189,6 +190,8 @@ public class Timeseries {
         return intervals.stream().map(Interval::getStart).map(this::formatTimestamp).collect(Collectors.toList());
     }
 
+    @SuppressWarnings("squid:SwitchLastCaseIsDefaultCheck")
+    @Explain("Not required as we fully handle all enum cases.")
     private String formatTimestamp(LocalDateTime timestamp) {
         switch (effectiveUnit) {
             case YEAR:

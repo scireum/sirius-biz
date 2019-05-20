@@ -22,7 +22,6 @@ import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
-import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -95,7 +94,7 @@ public abstract class BasicJobFactory implements JobFactory {
             return null;
         }
 
-        if (!canStartInUI()) {
+        if (!canStartInteractive()) {
             return null;
         }
 
@@ -141,7 +140,7 @@ public abstract class BasicJobFactory implements JobFactory {
     }
 
     @Override
-    public void startInUI(WebContext request) {
+    public void startInteractively(WebContext request) {
         checkPermissions();
         setupTaskContext();
 
@@ -152,7 +151,7 @@ public abstract class BasicJobFactory implements JobFactory {
         });
 
         if (submit.get()) {
-            executeInUI(request, context);
+            executeInteractive(request, context);
             return;
         }
 
@@ -167,46 +166,28 @@ public abstract class BasicJobFactory implements JobFactory {
      * @param request the request to fulfill
      * @param context the parameters wrapped as context
      */
-    protected abstract void executeInUI(WebContext request, Map<String, String> context);
+    protected abstract void executeInteractive(WebContext request, Map<String, String> context);
 
     @Override
-    public void startInCall(WebContext request, JSONStructuredOutput out) {
-        checkPermissions();
-        setupTaskContext();
-        Map<String, String> context = buildAndVerifyContext(request::get, true, error -> {
-            throw error;
-        });
-
-        executeInCall(out, context);
-    }
-
-    /**
-     * Executes the job as response to a JSON call.
-     * <p>
-     * Note that this sill executes in the web server thread.
-     *
-     * @param out     the JSON response to generate
-     * @param context the parameters wrapped as context
-     */
-    protected abstract void executeInCall(JSONStructuredOutput out, Map<String, String> context);
-
-    @Override
-    public void startInBackground(Function<String, Value> parameterProvider) {
+    public String startInBackground(Function<String, Value> parameterProvider) {
         checkPermissions();
         setupTaskContext();
         Map<String, String> context = buildAndVerifyContext(parameterProvider, true, error -> {
             throw error;
         });
 
-        executeInBackground(context);
+        return executeInBackground(context);
     }
 
     /**
      * Executes the job in the background.
      *
      * @param context the parameters wrapped as context
+     * @return the id of the {@link sirius.biz.process.Process} which has been started to cover the execution or
+     * <tt>null</tt> if no process was used.
      */
-    protected abstract void executeInBackground(Map<String, String> context);
+    @Nullable
+    protected abstract String executeInBackground(Map<String, String> context);
 
     /**
      * Fills the {@link TaskContext} with appropriate values.
@@ -228,18 +209,10 @@ public abstract class BasicJobFactory implements JobFactory {
         getRequiredPermissions().forEach(currentUser::assertPermission);
     }
 
-    /**
-     * Builds a context using values from the given <tt>parameterProvider</tt> and the
-     * {@link #getParameters() parameters} sepcified by this job.
-     *
-     * @param parameterProvider         used to provide parameter values
-     * @param enforceRequiredParameters determines if required parameters should be enforced
-     * @param errorConsumer             will be supplied with detected errors
-     * @return all provided parameters wrapped as context
-     */
-    protected Map<String, String> buildAndVerifyContext(Function<String, Value> parameterProvider,
-                                                        boolean enforceRequiredParameters,
-                                                        Consumer<HandledException> errorConsumer) {
+    @Override
+    public Map<String, String> buildAndVerifyContext(Function<String, Value> parameterProvider,
+                                                     boolean enforceRequiredParameters,
+                                                     Consumer<HandledException> errorConsumer) {
         Map<String, String> context = new HashMap<>();
         for (Parameter<?, ?> parameter : getParameters()) {
             try {

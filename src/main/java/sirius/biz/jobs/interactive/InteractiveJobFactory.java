@@ -18,7 +18,6 @@ import sirius.kernel.health.Log;
 import sirius.web.controller.Message;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
-import sirius.web.services.JSONStructuredOutput;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -43,12 +42,12 @@ public abstract class InteractiveJobFactory extends BasicJobFactory {
     protected Cells cells;
 
     @Override
-    public boolean canStartInUI() {
+    public boolean canStartInteractive() {
         return true;
     }
 
     @Override
-    public void startInUI(WebContext request) {
+    public void startInteractively(WebContext request) {
         checkPermissions();
         setupTaskContext();
 
@@ -77,18 +76,8 @@ public abstract class InteractiveJobFactory extends BasicJobFactory {
     protected abstract void generateResponse(WebContext request, Map<String, String> context);
 
     @Override
-    protected void executeInUI(WebContext request, Map<String, String> context) {
+    protected void executeInteractive(WebContext request, Map<String, String> context) {
         throw new UnsupportedOperationException("unreachable");
-    }
-
-    @Override
-    public boolean canStartInCall() {
-        return false;
-    }
-
-    @Override
-    protected void executeInCall(JSONStructuredOutput out, Map<String, String> context) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -97,7 +86,7 @@ public abstract class InteractiveJobFactory extends BasicJobFactory {
     }
 
     @Override
-    protected void executeInBackground(Map<String, String> context) {
+    protected String executeInBackground(Map<String, String> context) {
         throw new UnsupportedOperationException();
     }
 }
