@@ -423,7 +423,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                                                                                 .inner(PersonData.LASTNAME)))
                   .limit(10)
                   .iterateAll(userAccount -> {
-                      result.accept(new AutocompleteHelper.Completion(userAccount.getIdAsString(),
+                      result.accept(new AutocompleteHelper.Completion(userAccount.getUniqueName(),
                                                                       userAccount.toString(),
                                                                       userAccount.toString()));
                   });
