@@ -1,3 +1,5 @@
+<i:arg type="List" name="dbs" />
+<i:arg type="String" name="defaultDB" />
 <w:page titleKey="DatabaseController.sql">
     <i:block name="breadcrumbs">
         <li>
@@ -8,9 +10,18 @@
     <w:pageHeader titleKey="DatabaseController.sql"/>
 
     <div class="well">
-        <div class="input-group">
-            <input type="text" id="query" class="form-control" placeholder="@i18n('NLS.searchkey')" autofocus />
-            <span class="input-group-addon" onclick="execute()"><i class="fa fa-search"></i></span>
+        <div class="row">
+            <div class="col-md-10">
+                <div class="input-group">
+                    <input type="text" id="query" class="form-control" placeholder="@i18n('NLS.searchkey')" autofocus />
+                    <span class="input-group-addon" onclick="execute()"><i class="fa fa-search"></i></span>
+                </div>
+            </div>
+            <w:singleSelect name="db" id="db" span="2">
+                <i:for type="String" var="db" items="dbs">
+                    <option value="@db" @selected="defaultDB == db">@db</option>
+                </i:for>
+            </w:singleSelect>
         </div>
     </div>
 
@@ -27,6 +38,11 @@
 
     <script type="text/javascript">
 
+
+        $('#db').on('change', function() {
+            console.log($('[name=db]').val());
+        });
+
         function execute() {
             clearMessages();
             var $columns = $('#columns');
@@ -36,7 +52,8 @@
             $rows.html('<tr><td class="align-center"><i class="fa fa-spin fa-spinner"></i></td></tr>');
             $.getJSON('/system/sql/api/execute',
                 {
-                    query: $('#query').val()
+                    query: $('#query').val(),
+                    db: $('[name=db]').val()
                 },
                 function (data) {
                     $columns.html('');
