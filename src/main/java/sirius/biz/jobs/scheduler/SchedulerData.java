@@ -25,7 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Contains a composite which describe the scheduling setup of an {@link SchedulerEntry}.
+ * Contains a composite which describes the scheduling setup of an {@link SchedulerEntry}.
  * <p>
  * A composite is used so that the same values can be stored in a SQL as well as a MongoDB entity without repeating
  * too much code.
@@ -243,7 +243,7 @@ public class SchedulerData extends Composite {
         this.lastExecution = timestamp;
         this.numberOfExecutions++;
         if (this.runs != null) {
-            this.runs = this.runs - 1;
+            this.runs -= 1;
         }
     }
 
