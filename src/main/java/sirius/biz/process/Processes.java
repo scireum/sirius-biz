@@ -16,6 +16,7 @@ import sirius.biz.process.logs.ProcessLogType;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.protocol.JournalData;
 import sirius.db.es.Elastic;
+import sirius.db.es.ElasticQuery;
 import sirius.db.mixing.OptimisticLockException;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.DelayLine;
@@ -41,6 +42,8 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -201,6 +204,7 @@ public class Processes {
         } else {
             modify(process.getId(), p -> p.getState() == ProcessState.STANDBY, p -> p.setStarted(LocalDateTime.now()));
         }
+
         partiallyExecute(process.getId(), task);
     }
 
@@ -482,8 +486,23 @@ public class Processes {
      */
     public boolean addLink(String processId, ProcessLink link) {
         return modify(processId,
-                      process -> process.getState() != ProcessState.TERMINATED,
+                      process -> true,
                       process -> process.getLinks().add(link));
+    }
+
+    /**
+     * Adds the given reference to the given process.
+     *
+     * @param processId the process to update
+     * @param reference the reference to attach
+     * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
+     */
+    public boolean addReference(String processId, String reference) {
+        return modify(processId, process -> true, process -> {
+            if (!process.getReferences().contains(reference)) {
+                process.getReferences().add(reference);
+            }
+        });
     }
 
     /**

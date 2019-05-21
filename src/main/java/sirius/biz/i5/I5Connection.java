@@ -22,6 +22,7 @@ import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
+import java.io.Closeable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -29,7 +30,7 @@ import java.util.List;
 /**
  * Represents a connection to an IBM AS400 also known as i5.
  */
-public class I5Connection {
+public class I5Connection implements Closeable {
 
     protected AS400 i5;
     protected I5ConnectionPool pool;
@@ -87,6 +88,7 @@ public class I5Connection {
     /**
      * Closes the connection by returning it back to the connection pool.
      */
+    @Override
     public void close() {
         if (borrowed) {
             pool.returnConnection(this);
@@ -236,5 +238,14 @@ public class I5Connection {
     @Override
     public String toString() {
         return pool + ": " + i5;
+    }
+
+    /**
+     * Returns the CCSID (code page) used by the i5 at the other end.
+     *
+     * @return the CCSID to use when encoding or decoding strings
+     */
+    public int getCcsid() {
+        return i5.getCcsid();
     }
 }

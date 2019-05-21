@@ -19,7 +19,6 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.kernel.di.std.Part;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
-import sirius.web.services.JSONStructuredOutput;
 
 import java.util.Map;
 
@@ -53,25 +52,14 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     }
 
     @Override
-    public boolean canStartInUI() {
+    public boolean canStartInteractive() {
         return true;
     }
 
     @Override
-    public void executeInUI(WebContext request, Map<String, String> context) {
+    public void executeInteractive(WebContext request, Map<String, String> context) {
         String processId = startWithContext(context);
         request.respondWith().redirectToGet("/ps/" + processId);
-    }
-
-    @Override
-    public boolean canStartInCall() {
-        return true;
-    }
-
-    @Override
-    protected void executeInCall(JSONStructuredOutput out, Map<String, String> context) {
-        String processId = startWithContext(context);
-        processes.outputAsJSON(processId, out);
     }
 
     @Override
@@ -80,8 +68,8 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     }
 
     @Override
-    protected void executeInBackground(Map<String, String> context) {
-        startWithContext(context);
+    protected String executeInBackground(Map<String, String> context) {
+        return startWithContext(context);
     }
 
     /**

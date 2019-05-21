@@ -33,16 +33,19 @@ public abstract class Transformable {
     /**
      * Tries for create a new instance of the given type by parsing the given byte array.
      *
-     * @param type the type to be created
-     * @param <T>  the generic type for <tt>type</tt>
-     * @param data the byte array to parse
+     * @param type       the type to be created
+     * @param <T>        the generic type for <tt>type</tt>
+     * @param data       the byte array to parse
+     * @param connection the connection used to determine the CCSID (code page) to use
      * @return a new instance of T filled with the data parsed from <tt>data</tt>
      */
-    public static <T extends Transformable> T parse(@Nonnull Class<T> type, @Nonnull byte[] data) {
+    public static <T extends Transformable> T parse(@Nonnull Class<T> type,
+                                                    @Nonnull byte[] data,
+                                                    I5Connection connection) {
         try {
             Transformer tx = getTransformer(type);
             T result = type.getDeclaredConstructor().newInstance();
-            tx.fromBytes(result, data);
+            tx.fromBytes(result, data, connection.getCcsid());
 
             return result;
         } catch (Exception e) {
@@ -57,9 +60,10 @@ public abstract class Transformable {
      * Transforms this object into a byte representation which can be sent to an i5.
      *
      * @param destination the byte array to fill
+     * @param connection the connection used to determine the CCSID (code page) to use
      */
-    public void toBytes(byte[] destination) {
-        getTransformer(getClass()).toBytes(this, destination);
+    public void toBytes(byte[] destination, I5Connection connection) {
+        getTransformer(getClass()).toBytes(this, destination, connection.getCcsid());
     }
 
     @Override

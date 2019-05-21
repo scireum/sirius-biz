@@ -18,8 +18,8 @@
 
     <properties>
         <sirius.kernel>12.14.1</sirius.kernel>
-        <sirius.web>23.6</sirius.web>
-        <sirius.db>7.8</sirius.db>
+        <sirius.web>23.8</sirius.web>
+        <sirius.db>7.9</sirius.db>
     </properties>
 
     <repositories>
