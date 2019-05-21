@@ -33,8 +33,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Represents a composire which can be embedded into an {@link sirius.db.mixing.BaseEntity} and contain all relevent
- * data to describe a job a its start parameters.
+ * Represents a composite which can be embedded into a {@link sirius.db.mixing.BaseEntity} and contain all relevent
+ * data to describe a job and its start parameters.
  */
 public class JobConfigData extends Composite {
 
@@ -46,7 +46,7 @@ public class JobConfigData extends Composite {
     private String job;
 
     /**
-     * Contains the a copy of {@link JobFactory#getLabel()} to quickly render the selected job.
+     * Contains a copy of {@link JobFactory#getLabel()} to quickly render the selected job.
      */
     public static final Mapping JOB_NAME = Mapping.named("jobName");
     @Length(255)
@@ -123,7 +123,7 @@ public class JobConfigData extends Composite {
     }
 
     /**
-     * Returns a parameter provide to be supplied to {@link JobFactory#startInBackground(Function)}.
+     * Returns a parameter provider to be supplied to {@link JobFactory#startInBackground(Function)}.
      *
      * @return the parameters of this object as parameter provider
      */

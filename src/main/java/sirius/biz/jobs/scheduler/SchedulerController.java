@@ -55,13 +55,13 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
     @Permission(PERMISSION_MANAGE_SCHEDULER)
     @Routed("/jobs/scheduler")
     public void schedulerEntries(WebContext ctx) {
-        BasePageHelper<J, ?, ?, ?> ph = getEntriesAsPage();
-        ph.withContext(ctx);
-        ph.addBooleanFacet(SchedulerEntry.SCHEDULER_DATA.inner(SchedulerData.ENABLED).getName(),
+        BasePageHelper<J, ?, ?, ?> pageHelper = getEntriesAsPage();
+        pageHelper.withContext(ctx);
+        pageHelper.addBooleanFacet(SchedulerEntry.SCHEDULER_DATA.inner(SchedulerData.ENABLED).getName(),
                            NLS.get("SchedulerData.enabled"));
-        ph.withSearchFields(QueryField.contains(SchedulerEntry.JOB_CONFIG_DATA.inner(JobConfigData.JOB_NAME)));
+        pageHelper.withSearchFields(QueryField.contains(SchedulerEntry.JOB_CONFIG_DATA.inner(JobConfigData.JOB_NAME)));
 
-        ctx.respondWith().template("templates/biz/jobs/scheduler/entries.html.pasta", ph.asPage());
+        ctx.respondWith().template("templates/biz/jobs/scheduler/entries.html.pasta", pageHelper.asPage());
     }
 
     /**
