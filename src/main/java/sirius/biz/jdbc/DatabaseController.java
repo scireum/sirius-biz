@@ -33,7 +33,9 @@ import sirius.web.security.Permission;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * Provides the management GUI for database related activities.
@@ -55,6 +57,9 @@ public class DatabaseController extends BasicController {
     @ConfigValue("mixing.jdbc.mixing.database")
     private String defaultDatabase;
 
+    @ConfigValue("jdbc.selectableDatabases")
+    private List<String> selectableDatabases;
+
     /**
      * Renders the UI to execute SQL queries.
      *
@@ -63,7 +68,11 @@ public class DatabaseController extends BasicController {
     @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
     @Routed("/system/sql")
     public void sql(WebContext ctx) {
-        ctx.respondWith().template("templates/biz/model/sql.html.pasta");
+        // Only display selectable databases which are properly configured..
+        List<String> availableDatabases = selectableDatabases.stream()
+                                                             .filter(name -> databases.getDatabases().contains(name))
+                                                             .collect(Collectors.toList());
+        ctx.respondWith().template("templates/biz/model/sql.html.pasta", availableDatabases, defaultDatabase);
     }
 
     /**
@@ -77,12 +86,13 @@ public class DatabaseController extends BasicController {
     @Routed(value = "/system/sql/api/execute", jsonCall = true)
     public void executeQuery(WebContext ctx, JSONStructuredOutput out) throws SQLException {
         Watch w = Watch.start();
-        String database = ctx.get("db").asString(defaultDatabase);
-        Database db = databases.get(database);
-        String query = ctx.get("query").asString();
-        SQLQuery qry = db.createQuery(query);
 
-        if (isDDSStatement(query)) {
+        String database = ctx.get("db").asString(defaultDatabase);
+        Database db = determineDatabase(database);
+        String sqlStatement = ctx.get("query").asString();
+        SQLQuery qry = db.createQuery(sqlStatement);
+
+        if (isDDSStatement(sqlStatement)) {
             // To prevent accidential damage, we try to filter DDS queries (modifying the database structure) and
             // only permit them against our system database.
             if (!Strings.areEqual(database, defaultDatabase)) {
@@ -94,9 +104,7 @@ public class DatabaseController extends BasicController {
             }
 
             out.property("rowModified", qry.executeUpdate());
-        }
-
-        if (isModifyStatement(query)) {
+        } else if (isModifyStatement(sqlStatement)) {
             out.property("rowModified", qry.executeUpdate());
         } else {
             AtomicBoolean arrayStarted = new AtomicBoolean();
@@ -106,6 +114,13 @@ public class DatabaseController extends BasicController {
             }
         }
         out.property("duration", w.duration());
+    }
+
+    protected Database determineDatabase(String database) {
+        if (!selectableDatabases.contains(database)) {
+            throw Exceptions.createHandled().withSystemErrorMessage("Unknown database: %s", database).handle();
+        }
+        return databases.get(database);
     }
 
     private boolean isModifyStatement(String query) {
