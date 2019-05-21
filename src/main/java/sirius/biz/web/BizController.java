@@ -20,6 +20,7 @@ import sirius.db.mixing.properties.BooleanProperty;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Values;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -114,7 +115,7 @@ public class BizController extends BasicController {
      * @param ref    the reference which is either filled or verified that it points to <tt>entity</tt>
      * @param entity the entity the reference must point to
      * @param <E>    the generic type the the entity being referenced
-     * @param <I> the type of the id column of E
+     * @param <I>    the type of the id column of E
      * @throws sirius.kernel.health.HandledException if the entities do no match
      */
     protected <I, E extends BaseEntity<I>> void setOrVerify(BaseEntity<?> owner, BaseEntityRef<I, E> ref, E entity) {
@@ -198,7 +199,7 @@ public class BizController extends BasicController {
             String propertyName = property.getName();
 
             try {
-                property.parseValue(entity, ctx.get(propertyName));
+                property.parseValues(entity, Values.of(ctx.getParameters(propertyName)));
                 ensureTenantMatch(entity, property);
             } catch (HandledException e) {
                 UserContext.setFieldError(propertyName, ctx.get(propertyName));
