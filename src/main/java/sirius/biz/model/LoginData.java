@@ -213,14 +213,6 @@ public class LoginData extends Composite {
         }
     }
 
-    private void updatePassword(String password) {
-        this.salt = Strings.generateCode(20);
-        this.passwordHash = hashPassword(salt, password);
-        this.generatedPassword = null;
-        this.fingerprint = null;
-        this.lastPasswordChange = LocalDateTime.now();
-    }
-
     /**
      * Clears all internal fields so that a new password will be generated when the underlying entity is saved.
      */
