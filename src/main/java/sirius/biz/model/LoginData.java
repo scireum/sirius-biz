@@ -178,23 +178,33 @@ public class LoginData extends Composite {
 
     @BeforeSave
     protected void autofill() {
+        // If there is no password set at all, generate one...
+        if (Strings.isEmpty(passwordHash) && Strings.isEmpty(generatedPassword)) {
+            this.generatedPassword = Strings.generatePassword();
+        }
+
+        // Check if the generated password has been changed (but only if the user isn't currently updating the password)
+        if (Strings.isEmpty(cleartextPassword)
+            && Strings.isFilled(generatedPassword)
+            && checkPassword(username, generatedPassword) != PasswordVerificationResult.VALID) {
+            this.cleartextPassword = generatedPassword;
+        }
+
+        // If a password is to be set (either given by the user or via a generated password), update all
+        // internal fields (unless the password is empty)...
         if (Strings.isFilled(cleartextPassword)) {
             cleartextPassword = cleartextPassword.trim();
             if (Strings.isFilled(cleartextPassword)) {
                 this.salt = Strings.generateCode(20);
                 this.passwordHash = hashPassword(salt, cleartextPassword);
-                this.generatedPassword = null;
                 this.fingerprint = null;
                 this.lastPasswordChange = LocalDateTime.now();
+                if (!Strings.areEqual(cleartextPassword, generatedPassword)) {
+                    this.generatedPassword = null;
+                }
             }
         }
-        if (Strings.isEmpty(passwordHash) && Strings.isEmpty(generatedPassword)) {
-            this.generatedPassword = Strings.generatePassword();
-            this.salt = Strings.generateCode(20);
-            this.passwordHash = hashPassword(salt, generatedPassword);
-            this.fingerprint = null;
-            this.lastPasswordChange = LocalDateTime.now();
-        }
+
         if (Strings.isEmpty(apiToken)) {
             this.apiToken = Strings.generateCode(32);
         }
@@ -207,9 +217,8 @@ public class LoginData extends Composite {
      * Clears all internal fields so that a new password will be generated when the underlying entity is saved.
      */
     public void forceGenerationOfPassword() {
-        this.cleartextPassword = null;
-        this.passwordHash = null;
         this.generatedPassword = null;
+        this.passwordHash = null;
     }
 
     /**
@@ -315,6 +324,10 @@ public class LoginData extends Composite {
 
     public String getGeneratedPassword() {
         return generatedPassword;
+    }
+
+    public void setGeneratedPassword(String generatedPassword) {
+        this.generatedPassword = generatedPassword;
     }
 
     public int getNumberOfLogins() {
