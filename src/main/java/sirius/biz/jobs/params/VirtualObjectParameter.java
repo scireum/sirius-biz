@@ -5,10 +5,12 @@ import sirius.biz.storage.StoredObject;
 import sirius.biz.storage.VirtualObject;
 import sirius.biz.tenants.jdbc.SQLTenant;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -72,6 +74,16 @@ public class VirtualObjectParameter extends EntityParameter<VirtualObject, Virtu
         return findFile(input.asString());
     }
 
+    @Override
+    public Tuple<String, String> renderCurrentValue(Map<String, String> context) {
+        VirtualObject entity = get(context).orElse(null);
+        if (entity == null) {
+            return null;
+        }
+
+        return Tuple.create(entity.getObjectKey(), createLabel(entity));
+    }
+
     /**
      * Finds a {@link VirtualObject} for the given object key.
      * <p>
@@ -82,10 +94,10 @@ public class VirtualObjectParameter extends EntityParameter<VirtualObject, Virtu
      * @return {@link Optional<VirtualObject>} the found virtual object or {@link Optional#empty()}
      */
     private Optional<VirtualObject> findFile(String key) {
-        Optional<StoredObject> file = storage.findByKey((SQLTenant)tenants.getRequiredTenant(), getBucketName(), key);
+        Optional<StoredObject> file = storage.findByKey((SQLTenant) tenants.getRequiredTenant(), getBucketName(), key);
 
         if (!file.isPresent() && Strings.isFilled(defaultFilePath)) {
-            file = storage.findByPath((SQLTenant)tenants.getRequiredTenant(), getBucketName(), defaultFilePath);
+            file = storage.findByPath((SQLTenant) tenants.getRequiredTenant(), getBucketName(), defaultFilePath);
         }
 
         return file.map(storedObject -> {

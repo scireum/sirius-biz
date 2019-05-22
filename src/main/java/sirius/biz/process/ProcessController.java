@@ -87,26 +87,26 @@ public class ProcessController extends BizController {
                                    .orEmpty()
                                    .build());
 
-        ElasticPageHelper<Process> ph = ElasticPageHelper.withQuery(query);
-        ph.withContext(ctx);
-        ph.addTermAggregation(Process.STATE, ProcessState.class);
-        ph.addParameterFacet("reference",
-                             "reference-label",
-                             Process.REFERENCES,
-                             NLS.get("ProcessController.reference"),
-                             null);
-        ph.addTermAggregation(Process.PROCESS_TYPE, value -> NLS.getIfExists(value, null).orElse(null));
-        ph.addTimeAggregation(Process.STARTED,
-                              DateRange.lastFiveMinutes(),
-                              DateRange.lastFiveteenMinutes(),
-                              DateRange.lastTwoHours(),
-                              DateRange.today(),
-                              DateRange.yesterday(),
-                              DateRange.thisWeek(),
-                              DateRange.lastWeek());
-        ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
+        ElasticPageHelper<Process> pageHelper = ElasticPageHelper.withQuery(query);
+        pageHelper.withContext(ctx);
+        pageHelper.addTermAggregation(Process.STATE, ProcessState.class);
+        pageHelper.addParameterFacet("reference",
+                                     "reference-label",
+                                     Process.REFERENCES,
+                                     NLS.get("ProcessController.reference"),
+                                     null);
+        pageHelper.addTermAggregation(Process.PROCESS_TYPE, value -> NLS.getIfExists(value, null).orElse(null));
+        pageHelper.addTimeAggregation(Process.STARTED,
+                                      DateRange.lastFiveMinutes(),
+                                      DateRange.lastFiveteenMinutes(),
+                                      DateRange.lastTwoHours(),
+                                      DateRange.today(),
+                                      DateRange.yesterday(),
+                                      DateRange.thisWeek(),
+                                      DateRange.lastWeek());
+        pageHelper.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
-        ctx.respondWith().template("templates/biz/process/processes.html.pasta", ph.asPage());
+        ctx.respondWith().template("templates/biz/process/processes.html.pasta", pageHelper.asPage());
     }
 
     private Process findAccessibleProcess(String processId) {

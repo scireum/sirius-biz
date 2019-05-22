@@ -31,6 +31,8 @@
                             <a class="btn btn-default" href="/ps/@process.getId()/toggleDebugging">@i18n("ProcessController.enableDebugging")</a>
                         </i:else>
                     </i:if>
+                </i:if>
+                <i:if test="process.getState() == sirius.biz.process.ProcessState.RUNNING">
                     <a class="btn btn-danger" href="/ps/@process.getId()/cancel">@i18n("NLS.cancel")</a>
                 </i:if>
             </div>
