@@ -1,4 +1,5 @@
 <i:arg type="Page" name="accounts"/>
+<i:arg type="java.lang.Class" name="accountType"/>
 
 <w:page titleKey="UserAccount.plural">
     <i:block name="breadcrumbs">
@@ -9,86 +10,96 @@
 
     <w:pageHeader titleKey="UserAccount.plural"/>
 
-    <w:tableSearchHeader page="accounts" baseUrl="/user-accounts">
-        <a class="btn btn-primary" href="/user-account/new">@i18n("Model.create")</a>
-    </w:tableSearchHeader>
+    <div class="row">
+        <div class="col-md-3">
+            <w:filterbox page="accounts" baseUrl="/user-accounts" />
 
-    <w:table data="accounts">
-        <thead>
-        <tr>
-            <th>
-                @i18n("LoginData.username")<br>
-                <span class="muted">@i18n("Model.id")</span>
-            </th>
-            <th>
-                @i18n("Model.name")
-            </th>
-            <th>
-                @i18n("Model.email")
-            </th>
-            <th>
-                @i18n("LoginData.password")<br>
-                <span class="muted">@i18n("LoginData.generatedPassword")</span>
-            </th>
-            <th class="align-right">
-                @i18n("LoginData.lastLogin")<br>
-                <span class="muted">@i18n("LoginData.numberOfLogins")</span>
-            </th>
-            <th/>
-        </tr>
-        </thead>
-        <tbody>
-        <i:for type="sirius.biz.tenants.UserAccount" var="account" items="accounts.getItems()">
-            <tr @if (account.getUserAccountData().getLogin().isAccountLocked()) { class="warning" }>
-                <td>
-                    <a class="link"
-                       href="/user-account/@account.getIdAsString()">@account.getUserAccountData().getLogin().getUsername()</a><br>
-                    <span class="muted">@account.getIdAsString()</span>
-                </td>
-                <td>
-                    @account.getUserAccountData().getPerson()
-                </td>
-                <td>
-                    @account.getUserAccountData().getEmail()
-                </td>
-                <td>
-                    <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
-                        <i:if test="@account.getUserAccountData().canSendGeneratedPassword()">
-                            <a href="/user-account/@account.getIdAsString()/generate-and-send-password?@accounts.createQueryString()"
-                               class="link">
-                                <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generateAndSend")
-                            </a>
-                            <br>
-                        </i:if>
+            <w:jobs target="accountType" />
+        </div>
+        <div class="col-md-9">
+            <w:tableSearchHeader page="accounts" baseUrl="/user-accounts">
+                <a class="btn btn-primary" href="/user-account/new">@i18n("Model.create")</a>
+            </w:tableSearchHeader>
 
-                        <a href="/user-account/@account.getIdAsString()/generate-password?@accounts.createQueryString()"
-                           class="link">
-                            <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generate")
-                        </a>
-                        <br>
-                    </i:if>
+            <w:table data="accounts">
+                <thead>
+                <tr>
+                    <th>
+                        @i18n("LoginData.username")<br>
+                        <span class="muted">@i18n("Model.id")</span>
+                    </th>
+                    <th>
+                        @i18n("Model.name")
+                    </th>
+                    <th>
+                        @i18n("Model.email")
+                    </th>
+                    <th>
+                        @i18n("LoginData.password")<br>
+                        <span class="muted">@i18n("LoginData.generatedPassword")</span>
+                    </th>
+                    <th class="align-right">
+                        @i18n("LoginData.lastLogin")<br>
+                        <span class="muted">@i18n("LoginData.numberOfLogins")</span>
+                    </th>
+                    <th/>
+                </tr>
+                </thead>
+                <tbody>
+                <i:for type="sirius.biz.tenants.UserAccount" var="account" items="accounts.getItems()">
+                    <tr @if (account.getUserAccountData().getLogin().isAccountLocked()) { class="warning" }>
+                        <td>
+                            <a class="link"
+                               href="/user-account/@account.getIdAsString()">@account.getUserAccountData().getLogin().getUsername()</a><br>
+                            <span class="muted">@account.getIdAsString()</span>
+                        </td>
+                        <td>
+                            @account.getUserAccountData().getPerson()
+                        </td>
+                        <td>
+                            @account.getUserAccountData().getEmail()
+                        </td>
+                        <td>
+                            <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
+                                <i:if test="@account.getUserAccountData().canSendGeneratedPassword()">
+                                    <a href="/user-account/@account.getIdAsString()/generate-and-send-password?@accounts.createQueryString()"
+                                       class="link">
+                                        <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generateAndSend")
+                                    </a>
+                                    <br>
+                                </i:if>
 
-                    <i:if test="@account.getUserAccountData().getLogin().isDisplayGeneratedPassword()">
-                        <span class="muted">@account.getUserAccountData().getLogin().getGeneratedPassword()</span>
-
-                        <i:else>
-                            <i:if test="isFilled(account.getUserAccountData().getLogin().getGeneratedPassword())">
-                                <span class="muted">@i18n("LoginData.password.hiddenGenerated")</span>
+                                <a href="/user-account/@account.getIdAsString()/generate-password?@accounts.createQueryString()"
+                                   class="link">
+                                    <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generate")
+                                </a>
+                                <br>
                             </i:if>
-                        </i:else>
-                    </i:if>
-                </td>
-                <td class="align-right">
-                    @toUserString(account.getUserAccountData().getLogin().getLastLogin())<br>
-                    <span class="muted">@account.getUserAccountData().getLogin().getNumberOfLogins()</span>
-                </td>
-                <td class="col-md-2 align-center">
-                    <w:deleteLink url="@apply('/user-account/%s/delete', account.getIdAsString())" page="accounts"/>
-                </td>
-            </tr>
-        </i:for>
-        </tbody>
-    </w:table>
 
-    <w:pagination page="accounts" baseUrl="/user-accounts"/>
+                            <i:if test="@account.getUserAccountData().getLogin().isDisplayGeneratedPassword()">
+                                <span class="muted">@account.getUserAccountData().getLogin().getGeneratedPassword()</span>
+
+                                <i:else>
+                                    <i:if test="isFilled(account.getUserAccountData().getLogin().getGeneratedPassword())">
+                                        <span class="muted">@i18n("LoginData.password.hiddenGenerated")</span>
+                                    </i:if>
+                                </i:else>
+                            </i:if>
+                        </td>
+                        <td class="align-right">
+                            @toUserString(account.getUserAccountData().getLogin().getLastLogin())<br>
+                            <span class="muted">@account.getUserAccountData().getLogin().getNumberOfLogins()</span>
+                        </td>
+                        <td class="col-md-2 align-center">
+                            <w:deleteLink url="@apply('/user-account/%s/delete', account.getIdAsString())" page="accounts"/>
+                        </td>
+                    </tr>
+                </i:for>
+                </tbody>
+            </w:table>
+
+            <w:pagination page="accounts" baseUrl="/user-accounts"/>
+        </div>
+    </div>
+
 </w:page>

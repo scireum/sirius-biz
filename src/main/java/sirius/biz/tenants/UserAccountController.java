@@ -85,6 +85,9 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     public void accounts(WebContext ctx) {
         BasePageHelper<U, ?, ?, ?> ph = getUsersAsPage();
         ph.withContext(ctx);
+        ph.addBooleanFacet(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                        .inner(LoginData.ACCOUNT_LOCKED)
+                                                        .toString(), NLS.get("LoginData.accountLocked"));
         ph.withSearchFields(QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL)),
                             QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                              .inner(LoginData.USERNAME)),
@@ -93,7 +96,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                             QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                              .inner(PersonData.LASTNAME)));
 
-        ctx.respondWith().template("templates/biz/tenants/user-accounts.html.pasta", ph.asPage());
+        ctx.respondWith().template("templates/biz/tenants/user-accounts.html.pasta", ph.asPage(), getUserClass());
     }
 
     @SuppressWarnings("unchecked")
@@ -248,20 +251,19 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             userContext.runAs(userContext.getUserManager().findUserByUserId(userAccount.getUniqueName()), () -> {
                 Context context = Context.create();
 
-                context.set(PARAM_PASSWORD,
-                        userAccount.getUserAccountData().getLogin().getGeneratedPassword())
-                        .set(PARAM_NAME, userAccount.getUserAccountData().getPerson().getAddressableName())
-                        .set(PARAM_USERNAME, userAccount.getUserAccountData().getLogin().getUsername())
-                        .set(PARAM_URL, getBaseUrl())
-                        .set(PARAM_ROOT, wondergemRoot);
+                context.set(PARAM_PASSWORD, userAccount.getUserAccountData().getLogin().getGeneratedPassword())
+                       .set(PARAM_NAME, userAccount.getUserAccountData().getPerson().getAddressableName())
+                       .set(PARAM_USERNAME, userAccount.getUserAccountData().getLogin().getUsername())
+                       .set(PARAM_URL, getBaseUrl())
+                       .set(PARAM_ROOT, wondergemRoot);
 
                 mails.createEmail()
-                        .to(userAccount.getUserAccountData().getEmail(),
-                                userAccount.getUserAccountData().getPerson().toString())
-                        .subject(NLS.get("mail-password.subject"))
-                        .textTemplate("mail/useraccount/password.pasta", context)
-                        .htmlTemplate("mail/useraccount/password.html.pasta", context)
-                        .send();
+                     .to(userAccount.getUserAccountData().getEmail(),
+                         userAccount.getUserAccountData().getPerson().toString())
+                     .subject(NLS.get("mail-password.subject"))
+                     .textTemplate("mail/useraccount/password.pasta", context)
+                     .htmlTemplate("mail/useraccount/password.html.pasta", context)
+                     .send();
             });
         } else {
             UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
@@ -320,8 +322,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         account.getUserAccountData().getLogin().forceGenerationOfPassword();
 
         UserContext userContext = UserContext.get();
-        userContext.runAs(userContext.getUserManager().findUserByUserId(account.getUniqueName()), () -> account.getMapper().update(account));
-
+        userContext.runAs(userContext.getUserManager().findUserByUserId(account.getUniqueName()),
+                          () -> account.getMapper().update(account));
 
         auditLog.neutral("AuditLog.resetPassword")
                 .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
@@ -333,24 +335,23 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         if (Strings.isFilled(account.getUserAccountData().getEmail())) {
             userContext.runAs(userContext.getUserManager().findUserByUserId(account.getUniqueName()), () -> {
                 Context context = Context.create()
-                        .set(PARAM_REASON,
-                                NLS.fmtr("UserAccountController.forgotPassword.reason")
-                                        .set("ip", ctx.getRemoteIP().toString())
-                                        .format())
-                        .set(PARAM_PASSWORD,
-                                account.getUserAccountData().getLogin().getGeneratedPassword())
-                        .set(PARAM_NAME, account.getUserAccountData().getPerson().getAddressableName())
-                        .set(PARAM_USERNAME, account.getUserAccountData().getLogin().getUsername())
-                        .set(PARAM_URL, getBaseUrl())
-                        .set(PARAM_ROOT, wondergemRoot);
+                                         .set(PARAM_REASON,
+                                              NLS.fmtr("UserAccountController.forgotPassword.reason")
+                                                 .set("ip", ctx.getRemoteIP().toString())
+                                                 .format())
+                                         .set(PARAM_PASSWORD,
+                                              account.getUserAccountData().getLogin().getGeneratedPassword())
+                                         .set(PARAM_NAME, account.getUserAccountData().getPerson().getAddressableName())
+                                         .set(PARAM_USERNAME, account.getUserAccountData().getLogin().getUsername())
+                                         .set(PARAM_URL, getBaseUrl())
+                                         .set(PARAM_ROOT, wondergemRoot);
                 mails.createEmail()
-                        .to(account.getUserAccountData().getEmail(), account.getUserAccountData().getPerson().toString())
-                        .subject(NLS.get("mail-password.subject"))
-                        .textTemplate("mail/useraccount/password.pasta", context)
-                        .htmlTemplate("mail/useraccount/password.html.pasta", context)
-                        .send();
+                     .to(account.getUserAccountData().getEmail(), account.getUserAccountData().getPerson().toString())
+                     .subject(NLS.get("mail-password.subject"))
+                     .textTemplate("mail/useraccount/password.pasta", context)
+                     .htmlTemplate("mail/useraccount/password.html.pasta", context)
+                     .send();
             });
-
         }
     }
 

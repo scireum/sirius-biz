@@ -308,12 +308,13 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
     @SuppressWarnings("unchecked")
     protected Optional<U> loadAccountByName(String user) {
-        return (Optional<U>) mixing.getDescriptor(getUserClass())
-                                   .getMapper()
-                                   .select(getUserClass())
-                                   .eq(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                                    .inner(LoginData.USERNAME), user.toLowerCase())
-                                   .one();
+        return (Optional<U>) (Object) mixing.getDescriptor(getUserClass())
+                                            .getMapper()
+                                            .select(getUserClass())
+                                            .eq(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                             .inner(LoginData.USERNAME),
+                                                user.toLowerCase())
+                                            .one();
     }
 
     /**

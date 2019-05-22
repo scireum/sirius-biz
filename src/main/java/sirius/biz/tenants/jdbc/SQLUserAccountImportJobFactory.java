@@ -42,6 +42,11 @@ public class SQLUserAccountImportJobFactory extends LineBasedImportJobFactory {
         };
     }
 
+    @Override
+    protected boolean hasPresetFor(Object targetObject) {
+        return targetObject == SQLUserAccount.class;
+    }
+
     @Nonnull
     @Override
     public String getName() {

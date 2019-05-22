@@ -172,8 +172,14 @@ public class SchedulerData extends Composite {
         if (runs != null && runs <= 0) {
             return false;
         }
+
+        // Since the scheduler runs about every 50s, we might fire twice in the same minute - in this case,
+        // we abort here. If however, an entry is to be executed in two consecutive minutes, we have to execute it
+        // even if the execution interval isn't exactly 60s - otherwise we might miss an execution.
         if (lastExecution != null && Duration.between(lastExecution, checkpoint).getSeconds() <= 60) {
-            return false;
+            if (lastExecution.getMinute() == checkpoint.getMinute()) {
+                return false;
+            }
         }
         if (!matches(checkpoint.getYear(), year)) {
             return false;
