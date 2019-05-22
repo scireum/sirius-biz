@@ -12,13 +12,27 @@
             }
         </style>
     </i:block>
+
     <i:block name="breadcrumbs">
         <li>
             <a href="/jobs">@i18n("JobFactory.plural")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="JobFactory.plural"/>
+    <w:pageHeader>
+        <div class="row">
+            <div class="col-md-8">
+                @i18n("JobFactory.plural")
+            </div>
+            <div class="col-md-4 align-right">
+                <i:if test="isFrameworkEnabled('biz.scheduler-jdbc') || isFrameworkEnabled('biz.scheduler-mongo')">
+                    <w:permission permission="permission-manage-scheduler">
+                        <a class="btn btn-default" href="/jobs/scheduler">@i18n("SchedulerEntry.plural")</a>
+                    </w:permission>
+                </i:if>
+            </div>
+        </div>
+    </w:pageHeader>
 
     <w:tableSearchHeader page="jobs" baseUrl="/jobs"/>
 

@@ -40,13 +40,13 @@
                     </option>
                 </i:if>
             </w:autocompleteSingleSelect>
-            <w:booleanfield span="4"
-                            name="schedulerData_enabled"
-                            labelKey="SchedulerData.enabled"
-                            helpKey="SchedulerData.enabled.help"
-                            trueLabelKey="SchedulerData.enabled.true"
-                            falseLabelKey="SchedulerData.enabled.false"
-                            value="@entry.getSchedulerData().isEnabled()" />
+            <w:booleanSelect span="4"
+                             name="schedulerData_enabled"
+                             labelKey="SchedulerData.enabled"
+                             helpKey="SchedulerData.enabled.help"
+                             trueLabelKey="SchedulerData.enabled.true"
+                             falseLabelKey="SchedulerData.enabled.false"
+                             value="@entry.getSchedulerData().isEnabled()" />
             <w:textfield span="4"
                          name="schedulerData_runs"
                          labelKey="SchedulerData.runs"

@@ -10,7 +10,7 @@
 
     <w:menuSection>
             <w:menuItem titleKey="JobsController.jobs" url="/jobs" permission="permission-execute-jobs" framework="biz.jobs"/>
-            <w:menuItem titleKey="Process.plural" url="/ps" permission="permission-manage-jobs" framework="biz.processes"/>
+            <w:menuItem titleKey="Process.plural" url="/ps" framework="biz.processes"/>
     </w:menuSection>
 
     <w:menuSection>
