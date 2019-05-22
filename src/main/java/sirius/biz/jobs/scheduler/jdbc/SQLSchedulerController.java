@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.scheduler.jdbc;
 
+import sirius.biz.jobs.scheduler.JobConfigData;
 import sirius.biz.jobs.scheduler.SchedulerController;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.SQLPageHelper;
@@ -32,6 +33,8 @@ public class SQLSchedulerController extends SchedulerController<SQLSchedulerEntr
 
     @Override
     protected BasePageHelper<SQLSchedulerEntry, ?, ?, ?> getEntriesAsPage() {
-        return SQLPageHelper.withQuery(tenants.forCurrentTenant(oma.select(SQLSchedulerEntry.class)));
+        return SQLPageHelper.withQuery(tenants.forCurrentTenant(oma.select(SQLSchedulerEntry.class)
+                                                                   .orderAsc(SQLSchedulerEntry.JOB_CONFIG_DATA.inner(
+                                                                           JobConfigData.JOB))));
     }
 }
