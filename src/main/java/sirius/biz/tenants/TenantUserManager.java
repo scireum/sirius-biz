@@ -193,7 +193,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     }
 
     private UserInfo becomeSpyUser(String spyId, UserInfo rootUser) {
-        U spyUser = fetchAccount(spyId, null);
+        U spyUser = fetchAccount(spyId);
         if (spyUser == null) {
             return null;
         }
@@ -253,7 +253,17 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @SuppressWarnings("unchecked")
     @Nullable
     protected T fetchTenant(String tenantId) {
-        return (T) tenantsCache.get(tenantId, this::loadTenant);
+        T tenant = (T) tenantsCache.get(tenantId);
+        if (tenant != null) {
+            return tenant;
+        } else {
+            tenant = loadTenant(tenantId);
+            if (tenant != null) {
+                tenantsCache.put(tenantId, tenant);
+            }
+
+            return tenant;
+        }
     }
 
     protected T loadTenant(String tenantId) {
@@ -281,26 +291,29 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         if (!optionalAccount.isPresent()) {
             return null;
         }
-        if (optionalAccount.get().getUserAccountData().getLogin().isAccountLocked()) {
+
+        U account = optionalAccount.get();
+
+        userAccountCache.put(account.getUniqueName(), account);
+        tenantsCache.put(account.getTenant().getValue().getIdAsString(), account.getTenant().getValue());
+        rolesCache.remove(account.getUniqueName());
+        configCache.remove(account.getUniqueName());
+
+        if (account.getUserAccountData().getLogin().isAccountLocked()) {
             throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
         }
 
-        U account = fetchAccount(optionalAccount.get().getUniqueName(), optionalAccount.get());
-        if (account == null) {
-            return null;
-        }
         return asUser(account, null);
     }
 
     @SuppressWarnings("unchecked")
     protected Optional<U> loadAccountByName(String user) {
-        return (Optional<U>) (Object) mixing.getDescriptor(getUserClass())
-                                            .getMapper()
-                                            .select(getUserClass())
-                                            .eq(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                                             .inner(LoginData.USERNAME),
-                                                user.toLowerCase())
-                                            .one();
+        return (Optional<U>) mixing.getDescriptor(getUserClass())
+                                   .getMapper()
+                                   .select(getUserClass())
+                                   .eq(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                    .inner(LoginData.USERNAME), user.toLowerCase())
+                                   .one();
     }
 
     /**
@@ -313,7 +326,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @Nullable
     @Override
     public UserInfo findUserByUserId(String accountId) {
-        U account = fetchAccount(accountId, null);
+        U account = fetchAccount(accountId);
         if (account == null) {
             return null;
         }
@@ -347,7 +360,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     private UserInfo verifyIpRange(WebContext ctx, UserInfo info) {
         String actualUser = ctx.getSessionValue(scope.getScopeId() + "-user-id").asString();
 
-        U account = fetchAccount(actualUser, null);
+        U account = fetchAccount(actualUser);
 
         if (account == null) {
             return defaultUser;
@@ -387,39 +400,28 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return UserInfo.Builder.withUser(info).withPermissions(roles).build();
     }
 
-    /**
-     * Tries to fetch the requested account from the cache.
-     * <p>
-     * If a new account from the database is present (during login) this can be passed in as <tt>accountFromDB</tt>. If
-     * not, the value can be left <tt>null</tt> and a lookup will be performed if necessary. This ensures, that the
-     * cache is updated if a stale entry is detected during login.
-     *
-     * @param accountId    the id of the account to fetch
-     * @param givenAccount a fresh version from the database to check cache integrity
-     * @return the most current version from the cache to re-use computed fields if possible
-     */
     @SuppressWarnings("unchecked")
     @Nullable
-    private U fetchAccount(@Nonnull String accountId, @Nullable U givenAccount) {
-        U account;
-        U accountFromDB = givenAccount;
-        U accountFromCache = (U) userAccountCache.get(accountId);
-        if (accountFromCache == null || (accountFromDB != null
-                                         && accountFromDB.getVersion() > accountFromCache.getVersion())) {
-            if (accountFromDB == null) {
-                accountFromDB = loadAccount(accountId);
-                if (accountFromDB == null) {
-                    return null;
-                }
+    private U fetchAccount(@Nonnull String accountId) {
+        U account = (U) userAccountCache.get(accountId);
+        if (account == null) {
+            account = loadAccount(accountId);
+            if (account == null) {
+                return null;
             }
-            userAccountCache.put(accountFromDB.getUniqueName(), accountFromDB);
-            rolesCache.remove(accountFromDB.getUniqueName());
-            configCache.remove(accountFromDB.getUniqueName());
-            account = accountFromDB;
-        } else {
-            account = accountFromCache;
+            userAccountCache.put(account.getUniqueName(), account);
+            tenantsCache.put(account.getTenant().getValue().getIdAsString(), account.getTenant().getValue());
+            rolesCache.remove(account.getUniqueName());
+            configCache.remove(account.getUniqueName());
+
+            return account;
         }
-        account.getTenant().setValue(fetchTenant(account, accountFromDB));
+
+        T tenant = fetchTenant(String.valueOf(account.getTenant().getId()));
+        if (tenant == null) {
+            return null;
+        }
+        account.getTenant().setValue(tenant);
 
         return account;
     }
@@ -427,46 +429,6 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @SuppressWarnings("unchecked")
     protected U loadAccount(@Nonnull String accountId) {
         return (U) mixing.getDescriptor(getUserClass()).getMapper().resolve(accountId).orElse(null);
-    }
-
-    protected T loadTenantOfAccount(U account) {
-        return mixing.getDescriptor(getTenantClass())
-                     .getMapper()
-                     .find(getTenantClass(), account.getTenant().getId())
-                     .orElseThrow(() -> new IllegalStateException(Strings.apply("Tenant %s for UserAccount %s vanished!",
-                                                                                account.getTenant().getId(),
-                                                                                account.getId())));
-    }
-
-    @SuppressWarnings("unchecked")
-    private T fetchTenant(U account, @Nullable U accountFromDB) {
-        T tenantFromCache = (T) tenantsCache.get(String.valueOf(account.getTenant().getId()));
-
-        // If we found a tenant and no database object is present - we don't need
-        // to check for updates or changes, just return the cached value.
-        if (tenantFromCache != null && accountFromDB == null) {
-            return tenantFromCache;
-        }
-
-        // ...otherwise, let's check if our cached instance is still up to date
-        T tenantFromDB = loadTenantOfAccount(account);
-
-        // Only actually use the instance from the database if we either have no cached value
-        // or if it is outdated. Otherwise the cached instance is preferred, because it might contain
-        // useful pre-computed values...
-        if (tenantFromCache == null || tenantFromDB.getVersion() > tenantFromCache.getVersion()) {
-            tenantsCache.put(tenantFromDB.getIdAsString(), tenantFromDB);
-
-            // We also need to re-compute the roles and config of the user
-            // as this is also determined by the tenant
-            rolesCache.remove(account.getUniqueName());
-            configCache.remove(account.getUniqueName());
-            configCache.remove(tenantFromDB.getUniqueName());
-
-            return tenantFromDB;
-        }
-
-        return tenantFromCache;
     }
 
     protected UserInfo asUser(U account, List<String> extraRoles) {
@@ -610,7 +572,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
     @Override
     protected U getUserObject(UserInfo userInfo) {
-        return fetchAccount(userInfo.getUserId(), null);
+        return fetchAccount(userInfo.getUserId());
     }
 
     @Override
@@ -664,7 +626,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @SuppressWarnings({"squid:S1126", "RedundantIfStatement"})
     @Explain("Using explicit abort conditions and a final true makes all checks obvious")
     protected boolean isUserStillValid(String userId, WebContext ctx) {
-        U user = fetchAccount(userId, null);
+        U user = fetchAccount(userId);
 
         if (user == null) {
             return false;
@@ -714,10 +676,10 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         roles.addAll(tenant.getTenantData().getPermissions().getPermissions());
         roles.add(UserInfo.PERMISSION_LOGGED_IN);
 
-        if (Strings.isFilled(tenant.getTenantData().getAccountNumber())){
+        if (Strings.isFilled(tenant.getTenantData().getAccountNumber())) {
             roles.add("tenant-" + tenant.getTenantData().getAccountNumber());
         }
-        
+
         Set<String> transformedRoles = transformRoles(roles);
         if (isSystemTenant && transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
             roles.add(PERMISSION_SYSTEM_TENANT);
@@ -733,7 +695,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             return cachedRoles;
         }
 
-        U user = fetchAccount(userId, null);
+        U user = fetchAccount(userId);
         Set<String> roles;
         if (user != null) {
             roles = computeRoles(user,
@@ -750,7 +712,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @Nonnull
     @Override
     protected String computeUsername(@Nullable WebContext ctx, String userId) {
-        U account = fetchAccount(userId, null);
+        U account = fetchAccount(userId);
         if (account == null) {
             return "(unknown)";
         } else {
