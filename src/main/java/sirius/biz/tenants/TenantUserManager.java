@@ -262,14 +262,13 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         T tenant = (T) tenantsCache.get(tenantId);
         if (tenant != null) {
             return tenant;
-        } else {
-            tenant = loadTenant(tenantId);
-            if (tenant != null) {
-                tenantsCache.put(tenantId, tenant);
-            }
-
-            return tenant;
         }
+
+        tenant = loadTenant(tenantId);
+        if (tenant != null) {
+            tenantsCache.put(tenantId, tenant);
+        }
+        return tenant;
     }
 
     protected T loadTenant(String tenantId) {
