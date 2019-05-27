@@ -132,6 +132,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @Part
     protected static AuditLog auditLog;
 
+    @Part
+    private static AdditionalRolesProvider additionalRolesProvider;
+
     protected static Cache<String, Set<String>> rolesCache = CacheManager.createCoherentCache("tenants-roles");
     protected static Cache<String, UserAccount<?, ?>> userAccountCache =
             CacheManager.createCoherentCache("tenants-users");
@@ -684,9 +687,16 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         Set<String> transformedRoles = transformRoles(roles);
         if (isSystemTenant && transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
             roles.add(PERMISSION_SYSTEM_TENANT);
-            return transformRoles(roles);
+            return applyAdditionalRolesProvider(user, tenant, transformRoles(roles));
         }
-        return transformedRoles;
+        return applyAdditionalRolesProvider(user, tenant, transformedRoles);
+    }
+
+    private Set<String> applyAdditionalRolesProvider(U user, T tenant, Set<String> roles) {
+        if (additionalRolesProvider == null) {
+            return roles;
+        }
+        return additionalRolesProvider.addAdditionalRoles(user, tenant, roles);
     }
 
     @Override
