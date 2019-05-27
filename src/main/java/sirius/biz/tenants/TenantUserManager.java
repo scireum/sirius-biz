@@ -135,6 +135,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @Part
     private static AdditionalRolesProvider additionalRolesProvider;
 
+    @Part
+    private static LanguageProvider languageProvider;
+
     protected static Cache<String, Set<String>> rolesCache = CacheManager.createCoherentCache("tenants-roles");
     protected static Cache<String, UserAccount<?, ?>> userAccountCache =
             CacheManager.createCoherentCache("tenants-users");
@@ -745,6 +748,14 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @Nonnull
     @Override
     protected String computeLang(WebContext ctx, String userId) {
-        return NLS.getDefaultLanguage();
+        if (languageProvider == null) {
+            return NLS.getDefaultLanguage();
+        }
+        U userAccount = fetchAccount(userId);
+        if (userAccount == null) {
+            return NLS.getDefaultLanguage();
+        }
+        return languageProvider.getLanguage(userAccount, userAccount.getTenant().getValue())
+                               .orElse(NLS.getDefaultLanguage());
     }
 }
