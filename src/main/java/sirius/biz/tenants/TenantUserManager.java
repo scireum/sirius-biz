@@ -150,9 +150,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         super(scope, config);
         this.systemTenant = config.get("system-tenant").asString();
         this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(true);
-        this.availableLanguages = config.getStringList("availableLanguages").isEmpty() ?
+        this.availableLanguages = config.getStringList("available-languages").isEmpty() ?
                                   Collections.singletonList(NLS.getDefaultLanguage()) :
-                                  config.getStringList("availableLanguages");
+                                  config.getStringList("available-languages");
     }
 
     /**
