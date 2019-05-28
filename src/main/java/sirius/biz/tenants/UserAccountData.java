@@ -92,6 +92,7 @@ public class UserAccountData extends Composite implements MessageProvider {
     public static final Mapping LANG = Mapping.named("lang");
     @Autoloaded
     @NullAllowed
+    @Length(2)
     private String lang;
 
     @Part

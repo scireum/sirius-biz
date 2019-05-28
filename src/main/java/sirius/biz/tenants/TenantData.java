@@ -224,6 +224,7 @@ public class TenantData extends Composite implements Journaled {
     public static final Mapping LANG = Mapping.named("lang");
     @NullAllowed
     @Autoloaded
+    @Length(2)
     private String lang;
 
     @Part
