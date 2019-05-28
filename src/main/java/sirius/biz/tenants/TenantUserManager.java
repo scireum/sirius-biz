@@ -692,14 +692,14 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         Set<String> transformedRoles = transformRoles(roles);
         if (isSystemTenant && transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
             roles.add(PERMISSION_SYSTEM_TENANT);
-            return applyAdditionalRolesProviders(user, true, transformRoles(roles));
+            return applyAdditionalRolesProviders(user, transformRoles(roles));
         }
-        return applyAdditionalRolesProviders(user, false, transformedRoles);
+        return applyAdditionalRolesProviders(user, transformedRoles);
     }
 
-    private Set<String> applyAdditionalRolesProviders(U user, boolean isSystemTenant, Set<String> roles) {
+    private Set<String> applyAdditionalRolesProviders(U user, Set<String> roles) {
         for (AdditionalRolesProvider rolesProvider : additionalRolesProviders) {
-            rolesProvider.addAdditionalRoles(user, isSystemTenant, roles::add);
+            rolesProvider.addAdditionalRoles(user, roles::add);
         }
         return roles;
     }
