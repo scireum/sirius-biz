@@ -86,6 +86,9 @@ public class UserAccountData extends Composite implements MessageProvider {
     @AutoImport
     private boolean externalLoginRequired = false;
 
+    /**
+     * The language of the {@link UserAccount}.
+     */
     public static final Mapping LANG = Mapping.named("lang");
     @Autoloaded
     @NullAllowed

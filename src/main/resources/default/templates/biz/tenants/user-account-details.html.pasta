@@ -13,7 +13,7 @@
         </div>
 
         <div class="row">
-            <w:singleSelect name="userAccountData_lang" labelKey="Language">
+            <w:singleSelect name="userAccountData_lang" labelKey="Model.lang">
                 <i:for var="language" items="availableLanguages" type="String">
                     <option value="@language" @selected="language == account.getUserAccountData().getLang()">
                         @i18n(apply('Language.%s', language))

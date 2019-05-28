@@ -692,14 +692,14 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         Set<String> transformedRoles = transformRoles(roles);
         if (isSystemTenant && transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
             roles.add(PERMISSION_SYSTEM_TENANT);
-            return applyAdditionalRolesProvider(user, tenant, true, transformRoles(roles));
+            return applyAdditionalRolesProviders(user, true, transformRoles(roles));
         }
-        return applyAdditionalRolesProvider(user, tenant, false, transformedRoles);
+        return applyAdditionalRolesProviders(user, false, transformedRoles);
     }
 
-    private Set<String> applyAdditionalRolesProvider(U user, T tenant, boolean isSystemTenant, Set<String> roles) {
+    private Set<String> applyAdditionalRolesProviders(U user, boolean isSystemTenant, Set<String> roles) {
         for (AdditionalRolesProvider rolesProvider : additionalRolesProviders) {
-            rolesProvider.addAdditionalRoles(user, tenant, isSystemTenant, roles::add);
+            rolesProvider.addAdditionalRoles(user, isSystemTenant, roles::add);
         }
         return roles;
     }
@@ -747,6 +747,11 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         }
     }
 
+    /**
+     * Returns the languages available for this scope.
+     *
+     * @return the languages available for this scope
+     */
     @Nonnull
     public List<String> getAvailableLanguages() {
         return Collections.unmodifiableList(availableLanguages);

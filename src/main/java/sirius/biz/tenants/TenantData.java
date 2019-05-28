@@ -218,6 +218,9 @@ public class TenantData extends Composite implements Journaled {
     public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal;
 
+    /**
+     * The language of the {@link Tenant}
+     */
     public static final Mapping LANG = Mapping.named("lang");
     @NullAllowed
     @Autoloaded

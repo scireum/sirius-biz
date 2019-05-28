@@ -11,7 +11,7 @@
                          labelKey="Tenant.accountNumber" required="true"/>
         </div>
         <div class="row">
-            <w:singleSelect name="tenantData_lang" labelKey="Language">
+            <w:singleSelect name="tenantData_lang" labelKey="Model.lang">
                 <i:for var="language" items="availableLanguages" type="String">
                     <option value="@language" @selected="language == tenant.getTenantData().getLang()">
                         @i18n(apply('Language.%s', language))
