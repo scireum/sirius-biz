@@ -1,6 +1,7 @@
 <i:arg type="sirius.biz.tenants.Tenant" name="tenant"/>
 <i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 <i:arg type="List" name="tenants"/>
+<i:arg type="List" name="availableLanguages"/>
 
 <i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" page="details">
     <w:editForm url="@apply('/tenant/%s', tenant.getIdAsString())">
@@ -8,6 +9,15 @@
             <w:textfield span="12" name="tenantData_name" value="@tenant.getTenantData().getName()" labelKey="Model.name" required="true"/>
             <w:textfield span="12" name="tenantData_accountNumber" value="@tenant.getTenantData().getAccountNumber()"
                          labelKey="Tenant.accountNumber" required="true"/>
+        </div>
+        <div class="row">
+            <w:singleSelect name="tenantData_lang" labelKey="Language">
+                <i:for var="language" items="availableLanguages" type="String">
+                    <option value="@language" @selected="language == tenant.getTenantData().getLang()">
+                        @i18n(apply('Language.%s', language))
+                    </option>
+                </i:for>
+            </w:singleSelect>
         </div>
         <w:subHeading labelKey="Model.address"/>
         <div class="row">

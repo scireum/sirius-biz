@@ -122,6 +122,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
     protected final String systemTenant;
     protected final boolean acceptApiTokens;
+    protected final List<String> availableLanguages;
 
     @Part
     protected static Tenants<?, ?, ?> tenants;
@@ -150,6 +151,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         super(scope, config);
         this.systemTenant = config.get("system-tenant").asString();
         this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(true);
+        this.availableLanguages = config.getStringList("availableLanguages").isEmpty() ?
+                                  Collections.singletonList(NLS.getDefaultLanguage()) :
+                                  config.getStringList("availableLanguages");
     }
 
     /**
@@ -742,6 +746,11 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         } else {
             return tenant.getTenantData().getName();
         }
+    }
+
+    @Nonnull
+    public List<String> getAvailableLanguages() {
+        return Collections.unmodifiableList(availableLanguages);
     }
 
     @Nonnull

@@ -1,5 +1,6 @@
 <i:arg type="sirius.biz.tenants.UserAccount" name="account"/>
 <i:arg type="sirius.biz.tenants.UserAccountController" name="controller"/>
+<i:arg type="List" name="availableLanguages"/>
 
 <i:invoke template="/templates/biz/tenants/user-account.html.pasta" account="account" page="details">
     <w:editForm url="@apply('/user-account/%s', account.getIdAsString())">
@@ -9,6 +10,16 @@
                          helpKey="UserAccount.email.help"/>
             <w:textfield name="userAccountData_login_username" value="@account.getUserAccountData().getLogin().getUsername()" labelKey="LoginData.username"
                          helpKey="UserAccount.username.help"/>
+        </div>
+
+        <div class="row">
+            <w:singleSelect name="userAccountData_lang" labelKey="Language">
+                <i:for var="language" items="availableLanguages" type="String">
+                    <option value="@language" @selected="language == account.getUserAccountData().getLang()">
+                        @i18n(apply('Language.%s', language))
+                    </option>
+                </i:for>
+            </w:singleSelect>
         </div>
 
         <div class="row">

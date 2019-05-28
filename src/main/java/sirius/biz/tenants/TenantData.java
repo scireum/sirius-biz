@@ -218,6 +218,11 @@ public class TenantData extends Composite implements Journaled {
     public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal;
 
+    public static final Mapping LANG = Mapping.named("lang");
+    @NullAllowed
+    @Autoloaded
+    private String lang;
+
     @Part
     private static Tenants<?, ?, ?> tenants;
 
@@ -420,5 +425,13 @@ public class TenantData extends Composite implements Journaled {
         }
 
         return NLS.get("Model.tenant");
+    }
+
+    public String getLang() {
+        return lang;
+    }
+
+    public void setLang(String lang) {
+        this.lang = lang;
     }
 }
