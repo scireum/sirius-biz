@@ -74,7 +74,7 @@ public class StoredIncident extends SearchableEntity {
     private LocalDateTime lastOccurrence = LocalDateTime.now();
 
     /**
-     * Contains the number of occurences between the <tt>firstOccurence</tt> and <tt>lastOccurence</tt>.
+     * Contains the number of occurrences between the <tt>firstOccurrence</tt> and <tt>lastOccurrence</tt>.
      */
     public static final Mapping NUMBER_OF_OCCURRENCES = Mapping.named("numberOfOccurrences");
     private int numberOfOccurrences = 0;
