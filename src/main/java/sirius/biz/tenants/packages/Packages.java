@@ -9,6 +9,7 @@
 package sirius.biz.tenants.packages;
 
 import com.typesafe.config.Config;
+import sirius.biz.model.PermissionData;
 import sirius.kernel.Sirius;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
@@ -83,5 +84,22 @@ public class Packages {
         }
         String requiredPermission = config.getString(role);
         return UserContext.get().getUser().hasPermission(requiredPermission);
+    }
+
+    /**
+     * Checks whether the permissionData object has the required permission for a given role.
+     *
+     * @param scope          the scope
+     * @param role           the role in question
+     * @param permissionData the permissionData object to check
+     * @return true if the permissionData object has the required permission, false if not
+     */
+    public boolean hasRequiredPermissionForRole(String scope, String role, PermissionData permissionData) {
+        Config config = getScopeExtension(scope).getConfig("required-permissions-for-role");
+        if (!config.hasPath(role)) {
+            return true;
+        }
+        String requiredPermission = config.getString(role);
+        return permissionData.getPermissions().contains(requiredPermission);
     }
 }
