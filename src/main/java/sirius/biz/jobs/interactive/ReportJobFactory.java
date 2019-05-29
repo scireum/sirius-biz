@@ -9,9 +9,11 @@
 package sirius.biz.jobs.interactive;
 
 import sirius.biz.analytics.reports.Cell;
+import sirius.biz.analytics.reports.Cells;
 import sirius.biz.analytics.reports.Report;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.di.std.Part;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
@@ -24,6 +26,9 @@ import java.util.function.BiConsumer;
  * Provides a base implementation for interactive charts which compute an display a {@link Report}.
  */
 public abstract class ReportJobFactory extends InteractiveJobFactory {
+
+    @Part
+    protected Cells cells;
 
     @Override
     public String getIcon() {
