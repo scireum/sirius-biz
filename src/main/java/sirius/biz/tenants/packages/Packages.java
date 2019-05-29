@@ -12,6 +12,7 @@ import com.typesafe.config.Config;
 import sirius.kernel.Sirius;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
+import sirius.kernel.settings.Extension;
 import sirius.web.security.UserContext;
 
 import java.util.List;
@@ -29,7 +30,11 @@ public class Packages {
      * @return the pricePackages of the scope
      */
     public List<String> getPricePackages(String scope) {
-        return Sirius.getSettings().getExtension("security.packages", scope).getStringList("packages");
+        return getScopeExtension(scope).getStringList("packages");
+    }
+
+    private Extension getScopeExtension(String scope) {
+        return Sirius.getSettings().getExtension("security.packages", scope);
     }
 
     /**
@@ -50,7 +55,7 @@ public class Packages {
      * @return the upgrades of the scope
      */
     public List<String> getUpgrades(String scope) {
-        return Sirius.getSettings().getExtension("security.packages", scope).getStringList("upgrades");
+        return getScopeExtension(scope).getStringList("upgrades");
     }
 
     /**
@@ -72,9 +77,7 @@ public class Packages {
      * @return true if the current user has the required permission, false if not
      */
     public boolean hasRequiredPermissionForRole(String scope, String role) {
-        Config config = Sirius.getSettings()
-                              .getExtension("security.packages", scope)
-                              .getConfig("required-permissions-for-role");
+        Config config = getScopeExtension(scope).getConfig("required-permissions-for-role");
         if (!config.hasPath(role)) {
             return true;
         }
