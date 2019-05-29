@@ -23,9 +23,10 @@ import java.util.Optional;
  */
 public abstract class Parameter<V, P extends Parameter<V, P>> {
 
-    protected enum Visibility {
-        NORMAL, ONLY_WITH_VALUE, HIDDEN
-    }
+    /**
+     * Provides a tri-state value for the visibility of a parameter.
+     */
+    private enum Visibility {NORMAL, ONLY_WITH_VALUE, HIDDEN}
 
     protected String name;
     protected String label;
