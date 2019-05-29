@@ -81,4 +81,9 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
     public String toString() {
         return userAccountData.toString();
     }
+
+    @Override
+    public String getRateLimitScope() {
+        return getIdAsString();
+    }
 }
