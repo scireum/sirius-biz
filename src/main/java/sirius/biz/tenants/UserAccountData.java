@@ -86,6 +86,15 @@ public class UserAccountData extends Composite implements MessageProvider {
     @AutoImport
     private boolean externalLoginRequired = false;
 
+    /**
+     * The language of the {@link UserAccount}.
+     */
+    public static final Mapping LANG = Mapping.named("lang");
+    @Autoloaded
+    @NullAllowed
+    @Length(2)
+    private String lang;
+
     @Part
     private static Mails ms;
 
@@ -121,17 +130,18 @@ public class UserAccountData extends Composite implements MessageProvider {
                             .handle();
         }
 
-        userObject.assertUnique(UserAccount.USER_ACCOUNT_DATA.inner(LOGIN).inner(LoginData.USERNAME), getLogin().getUsername());
+        userObject.assertUnique(UserAccount.USER_ACCOUNT_DATA.inner(LOGIN).inner(LoginData.USERNAME),
+                                getLogin().getUsername());
     }
 
     @AfterSave
     protected void onModify() {
-        TenantUserManager.flushCacheForUserAccount((UserAccount<?,?>)userObject);
+        TenantUserManager.flushCacheForUserAccount((UserAccount<?, ?>) userObject);
     }
 
     @AfterDelete
     protected void onDelete() {
-        TenantUserManager.flushCacheForUserAccount((UserAccount<?,?>)userObject);
+        TenantUserManager.flushCacheForUserAccount((UserAccount<?, ?>) userObject);
     }
 
     /**
@@ -166,7 +176,7 @@ public class UserAccountData extends Composite implements MessageProvider {
     }
 
     protected Tenant<?> getTenant() {
-        return ((UserAccount<?,?>)userObject).getTenant().getValue();
+        return ((UserAccount<?, ?>) userObject).getTenant().getValue();
     }
 
     @Override
@@ -282,5 +292,13 @@ public class UserAccountData extends Composite implements MessageProvider {
 
     public void setExternalLoginRequired(boolean externalLoginRequired) {
         this.externalLoginRequired = externalLoginRequired;
+    }
+
+    public String getLang() {
+        return lang;
+    }
+
+    public void setLang(String lang) {
+        this.lang = lang;
     }
 }

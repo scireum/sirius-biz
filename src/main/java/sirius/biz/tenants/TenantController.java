@@ -150,7 +150,8 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
                                .getMapper()
                                .select(getTenantClass())
                                .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME))
-                               .queryList());
+                               .queryList(),
+                         ((TenantUserManager) UserContext.get().getUserManager()).getAvailableLanguages());
         }
     }
 
@@ -246,7 +247,8 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
                             QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.STREET)),
                             QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.CITY)));
 
-        ctx.respondWith().template("templates/biz/tenants/select-tenant.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
+        ctx.respondWith()
+           .template("templates/biz/tenants/select-tenant.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
     }
 
     /**
