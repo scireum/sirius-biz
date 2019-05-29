@@ -1,0 +1,15 @@
+<i:arg type="String" name="scope"/>
+<i:arg type="String" name="realm"/>
+<i:arg type="String" name="labelKey" default="@apply('Isenguard.%s', realm)"/>
+<i:arg type="String" name="label" default="@i18n(labelKey)"/>
+<i:arg type="java.lang.Integer" name="explicitLimit" default="null"/>
+
+<i:pragma name="inline" value="true" />
+<i:pragma name="description" value="Outputs the current value and the limit for the given realm and scope. Emits no output, if no limit is applied." />
+
+<i:if test="isenguard != null">
+    <i:local name="info" value="@isenguard.getRateLimitInfo(scope, realm, explicitLimit)"/>
+    <i:if test="info != null">
+        <w:infoboxElement label="@label" value="@info" />
+    </i:if>
+</i:if>
