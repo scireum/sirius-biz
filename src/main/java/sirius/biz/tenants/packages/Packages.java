@@ -18,7 +18,7 @@ import sirius.web.security.UserContext;
 import java.util.List;
 
 /**
- * This helper class is responsible for reading the conf
+ * This helper class is a wrapper for the <tt>security.packages</tt> configuratuions.
  */
 @Register(classes = Packages.class)
 public class Packages {
