@@ -122,6 +122,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
     protected final String systemTenant;
     protected final boolean acceptApiTokens;
+    protected final List<String> availableLanguages;
 
     @Part
     protected static Tenants<?, ?, ?> tenants;
@@ -144,6 +145,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         super(scope, config);
         this.systemTenant = config.get("system-tenant").asString();
         this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(true);
+        this.availableLanguages = config.getStringList("available-languages").isEmpty() ?
+                                  Collections.singletonList(NLS.getDefaultLanguage()) :
+                                  config.getStringList("available-languages");
     }
 
     /**
@@ -256,14 +260,13 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         T tenant = (T) tenantsCache.get(tenantId);
         if (tenant != null) {
             return tenant;
-        } else {
-            tenant = loadTenant(tenantId);
-            if (tenant != null) {
-                tenantsCache.put(tenantId, tenant);
-            }
-
-            return tenant;
         }
+
+        tenant = loadTenant(tenantId);
+        if (tenant != null) {
+            tenantsCache.put(tenantId, tenant);
+        }
+        return tenant;
     }
 
     protected T loadTenant(String tenantId) {
@@ -732,9 +735,25 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         }
     }
 
+    /**
+     * Returns the languages available for this scope.
+     *
+     * @return the languages available for this scope
+     */
+    @Nonnull
+    public List<String> getAvailableLanguages() {
+        return Collections.unmodifiableList(availableLanguages);
+    }
+
     @Nonnull
     @Override
     protected String computeLang(WebContext ctx, String userId) {
-        return NLS.getDefaultLanguage();
+        U userAccount = fetchAccount(userId);
+        if (userAccount == null) {
+            return NLS.getDefaultLanguage();
+        }
+        return Strings.firstFilled(userAccount.getUserAccountData().getLang(),
+                                   userAccount.getTenant().getValue().getTenantData().getLang(),
+                                   NLS.getDefaultLanguage());
     }
 }
