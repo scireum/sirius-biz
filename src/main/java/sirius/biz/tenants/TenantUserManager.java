@@ -20,9 +20,7 @@ import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
-import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
-import sirius.kernel.di.std.Parts;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
@@ -134,9 +132,6 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
     @Part
     protected static AuditLog auditLog;
-
-    @Parts(AdditionalRolesProvider.class)
-    private static PartCollection<AdditionalRolesProvider> additionalRolesProviders;
 
     protected static Cache<String, Set<String>> rolesCache = CacheManager.createCoherentCache("tenants-roles");
     protected static Cache<String, UserAccount<?, ?>> userAccountCache =
@@ -692,16 +687,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         Set<String> transformedRoles = transformRoles(roles);
         if (isSystemTenant && transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
             roles.add(PERMISSION_SYSTEM_TENANT);
-            return applyAdditionalRolesProviders(user, transformRoles(roles));
+            return transformRoles(roles);
         }
-        return applyAdditionalRolesProviders(user, transformedRoles);
-    }
-
-    private Set<String> applyAdditionalRolesProviders(U user, Set<String> roles) {
-        for (AdditionalRolesProvider rolesProvider : additionalRolesProviders) {
-            rolesProvider.addAdditionalRoles(user, roles::add);
-        }
-        return roles;
+        return transformedRoles;
     }
 
     @Override
