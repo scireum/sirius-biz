@@ -58,7 +58,7 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
         BasePageHelper<J, ?, ?, ?> pageHelper = getEntriesAsPage();
         pageHelper.withContext(ctx);
         pageHelper.addBooleanFacet(SchedulerEntry.SCHEDULER_DATA.inner(SchedulerData.ENABLED).getName(),
-                           NLS.get("SchedulerData.enabled"));
+                                   NLS.get("SchedulerData.enabled"));
         pageHelper.withSearchFields(QueryField.contains(SchedulerEntry.JOB_CONFIG_DATA.inner(JobConfigData.JOB_NAME)));
 
         ctx.respondWith().template("templates/biz/jobs/scheduler/entries.html.pasta", pageHelper.asPage());
@@ -154,12 +154,13 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
     @Permission(PERMISSION_MANAGE_SCHEDULER)
     @Routed("/jobs/scheduler/entry/:1/delete")
     public void deleteEntry(WebContext ctx, String entryId) {
-        Optional<J> entry = tryFindForTenant(getEntryType(), entryId);
-        entry.ifPresent(schedulerEntry -> {
-
-            schedulerEntry.getMapper().delete(schedulerEntry);
-            showDeletedMessage();
-        });
+        if (ctx.ensureSafePOST()) {
+            Optional<J> entry = tryFindForTenant(getEntryType(), entryId);
+            entry.ifPresent(schedulerEntry -> {
+                schedulerEntry.getMapper().delete(schedulerEntry);
+                showDeletedMessage();
+            });
+        }
 
         schedulerEntries(ctx);
     }
