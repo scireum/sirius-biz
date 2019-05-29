@@ -25,17 +25,31 @@ class IsenguardSpec extends BaseSpecification {
         isenguard.isRateLimitReached("127.0.0.1",
                                      "test",
                                      Isenguard.USE_LIMIT_FROM_CONFIG,
-                                     { -> counter.incrementAndGet() })
-        isenguard.isRateLimitReached("127.0.0.1", "test", Isenguard.USE_LIMIT_FROM_CONFIG,
-                                     { -> counter.incrementAndGet() })
-        isenguard.isRateLimitReached("127.0.0.1", "test", Isenguard.USE_LIMIT_FROM_CONFIG,
-                                     { -> counter.incrementAndGet() })
-        def fourth = isenguard.isRateLimitReached("127.0.0.1", "test", Isenguard.USE_LIMIT_FROM_CONFIG,
-                                                  { -> counter.incrementAndGet() })
-        def fifth = isenguard.isRateLimitReached("127.0.0.1", "test", Isenguard.USE_LIMIT_FROM_CONFIG,
-                                                 { -> counter.incrementAndGet() })
-        def sixth = isenguard.isRateLimitReached("127.0.0.1", "test", Isenguard.USE_LIMIT_FROM_CONFIG,
-                                                 { -> counter.incrementAndGet() })
+                                     { -> counter.incrementAndGet() },
+                                     { -> new RateLimitingInfo(null, null, null) })
+        isenguard.isRateLimitReached("127.0.0.1",
+                                     "test",
+                                     Isenguard.USE_LIMIT_FROM_CONFIG,
+                                     { -> counter.incrementAndGet() },
+                                     { -> new RateLimitingInfo(null, null, null) })
+        isenguard.isRateLimitReached("127.0.0.1",
+                                     "test", Isenguard.USE_LIMIT_FROM_CONFIG,
+                                     { -> counter.incrementAndGet() },
+                                     { -> new RateLimitingInfo(null, null, null) })
+        def fourth = isenguard.isRateLimitReached("127.0.0.1",
+                                                  "test",
+                                                  Isenguard.USE_LIMIT_FROM_CONFIG,
+                                                  { -> counter.incrementAndGet() },
+                                                  { -> new RateLimitingInfo(null, null, null) })
+        def fifth = isenguard.isRateLimitReached("127.0.0.1",
+                                                 "test",
+                                                 Isenguard.USE_LIMIT_FROM_CONFIG,
+                                                 { -> counter.incrementAndGet() },
+                                                 { -> new RateLimitingInfo(null, null, null) })
+        def sixth = isenguard.isRateLimitReached("127.0.0.1",
+                                                 "test", Isenguard.USE_LIMIT_FROM_CONFIG,
+                                                 { -> counter.incrementAndGet() },
+                                                 { -> new RateLimitingInfo(null, null, null) })
         then:
         fourth == false
         fifth == true
