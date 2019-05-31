@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.packages;
+package sirius.biz.packages;
 
 import com.typesafe.config.Config;
 import sirius.biz.model.PermissionData;
@@ -25,12 +25,12 @@ import java.util.List;
 public class Packages {
 
     /**
-     * Returns the pricePackages for the given scope.
+     * Returns the list of packages available for the given scope.
      *
      * @param scope the scope
      * @return the pricePackages of the scope
      */
-    public List<String> getPricePackages(String scope) {
+    public List<String> getPackages(String scope) {
         return getScopeExtension(scope).getStringList("packages");
     }
 
@@ -45,12 +45,12 @@ public class Packages {
      * @param packageKey the package key
      * @return the translated name for the given package of the given scope
      */
-    public String getPricePackageName(String scope, String packageKey) {
+    public String getPackageName(String scope, String packageKey) {
         return NLS.get("Packages.package." + scope + "." + packageKey);
     }
 
     /**
-     * Returns the upgrades for the given scope.
+     * Returns the list of upgrades available for the given scope.
      *
      * @param scope the scope
      * @return the upgrades of the scope
@@ -73,12 +73,11 @@ public class Packages {
     /**
      * Checks whether the current user has the required permission for a given role.
      *
-     * @param scope the scope
-     * @param role  the role in question
+     * @param role the role in question
      * @return true if the current user has the required permission, false if not
      */
-    public boolean hasRequiredPermissionForRole(String scope, String role) {
-        Config config = getScopeExtension(scope).getConfig("required-permissions-for-role");
+    public boolean hasRequiredPermissionForRole(String role) {
+        Config config = Sirius.getSettings().getConfig("security.packages.required-permissions-for-role");
         if (!config.hasPath(role)) {
             return true;
         }
@@ -89,13 +88,12 @@ public class Packages {
     /**
      * Checks whether the permissionData object has the required permission for a given role.
      *
-     * @param scope          the scope
      * @param role           the role in question
      * @param permissionData the permissionData object to check
      * @return true if the permissionData object has the required permission, false if not
      */
-    public boolean hasRequiredPermissionForRole(String scope, String role, PermissionData permissionData) {
-        Config config = getScopeExtension(scope).getConfig("required-permissions-for-role");
+    public boolean hasRequiredPermissionForRole(String role, PermissionData permissionData) {
+        Config config = Sirius.getSettings().getConfig("security.packages.required-permissions-for-role");
         if (!config.hasPath(role)) {
             return true;
         }

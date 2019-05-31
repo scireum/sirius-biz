@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.packages
+package sirius.biz.packages
 
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
@@ -20,8 +20,8 @@ class PackagesSpec extends BaseSpecification {
 
     def "get packages for diffrent scopes"() {
         when:
-        def scope1 = packages.getPricePackages("test-scope-1")
-        def scope2 = packages.getPricePackages("test-scope-2")
+        def scope1 = packages.getPackages("test-scope-1")
+        def scope2 = packages.getPackages("test-scope-2")
         then:
         scope1 == ["package1", "package2"]
         scope2 == ["package3"]
@@ -41,14 +41,14 @@ class PackagesSpec extends BaseSpecification {
         UserContext.get()
                    .setCurrentUser(UserInfo.Builder.withUser(UserInfo.NOBODY).withPermissions(permissions).build())
         expect:
-        packages.hasRequiredPermissionForRole(scope, role) == expectedResult
+        packages.hasRequiredPermissionForRole(role) == expectedResult
         where:
-        scope          | role     | expectedResult | permissions
-        "test-scope-1" | "role2"  | true           | [] as Set<String>
-        "test-scope-1" | "role1a" | false          | [] as Set<String>
-        "test-scope-1" | "role1b" | false          | [] as Set<String>
-        "test-scope-1" | "role1a" | true           | ["permission1"] as Set<String>
-        "test-scope-1" | "role1b" | true           | ["permission1"] as Set<String>
-        "test-scope-1" | "role1b" | false          | ["permission2"] as Set<String>
+        role     | expectedResult | permissions
+        "role2"  | true           | [] as Set<String>
+        "role1a" | false          | [] as Set<String>
+        "role1b" | false          | [] as Set<String>
+        "role1a" | true           | ["permission1"] as Set<String>
+        "role1b" | true           | ["permission1"] as Set<String>
+        "role1b" | false          | ["permission2"] as Set<String>
     }
 }
