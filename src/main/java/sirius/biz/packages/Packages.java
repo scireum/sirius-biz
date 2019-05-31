@@ -22,6 +22,7 @@ import java.util.function.Predicate;
 
 /**
  * This helper class is a wrapper for the <tt>security.packages</tt> configuratuions.
+ * <p>
  */
 @Register(classes = Packages.class)
 public class Packages {
@@ -102,16 +103,16 @@ public class Packages {
      * The predicate will be called with the required permission for the permission and should return true or false,
      * depending on if the required permission is present.
      *
-     * @param role                   the role in question
+     * @param permission             the permission in question
      * @param hasPermissionPredicate a predicate which will determine if the required permission is present
      * @return true if the object has the required permission (determined via the predicate), false if not
      */
-    public boolean hasRequiredPermissionForPermission(String role, Predicate<String> hasPermissionPredicate) {
+    public boolean hasRequiredPermissionForPermission(String permission, Predicate<String> hasPermissionPredicate) {
         Config config = Sirius.getSettings().getConfig("security.packages.required-permissions-for-permission");
-        if (!config.hasPath(role)) {
+        if (!config.hasPath(permission)) {
             return true;
         }
-        String requiredPermission = config.getString(role);
+        String requiredPermission = config.getString(permission);
         return hasPermissionPredicate.test(requiredPermission);
     }
 }
