@@ -23,6 +23,7 @@ import java.util.function.Predicate;
 /**
  * This helper class is a wrapper for the <tt>security.packages</tt> configuratuions.
  * <p>
+ * For a highlevel overview see the README.md of this package.
  */
 @Register(classes = Packages.class)
 public class Packages {
