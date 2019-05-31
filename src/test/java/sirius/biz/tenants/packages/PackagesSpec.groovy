@@ -27,20 +27,6 @@ class PackagesSpec extends BaseSpecification {
         scope2 == ["package3"]
     }
 
-    def "test getPackageName"() {
-        when:
-        def name = packages.getPricePackageName("test-scope-1", "package1")
-        then:
-        name == "Erstes Paket"
-    }
-
-    def "test getUpgradeName"() {
-        when:
-        def name = packages.getUpgradeName("test-scope-2", "upgradeE")
-        then:
-        name == "Upgrade Emil"
-    }
-
     def "get upgrades for diffrent scopes"() {
         when:
         def scope1 = packages.getUpgrades("test-scope-1")
