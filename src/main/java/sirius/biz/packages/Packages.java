@@ -15,8 +15,10 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.security.UserContext;
+import sirius.web.security.UserInfo;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * This helper class is a wrapper for the <tt>security.packages</tt> configuratuions.
@@ -71,33 +73,45 @@ public class Packages {
     }
 
     /**
-     * Checks whether the current user has the required permission for a given role.
+     * Checks whether the current user has the required permission for a given permission.
      *
-     * @param role the role in question
+     * @param permission the permission in question
      * @return true if the current user has the required permission, false if not
      */
-    public boolean hasRequiredPermissionForRole(String role) {
-        Config config = Sirius.getSettings().getConfig("security.packages.required-permissions-for-role");
-        if (!config.hasPath(role)) {
-            return true;
-        }
-        String requiredPermission = config.getString(role);
-        return UserContext.get().getUser().hasPermission(requiredPermission);
+    public boolean hasRequiredPermissionForPermission(String permission) {
+        UserInfo currentUser = UserContext.get().getUser();
+        return hasRequiredPermissionForPermission(permission, currentUser::hasPermission);
     }
 
     /**
-     * Checks whether the permissionData object has the required permission for a given role.
+     * Checks whether the permissionData object has the required permission for a given permission.
      *
-     * @param role           the role in question
+     * @param permission     the permission in question
      * @param permissionData the permissionData object to check
      * @return true if the permissionData object has the required permission, false if not
      */
-    public boolean hasRequiredPermissionForRole(String role, PermissionData permissionData) {
-        Config config = Sirius.getSettings().getConfig("security.packages.required-permissions-for-role");
+    public boolean hasRequiredPermissionForPermission(String permission, PermissionData permissionData) {
+        return hasRequiredPermissionForPermission(permission,
+                                                  requiredPermission -> permissionData.getPermissions()
+                                                                                      .contains(requiredPermission));
+    }
+
+    /**
+     * Checks whether some object has the required permission for a given permission, via a predicate.
+     * <p>
+     * The predicate will be called with the required permission for the permission and should return true or false,
+     * depending on if the required permission is present.
+     *
+     * @param role                   the role in question
+     * @param hasPermissionPredicate a predicate which will determine if the required permission is present
+     * @return true if the object has the required permission (determined via the predicate), false if not
+     */
+    public boolean hasRequiredPermissionForPermission(String role, Predicate<String> hasPermissionPredicate) {
+        Config config = Sirius.getSettings().getConfig("security.packages.required-permissions-for-permission");
         if (!config.hasPath(role)) {
             return true;
         }
         String requiredPermission = config.getString(role);
-        return permissionData.getPermissions().contains(requiredPermission);
+        return hasPermissionPredicate.test(requiredPermission);
     }
 }

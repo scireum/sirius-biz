@@ -41,7 +41,7 @@ class PackagesSpec extends BaseSpecification {
         UserContext.get()
                    .setCurrentUser(UserInfo.Builder.withUser(UserInfo.NOBODY).withPermissions(permissions).build())
         expect:
-        packages.hasRequiredPermissionForRole(role) == expectedResult
+        packages.hasRequiredPermissionForPermission(role) == expectedResult
         where:
         role     | expectedResult | permissions
         "role2"  | true           | [] as Set<String>
