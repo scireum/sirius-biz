@@ -42,6 +42,12 @@
 
                     <i:extensions name="templates-tenant-sidebar-menu" tenant="tenant" page="page"/>
                 </w:navbox>
+
+                <w:jobs target="tenant" />
+
+                <w:rateLimitBox>
+                    <w:rateLimitsPerType type="tenant" scope="tenant.getIdAsString()" />
+                </w:rateLimitBox>
             </div>
         </i:if>
         <div class="@if (tenant.isNew()) { col-md-12 } else { col-md-9 }">

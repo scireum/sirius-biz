@@ -11,6 +11,8 @@ package sirius.biz.isenguard;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Provides an "empty" implementation which doesn't perform any limiting at all.
@@ -40,10 +42,17 @@ public class NOOPLimiter implements Limiter {
     }
 
     @Override
-    public boolean increaseAndCheckLimit(String key,
-                                         int intervalInSeconds,
-                                         int limit,
-                                         Runnable limitReachedOnce) {
+    public boolean increaseAndCheckLimit(String key, int intervalInSeconds, int limit, Runnable limitReachedOnce) {
         return false;
+    }
+
+    @Override
+    public int readLimit(String key) {
+        return 0;
+    }
+
+    @Override
+    public Set<String> getBlockedIPs() {
+        return Collections.emptySet();
     }
 }

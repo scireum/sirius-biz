@@ -1,11 +1,10 @@
 <i:arg type="String" name="type"/>
 <i:arg type="String" name="id"/>
-<i:arg type="String" name="hash"/>
 <i:arg type="Page" name="protocol"/>
 <w:page titleKey="JournalEntry.plural">
     <i:block name="breadcrumbs">
         <li>
-            <a href="@apply('/system/protocol/%s/%s/%s', type, id, hash)">@i18n("JournalEntry.plural")</a>
+            <a href="@signLink(apply('/system/protocol/%s/%s', type, id))">@i18n("JournalEntry.plural")</a>
         </li>
     </i:block>
 
@@ -13,10 +12,10 @@
 
     <div class="row">
         <div class="col-md-3">
-            <w:filterbox page="protocol" baseUrl="@apply('/system/protocol/%s/%s/%s', type, id, hash)"/>
+            <w:filterbox page="protocol" baseUrl="@signLink(apply('/system/protocol/%s/%s', type, id))"/>
         </div>
         <div class="col-md-9">
-            <w:tableSearchHeader page="protocol" baseUrl="@apply('/system/protocol/%s/%s/%s', type, id, hash)"/>
+            <w:tableSearchHeader page="protocol" baseUrl="@signLink(apply('/system/protocol/%s/%s', type, id))"/>
 
             <w:table data="protocol">
                 <thead>
@@ -61,7 +60,7 @@
                 </tbody>
             </w:table>
 
-            <w:pagination page="protocol" baseUrl="@apply('/system/protocol/%s/%s/%s', type, id, hash)"/>
+            <w:pagination page="protocol" baseUrl="@signLink(apply('/system/protocol/%s/%s', type, id))"/>
         </div>
     </div>
 

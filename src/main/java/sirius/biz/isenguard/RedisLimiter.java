@@ -10,11 +10,14 @@ package sirius.biz.isenguard;
 
 import sirius.db.redis.Redis;
 import sirius.db.redis.RedisDB;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -70,7 +73,7 @@ public class RedisLimiter implements Limiter {
     @Override
     public boolean increaseAndCheckLimit(String key, int intervalInSeconds, int limit, Runnable limitReachedOnce) {
         String effectiveKey = COUNTER_PREFIX + key;
-        return getDB().query(() -> "Rate Limit: " + effectiveKey, db -> {
+        return getDB().query(() -> "Update rate limit: " + effectiveKey, db -> {
             long value = db.incr(effectiveKey);
             if (value == 1) {
                 db.expire(effectiveKey, intervalInSeconds);
@@ -80,6 +83,28 @@ public class RedisLimiter implements Limiter {
 
             return value >= limit;
         });
+    }
+
+    @Override
+    public int readLimit(String key) {
+        String effectiveKey = COUNTER_PREFIX + key;
+        return getDB().query(() -> "Read rate limit: " + effectiveKey, db -> {
+            String value = db.get(effectiveKey);
+            if (Strings.isEmpty(value)) {
+                return 0;
+            }
+
+            return Integer.parseInt(value);
+        });
+    }
+
+
+    @Override
+    public Set<String> getBlockedIPs() {
+        return getDB().query(() -> "Query blocked IPs",
+                      db -> db.zrevrange(BLOCKED_IPS,
+                                                0,
+                                                50));
     }
 
     public boolean isConfigured() {

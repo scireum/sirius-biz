@@ -85,4 +85,9 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
     public String toString() {
         return userAccountData.toString();
     }
+
+    @Override
+    public String getRateLimitScope() {
+        return getIdAsString();
+    }
 }

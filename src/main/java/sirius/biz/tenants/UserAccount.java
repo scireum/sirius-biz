@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import sirius.biz.isenguard.RateLimitedEntity;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.protocol.Traced;
 import sirius.biz.web.TenantAware;
@@ -29,7 +30,7 @@ import sirius.web.security.MessageProvider;
 @SuppressWarnings("squid:S1214")
 @Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real enttiy.")
 public interface UserAccount<I, T extends BaseEntity<I> & Tenant<I>>
-        extends Transformable, MessageProvider, Traced, Journaled, TenantAware {
+        extends Transformable, MessageProvider, Traced, Journaled, TenantAware, RateLimitedEntity {
 
     /**
      * Defines the mapping which is used for the user account data composite.

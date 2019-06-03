@@ -15,6 +15,8 @@ import sirius.kernel.di.Initializable;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
+import sirius.kernel.nls.NLS;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -33,6 +35,8 @@ public class AuditLog implements Initializable {
     private Elastic elastic;
 
     private boolean enabled;
+
+    private static final Log LOG = Log.get("audit");
 
     @Override
     public void initialize() throws Exception {
@@ -141,8 +145,37 @@ public class AuditLog implements Initializable {
                     return;
                 }
                 elastic.update(entry);
+                logToSyslog();
             } catch (Exception e) {
                 Exceptions.ignore(e);
+            }
+        }
+
+        protected void logToSyslog() {
+            if (entry.isNegative()) {
+                LOG.WARN("%s (%s) caused for %s (%s) of %s (%s): %s (%s) - IP: %s, Timestamp: %s",
+                         entry.getCausedByUserName(),
+                         entry.getCausedByUser(),
+                         entry.getUserName(),
+                         entry.getUser(),
+                         entry.getTenantName(),
+                         entry.getTenant(),
+                         entry.getMessage(),
+                         NLS.get(entry.getMessage(), NLS.getDefaultLanguage()),
+                         entry.getIp(),
+                         NLS.toUserString(entry.getTimestamp(), NLS.getDefaultLanguage()));
+            } else {
+                LOG.INFO("%s (%s) caused for %s (%s) of %s (%s): %s (%s) - IP: %s, Timestamp: %s",
+                         entry.getCausedByUserName(),
+                         entry.getCausedByUser(),
+                         entry.getUserName(),
+                         entry.getUser(),
+                         entry.getTenantName(),
+                         entry.getTenant(),
+                         entry.getMessage(),
+                         NLS.get(entry.getMessage(), NLS.getDefaultLanguage()),
+                         entry.getIp(),
+                         NLS.toUserString(entry.getTimestamp(), NLS.getDefaultLanguage()));
             }
         }
     }

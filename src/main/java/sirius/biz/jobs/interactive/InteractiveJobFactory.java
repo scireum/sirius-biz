@@ -11,6 +11,7 @@ package sirius.biz.jobs.interactive;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.analytics.reports.Cells;
 import sirius.biz.jobs.BasicJobFactory;
+import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -19,8 +20,10 @@ import sirius.web.controller.Message;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * Provides a base implementation for interactive jobs.
@@ -40,6 +43,36 @@ public abstract class InteractiveJobFactory extends BasicJobFactory {
 
     @Part
     protected Cells cells;
+
+    /**
+     * Returns the parameters accepted by this job.
+     *
+     * @param context the current set of parameters
+     * @return the list of parameters of this job
+     */
+    public List<Parameter<?, ?>> getVisibleParameters(Map<String, String> context) {
+        return getParameters().stream().filter(parameter -> parameter.isVisible(context)).collect(Collectors.toList());
+    }
+
+    /**
+     * Returns the label / heading to show based on the given parameter values.
+     *
+     * @param context the current set of parameters
+     * @return the label to use. By default, {@link #getLabel()} will be returned
+     */
+    public String getCurrentLabel(Map<String, String> context) {
+        return getLabel();
+    }
+
+    /**
+     * Returns the description to show based on the given parameter values.
+     *
+     * @param context the current set of parameters
+     * @return the description to use. By default, {@link #getDetailDescription()} will be returned
+     */
+    public String getCurrentDescription(Map<String, String> context) {
+        return getDetailDescription();
+    }
 
     @Override
     public boolean canStartInteractive() {
