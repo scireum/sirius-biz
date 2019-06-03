@@ -44,7 +44,7 @@ public class TraceData extends Composite {
     private LocalDateTime createdAt;
 
     /**
-     * Stores the system string ({@link TaskContext#getSystemString()} where the associated entity was created.
+     * Stores the system string ({@link TaskContext#getSystemString()}) where the associated entity was created.
      */
     public static final Mapping CREATED_IN = Mapping.named("createdIn");
     @NoJournal
@@ -159,5 +159,13 @@ public class TraceData extends Composite {
 
     public String getChangedIn() {
         return changedIn;
+    }
+
+    public String getCreatedOn() {
+        return createdOn;
+    }
+
+    public String getChangedOn() {
+        return changedOn;
     }
 }
