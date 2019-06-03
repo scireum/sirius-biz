@@ -13,9 +13,9 @@
 
     <w:pageHeader title="@job.getLabel()"/>
 
-    <i:if test="isFilled(job.getDescription())">
+    <i:if test="isFilled(job.getDetailDescription())">
         <div class="well">
-            @job.getDescription()
+            @job.getDetailDescription()
         </div>
     </i:if>
 

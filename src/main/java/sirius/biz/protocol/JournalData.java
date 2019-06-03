@@ -8,6 +8,7 @@
 
 package sirius.biz.protocol;
 
+import sirius.biz.web.BizController;
 import sirius.db.es.Elastic;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
@@ -168,8 +169,7 @@ public class JournalData extends Composite {
 
         String type = Mixing.getNameForType(owner.getClass());
         String id = String.valueOf(owner.getId());
-        String hash = JournalController.computeAuthHash(type, id);
 
-        return "/system/protocol/" + type + "/" + id + "/" + hash;
+        return BizController.signLink("/system/protocol/" + type + "/" + id);
     }
 }
