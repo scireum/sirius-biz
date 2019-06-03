@@ -14,6 +14,7 @@ import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
+import sirius.kernel.async.CallContext;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Strings;
 import sirius.web.security.UserContext;
@@ -43,13 +44,22 @@ public class TraceData extends Composite {
     private LocalDateTime createdAt;
 
     /**
-     * Stores the system string ({@link TaskContext#getSystemString()} where the associated entity was created.
+     * Stores the system string ({@link TaskContext#getSystemString()}) where the associated entity was created.
      */
     public static final Mapping CREATED_IN = Mapping.named("createdIn");
     @NoJournal
     @NullAllowed
     @Length(150)
     private String createdIn;
+
+    /**
+     * Stores the node string ({@link CallContext#getNodeName()}) where the associated entity was created.
+     */
+    public static final Mapping CREATED_ON = Mapping.named("createdOn");
+    @NoJournal
+    @NullAllowed
+    @Length(50)
+    private String createdOn;
 
     /**
      * Stores the username of the user which last changed the associated entity.
@@ -69,13 +79,22 @@ public class TraceData extends Composite {
     private LocalDateTime changedAt;
 
     /**
-     * Stores the system string ({@link TaskContext#getSystemString()} where the associated entity was last changed.
+     * Stores the system string ({@link TaskContext#getSystemString()}) where the associated entity was last changed.
      */
     public static final Mapping CHANGED_IN = Mapping.named("changedIn");
     @NoJournal
     @NullAllowed
     @Length(150)
     private String changedIn;
+
+    /**
+     * Stores the node string ({@link CallContext#getNodeName()}) where the associated entity was last changed.
+     */
+    public static final Mapping CHANGED_ON = Mapping.named("changedOn");
+    @NoJournal
+    @NullAllowed
+    @Length(50)
+    private String changedOn;
 
     @Transient
     private boolean silent;
@@ -87,10 +106,12 @@ public class TraceData extends Composite {
                 createdBy = Strings.limit(UserContext.getCurrentUser().getUserName(), 50);
                 createdAt = LocalDateTime.now();
                 createdIn = Strings.limit(TaskContext.get().getSystemString(), 150);
+                createdOn = Strings.limit(CallContext.getNodeName(), 50);
             }
             changedBy = Strings.limit(UserContext.getCurrentUser().getUserName(), 50);
             changedAt = LocalDateTime.now();
             changedIn = Strings.limit(TaskContext.get().getSystemString(), 150);
+            changedOn = Strings.limit(CallContext.getNodeName(), 50);
         }
     }
 
@@ -138,5 +159,13 @@ public class TraceData extends Composite {
 
     public String getChangedIn() {
         return changedIn;
+    }
+
+    public String getCreatedOn() {
+        return createdOn;
+    }
+
+    public String getChangedOn() {
+        return changedOn;
     }
 }
