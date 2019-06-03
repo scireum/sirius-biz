@@ -23,12 +23,18 @@ import java.util.Optional;
  */
 public abstract class Parameter<V, P extends Parameter<V, P>> {
 
+    /**
+     * Provides a tri-state value for the visibility of a parameter.
+     */
+    private enum Visibility {NORMAL, ONLY_WITH_VALUE, HIDDEN}
+
     protected String name;
     protected String label;
     protected String description;
     protected boolean required;
     protected int span = 6;
     protected int smallSpan = 12;
+    protected Visibility visibility = Visibility.NORMAL;
 
     /**
      * Creates a new parameter with the given name and label.
@@ -91,6 +97,44 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
     public P markRequired() {
         this.required = true;
         return self();
+    }
+
+    /**
+     * Marks this parameter as hidden.
+     *
+     * @return the parameter itself for fluent method calls
+     */
+    public P hidden() {
+        this.visibility = Visibility.HIDDEN;
+        return self();
+    }
+
+    /**
+     * Marks this parameter as hidden if no value is present.
+     *
+     * @return the parameter itself for fluent method calls
+     */
+    public P hiddenIfEmpty() {
+        this.visibility = Visibility.ONLY_WITH_VALUE;
+        return self();
+    }
+
+    /**
+     * Determines if the parameter is currently visible.
+     *
+     * @param context the context containing all parameter values
+     * @return <tt>true</tt> if the parameter is visible, <tt>false</tt> otherwsie
+     */
+    public boolean isVisible(Map<String, String> context) {
+        if (this.visibility == Visibility.HIDDEN) {
+            return false;
+        }
+
+        if (this.visibility == Visibility.NORMAL) {
+            return true;
+        }
+
+        return get(context).isPresent();
     }
 
     /**

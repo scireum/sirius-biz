@@ -9,6 +9,7 @@
 package sirius.biz.analytics.events;
 
 import sirius.db.jdbc.SQLEntity;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Engine;
 import sirius.db.mixing.annotations.Realm;
@@ -17,6 +18,7 @@ import sirius.kernel.async.CallContext;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * Provides a base class for all events recorded by the {@link EventRecorder}.
@@ -42,16 +44,19 @@ public abstract class Event extends SQLEntity {
      * <p>
      * Note that this is redundant to {@link #eventTimestamp} and only required to be used as index by <b>Clickhouse</b>.
      */
+    public static final Mapping EVENT_DATE = Mapping.named("eventDate");
     private LocalDate eventDate;
 
     /**
      * Contains the date and time when the event occurred.
      */
+    public static final Mapping EVENT_TIMESTAMP = Mapping.named("eventTimestamp");
     private LocalDateTime eventTimestamp;
 
     /**
      * Contains the name of the node on which the event occurred.
      */
+    public static final Mapping NODE = Mapping.named("node");
     private String node;
 
     /**

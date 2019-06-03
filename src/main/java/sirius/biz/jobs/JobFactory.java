@@ -47,11 +47,23 @@ public interface JobFactory extends Named, Priorized {
 
     /**
      * Returns a short description of this job.
+     * <p>
+     * This is shown in lists and should therefore be quite concise.
      *
      * @return the description for this job
      */
     @Nullable
     String getDescription();
+
+    /**
+     * Returns a detailed description of this job.
+     * <p>
+     * This description is shown when the job is being (or about to be) executed and might be more elaborated.
+     *
+     * @return the detailed description for this job
+     */
+    @Nullable
+    String getDetailDescription();
 
     /**
      * Returns a list of permissions which a user must have in order to run this job.
