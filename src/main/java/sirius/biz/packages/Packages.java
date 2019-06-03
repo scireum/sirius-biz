@@ -14,6 +14,7 @@ import sirius.kernel.Sirius;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
+import sirius.web.security.Permissions;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
@@ -114,6 +115,6 @@ public class Packages {
             return true;
         }
         String requiredPermission = config.getString(permission);
-        return hasPermissionPredicate.test(requiredPermission);
+        return Permissions.hasPermission(requiredPermission, hasPermissionPredicate);
     }
 }
