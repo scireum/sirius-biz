@@ -8,6 +8,8 @@
 
 package sirius.biz.tenants;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.model.InternationalAddressData;
 import sirius.biz.model.PermissionData;
@@ -15,12 +17,14 @@ import sirius.biz.packages.PackageData;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.web.Autoloaded;
+import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeDelete;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
@@ -32,6 +36,7 @@ import sirius.kernel.nls.NLS;
 import sirius.web.http.IPRange;
 import sirius.web.http.WebContext;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
@@ -225,6 +230,19 @@ public class TenantData extends Composite implements Journaled {
      */
     public static final Mapping PACKAGE_DATA = Mapping.named("packageData");
     private final PackageData packageData;
+
+    /**
+     * Contains a custom configuration which is added to the config of the current {@link
+     * sirius.web.security.ScopeInfo}.
+     */
+    public static final Mapping CONFIG_STRING = Mapping.named("configString");
+    @Autoloaded
+    @NullAllowed
+    @Lob
+    private String configString;
+
+    @Transient
+    private Config config;
 
     /**
      * Used to record changes on fields of the tenant.
@@ -456,5 +474,52 @@ public class TenantData extends Composite implements Journaled {
 
     public PackageData getPackageData() {
         return packageData;
+    }
+
+    /**
+     * Returns the parsed config for the tenant.
+     *
+     * @return the parsed configuration
+     */
+    @Nullable
+    public Config getConfig() {
+        if (config == null) {
+            if (Strings.isFilled(configString)) {
+                try {
+                    config = ConfigFactory.parseString(configString);
+                } catch (Exception e) {
+                    throw Exceptions.handle()
+                                    .to(BizController.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage("Cannot load config of %s (%s): %s (%s)",
+                                                            tenantObject,
+                                                            tenantObject.getId())
+                                    .handle();
+                }
+            } else {
+                return null;
+            }
+        }
+
+        return config;
+    }
+
+    /**
+     * Returns the config as string.
+     *
+     * @return the individual config as string
+     */
+    public String getConfigString() {
+        return configString;
+    }
+
+    /**
+     * Sets the config as string.
+     *
+     * @param configString the individual config as string
+     */
+    public void setConfigString(String configString) {
+        this.configString = configString;
+        this.config = null;
     }
 }

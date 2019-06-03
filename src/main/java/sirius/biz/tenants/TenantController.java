@@ -9,7 +9,6 @@
 package sirius.biz.tenants;
 
 import sirius.biz.model.AddressData;
-import sirius.biz.model.PermissionData;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
@@ -174,10 +173,8 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
         load(ctx, tenant);
-        if (ctx.hasParameter(Tenant.TENANT_DATA.inner(TenantData.PERMISSIONS)
-                                               .inner(PermissionData.CONFIG_STRING)
-                                               .getName())) {
-            tenant.getTenantData().getPermissions().getConfig();
+        if (ctx.hasParameter(Tenant.TENANT_DATA.inner(TenantData.CONFIG_STRING).getName())) {
+            tenant.getTenantData().getConfig();
         }
         tenant.getTenantData().getPermissions().getPermissions().clear();
         for (String permission : ctx.getParameters("permissions")) {
