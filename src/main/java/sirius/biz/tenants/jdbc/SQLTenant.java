@@ -61,4 +61,9 @@ public class SQLTenant extends BizEntity implements Tenant<Long> {
     public String toString() {
         return getTenantData().toString();
     }
+
+    @Override
+    public String getRateLimitScope() {
+        return getIdAsString();
+    }
 }

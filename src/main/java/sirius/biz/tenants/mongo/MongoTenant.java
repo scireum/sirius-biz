@@ -64,4 +64,9 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
     public String toString() {
         return getTenantData().toString();
     }
+
+    @Override
+    public String getRateLimitScope() {
+        return getIdAsString();
+    }
 }

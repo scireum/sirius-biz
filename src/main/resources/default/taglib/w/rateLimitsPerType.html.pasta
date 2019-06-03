@@ -1,0 +1,11 @@
+<i:arg type="String" name="type" />
+<i:arg type="String" name="scope" />
+
+<i:pragma name="inline" value="true" />
+<i:pragma name="description" value="Outputs all limits for realms of the given type for the given scope." />
+
+<i:if test="isenguard != null">
+    <i:for type="String" var="realm" items="@isenguard.getRealmsByType(type)">
+        <w:rateLimitInfo scope="@scope" realm="@realm" explicitLimit="null" />
+    </i:for>
+</i:if>

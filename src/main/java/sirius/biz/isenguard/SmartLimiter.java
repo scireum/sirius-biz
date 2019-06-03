@@ -12,6 +12,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
+import java.util.Set;
 
 /**
  * Provides a "smart" implementation which uses redis if available and resorts to "noop" otherwise.
@@ -63,5 +64,15 @@ public class SmartLimiter implements Limiter {
     @Override
     public boolean increaseAndCheckLimit(String key, int intervalInSeconds, int limit, Runnable limitReachedOnce) {
         return getLimiter().increaseAndCheckLimit(key, intervalInSeconds, limit, limitReachedOnce);
+    }
+
+    @Override
+    public int readLimit(String key) {
+        return getLimiter().readLimit(key);
+    }
+
+    @Override
+    public Set<String> getBlockedIPs() {
+        return getLimiter().getBlockedIPs();
     }
 }
