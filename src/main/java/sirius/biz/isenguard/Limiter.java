@@ -10,6 +10,8 @@ package sirius.biz.isenguard;
 
 import sirius.kernel.di.std.Named;
 
+import java.util.Set;
+
 /**
  * Represents a limiter strategy used by {@link Isenguard}.
  */
@@ -47,4 +49,21 @@ public interface Limiter extends Named {
      * @return <tt>true</tt> if the interval was reached, <tt>false</tt> otherwise
      */
     boolean increaseAndCheckLimit(String key, int intervalInSeconds, int limit, Runnable limitReachedOnce);
+
+    /**
+     * Reads the current value for the given key.
+     *
+     * @param key the unique name of this counter which represents the ip, realm and check-interval
+     * @return the current counter value for the given key
+     */
+    int readLimit(String key);
+
+    /**
+     * Returns a list of currently blocked IPs.
+     * <p>
+     * For efficiency reasons, this list can be limited to the latest matches (e.g. the top 50).
+     *
+     * @return a list of currently blocked IPs
+     */
+    Set<String> getBlockedIPs();
 }

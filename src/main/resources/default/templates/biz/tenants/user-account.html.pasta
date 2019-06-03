@@ -52,6 +52,12 @@
                     <i:extensions name="templates-user-account-sidebar-menu" account="account" page="page"/>
                 </w:navbox>
 
+                <w:jobs target="account" />
+
+                <w:rateLimitBox>
+                    <w:rateLimitsPerType type="user" scope="account.getIdAsString()" />
+                </w:rateLimitBox>
+
                 <a href="/user-accounts" class="btn btn-block">@i18n("NLS.back")</a>
             </div>
         </i:if>

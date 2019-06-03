@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import sirius.biz.isenguard.RateLimitedEntity;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.protocol.Traced;
 import sirius.db.mixing.Mapping;
@@ -24,7 +25,7 @@ import sirius.kernel.di.transformers.Transformable;
  */
 @SuppressWarnings("squid:S1214")
 @Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real enttiy.")
-public interface Tenant<I> extends Transformable, Traced, Journaled {
+public interface Tenant<I> extends Transformable, Traced, Journaled, RateLimitedEntity {
 
     /**
      * Contains the mapping used to identify the parent tenant of the current one.
