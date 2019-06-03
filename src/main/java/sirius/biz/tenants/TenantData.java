@@ -11,6 +11,7 @@ package sirius.biz.tenants;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.model.InternationalAddressData;
 import sirius.biz.model.PermissionData;
+import sirius.biz.packages.PackageData;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.web.Autoloaded;
@@ -208,9 +209,22 @@ public class TenantData extends Composite implements Journaled {
 
     /**
      * Contains the features and individual config assigned to the tenant.
+     *
+     * @deprecated use {@link ::packageData}
      */
+    @Deprecated
     public static final Mapping PERMISSIONS = Mapping.named("permissions");
+    /**
+     * @deprecated use {@link ::packageData}
+     */
+    @Deprecated
     private final PermissionData permissions;
+
+    /**
+     * Contains the package, upgrades and additional and revoked permissions for this tenant.
+     */
+    public static final Mapping PACKAGE_DATA = Mapping.named("packageData");
+    private final PackageData packageData;
 
     /**
      * Used to record changes on fields of the tenant.
@@ -239,6 +253,7 @@ public class TenantData extends Composite implements Journaled {
         this.tenantObject = tenantObject;
         this.permissions = new PermissionData(tenantObject);
         this.journal = new JournalData(tenantObject);
+        this.packageData = new PackageData();
     }
 
     @BeforeSave
@@ -437,5 +452,9 @@ public class TenantData extends Composite implements Journaled {
 
     public void setLang(String lang) {
         this.lang = lang;
+    }
+
+    public PackageData getPackageData() {
+        return packageData;
     }
 }
