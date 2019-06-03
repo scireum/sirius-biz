@@ -16,9 +16,9 @@ import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.security.Permissions;
 import sirius.web.security.UserContext;
-import sirius.web.security.UserInfo;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -82,8 +82,8 @@ public class Packages {
      * @return true if the current user has the required permission, false if not
      */
     public boolean hasRequiredPermissionForPermission(String permission) {
-        UserInfo currentUser = UserContext.get().getUser();
-        return hasRequiredPermissionForPermission(permission, currentUser::hasPermission);
+        Set<String> permissions = UserContext.get().getUser().getPermissions();
+        return hasRequiredPermissionForPermission(permission, permissions::contains);
     }
 
     /**
