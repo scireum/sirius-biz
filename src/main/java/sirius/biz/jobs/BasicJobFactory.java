@@ -62,6 +62,12 @@ public abstract class BasicJobFactory implements JobFactory {
         return NLS.getIfExists(getClass().getSimpleName() + ".description", null).orElse(null);
     }
 
+    @Nullable
+    @Override
+    public String getDetailDescription() {
+        return NLS.getIfExists(getClass().getSimpleName() + ".detailDescription", null).orElse(getDescription());
+    }
+
     @Override
     public List<String> getRequiredPermissions() {
         return Arrays.stream(getClass().getAnnotationsByType(Permission.class))
