@@ -12,6 +12,7 @@ import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.db.jdbc.OMA;
 import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.InvalidFieldException;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
@@ -406,7 +407,7 @@ public class BizController extends BasicController {
                 }
                 showSavedMessage();
             } catch (Exception e) {
-                UserContext.handle(e);
+                handle(e);
             }
             return false;
         }
@@ -423,13 +424,18 @@ public class BizController extends BasicController {
     }
 
     /**
-     * Performs a validation and reports all warnings via the {@link UserContext}.
+     * Performs a validation and reports the first warnings via the {@link UserContext}.
+     * <p>
+     * Note that this is only done, if no error messages are present which might otherwise confuse the user.
      *
      * @param entity the entity to validate
      */
     protected void validate(BaseEntity<?> entity) {
-        for (String warning : entity.getMapper().validate(entity)) {
-            UserContext.message(Message.warn(warning));
+        UserContext userCtx = UserContext.get();
+        if (userCtx.getMessages().stream().noneMatch(msg -> Strings.areEqual(Message.ERROR, msg.getType()))) {
+            entity.getMapper().validate(entity).stream().findFirst().ifPresent(msg -> {
+                userCtx.addMessage(Message.warn(msg));
+            });
         }
     }
 
