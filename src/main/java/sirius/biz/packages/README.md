@@ -30,6 +30,8 @@ permission needs another permission to make sense, this can be configured here. 
 UserAccount role should be only displayed if the Tenant has a certain other permission. This can be checked via the
 `Packages#hasRequiredPermissionForPermission` method.
 
+To use packages and upgrades in entities, use the [PackageData](PackageData.java)-composite.
+
 Example configuration:
 ```
 security {
