@@ -676,9 +676,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
     private Set<String> computeRoles(U user, T tenant, boolean isSystemTenant) {
         Set<String> roles = Sets.newTreeSet();
-        roles.addAll(user.getUserAccountData().getPermissions().getPermissions());
-        roles.addAll(tenant.getTenantData().getPackageData().getAdditionalPermissions());
         roles.add(UserInfo.PERMISSION_LOGGED_IN);
+        roles.addAll(user.getUserAccountData().getPermissions().getPermissions());
+        roles.addAll(tenant.getTenantData().getPackageData().getCombinedPermissions());
 
         if (Strings.isFilled(tenant.getTenantData().getAccountNumber())) {
             roles.add("tenant-" + tenant.getTenantData().getAccountNumber());
@@ -687,8 +687,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         Set<String> transformedRoles = transformRoles(roles);
         if (isSystemTenant && transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
             roles.add(PERMISSION_SYSTEM_TENANT);
-            return transformRoles(roles);
+            transformedRoles = transformRoles(roles);
         }
+        transformedRoles.removeAll(tenant.getTenantData().getPackageData().getRevokedPermissions());
         return transformedRoles;
     }
 

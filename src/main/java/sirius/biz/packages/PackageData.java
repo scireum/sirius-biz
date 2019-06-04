@@ -129,6 +129,21 @@ public class PackageData extends Composite {
         return Permissions.applyProfiles(packageAndUpgradeFeatures);
     }
 
+    /**
+     * Combines the package, upgrades and additional permissions in a single set.
+     *
+     * @return the combined permissions
+     */
+    public Set<String> getCombinedPermissions() {
+        Set<String> permissions = new TreeSet<>();
+        if (Strings.isFilled(getPackage())) {
+            permissions.add(getPackage());
+        }
+        permissions.addAll(getAdditionalPermissions());
+        permissions.addAll(getUpgrades());
+        return permissions;
+    }
+
     @BeforeSave
     protected void updateStrings() {
         upgradesString = Strings.join(getUpgrades(), ",");
