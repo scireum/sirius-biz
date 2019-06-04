@@ -39,6 +39,8 @@
                                   active="page == 'details'"/>
                     <w:navboxLink labelKey="Model.config" url="@apply('/tenant/%s/config', tenant.getIdAsString())"
                                   active="page == 'config'"/>
+                    <w:navboxLink labelKey="Tenant.permissions" url="@apply('/tenant/%s/permissions', tenant.getIdAsString())"
+                                  active="page == 'permissions'"/>
 
                     <i:extensions name="templates-tenant-sidebar-menu" tenant="tenant" page="page"/>
                 </w:navbox>

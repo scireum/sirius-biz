@@ -15,6 +15,7 @@ import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.commons.Strings;
+import sirius.web.security.Permissions;
 
 import java.util.Set;
 import java.util.TreeSet;
@@ -112,6 +113,20 @@ public class PackageData extends Composite {
             }
         }
         return result;
+    }
+
+    /**
+     * Returns the permissions granted by the package and upgrades.
+     *
+     * @return the permissions granted by the package and upgrades
+     */
+    public Set<String> getPackageAndUpgradePermissions() {
+        Set<String> packageAndUpgradeFeatures = new TreeSet<>();
+        if (Strings.isFilled(getPackage())) {
+            packageAndUpgradeFeatures.add(getPackage());
+        }
+        packageAndUpgradeFeatures.addAll(getUpgrades());
+        return Permissions.applyProfiles(packageAndUpgradeFeatures);
     }
 
     @BeforeSave

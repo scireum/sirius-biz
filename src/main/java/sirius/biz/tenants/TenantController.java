@@ -30,6 +30,7 @@ import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 import sirius.web.services.JSONStructuredOutput;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -210,6 +211,47 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
         ctx.respondWith().template("templates/biz/tenants/tenant-config.html.pasta", tenant);
+    }
+
+    /**
+     * Provides an editor for setting additional and revoked permissions.
+     *
+     * @param ctx      the current request
+     * @param tenantId the id of the tenant to change
+     */
+    @Routed("/tenant/:1/permissions")
+    @LoginRequired
+    @Permission(PERMISSION_MANAGE_TENANTS)
+    public void tenantPermissionse(WebContext ctx, String tenantId) {
+        T tenant = find(getTenantClass(), tenantId);
+        assertNotNew(tenant);
+
+        boolean handled = prepareSave(ctx).disableAutoload().withAfterSaveURI("/tenants").withPreSaveHandler(isNew -> {
+            List<String> additionalPermissions = new ArrayList<>();
+            List<String> revokedPermissions = new ArrayList<>();
+
+            for (String permission : getPermissions()) {
+                switch (ctx.get(permission).asString()) {
+                    case "additional":
+                        additionalPermissions.add(permission);
+                        break;
+                    case "revoked":
+                        revokedPermissions.add(permission);
+                        break;
+                    default:
+                }
+            }
+
+            tenant.getTenantData().getPackageData().getAdditionalPermissions().clear();
+            tenant.getTenantData().getPackageData().getAdditionalPermissions().addAll(additionalPermissions);
+
+            tenant.getTenantData().getPackageData().getRevokedPermissions().clear();
+            tenant.getTenantData().getPackageData().getRevokedPermissions().addAll(revokedPermissions);
+        }).saveEntity(tenant);
+
+        if (!handled) {
+            ctx.respondWith().template("templates/biz/tenants/tenant-permissions.html.pasta", tenant, this, packages);
+        }
     }
 
     /**
