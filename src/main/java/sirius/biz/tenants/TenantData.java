@@ -14,6 +14,7 @@ import sirius.biz.importer.AutoImport;
 import sirius.biz.model.InternationalAddressData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.packages.PackageData;
+import sirius.biz.mongo.PrefixSearchContent;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.web.Autoloaded;
@@ -93,6 +94,7 @@ public class TenantData extends Composite implements Journaled {
     @Unique
     @Autoloaded
     @AutoImport
+    @PrefixSearchContent
     @Length(255)
     private String name;
 
@@ -104,6 +106,7 @@ public class TenantData extends Composite implements Journaled {
     @Unique
     @Autoloaded
     @AutoImport
+    @PrefixSearchContent
     @NullAllowed
     @Length(50)
     private String accountNumber;

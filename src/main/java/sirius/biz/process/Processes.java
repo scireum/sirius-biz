@@ -16,7 +16,6 @@ import sirius.biz.process.logs.ProcessLogType;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.protocol.JournalData;
 import sirius.db.es.Elastic;
-import sirius.db.es.ElasticQuery;
 import sirius.db.mixing.OptimisticLockException;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.DelayLine;
@@ -42,8 +41,6 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -485,9 +482,7 @@ public class Processes {
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
     public boolean addLink(String processId, ProcessLink link) {
-        return modify(processId,
-                      process -> true,
-                      process -> process.getLinks().add(link));
+        return modify(processId, process -> true, process -> process.getLinks().add(link));
     }
 
     /**

@@ -17,6 +17,7 @@ import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SmartQuery;
+import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
 
@@ -33,7 +34,17 @@ public class SQLUserAccountController extends UserAccountController<Long, SQLTen
                                                                                          .inner(PersonData.LASTNAME))
                                                   .orderAsc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                          .inner(PersonData.FIRSTNAME));
-        return SQLPageHelper.withQuery(tenants.forCurrentTenant(baseQuery));
+
+        SQLPageHelper<SQLUserAccount> pageHelper = SQLPageHelper.withQuery(tenants.forCurrentTenant(baseQuery));
+        pageHelper.withSearchFields(QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL)),
+                                    QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                                     .inner(LoginData.USERNAME)),
+                                    QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
+                                                                                     .inner(PersonData.FIRSTNAME)),
+                                    QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
+                                                                                     .inner(PersonData.LASTNAME)));
+
+        return pageHelper;
     }
 
     @Override
@@ -52,6 +63,15 @@ public class SQLUserAccountController extends UserAccountController<Long, SQLTen
                                                   .orderAsc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                          .inner(PersonData.FIRSTNAME));
 
-        return SQLPageHelper.withQuery(baseQuery);
+        SQLPageHelper<SQLUserAccount> pageHelper = SQLPageHelper.withQuery(baseQuery);
+        pageHelper.withSearchFields(QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
+                                                                                     .inner(PersonData.LASTNAME)),
+                                    QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
+                                                                                     .inner(PersonData.FIRSTNAME)),
+                                    QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                                     .inner(LoginData.USERNAME)),
+                                    QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL)));
+
+        return pageHelper;
     }
 }

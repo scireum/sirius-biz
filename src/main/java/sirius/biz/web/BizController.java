@@ -15,6 +15,7 @@ import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.db.jdbc.OMA;
 import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.InvalidFieldException;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
@@ -30,7 +31,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
-import sirius.kernel.nls.Formatter;
+import sirius.kernel.nls.NLS;
 import sirius.web.controller.BasicController;
 import sirius.web.controller.Message;
 import sirius.web.http.WebContext;
@@ -43,7 +44,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -262,183 +262,61 @@ public class BizController extends BasicController {
     }
 
     /**
-     * Provides a fluent API to control the process and user routing while creating or updating an entity in the
-     * database.
-     */
-    public class SaveHelper {
-
-        private WebContext ctx;
-        private Consumer<Boolean> preSaveHandler;
-        private Consumer<Boolean> postSaveHandler;
-        private String createdURI;
-        private String afterSaveURI;
-
-        private List<Mapping> mappings;
-        private boolean autoload = true;
-        private boolean acceptUnsafePOST = false;
-
-        private SaveHelper(WebContext ctx) {
-            this.ctx = ctx;
-        }
-
-        /**
-         * Installs a pre save handler which is invoked just before the entity is persisted into the database.
-         *
-         * @param preSaveHandler a consumer which is supplied with a boolean flag, indicating if the entity was new.
-         *                       The handler can be used to modify the entity before it is saved.
-         * @return the helper itself for fluent method calls
-         */
-        public SaveHelper withPreSaveHandler(Consumer<Boolean> preSaveHandler) {
-            this.preSaveHandler = preSaveHandler;
-            return this;
-        }
-
-        /**
-         * Installs a post save handler which is invoked just after the entity was persisted into the database.
-         *
-         * @param postSaveHandler a consumer which is supplied with a boolean flag, indicating if the entiy was new.
-         *                        The
-         *                        handler can be used to modify the entity or related entities after it was created in
-         *                        the database.
-         * @return the helper itself for fluent method calls
-         */
-        public SaveHelper withPostSaveHandler(Consumer<Boolean> postSaveHandler) {
-            this.postSaveHandler = postSaveHandler;
-            return this;
-        }
-
-        /**
-         * Specifies what mappings should be loaded from the request context
-         * <p>
-         * if not set all marked as {@link Autoloaded} properties of the entity are loaded
-         *
-         * @param columns array of {@link Mapping} objects
-         * @return the helper itself for fluent method calls
-         */
-        public SaveHelper withMappings(Mapping... columns) {
-            this.mappings = Arrays.asList(columns);
-            return this;
-        }
-
-        /**
-         * Used to supply a URL to which the user is redirected if a new entity was created.
-         * <p>
-         * As new entities are often created using a placeholder URL like <tt>/entity/new</tt>, we must
-         * redirect to the canonical URL like <tt>/entity/128</tt> if a new entity was created.
-         * <p>
-         * Note that the redirect is only performed if the newly created entity has validation warnings or the Entity is
-         * new.
-         *
-         * @param createdURI the URI to redirect to where <tt>${id}</tt> is replaced with the actual id of the entity
-         * @return the helper itself for fluent method calls
-         */
-        public SaveHelper withAfterCreateURI(String createdURI) {
-            this.createdURI = createdURI;
-            return this;
-        }
-
-        /**
-         * Used to supply a URL to which the user is redirected if an entity was successfully saved.
-         * <p>
-         * Once an entity was successfully saved is not new and has no validation warnings, the user will be redirected
-         * to the given URL.
-         *
-         * @param afterSaveURI the list or base URL to return to, after an entity was successfully edited.
-         * @return the helper itself for fluent method calls
-         */
-        public SaveHelper withAfterSaveURI(String afterSaveURI) {
-            this.afterSaveURI = afterSaveURI;
-            return this;
-        }
-
-        /**
-         * Disables the automatically loading process of all entity properties annotated with {@link Autoloaded}.
-         *
-         * @return the helper itself for fluent method calls
-         */
-        public SaveHelper disableAutoload() {
-            this.autoload = false;
-            return this;
-        }
-
-        /**
-         * Disables the CSRF-token checks when {@link #saveEntity(BaseEntity)} is called.
-         *
-         * @return the helper itself for fluent method calls
-         */
-        public SaveHelper disableSafePOST() {
-            this.acceptUnsafePOST = true;
-            return this;
-        }
-
-        /**
-         * Applies the configured save login on the given entity.
-         *
-         * @param entity the entity to update and save
-         * @return <tt>true</tt> if the request was handled (the user was redirected), <tt>false</tt> otherwise
-         */
-        public boolean saveEntity(BaseEntity<?> entity) {
-            try {
-                if (!((acceptUnsafePOST && ctx.isUnsafePOST()) || ctx.ensureSafePOST())) {
-                    return false;
-                }
-
-                boolean wasNew = entity.isNew();
-
-                if (autoload) {
-                    load(ctx, entity);
-                }
-
-                if (mappings != null && !mappings.isEmpty()) {
-                    load(ctx, entity, mappings);
-                }
-
-                if (preSaveHandler != null) {
-                    preSaveHandler.accept(wasNew);
-                }
-
-                entity.getMapper().update(entity);
-                if (postSaveHandler != null) {
-                    postSaveHandler.accept(wasNew);
-                }
-
-                if (wasNew && Strings.isFilled(createdURI)) {
-                    ctx.respondWith()
-                       .redirectToGet(Formatter.create(createdURI).set("id", entity.getIdAsString()).format());
-                    return true;
-                }
-
-                if (!entity.getMapper().hasValidationWarnings(entity) && Strings.isFilled(afterSaveURI)) {
-                    ctx.respondWith()
-                       .redirectToGet(Formatter.create(afterSaveURI).set("id", entity.getIdAsString()).format());
-                    return true;
-                }
-                showSavedMessage();
-            } catch (Exception e) {
-                UserContext.handle(e);
-            }
-            return false;
-        }
-    }
-
-    /**
      * Creates a {@link SaveHelper} with provides a fluent API to save an entity into the database.
      *
      * @param ctx the current request
      * @return a helper used to configure the save process
      */
     protected SaveHelper prepareSave(WebContext ctx) {
-        return new SaveHelper(ctx);
+        return new SaveHelper(this, ctx);
     }
 
     /**
-     * Performs a validation and reports all warnings via the {@link UserContext}.
+     * Deletes the entity with the given type and id.
+     * <p>
+     * If the entity is {@link TenantAware} a matching tenant will be ensured. If the entits
+     * does no longer exist, this call will be ignored. If no valid POST with CSRF token is present,
+     * and exception will be thrown.
+     *
+     * @param ctx  the current request
+     * @param type the type of entity to delete
+     * @param id   the id of the entity to delete
+     */
+    public void deleteEntity(WebContext ctx, Class<? extends BaseEntity<?>> type, String id) {
+        deleteEntity(ctx, tryFindForTenant(type, id));
+    }
+
+    /**
+     * Deletes the entity with the given type and id.
+     * <p>
+     * If the given optional is empty, this call will be ignored. If no valid POST with CSRF token is present,
+     * and exception will be thrown.
+     *
+     * @param ctx            the current request
+     * @param optionalEntity the entity to delete (if present)
+     */
+    public void deleteEntity(WebContext ctx, Optional<? extends BaseEntity<?>> optionalEntity) {
+        if (ctx.isSafePOST()) {
+            optionalEntity.ifPresent(entity -> {
+                entity.getDescriptor().getMapper().delete(entity);
+                showDeletedMessage();
+            });
+        }
+    }
+
+    /**
+     * Performs a validation and reports the first warnings via the {@link UserContext}.
+     * <p>
+     * Note that this is only done, if no error messages are present which might otherwise confuse the user.
      *
      * @param entity the entity to validate
      */
     protected void validate(BaseEntity<?> entity) {
-        for (String warning : entity.getMapper().validate(entity)) {
-            UserContext.message(Message.warn(warning));
+        UserContext userCtx = UserContext.get();
+        if (userCtx.getMessages().stream().noneMatch(msg -> Strings.areEqual(Message.ERROR, msg.getType()))) {
+            entity.getMapper().validate(entity).stream().findFirst().ifPresent(msg -> {
+                userCtx.addMessage(Message.warn(msg));
+            });
         }
     }
 
@@ -534,6 +412,24 @@ public class BizController extends BasicController {
             }
             return e;
         });
+    }
+
+    /**
+     * Handles the given exception.
+     * <p>
+     * In contrast to {@link UserContext#handle(Throwable)} this will also check if the
+     * cause of the given exception is a {@link InvalidFieldException} generated by sirius-db.
+     * <p>
+     * In this case, it will mark the according field as errorneous.
+     *
+     * @param ex the exception to handle
+     */
+    protected void handle(Exception ex) {
+        if (ex.getCause() instanceof InvalidFieldException) {
+            UserContext.get().signalFieldError(((InvalidFieldException) ex.getCause()).getField());
+        }
+
+        UserContext.handle(ex);
     }
 
     /**
