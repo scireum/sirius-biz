@@ -1,6 +1,6 @@
 <i:arg type="sirius.biz.packages.PackageData" name="packageData"/>
 <i:arg type="sirius.biz.packages.Packages" name="packages"/>
-<i:arg type="String" name="scope" default="tenant"/>
+<i:arg type="String" name="scope"/>
 
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders the package and upgrades"/>

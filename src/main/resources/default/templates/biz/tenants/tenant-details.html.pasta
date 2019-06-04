@@ -81,7 +81,7 @@
             </div>
             <div class="col-md-6">
                 <w:subHeading labelKey="Tenant.permissions"/>
-                <i:invoke template="templates/biz/packages/packages-and-upgrades.html.pasta"
+                <i:invoke template="templates/biz/packages/packages-and-upgrades.html.pasta" scope="tenant"
                           packageData="@tenant.getTenantData().getPackageData()" packages="packages"/>
             </div>
         </div>

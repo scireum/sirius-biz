@@ -1,7 +1,5 @@
 <i:arg type="sirius.biz.packages.PackageData" name="packageData"/>
-<i:arg type="sirius.biz.packages.Packages" name="packages"/>
-<i:arg type="String" name="scope" default="tenant"/>
-<i:arg type="String" name="translationPrefix" default="TenantPermission"/>
+<i:arg type="String" name="translationPrefix"/>
 <i:arg type="List" name="allPermissions"/>
 
 <i:pragma name="inline" value="true"/>
