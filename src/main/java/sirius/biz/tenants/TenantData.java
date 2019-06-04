@@ -12,7 +12,6 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.model.InternationalAddressData;
-import sirius.biz.model.PermissionData;
 import sirius.biz.packages.PackageData;
 import sirius.biz.mongo.PrefixSearchContent;
 import sirius.biz.protocol.JournalData;
@@ -216,19 +215,6 @@ public class TenantData extends Composite implements Journaled {
             new InternationalAddressData(InternationalAddressData.Requirements.NONE, null);
 
     /**
-     * Contains the features and individual config assigned to the tenant.
-     *
-     * @deprecated use {@link ::packageData}
-     */
-    @Deprecated
-    public static final Mapping PERMISSIONS = Mapping.named("permissions");
-    /**
-     * @deprecated use {@link ::packageData}
-     */
-    @Deprecated
-    private final PermissionData permissions;
-
-    /**
      * Contains the package, upgrades and additional and revoked permissions for this tenant.
      */
     public static final Mapping PACKAGE_DATA = Mapping.named("packageData");
@@ -272,7 +258,6 @@ public class TenantData extends Composite implements Journaled {
      */
     public TenantData(BaseEntity<?> tenantObject) {
         this.tenantObject = tenantObject;
-        this.permissions = new PermissionData(tenantObject);
         this.journal = new JournalData(tenantObject);
     }
 
@@ -358,10 +343,6 @@ public class TenantData extends Composite implements Journaled {
 
     public InternationalAddressData getAddress() {
         return address;
-    }
-
-    public PermissionData getPermissions() {
-        return permissions;
     }
 
     public boolean isParentCanAccess() {
