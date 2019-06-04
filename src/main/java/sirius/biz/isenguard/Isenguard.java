@@ -37,8 +37,8 @@ import java.util.stream.Collectors;
  * Most probably this will be based on {@link RedisLimiter redis} but other approaches can be taken by providing a
  * custom {@link Limiter} via the system config value <tt>isenguard.limiter</tt>.
  */
-@Register(classes = {Isenguard.class, Firewall.class}, framework = Isenguard.FRAMEWORK_ISENGUARD)
-public class Isenguard implements Firewall {
+@Register(classes = Isenguard.class)
+public class Isenguard {
 
     /**
      * Contains the framework name which controls if isenguard is active or not.
@@ -89,9 +89,14 @@ public class Isenguard implements Firewall {
     @Part
     private EventRecorder events;
 
-    @Override
-    public boolean isIPBlacklisted(WebContext ctx) {
-        return limiter != null && limiter.isIPBLacklisted(ctx.getRemoteIP().toString());
+    /**
+     * Determins if the given ipAddress has already been blocked via {@link #blockIP(String)}.
+     *
+     * @param ipAddress the ip address to check
+     * @return <tt>true</tt> if the address has been blocked, <tt>false</tt> otherwise
+     */
+    public boolean isIPBlacklisted(String ipAddress) {
+        return limiter != null && limiter.isIPBLacklisted(ipAddress);
     }
 
     /**
@@ -116,17 +121,6 @@ public class Isenguard implements Firewall {
     public void unblockIP(String ipAddress) {
         LOG.WARN("The IP %s was removed from the list of blocked IP addresses.", ipAddress);
         limiter.unblock(ipAddress);
-    }
-
-    @Override
-    public boolean handleRateLimiting(WebContext ctx, String realm) {
-        String ip = ctx.getRemoteIP().getHostAddress();
-        if (isRateLimitReached(ip, realm, USE_LIMIT_FROM_CONFIG, () -> RateLimitingInfo.fromWebContext(ctx, null))) {
-            ctx.respondWith().error(HttpResponseStatus.TOO_MANY_REQUESTS);
-            return true;
-        }
-
-        return false;
     }
 
     /**
