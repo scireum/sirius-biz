@@ -1,7 +1,7 @@
 <i:arg type="sirius.biz.tenants.Tenant" name="tenant"/>
 
 <i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" page="config">
-    <div id="editor" style="height: 450px">@tenant.getTenantData().getPermissions().getConfigString()</div>
+    <div id="editor" style="height: 450px">@tenant.getTenantData().getConfigString()</div>
 
     <div class="form-actions">
         <a id="save" class="btn btn-primary">
@@ -16,7 +16,7 @@
 
         $('#save').click(function() {
             updateField('/tenant/@tenant.getIdAsString()/update',
-                'tenantData_permissions_configString',
+                'tenantData_configString',
                 editor.getSession().getDocument().getValue());
         });
 
