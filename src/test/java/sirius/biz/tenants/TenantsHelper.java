@@ -65,7 +65,7 @@ public class TenantsHelper {
         if (testTenant == null) {
             testTenant = new SQLTenant();
             testTenant.getTenantData().setName("Test");
-            testTenant.getTenantData().getPermissions().getPermissions().addAll(features);
+            testTenant.getTenantData().getPackageData().getAdditionalPermissions().addAll(features);
             oma.update(testTenant);
         }
     }

@@ -131,16 +131,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
 
         SaveHelper saveHelper = prepareSave(ctx).withAfterCreateURI("/tenant/${id}").withAfterSaveURI("/tenants");
         saveHelper.withPreSaveHandler(isNew -> {
-            tenant.getTenantData().getPermissions().getPermissions().clear();
-            for (String permission : ctx.getParameters("permissions")) {
-                // Ensure that only real permissions end up in the permissions list,
-                // as roles, permissions and flags later end up in the same vector
-                // therefore we don't want nothing else but tenant permissions in this list
-                if (getPermissions().contains(permission)) {
-                    tenant.getTenantData().getPermissions().getPermissions().add(permission);
-                }
-            }
-
             tenant.getTenantData().getPackageData().getUpgrades().clear();
             for (String upgrade : ctx.getParameters("upgrades")) {
                 if (packages.getUpgrades("tenant").contains(upgrade)) {
@@ -194,13 +184,13 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         if (ctx.hasParameter(Tenant.TENANT_DATA.inner(TenantData.CONFIG_STRING).getName())) {
             tenant.getTenantData().getConfig();
         }
-        tenant.getTenantData().getPermissions().getPermissions().clear();
+        tenant.getTenantData().getPackageData().getAdditionalPermissions().clear();
         for (String permission : ctx.getParameters("permissions")) {
             // Ensure that only real roles end up in the permissions list,
             // as roles, permissions and flags later end up in the same vector
             // therefore we don't want nothing else but tenant permissions in this list
             if (getPermissions().contains(permission)) {
-                tenant.getTenantData().getPermissions().getPermissions().add(permission);
+                tenant.getTenantData().getPackageData().getAdditionalPermissions().add(permission);
             }
         }
 
