@@ -29,7 +29,6 @@ import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 import sirius.web.services.JSONStructuredOutput;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -131,18 +130,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
 
         SaveHelper saveHelper = prepareSave(ctx).withAfterCreateURI("/tenant/${id}").withAfterSaveURI("/tenants");
         saveHelper.withPreSaveHandler(isNew -> {
-            tenant.getTenantData().getPackageData().getUpgrades().clear();
-            for (String upgrade : ctx.getParameters("upgrades")) {
-                if (packages.getUpgrades("tenant").contains(upgrade)) {
-                    // ensure only real upgrades get in this list
-                    tenant.getTenantData().getPackageData().getUpgrades().add(upgrade);
-                }
-            }
-
-            if (packages.getPackages("tenant").contains(ctx.get("package").asString())) {
-                // ensure only real packages get in this field
-                tenant.getTenantData().getPackageData().setPackage(ctx.get("package").asString());
-            }
+            tenant.getTenantData().getPackageData().loadPackageAndUpgradesFromContext("tenant", ctx);
         });
 
         boolean requestHandled = saveHelper.saveEntity(tenant);
@@ -236,26 +224,9 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         assertNotNew(tenant);
 
         boolean handled = prepareSave(ctx).disableAutoload().withAfterSaveURI("/tenants").withPreSaveHandler(isNew -> {
-            List<String> additionalPermissions = new ArrayList<>();
-            List<String> revokedPermissions = new ArrayList<>();
-
-            for (String permission : getPermissions()) {
-                switch (ctx.get(permission).asString()) {
-                    case "additional":
-                        additionalPermissions.add(permission);
-                        break;
-                    case "revoked":
-                        revokedPermissions.add(permission);
-                        break;
-                    default:
-                }
-            }
-
-            tenant.getTenantData().getPackageData().getAdditionalPermissions().clear();
-            tenant.getTenantData().getPackageData().getAdditionalPermissions().addAll(additionalPermissions);
-
-            tenant.getTenantData().getPackageData().getRevokedPermissions().clear();
-            tenant.getTenantData().getPackageData().getRevokedPermissions().addAll(revokedPermissions);
+            tenant.getTenantData()
+                  .getPackageData()
+                  .loadRevokedAndAdditionalPermissionsFromContext("tenant", ctx, getPermissions());
         }).saveEntity(tenant);
 
         if (!handled) {

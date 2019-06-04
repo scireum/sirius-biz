@@ -15,8 +15,11 @@ import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Part;
+import sirius.web.http.WebContext;
 import sirius.web.security.Permissions;
 
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -24,6 +27,9 @@ import java.util.TreeSet;
  * Contains the package, upgrades and additional and revoked permissions for an entity.
  */
 public class PackageData extends Composite {
+
+    @Part
+    private static Packages packages;
 
     /**
      * The selected package
@@ -154,6 +160,53 @@ public class PackageData extends Composite {
         permissions.addAll(getAdditionalPermissions());
         permissions.addAll(getUpgrades());
         return permissions;
+    }
+
+    /**
+     * Load the package and upgrades from the web context.
+     *
+     * @param packagesScope the packages scope
+     * @param context       the web context
+     */
+    public void loadPackageAndUpgradesFromContext(String packagesScope, WebContext context) {
+        getUpgrades().clear();
+        for (String upgrade : context.getParameters("upgrades")) {
+            if (packages.getUpgrades(packagesScope).contains(upgrade)) {
+                // ensure only real upgrades get in this list
+                getUpgrades().add(upgrade);
+            }
+        }
+
+        if (packages.getPackages(packagesScope).contains(context.get("package").asString())) {
+            // ensure only real packages get in this field
+            setPackage(context.get("package").asString());
+        }
+    }
+
+    /**
+     * Load the revoked and additional permissions from the web context.
+     *
+     * @param packagesScope  the packages scope
+     * @param context        the web context
+     * @param allPermissions all possible permissions
+     */
+    public void loadRevokedAndAdditionalPermissionsFromContext(String packagesScope,
+                                                               WebContext context,
+                                                               List<String> allPermissions) {
+        getAdditionalPermissions().clear();
+        getRevokedPermissions().clear();
+
+        for (String permission : allPermissions) {
+            switch (context.get(permission).asString()) {
+                case "additional":
+                    getAdditionalPermissions().add(permission);
+                    break;
+                case "revoked":
+                    getRevokedPermissions().add(permission);
+                    break;
+                default:
+            }
+        }
     }
 
     @BeforeSave
