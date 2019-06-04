@@ -60,7 +60,7 @@ public class AuditLog implements Initializable {
         private String getCurrentIP() {
             WebContext webContext = CallContext.getCurrent().get(WebContext.class);
             if (webContext.isValid()) {
-                return webContext.getRemoteIP().toString();
+                return webContext.getRemoteIP().getHostAddress();
             }
 
             return null;
