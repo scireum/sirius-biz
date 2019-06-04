@@ -8,13 +8,11 @@
 
 package sirius.biz.tenants;
 
-import sirius.biz.model.AddressData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
-import sirius.db.mixing.query.QueryField;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -104,14 +102,14 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     public void tenants(WebContext ctx) {
         BasePageHelper<T, ?, ?, ?> ph = getTenantsAsPage();
         ph.withContext(ctx);
-        ph.withSearchFields(QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.NAME)),
-                            QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)),
-                            QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.STREET)),
-                            QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.CITY)));
-
         ctx.respondWith().template("templates/biz/tenants/tenants.html.pasta", ph.asPage());
     }
 
+    /**
+     * Constructs a page helper for the tenants to view.
+     *
+     * @return the list of available tenants wrapped as page helper
+     */
     protected abstract BasePageHelper<T, ?, ?, ?> getTenantsAsPage();
 
     /**
@@ -160,6 +158,11 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         }
     }
 
+    /**
+     * Returns the effective entity class used to represent tenants.
+     *
+     * @return the effective entity class for tenants
+     */
     @SuppressWarnings("unchecked")
     protected Class<T> getTenantClass() {
         return (Class<T>) tenants.getTenantClass();
@@ -247,13 +250,14 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     public void selectTenants(WebContext ctx) {
         BasePageHelper<T, ?, ?, ?> ph = getSelectableTenantsAsPage(ctx, determineCurrentTenant(ctx));
         ph.withContext(ctx);
-        ph.withSearchFields(QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.NAME)),
-                            QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)),
-                            QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.STREET)),
-                            QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.CITY)));
 
         ctx.respondWith()
            .template("templates/biz/tenants/select-tenant.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
+    }
+
+    private boolean isCurrentlySpying(WebContext ctx) {
+        return ctx.getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX)
+                  .isFilled();
     }
 
     /**
@@ -292,12 +296,12 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      */
     public abstract Optional<T> resolveAccessibleTenant(String id, Tenant<?> currentTenant);
 
+    /**
+     * Constructs a page helper for the selectable tenants.
+     *
+     * @return the list of selectable tenants wrapped as page helper
+     */
     protected abstract BasePageHelper<T, ?, ?, ?> getSelectableTenantsAsPage(WebContext ctx, T currentTenant);
-
-    private boolean isCurrentlySpying(WebContext ctx) {
-        return ctx.getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX)
-                  .isFilled();
-    }
 
     /**
      * Makes the current user belong to the given tenant.
@@ -344,12 +348,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         AutocompleteHelper.handle(ctx, (query, result) -> {
             BasePageHelper<T, ?, ?, ?> ph = getSelectableTenantsAsPage(ctx, determineCurrentTenant(ctx));
             ph.withContext(ctx);
-            ph.withSearchFields(QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.NAME)),
-                                QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)),
-                                QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS)
-                                                                      .inner(AddressData.STREET)),
-                                QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS)
-                                                                      .inner(AddressData.CITY)));
 
             ph.asPage().getItems().forEach(tenant -> {
                 result.accept(new AutocompleteHelper.Completion(tenant.getIdAsString(),

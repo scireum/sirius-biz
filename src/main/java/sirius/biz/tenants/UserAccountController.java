@@ -10,13 +10,12 @@ package sirius.biz.tenants;
 
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
-import sirius.biz.model.PersonData;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
-import sirius.db.mixing.query.QueryField;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -88,22 +87,25 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         ph.addBooleanFacet(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                         .inner(LoginData.ACCOUNT_LOCKED)
                                                         .toString(), NLS.get("LoginData.accountLocked"));
-        ph.withSearchFields(QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL)),
-                            QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                                             .inner(LoginData.USERNAME)),
-                            QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
-                                                                             .inner(PersonData.FIRSTNAME)),
-                            QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
-                                                                             .inner(PersonData.LASTNAME)));
 
         ctx.respondWith().template("templates/biz/tenants/user-accounts.html.pasta", ph.asPage(), getUserClass());
     }
 
+    /**
+     * Returns the effective entity class used to represent user accounts.
+     *
+     * @return the effective entity class for user accounts
+     */
     @SuppressWarnings("unchecked")
     protected Class<U> getUserClass() {
         return (Class<U>) tenants.getUserClass();
     }
 
+    /**
+     * Constructs a page helper for the user accounts to view.
+     *
+     * @return the list of available user accounts wrapped as page helper
+     */
     protected abstract BasePageHelper<U, ?, ?, ?> getUsersAsPage();
 
     /**
@@ -361,7 +363,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "RedundantCast"})
+    @Explain("The redundant cast is rquired as otherwise the Java compiler gets confused.")
     protected List<U> findUserAccountsWithEmail(String email) {
         return (List<U>) (Object) mixing.getDescriptor(getUserClass())
                                         .getMapper()
@@ -416,24 +419,14 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     @Routed("/user-accounts/autocomplete")
     public void usersAutocomplete(final WebContext ctx) {
         AutocompleteHelper.handle(ctx, (query, result) -> {
-            mixing.getDescriptor(getUserClass())
-                  .getMapper()
-                  .select(getUserClass())
-                  .eq(UserAccount.TENANT, tenants.getRequiredTenant())
-                  .queryString(query,
-                               QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL)),
-                               QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                                                .inner(LoginData.USERNAME)),
-                               QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
-                                                                                .inner(PersonData.FIRSTNAME)),
-                               QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
-                                                                                .inner(PersonData.LASTNAME)))
-                  .limit(10)
-                  .iterateAll(userAccount -> {
-                      result.accept(new AutocompleteHelper.Completion(userAccount.getUniqueName(),
-                                                                      userAccount.toString(),
-                                                                      userAccount.toString()));
-                  });
+            BasePageHelper<U, ?, ?, ?> ph = getSelectableUsersAsPage();
+            ph.withContext(ctx);
+
+            ph.asPage().getItems().forEach(userAccount -> {
+                result.accept(new AutocompleteHelper.Completion(userAccount.getUniqueName(),
+                                                                userAccount.toString(),
+                                                                userAccount.toString()));
+            });
         });
     }
 
@@ -448,24 +441,22 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     public void selectUserAccounts(WebContext ctx) {
         BasePageHelper<U, ?, ?, ?> ph = getSelectableUsersAsPage();
         ph.withContext(ctx);
-        ph.withSearchFields(QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
-                                                                             .inner(PersonData.LASTNAME)),
-                            QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
-                                                                             .inner(PersonData.FIRSTNAME)),
-                            QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                                             .inner(LoginData.USERNAME)),
-                            QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL)));
 
         ctx.respondWith()
            .template("templates/biz/tenants/select-user-account.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
     }
 
-    protected abstract BasePageHelper<U, ?, ?, ?> getSelectableUsersAsPage();
-
     private boolean isCurrentlySpying(WebContext ctx) {
         return ctx.getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX)
                   .isFilled();
     }
+
+    /**
+     * Constructs a page helper for the selectable user accounts.
+     *
+     * @return the list of selectable user accounts wrapped as page helper
+     */
+    protected abstract BasePageHelper<U, ?, ?, ?> getSelectableUsersAsPage();
 
     /**
      * Makes the current user belong to the given tenant.
