@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.jdbc;
 
+import sirius.biz.model.AddressData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantController;
 import sirius.biz.tenants.TenantData;
@@ -16,6 +17,7 @@ import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.SQLPageHelper;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
+import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
 import sirius.web.http.WebContext;
@@ -30,12 +32,29 @@ public class SQLTenantController extends TenantController<Long, SQLTenant, SQLUs
 
     @Override
     protected BasePageHelper<SQLTenant, ?, ?, ?> getTenantsAsPage() {
-        return SQLPageHelper.withQuery(oma.select(SQLTenant.class).orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME)));
+        SQLPageHelper<SQLTenant> pageHelper = SQLPageHelper.withQuery(oma.select(SQLTenant.class)
+                                                                         .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME)));
+        pageHelper.withSearchFields(QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.NAME)),
+                                    QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)),
+                                    QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS)
+                                                                          .inner(AddressData.STREET)),
+                                    QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS)
+                                                                          .inner(AddressData.CITY)));
+
+        return pageHelper;
     }
 
     @Override
     protected BasePageHelper<SQLTenant, ?, ?, ?> getSelectableTenantsAsPage(WebContext ctx, SQLTenant currentTenant) {
-        return SQLPageHelper.withQuery(queryPossibleTenants(currentTenant).orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME)));
+        SQLPageHelper<SQLTenant> pageHelper =
+                SQLPageHelper.withQuery(queryPossibleTenants(currentTenant).orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME)));
+        pageHelper.withSearchFields(QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.NAME)),
+                                    QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)),
+                                    QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS)
+                                                                          .inner(AddressData.STREET)),
+                                    QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS)
+                                                                          .inner(AddressData.CITY)));
+        return pageHelper;
     }
 
     @Override
