@@ -8,9 +8,7 @@
 
 package sirius.biz.tenants;
 
-import sirius.biz.model.AddressData;
 import sirius.biz.packages.Packages;
-import sirius.biz.model.PermissionData;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
@@ -233,7 +231,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     @Routed("/tenant/:1/permissions")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
-    public void tenantPermissionse(WebContext ctx, String tenantId) {
+    public void tenantPermissions(WebContext ctx, String tenantId) {
         T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
 

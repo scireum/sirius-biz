@@ -25,20 +25,32 @@ import java.util.TreeSet;
  */
 public class PackageData extends Composite {
 
+    /**
+     * The selected package
+     */
     public static final Mapping PACKAGE_STRING = Mapping.named("packageString");
     @Autoloaded
     @NullAllowed
     private String packageString;
 
+    /**
+     * List of selected upgrades as string
+     */
     public static final Mapping UPGRADES_STRING = Mapping.named("upgradesString");
     @Autoloaded
     @NullAllowed
     private String upgradesString;
 
+    /**
+     * List of the additionaly granted permissions as string
+     */
     public static final Mapping ADDITIONAL_PERMISSIONS_STRING = Mapping.named("additionalPermissionsString");
     @NullAllowed
     private String additionalPermissionsString;
 
+    /**
+     * List of the explicitly revoked permissions as string
+     */
     public static final Mapping REVOKED_PERMISSIONS_STRING = Mapping.named("revokedPermissionsString");
     @NullAllowed
     private String revokedPermissionsString;
