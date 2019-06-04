@@ -142,16 +142,21 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         boolean requestHandled = saveHelper.saveEntity(tenant);
         if (!requestHandled) {
             validate(tenant);
+
+            List<String> availableLanguages =
+                    ((TenantUserManager<?, ?, ?>) UserContext.get().getUserManager()).getAvailableLanguages();
+            List<BaseEntity<?>> possibleParentTenants = mixing.getDescriptor(getTenantClass())
+                                                              .getMapper()
+                                                              .select(getTenantClass())
+                                                              .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME))
+                                                              .queryList();
+
             ctx.respondWith()
                .template("templates/biz/tenants/tenant-details.html.pasta",
                          tenant,
                          this,
-                         mixing.getDescriptor(getTenantClass())
-                               .getMapper()
-                               .select(getTenantClass())
-                               .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME))
-                               .queryList(),
-                         ((TenantUserManager) UserContext.get().getUserManager()).getAvailableLanguages());
+                         possibleParentTenants,
+                         availableLanguages);
         }
     }
 

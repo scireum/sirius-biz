@@ -141,11 +141,13 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
 
         if (!requestHandled) {
             validate(userAccount);
+            List<String> availableLanguages =
+                    ((TenantUserManager<?, ?, ?>) UserContext.get().getUserManager()).getAvailableLanguages();
             ctx.respondWith()
                .template("templates/biz/tenants/user-account-details.html.pasta",
                          userAccount,
                          this,
-                         ((TenantUserManager) UserContext.get().getUserManager()).getAvailableLanguages());
+                         availableLanguages);
         }
     }
 
