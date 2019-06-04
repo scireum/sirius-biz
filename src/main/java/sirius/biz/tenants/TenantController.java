@@ -180,6 +180,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         assertNotNew(tenant);
         load(ctx, tenant);
         if (ctx.hasParameter(Tenant.TENANT_DATA.inner(TenantData.CONFIG_STRING).getName())) {
+            // parses the config to make sure it is valid
             tenant.getTenantData().getConfig();
         }
         tenant.getMapper().update(tenant);
