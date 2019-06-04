@@ -16,6 +16,7 @@ import sirius.biz.tenants.UserAccountData;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.MongoPageHelper;
 import sirius.db.jdbc.SQLEntity;
+import sirius.db.mixing.query.QueryField;
 import sirius.db.mongo.MongoQuery;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
@@ -33,7 +34,11 @@ public class MongoUserAccountController extends UserAccountController<String, Mo
                                                                                              .inner(PersonData.LASTNAME))
                                                       .orderAsc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                              .inner(PersonData.FIRSTNAME));
-        return MongoPageHelper.withQuery(tenants.forCurrentTenant(baseQuery));
+
+        MongoPageHelper<MongoUserAccount> pageHelper = MongoPageHelper.withQuery(tenants.forCurrentTenant(baseQuery));
+        pageHelper.withSearchFields(QueryField.startsWith(MongoUserAccount.SEARCH_PREFIXES));
+
+        return pageHelper;
     }
 
     @Override
@@ -52,6 +57,9 @@ public class MongoUserAccountController extends UserAccountController<String, Mo
                                                       .orderAsc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                              .inner(PersonData.FIRSTNAME));
 
-        return MongoPageHelper.withQuery(baseQuery);
+        MongoPageHelper<MongoUserAccount> pageHelper = MongoPageHelper.withQuery(baseQuery);
+        pageHelper.withSearchFields(QueryField.startsWith(MongoUserAccount.SEARCH_PREFIXES));
+
+        return pageHelper;
     }
 }

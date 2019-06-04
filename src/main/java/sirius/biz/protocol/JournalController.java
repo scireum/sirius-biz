@@ -8,12 +8,10 @@
 
 package sirius.biz.protocol;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.web.BizController;
 import sirius.biz.web.ElasticPageHelper;
 import sirius.db.mixing.DateRange;
 import sirius.db.mixing.query.QueryField;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;

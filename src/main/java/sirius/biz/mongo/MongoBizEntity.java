@@ -12,14 +12,13 @@ import sirius.biz.protocol.NoJournal;
 import sirius.biz.protocol.TraceData;
 import sirius.biz.protocol.Traced;
 import sirius.db.mixing.Mapping;
-import sirius.db.mongo.MongoEntity;
 
 /**
  * Provides a base class for entities managed by a {@link sirius.biz.web.BizController}.
  * <p>
  * Provides built in {@link TraceData}
  */
-public abstract class MongoBizEntity extends MongoEntity implements Traced {
+public abstract class MongoBizEntity extends PrefixSearchableEntity implements Traced {
 
     /**
      * Contains tracing data which records which user created and last edited the entity

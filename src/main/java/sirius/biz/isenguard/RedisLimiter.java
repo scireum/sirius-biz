@@ -16,7 +16,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -98,13 +97,9 @@ public class RedisLimiter implements Limiter {
         });
     }
 
-
     @Override
     public Set<String> getBlockedIPs() {
-        return getDB().query(() -> "Query blocked IPs",
-                      db -> db.zrevrange(BLOCKED_IPS,
-                                                0,
-                                                50));
+        return getDB().query(() -> "Query blocked IPs", db -> db.zrevrange(BLOCKED_IPS, 0, 50));
     }
 
     public boolean isConfigured() {

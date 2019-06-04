@@ -14,6 +14,7 @@ import sirius.biz.tenants.TenantData;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.MongoPageHelper;
+import sirius.db.mixing.query.QueryField;
 import sirius.db.mongo.MongoQuery;
 import sirius.db.mongo.QueryBuilder;
 import sirius.kernel.di.std.Register;
@@ -30,15 +31,24 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
 
     @Override
     protected BasePageHelper<MongoTenant, ?, ?, ?> getTenantsAsPage() {
-        return MongoPageHelper.withQuery(mango.select(MongoTenant.class)
-                                              .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME)));
+        MongoPageHelper<MongoTenant> pageHelper = MongoPageHelper.withQuery(mango.select(MongoTenant.class)
+                                                                                 .orderAsc(Tenant.TENANT_DATA.inner(
+                                                                                         TenantData.NAME)));
+        pageHelper.withSearchFields(QueryField.startsWith(MongoTenant.SEARCH_PREFIXES));
+
+        return pageHelper;
     }
 
     @Override
     protected BasePageHelper<MongoTenant, ?, ?, ?> getSelectableTenantsAsPage(WebContext ctx,
                                                                               MongoTenant currentTenant) {
-        return MongoPageHelper.withQuery(queryPossibleTenants(currentTenant).orderAsc(Tenant.TENANT_DATA.inner(
-                TenantData.NAME)));
+
+        MongoPageHelper<MongoTenant> pageHelper =
+                MongoPageHelper.withQuery(queryPossibleTenants(currentTenant).orderAsc(Tenant.TENANT_DATA.inner(
+                        TenantData.NAME)));
+        pageHelper.withSearchFields(QueryField.startsWith(MongoTenant.SEARCH_PREFIXES));
+
+        return pageHelper;
     }
 
     @Override

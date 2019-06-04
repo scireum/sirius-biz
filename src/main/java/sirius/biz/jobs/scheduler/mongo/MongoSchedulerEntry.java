@@ -11,7 +11,6 @@ package sirius.biz.jobs.scheduler.mongo;
 import sirius.biz.jobs.scheduler.JobConfigData;
 import sirius.biz.jobs.scheduler.SchedulerData;
 import sirius.biz.jobs.scheduler.SchedulerEntry;
-import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.biz.tenants.mongo.MongoTenantAware;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;

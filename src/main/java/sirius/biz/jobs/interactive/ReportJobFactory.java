@@ -27,12 +27,6 @@ import java.util.function.BiConsumer;
  */
 public abstract class ReportJobFactory extends InteractiveJobFactory {
 
-    /**
-     * Provides the <tt>Cells</tt> helper for all sub classses which is used to populate a <tt>Report</tt>.
-     */
-    @Part
-    protected Cells cells;
-
     @Override
     public String getIcon() {
         return "fa-file-image-o";
