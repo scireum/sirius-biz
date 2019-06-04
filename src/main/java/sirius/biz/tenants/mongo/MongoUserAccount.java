@@ -13,6 +13,7 @@ import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Versioned;
 import sirius.db.mongo.Mango;
@@ -43,6 +44,14 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
      */
     public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal = new JournalData(this);
+
+    @BeforeSave
+    protected void enhanceSearchField() {
+        addContent(getUserAccountData().getPerson().getFirstname());
+        addContent(getUserAccountData().getPerson().getLastname());
+        addContent(getUserAccountData().getLogin().getUsername());
+        addContent(getUserAccountData().getEmail());
+    }
 
     @Override
     public <A> Optional<A> tryAs(Class<A> adapterType) {

@@ -59,7 +59,7 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
     @Transient
     private boolean forceUpdateSearchPrefixes;
 
-    @BeforeSave
+    @BeforeSave(priority = 10)
     protected void updateSearchField() {
         if (!isNew() && !forceUpdateSearchPrefixes && !isAnyMappingChanged()) {
             return;

@@ -14,6 +14,7 @@ import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantData;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.di.std.Framework;
@@ -40,6 +41,11 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
     public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal = new JournalData(this);
 
+    @BeforeSave
+    protected void enhanceSearchField() {
+        addContent(getTenantData().getAddress().getStreet());
+        addContent(getTenantData().getAddress().getZip());
+        addContent(getTenantData().getAddress().getCity());
     }
 
     @Override
