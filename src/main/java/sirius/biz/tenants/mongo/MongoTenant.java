@@ -40,9 +40,6 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
     public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal = new JournalData(this);
 
-    @Override
-    public void setId(String id) {
-        super.setId(id);
     }
 
     @Override
