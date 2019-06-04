@@ -17,9 +17,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * Provides a implementation which used MD5 as hash function to protect password.
+ * Provides an implementation which uses MD5 as hash function to protect the password.
  * <p>
- * As MD5 can be comuted quite quickly, it is considered too weak to be used to hash passwords.
+ * As MD5 can be computed quite fast, it is considered too weak to be used to hash passwords.
  * Therefore we permit logins using these hashes but re-hash them using a stronger function.
  */
 @Register
