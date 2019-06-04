@@ -583,20 +583,20 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     protected UserSettings getUserSettings(UserSettings scopeSettings, UserInfo userInfo) {
         U user = userInfo.getUserObject(getUserClass());
         if (user.getUserAccountData().getPermissions().getConfig() == null) {
-            if (user.getTenant().getValue().getTenantData().getPermissions().getConfig() == null) {
+            if (user.getTenant().getValue().getTenantData().getConfig() == null) {
                 return scopeSettings;
             }
 
             return configCache.get(user.getTenant().getUniqueObjectName(), i -> {
                 Config cfg = scopeSettings.getConfig();
-                cfg = user.getTenant().getValue().getTenantData().getPermissions().getConfig().withFallback(cfg);
+                cfg = user.getTenant().getValue().getTenantData().getConfig().withFallback(cfg);
                 return Tuple.create(new UserSettings(cfg), user.getTenant().getUniqueObjectName());
             }).getFirst();
         }
 
         return configCache.get(user.getUniqueName(), i -> {
             Config cfg = scopeSettings.getConfig();
-            cfg = user.getTenant().getValue().getTenantData().getPermissions().getConfig().withFallback(cfg);
+            cfg = user.getTenant().getValue().getTenantData().getConfig().withFallback(cfg);
             cfg = user.getUserAccountData().getPermissions().getConfig().withFallback(cfg);
             return Tuple.create(new UserSettings(cfg), user.getTenant().getUniqueObjectName());
         }).getFirst();
@@ -676,9 +676,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
     private Set<String> computeRoles(U user, T tenant, boolean isSystemTenant) {
         Set<String> roles = Sets.newTreeSet();
-        roles.addAll(user.getUserAccountData().getPermissions().getPermissions());
-        roles.addAll(tenant.getTenantData().getPermissions().getPermissions());
         roles.add(UserInfo.PERMISSION_LOGGED_IN);
+        roles.addAll(user.getUserAccountData().getPermissions().getPermissions());
+        roles.addAll(tenant.getTenantData().getPackageData().getCombinedPermissions());
 
         if (Strings.isFilled(tenant.getTenantData().getAccountNumber())) {
             roles.add("tenant-" + tenant.getTenantData().getAccountNumber());
@@ -687,8 +687,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         Set<String> transformedRoles = transformRoles(roles);
         if (isSystemTenant && transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
             roles.add(PERMISSION_SYSTEM_TENANT);
-            return transformRoles(roles);
+            transformedRoles = transformRoles(roles);
         }
+        transformedRoles.removeAll(tenant.getTenantData().getPackageData().getRevokedPermissions());
         return transformedRoles;
     }
 

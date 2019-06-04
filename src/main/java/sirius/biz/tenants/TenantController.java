@@ -8,7 +8,7 @@
 
 package sirius.biz.tenants;
 
-import sirius.biz.model.PermissionData;
+import sirius.biz.packages.Packages;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
@@ -61,6 +61,9 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
 
     @Part
     protected AuditLog auditLog;
+
+    @Part
+    private Packages packages;
 
     /**
      * Returns all available features which can be assigned to a tenant.
@@ -127,15 +130,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
 
         SaveHelper saveHelper = prepareSave(ctx).withAfterCreateURI("/tenant/${id}").withAfterSaveURI("/tenants");
         saveHelper.withPreSaveHandler(isNew -> {
-            tenant.getTenantData().getPermissions().getPermissions().clear();
-            for (String permission : ctx.getParameters("permissions")) {
-                // Ensure that only real permissions end up in the permissions list,
-                // as roles, permissions and flags later end up in the same vector
-                // therefore we don't want nothing else but tenant permissions in this list
-                if (getPermissions().contains(permission)) {
-                    tenant.getTenantData().getPermissions().getPermissions().add(permission);
-                }
-            }
+            tenant.getTenantData().getPackageData().loadPackageAndUpgradesFromContext("tenant", ctx);
         });
 
         boolean requestHandled = saveHelper.saveEntity(tenant);
@@ -155,7 +150,8 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
                          tenant,
                          this,
                          possibleParentTenants,
-                         availableLanguages);
+                         availableLanguages,
+                         packages);
         }
     }
 
@@ -183,21 +179,10 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
         load(ctx, tenant);
-        if (ctx.hasParameter(Tenant.TENANT_DATA.inner(TenantData.PERMISSIONS)
-                                               .inner(PermissionData.CONFIG_STRING)
-                                               .getName())) {
-            tenant.getTenantData().getPermissions().getConfig();
+        if (ctx.hasParameter(Tenant.TENANT_DATA.inner(TenantData.CONFIG_STRING).getName())) {
+            // parses the config to make sure it is valid
+            tenant.getTenantData().getConfig();
         }
-        tenant.getTenantData().getPermissions().getPermissions().clear();
-        for (String permission : ctx.getParameters("permissions")) {
-            // Ensure that only real roles end up in the permissions list,
-            // as roles, permissions and flags later end up in the same vector
-            // therefore we don't want nothing else but tenant permissions in this list
-            if (getPermissions().contains(permission)) {
-                tenant.getTenantData().getPermissions().getPermissions().add(permission);
-            }
-        }
-
         tenant.getMapper().update(tenant);
     }
 
@@ -214,6 +199,30 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
         ctx.respondWith().template("templates/biz/tenants/tenant-config.html.pasta", tenant);
+    }
+
+    /**
+     * Provides an editor for setting additional and revoked permissions.
+     *
+     * @param ctx      the current request
+     * @param tenantId the id of the tenant to change
+     */
+    @Routed("/tenant/:1/permissions")
+    @LoginRequired
+    @Permission(PERMISSION_MANAGE_TENANTS)
+    public void tenantPermissions(WebContext ctx, String tenantId) {
+        T tenant = find(getTenantClass(), tenantId);
+        assertNotNew(tenant);
+
+        boolean handled = prepareSave(ctx).disableAutoload().withAfterSaveURI("/tenants").withPreSaveHandler(isNew -> {
+            tenant.getTenantData()
+                  .getPackageData()
+                  .loadRevokedAndAdditionalPermissionsFromContext("tenant", ctx, getPermissions());
+        }).saveEntity(tenant);
+
+        if (!handled) {
+            ctx.respondWith().template("templates/biz/tenants/tenant-permissions.html.pasta", tenant, this, packages);
+        }
     }
 
     /**
