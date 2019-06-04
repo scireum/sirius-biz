@@ -420,16 +420,37 @@ public class BizController extends BasicController {
             }
             return false;
         }
+    /**
+     * Deletes the entity with the given type and id.
+     * <p>
+     * If the entity is {@link TenantAware} a matching tenant will be ensured. If the entits
+     * does no longer exist, this call will be ignored. If no valid POST with CSRF token is present,
+     * and exception will be thrown.
+     *
+     * @param ctx  the current request
+     * @param type the type of entity to delete
+     * @param id   the id of the entity to delete
+     */
+    public void deleteEntity(WebContext ctx, Class<? extends BaseEntity<?>> type, String id) {
+        deleteEntity(ctx, tryFindForTenant(type, id));
     }
 
     /**
-     * Creates a {@link SaveHelper} with provides a fluent API to save an entity into the database.
+     * Deletes the entity with the given type and id.
+     * <p>
+     * If the given optional is empty, this call will be ignored. If no valid POST with CSRF token is present,
+     * and exception will be thrown.
      *
-     * @param ctx the current request
-     * @return a helper used to configure the save process
+     * @param ctx            the current request
+     * @param optionalEntity the entity to delete (if present)
      */
-    protected SaveHelper prepareSave(WebContext ctx) {
-        return new SaveHelper(ctx);
+    public void deleteEntity(WebContext ctx, Optional<? extends BaseEntity<?>> optionalEntity) {
+        if (ctx.isSafePOST()) {
+            optionalEntity.ifPresent(entity -> {
+                entity.getDescriptor().getMapper().delete(entity);
+                UserContext.message(Message.info(NLS.get("BasicController.objectDeleted")));
+            });
+        }
     }
 
     /**

@@ -154,14 +154,7 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
     @Permission(PERMISSION_MANAGE_SCHEDULER)
     @Routed("/jobs/scheduler/entry/:1/delete")
     public void deleteEntry(WebContext ctx, String entryId) {
-        if (ctx.ensureSafePOST()) {
-            Optional<J> entry = tryFindForTenant(getEntryType(), entryId);
-            entry.ifPresent(schedulerEntry -> {
-                schedulerEntry.getMapper().delete(schedulerEntry);
-                showDeletedMessage();
-            });
-        }
-
+        deleteEntity(ctx,getEntryType(), entryId);
         schedulerEntries(ctx);
     }
 

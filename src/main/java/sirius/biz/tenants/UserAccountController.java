@@ -387,13 +387,11 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         Optional<U> account = tryFindForTenant(getUserClass(), id);
         account.ifPresent(u -> {
             if (Objects.equals(getUser().getUserObject(UserAccount.class), u)) {
-                UserContext.message(Message.error(NLS.get("UserAccountController.cannotDeleteSelf")));
-            } else {
-                u.getMapper().delete(u);
-                showDeletedMessage();
+                throw Exceptions.createHandled().withNLSKey("UserAccountController.cannotDeleteSelf").handle();
             }
         });
 
+        deleteEntity(ctx, account);
         accounts(ctx);
     }
 

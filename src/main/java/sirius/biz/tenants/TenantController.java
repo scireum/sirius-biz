@@ -12,6 +12,7 @@ import sirius.biz.model.PermissionData;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
+import sirius.biz.web.SaveHelper;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
@@ -232,10 +233,9 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
             if (tenant.equals(tenants.getRequiredTenant())) {
                 throw Exceptions.createHandled().withNLSKey("TenantController.cannotDeleteSelf").handle();
             }
-            tenant.getMapper().delete(tenant);
-            showDeletedMessage();
         });
 
+        deleteEntity(ctx, optionalTenant);
         tenants(ctx);
     }
 
