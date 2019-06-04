@@ -558,7 +558,7 @@ public class BizController extends BasicController {
         }
 
         UserContext.handle(ex);
-    }a
+    }
 
     /**
      * Computes a signature used by {@link #signLink(String)} and {@link #verifySignedLink(WebContext)}.
