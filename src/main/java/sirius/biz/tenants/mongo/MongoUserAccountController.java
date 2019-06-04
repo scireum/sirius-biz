@@ -36,7 +36,7 @@ public class MongoUserAccountController extends UserAccountController<String, Mo
                                                                                              .inner(PersonData.FIRSTNAME));
 
         MongoPageHelper<MongoUserAccount> pageHelper = MongoPageHelper.withQuery(tenants.forCurrentTenant(baseQuery));
-        pageHelper.withSearchFields(QueryField.startsWith(MongoTenant.SEARCH_PREFIXES));
+        pageHelper.withSearchFields(QueryField.startsWith(MongoUserAccount.SEARCH_PREFIXES));
 
         return pageHelper;
     }
@@ -58,7 +58,7 @@ public class MongoUserAccountController extends UserAccountController<String, Mo
                                                                                              .inner(PersonData.FIRSTNAME));
 
         MongoPageHelper<MongoUserAccount> pageHelper = MongoPageHelper.withQuery(baseQuery);
-        pageHelper.withSearchFields(QueryField.startsWith(MongoTenant.SEARCH_PREFIXES));
+        pageHelper.withSearchFields(QueryField.startsWith(MongoUserAccount.SEARCH_PREFIXES));
 
         return pageHelper;
     }

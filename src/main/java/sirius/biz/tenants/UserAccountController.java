@@ -364,7 +364,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     }
 
     @SuppressWarnings({"unchecked", "RedundantCast"})
-    @Explain("The redundant cast is rquired as otherwise the Java compiler gets confused.")
+    @Explain("The redundant cast is required as otherwise the Java compiler gets confused.")
     protected List<U> findUserAccountsWithEmail(String email) {
         return (List<U>) (Object) mixing.getDescriptor(getUserClass())
                                         .getMapper()
