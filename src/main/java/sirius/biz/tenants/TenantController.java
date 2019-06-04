@@ -182,16 +182,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         if (ctx.hasParameter(Tenant.TENANT_DATA.inner(TenantData.CONFIG_STRING).getName())) {
             tenant.getTenantData().getConfig();
         }
-        tenant.getTenantData().getPackageData().getAdditionalPermissions().clear();
-        for (String permission : ctx.getParameters("permissions")) {
-            // Ensure that only real roles end up in the permissions list,
-            // as roles, permissions and flags later end up in the same vector
-            // therefore we don't want nothing else but tenant permissions in this list
-            if (getPermissions().contains(permission)) {
-                tenant.getTenantData().getPackageData().getAdditionalPermissions().add(permission);
-            }
-        }
-
         tenant.getMapper().update(tenant);
     }
 
