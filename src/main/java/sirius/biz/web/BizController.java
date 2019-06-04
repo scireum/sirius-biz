@@ -299,7 +299,7 @@ public class BizController extends BasicController {
         if (ctx.isSafePOST()) {
             optionalEntity.ifPresent(entity -> {
                 entity.getDescriptor().getMapper().delete(entity);
-                UserContext.message(Message.info(NLS.get("BasicController.objectDeleted")));
+                showDeletedMessage();
             });
         }
     }
