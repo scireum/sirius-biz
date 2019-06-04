@@ -1,0 +1,24 @@
+<i:arg type="sirius.biz.packages.PackageData" name="packageData"/>
+<i:arg type="sirius.biz.packages.Packages" name="packages"/>
+<i:arg type="String" name="scope" default="tenant"/>
+
+<i:pragma name="inline" value="true"/>
+<i:pragma name="description" value="Renders the package and upgrades"/>
+
+<div class="row">
+    <w:singleSelect span="12" name="package" labelKey="Packages.packages">
+        <i:for var="package" items="packages.getPackages(scope)" type="String">
+            <option value="@package" @selected="package == packageData.getPackage()">
+                @packages.getPackageName(scope, package)
+            </option>
+        </i:for>
+    </w:singleSelect>
+
+    <w:multiSelect span="12" name="upgrades" labelKey="Packages.upgrades">
+        <i:for var="upgrade" items="packages.getUpgrades(scope)" type="String">
+            <option value="@upgrade" @selected="packageData.getUpgrades().contains(upgrade)">
+                @packages.getUpgradeName(scope, upgrade)
+            </option>
+        </i:for>
+    </w:multiSelect>
+</div>

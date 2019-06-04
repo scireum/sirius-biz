@@ -9,6 +9,7 @@
 package sirius.biz.tenants;
 
 import sirius.biz.model.AddressData;
+import sirius.biz.packages.Packages;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
@@ -61,6 +62,9 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
 
     @Part
     protected AuditLog auditLog;
+
+    @Part
+    private Packages packages;
 
     /**
      * Returns all available features which can be assigned to a tenant.
@@ -136,6 +140,19 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
                     tenant.getTenantData().getPermissions().getPermissions().add(permission);
                 }
             }
+
+            tenant.getTenantData().getPackageData().getUpgrades().clear();
+            for (String upgrade : ctx.getParameters("upgrades")) {
+                if (packages.getUpgrades("tenant").contains(upgrade)) {
+                    // ensure only real upgrades get in this list
+                    tenant.getTenantData().getPackageData().getUpgrades().add(upgrade);
+                }
+            }
+
+            if (packages.getPackages("tenant").contains(ctx.get("package").asString())) {
+                // ensure only real packages get in this field
+                tenant.getTenantData().getPackageData().setPackage(ctx.get("package").asString());
+            }
         });
 
         boolean requestHandled = saveHelper.saveEntity(tenant);
@@ -150,7 +167,8 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
                                .select(getTenantClass())
                                .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME))
                                .queryList(),
-                         ((TenantUserManager) UserContext.get().getUserManager()).getAvailableLanguages());
+                         ((TenantUserManager) UserContext.get().getUserManager()).getAvailableLanguages(),
+                         packages);
         }
     }
 
