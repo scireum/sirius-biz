@@ -17,6 +17,9 @@ import sirius.tagliatelle.rendering.LocalRenderContext;
 import javax.annotation.Nonnull;
 import java.util.List;
 
+/**
+ * Signs a link which can be verified using BizController.verifySignedLink.
+ */
 @Register
 public class SignLinkMacro implements Macro {
 

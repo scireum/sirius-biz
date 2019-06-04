@@ -18,7 +18,6 @@ import sirius.kernel.async.CallContext;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Map;
 
 /**
  * Provides a base class for all events recorded by the {@link EventRecorder}.
