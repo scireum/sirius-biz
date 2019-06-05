@@ -18,6 +18,10 @@
     <w:pageHeader>
         @i18n("Model.tenant"): @tenant.getTenantData().getName()
         <small>@tenant.getTenantData().getAccountNumber()</small>
+
+        <span class="pull-right">
+            <i:extensions name="templates-tenant-header" tenant="tenant" page="page"/>
+        </span>
     </w:pageHeader>
 
     <div class="row">
