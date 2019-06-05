@@ -19,6 +19,7 @@ import sirius.kernel.di.std.Part;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permissions;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -71,6 +72,9 @@ public class PackageData extends Composite {
 
     @Transient
     private Set<String> revokedPermissions;
+
+    @Transient
+    private Set<String> expandedPermissions;
 
     public void setPackage(String packageString) {
         this.packageString = packageString;
@@ -147,6 +151,39 @@ public class PackageData extends Composite {
         }
         packageAndUpgradeFeatures.addAll(getUpgrades());
         return Permissions.applyProfiles(packageAndUpgradeFeatures);
+    }
+
+    /**
+     * Returns every permission granted by the package, upgrades and additional permissions. Also takes the revoked
+     * permissions into account.
+     *
+     * @return a set of every permission granted
+     */
+    public Set<String> getExpandedPermissions() {
+        if (expandedPermissions == null) {
+            expandedPermissions = new TreeSet<>();
+            if (Strings.isFilled(getPackage())) {
+                expandedPermissions.add(getPackage());
+            }
+            expandedPermissions.addAll(getUpgrades());
+            expandedPermissions.addAll(getAdditionalPermissions());
+            expandedPermissions = Permissions.applyProfiles(expandedPermissions);
+            expandedPermissions.removeAll(getRevokedPermissions());
+        }
+        return Collections.unmodifiableSet(expandedPermissions);
+    }
+
+    /**
+     * Checks if the permission is granted.
+     * <p>
+     * Will be checked against the {@link #getExpandedPermissions()}.
+     *
+     * @param permission the permission to check for
+     * @return true, if this obejct has the permission, false otherwise
+     */
+    public boolean hasPermission(String permission) {
+        Set<String> expanded = getExpandedPermissions();
+        return Permissions.hasPermission(permission, expanded::contains);
     }
 
     /**
