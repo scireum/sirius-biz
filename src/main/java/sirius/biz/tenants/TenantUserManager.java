@@ -20,7 +20,9 @@ import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.Parts;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
@@ -133,8 +135,12 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @Part
     protected static AuditLog auditLog;
 
+    @Parts(AdditionalRolesProvider.class)
+    private static PartCollection<AdditionalRolesProvider> additionalRolesProviders;
+
     protected static Cache<String, Tuple<Set<String>, String>> rolesCache =
             CacheManager.createCoherentCache("tenants-roles");
+
     protected static Cache<String, UserAccount<?, ?>> userAccountCache =
             CacheManager.createCoherentCache("tenants-users");
     protected static Cache<String, Tenant<?>> tenantsCache = CacheManager.createCoherentCache("tenants-tenants");
@@ -685,6 +691,10 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
         if (Strings.isFilled(tenant.getTenantData().getAccountNumber())) {
             roles.add("tenant-" + tenant.getTenantData().getAccountNumber());
+        }
+
+        for (AdditionalRolesProvider rolesProvider : additionalRolesProviders) {
+            rolesProvider.addAdditionalRoles(user, roles::add);
         }
 
         Set<String> transformedRoles = transformRoles(roles);
