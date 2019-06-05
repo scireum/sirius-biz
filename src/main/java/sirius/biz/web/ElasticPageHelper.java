@@ -16,7 +16,9 @@ import sirius.db.mixing.Mapping;
 import sirius.kernel.cache.ValueComputer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Watch;
+import sirius.kernel.nls.NLS;
 import sirius.web.controller.Facet;
 import sirius.web.controller.FacetItem;
 import sirius.web.controller.Page;
@@ -122,7 +124,6 @@ public class ElasticPageHelper<E extends ElasticEntity>
      * @param ranges the ranges which are supported as filter values
      * @return the helper itself for fluent method calls
      */
-    @SuppressWarnings("unchecked")
     public ElasticPageHelper<E> addTimeAggregation(Mapping field, DateRange... ranges) {
         return addTimeAggregation(field, baseQuery.getDescriptor().findProperty(field.toString()).getLabel(), ranges);
     }
@@ -135,13 +136,37 @@ public class ElasticPageHelper<E extends ElasticEntity>
      * @param ranges the ranges which are supported as filter values
      * @return the helper itself for fluent method calls
      */
-    @SuppressWarnings("unchecked")
     public ElasticPageHelper<E> addTimeAggregation(Mapping field, String title, DateRange... ranges) {
         Facet facet = createTimeFacet(field.toString(), title, ranges);
         baseQuery.addDateAggregation(field.toString(), field, Arrays.asList(ranges));
         aggregatingFacets.add(Tuple.create(facet, null));
 
         return this;
+    }
+
+    /**
+     * Adds a automatic facet for a boolean field.
+     *
+     * @param field the field to aggregate on
+     * @return the helper itself for fluent method calls
+     */
+    public ElasticPageHelper<E> addBooleanAggregation(Mapping field) {
+        Facet facet = new Facet(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
+                                field.toString(),
+                                null,
+                                null);
+        facet.addItem("1", NLS.get("NLS.yes"), -1);
+        facet.addItem("0", NLS.get("NLS.no"), -1);
+
+        aggregatingFacets.add(Tuple.create(facet, null));
+        baseQuery.addTermAggregation(field.toString(), field, 3);
+
+        return addFacet(facet, (f, q) -> {
+            Value filterValue = Value.of(f.getValue());
+            if (filterValue.isFilled()) {
+                q.eq(Mapping.named(f.getName()), Strings.areEqual(f.getValue(), "1"));
+            }
+        });
     }
 
     /**
