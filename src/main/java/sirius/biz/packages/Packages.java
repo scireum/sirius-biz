@@ -15,11 +15,11 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.security.Permissions;
-import sirius.web.security.UserContext;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * This helper class is a wrapper for the <tt>security.packages</tt> configuratuions.
@@ -76,30 +76,6 @@ public class Packages {
     }
 
     /**
-     * Checks whether the current user has the required permission for a given permission.
-     *
-     * @param permission the permission in question
-     * @return true if the current user has the required permission, false if not
-     */
-    public boolean hasRequiredPermissionForPermission(String permission) {
-        Set<String> permissions = UserContext.get().getUser().getPermissions();
-        return hasRequiredPermissionForPermission(permission, permissions::contains);
-    }
-
-    /**
-     * Checks whether the permissionData object has the required permission for a given permission.
-     *
-     * @param permission     the permission in question
-     * @param permissionData the permissionData object to check
-     * @return true if the permissionData object has the required permission, false if not
-     */
-    public boolean hasRequiredPermissionForPermission(String permission, PermissionData permissionData) {
-        return hasRequiredPermissionForPermission(permission,
-                                                  requiredPermission -> permissionData.getPermissions()
-                                                                                      .contains(requiredPermission));
-    }
-
-    /**
      * Checks whether some object has the required permission for a given permission, via a predicate.
      * <p>
      * The predicate will be called with the required permission for the permission and should return true or false,
@@ -116,5 +92,49 @@ public class Packages {
         }
         String requiredPermission = config.getString(permission);
         return Permissions.hasPermission(requiredPermission, hasPermissionPredicate);
+    }
+
+    /**
+     * Filters the given list of <tt>allPermissions</tt> to only contain accessible ones.
+     *
+     * <p>
+     * This utilizes the same mapping as {@link #hasRequiredPermissionForPermission(String, Predicate)}
+     *
+     * @param allPermissions         the list of permissions to process
+     * @param hasPermissionPredicate the predicate which deciedes if a given permission is present
+     * @return a list of all accessible permissions (in <tt>allPermissions</tt>)
+     */
+    public List<String> filterAccessiblePermissions(List<String> allPermissions,
+                                                    Predicate<String> hasPermissionPredicate) {
+        Config config = Sirius.getSettings().getConfig("security.packages.required-permissions-for-permission");
+        if (config.isEmpty()) {
+            return allPermissions;
+        }
+
+        return allPermissions.stream()
+                             .filter(permission -> !config.hasPath(permission)
+                                                   || Permissions.hasPermission(config.getString(permission),
+                                                                                hasPermissionPredicate))
+                             .collect(Collectors.toList());
+    }
+
+    /**
+     * Loads a list of assigned permissions into the given destination.
+     * <p>
+     * Filters the list of permissions using the <tt>isAccessible</tt> predicate.
+     * <p>
+     * This can be used to fill the {@link PermissionData#getPermissions()} to only contain valid
+     * and accessible roles / permissions.
+     *
+     * @param assignedPermissions the list of permissions to assign
+     * @param isAccessible        the predicate used to determine if a given permission is accessible or not
+     * @param destination         the destination which will be first cleared and then supplied with the accessible
+     *                            permissions
+     */
+    public void loadAccessiblePermissions(Collection<String> assignedPermissions,
+                                          Predicate<String> isAccessible,
+                                          Collection<String> destination) {
+        destination.clear();
+        assignedPermissions.stream().filter(isAccessible).forEach(destination::add);
     }
 }
