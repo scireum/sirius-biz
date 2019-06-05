@@ -1,4 +1,5 @@
 <i:arg type="sirius.biz.tenants.Tenant" name="tenant"/>
+<i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 <i:arg type="String" name="page"/>
 
 <w:page title="@toUserString(tenant)">
@@ -43,10 +44,14 @@
                                   active="page == 'details'"/>
                     <w:navboxLink labelKey="Model.config" url="@apply('/tenant/%s/config', tenant.getIdAsString())"
                                   active="page == 'config'"/>
-                    <w:navboxLink labelKey="Tenant.permissions" url="@apply('/tenant/%s/permissions', tenant.getIdAsString())"
-                                  active="page == 'permissions'"/>
+                    <i:if test="!controller.getPermissions().isEmpty()">
+                        <w:navboxLink labelKey="Tenant.permissions" url="@apply('/tenant/%s/permissions', tenant.getIdAsString())"
+                                      active="page == 'permissions'"/>
+                    </i:if>
+                    <w:navboxLink labelKey="Model.saml" url="@apply('/tenant/%s/saml', tenant.getIdAsString())"
+                                  active="page == 'saml'"/>
 
-                    <i:extensions name="templates-tenant-sidebar-menu" tenant="tenant" page="page"/>
+                    <i:extensions name="templates-tenant-sidebar-menu" tenant="tenant" controller="controller" page="page"/>
                 </w:navbox>
 
                 <w:jobs target="tenant" />

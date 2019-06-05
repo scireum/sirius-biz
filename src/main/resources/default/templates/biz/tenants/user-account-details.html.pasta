@@ -26,9 +26,9 @@
             <w:textfield name="userAccountData_person_lastname" value="@account.getUserAccountData().getPerson().getLastname()"
                          labelKey="PersonData.lastname"/>
             <w:singleSelect name="userAccountData_lang" labelKey="Model.lang" required="true">
-                <i:for var="language" items="controller.getAvailableLanguages()" type="String">
-                    <option value="@language" @selected="language == account.getUserAccountData().getLang()">
-                        @i18n(apply('Language.%s', language))
+                <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
+                    <option value="@language.getFirst()" @selected="language.getFirst() == account.getUserAccountData().getLang()">
+                        @language.getSecond()
                     </option>
                 </i:for>
             </w:singleSelect>

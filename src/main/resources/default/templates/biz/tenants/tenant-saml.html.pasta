@@ -1,0 +1,22 @@
+<i:arg type="sirius.biz.tenants.Tenant" name="tenant"/>
+<i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
+
+<i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" controller="controller" page="saml">
+    <w:editForm url="@apply('/tenant/%s/saml', tenant.getIdAsString())">
+        <w:subHeading labelKey="Tenant.saml"/>
+        <div class="row">
+            <w:textfield name="tenantData_samlRequestIssuerName" value="@tenant.getTenantData().getSamlRequestIssuerName()"
+                         labelKey="Tenant.samlRequestIssuerName" helpKey="Tenant.samlRequestIssuerName.help"/>
+            <w:textfield name="tenantData_samlIssuerIndex" value="@tenant.getTenantData().getSamlIssuerIndex()"
+                         labelKey="Tenant.samlIssuerIndex" helpKey="Tenant.samlIssuerIndex.help"/>
+            <w:textfield name="tenantData_samlIssuerUrl" value="@tenant.getTenantData().getSamlIssuerUrl()"
+                         labelKey="Tenant.samlIssuerUrl" span="12" helpKey="Tenant.samlIssuerUrl.help"/>
+            <w:textfield name="tenantData_samlIssuerName" value="@tenant.getTenantData().getSamlIssuerName()"
+                         labelKey="Tenant.samlIssuerName" span="12" helpKey="Tenant.samlIssuerName.help"/>
+            <w:textfield name="tenantData_samlFingerprint" value="@tenant.getTenantData().getSamlFingerprint()"
+                         labelKey="Tenant.samlFingerprint" span="12" helpKey="Tenant.samlFingerprint.help"/>
+        </div>
+    </w:editForm>
+
+    <w:formBar />
+</i:invoke>
