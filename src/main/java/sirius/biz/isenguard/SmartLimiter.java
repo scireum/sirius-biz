@@ -17,7 +17,7 @@ import java.util.Set;
 /**
  * Provides a "smart" implementation which uses redis if available and resorts to "noop" otherwise.
  */
-@Register(classes = {Limiter.class, SmartLimiter.class}, framework = Isenguard.FRAMEWORK_ISENGUARD)
+@Register(classes = {Limiter.class, SmartLimiter.class})
 public class SmartLimiter implements Limiter {
 
     @Part
