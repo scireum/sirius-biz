@@ -10,6 +10,7 @@ package sirius.biz.tenants;
 
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
+import sirius.biz.packages.Packages;
 import sirius.biz.protocol.AuditLog;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
@@ -17,6 +18,7 @@ import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -108,6 +110,9 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     protected abstract BasePageHelper<U, ?, ?, ?> getUsersAsPage();
 
+    @Part
+    private Packages packages;
+
     /**
      * Shows an editor for the given account.
      *
@@ -123,34 +128,28 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         boolean requestHandled = prepareSave(ctx).withAfterCreateURI("/user-account/${id}")
                                                  .withAfterSaveURI("/user-accounts")
                                                  .withPreSaveHandler(isNew -> {
-                                                     userAccount.getUserAccountData()
-                                                                .getPermissions()
-                                                                .getPermissions()
-                                                                .clear();
-                                                     for (String role : ctx.getParameters("roles")) {
-                                                         // Ensure that only real roles end up in the permissions list,
-                                                         // as roles, permissions and flags later end up in the same vector
-                                                         // therefore we don't want nothing else but user roles in this list
-                                                         if (getRoles().contains(role)) {
-                                                             userAccount.getUserAccountData()
-                                                                        .getPermissions()
-                                                                        .getPermissions()
-                                                                        .add(role);
-                                                         }
-                                                     }
+                                                     List<String> accessiblePermissions = getRoles();
+                                                     packages.loadAccessiblePermissions(ctx.getParameters("roles"),
+                                                                                        accessiblePermissions::contains,
+                                                                                        userAccount.getUserAccountData()
+                                                                                                   .getPermissions()
+                                                                                                   .getPermissions());
                                                  })
                                                  .saveEntity(userAccount);
 
         if (!requestHandled) {
             validate(userAccount);
-            List<String> availableLanguages =
-                    ((TenantUserManager<?, ?, ?>) UserContext.get().getUserManager()).getAvailableLanguages();
-            ctx.respondWith()
-               .template("templates/biz/tenants/user-account-details.html.pasta",
-                         userAccount,
-                         this,
-                         availableLanguages);
+            ctx.respondWith().template("templates/biz/tenants/user-account-details.html.pasta", userAccount, this);
         }
+    }
+
+    /**
+     * Returns a list of supported languages and their translated name.
+     *
+     * @return a list of tuples containing the ISO code and the translated name
+     */
+    public List<Tuple<String, String>> getAvailableLanguages() {
+        return tenants.getTenantUserManager().getAvailableLanguages();
     }
 
     /**
@@ -196,7 +195,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      * @return all roles which can be granted to a user
      */
     public List<String> getRoles() {
-        return Collections.unmodifiableList(roles);
+        Tenant<?> tenant = tenants.getRequiredTenant();
+        return packages.filterAccessiblePermissions(roles, tenant::hasPermission);
     }
 
     /**

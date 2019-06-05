@@ -15,6 +15,7 @@ import sirius.biz.web.BizController;
 import sirius.biz.web.SaveHelper;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -101,7 +102,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      */
     @Routed("/tenants")
     @DefaultRoute
-    @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void tenants(WebContext ctx) {
         BasePageHelper<T, ?, ?, ?> ph = getTenantsAsPage();
@@ -123,36 +123,54 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      * @param tenantId the id of the tenant to change
      */
     @Routed("/tenant/:1")
-    @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void tenant(WebContext ctx, String tenantId) {
         T tenant = find(getTenantClass(), tenantId);
 
         SaveHelper saveHelper = prepareSave(ctx).withAfterCreateURI("/tenant/${id}").withAfterSaveURI("/tenants");
         saveHelper.withPreSaveHandler(isNew -> {
-            tenant.getTenantData().getPackageData().loadPackageAndUpgradesFromContext("tenant", ctx);
+            tenant.getTenantData()
+                  .getPackageData()
+                  .loadPackageAndUpgrades("tenant", ctx.getParameters("upgrades"), ctx.get("package").asString());
         });
 
         boolean requestHandled = saveHelper.saveEntity(tenant);
         if (!requestHandled) {
             validate(tenant);
 
-            List<String> availableLanguages =
-                    ((TenantUserManager<?, ?, ?>) UserContext.get().getUserManager()).getAvailableLanguages();
-            List<BaseEntity<?>> possibleParentTenants = mixing.getDescriptor(getTenantClass())
-                                                              .getMapper()
-                                                              .select(getTenantClass())
-                                                              .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME))
-                                                              .queryList();
-
-            ctx.respondWith()
-               .template("templates/biz/tenants/tenant-details.html.pasta",
-                         tenant,
-                         this,
-                         possibleParentTenants,
-                         availableLanguages,
-                         packages);
+            ctx.respondWith().template("templates/biz/tenants/tenant-details.html.pasta", tenant, this);
         }
+    }
+
+    /**
+     * Provides access to the package manager (used by the template).
+     *
+     * @return the packages helper
+     */
+    public Packages getPackages() {
+        return packages;
+    }
+
+    /**
+     * Returns a list of supported languages and their translated name.
+     *
+     * @return a list of tuples containing the ISO code and the translated name
+     */
+    public List<Tuple<String, String>> getAvailableLanguages() {
+        return tenants.getTenantUserManager().getAvailableLanguages();
+    }
+
+    /**
+     * Provides the list of possible parent tenants to the template.
+     *
+     * @return the list of possible parent tenants
+     */
+    public List<BaseEntity<?>> getPossibleParentTenants() {
+        return mixing.getDescriptor(getTenantClass())
+                     .getMapper()
+                     .select(getTenantClass())
+                     .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME))
+                     .queryList();
     }
 
     /**
@@ -173,7 +191,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      * @param tenantId the id of the tenant to update
      */
     @Routed(value = "/tenant/:1/update", jsonCall = true)
-    @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void tenantUpdate(WebContext ctx, JSONStructuredOutput out, String tenantId) {
         T tenant = find(getTenantClass(), tenantId);
@@ -193,12 +210,11 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      * @param tenantId the id of the tenant to change
      */
     @Routed("/tenant/:1/config")
-    @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void tenantConfig(WebContext ctx, String tenantId) {
         T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
-        ctx.respondWith().template("templates/biz/tenants/tenant-config.html.pasta", tenant);
+        ctx.respondWith().template("templates/biz/tenants/tenant-config.html.pasta", tenant, this);
     }
 
     /**
@@ -208,20 +224,45 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      * @param tenantId the id of the tenant to change
      */
     @Routed("/tenant/:1/permissions")
-    @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
-    public void tenantPermissions(WebContext ctx, String tenantId) {
+    public void permissions(WebContext ctx, String tenantId) {
         T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
 
         boolean handled = prepareSave(ctx).disableAutoload().withAfterSaveURI("/tenants").withPreSaveHandler(isNew -> {
             tenant.getTenantData()
                   .getPackageData()
-                  .loadRevokedAndAdditionalPermissionsFromContext("tenant", ctx, getPermissions());
+                  .loadRevokedAndAdditionalPermission(getPermissions(), ctx::getParameter);
         }).saveEntity(tenant);
 
         if (!handled) {
-            ctx.respondWith().template("templates/biz/tenants/tenant-permissions.html.pasta", tenant, this, packages);
+            ctx.respondWith().template("templates/biz/tenants/tenant-permissions.html.pasta", tenant, this);
+        }
+    }
+
+    /**
+     * Provides an editor for setting additional and revoked permissions.
+     *
+     * @param ctx      the current request
+     * @param tenantId the id of the tenant to change
+     */
+    @Routed("/tenant/:1/saml")
+    @LoginRequired
+    @Permission(PERMISSION_MANAGE_TENANTS)
+    public void saml(WebContext ctx, String tenantId) {
+        T tenant = find(getTenantClass(), tenantId);
+        assertNotNew(tenant);
+
+        boolean handled = prepareSave(ctx).disableAutoload()
+                                          .withMappings(Tenant.TENANT_DATA.inner(TenantData.SAML_REQUEST_ISSUER_NAME),
+                                                        Tenant.TENANT_DATA.inner(TenantData.SAML_ISSUER_INDEX),
+                                                        Tenant.TENANT_DATA.inner(TenantData.SAML_ISSUER_URL),
+                                                        Tenant.TENANT_DATA.inner(TenantData.SAML_ISSUER_NAME),
+                                                        Tenant.TENANT_DATA.inner(TenantData.SAML_FINGERPRINT))
+                                          .saveEntity(tenant);
+
+        if (!handled) {
+            ctx.respondWith().template("templates/biz/tenants/tenant-saml.html.pasta", tenant, this);
         }
     }
 
