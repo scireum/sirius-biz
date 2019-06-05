@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Provides a {@link UserManager} for {@link Tenant} and {@link UserAccount}.
@@ -737,13 +738,36 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     }
 
     /**
-     * Returns the languages available for this scope.
+     * Returns the list of supported languages as ISO codes.
      *
-     * @return the languages available for this scope
+     * @return the list of supported languages
      */
-    @Nonnull
-    public List<String> getAvailableLanguages() {
+    public List<String> getAvailableLanguageCodes() {
         return Collections.unmodifiableList(availableLanguages);
+    }
+
+    /**
+     * Returns a list of supported languages and their translated name.
+     *
+     * @return a list of tuples containing the ISO code and the translated name
+     */
+    public List<Tuple<String, String>> getAvailableLanguages() {
+        return availableLanguages.stream()
+                                 .map(code -> Tuple.create(code, NLS.get("Language." + code)))
+                                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns the id of the system tenant.
+     * <p>
+     * Note that this method should only be used by the framework itself. Otherwise use
+     * {@link UserInfo#hasPermission(String)} or {@link Tenant#hasPermission(String)} and
+     * {@link TenantUserManager#PERMISSION_SYSTEM_TENANT}.
+     *
+     * @return the id of the system tenant
+     */
+    public String getSystemTenantId() {
+        return systemTenant;
     }
 
     @Nonnull

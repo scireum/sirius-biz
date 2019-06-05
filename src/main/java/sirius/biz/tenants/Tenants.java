@@ -19,6 +19,7 @@ import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
@@ -215,5 +216,15 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      */
     public <E extends BaseEntity<?> & TenantAware, Q extends Query<Q, E, ?>> Q forCurrentTenant(Q qry) {
         return qry.eq(TenantAware.TENANT, getRequiredTenant());
+    }
+
+    /**
+     * Provides access to the tenant user manager by assuming it is installed in the DEFAULT_SCOPE.
+     *
+     * @return the tenant user manager used by the default scope
+     */
+    @SuppressWarnings("unchecked")
+    public TenantUserManager<?, T, U> getTenantUserManager() {
+        return (TenantUserManager<?, T, U>) ScopeInfo.DEFAULT_SCOPE.getUserManager();
     }
 }
