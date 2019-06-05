@@ -723,7 +723,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             roles = Collections.emptySet();
         }
 
-        rolesCache.put(userId, Tuple.create(roles, String.valueOf(user.getTenant().getId())));
+        rolesCache.put(userId, Tuple.create(roles, user.getTenant().getUniqueObjectName()));
         return roles;
     }
 
