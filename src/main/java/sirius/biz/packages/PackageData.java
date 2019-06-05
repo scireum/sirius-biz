@@ -16,13 +16,13 @@ import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
-import sirius.web.http.WebContext;
 import sirius.web.security.Permissions;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 
 /**
  * Contains the package, upgrades and additional and revoked permissions for an entity.
@@ -74,7 +74,7 @@ public class PackageData extends Composite {
     private Set<String> revokedPermissions;
 
     @Transient
-    private Set<String> expandedPermissions;
+    private Set<String> directPermissions;
 
     public void setPackage(String packageString) {
         this.packageString = packageString;
@@ -145,12 +145,32 @@ public class PackageData extends Composite {
      * @return the permissions granted by the package and upgrades
      */
     public Set<String> getPackageAndUpgradePermissions() {
-        Set<String> packageAndUpgradeFeatures = new TreeSet<>();
-        if (Strings.isFilled(getPackage())) {
-            packageAndUpgradeFeatures.add(getPackage());
+        if (directPermissions == null) {
+            Set<String> packageAndUpgradeFeatures = new TreeSet<>();
+            if (Strings.isFilled(getPackage())) {
+                packageAndUpgradeFeatures.add(getPackage());
+            }
+            packageAndUpgradeFeatures.addAll(getUpgrades());
+            directPermissions = Permissions.applyProfiles(packageAndUpgradeFeatures);
         }
-        packageAndUpgradeFeatures.addAll(getUpgrades());
-        return Permissions.applyProfiles(packageAndUpgradeFeatures);
+
+        return Collections.unmodifiableSet(directPermissions);
+    }
+
+    /**
+     * Combines the package, upgrades and additional permissions in a single set.
+     *
+     * @return the combined permissions
+     */
+    public Set<String> computeCombinedPermissions() {
+        Set<String> permissions = new TreeSet<>();
+        if (Strings.isFilled(getPackage())) {
+            permissions.add(getPackage());
+        }
+        permissions.addAll(getUpgrades());
+        permissions.addAll(getAdditionalPermissions());
+
+        return permissions;
     }
 
     /**
@@ -159,91 +179,53 @@ public class PackageData extends Composite {
      *
      * @return a set of every permission granted
      */
-    public Set<String> getExpandedPermissions() {
-        if (expandedPermissions == null) {
-            expandedPermissions = new TreeSet<>();
-            if (Strings.isFilled(getPackage())) {
-                expandedPermissions.add(getPackage());
-            }
-            expandedPermissions.addAll(getUpgrades());
-            expandedPermissions.addAll(getAdditionalPermissions());
-            expandedPermissions = Permissions.applyProfiles(expandedPermissions);
-            expandedPermissions.removeAll(getRevokedPermissions());
-        }
-        return Collections.unmodifiableSet(expandedPermissions);
-    }
-
-    /**
-     * Checks if the permission is granted.
-     * <p>
-     * Will be checked against the {@link #getExpandedPermissions()}.
-     *
-     * @param permission the permission to check for
-     * @return true, if this obejct has the permission, false otherwise
-     */
-    public boolean hasPermission(String permission) {
-        Set<String> expanded = getExpandedPermissions();
-        return Permissions.hasPermission(permission, expanded::contains);
-    }
-
-    /**
-     * Combines the package, upgrades and additional permissions in a single set.
-     *
-     * @return the combined permissions
-     */
-    public Set<String> getCombinedPermissions() {
+    public Set<String> computeExpandedPermissions() {
         Set<String> permissions = new TreeSet<>();
         if (Strings.isFilled(getPackage())) {
             permissions.add(getPackage());
         }
-        permissions.addAll(getAdditionalPermissions());
         permissions.addAll(getUpgrades());
+        permissions.addAll(getAdditionalPermissions());
+        permissions = Permissions.applyProfiles(permissions);
+        permissions.removeAll(getRevokedPermissions());
+
         return permissions;
     }
 
     /**
-     * Load the package and upgrades from the web context.
+     * Load the package and upgrades (if existent).
      *
      * @param packagesScope the packages scope
-     * @param context       the web context
+     * @param upgrades      the list of upgrades to load
+     * @param packageString the package to apply.
      */
-    public void loadPackageAndUpgradesFromContext(String packagesScope, WebContext context) {
-        getUpgrades().clear();
-        for (String upgrade : context.getParameters("upgrades")) {
-            if (packages.getUpgrades(packagesScope).contains(upgrade)) {
-                // ensure only real upgrades get in this list
-                getUpgrades().add(upgrade);
-            }
-        }
+    public void loadPackageAndUpgrades(String packagesScope, List<String> upgrades, String packageString) {
+        List<String> accessibleUpgrades = packages.getUpgrades(packagesScope);
+        packages.loadAccessiblePermissions(upgrades, accessibleUpgrades::contains, getUpgrades());
 
-        if (packages.getPackages(packagesScope).contains(context.get("package").asString())) {
-            // ensure only real packages get in this field
-            setPackage(context.get("package").asString());
+        if (packages.getPackages(packagesScope).contains(packageString)) {
+            setPackage(packageString);
         }
     }
 
     /**
-     * Load the revoked and additional permissions from the web context.
+     * Load the revoked and additional permissions.
      *
-     * @param packagesScope  the packages scope
-     * @param context        the web context
-     * @param allPermissions all possible permissions
+     * @param allPermissions    all possible permissions
+     * @param selectionFunction the function which determines if the permission is either additionally added, or revoked
      */
-    public void loadRevokedAndAdditionalPermissionsFromContext(String packagesScope,
-                                                               WebContext context,
-                                                               List<String> allPermissions) {
+    public void loadRevokedAndAdditionalPermission(List<String> allPermissions,
+                                                   Function<String, String> selectionFunction) {
         getAdditionalPermissions().clear();
         getRevokedPermissions().clear();
 
         for (String permission : allPermissions) {
-            switch (context.get(permission).asString()) {
-                case "additional":
-                    getAdditionalPermissions().add(permission);
-                    break;
-                case "revoked":
-                    getRevokedPermissions().add(permission);
-                    break;
-                default:
+            String selection = selectionFunction.apply(permission);
+
+            if ("additional".equals(selection)) {
+                getAdditionalPermissions().add(permission);
+            } else if ("revoked".equals(selection)) {
+                getRevokedPermissions().add(permission);
             }
         }
     }
