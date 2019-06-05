@@ -83,4 +83,16 @@ public interface Tenant<I> extends Transformable, Traced, Journaled, RateLimited
      * @return <tt>true</tt> if the entity has not been written to the database yes, <tt>false</tt> otherwise
      */
     boolean isNew();
+
+    /**
+     * Determines if this tenant has the requested permission.
+     * <p>
+     * Note that this only verifies that the tenant has a specific property or feature enabled but does not
+     * take user permissions into account. These can be checked using
+     * {@link sirius.web.security.UserInfo#hasPermission(String)}.
+     *
+     * @param permission the permission to check
+     * @return <tt>true</tt> if the tenant has the permission, <tt>false</tt> otherwise
+     */
+    boolean hasPermission(String permission);
 }
