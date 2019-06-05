@@ -8,10 +8,10 @@
 
 package sirius.biz.packages;
 
-import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
+import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.commons.Strings;
@@ -35,16 +35,16 @@ public class PackageData extends Composite {
      * The selected package
      */
     public static final Mapping PACKAGE_STRING = Mapping.named("packageString");
-    @Autoloaded
     @NullAllowed
+    @Length(4096)
     private String packageString;
 
     /**
      * List of selected upgrades as string
      */
     public static final Mapping UPGRADES_STRING = Mapping.named("upgradesString");
-    @Autoloaded
     @NullAllowed
+    @Length(4096)
     private String upgradesString;
 
     /**
@@ -52,6 +52,7 @@ public class PackageData extends Composite {
      */
     public static final Mapping ADDITIONAL_PERMISSIONS_STRING = Mapping.named("additionalPermissionsString");
     @NullAllowed
+    @Length(4096)
     private String additionalPermissionsString;
 
     /**
@@ -59,6 +60,7 @@ public class PackageData extends Composite {
      */
     public static final Mapping REVOKED_PERMISSIONS_STRING = Mapping.named("revokedPermissionsString");
     @NullAllowed
+    @Length(4096)
     private String revokedPermissionsString;
 
     @Transient
