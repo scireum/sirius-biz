@@ -162,9 +162,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
      * @return the helper itself for fluent method calls
      */
     public B addBooleanFacet(String name, String title) {
-        Objects.requireNonNull(ctx);
-
-        Facet facet = new Facet(title, name, ctx.get(name).asString(), null);
+        Facet facet = new Facet(title, name, null, null);
         facet.addItem("true", NLS.get("NLS.yes"), -1);
         facet.addItem("false", NLS.get("NLS.no"), -1);
 

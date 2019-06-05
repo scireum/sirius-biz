@@ -20,7 +20,9 @@ import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.Parts;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
@@ -134,7 +136,12 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @Part
     protected static AuditLog auditLog;
 
-    protected static Cache<String, Set<String>> rolesCache = CacheManager.createCoherentCache("tenants-roles");
+    @Parts(AdditionalRolesProvider.class)
+    private static PartCollection<AdditionalRolesProvider> additionalRolesProviders;
+
+    protected static Cache<String, Tuple<Set<String>, String>> rolesCache =
+            CacheManager.createCoherentCache("tenants-roles");
+
     protected static Cache<String, UserAccount<?, ?>> userAccountCache =
             CacheManager.createCoherentCache("tenants-users");
     protected static Cache<String, Tenant<?>> tenantsCache = CacheManager.createCoherentCache("tenants-tenants");
@@ -172,6 +179,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         configCache.remove(tenant.getUniqueName());
         configCache.removeIf(cachedValue -> Strings.areEqual(cachedValue.getValue().getSecond(),
                                                              tenant.getUniqueName()));
+        rolesCache.removeIf(cachedValue -> Strings.areEqual(cachedValue.getValue().getSecond(),
+                                                            tenant.getUniqueName()));
     }
 
     @Override
@@ -310,7 +319,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return asUser(account, null);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "RedundantCast"})
+    @Explain("The redundant cast is required as otherwise the Java compiler gets confused.")
     protected Optional<U> loadAccountByName(String user) {
         return (Optional<U>) (Object) mixing.getDescriptor(getUserClass())
                                             .getMapper()
@@ -685,6 +695,10 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             roles.add("tenant-" + tenant.getTenantData().getAccountNumber());
         }
 
+        for (AdditionalRolesProvider rolesProvider : additionalRolesProviders) {
+            rolesProvider.addAdditionalRoles(user, roles::add);
+        }
+
         Set<String> transformedRoles = transformRoles(roles);
         if (isSystemTenant && transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
             roles.add(PERMISSION_SYSTEM_TENANT);
@@ -696,9 +710,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
     @Override
     protected Set<String> computeRoles(WebContext ctx, String userId) {
-        Set<String> cachedRoles = rolesCache.get(userId);
+        Tuple<Set<String>, String> cachedRoles = rolesCache.get(userId);
         if (cachedRoles != null) {
-            return cachedRoles;
+            return cachedRoles.getFirst();
         }
 
         U user = fetchAccount(userId);
@@ -706,12 +720,12 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         if (user != null) {
             roles = computeRoles(user,
                                  user.getTenant().getValue(),
-                                 Strings.areEqual(systemTenant, String.valueOf(user.getTenant().getValue().getId())));
+                                 Strings.areEqual(systemTenant, String.valueOf(user.getTenant().getId())));
         } else {
             roles = Collections.emptySet();
         }
 
-        rolesCache.put(userId, roles);
+        rolesCache.put(userId, Tuple.create(roles, user.getTenant().getUniqueObjectName()));
         return roles;
     }
 

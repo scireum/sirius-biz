@@ -17,6 +17,7 @@ import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.web.security.ScopeInfo;
@@ -224,7 +225,63 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @return the tenant user manager used by the default scope
      */
     @SuppressWarnings("unchecked")
-    public TenantUserManager<?, T, U> getTenantUserManager() {
-        return (TenantUserManager<?, T, U>) ScopeInfo.DEFAULT_SCOPE.getUserManager();
+    public TenantUserManager<I, T, U> getTenantUserManager() {
+        return (TenantUserManager<I, T, U>) ScopeInfo.DEFAULT_SCOPE.getUserManager();
+    }
+
+    /**
+     * Provides access to the tenant with the given id
+     * <p>
+     * This utilizes the cache maintained by the {@link TenantUserManager} and is therefore quite efficient
+     *
+     * @param tenantId the id of the tenant to fetch
+     * @return the tenant with the given id or an empty optional if the tenant cannot be resolved
+     */
+    public Optional<T> fetchCachedTenant(I tenantId) {
+        if (Strings.isEmpty(tenantId)) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(getTenantUserManager().fetchTenant(String.valueOf(tenantId)));
+    }
+
+    /**
+     * Boilerplate to quickly fetch the name of the tenant with the given id.
+     *
+     * @param tenantId the tenant to fetch the name for
+     * @return the name of the tenant or an empty string if the tenant doesn't exist
+     */
+    public String fetchCachedTenantName(I tenantId) {
+        return fetchCachedTenant(tenantId).map(tenant -> tenant.getTenantData().getName()).orElse("");
+    }
+
+    /**
+     * Provides access to the tenant stored in the given reference.
+     * <p>
+     * This utilizes the cache maintained by the {@link TenantUserManager} and is therefore quite efficient
+     *
+     * @param tenantRef the reference to read the tenant from
+     * @return the tenant with the given id or an empty optional if the tenant cannot be resolved
+     */
+    public Optional<T> fetchCachedTenant(BaseEntityRef<I, T> tenantRef) {
+        if (tenantRef.isEmpty()) {
+            return Optional.empty();
+        }
+
+        if (tenantRef.isValueLoaded()) {
+            return Optional.of(tenantRef.getValue());
+        }
+
+        return fetchCachedTenant(tenantRef.getId());
+    }
+
+    /**
+     * Boilerplate to quickly fetch the name of the tenant in the given reference.
+     *
+     * @param tenantRef the reference to read the tenant from
+     * @return the name of the tenant or an empty string if the tenant doesn't exist
+     */
+    public String fetchCachedTenantName(BaseEntityRef<I, T> tenantRef) {
+        return fetchCachedTenant(tenantRef).map(tenant -> tenant.getTenantData().getName()).orElse("");
     }
 }
