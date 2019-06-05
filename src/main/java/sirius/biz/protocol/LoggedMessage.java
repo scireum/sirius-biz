@@ -70,17 +70,17 @@ public class LoggedMessage extends SearchableEntity {
      *
      * @return the name of a CSS class based on the level of the message.
      */
-    public String getLabelClass() {
+    public String getRowClass() {
         if ("ERROR".equals(getLevel())) {
-            return "label-important";
+            return "danger";
         }
         if ("WARN".equals(getLevel())) {
-            return "label-warning";
+            return "warning";
         }
         if ("DEBUG".equals(getLevel())) {
             return "";
         }
-        return "label-info";
+        return "info";
     }
 
     public String getMessage() {

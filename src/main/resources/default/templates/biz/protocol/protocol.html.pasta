@@ -39,23 +39,23 @@
                         <td>
                             <div class="row">
                                 <div class="col-md-4">
-                                    @toUserString(msg.getTod())
-                                    <br>@msg.getUsername()
-                                    <br>
-                                    <small>@msg.getUserId()</small>
+                                    <small>
+                                        @toUserString(msg.getTod())
+                                        <br>@msg.getUsername()
+                                        <br> @msg.getUserId()
+                                    </small>
                                 </div>
                                 <div class="col-md-4">
-                                    @msg.getTargetName()
-                                    <small>(@msg.getTargetId())
+                                    <small>
+                                        @msg.getTargetName() (@msg.getTargetId())
                                         <br>@msg.getTargetType()
                                     </small>
                                 </div>
-                                <div class="col-md-4">@msg.getSubsystem()</div>
+                                <div class="col-md-4"><small>@msg.getSubsystem()</small></div>
                             </div>
                             <div class="row">
                                 <div class="col-md-12">
-                                    <p/>
-                                    <pre class="plain" style="white-space: pre-wrap">@msg.getChanges()</pre>
+                                    <pre class="plain" style="white-space: pre-wrap; padding-top: 8px">@msg.getChanges()</pre>
                                 </div>
                             </div>
                         </td>

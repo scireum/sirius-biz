@@ -38,7 +38,7 @@ public class MailController extends BizController {
         ElasticPageHelper<MailProtocol> ph =
                 ElasticPageHelper.withQuery(elastic.select(MailProtocol.class).orderDesc(MailProtocol.TOD));
         ph.withContext(ctx);
-        ph.addBooleanFacet(MailProtocol.SUCCESS.getName(), NLS.get("MailProtocol.success"));
+        ph.addBooleanAggregation(MailProtocol.SUCCESS);
         ph.addTermAggregation(MailProtocol.NODE);
         ph.addTermAggregation(MailProtocol.TYPE);
         ph.addTimeAggregation(MailProtocol.TOD,

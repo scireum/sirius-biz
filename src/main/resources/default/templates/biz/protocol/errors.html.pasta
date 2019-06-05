@@ -43,20 +43,20 @@
                     <tr>
                         <td>
                             <div class="row">
-                                <div class="col-md-4"><a href="/system/error/@i.getId()">@toUserString(i.getLastOccurrence())</a>
+                                <div class="col-md-4">
+                                    <a href="/system/error/@i.getId()"><small>@toUserString(i.getLastOccurrence())</small></a>
                                 </div>
-                                <div class="col-md-4">@i.getNumberOfOccurrences()</div>
-                                <div class="col-md-4">@i.getUser()</div>
+                                <div class="col-md-4"><small>@i.getNumberOfOccurrences()</small></div>
+                                <div class="col-md-4"><small>@i.getUser()</small></div>
                             </div>
                             <div class="row">
-                                <div class="muted col-md-4">@toUserString(i.getFirstOccurrence())</div>
-                                <div class="muted col-md-4">@i.getCategory()</div>
-                                <div class="muted col-md-4">@i.getNode()</div>
+                                <div class="muted col-md-4"><small>@toUserString(i.getFirstOccurrence())</small></div>
+                                <div class="muted col-md-4"><small>@i.getCategory()</small></div>
+                                <div class="muted col-md-4"><small>@i.getNode()</small></div>
                             </div>
                             <div class="row">
                                 <div class="col-md-12 error-code">
-                                    <p/>
-                                    <pre class="plain">@i.getMessage()</pre>
+                                    <pre class="plain" style="white-space: pre-wrap; padding-top: 8px">@i.getMessage()</pre>
                                 </div>
                             </div>
                         </td>

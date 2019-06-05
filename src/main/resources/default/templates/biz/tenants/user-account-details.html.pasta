@@ -1,6 +1,5 @@
 <i:arg type="sirius.biz.tenants.UserAccount" name="account"/>
 <i:arg type="sirius.biz.tenants.UserAccountController" name="controller"/>
-<i:arg type="List" name="availableLanguages"/>
 
 <i:invoke template="/templates/biz/tenants/user-account.html.pasta" account="account" page="details">
     <w:editForm url="@apply('/user-account/%s', account.getIdAsString())">
@@ -13,25 +12,26 @@
         </div>
 
         <div class="row">
-            <w:singleSelect name="userAccountData_lang" labelKey="Model.lang">
-                <i:for var="language" items="availableLanguages" type="String">
+
+        </div>
+
+        <div class="row">
+            <w:codelistSelect span="3" name="userAccountData_person_salutation" list="salutations" value="@account.getUserAccountData().getPerson().getSalutation()"
+                              labelKey="PersonData.salutation"/>
+            <w:textfield span="3" name="userAccountData_person_title" value="@account.getUserAccountData().getPerson().getTitle()" labelKey="PersonData.title"/>
+            <w:textfield name="userAccountData_person_firstname" value="@account.getUserAccountData().getPerson().getFirstname()"
+                         labelKey="PersonData.firstname"/>
+        </div>
+        <div class="row">
+            <w:textfield name="userAccountData_person_lastname" value="@account.getUserAccountData().getPerson().getLastname()"
+                         labelKey="PersonData.lastname"/>
+            <w:singleSelect name="userAccountData_lang" labelKey="Model.lang" required="true">
+                <i:for var="language" items="controller.getAvailableLanguages()" type="String">
                     <option value="@language" @selected="language == account.getUserAccountData().getLang()">
                         @i18n(apply('Language.%s', language))
                     </option>
                 </i:for>
             </w:singleSelect>
-        </div>
-
-        <div class="row">
-            <w:codelistSelect name="userAccountData_person_salutation" list="salutations" value="@account.getUserAccountData().getPerson().getSalutation()"
-                              labelKey="PersonData.salutation"/>
-            <w:textfield name="userAccountData_person_title" value="@account.getUserAccountData().getPerson().getTitle()" labelKey="PersonData.title"/>
-        </div>
-        <div class="row">
-            <w:textfield name="userAccountData_person_firstname" value="@account.getUserAccountData().getPerson().getFirstname()"
-                         labelKey="PersonData.firstname"/>
-            <w:textfield name="userAccountData_person_lastname" value="@account.getUserAccountData().getPerson().getLastname()"
-                         labelKey="PersonData.lastname"/>
         </div>
         <div class="row">
             <div class="col-md-6">
