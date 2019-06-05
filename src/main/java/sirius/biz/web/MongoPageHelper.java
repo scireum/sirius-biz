@@ -8,21 +8,28 @@
 
 package sirius.biz.web;
 
+import sirius.db.mixing.DateRange;
 import sirius.db.mixing.Mapping;
 import sirius.db.mongo.Mongo;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.MongoQuery;
 import sirius.db.mongo.constraints.MongoConstraint;
+import sirius.db.mongo.facets.MongoBooleanFacet;
+import sirius.db.mongo.facets.MongoDateRangeFacet;
 import sirius.db.mongo.facets.MongoTermFacet;
 import sirius.kernel.cache.ValueComputer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.nls.NLS;
 import sirius.web.controller.Facet;
+import sirius.web.controller.FacetItem;
 import sirius.web.controller.Page;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -78,6 +85,92 @@ public class MongoPageHelper<E extends MongoEntity>
                                                  .findFirst()
                                                  .map(Object::toString)
                                                  .orElse(value));
+    }
+
+    /**
+     * Adds a time series based aggregation.
+     *
+     * @param field  the field to filter on
+     * @param ranges the ranges which are supported as filter values
+     * @return the helper itself for fluent method calls
+     */
+    public MongoPageHelper<E> addTimeAggregation(Mapping field, DateRange... ranges) {
+        return addTimeAggregation(field, baseQuery.getDescriptor().findProperty(field.toString()).getLabel(), ranges);
+    }
+
+    /**
+     * Adds a time series based aggregation.
+     *
+     * @param field  the field to filter on
+     * @param title  the title of the filter shown to the user
+     * @param ranges the ranges which are supported as filter values
+     * @return the helper itself for fluent method calls
+     */
+    public MongoPageHelper<E> addTimeAggregation(Mapping field, String title, DateRange... ranges) {
+        Facet facet = createTimeFacet(field.toString(), title, ranges);
+
+        baseQuery.addFacet(new MongoDateRangeFacet(field, Arrays.asList(ranges)).onComplete(mongoFacet -> {
+            Iterator<FacetItem> iter = facet.getAllItems().iterator();
+            while (iter.hasNext()) {
+                FacetItem item = iter.next();
+                int numberOfHits = mongoFacet.getRanges()
+                                             .stream()
+                                             .filter(rangeAndCount -> Strings.areEqual(item.getKey(),
+                                                                                       rangeAndCount.getFirst()
+                                                                                                    .getKey()))
+                                             .map(Tuple::getSecond)
+                                             .findFirst()
+                                             .orElse(0);
+                if (numberOfHits > 0 || item.isActive()) {
+                    item.setCount(numberOfHits);
+                } else {
+                    // If the item has no matches and isn't an active filter - remove as
+                    // it is unneccessary...
+                    iter.remove();
+                }
+            }
+        }));
+
+        return this;
+    }
+
+    /**
+     * Adds a automatic facet for a boolean field.
+     *
+     * @param field the field to aggregate on
+     * @return the helper itself for fluent method calls
+     */
+    public MongoPageHelper<E> addBooleanAggregation(Mapping field) {
+        Facet facet = new Facet(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
+                                field.toString(),
+                                null,
+                                null);
+        facet.addItem("true", NLS.get("NLS.yes"), -1);
+        facet.addItem("false", NLS.get("NLS.no"), -1);
+
+        baseQuery.addFacet(new MongoBooleanFacet(field).onComplete(mongoFacet -> {
+
+            Iterator<FacetItem> iter = facet.getAllItems().iterator();
+            while (iter.hasNext()) {
+                FacetItem item = iter.next();
+                int numberOfHits =
+                        Strings.areEqual(item.getKey(), "true") ? mongoFacet.getNumTrue() : mongoFacet.getNumFalse();
+                if (numberOfHits > 0 || item.isActive()) {
+                    item.setCount(numberOfHits);
+                } else {
+                    // If the item has no matches and isn't an active filter - remove as
+                    // it is unneccessary...
+                    iter.remove();
+                }
+            }
+        }));
+
+        return addFacet(facet, (f, q) -> {
+            Value filterValue = Value.of(f.getValue());
+            if (filterValue.isFilled()) {
+                q.eq(Mapping.named(f.getName()), filterValue.asBoolean());
+            }
+        });
     }
 
     /**
