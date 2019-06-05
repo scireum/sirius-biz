@@ -133,7 +133,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @Part
     protected static AuditLog auditLog;
 
-    protected static Cache<String, Set<String>> rolesCache = CacheManager.createCoherentCache("tenants-roles");
+    protected static Cache<String, Tuple<Set<String>, String>> rolesCache =
+            CacheManager.createCoherentCache("tenants-roles");
     protected static Cache<String, UserAccount<?, ?>> userAccountCache =
             CacheManager.createCoherentCache("tenants-users");
     protected static Cache<String, Tenant<?>> tenantsCache = CacheManager.createCoherentCache("tenants-tenants");
@@ -171,6 +172,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         configCache.remove(tenant.getUniqueName());
         configCache.removeIf(cachedValue -> Strings.areEqual(cachedValue.getValue().getSecond(),
                                                              tenant.getUniqueName()));
+        rolesCache.removeIf(cachedValue -> Strings.areEqual(cachedValue.getValue().getSecond(),
+                                                            tenant.getUniqueName()));
     }
 
     @Override
@@ -695,9 +698,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
     @Override
     protected Set<String> computeRoles(WebContext ctx, String userId) {
-        Set<String> cachedRoles = rolesCache.get(userId);
+        Tuple<Set<String>, String> cachedRoles = rolesCache.get(userId);
         if (cachedRoles != null) {
-            return cachedRoles;
+            return cachedRoles.getFirst();
         }
 
         U user = fetchAccount(userId);
@@ -705,12 +708,12 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         if (user != null) {
             roles = computeRoles(user,
                                  user.getTenant().getValue(),
-                                 Strings.areEqual(systemTenant, String.valueOf(user.getTenant().getValue().getId())));
+                                 Strings.areEqual(systemTenant, String.valueOf(user.getTenant().getId())));
         } else {
             roles = Collections.emptySet();
         }
 
-        rolesCache.put(userId, roles);
+        rolesCache.put(userId, Tuple.create(roles, String.valueOf(user.getTenant().getId())));
         return roles;
     }
 
