@@ -10,6 +10,8 @@ package sirius.biz.packages
 
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
+import sirius.web.security.UserContext
+import sirius.web.security.UserInfo
 
 class PackagesSpec extends BaseSpecification {
 
@@ -35,8 +37,11 @@ class PackagesSpec extends BaseSpecification {
     }
 
     def "test hasRequiredPermissionForRole for current user"() {
+        setup:
+        UserContext.get()
+                   .setCurrentUser(UserInfo.Builder.withUser(UserInfo.NOBODY).withPermissions(permissions).build())
         expect:
-        packages.hasRequiredPermissionForPermission(role, { key -> permissions.contains(key) }) == expectedResult
+        packages.hasRequiredPermissionForPermission(role) == expectedResult
         where:
         role     | expectedResult | permissions
         "role2"  | true           | [] as Set<String>
