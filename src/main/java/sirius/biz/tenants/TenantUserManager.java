@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Provides a {@link UserManager} for {@link Tenant} and {@link UserAccount}.
@@ -318,7 +319,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return asUser(account, null);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "RedundantCast"})
+    @Explain("The redundant cast is required as otherwise the Java compiler gets confused.")
     protected Optional<U> loadAccountByName(String user) {
         return (Optional<U>) (Object) mixing.getDescriptor(getUserClass())
                                             .getMapper()
@@ -687,7 +689,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         Set<String> roles = Sets.newTreeSet();
         roles.add(UserInfo.PERMISSION_LOGGED_IN);
         roles.addAll(user.getUserAccountData().getPermissions().getPermissions());
-        roles.addAll(tenant.getTenantData().getPackageData().getCombinedPermissions());
+        roles.addAll(tenant.getTenantData().getPackageData().computeCombinedPermissions());
 
         if (Strings.isFilled(tenant.getTenantData().getAccountNumber())) {
             roles.add("tenant-" + tenant.getTenantData().getAccountNumber());
@@ -750,13 +752,36 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     }
 
     /**
-     * Returns the languages available for this scope.
+     * Returns the list of supported languages as ISO codes.
      *
-     * @return the languages available for this scope
+     * @return the list of supported languages
      */
-    @Nonnull
-    public List<String> getAvailableLanguages() {
+    public List<String> getAvailableLanguageCodes() {
         return Collections.unmodifiableList(availableLanguages);
+    }
+
+    /**
+     * Returns a list of supported languages and their translated name.
+     *
+     * @return a list of tuples containing the ISO code and the translated name
+     */
+    public List<Tuple<String, String>> getAvailableLanguages() {
+        return availableLanguages.stream()
+                                 .map(code -> Tuple.create(code, NLS.get("Language." + code)))
+                                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns the id of the system tenant.
+     * <p>
+     * Note that this method should only be used by the framework itself. Otherwise use
+     * {@link UserInfo#hasPermission(String)} or {@link Tenant#hasPermission(String)} and
+     * {@link TenantUserManager#PERMISSION_SYSTEM_TENANT}.
+     *
+     * @return the id of the system tenant
+     */
+    public String getSystemTenantId() {
+        return systemTenant;
     }
 
     @Nonnull

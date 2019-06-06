@@ -15,15 +15,15 @@
         <div class="col-md-9">
             <w:tableSearchHeader page="logs" baseUrl="/system/logs"/>
 
-            <w:table data="logs">
+            <w:table data="logs" colorized="true">
                 <thead>
                 <tr>
+                    <th></th>
                     <th>
                         <div class="row">
-                            <div class="col-md-2">@i18n("LoggedMessage.level")</div>
                             <div class="col-md-3">@i18n("LoggedMessage.tod")</div>
-                            <div class="col-md-2">@i18n("LoggedMessage.category")</div>
-                            <div class="col-md-2">@i18n("LoggedMessage.user")</div>
+                            <div class="col-md-3">@i18n("LoggedMessage.category")</div>
+                            <div class="col-md-3">@i18n("LoggedMessage.user")</div>
                             <div class="col-md-3">@i18n("LoggedMessage.node")</div>
                         </div>
                     </th>
@@ -31,16 +31,15 @@
                 </thead>
                 <tbody>
                 <i:for type="sirius.biz.protocol.LoggedMessage" var="msg" items="logs.getItems()">
-                    <tr>
+                    <tr class="@msg.getRowClass()">
+                        <td></td>
                         <td>
                             <div class="row">
-                                <div class="col-md-2"><span class="label @msg.getLabelClass()">@msg.getLevel()</span>
-                                </div>
                                 <div class="col-md-3 muted">
                                     <small>@toUserString(msg.getTod())</small>
                                 </div>
-                                <div class="col-md-2">@msg.getCategory()</div>
-                                <div class="col-md-2 muted">
+                                <div class="col-md-3">@msg.getCategory()</div>
+                                <div class="col-md-3 muted">
                                     <small>@msg.getUser()</small>
                                 </div>
                                 <div class="col-md-3 muted">
@@ -49,8 +48,7 @@
                             </div>
                             <div class="row">
                                 <div class="col-md-12">
-                                    <p/>
-                                    <pre class="plain" style="white-space: pre-wrap">@msg.getMessage()</pre>
+                                    <pre class="plain" style="white-space: pre-wrap; padding-top: 8px">@msg.getMessage()</pre>
                                 </div>
                             </div>
                         </td>

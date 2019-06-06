@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Provides a limiter based on Redis.
  */
-@Register(classes = {Limiter.class, RedisLimiter.class}, framework = Isenguard.FRAMEWORK_ISENGUARD)
+@Register(classes = {Limiter.class, RedisLimiter.class})
 public class RedisLimiter implements Limiter {
 
     public static final String BLOCKED_IPS = "isenguard-blocked-ips";

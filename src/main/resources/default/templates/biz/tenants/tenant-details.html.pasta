@@ -1,21 +1,18 @@
 <i:arg type="sirius.biz.tenants.Tenant" name="tenant"/>
 <i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
-<i:arg type="List" name="tenants"/>
-<i:arg type="List" name="availableLanguages"/>
-<i:arg type="sirius.biz.packages.Packages" name="packages"/>
 
-<i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" page="details">
+<i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" controller="controller" page="details">
     <w:editForm url="@apply('/tenant/%s', tenant.getIdAsString())">
         <div class="row">
             <w:textfield span="12" name="tenantData_name" value="@tenant.getTenantData().getName()" labelKey="Model.name" required="true"/>
-            <w:textfield span="12" name="tenantData_accountNumber" value="@tenant.getTenantData().getAccountNumber()"
-                         labelKey="Tenant.accountNumber" required="true"/>
         </div>
         <div class="row">
-            <w:singleSelect name="tenantData_lang" labelKey="Model.lang">
-                <i:for var="language" items="availableLanguages" type="String">
-                    <option value="@language" @selected="language == tenant.getTenantData().getLang()">
-                        @i18n(apply('Language.%s', language))
+            <w:textfield name="tenantData_accountNumber" value="@tenant.getTenantData().getAccountNumber()"
+                         labelKey="Tenant.accountNumber" />
+            <w:singleSelect name="tenantData_lang" labelKey="Model.lang" required="true">
+                <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
+                    <option value="@language.getFirst()" @selected="language.getFirst() == tenant.getTenantData().getLang()">
+                        @language.getSecond()
                     </option>
                 </i:for>
             </w:singleSelect>
@@ -47,19 +44,6 @@
             <w:textfield name="tenantData_rolesToKeep" value="@tenant.getTenantData().getRolesToKeep()" labelKey="Tenant.rolesToKeep"
                          helpKey="Tenant.rolesToKeep.help"/>
         </div>
-        <w:subHeading labelKey="Tenant.saml"/>
-        <div class="row">
-            <w:textfield name="tenantData_samlRequestIssuerName" value="@tenant.getTenantData().getSamlRequestIssuerName()"
-                         labelKey="Tenant.samlRequestIssuerName" helpKey="Tenant.samlRequestIssuerName.help"/>
-            <w:textfield name="tenantData_samlIssuerIndex" value="@tenant.getTenantData().getSamlIssuerIndex()"
-                         labelKey="Tenant.samlIssuerIndex" helpKey="Tenant.samlIssuerIndex.help"/>
-            <w:textfield name="tenantData_samlIssuerUrl" value="@tenant.getTenantData().getSamlIssuerUrl()"
-                         labelKey="Tenant.samlIssuerUrl" span="12" helpKey="Tenant.samlIssuerUrl.help"/>
-            <w:textfield name="tenantData_samlIssuerName" value="@tenant.getTenantData().getSamlIssuerName()"
-                         labelKey="Tenant.samlIssuerName" span="12" helpKey="Tenant.samlIssuerName.help"/>
-            <w:textfield name="tenantData_samlFingerprint" value="@tenant.getTenantData().getSamlFingerprint()"
-                         labelKey="Tenant.samlFingerprint" span="12" helpKey="Tenant.samlFingerprint.help"/>
-        </div>
         <div class="row">
             <div class="col-md-6">
                 <w:subHeading labelKey="Tenant.administration"/>
@@ -67,7 +51,7 @@
 
                     <w:singleSelect span="12" name="parent" optional="true" labelKey="Tenant.parent"
                                     helpKey="Tenant.parent.help">
-                        <i:for type="sirius.biz.tenants.Tenant" var="t" items="tenants">
+                        <i:for type="sirius.biz.tenants.Tenant" var="t" items="controller.getPossibleParentTenants()">
                             <option value="@t.getIdAsString()" @if(tenant.getParent().is(t)) {selected="selected" }>
                                 @t.getTenantData().getName()
                             </option>
@@ -82,11 +66,11 @@
             <div class="col-md-6">
                 <w:subHeading labelKey="Tenant.permissions"/>
                 <i:invoke template="templates/biz/packages/packages-and-upgrades.html.pasta" scope="tenant"
-                          packageData="@tenant.getTenantData().getPackageData()" packages="packages"/>
+                          packageData="@tenant.getTenantData().getPackageData()" packages="controller.getPackages()"/>
             </div>
         </div>
 
-        <i:extensions name="templates-tenant-details" tenant="tenant"/>
+        <i:extensions name="templates-tenant-details" tenant="tenant" controller="controller"/>
     </w:editForm>
 
     <w:formBar>

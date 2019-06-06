@@ -17,7 +17,7 @@ import java.util.Set;
 /**
  * Provides an "empty" implementation which doesn't perform any limiting at all.
  */
-@Register(classes = {Limiter.class, NOOPLimiter.class}, framework = Isenguard.FRAMEWORK_ISENGUARD)
+@Register(classes = {Limiter.class, NOOPLimiter.class})
 public class NOOPLimiter implements Limiter {
 
     @Nonnull

@@ -1,6 +1,7 @@
 <i:arg type="sirius.biz.tenants.Tenant" name="tenant"/>
+<i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 
-<i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" page="config">
+<i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" controller="controller" page="config">
     <div id="editor" style="height: 450px">@tenant.getTenantData().getConfigString()</div>
 
     <div class="form-actions">

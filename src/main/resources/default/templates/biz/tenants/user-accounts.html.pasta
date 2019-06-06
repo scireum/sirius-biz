@@ -12,9 +12,9 @@
 
     <div class="row">
         <div class="col-md-3">
-            <w:filterbox page="accounts" baseUrl="/user-accounts" />
+            <w:filterbox page="accounts" baseUrl="/user-accounts"/>
 
-            <w:jobs target="accountType" />
+            <w:jobs target="accountType"/>
         </div>
         <div class="col-md-9">
             <w:tableSearchHeader page="accounts" baseUrl="/user-accounts">
@@ -62,14 +62,15 @@
                         <td>
                             <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
                                 <i:if test="@account.getUserAccountData().canSendGeneratedPassword()">
-                                    <a href="/user-account/@account.getIdAsString()/generate-and-send-password?@accounts.createQueryString()"
+                                    <a href="@accounts.linkToCurrentPage(apply('/user-account/%s/generate-and-send-password', account.getIdAsString()))"
                                        class="link">
-                                        <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generateAndSend")
+                                        <i class="fa fa-angle-double-right"></i>
+                                        @i18n("LoginData.password.generateAndSend")
                                     </a>
                                     <br>
                                 </i:if>
 
-                                <a href="/user-account/@account.getIdAsString()/generate-password?@accounts.createQueryString()"
+                                <a href="@accounts.linkToCurrentPage(apply('/user-account/%s/generate-password', account.getIdAsString()))"
                                    class="link">
                                     <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generate")
                                 </a>
@@ -91,7 +92,8 @@
                             <span class="muted">@account.getUserAccountData().getLogin().getNumberOfLogins()</span>
                         </td>
                         <td class="col-md-2 align-center">
-                            <w:deleteLink url="@apply('/user-account/%s/delete', account.getIdAsString())" page="accounts"/>
+                            <w:deleteLink url="@apply('/user-account/%s/delete', account.getIdAsString())"
+                                          page="accounts"/>
                         </td>
                     </tr>
                 </i:for>
