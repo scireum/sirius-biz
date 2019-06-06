@@ -92,8 +92,26 @@
                             <span class="muted">@account.getUserAccountData().getLogin().getNumberOfLogins()</span>
                         </td>
                         <td class="col-md-2 align-center">
-                            <w:deleteLink url="@apply('/user-account/%s/delete', account.getIdAsString())"
-                                          page="accounts"/>
+                            <w:permission permission="permission-delete-user-accounts">
+                                <w:deleteLink url="@apply('/user-account/%s/delete', account.getIdAsString())"
+                                              page="accounts"/>
+                            </w:permission>
+
+                            <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
+                                <i class="fa fa-unlock"></i>
+                                <a class="link link-danger"
+                                   href="@apply('/user-account/%s/unlock', account.getIdAsString())">
+                                    @i18n("LoginData.unlock")
+                                </a>
+
+                                <i:else>
+                                    <i class="fa fa-lock"></i>
+                                    <a class="link link-danger"
+                                       href="@apply('/user-account/%s/lock', account.getIdAsString())">
+                                        @i18n("LoginData.lock")
+                                    </a>
+                                </i:else>
+                            </i:if>
                         </td>
                     </tr>
                 </i:for>

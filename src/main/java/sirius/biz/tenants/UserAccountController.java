@@ -34,7 +34,6 @@ import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 import sirius.web.services.JSONStructuredOutput;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -50,9 +49,13 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         extends BizController {
 
     /**
-     * The permission required to add, modify or delete accounts
+     * The permission required to add, modify or lock accounts
      */
     public static final String PERMISSION_MANAGE_USER_ACCOUNTS = "permission-manage-user-accounts";
+    /**
+     * The permission required to delete accounts
+     */
+    public static final String PERMISSION_DELETE_USER_ACCOUNTS = "permission-delete-user-accounts";
 
     private static final String PARAM_PASSWORD = "password";
     private static final String PARAM_NAME = "name";
@@ -128,6 +131,13 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         boolean requestHandled = prepareSave(ctx).withAfterCreateURI("/user-account/${id}")
                                                  .withAfterSaveURI("/user-accounts")
                                                  .withPreSaveHandler(isNew -> {
+                                                     if (isUserLockingHimself(userAccount)) {
+                                                         throw Exceptions.createHandled()
+                                                                         .withNLSKey(
+                                                                                 "UserAccountController.cannotLockSelf")
+                                                                         .handle();
+                                                     }
+
                                                      List<String> accessiblePermissions = getRoles();
                                                      packages.loadAccessiblePermissions(ctx.getParameters("roles"),
                                                                                         accessiblePermissions::contains,
@@ -141,6 +151,17 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             validate(userAccount);
             ctx.respondWith().template("templates/biz/tenants/user-account-details.html.pasta", userAccount, this);
         }
+    }
+
+    private boolean isUserLockingHimself(U userAccount) {
+        if (!userAccount.isChanged(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                .inner(LoginData.ACCOUNT_LOCKED))) {
+            return false;
+        }
+        if (!userAccount.getUserAccountData().getLogin().isAccountLocked()) {
+            return false;
+        }
+        return Objects.equals(getUser().getUserObject(UserAccount.class), userAccount);
     }
 
     /**
@@ -375,6 +396,48 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     }
 
     /**
+     * Locks the given account.
+     *
+     * @param ctx       the current request
+     * @param accountId the account to lock
+     */
+    @LoginRequired
+    @Routed("/user-account/:1/lock")
+    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
+    public void lockUser(final WebContext ctx, String accountId) {
+        Optional<U> account = tryFindForTenant(getUserClass(), accountId);
+        account.ifPresent(user -> {
+            if (Objects.equals(getUser().getUserObject(UserAccount.class), user)) {
+                throw Exceptions.createHandled().withNLSKey("UserAccountController.cannotLockSelf").handle();
+            }
+
+            user.getUserAccountData().getLogin().setAccountLocked(true);
+            user.getMapper().update(user);
+        });
+
+        accounts(ctx);
+    }
+
+    /**
+     * Unlocks the given account.
+     *
+     * @param ctx       the current request
+     * @param accountId the account to unlock
+     */
+    @LoginRequired
+    @Routed("/user-account/:1/unlock")
+    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
+    public void unlockUser(final WebContext ctx, String accountId) {
+        Optional<U> account = tryFindForTenant(getUserClass(), accountId);
+        account.ifPresent(user -> {
+            user.getUserAccountData().getLogin().setAccountLocked(false);
+            user.getMapper().update(user);
+        });
+
+        accounts(ctx);
+    }
+
+    /**
      * Deletes the given account.
      *
      * @param ctx the current request
@@ -382,7 +445,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     @LoginRequired
     @Routed("/user-account/:1/delete")
-    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
+    @Permission(PERMISSION_DELETE_USER_ACCOUNTS)
     public void deleteAdmin(final WebContext ctx, String id) {
         Optional<U> account = tryFindForTenant(getUserClass(), id);
         account.ifPresent(u -> {
