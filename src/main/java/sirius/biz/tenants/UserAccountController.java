@@ -34,7 +34,6 @@ import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 import sirius.web.services.JSONStructuredOutput;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -132,6 +131,13 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         boolean requestHandled = prepareSave(ctx).withAfterCreateURI("/user-account/${id}")
                                                  .withAfterSaveURI("/user-accounts")
                                                  .withPreSaveHandler(isNew -> {
+                                                     if (isUserLockingHimself(userAccount)) {
+                                                         throw Exceptions.createHandled()
+                                                                         .withNLSKey(
+                                                                                 "UserAccountController.cannotLockSelf")
+                                                                         .handle();
+                                                     }
+
                                                      List<String> accessiblePermissions = getRoles();
                                                      packages.loadAccessiblePermissions(ctx.getParameters("roles"),
                                                                                         accessiblePermissions::contains,
@@ -145,6 +151,17 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             validate(userAccount);
             ctx.respondWith().template("templates/biz/tenants/user-account-details.html.pasta", userAccount, this);
         }
+    }
+
+    private boolean isUserLockingHimself(U userAccount) {
+        if (!userAccount.isChanged(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                .inner(LoginData.ACCOUNT_LOCKED))) {
+            return false;
+        }
+        if (!userAccount.getUserAccountData().getLogin().isAccountLocked()) {
+            return false;
+        }
+        return Objects.equals(getUser().getUserObject(UserAccount.class), userAccount);
     }
 
     /**
