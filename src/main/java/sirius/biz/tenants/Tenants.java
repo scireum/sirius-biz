@@ -237,12 +237,12 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @param tenantId the id of the tenant to fetch
      * @return the tenant with the given id or an empty optional if the tenant cannot be resolved
      */
-    public Optional<T> fetchCachedTenant(I tenantId) {
+    public Optional<T> fetchCachedTenant(String tenantId) {
         if (Strings.isEmpty(tenantId)) {
             return Optional.empty();
         }
 
-        return Optional.ofNullable(getTenantUserManager().fetchTenant(String.valueOf(tenantId)));
+        return Optional.ofNullable(getTenantUserManager().fetchTenant(tenantId));
     }
 
     /**
@@ -251,7 +251,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @param tenantId the tenant to fetch the name for
      * @return the name of the tenant or an empty string if the tenant doesn't exist
      */
-    public String fetchCachedTenantName(I tenantId) {
+    public String fetchCachedTenantName(String tenantId) {
         return fetchCachedTenant(tenantId).map(tenant -> tenant.getTenantData().getName()).orElse("");
     }
 
@@ -272,7 +272,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
             return Optional.of(tenantRef.getValue());
         }
 
-        return fetchCachedTenant(tenantRef.getId());
+        return fetchCachedTenant(String.valueOf(tenantRef.getId()));
     }
 
     /**
@@ -283,5 +283,83 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      */
     public String fetchCachedTenantName(BaseEntityRef<I, T> tenantRef) {
         return fetchCachedTenant(tenantRef).map(tenant -> tenant.getTenantData().getName()).orElse("");
+    }
+
+    /**
+     * Provides access to the user account with the given id
+     * <p>
+     * This utilizes the cache maintained by the {@link TenantUserManager} and is therefore quite efficient
+     *
+     * @param userId the id of the user to fetch
+     * @return the user account with the given id or an empty optional if the user cannot be resolved
+     */
+    public Optional<U> fetchCachedUserAccount(String userId) {
+        if (Strings.isEmpty(userId)) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(getTenantUserManager().fetchAccount(userId));
+    }
+
+    /**
+     * Boilerplate to quickly fetch the email of the user with the given id.
+     *
+     * @param userId the user to fetch the email for
+     * @return the email of the user or an empty string if the user doesn't exist
+     */
+    public String fetchCachedUserMail(String userId) {
+        return fetchCachedUserAccount(userId).map(user -> user.getUserAccountData().getEmail()).orElse("");
+    }
+
+    /**
+     * Boilerplate to quickly fetch the name of the user with the given id.
+     * Uses {@link U#toString()}.
+     * 
+     * @param userId the user to fetch the name for
+     * @return the name of the user or an empty string if the user doesn't exist
+     */
+    public String fetchCachedUserName(String userId) {
+        return fetchCachedUserAccount(userId).map(UserAccount::toString).orElse("");
+    }
+
+    /**
+     * Provides access to the user account stored in the given reference.
+     * <p>
+     * This utilizes the cache maintained by the {@link TenantUserManager} and is therefore quite efficient
+     *
+     * @param userRef the reference to read the user from
+     * @return the user account with the given id or an empty optional if the user cannot be resolved
+     */
+    public Optional<U> fetchCachedUserAccount(BaseEntityRef<I, U> userRef) {
+        if (userRef.isEmpty()) {
+            return Optional.empty();
+        }
+
+        if (userRef.isValueLoaded()) {
+            return Optional.of(userRef.getValue());
+        }
+
+        return fetchCachedUserAccount(String.valueOf(userRef.getId()));
+    }
+
+    /**
+     * Boilerplate to quickly fetch the email of the user account in the given reference.
+     *
+     * @param userRef the reference to read the user from
+     * @return the email of the user or an empty string if the user doesn't exist
+     */
+    public String fetchCachedUserMail(BaseEntityRef<I, U> userRef) {
+        return fetchCachedUserAccount(userRef).map(user -> user.getUserAccountData().getEmail()).orElse("");
+    }
+
+    /**
+     * Boilerplate to quickly fetch the name of the user account in the given reference.
+     * Uses {@link U#toString()}.
+     *
+     * @param userRef the reference to read the user from
+     * @return the name of the user or an empty string if the user doesn't exist
+     */
+    public String fetchCachedUserName(BaseEntityRef<I, U> userRef) {
+        return fetchCachedUserAccount(userRef).map(UserAccount::toString).orElse("");
     }
 }

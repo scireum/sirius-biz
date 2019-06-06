@@ -417,7 +417,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
     @SuppressWarnings("unchecked")
     @Nullable
-    private U fetchAccount(@Nonnull String accountId) {
+    protected U fetchAccount(@Nonnull String accountId) {
         U account = (U) userAccountCache.get(accountId);
         if (account == null) {
             account = loadAccount(accountId);
@@ -717,15 +717,18 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
         U user = fetchAccount(userId);
         Set<String> roles;
+        String tenantReference;
         if (user != null) {
             roles = computeRoles(user,
                                  user.getTenant().getValue(),
                                  Strings.areEqual(systemTenant, String.valueOf(user.getTenant().getId())));
+            tenantReference = user.getTenant().getUniqueObjectName();
         } else {
             roles = Collections.emptySet();
+            tenantReference = null;
         }
 
-        rolesCache.put(userId, Tuple.create(roles, user.getTenant().getUniqueObjectName()));
+        rolesCache.put(userId, Tuple.create(roles, tenantReference));
         return roles;
     }
 
