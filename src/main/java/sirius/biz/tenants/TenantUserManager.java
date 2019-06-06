@@ -704,7 +704,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             roles.add(PERMISSION_SYSTEM_TENANT);
             transformedRoles = transformRoles(roles);
         }
-        transformedRoles.removeAll(tenant.getTenantData().getPackageData().getRevokedPermissions());
+        transformedRoles.removeAll(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
         return transformedRoles;
     }
 

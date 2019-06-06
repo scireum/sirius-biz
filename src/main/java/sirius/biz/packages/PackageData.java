@@ -10,10 +10,10 @@ package sirius.biz.packages;
 
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
+import sirius.db.mixing.types.StringList;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.web.security.Permissions;
@@ -43,35 +43,26 @@ public class PackageData extends Composite {
     /**
      * List of selected upgrades as string
      */
-    public static final Mapping UPGRADES_STRING = Mapping.named("upgradesString");
+    public static final Mapping UPGRADES = Mapping.named("upgrades");
     @NullAllowed
     @Length(4096)
-    private String upgradesString;
+    private final StringList upgrades = new StringList();
 
     /**
      * List of the additionaly granted permissions as string
      */
-    public static final Mapping ADDITIONAL_PERMISSIONS_STRING = Mapping.named("additionalPermissionsString");
+    public static final Mapping ADDITIONAL_PERMISSIONS = Mapping.named("additionalPermissions");
     @NullAllowed
     @Length(4096)
-    private String additionalPermissionsString;
+    private final StringList additionalPermissions = new StringList();
 
     /**
      * List of the explicitly revoked permissions as string
      */
-    public static final Mapping REVOKED_PERMISSIONS_STRING = Mapping.named("revokedPermissionsString");
+    public static final Mapping REVOKED_PERMISSIONS = Mapping.named("revokedPermissions");
     @NullAllowed
     @Length(4096)
-    private String revokedPermissionsString;
-
-    @Transient
-    private Set<String> upgrades;
-
-    @Transient
-    private Set<String> additionalPermissions;
-
-    @Transient
-    private Set<String> revokedPermissions;
+    private final StringList revokedPermissions = new StringList();
 
     @Transient
     private Set<String> directPermissions;
@@ -91,10 +82,7 @@ public class PackageData extends Composite {
      *
      * @return the granted upgrades
      */
-    public Set<String> getUpgrades() {
-        if (upgrades == null) {
-            upgrades = compileString(upgradesString);
-        }
+    public StringList getUpgrades() {
         return upgrades;
     }
 
@@ -105,10 +93,7 @@ public class PackageData extends Composite {
      *
      * @return the granted additional permissions
      */
-    public Set<String> getAdditionalPermissions() {
-        if (additionalPermissions == null) {
-            additionalPermissions = compileString(additionalPermissionsString);
-        }
+    public StringList getAdditionalPermissions() {
         return additionalPermissions;
     }
 
@@ -119,24 +104,8 @@ public class PackageData extends Composite {
      *
      * @return the revoked permissions
      */
-    public Set<String> getRevokedPermissions() {
-        if (revokedPermissions == null) {
-            revokedPermissions = compileString(revokedPermissionsString);
-        }
+    public StringList getRevokedPermissions() {
         return revokedPermissions;
-    }
-
-    private Set<String> compileString(String data) {
-        Set<String> result = new TreeSet<>();
-        if (Strings.isFilled(data)) {
-            for (String permission : data.split(",")) {
-                permission = permission.trim();
-                if (Strings.isFilled(permission)) {
-                    result.add(permission);
-                }
-            }
-        }
-        return result;
     }
 
     /**
@@ -150,7 +119,7 @@ public class PackageData extends Composite {
             if (Strings.isFilled(getPackage())) {
                 packageAndUpgradeFeatures.add(getPackage());
             }
-            packageAndUpgradeFeatures.addAll(getUpgrades());
+            packageAndUpgradeFeatures.addAll(getUpgrades().data());
             directPermissions = Permissions.applyProfiles(packageAndUpgradeFeatures);
         }
 
@@ -167,8 +136,8 @@ public class PackageData extends Composite {
         if (Strings.isFilled(getPackage())) {
             permissions.add(getPackage());
         }
-        permissions.addAll(getUpgrades());
-        permissions.addAll(getAdditionalPermissions());
+        permissions.addAll(getUpgrades().data());
+        permissions.addAll(getAdditionalPermissions().data());
 
         return permissions;
     }
@@ -184,10 +153,10 @@ public class PackageData extends Composite {
         if (Strings.isFilled(getPackage())) {
             permissions.add(getPackage());
         }
-        permissions.addAll(getUpgrades());
-        permissions.addAll(getAdditionalPermissions());
+        permissions.addAll(getUpgrades().data());
+        permissions.addAll(getAdditionalPermissions().data());
         permissions = Permissions.applyProfiles(permissions);
-        permissions.removeAll(getRevokedPermissions());
+        permissions.removeAll(getRevokedPermissions().data());
 
         return permissions;
     }
@@ -201,7 +170,7 @@ public class PackageData extends Composite {
      */
     public void loadPackageAndUpgrades(String packagesScope, List<String> upgrades, String packageString) {
         List<String> accessibleUpgrades = packages.getUpgrades(packagesScope);
-        packages.loadAccessiblePermissions(upgrades, accessibleUpgrades::contains, getUpgrades());
+        packages.loadAccessiblePermissions(upgrades, accessibleUpgrades::contains, getUpgrades().modify());
 
         if (packages.getPackages(packagesScope).contains(packageString)) {
             setPackage(packageString);
@@ -228,12 +197,5 @@ public class PackageData extends Composite {
                 getRevokedPermissions().add(permission);
             }
         }
-    }
-
-    @BeforeSave
-    protected void updateStrings() {
-        upgradesString = Strings.join(getUpgrades(), ",");
-        additionalPermissionsString = Strings.join(getAdditionalPermissions(), ",");
-        revokedPermissionsString = Strings.join(getRevokedPermissions(), ",");
     }
 }
