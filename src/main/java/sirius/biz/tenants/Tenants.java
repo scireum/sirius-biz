@@ -312,6 +312,17 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
     }
 
     /**
+     * Boilerplate to quickly fetch the name of the user with the given id.
+     * Uses {@link U#toString()}.
+     * 
+     * @param userId the user to fetch the name for
+     * @return the name of the user or an empty string if the user doesn't exist
+     */
+    public String fetchCachedUserName(String userId) {
+        return fetchCachedUserAccount(userId).map(UserAccount::toString).orElse("");
+    }
+
+    /**
      * Provides access to the user account stored in the given reference.
      * <p>
      * This utilizes the cache maintained by the {@link TenantUserManager} and is therefore quite efficient
@@ -339,5 +350,16 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      */
     public String fetchCachedUserMail(BaseEntityRef<I, U> userRef) {
         return fetchCachedUserAccount(userRef).map(user -> user.getUserAccountData().getEmail()).orElse("");
+    }
+
+    /**
+     * Boilerplate to quickly fetch the name of the user account in the given reference.
+     * Uses {@link U#toString()}.
+     *
+     * @param userRef the reference to read the user from
+     * @return the name of the user or an empty string if the user doesn't exist
+     */
+    public String fetchCachedUserName(BaseEntityRef<I, U> userRef) {
+        return fetchCachedUserAccount(userRef).map(UserAccount::toString).orElse("");
     }
 }
