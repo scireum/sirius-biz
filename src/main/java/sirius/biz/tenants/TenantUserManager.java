@@ -417,7 +417,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
     @SuppressWarnings("unchecked")
     @Nullable
-    private U fetchAccount(@Nonnull String accountId) {
+    protected U fetchAccount(@Nonnull String accountId) {
         U account = (U) userAccountCache.get(accountId);
         if (account == null) {
             account = loadAccount(accountId);
