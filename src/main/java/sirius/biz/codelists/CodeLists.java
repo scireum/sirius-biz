@@ -24,6 +24,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.kernel.settings.Extension;
 import sirius.web.security.ScopeInfo;
@@ -31,7 +32,9 @@ import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -49,9 +52,16 @@ import java.util.Optional;
  */
 public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L>> {
 
+    protected static final String CONFIG_EXTENSION_CODE_LISTS = "code-lists";
+    protected static final String CONFIG_KEY_NAME = "name";
+    protected static final String CONFIG_KEY_DESCRIPTION = "description";
+    protected static final String CONFIG_KEY_AUTOFILL = "autofill";
+    protected static final String CONFIG_KEY_GLOBAL = "global";
     protected Cache<String, String> valueCache = CacheManager.createCoherentCache("codelists-values");
 
     protected static final Log LOG = Log.get("codelists");
+
+    protected Map<String, Boolean> codeListGlobalFlag = new HashMap<>();
 
     @Part
     private Tenants<?, ?, ?> tenants;
@@ -123,14 +133,19 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
             return null;
         }
 
-        return getCurrentTenant().map(tenant -> valueCache.get(tenant.getIdAsString() + codeList + "|" + code, ignored ->
-                getValues(codeList, code).getFirst()
-        )).orElseGet(() -> {
-            Exceptions.handle().to(LOG).withSystemErrorMessage("No Tenant for code list getValue call found. Make sure that a currentTenant is set.").handle();
+        return getCurrentTenant(codeList).map(tenant -> fetchValueFromCache(tenant, codeList, code)).orElseGet(() -> {
+            warnAboutMissingTenant();
             return code;
         });
+    }
 
+    protected String fetchValueFromCache(Tenant<?> tenant, String codeList, String code) {
+        return valueCache.get(tenant.getIdAsString() + codeList + "|" + code,
+                              ignored -> getValues(codeList, code).getFirst());
+    }
 
+    protected HandledException warnAboutMissingTenant() {
+        return Exceptions.handle().to(LOG).withNLSKey("CodeLists.noCurrentTenant").handle();
     }
 
     /**
@@ -167,9 +182,9 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
         if (cle == null) {
             throw Exceptions.handle()
                             .to(LOG)
-                            .withSystemErrorMessage("Unable to find required code ('%s') in code list ('%s')",
-                                                    code,
-                                                    codeList)
+                            .withNLSKey("CodeLists.missingEntry")
+                            .set("codeList", codeList)
+                            .set("code", code)
                             .handle();
         }
 
@@ -224,20 +239,20 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
             throw new IllegalArgumentException("codeList must not be empty");
         }
 
-        Tenant<?> currentTenant = getCurrentTenant().orElseThrow(() -> Exceptions.handle().to(LOG).withNLSKey("CodeLists.noCurrentTenant").handle());
+        Tenant<?> currentTenant = getCurrentTenant(codeList).orElseThrow(this::warnAboutMissingTenant);
 
         L cl = createListQuery().eq(CodeList.TENANT, currentTenant)
-                .eq(CodeList.CODE_LIST_DATA.inner(CodeListData.CODE), codeList)
-                .queryFirst();
+                                .eq(CodeList.CODE_LIST_DATA.inner(CodeListData.CODE), codeList)
+                                .queryFirst();
 
         if (cl == null) {
-            Extension ext = Sirius.getSettings().getExtension("code-lists", codeList);
+            Extension ext = getCodeListConfig(codeList);
 
             cl = createCodeList(currentTenant, codeList);
             if (ext != null && !ext.isDefault()) {
-                cl.getCodeListData().setName(ext.get("name").asString());
-                cl.getCodeListData().setDescription(ext.get("description").asString());
-                cl.getCodeListData().setAutofill(ext.get("autofill").asBoolean());
+                cl.getCodeListData().setName(ext.get(CONFIG_KEY_NAME).asString());
+                cl.getCodeListData().setDescription(ext.get(CONFIG_KEY_DESCRIPTION).asString());
+                cl.getCodeListData().setAutofill(ext.get(CONFIG_KEY_AUTOFILL).asBoolean());
             }
 
             cl.getMapper().update(cl);
@@ -277,11 +292,17 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
      * <p>
      * This also gracefully handles scopes other than the current tenant as long as there is an adapter to make it
      * match a {@link CodeListTenantProvider}.
+     * <p>
+     * Note that "global" code lists are always stored in the system tenant and shared accross all tenants.
      *
      * @return optional of the current tenant to be used to determine which code lists to operate on.
      */
     @SuppressWarnings("unchecked")
-    private Optional<Tenant<?>> getCurrentTenant() {
+    private Optional<Tenant<?>> getCurrentTenant(String codeList) {
+        if (isCodeListGlobal(codeList)) {
+            return (Optional<Tenant<?>>) tenants.fetchCachedTenant(tenants.getTenantUserManager().getSystemTenantId());
+        }
+
         if (UserContext.getCurrentScope() == ScopeInfo.DEFAULT_SCOPE) {
             return (Optional<Tenant<?>>) tenants.getCurrentTenant();
         }
@@ -297,6 +318,21 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
         }
 
         return Optional.of(currentTenant);
+    }
+
+    private boolean isCodeListGlobal(String codeList) {
+        return codeListGlobalFlag.computeIfAbsent(codeList, ignored -> {
+            Extension ext = getCodeListConfig(codeList);
+            boolean isGlobal = ext.get(CONFIG_KEY_GLOBAL).asBoolean();
+            if (isGlobal && ext.get(CONFIG_KEY_AUTOFILL).asBoolean()) {
+                LOG.WARN("The code list %s is 'global' and has 'autofill' enabled. This is a dangerous combination!");
+            }
+            return isGlobal;
+        });
+    }
+
+    private Extension getCodeListConfig(String codeList) {
+        return Sirius.getSettings().getExtension(CONFIG_EXTENSION_CODE_LISTS, codeList);
     }
 
     /**
