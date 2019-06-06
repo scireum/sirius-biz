@@ -92,8 +92,10 @@
                             <span class="muted">@account.getUserAccountData().getLogin().getNumberOfLogins()</span>
                         </td>
                         <td class="col-md-2 align-center">
-                            <w:deleteLink url="@apply('/user-account/%s/delete', account.getIdAsString())"
-                                          page="accounts"/>
+                            <w:permission permission="permission-delete-user-accounts">
+                                <w:deleteLink url="@apply('/user-account/%s/delete', account.getIdAsString())"
+                                              page="accounts"/>
+                            </w:permission>
                         </td>
                     </tr>
                 </i:for>

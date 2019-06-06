@@ -50,9 +50,13 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         extends BizController {
 
     /**
-     * The permission required to add, modify or delete accounts
+     * The permission required to add, modify or lock accounts
      */
     public static final String PERMISSION_MANAGE_USER_ACCOUNTS = "permission-manage-user-accounts";
+    /**
+     * The permission required to delete accounts
+     */
+    public static final String PERMISSION_DELETE_USER_ACCOUNTS = "permission-delete-user-accounts";
 
     private static final String PARAM_PASSWORD = "password";
     private static final String PARAM_NAME = "name";
@@ -382,7 +386,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     @LoginRequired
     @Routed("/user-account/:1/delete")
-    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
+    @Permission(PERMISSION_DELETE_USER_ACCOUNTS)
     public void deleteAdmin(final WebContext ctx, String id) {
         Optional<U> account = tryFindForTenant(getUserClass(), id);
         account.ifPresent(u -> {
