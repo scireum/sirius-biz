@@ -237,12 +237,12 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @param tenantId the id of the tenant to fetch
      * @return the tenant with the given id or an empty optional if the tenant cannot be resolved
      */
-    public Optional<T> fetchCachedTenant(I tenantId) {
+    public Optional<T> fetchCachedTenant(String tenantId) {
         if (Strings.isEmpty(tenantId)) {
             return Optional.empty();
         }
 
-        return Optional.ofNullable(getTenantUserManager().fetchTenant(String.valueOf(tenantId)));
+        return Optional.ofNullable(getTenantUserManager().fetchTenant(tenantId));
     }
 
     /**
@@ -251,7 +251,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @param tenantId the tenant to fetch the name for
      * @return the name of the tenant or an empty string if the tenant doesn't exist
      */
-    public String fetchCachedTenantName(I tenantId) {
+    public String fetchCachedTenantName(String tenantId) {
         return fetchCachedTenant(tenantId).map(tenant -> tenant.getTenantData().getName()).orElse("");
     }
 
@@ -272,7 +272,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
             return Optional.of(tenantRef.getValue());
         }
 
-        return fetchCachedTenant(tenantRef.getId());
+        return fetchCachedTenant(String.valueOf(tenantRef.getId()));
     }
 
     /**
@@ -293,12 +293,12 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @param userId the id of the user to fetch
      * @return the user account with the given id or an empty optional if the user cannot be resolved
      */
-    public Optional<U> fetchCachedUserAccount(I userId) {
+    public Optional<U> fetchCachedUserAccount(String userId) {
         if (Strings.isEmpty(userId)) {
             return Optional.empty();
         }
 
-        return Optional.ofNullable(getTenantUserManager().fetchAccount(String.valueOf(userId)));
+        return Optional.ofNullable(getTenantUserManager().fetchAccount(userId));
     }
 
     /**
@@ -307,7 +307,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @param userId the user to fetch the email for
      * @return the email of the user or an empty string if the user doesn't exist
      */
-    public String fetchCachedUserMail(I userId) {
+    public String fetchCachedUserMail(String userId) {
         return fetchCachedUserAccount(userId).map(user -> user.getUserAccountData().getEmail()).orElse("");
     }
 
@@ -328,7 +328,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
             return Optional.of(userRef.getValue());
         }
 
-        return fetchCachedUserAccount(userRef.getId());
+        return fetchCachedUserAccount(String.valueOf(userRef.getId()));
     }
 
     /**
