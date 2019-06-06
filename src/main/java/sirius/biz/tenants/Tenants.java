@@ -237,12 +237,12 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @param tenantId the id of the tenant to fetch
      * @return the tenant with the given id or an empty optional if the tenant cannot be resolved
      */
-    public Optional<T> fetchCachedTenant(I tenantId) {
+    public Optional<T> fetchCachedTenant(String tenantId) {
         if (Strings.isEmpty(tenantId)) {
             return Optional.empty();
         }
 
-        return Optional.ofNullable(getTenantUserManager().fetchTenant(String.valueOf(tenantId)));
+        return Optional.ofNullable(getTenantUserManager().fetchTenant(tenantId));
     }
 
     /**
@@ -251,7 +251,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @param tenantId the tenant to fetch the name for
      * @return the name of the tenant or an empty string if the tenant doesn't exist
      */
-    public String fetchCachedTenantName(I tenantId) {
+    public String fetchCachedTenantName(String tenantId) {
         return fetchCachedTenant(tenantId).map(tenant -> tenant.getTenantData().getName()).orElse("");
     }
 
@@ -272,7 +272,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
             return Optional.of(tenantRef.getValue());
         }
 
-        return fetchCachedTenant(tenantRef.getId());
+        return fetchCachedTenant(String.valueOf(tenantRef.getId()));
     }
 
     /**
