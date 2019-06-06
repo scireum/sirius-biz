@@ -379,6 +379,48 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     }
 
     /**
+     * Locks the given account.
+     *
+     * @param ctx       the current request
+     * @param accountId the account to lock
+     */
+    @LoginRequired
+    @Routed("/user-account/:1/lock")
+    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
+    public void lockUser(final WebContext ctx, String accountId) {
+        Optional<U> account = tryFindForTenant(getUserClass(), accountId);
+        account.ifPresent(user -> {
+            if (Objects.equals(getUser().getUserObject(UserAccount.class), user)) {
+                throw Exceptions.createHandled().withNLSKey("UserAccountController.cannotLockSelf").handle();
+            }
+
+            user.getUserAccountData().getLogin().setAccountLocked(true);
+            user.getMapper().update(user);
+        });
+
+        accounts(ctx);
+    }
+
+    /**
+     * Unlocks the given account.
+     *
+     * @param ctx       the current request
+     * @param accountId the account to unlock
+     */
+    @LoginRequired
+    @Routed("/user-account/:1/unlock")
+    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
+    public void unlockUser(final WebContext ctx, String accountId) {
+        Optional<U> account = tryFindForTenant(getUserClass(), accountId);
+        account.ifPresent(user -> {
+            user.getUserAccountData().getLogin().setAccountLocked(false);
+            user.getMapper().update(user);
+        });
+
+        accounts(ctx);
+    }
+
+    /**
      * Deletes the given account.
      *
      * @param ctx the current request
