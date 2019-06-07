@@ -3,74 +3,8 @@
 
 <i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" controller="controller" page="details">
     <w:editForm url="@apply('/tenant/%s', tenant.getIdAsString())">
-        <div class="row">
-            <w:textfield span="12" name="tenantData_name" value="@tenant.getTenantData().getName()" labelKey="Model.name" required="true"/>
-        </div>
-        <div class="row">
-            <w:textfield name="tenantData_accountNumber" value="@tenant.getTenantData().getAccountNumber()"
-                         labelKey="Tenant.accountNumber" />
-            <w:singleSelect name="tenantData_lang" labelKey="Model.lang" required="true">
-                <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
-                    <option value="@language.getFirst()" @selected="language.getFirst() == tenant.getTenantData().getLang()">
-                        @language.getSecond()
-                    </option>
-                </i:for>
-            </w:singleSelect>
-        </div>
-        <w:subHeading labelKey="Model.address"/>
-        <div class="row">
-            <w:textfield span="12" name="tenantData_address_street" value="@tenant.getTenantData().getAddress().getStreet()"
-                         labelKey="AddressData.street"/>
-        </div>
-        <div class="row">
-            <w:textfield span="2" name="tenantData_address_zip" value="@tenant.getTenantData().getAddress().getZip()"
-                         labelKey="AddressData.zip"/>
-            <w:textfield name="tenantData_address_city" value="@tenant.getTenantData().getAddress().getCity()" labelKey="AddressData.city"/>
-            <w:codelistSelect span="4" list="countries" name="tenantData_address_country" value="@tenant.getTenantData().getAddress().getCountry()"
-                              labelKey="InternationalAddressData.country"/>
-        </div>
-        <w:subHeading labelKey="Model.security"/>
-        <div class="row">
-            <w:textfield name="tenantData_loginIntervalDays" value="@toUserString(tenant.getTenantData().getLoginIntervalDays())"
-                         addonText="@i18n('Tenant.suffixDays')" labelKey="Tenant.loginIntervalDays"
-                         helpKey="Tenant.loginIntervalDays.help"/>
-            <w:textfield name="tenantData_externalLoginIntervalDays" value="@toUserString(tenant.getTenantData().getExternalLoginIntervalDays())"
-                         addonText="@i18n('Tenant.suffixDays')" labelKey="Tenant.externalLoginIntervalDays"
-                         helpKey="Tenant.externalLoginIntervalDays.help"/>
-
-            <w:textfield name="tenantData_ipRange" value="@tenant.getTenantData().getIpRange()" labelKey="Tenant.ipRange"
-                         helpKey="Tenant.ipRange.help"/>
-
-            <w:textfield name="tenantData_rolesToKeep" value="@tenant.getTenantData().getRolesToKeep()" labelKey="Tenant.rolesToKeep"
-                         helpKey="Tenant.rolesToKeep.help"/>
-        </div>
-        <div class="row">
-            <div class="col-md-6">
-                <w:subHeading labelKey="Tenant.administration"/>
-                <div class="row">
-
-                    <w:singleSelect span="12" name="parent" optional="true" labelKey="Tenant.parent"
-                                    helpKey="Tenant.parent.help">
-                        <i:for type="sirius.biz.tenants.Tenant" var="t" items="controller.getPossibleParentTenants()">
-                            <option value="@t.getIdAsString()" @if(tenant.getParent().is(t)) {selected="selected" }>
-                                @t.getTenantData().getName()
-                            </option>
-                        </i:for>
-                    </w:singleSelect>
-                    <w:checkbox span="12" name="tenantData_parentCanAccess" value="tenant.getTenantData().isParentCanAccess()"
-                                labelKey="Tenant.parentCanAccess" helpKey="Tenant.parentCanAccess.help"/>
-                    <w:checkbox span="12" name="tenantData_canAccessParent" value="tenant.getTenantData().isCanAccessParent()"
-                                labelKey="Tenant.canAccessParent" helpKey="Tenant.canAccessParent.help"/>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <w:subHeading labelKey="Tenant.permissions"/>
-                <i:invoke template="templates/biz/packages/packages-and-upgrades.html.pasta" scope="tenant"
-                          packageData="@tenant.getTenantData().getPackageData()" packages="controller.getPackages()"/>
-            </div>
-        </div>
-
-        <i:extensions name="templates-tenant-details" tenant="tenant" controller="controller"/>
+        <i:invoke template="/templates/biz/tenants/tenant-details-fields.html.pasta" tenant="tenant"
+                  controller="controller"/>
     </w:editForm>
 
     <w:formBar>
