@@ -167,12 +167,13 @@ public class SaveHelper {
                 return true;
             }
 
+            bizController.showSavedMessage();
+            
             if (!entity.getMapper().hasValidationWarnings(entity) && Strings.isFilled(afterSaveURI)) {
                 ctx.respondWith()
                    .redirectToGet(Formatter.create(afterSaveURI).set("id", entity.getIdAsString()).format());
                 return true;
             }
-            bizController.showSavedMessage();
         } catch (Exception e) {
             bizController.handle(e);
         }
