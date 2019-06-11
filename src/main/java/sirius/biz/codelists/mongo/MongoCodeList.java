@@ -11,12 +11,14 @@ package sirius.biz.codelists.mongo;
 import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeListData;
 import sirius.biz.tenants.mongo.MongoTenantAware;
+import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.di.std.Framework;
 
 /**
  * Provides the MongoDB implementation of {@link CodeList}.
  */
 @Framework(MongoCodeLists.FRAMEWORK_CODE_LISTS_MONGO)
+@TranslationSource(CodeList.class)
 public class MongoCodeList extends MongoTenantAware implements CodeList {
 
     private final CodeListData codeListData = new CodeListData(this);

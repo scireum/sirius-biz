@@ -15,6 +15,7 @@ import sirius.biz.tenants.UserAccountData;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
+import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mixing.annotations.Versioned;
 import sirius.db.mongo.Mango;
 import sirius.kernel.di.std.Framework;
@@ -34,6 +35,7 @@ import java.util.function.Consumer;
         columns = "userAccountData_login_username",
         columnSettings = Mango.INDEX_ASCENDING,
         unique = true)
+@TranslationSource(UserAccount.class)
 public class MongoUserAccount extends MongoTenantAware implements UserAccount<String, MongoTenant> {
 
     public static final Mapping USER_ACCOUNT_DATA = Mapping.named("userAccountData");

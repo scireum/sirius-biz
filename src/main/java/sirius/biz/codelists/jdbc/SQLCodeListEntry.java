@@ -12,12 +12,14 @@ import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListEntryData;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
+import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.di.std.Framework;
 
 /**
  * Provides the JDBC/SQL implementation of {@link CodeListEntry}.
  */
 @Framework(SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
+@TranslationSource(CodeListEntry.class)
 public class SQLCodeListEntry extends SQLEntity implements CodeListEntry<Long, SQLCodeList> {
 
     private final SQLEntityRef<SQLCodeList> codeList =

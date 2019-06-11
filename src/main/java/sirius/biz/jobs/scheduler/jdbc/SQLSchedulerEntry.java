@@ -12,6 +12,7 @@ import sirius.biz.jobs.scheduler.JobConfigData;
 import sirius.biz.jobs.scheduler.SchedulerData;
 import sirius.biz.jobs.scheduler.SchedulerEntry;
 import sirius.biz.tenants.jdbc.SQLTenantAware;
+import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 
@@ -19,6 +20,7 @@ import sirius.kernel.di.std.Framework;
  * Provides the SQL implementation for representing {@link SchedulerEntry scheduler entries}.
  */
 @Framework(SQLSchedulerController.FRAMEWORK_SCHEDULER_JDBC)
+@TranslationSource(SchedulerEntry.class)
 public class SQLSchedulerEntry extends SQLTenantAware implements SchedulerEntry {
 
     private final SchedulerData schedulerData = new SchedulerData();
