@@ -538,11 +538,18 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return false;
     }
 
-    protected String getHashedApiToken(String apiToken, long time) {
+    /**
+     * Creates a md5 hash, using the given apiToken and the timestampInDays.
+     *
+     * @param apiToken        the apiToken
+     * @param timestampInDays the timestampInDays
+     * @return the md5 hash of the apiToken and timestampInDays
+     */
+    protected String getHashedApiToken(String apiToken, long timestampInDays) {
         return Hashing.md5()
                       .newHasher()
                       .putString(apiToken, Charsets.UTF_8)
-                      .putString(String.valueOf(time), Charsets.UTF_8)
+                      .putString(String.valueOf(timestampInDays), Charsets.UTF_8)
                       .hash()
                       .toString();
     }
