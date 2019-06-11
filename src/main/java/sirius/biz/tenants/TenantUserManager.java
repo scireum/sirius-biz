@@ -493,7 +493,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         }
 
         LoginData loginData = account.getUserAccountData().getLogin();
-        if (acceptApiTokens && Strings.areEqual(password, loginData.getApiToken())) {
+        if (acceptApiTokens && loginData.checkApiToken(password)) {
             completeAuditLogForUser(auditLog.neutral("AuditLog.apiTokenLogin"), account);
             return result;
         }
