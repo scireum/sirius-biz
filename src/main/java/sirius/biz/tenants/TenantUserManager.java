@@ -75,6 +75,11 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     public static final String PERMISSION_OUT_OF_IP_RANGE = "flag-out-of-ip-range";
 
     /**
+     * This flag indicates that the current user belongs to a tenant with child tenants.
+     */
+    public static final String PERMISSION_HAS_CHILDREN = "flag-has-children";
+
+    /**
      * Contains the permission required to manage the system.
      * <p>
      * If this permission is granted for user accounts that belong to the system tenant, the PERMISSION_SYSTEM_TENANT
@@ -697,6 +702,10 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
         for (AdditionalRolesProvider rolesProvider : additionalRolesProviders) {
             rolesProvider.addAdditionalRoles(user, roles::add);
+        }
+
+        if (tenant.getMapper().select(tenant.getClass()).eq(Tenant.PARENT, tenant.getIdAsString()).exists()) {
+            roles.add(PERMISSION_HAS_CHILDREN);
         }
 
         Set<String> transformedRoles = transformRoles(roles);
