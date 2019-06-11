@@ -11,6 +11,8 @@ package sirius.biz.web;
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.process.Processes;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.db.jdbc.OMA;
@@ -23,14 +25,18 @@ import sirius.db.mixing.properties.BaseEntityRefProperty;
 import sirius.db.mixing.properties.BooleanProperty;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
+import sirius.kernel.Sirius;
+import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Values;
+import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
+import sirius.kernel.nls.NLS;
 import sirius.web.controller.BasicController;
 import sirius.web.controller.Message;
 import sirius.web.http.WebContext;
@@ -39,6 +45,7 @@ import sirius.web.util.LinkBuilder;
 
 import javax.annotation.Nonnull;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -63,6 +70,12 @@ public class BizController extends BasicController {
 
     @Part
     protected Elastic elastic;
+
+    @Part
+    private GlobalContext globalContext;
+
+    @Part
+    private Tasks tasks;
 
     @Part
     protected Tenants<?, ?, ?> tenants;
@@ -297,8 +310,32 @@ public class BizController extends BasicController {
     public void deleteEntity(WebContext ctx, Optional<? extends BaseEntity<?>> optionalEntity) {
         if (ctx.isSafePOST()) {
             optionalEntity.ifPresent(entity -> {
-                entity.getDescriptor().getMapper().delete(entity);
-                showDeletedMessage();
+                if (entity.getDescriptor().isComplexDelete()
+                    && Sirius.isFrameworkEnabled(Processes.FRAMEWORK_PROCESSES)) {
+                    Processes processes = globalContext.getPart(Processes.class);
+                    String processId = processes.createProcessForCurrentUser("delete-entity",
+                                                                             NLS.fmtr("BizController.deleteProcessTitle")
+                                                                                .set("entity",
+                                                                                     Strings.limit(entity, 30))
+                                                                                .format(),
+                                                                             "fa-trash",
+                                                                             Collections.emptyMap());
+                    tasks.defaultExecutor().fork(() -> {
+                        processes.execute(processId, process -> {
+                            process.log(ProcessLog.info()
+                                                  .withNLSKey("BizController.startDelete")
+                                                  .withContext("entity", String.valueOf(entity)));
+                            entity.getDescriptor().getMapper().delete(entity);
+                            process.log(ProcessLog.success().withNLSKey("BizController.deleteCompleted"));
+                        });
+                    });
+
+                    UserContext.message(Message.info(NLS.get("BizController.deletingInBackground"))
+                                               .withAction("/ps/" + processId, NLS.get("BizController.deleteProcess")));
+                } else {
+                    entity.getDescriptor().getMapper().delete(entity);
+                    showDeletedMessage();
+                }
             });
         }
     }
@@ -485,3 +522,4 @@ public class BizController extends BasicController {
         return true;
     }
 }
+

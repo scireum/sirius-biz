@@ -57,7 +57,7 @@
 
             <w:navbox labelKey="Model.links">
                 <w:navboxLink icon="fa-info-circle" labelKey="Model.details" url="@apply('/ps/%s', process.getId())" active="page == 'details'"/>
-                <w:navboxLink icon="fa-bars" labelKey="Process.logs" url="@apply('/ps/%s/logs', process.getId())" active="page == 'logs'"/>
+                <w:navboxLink icon="fa-bars" labelKey="ProcessLog.plural" url="@apply('/ps/%s/logs', process.getId())" active="page == 'logs'"/>
 
                 <i:for type="sirius.biz.process.output.ProcessOutput" var="output" items="@process.getOutputs()">
                     <w:navboxLink icon="@output.getIcon()" label="@output.getLabel()"
