@@ -8,8 +8,10 @@
 
 package sirius.biz.tenants;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.hash.Hashing;
 import com.typesafe.config.Config;
 import sirius.biz.model.LoginData;
 import sirius.biz.protocol.AuditLog;
@@ -43,6 +45,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -498,7 +501,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         }
 
         LoginData loginData = account.getUserAccountData().getLogin();
-        if (acceptApiTokens && Strings.areEqual(password, loginData.getApiToken())) {
+        if (acceptApiTokens && checkApiToken(loginData, password)) {
             completeAuditLogForUser(auditLog.neutral("AuditLog.apiTokenLogin"), account);
             return result;
         }
@@ -520,6 +523,40 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                 .log();
 
         return null;
+    }
+
+    protected boolean checkApiToken(LoginData loginData, String givenApiToken) {
+        if (Strings.areEqual(givenApiToken, loginData.getApiToken())) {
+            return true;
+        }
+
+        long currentTimestampInDays = TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis());
+        // Timestamps of tomorrow and yesterday should be valid too, to be more gracefull with nightly scripts utilizing
+        // the apiToken. If midnight passes while execution, the hashed apiToken would be suddenly invalid.
+        for (int i = -1; i <= 1; i++) {
+            long timestampToCheck = currentTimestampInDays + i;
+            if (Strings.areEqual(getHashedApiToken(loginData.getApiToken(), timestampToCheck), givenApiToken)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Creates a md5 hash, using the given apiToken and the timestampInDays.
+     *
+     * @param apiToken        the apiToken
+     * @param timestampInDays the timestampInDays
+     * @return the md5 hash of the apiToken and timestampInDays
+     */
+    protected String getHashedApiToken(String apiToken, long timestampInDays) {
+        return Hashing.md5()
+                      .newHasher()
+                      .putString(apiToken, Charsets.UTF_8)
+                      .putString(String.valueOf(timestampInDays), Charsets.UTF_8)
+                      .hash()
+                      .toString();
     }
 
     protected void completeAuditLogForUser(AuditLog.AuditLogBuilder builder, U account) {
