@@ -61,7 +61,7 @@ public abstract class ProcessCommand implements Command {
      */
     @Nullable
     protected String getIcon(Values args) {
-        return null;
+        return "fa-cogs";
     }
 
     /**
