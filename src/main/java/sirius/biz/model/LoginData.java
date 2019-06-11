@@ -61,6 +61,7 @@ public class LoginData extends Composite {
          * The given password is invalid.
          */
         INVALID
+
     }
 
     /**
