@@ -28,7 +28,6 @@ import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Stores a username and encrypted password along with some trace data to support logins which can be embedded into
@@ -176,9 +175,6 @@ public class LoginData extends Composite {
     @PriorityParts(PasswordHashFunction.class)
     private static List<PasswordHashFunction> hashFunctions;
 
-    @PriorityParts(ApiTokenHashFunction.class)
-    private static List<ApiTokenHashFunction> apiTokenHashFunctions;
-
     @BeforeSave
     protected void autofill() {
         // If there is no password set at all, generate one...
@@ -300,32 +296,6 @@ public class LoginData extends Composite {
         }
 
         return PasswordVerificationResult.INVALID;
-    }
-
-    /**
-     * Check if the given apiToken is correct.
-     *
-     * @param apiToken the apiToken to validate
-     * @return <tt>true</tt> if the apiToken is valid, <tt>false</tt> otherwise
-     */
-    public boolean checkApiToken(String apiToken) {
-        if (Strings.areEqual(apiToken, getApiToken())) {
-            return true;
-        }
-
-        long currentTimestampInDays = TimeUnit.MILLISECONDS.toDays(System.currentTimeMillis());
-        // Timestamps of tomorrow and yesterday should be valid too, to be more gracefull with nightly scripts utilizing
-        // the apiToken. If midnight passes while execution, the hashed apiToken would be suddenly invalid.
-        for (int i = -1; i <= 1; i++) {
-            long timestampToCheck = currentTimestampInDays + i;
-            for (ApiTokenHashFunction hashFunction : apiTokenHashFunctions) {
-                if (Strings.areEqual(hashFunction.computeHash(getApiToken(), timestampToCheck), apiToken)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     /**
