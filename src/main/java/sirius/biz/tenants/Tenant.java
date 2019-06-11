@@ -71,13 +71,6 @@ public interface Tenant<I> extends Transformable, Traced, Journaled, RateLimited
     String getUniqueName();
 
     /**
-     * Returns the version of the entity.
-     *
-     * @return the version of the entity
-     */
-    int getVersion();
-
-    /**
      * Determines if the entity is new (not yet written to the database).
      *
      * @return <tt>true</tt> if the entity has not been written to the database yes, <tt>false</tt> otherwise

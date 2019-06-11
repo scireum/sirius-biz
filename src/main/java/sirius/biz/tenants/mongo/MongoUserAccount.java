@@ -30,7 +30,6 @@ import java.util.function.Consumer;
  * Serveral users are grouped together by their company, which is referred to as {@link Tenant}.
  */
 @Framework(MongoTenants.FRAMEWORK_TENANTS_MONGO)
-@Versioned
 @Index(name = "index_username",
         columns = "userAccountData_login_username",
         columnSettings = Mango.INDEX_ASCENDING,
