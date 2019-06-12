@@ -11,6 +11,7 @@ package sirius.biz.web;
 import sirius.biz.codelists.CodeLists;
 import sirius.biz.isenguard.Isenguard;
 import sirius.biz.jobs.Jobs;
+import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.db.jdbc.Databases;
 import sirius.db.jdbc.OMA;
@@ -56,11 +57,15 @@ public class BizContextExtender implements GlobalContextExtender {
     @Part
     private Isenguard isenguard;
 
+    @Part
+    private Tenants<?, ?, ?> tenantsHelper;
+
     @Override
     public void collectTemplate(BiConsumer<String, Object> globalParameterCollector) {
         globalParameterCollector.accept("codeLists", codeLists);
         globalParameterCollector.accept("jobsService", jobs);
         globalParameterCollector.accept("isenguard", isenguard);
+        globalParameterCollector.accept("tenantsHelper", tenantsHelper);
     }
 
     @Override
