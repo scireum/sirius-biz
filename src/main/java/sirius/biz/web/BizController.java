@@ -25,12 +25,10 @@ import sirius.db.mixing.properties.BaseEntityRefProperty;
 import sirius.db.mixing.properties.BooleanProperty;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
-import sirius.kernel.Sirius;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Values;
-import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -72,7 +70,7 @@ public class BizController extends BasicController {
     protected Elastic elastic;
 
     @Part
-    private GlobalContext globalContext;
+    private Processes processes;
 
     @Part
     private Tasks tasks;
@@ -310,34 +308,35 @@ public class BizController extends BasicController {
     public void deleteEntity(WebContext ctx, Optional<? extends BaseEntity<?>> optionalEntity) {
         if (ctx.isSafePOST()) {
             optionalEntity.ifPresent(entity -> {
-                if (entity.getDescriptor().isComplexDelete()
-                    && Sirius.isFrameworkEnabled(Processes.FRAMEWORK_PROCESSES)) {
-                    Processes processes = globalContext.getPart(Processes.class);
-                    String processId = processes.createProcessForCurrentUser("delete-entity",
-                                                                             NLS.fmtr("BizController.deleteProcessTitle")
-                                                                                .set("entity",
-                                                                                     Strings.limit(entity, 30))
-                                                                                .format(),
-                                                                             "fa-trash",
-                                                                             Collections.emptyMap());
-                    tasks.defaultExecutor().fork(() -> {
-                        processes.execute(processId, process -> {
-                            process.log(ProcessLog.info()
-                                                  .withNLSKey("BizController.startDelete")
-                                                  .withContext("entity", String.valueOf(entity)));
-                            entity.getDescriptor().getMapper().delete(entity);
-                            process.log(ProcessLog.success().withNLSKey("BizController.deleteCompleted"));
-                        });
-                    });
-
-                    UserContext.message(Message.info(NLS.get("BizController.deletingInBackground"))
-                                               .withAction("/ps/" + processId, NLS.get("BizController.deleteProcess")));
+                if (entity.getDescriptor().isComplexDelete() && processes != null) {
+                    deleteComplexEntity(entity);
                 } else {
                     entity.getDescriptor().getMapper().delete(entity);
                     showDeletedMessage();
                 }
             });
         }
+    }
+
+    protected void deleteComplexEntity(BaseEntity<?> entity) {
+        String processId = processes.createProcessForCurrentUser("delete-entity",
+                                                                 NLS.fmtr("BizController.deleteProcessTitle")
+                                                                    .set("entity", Strings.limit(entity, 30))
+                                                                    .format(),
+                                                                 "fa-trash",
+                                                                 Collections.emptyMap());
+        tasks.defaultExecutor().fork(() -> {
+            processes.execute(processId, process -> {
+                process.log(ProcessLog.info()
+                                      .withNLSKey("BizController.startDelete")
+                                      .withContext("entity", String.valueOf(entity)));
+                entity.getDescriptor().getMapper().delete(entity);
+                process.log(ProcessLog.success().withNLSKey("BizController.deleteCompleted"));
+            });
+        });
+
+        UserContext.message(Message.info(NLS.get("BizController.deletingInBackground"))
+                                   .withAction("/ps/" + processId, NLS.get("BizController.deleteProcess")));
     }
 
     /**
