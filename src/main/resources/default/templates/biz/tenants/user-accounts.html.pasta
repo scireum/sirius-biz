@@ -87,7 +87,7 @@
                             @toUserString(account.getUserAccountData().getLogin().getLastLogin())<br>
                             <span class="muted">@account.getUserAccountData().getLogin().getNumberOfLogins()</span>
                         </td>
-                        <td class="col-md-2 align-center">
+                        <td class="align-center">
                             <w:permission permission="permission-select-user-account">
                                 <div>
                                     <a class="link" href="/user-accounts/select/@account.getIdAsString()">
@@ -97,25 +97,28 @@
                                 </div>
                             </w:permission>
                             <w:permission permission="permission-delete-user-accounts">
-                                <w:deleteLink url="@apply('/user-account/%s/delete', account.getIdAsString())"
-                                              page="accounts"/>
+                                <div>
+                                    <w:deleteLink url="@apply('/user-account/%s/delete', account.getIdAsString())"
+                                                  page="accounts"/>
+                                </div>
                             </w:permission>
 
-                            <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
-                                <i class="fa fa-unlock"></i>
-                                <a class="link link-danger"
-                                   href="@apply('/user-account/%s/unlock', account.getIdAsString())">
-                                    @i18n("LoginData.unlock")
-                                </a>
-
-                                <i:else>
-                                    <i class="fa fa-lock"></i>
-                                    <a class="link link-danger"
-                                       href="@apply('/user-account/%s/lock', account.getIdAsString())">
-                                        @i18n("LoginData.lock")
+                            <div>
+                                <i:if test="account.getUserAccountData().getLogin().isAccountLocked()">
+                                    <a class="link link-danger" href="/user-account/@account.getIdAsString()/unlock">
+                                        <i class="fa fa-unlock"></i>
+                                        @i18n("LoginData.unlock")
                                     </a>
-                                </i:else>
-                            </i:if>
+
+                                    <i:else>
+                                        <a class="link link-danger"
+                                           href="/user-account/@account.getIdAsString()/lock">
+                                            <i class="fa fa-lock"></i>
+                                            @i18n("LoginData.lock")
+                                        </a>
+                                    </i:else>
+                                </i:if>
+                            </div>
                         </td>
                     </tr>
                 </i:for>
