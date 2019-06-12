@@ -6,7 +6,7 @@
 <i:pragma name="description" value="Renders the package and upgrades"/>
 
 <div class="row">
-    <w:singleSelect span="12" name="package" labelKey="Packages.packages">
+    <w:singleSelect span="12" name="package" labelKey="PackageData.packageString" optional="true">
         <i:for var="package" items="packages.getPackages(scope)" type="String">
             <option value="@package" @selected="package == packageData.getPackage()">
                 @packages.getPackageName(scope, package)
@@ -14,7 +14,7 @@
         </i:for>
     </w:singleSelect>
 
-    <w:multiSelect span="12" name="upgrades" labelKey="Packages.upgrades">
+    <w:multiSelect span="12" name="upgrades" labelKey="PackageData.upgrades" optional="true">
         <i:for var="upgrade" items="packages.getUpgrades(scope)" type="String">
             <option value="@upgrade" @selected="packageData.getUpgrades().contains(upgrade)">
                 @packages.getUpgradeName(scope, upgrade)
