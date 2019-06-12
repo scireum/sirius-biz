@@ -8,7 +8,6 @@
 
 package sirius.biz.isenguard;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.protocol.AuditLog;
 import sirius.kernel.Sirius;
@@ -21,7 +20,6 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.kernel.settings.Extension;
 import sirius.web.http.Firewall;
-import sirius.web.http.WebContext;
 
 import javax.annotation.Nullable;
 import java.util.List;

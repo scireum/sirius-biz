@@ -24,8 +24,6 @@ import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
-import java.util.Optional;
-
 /**
  * Provides a base class to create the management UI for the job scheduler.
  * <p>
@@ -154,7 +152,7 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
     @Permission(PERMISSION_MANAGE_SCHEDULER)
     @Routed("/jobs/scheduler/entry/:1/delete")
     public void deleteEntry(WebContext ctx, String entryId) {
-        deleteEntity(ctx,getEntryType(), entryId);
+        deleteEntity(ctx, getEntryType(), entryId);
         schedulerEntries(ctx);
     }
 

@@ -24,7 +24,7 @@ import sirius.kernel.di.transformers.Transformable;
  * @param <I> the type used to represent database IDs
  */
 @SuppressWarnings("squid:S1214")
-@Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real enttiy.")
+@Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
 public interface Tenant<I> extends Transformable, Traced, Journaled, RateLimitedEntity {
 
     /**
