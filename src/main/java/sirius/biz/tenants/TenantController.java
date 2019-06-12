@@ -52,6 +52,12 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     public static final String PERMISSION_MANAGE_TENANTS = "permission-manage-tenants";
 
     /**
+     * Contains the scope of packages and upgrades to use.
+     *
+     */
+    public static final String PACKAGE_SCOPE_TENANT = "tenant";
+
+    /**
      * Contains a list of all available features or permission which can be granted to a tenant.
      */
     @ConfigValue("security.tenantPermissions")
