@@ -45,7 +45,17 @@
                     @tenant.getTenantData().getAddress().getZip() @tenant.getTenantData().getAddress().getCity()
                 </td>
                 <td class="col-md-2 align-center">
-                    <w:deleteLink url="@apply('/tenant/%s/delete', tenant.getIdAsString())" page="tenants"/>
+                    <w:permission permission="permission-select-tenant">
+                        <div>
+                            <a class="link" href="/tenants/select/@tenant.getIdAsString()">
+                                <i class="fa fa-building"></i>
+                                @i18n("TenantController.select")
+                            </a>
+                        </div>
+                    </w:permission>
+                    <div>
+                        <w:deleteLink url="@apply('/tenant/%s/delete', tenant.getIdAsString())" page="tenants"/>
+                    </div>
                 </td>
             </tr>
         </i:for>

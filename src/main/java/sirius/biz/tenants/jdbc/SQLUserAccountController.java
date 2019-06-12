@@ -10,6 +10,9 @@ package sirius.biz.tenants.jdbc;
 
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PersonData;
+import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.TenantData;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountController;
 import sirius.biz.tenants.UserAccountData;
@@ -50,8 +53,9 @@ public class SQLUserAccountController extends UserAccountController<Long, SQLTen
     @Override
     protected BasePageHelper<SQLUserAccount, ?, ?, ?> getSelectableUsersAsPage() {
         SmartQuery<SQLUserAccount> baseQuery = oma.select(SQLUserAccount.class)
-                                                  .eq(UserAccount.TENANT, tenants.getRequiredTenant())
                                                   .fields(SQLEntity.ID,
+                                                          UserAccount.TENANT.join(Tenant.TENANT_DATA.inner(TenantData.NAME)),
+                                                          UserAccount.TENANT.join(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)),
                                                           UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                        .inner(PersonData.LASTNAME),
                                                           UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
@@ -63,8 +67,14 @@ public class SQLUserAccountController extends UserAccountController<Long, SQLTen
                                                   .orderAsc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                          .inner(PersonData.FIRSTNAME));
 
+        if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+            baseQuery = baseQuery.eq(UserAccount.TENANT, tenants.getRequiredTenant());
+        }
+
         SQLPageHelper<SQLUserAccount> pageHelper = SQLPageHelper.withQuery(baseQuery);
-        pageHelper.withSearchFields(QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
+        pageHelper.withSearchFields(QueryField.contains(UserAccount.TENANT.join(Tenant.TENANT_DATA.inner(TenantData.NAME))),
+                                    QueryField.contains(UserAccount.TENANT.join(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER))),
+                                    QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                      .inner(PersonData.LASTNAME)),
                                     QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                      .inner(PersonData.FIRSTNAME)),
