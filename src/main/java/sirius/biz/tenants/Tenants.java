@@ -85,9 +85,12 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      */
     @Nonnull
     public U getRequiredUser() {
-        Optional<U> ua = getCurrentUser();
-        if (ua.isPresent()) {
-            return ua.get();
+        return getUserOrThrowException(getCurrentUser());
+    }
+
+    private U getUserOrThrowException(Optional<U> userAccount) {
+        if (userAccount.isPresent()) {
+            return userAccount.get();
         }
         throw Exceptions.handle()
                         .to(BizController.LOG)
@@ -121,9 +124,12 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      */
     @Nonnull
     public T getRequiredTenant() {
-        Optional<T> t = getCurrentTenant();
-        if (t.isPresent()) {
-            return t.get();
+        return getTenantOrThrowException(getCurrentTenant());
+    }
+
+    private T getTenantOrThrowException(Optional<T> tenant) {
+        if (tenant.isPresent()) {
+            return tenant.get();
         }
         throw Exceptions.handle()
                         .to(BizController.LOG)
@@ -254,14 +260,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @return the tenant with the given id
      */
     public T fetchCachedRequiredTenant(String tenantId) {
-        Optional<T> t = fetchCachedTenant(tenantId);
-        if (t.isPresent()) {
-            return t.get();
-        }
-        throw Exceptions.handle()
-                        .to(BizController.LOG)
-                        .withSystemErrorMessage("A tenant of type Tenant was expected but not present!")
-                        .handle();
+        return getTenantOrThrowException(fetchCachedTenant(tenantId));
     }
 
     /**
@@ -303,14 +302,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @return the tenant with the given id
      */
     public T fetchCachedRequiredTenant(BaseEntityRef<I, T> tenantRef) {
-        Optional<T> t = fetchCachedTenant(tenantRef);
-        if (t.isPresent()) {
-            return t.get();
-        }
-        throw Exceptions.handle()
-                        .to(BizController.LOG)
-                        .withSystemErrorMessage("A tenant of type Tenant was expected but not present!")
-                        .handle();
+        return getTenantOrThrowException(fetchCachedTenant(tenantRef));
     }
 
     /**
@@ -348,14 +340,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @return the user account with the given id
      */
     public U fetchCachedRequiredUserAccount(String userId) {
-        Optional<U> u = fetchCachedUserAccount(userId);
-        if (u.isPresent()) {
-            return u.get();
-        }
-        throw Exceptions.handle()
-                        .to(BizController.LOG)
-                        .withSystemErrorMessage("A user of type UserAccount was expected but not present!")
-                        .handle();
+        return getUserOrThrowException(fetchCachedUserAccount(userId));
     }
 
     /**
@@ -409,14 +394,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @return the user account with the given id
      */
     public U fetchCachedRequiredUserAccount(BaseEntityRef<I, U> userRef) {
-        Optional<U> u = fetchCachedUserAccount(userRef);
-        if (u.isPresent()) {
-            return u.get();
-        }
-        throw Exceptions.handle()
-                        .to(BizController.LOG)
-                        .withSystemErrorMessage("A user of type UserAccount was expected but not present!")
-                        .handle();
+        return getUserOrThrowException(fetchCachedUserAccount(userRef));
     }
 
     /**
