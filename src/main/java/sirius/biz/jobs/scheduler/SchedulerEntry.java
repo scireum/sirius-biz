@@ -10,10 +10,13 @@ package sirius.biz.jobs.scheduler;
 
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
+import sirius.kernel.commons.Explain;
 
 /**
  * Describes entities which are handled by the {@link SchedulerController} as well as the {@link JobSchedulerLoop}.
  */
+@SuppressWarnings("squid:S1214")
+@Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
 public interface SchedulerEntry {
 
     /**

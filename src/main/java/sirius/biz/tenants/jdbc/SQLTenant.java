@@ -20,6 +20,7 @@ import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
+import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
@@ -31,6 +32,7 @@ import java.util.TreeSet;
  * Reprensents the JDBC/SQL implementation of {@link Tenant}.
  */
 @Framework(SQLTenants.FRAMEWORK_TENANTS_JDBC)
+@TranslationSource(Tenant.class)
 public class SQLTenant extends BizEntity implements Tenant<Long> {
 
     /**

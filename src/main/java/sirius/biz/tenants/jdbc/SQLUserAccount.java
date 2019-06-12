@@ -14,7 +14,7 @@ import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Index;
-import sirius.db.mixing.annotations.Versioned;
+import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.di.std.Framework;
 import sirius.web.controller.Message;
 
@@ -27,8 +27,8 @@ import java.util.function.Consumer;
  * Serveral users are grouped together by their company, which is referred to as {@link Tenant}.
  */
 @Framework(SQLTenants.FRAMEWORK_TENANTS_JDBC)
-@Versioned
 @Index(name = "index_username", columns = "userAccountData_login_username", unique = true)
+@TranslationSource(UserAccount.class)
 public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, SQLTenant> {
 
     public static final Mapping USER_ACCOUNT_DATA = Mapping.named("userAccountData");

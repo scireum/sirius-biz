@@ -16,6 +16,7 @@ import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
+import sirius.db.mixing.annotations.ComplexDelete;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.types.NestedList;
 import sirius.db.mixing.types.StringIntMap;
@@ -44,6 +45,7 @@ import java.util.stream.Collectors;
  * with or report to their user / tenant.
  */
 @Framework(Processes.FRAMEWORK_PROCESSES)
+@ComplexDelete(false)
 public class Process extends SearchableEntity {
 
     /**

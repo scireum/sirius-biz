@@ -19,6 +19,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
+import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
@@ -31,6 +32,7 @@ import java.util.TreeSet;
  * Reprensents the MongoDB implementation of {@link Tenant}.
  */
 @Framework(MongoTenants.FRAMEWORK_TENANTS_MONGO)
+@TranslationSource(Tenant.class)
 public class MongoTenant extends MongoBizEntity implements Tenant<String> {
 
     /**

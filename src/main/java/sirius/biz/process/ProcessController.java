@@ -263,7 +263,7 @@ public class ProcessController extends BizController {
         ElasticQuery<ProcessLog> query = elastic.select(ProcessLog.class)
                                                 .where(Elastic.FILTERS.notExists(ProcessLog.OUTPUT))
                                                 .eq(ProcessLog.PROCESS, process)
-                                                .orderDesc(ProcessLog.SORT_KEY);
+                                                .orderAsc(ProcessLog.SORT_KEY);
 
         UserInfo user = UserContext.getCurrentUser();
         if (!user.hasPermission(PERMISSION_MANAGE_ALL_PROCESSES)) {

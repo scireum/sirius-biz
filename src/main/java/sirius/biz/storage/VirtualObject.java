@@ -13,6 +13,7 @@ import sirius.db.KeyGenerator;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.BeforeSave;
+import sirius.db.mixing.annotations.ComplexDelete;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
@@ -35,6 +36,7 @@ import java.time.LocalDateTime;
 @Index(name = "temporary_lookup", columns = {"temporary", "trace_changedAt"})
 @Index(name = "cleanup_lookup", columns = {"bucket", "trace_changedAt"})
 @Framework(Storage.FRAMEWORK_STORAGE)
+@ComplexDelete(false)
 public class VirtualObject extends SQLTenantAware implements StoredObject {
 
     /**

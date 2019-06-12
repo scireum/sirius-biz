@@ -77,6 +77,9 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     @Part
     protected AuditLog auditLog;
 
+    @Part
+    private Packages packages;
+
     /**
      * Shows a list of all available users of the current tenant.
      *
@@ -112,9 +115,6 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      * @return the list of available user accounts wrapped as page helper
      */
     protected abstract BasePageHelper<U, ?, ?, ?> getUsersAsPage();
-
-    @Part
-    private Packages packages;
 
     /**
      * Shows an editor for the given account.
@@ -545,7 +545,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             return;
         }
 
-        if (!UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+        if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
             assertTenant(user);
         }
 

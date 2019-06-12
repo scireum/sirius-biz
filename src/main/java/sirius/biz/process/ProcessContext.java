@@ -51,30 +51,6 @@ public interface ProcessContext extends TaskContextAdapter {
     String getTitle();
 
     /**
-     * Logs the given message unless the method is called to frequently.
-     * <p>
-     * This method has an internal rate limit and can therefore be used by loops etc. to report the progress
-     * every now and then.
-     * <p>
-     * A caller can rely on the rate limit and therefore can invoke this method as often as desired. However
-     * one must not rely on any message to be shown.
-     *
-     * @param message the message to add to the logs.
-     */
-    void logLimited(Object message);
-
-    /**
-     * Increments the given performance counter by one and supplies a loop duration in milliseconds.
-     * <p>
-     * The avarage value will be computed for the given counter and gives the user a rough estimate what the current
-     * task is doing.
-     *
-     * @param counter the counter to increment
-     * @param millis  the current duration for the block being counted
-     */
-    void addTiming(String counter, long millis);
-
-    /**
      * Increments the given performance counter by one and supplies a loop duration in milliseconds if the current
      * process has debugging enabled.
      * <p>

@@ -12,6 +12,7 @@ import sirius.biz.jobs.scheduler.JobConfigData;
 import sirius.biz.jobs.scheduler.SchedulerData;
 import sirius.biz.jobs.scheduler.SchedulerEntry;
 import sirius.biz.tenants.mongo.MongoTenantAware;
+import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 
@@ -19,6 +20,7 @@ import sirius.kernel.di.std.Framework;
  * Provides the MongoDB implementation for representing {@link SchedulerEntry scheduler entries}.
  */
 @Framework(MongoSchedulerController.FRAMEWORK_SCHEDULER_MONGO)
+@TranslationSource(SchedulerEntry.class)
 public class MongoSchedulerEntry extends MongoTenantAware implements SchedulerEntry {
 
     private final SchedulerData schedulerData = new SchedulerData();

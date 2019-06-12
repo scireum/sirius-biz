@@ -28,7 +28,7 @@ import sirius.web.security.MessageProvider;
  * @param <T> specifies the effective entity type used to represent Tenants
  */
 @SuppressWarnings("squid:S1214")
-@Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real enttiy.")
+@Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
 public interface UserAccount<I, T extends BaseEntity<I> & Tenant<I>>
         extends Transformable, MessageProvider, Traced, Journaled, TenantAware, RateLimitedEntity {
 
@@ -53,13 +53,6 @@ public interface UserAccount<I, T extends BaseEntity<I> & Tenant<I>>
      * database yet
      */
     String getUniqueName();
-
-    /**
-     * Returns the version of the entity.
-     *
-     * @return the version of the entity
-     */
-    int getVersion();
 
     /**
      * Determines if the entity is new (not yet written to the database).
