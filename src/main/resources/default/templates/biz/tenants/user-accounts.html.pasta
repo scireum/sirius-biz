@@ -29,10 +29,8 @@
                         <span class="muted">@i18n("Model.id")</span>
                     </th>
                     <th>
-                        @i18n("Model.name")
-                    </th>
-                    <th>
-                        @i18n("Model.email")
+                        @i18n("Model.name")<br>
+                        <span class="muted">@i18n("Model.email")</span>
                     </th>
                     <th>
                         @i18n("LoginData.password")<br>
@@ -54,10 +52,8 @@
                             <span class="muted">@account.getIdAsString()</span>
                         </td>
                         <td>
-                            @account.getUserAccountData().getPerson()
-                        </td>
-                        <td>
-                            @account.getUserAccountData().getEmail()
+                            @account.getUserAccountData().getPerson()<br>
+                            <span class="muted">@account.getUserAccountData().getEmail()</span>
                         </td>
                         <td>
                             <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
