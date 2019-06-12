@@ -70,7 +70,7 @@
                 </div>
             </i:if>
 
-            <w:subHeading labelKey="VirtualObject.versions"/>
+            <w:subHeading labelKey="VersionedFile.plural"/>
 
             <w:table data="versions">
                 <thead>
