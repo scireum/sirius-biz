@@ -88,6 +88,14 @@
                             <span class="muted">@account.getUserAccountData().getLogin().getNumberOfLogins()</span>
                         </td>
                         <td class="col-md-2 align-center">
+                            <w:permission permission="permission-select-user-account">
+                                <div>
+                                    <a class="link" href="/user-accounts/select/@account.getIdAsString()">
+                                        <i class="fa fa-user"></i>
+                                        @i18n("UserAccountConroller.select")
+                                    </a>
+                                </div>
+                            </w:permission>
                             <w:permission permission="permission-delete-user-accounts">
                                 <w:deleteLink url="@apply('/user-account/%s/delete', account.getIdAsString())"
                                               page="accounts"/>
