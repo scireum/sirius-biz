@@ -10,7 +10,6 @@ package sirius.biz.web;
 
 import sirius.db.mixing.DateRange;
 import sirius.db.mixing.Mapping;
-import sirius.db.mongo.Mongo;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.MongoQuery;
 import sirius.db.mongo.constraints.MongoConstraint;
@@ -22,7 +21,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Watch;
-import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Facet;
 import sirius.web.controller.FacetItem;
@@ -40,8 +39,8 @@ import java.util.List;
 public class MongoPageHelper<E extends MongoEntity>
         extends BasePageHelper<E, MongoConstraint, MongoQuery<E>, MongoPageHelper<E>> {
 
-    @Part
-    private Mongo mongo;
+    @PriorityParts(MongoPageHelperExtender.class)
+    private static List<MongoPageHelperExtender<?>> extenders;
 
     protected MongoPageHelper(MongoQuery<E> query) {
         super(query);
@@ -223,5 +222,16 @@ public class MongoPageHelper<E extends MongoEntity>
     protected void fillPage(Watch w, Page<E> result, List<E> items) {
         baseQuery.executeFacets();
         super.fillPage(w, result, items);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Page<E> asPage() {
+        for (MongoPageHelperExtender<?> extender : extenders) {
+            if (extender.getTargetType().isAssignableFrom(baseQuery.getDescriptor().getType())) {
+                ((MongoPageHelperExtender<E>) extender).extend(this);
+            }
+        }
+        return super.asPage();
     }
 }

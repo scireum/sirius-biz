@@ -18,11 +18,14 @@ import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
+import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.health.Exceptions;
 import sirius.web.controller.Facet;
+import sirius.web.controller.Page;
 
 import java.sql.SQLException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -32,6 +35,9 @@ import java.util.function.Function;
  */
 public class SQLPageHelper<E extends SQLEntity>
         extends BasePageHelper<E, SQLConstraint, SmartQuery<E>, SQLPageHelper<E>> {
+
+    @PriorityParts(SQLPageHelperExtender.class)
+    private static List<SQLPageHelperExtender<?>> extenders;
 
     protected SQLPageHelper(SmartQuery<E> query) {
         super(query);
@@ -82,5 +88,16 @@ public class SQLPageHelper<E extends SQLEntity>
                 Exceptions.handle(OMA.LOG, e);
             }
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Page<E> asPage() {
+        for (SQLPageHelperExtender<?> extender : extenders) {
+            if (extender.getTargetType().isAssignableFrom(baseQuery.getDescriptor().getType())) {
+                ((SQLPageHelperExtender<E>) extender).extend(this);
+            }
+        }
+        return super.asPage();
     }
 }
