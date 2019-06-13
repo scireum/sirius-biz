@@ -20,6 +20,7 @@ import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -85,14 +86,14 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      */
     @Nonnull
     public U getRequiredUser() {
-        Optional<U> ua = getCurrentUser();
-        if (ua.isPresent()) {
-            return ua.get();
-        }
-        throw Exceptions.handle()
-                        .to(BizController.LOG)
-                        .withSystemErrorMessage("A user of type UserAccount was expected but not present!")
-                        .handle();
+        return getCurrentUser().orElseThrow(this::createMissingUserException);
+    }
+
+    private HandledException createMissingUserException() {
+        return Exceptions.handle()
+                         .to(BizController.LOG)
+                         .withSystemErrorMessage("A user of type UserAccount was expected but not present!")
+                         .handle();
     }
 
     /**
@@ -121,14 +122,14 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      */
     @Nonnull
     public T getRequiredTenant() {
-        Optional<T> t = getCurrentTenant();
-        if (t.isPresent()) {
-            return t.get();
-        }
-        throw Exceptions.handle()
-                        .to(BizController.LOG)
-                        .withSystemErrorMessage("A tenant of type Tenant was expected but not present!")
-                        .handle();
+        return getCurrentTenant().orElseThrow(this::createMissingTenantException);
+    }
+
+    private HandledException createMissingTenantException() {
+        return Exceptions.handle()
+                         .to(BizController.LOG)
+                         .withSystemErrorMessage("A tenant of type Tenant was expected but not present!")
+                         .handle();
     }
 
     /**
@@ -246,6 +247,18 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
     }
 
     /**
+     * Provides access to the tenant with the given id or throws an exception if no tenant is present.
+     * <p>
+     * This utilizes the cache maintained by the {@link TenantUserManager} and is therefore quite efficient.
+     *
+     * @param tenantId the id of the tenant to fetch
+     * @return the tenant with the given id
+     */
+    public T fetchCachedRequiredTenant(String tenantId) {
+        return fetchCachedTenant(tenantId).orElseThrow(this::createMissingTenantException);
+    }
+
+    /**
      * Boilerplate to quickly fetch the name of the tenant with the given id.
      *
      * @param tenantId the tenant to fetch the name for
@@ -258,7 +271,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
     /**
      * Provides access to the tenant stored in the given reference.
      * <p>
-     * This utilizes the cache maintained by the {@link TenantUserManager} and is therefore quite efficient
+     * This utilizes the cache maintained by the {@link TenantUserManager} and is therefore quite efficient.
      *
      * @param tenantRef the reference to read the tenant from
      * @return the tenant with the given id or an empty optional if the tenant cannot be resolved
@@ -276,6 +289,18 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
     }
 
     /**
+     * Provides access to the tenant stored in the given reference or throws an exception if no tenant is present.
+     * <p>
+     * This utilizes the cache maintained by the {@link TenantUserManager} and is therefore quite efficient.
+     *
+     * @param tenantRef the reference to read the tenant from
+     * @return the tenant with the given id
+     */
+    public T fetchCachedRequiredTenant(BaseEntityRef<I, T> tenantRef) {
+        return fetchCachedTenant(tenantRef).orElseThrow(this::createMissingTenantException);
+    }
+
+    /**
      * Boilerplate to quickly fetch the name of the tenant in the given reference.
      *
      * @param tenantRef the reference to read the tenant from
@@ -288,7 +313,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
     /**
      * Provides access to the user account with the given id
      * <p>
-     * This utilizes the cache maintained by the {@link TenantUserManager} and is therefore quite efficient
+     * This utilizes the cache maintained by the {@link TenantUserManager} and is therefore quite efficient.
      *
      * @param userId the id of the user to fetch
      * @return the user account with the given id or an empty optional if the user cannot be resolved
@@ -299,6 +324,18 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
         }
 
         return Optional.ofNullable(getTenantUserManager().fetchAccount(userId));
+    }
+
+    /**
+     * Provides access to the user account with the given id or throws an exception if no user account is present.
+     * <p>
+     * This utilizes the cache maintained by the {@link TenantUserManager} and is therefore quite efficient.
+     *
+     * @param userId the id of the user to fetch
+     * @return the user account with the given id
+     */
+    public U fetchCachedRequiredUserAccount(String userId) {
+        return fetchCachedUserAccount(userId).orElseThrow(this::createMissingUserException);
     }
 
     /**
@@ -314,7 +351,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
     /**
      * Boilerplate to quickly fetch the name of the user with the given id.
      * Uses {@link U#toString()}.
-     * 
+     *
      * @param userId the user to fetch the name for
      * @return the name of the user or an empty string if the user doesn't exist
      */
@@ -340,6 +377,19 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
         }
 
         return fetchCachedUserAccount(String.valueOf(userRef.getId()));
+    }
+
+    /**
+     * Provides access to the user account stored in the given reference or throws an exception if no user account is
+     * present.
+     * <p>
+     * This utilizes the cache maintained by the {@link TenantUserManager} and is therefore quite efficient
+     *
+     * @param userRef the reference to read the user from
+     * @return the user account with the given id
+     */
+    public U fetchCachedRequiredUserAccount(BaseEntityRef<I, U> userRef) {
+        return fetchCachedUserAccount(userRef).orElseThrow(this::createMissingUserException);
     }
 
     /**
