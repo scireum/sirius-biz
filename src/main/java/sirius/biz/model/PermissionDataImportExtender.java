@@ -22,7 +22,7 @@ import java.util.function.BiConsumer;
 
 /**
  * Provides an import extender which uses {@link PermissionData#compilePermissionString(String)} for each
- * {@link PermissionData#PERMISSION_STRING}.
+ * {@link PermissionData#PERMISSIONS}.
  * <p>
  * Additionally, we provide a way to modify the set of roles: By starting the roles list with a "+"
  * (e.g. <tt>+ROLE,ROLE2</tt>) the roles are just added to the already existing set of permissions. Likewise
@@ -37,7 +37,7 @@ public class PermissionDataImportExtender implements EntityImportHandlerExtender
                                ImporterContext context,
                                BiConsumer<Mapping, BiConsumer<Context, Object>> loaderCollector) {
         for (Property property : descriptor.getProperties()) {
-            if (PermissionData.PERMISSION_STRING.getName().equals(property.getField().getName())
+            if (PermissionData.PERMISSIONS.getName().equals(property.getField().getName())
                 && property.getField().getDeclaringClass() == PermissionData.class) {
                 loaderCollector.accept(Mapping.named(property.getName()),
                                        (data, entity) -> loadPermissions(entity, property, data));
@@ -53,6 +53,7 @@ public class PermissionDataImportExtender implements EntityImportHandlerExtender
                           .addAll(PermissionData.compilePermissionString(permissionString.substring(1)));
         } else if (permissionString.startsWith("-")) {
             permissionData.getPermissions()
+                          .modify()
                           .removeAll(PermissionData.compilePermissionString(permissionString.substring(1)));
         } else {
             permissionData.getPermissions().clear();

@@ -248,7 +248,7 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
                 .map(String::trim)
                 .filter(Strings::isFilled)
                 .filter(role -> roles.contains(role))
-                .collect(Lambdas.into(account.getUserAccountData().getPermissions().getPermissions()));
+                .collect(Lambdas.into(account.getUserAccountData().getPermissions().getPermissions().modify()));
 
         if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_GIVEN_NAME))) {
             account.getUserAccountData()
