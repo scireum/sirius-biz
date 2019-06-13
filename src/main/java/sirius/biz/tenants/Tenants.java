@@ -20,6 +20,7 @@ import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -85,17 +86,14 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      */
     @Nonnull
     public U getRequiredUser() {
-        return getUserOrThrowException(getCurrentUser());
+        return getCurrentUser().orElseThrow(this::createMissingUserException);
     }
 
-    private U getUserOrThrowException(Optional<U> userAccount) {
-        if (userAccount.isPresent()) {
-            return userAccount.get();
-        }
-        throw Exceptions.handle()
-                        .to(BizController.LOG)
-                        .withSystemErrorMessage("A user of type UserAccount was expected but not present!")
-                        .handle();
+    private HandledException createMissingUserException() {
+        return Exceptions.handle()
+                         .to(BizController.LOG)
+                         .withSystemErrorMessage("A user of type UserAccount was expected but not present!")
+                         .handle();
     }
 
     /**
@@ -124,17 +122,14 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      */
     @Nonnull
     public T getRequiredTenant() {
-        return getTenantOrThrowException(getCurrentTenant());
+        return getCurrentTenant().orElseThrow(this::createMissingTenantException);
     }
 
-    private T getTenantOrThrowException(Optional<T> tenant) {
-        if (tenant.isPresent()) {
-            return tenant.get();
-        }
-        throw Exceptions.handle()
-                        .to(BizController.LOG)
-                        .withSystemErrorMessage("A tenant of type Tenant was expected but not present!")
-                        .handle();
+    private HandledException createMissingTenantException() {
+        return Exceptions.handle()
+                         .to(BizController.LOG)
+                         .withSystemErrorMessage("A tenant of type Tenant was expected but not present!")
+                         .handle();
     }
 
     /**
@@ -260,7 +255,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @return the tenant with the given id
      */
     public T fetchCachedRequiredTenant(String tenantId) {
-        return getTenantOrThrowException(fetchCachedTenant(tenantId));
+        return fetchCachedTenant(tenantId).orElseThrow(this::createMissingTenantException);
     }
 
     /**
@@ -302,7 +297,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @return the tenant with the given id
      */
     public T fetchCachedRequiredTenant(BaseEntityRef<I, T> tenantRef) {
-        return getTenantOrThrowException(fetchCachedTenant(tenantRef));
+        return fetchCachedTenant(tenantRef).orElseThrow(this::createMissingTenantException);
     }
 
     /**
@@ -340,7 +335,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @return the user account with the given id
      */
     public U fetchCachedRequiredUserAccount(String userId) {
-        return getUserOrThrowException(fetchCachedUserAccount(userId));
+        return fetchCachedUserAccount(userId).orElseThrow(this::createMissingUserException);
     }
 
     /**
@@ -394,7 +389,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @return the user account with the given id
      */
     public U fetchCachedRequiredUserAccount(BaseEntityRef<I, U> userRef) {
-        return getUserOrThrowException(fetchCachedUserAccount(userRef));
+        return fetchCachedUserAccount(userRef).orElseThrow(this::createMissingUserException);
     }
 
     /**
