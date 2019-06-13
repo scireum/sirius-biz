@@ -323,7 +323,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
             return Optional.empty();
         }
 
-        return Optional.ofNullable(getTenantUserManager().fetchAccount(userId));
+        return Optional.ofNullable(getTenantUserManager().fetchAccount(Mixing.getUniqueName(getUserClass(), userId)));
     }
 
     /**
@@ -376,7 +376,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
             return Optional.of(userRef.getValue());
         }
 
-        return fetchCachedUserAccount(String.valueOf(userRef.getId()));
+        return fetchCachedUserAccount(userRef.getUniqueObjectName());
     }
 
     /**
