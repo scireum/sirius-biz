@@ -755,15 +755,15 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     }
 
     @Override
-    protected Set<String> computeRoles(WebContext ctx, String userId) {
-        Tuple<Set<String>, String> cachedRoles = rolesCache.get(userId);
+    protected Set<String> computeRoles(WebContext ctx, String accountUniqueName) {
+        Tuple<Set<String>, String> cachedRoles = rolesCache.get(accountUniqueName);
         if (cachedRoles != null) {
             return cachedRoles.getFirst();
         }
 
-        U user = fetchAccount(userId);
+        U user = fetchAccount(accountUniqueName);
         if (user == null) {
-            rolesCache.put(userId, Tuple.create(Collections.emptySet(), null));
+            rolesCache.put(accountUniqueName, Tuple.create(Collections.emptySet(), null));
             return Collections.emptySet();
         }
 
@@ -771,7 +771,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                                          user.getTenant().getValue(),
                                          Strings.areEqual(systemTenant, String.valueOf(user.getTenant().getId())));
 
-        rolesCache.put(userId, Tuple.create(roles, user.getTenant().getUniqueObjectName()));
+        rolesCache.put(accountUniqueName, Tuple.create(roles, user.getTenant().getUniqueObjectName()));
         return roles;
     }
 

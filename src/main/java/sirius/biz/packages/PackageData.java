@@ -37,7 +37,7 @@ public class PackageData extends Composite {
      */
     public static final Mapping PACKAGE_STRING = Mapping.named("packageString");
     @NullAllowed
-    @Length(4096)
+    @Length(50)
     private String packageString;
 
     /**

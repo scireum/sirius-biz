@@ -59,6 +59,8 @@
                 <w:rateLimitBox>
                     <w:rateLimitsPerType type="tenant" scope="tenant.getIdAsString()" />
                 </w:rateLimitBox>
+
+                <a href="/tenants" class="btn btn-block">@i18n("NLS.back")</a>
             </div>
         </i:if>
         <div class="@if (tenant.isNew()) { col-md-12 } else { col-md-9 }">
