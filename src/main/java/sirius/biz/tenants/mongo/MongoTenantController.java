@@ -58,7 +58,9 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
 
     private MongoQuery<MongoTenant> queryPossibleTenants(MongoTenant currentTenant) {
         MongoQuery<MongoTenant> baseQuery = mango.select(MongoTenant.class);
-        if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+        
+        TenantUserManager<?, ?, ?> userManager = tenants.getTenantUserManager();
+        if (!userManager.getSystemTenantId().equals(userManager.getOriginalTenantId())) {
             if (currentTenant.getTenantData().isCanAccessParent()) {
                 baseQuery.where(QueryBuilder.FILTERS.or(QueryBuilder.FILTERS.and(QueryBuilder.FILTERS.eq(Tenant.PARENT,
                                                                                                          currentTenant),
