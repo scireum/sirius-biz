@@ -113,7 +113,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             for (Tuple<String, String> t : incident.getMDC()) {
                 si.getMdc().put(t.getFirst(), t.getSecond());
             }
-            si.setUser(UserContext.getCurrentUser().getUserName());
+            si.setUser(UserContext.getCurrentUser().getProtocolUsername());
             si.setMessage(incident.getException().getMessage());
             si.setStack(NLS.toUserString(incident.getException()));
             si.setCategory(incident.getCategory());
@@ -142,7 +142,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             msg.setLevel(message.getLogLevel().toString());
             msg.setMessage(message.getMessage());
             msg.setNode(CallContext.getNodeName());
-            msg.setUser(UserContext.getCurrentUser().getUserName());
+            msg.setUser(UserContext.getCurrentUser().getProtocolUsername());
 
             autoBatch.insertAsync(msg);
         } catch (Exception e) {

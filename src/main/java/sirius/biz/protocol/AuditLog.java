@@ -74,7 +74,7 @@ public class AuditLog implements Initializable {
         @CheckReturnValue
         public AuditLogBuilder forCurrentUser() {
             UserInfo user = UserContext.getCurrentUser();
-            return forUser(user.getUserId(), user.getUserName()).forTenant(user.getTenantId(), user.getTenantName());
+            return forUser(user.getUserId(), user.getProtocolUsername()).forTenant(user.getTenantId(), user.getTenantName());
         }
 
         /**
@@ -100,7 +100,7 @@ public class AuditLog implements Initializable {
         @CheckReturnValue
         public AuditLogBuilder causedByCurrentUser() {
             UserInfo user = UserContext.getCurrentUser();
-            return causedByUser(user.getUserId(), user.getUserName());
+            return causedByUser(user.getUserId(), user.getProtocolUsername());
         }
 
         /**

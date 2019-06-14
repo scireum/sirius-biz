@@ -103,7 +103,7 @@ public class TraceData extends Composite {
     protected void update() {
         if (!silent) {
             if (createdAt == null) {
-                createdBy = Strings.limit(UserContext.getCurrentUser().getUserName(), 50);
+                createdBy = Strings.limit(UserContext.getCurrentUser().getProtocolUsername(), 50);
                 createdAt = LocalDateTime.now();
                 createdIn = Strings.limit(TaskContext.get().getSystemString(), 150);
                 createdOn = Strings.limit(CallContext.getNodeName(), 50);

@@ -98,7 +98,7 @@ public class JournalData extends Composite {
             entry.setTargetType(Mixing.getNameForType(entity.getClass()));
             entry.setSubsystem(TaskContext.get().getSystemString());
             entry.setUserId(UserContext.getCurrentUser().getUserId());
-            entry.setUsername(UserContext.getCurrentUser().getUserName());
+            entry.setUsername(UserContext.getCurrentUser().getProtocolUsername());
             elastic.update(entry);
         } catch (Exception e) {
             Exceptions.handle(Elastic.LOG, e);

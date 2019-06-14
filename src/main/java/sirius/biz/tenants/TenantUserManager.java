@@ -33,7 +33,6 @@ import sirius.kernel.settings.Extension;
 import sirius.web.http.WebContext;
 import sirius.web.security.GenericUserManager;
 import sirius.web.security.ScopeInfo;
-import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 import sirius.web.security.UserManager;
 import sirius.web.security.UserSettings;
@@ -48,6 +47,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -227,7 +227,11 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         if (rootUser.hasPermission(PERMISSION_SYSTEM_TENANT)) {
             extraRoles.add(PERMISSION_SYSTEM_TENANT);
         }
-        return asUser(spyUser, extraRoles);
+        return asUser(spyUser,
+                      extraRoles,
+                      () -> Strings.apply("%s - %s",
+                                          computeUsername(null, rootUser.getUserId()),
+                                          computeTenantname(null, rootUser.getTenantId())));
     }
 
     @Override
@@ -249,7 +253,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         Set<String> roles = computeRoles(modifiedUser, tenant, originalUser.hasPermission(PERMISSION_SYSTEM_TENANT));
         roles.add(PERMISSION_SPY_USER);
         roles.add(PERMISSION_SELECT_TENANT);
-        return asUserWithRoles(modifiedUser, roles);
+        return asUserWithRoles(modifiedUser, roles, () -> computeTenantname(null, originalUser.getTenantId()));
     }
 
     protected U cloneUser(UserInfo originalUser) {
@@ -355,7 +359,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
         }
 
-        return asUser(account, null);
+        return asUser(account, null, null);
     }
 
     @SuppressWarnings({"unchecked", "RedundantCast"})
@@ -384,7 +388,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         if (account == null) {
             return null;
         }
-        return asUser(account, null);
+        return asUser(account, null, null);
     }
 
     @Nonnull
@@ -485,17 +489,17 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return (U) mixing.getDescriptor(getUserClass()).getMapper().resolve(accountId).orElse(null);
     }
 
-    protected UserInfo asUser(U account, List<String> extraRoles) {
+    protected UserInfo asUser(U account, List<String> extraRoles, @Nullable Supplier<String> appendixSupplier) {
         Set<String> roles = computeRoles(null, account.getUniqueName());
         if (extraRoles != null) {
             // Make a copy so that we do not modify the cached set...
             roles = Sets.newTreeSet(roles);
             roles.addAll(extraRoles);
         }
-        return asUserWithRoles(account, roles);
+        return asUserWithRoles(account, roles, appendixSupplier);
     }
 
-    private UserInfo asUserWithRoles(U account, Set<String> roles) {
+    private UserInfo asUserWithRoles(U account, Set<String> roles, @Nullable Supplier<String> appendixSupplier) {
         return UserInfo.Builder.createUser(account.getUniqueName())
                                .withUsername(account.getUserAccountData().getLogin().getUsername())
                                .withTenantId(String.valueOf(account.getTenant().getId()))
@@ -504,6 +508,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                                .withPermissions(roles)
                                .withSettingsSupplier(ui -> getUserSettings(getScopeSettings(), ui))
                                .withUserSupplier(u -> account)
+                               .withNameAppendixSupplier(appendixSupplier)
                                .build();
     }
 
@@ -871,42 +876,5 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return Strings.firstFilled(userAccount.getUserAccountData().getLang(),
                                    userAccount.getTenant().getValue().getTenantData().getLang(),
                                    NLS.getDefaultLanguage());
-    }
-
-    /**
-     * Returns a name for the current user to be used in system protocols like {@link sirius.biz.protocol.TraceData} or {@link sirius.biz.protocol.JournalData}
-     * In addition to the normal user name, this name may be appended by the original user or tenant name if the current user is a spy user.
-     *
-     * @return the name of the current user with additional info in case of a spy user
-     */
-    public String computeCurrentUserProtocolName() {
-        if (isCurrentlySpyUser()) {
-            return Strings.apply("%s (%s - %s)",
-                                 computeUsername(null, UserContext.getCurrentUser().getUserId()),
-                                 computeUsername(null, getOriginalUserId()),
-                                 computeTenantname(null, getOriginalTenantId()));
-        }
-        if (isCurrentlySpyTenant()) {
-            return Strings.apply("%s (%s)",
-                                 computeUsername(null, UserContext.getCurrentUser().getUserId()),
-                                 computeTenantname(null, getOriginalTenantId()));
-        }
-
-        return computeUsername(null, UserContext.getCurrentUser().getUserId());
-    }
-
-    private boolean isCurrentlySpyUser() {
-        return CallContext.getCurrent()
-                          .get(WebContext.class)
-                          .getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX)
-                          .isFilled();
-    }
-
-    private boolean isCurrentlySpyTenant() {
-        return CallContext.getCurrent()
-                          .get(WebContext.class)
-                          .getSessionValue(UserContext.getCurrentScope().getScopeId()
-                                           + TenantUserManager.TENANT_SPY_ID_SUFFIX)
-                          .isFilled();
     }
 }
