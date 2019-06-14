@@ -1,4 +1,5 @@
 <i:arg name="userAccount" type="sirius.biz.tenants.UserAccount"/>
+<i:arg name="controller" type="sirius.biz.tenants.UserAccountController"/>
 
 <w:page titleKey="ProfileController.myProfile">
     <w:pageHeader titleKey="ProfileController.userProfile"/>
@@ -68,6 +69,16 @@
                                  name="userAccountData_person_lastname"
                                  value="@userAccount.getUserAccountData().getPerson().getLastname()"
                                  labelKey="PersonData.lastname"/>
+                </div>
+                <div class="row">
+                    <w:singleSelect name="userAccountData_lang" labelKey="Model.lang" required="true">
+                        <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
+                            <option value="@language.getFirst()"
+                                    @selected="language.getFirst() == userAccount.getUserAccountData().getLang()">
+                                @language.getSecond()
+                            </option>
+                        </i:for>
+                    </w:singleSelect>
                 </div>
             </div>
             <div class="col-md-4">
