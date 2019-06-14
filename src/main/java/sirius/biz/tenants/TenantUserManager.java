@@ -255,6 +255,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             U currentUser = originalUser.getUserObject(getUserClass());
             U modifiedUser = getUserClass().getDeclaredConstructor().newInstance();
             modifiedUser.setId(currentUser.getId());
+            modifiedUser.getUserAccountData().setLang(currentUser.getUserAccountData().getLang());
             modifiedUser.getUserAccountData()
                         .getLogin()
                         .setUsername(currentUser.getUserAccountData().getLogin().getUsername());
@@ -469,7 +470,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                                .withUsername(account.getUserAccountData().getLogin().getUsername())
                                .withTenantId(String.valueOf(account.getTenant().getId()))
                                .withTenantName(account.getTenant().getValue().getTenantData().getName())
-                               .withLang(NLS.getDefaultLanguage())
+                               .withLang(computeLang(null, account.getUniqueName()))
                                .withPermissions(roles)
                                .withSettingsSupplier(ui -> getUserSettings(getScopeSettings(), ui))
                                .withUserSupplier(u -> account)
