@@ -17,6 +17,7 @@ import sirius.biz.model.LoginData;
 import sirius.biz.protocol.AuditLog;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
+import sirius.kernel.async.CallContext;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
@@ -32,6 +33,7 @@ import sirius.kernel.settings.Extension;
 import sirius.web.http.WebContext;
 import sirius.web.security.GenericUserManager;
 import sirius.web.security.ScopeInfo;
+import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 import sirius.web.security.UserManager;
 import sirius.web.security.UserSettings;
@@ -300,6 +302,34 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
      */
     public String getOriginalTenantId(WebContext ctx) {
         return ctx.getSessionValue(this.scope.getScopeId() + "-tenant-id").asString();
+    }
+
+    /**
+     * Determines the original tenant ID of the current request.
+     *
+     * @return the original tenant id of the currently active user (without spy overwrites)
+     */
+    public String getOriginalTenantId() {
+        return getOriginalTenantId(CallContext.getCurrent().get(WebContext.class));
+    }
+
+    /**
+     * Determines the original user ID.
+     *
+     * @param ctx the current web request
+     * @return the original user id of the currently active user (without spy overwrites)
+     */
+    public String getOriginalUserId(WebContext ctx) {
+        return ctx.getSessionValue(this.scope.getScopeId() + "-user-id").asString();
+    }
+
+    /**
+     * Determines the original user ID of the current request.
+     *
+     * @return the original user id of the currently active user (without spy overwrites)
+     */
+    public String getOriginalUserId() {
+        return getOriginalUserId(CallContext.getCurrent().get(WebContext.class));
     }
 
     @Override
@@ -841,5 +871,42 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return Strings.firstFilled(userAccount.getUserAccountData().getLang(),
                                    userAccount.getTenant().getValue().getTenantData().getLang(),
                                    NLS.getDefaultLanguage());
+    }
+
+    /**
+     * Returns a name for the current user to be used in system protocols like {@link sirius.biz.protocol.TraceData} or {@link sirius.biz.protocol.JournalData}
+     * In addition to the normal user name, this name may be appended by the original user or tenant name if the current user is a spy user.
+     *
+     * @return the name of the current user with additional info in case of a spy user
+     */
+    public String computeCurrentUserProtocolName() {
+        if (isCurrentlySpyUser()) {
+            return Strings.apply("%s (%s - %s)",
+                                 computeUsername(null, UserContext.getCurrentUser().getUserId()),
+                                 computeUsername(null, getOriginalUserId()),
+                                 computeTenantname(null, getOriginalTenantId()));
+        }
+        if (isCurrentlySpyTenant()) {
+            return Strings.apply("%s (%s)",
+                                 computeUsername(null, UserContext.getCurrentUser().getUserId()),
+                                 computeTenantname(null, getOriginalTenantId()));
+        }
+
+        return computeUsername(null, UserContext.getCurrentUser().getUserId());
+    }
+
+    private boolean isCurrentlySpyUser() {
+        return CallContext.getCurrent()
+                          .get(WebContext.class)
+                          .getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX)
+                          .isFilled();
+    }
+
+    private boolean isCurrentlySpyTenant() {
+        return CallContext.getCurrent()
+                          .get(WebContext.class)
+                          .getSessionValue(UserContext.getCurrentScope().getScopeId()
+                                           + TenantUserManager.TENANT_SPY_ID_SUFFIX)
+                          .isFilled();
     }
 }
