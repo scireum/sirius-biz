@@ -17,6 +17,7 @@ import sirius.biz.model.LoginData;
 import sirius.biz.protocol.AuditLog;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
+import sirius.kernel.async.CallContext;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
@@ -46,6 +47,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -225,7 +227,11 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         if (rootUser.hasPermission(PERMISSION_SYSTEM_TENANT)) {
             extraRoles.add(PERMISSION_SYSTEM_TENANT);
         }
-        return asUser(spyUser, extraRoles);
+        return asUser(spyUser,
+                      extraRoles,
+                      () -> Strings.apply("%s - %s",
+                                          computeUsername(null, rootUser.getUserId()),
+                                          computeTenantname(null, rootUser.getTenantId())));
     }
 
     @Override
@@ -247,7 +253,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         Set<String> roles = computeRoles(modifiedUser, tenant, originalUser.hasPermission(PERMISSION_SYSTEM_TENANT));
         roles.add(PERMISSION_SPY_USER);
         roles.add(PERMISSION_SELECT_TENANT);
-        return asUserWithRoles(modifiedUser, roles);
+        return asUserWithRoles(modifiedUser, roles, () -> computeTenantname(null, originalUser.getTenantId()));
     }
 
     protected U cloneUser(UserInfo originalUser) {
@@ -302,6 +308,34 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return ctx.getSessionValue(this.scope.getScopeId() + "-tenant-id").asString();
     }
 
+    /**
+     * Determines the original tenant ID of the current request.
+     *
+     * @return the original tenant id of the currently active user (without spy overwrites)
+     */
+    public String getOriginalTenantId() {
+        return getOriginalTenantId(CallContext.getCurrent().get(WebContext.class));
+    }
+
+    /**
+     * Determines the original user ID.
+     *
+     * @param ctx the current web request
+     * @return the original user id of the currently active user (without spy overwrites)
+     */
+    public String getOriginalUserId(WebContext ctx) {
+        return ctx.getSessionValue(this.scope.getScopeId() + "-user-id").asString();
+    }
+
+    /**
+     * Determines the original user ID of the current request.
+     *
+     * @return the original user id of the currently active user (without spy overwrites)
+     */
+    public String getOriginalUserId() {
+        return getOriginalUserId(CallContext.getCurrent().get(WebContext.class));
+    }
+
     @Override
     public UserInfo findUserByName(@Nullable WebContext ctx, String user) {
         if (Strings.isEmpty(user)) {
@@ -325,7 +359,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
         }
 
-        return asUser(account, null);
+        return asUser(account, null, null);
     }
 
     @SuppressWarnings({"unchecked", "RedundantCast"})
@@ -354,7 +388,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         if (account == null) {
             return null;
         }
-        return asUser(account, null);
+        return asUser(account, null, null);
     }
 
     @Nonnull
@@ -455,17 +489,17 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return (U) mixing.getDescriptor(getUserClass()).getMapper().resolve(accountId).orElse(null);
     }
 
-    protected UserInfo asUser(U account, List<String> extraRoles) {
+    protected UserInfo asUser(U account, List<String> extraRoles, @Nullable Supplier<String> appendixSupplier) {
         Set<String> roles = computeRoles(null, account.getUniqueName());
         if (extraRoles != null) {
             // Make a copy so that we do not modify the cached set...
             roles = Sets.newTreeSet(roles);
             roles.addAll(extraRoles);
         }
-        return asUserWithRoles(account, roles);
+        return asUserWithRoles(account, roles, appendixSupplier);
     }
 
-    private UserInfo asUserWithRoles(U account, Set<String> roles) {
+    private UserInfo asUserWithRoles(U account, Set<String> roles, @Nullable Supplier<String> appendixSupplier) {
         return UserInfo.Builder.createUser(account.getUniqueName())
                                .withUsername(account.getUserAccountData().getLogin().getUsername())
                                .withTenantId(String.valueOf(account.getTenant().getId()))
@@ -474,6 +508,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                                .withPermissions(roles)
                                .withSettingsSupplier(ui -> getUserSettings(getScopeSettings(), ui))
                                .withUserSupplier(u -> account)
+                               .withNameAppendixSupplier(appendixSupplier)
                                .build();
     }
 

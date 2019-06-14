@@ -55,6 +55,7 @@ public class TenantsHelper {
 
         UserContext.get()
                    .setCurrentUser(((SQLTenantUserManager) UserContext.get().getUserManager()).asUser(getTestUser(),
+                                                                                                      null,
                                                                                                       null));
     }
 
