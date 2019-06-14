@@ -143,7 +143,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                                                                                         accessiblePermissions::contains,
                                                                                         userAccount.getUserAccountData()
                                                                                                    .getPermissions()
-                                                                                                   .getPermissions());
+                                                                                                   .getPermissions()
+                                                                                                   .modify());
                                                  })
                                                  .saveEntity(userAccount);
 

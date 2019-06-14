@@ -265,7 +265,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             modifiedUser.getUserAccountData()
                         .getPermissions()
                         .getPermissions()
-                        .addAll(currentUser.getUserAccountData().getPermissions().getPermissions());
+                        .addAll(currentUser.getUserAccountData().getPermissions().getPermissions().modify());
             return modifiedUser;
         } catch (Exception e) {
             throw Exceptions.handle(Log.APPLICATION, e);
@@ -730,7 +730,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     private Set<String> computeRoles(U user, T tenant, boolean isSystemTenant) {
         Set<String> roles = Sets.newTreeSet();
         roles.add(UserInfo.PERMISSION_LOGGED_IN);
-        roles.addAll(user.getUserAccountData().getPermissions().getPermissions());
+        roles.addAll(user.getUserAccountData().getPermissions().getPermissions().modify());
         roles.addAll(tenant.getTenantData().getPackageData().computeCombinedPermissions());
 
         if (Strings.isFilled(tenant.getTenantData().getAccountNumber())) {

@@ -16,11 +16,11 @@ import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
+import sirius.db.mixing.types.StringList;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
 
@@ -41,14 +41,14 @@ public class PermissionData extends Composite {
     private final BaseEntity<?> parent;
 
     /**
-     * Contains all permissions as a single string, separated with commas.
+     * Contains all permissions.
      */
-    public static final Mapping PERMISSION_STRING = Mapping.named("permissionString");
+    public static final Mapping PERMISSIONS = Mapping.named("permissions");
     @Autoloaded
     @NullAllowed
     @AutoImport
     @Length(4096)
-    private String permissionString;
+    private final StringList permissions = new StringList();
 
     /**
      * Contains a custom configuration which is added to the config of the current {@link
@@ -59,9 +59,6 @@ public class PermissionData extends Composite {
     @NullAllowed
     @Lob
     private String configString;
-
-    @Transient
-    private Set<String> permissions;
 
     @Transient
     private Config config;
@@ -82,11 +79,7 @@ public class PermissionData extends Composite {
      *
      * @return the set of granted permissions
      */
-    public Set<String> getPermissions() {
-        if (permissions == null) {
-            permissions = compilePermissionString(permissionString);
-        }
-
+    public StringList getPermissions() {
         return permissions;
     }
 
@@ -155,10 +148,5 @@ public class PermissionData extends Composite {
     public void setConfigString(String configString) {
         this.configString = configString;
         this.config = null;
-    }
-
-    @BeforeSave
-    protected void updatePermissionString() {
-        permissionString = Strings.join(getPermissions(), ",");
     }
 }
