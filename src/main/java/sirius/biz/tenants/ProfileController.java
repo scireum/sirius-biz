@@ -43,6 +43,9 @@ public class ProfileController<I, T extends BaseEntity<I> & Tenant<I>, U extends
     @ConfigValue("product.wondergemRoot")
     protected String wondergemRoot;
 
+    @Part
+    private UserAccountController<?, ?, ?> userAccountController;
+
     /**
      * Shows a page where an account can change the user informations, e.g. mail, name, ...
      *
@@ -58,7 +61,7 @@ public class ProfileController<I, T extends BaseEntity<I> & Tenant<I>, U extends
         boolean requestHandled = prepareSave(ctx).saveEntity(userAccount);
 
         if (!requestHandled) {
-            ctx.respondWith().template("/templates/biz/tenants/profile.html.pasta", userAccount);
+            ctx.respondWith().template("/templates/biz/tenants/profile.html.pasta", userAccount, userAccountController);
         }
     }
 
