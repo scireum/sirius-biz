@@ -11,7 +11,6 @@ package sirius.biz.tenants.mongo;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantController;
 import sirius.biz.tenants.TenantData;
-import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.MongoPageHelper;
 import sirius.db.mixing.query.QueryField;
@@ -58,9 +57,8 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
 
     private MongoQuery<MongoTenant> queryPossibleTenants(MongoTenant currentTenant) {
         MongoQuery<MongoTenant> baseQuery = mango.select(MongoTenant.class);
-        
-        TenantUserManager<?, ?, ?> userManager = tenants.getTenantUserManager();
-        if (!userManager.getSystemTenantId().equals(userManager.getOriginalTenantId())) {
+
+        if (!isUserAccountOfSystemTenant()) {
             if (currentTenant.getTenantData().isCanAccessParent()) {
                 baseQuery.where(QueryBuilder.FILTERS.or(QueryBuilder.FILTERS.and(QueryBuilder.FILTERS.eq(Tenant.PARENT,
                                                                                                          currentTenant),

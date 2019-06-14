@@ -545,9 +545,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             selectUserAccounts(ctx);
             return;
         }
-        
-        TenantUserManager<?, ?, ?> userManager = tenants.getTenantUserManager();
-        if (!userManager.getSystemTenantId().equals(userManager.getOriginalTenantId())) {
+
+        if (!isUserAccountOfSystemTenant()) {
             assertTenant(user);
         }
 
