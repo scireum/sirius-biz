@@ -64,7 +64,7 @@ public class SQLTenantController extends TenantController<Long, SQLTenant, SQLUs
 
     private SmartQuery<SQLTenant> queryPossibleTenants(SQLTenant currentTenant) {
         SmartQuery<SQLTenant> baseQuery = oma.select(SQLTenant.class);
-        if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+        if (!isUserAccountOfSystemTenant()) {
             if (currentTenant.getTenantData().isCanAccessParent()) {
                 baseQuery.where(OMA.FILTERS.or(OMA.FILTERS.and(OMA.FILTERS.eq(Tenant.PARENT, currentTenant),
                                                                OMA.FILTERS.eq(Tenant.TENANT_DATA.inner(TenantData.PARENT_CAN_ACCESS),

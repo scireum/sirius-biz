@@ -546,7 +546,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             return;
         }
 
-        if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+        if (!isUserAccountOfSystemTenant()) {
             assertTenant(user);
         }
 
