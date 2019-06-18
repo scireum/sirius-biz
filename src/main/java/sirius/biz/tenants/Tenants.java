@@ -376,7 +376,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
             return Optional.of(userRef.getValue());
         }
 
-        return fetchCachedUserAccount(userRef.getUniqueObjectName());
+        return fetchCachedUserAccount(userRef.getIdAsString());
     }
 
     /**
