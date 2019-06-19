@@ -47,7 +47,9 @@
 
                 <w:navbox labelKey="Model.links">
                     <w:navboxLink labelKey="Model.details" url="@apply('/user-account/%s', account.getIdAsString())" active="page == 'details'"/>
-                    <w:navboxLink labelKey="Model.config" url="@apply('/user-account/%s/config', account.getIdAsString())" active="page == 'config'"/>
+                    <w:permission permission="feature-user-account-config">
+                        <w:navboxLink labelKey="Model.config" url="@apply('/user-account/%s/config', account.getIdAsString())" active="page == 'config'"/>
+                    </w:permission>
 
                     <i:extensions name="templates-user-account-sidebar-menu" account="account" page="page"/>
                 </w:navbox>

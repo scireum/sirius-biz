@@ -13,7 +13,6 @@
     <div class="row">
         <div class="col-md-3">
             <w:filterbox page="accounts" baseUrl="/user-accounts"/>
-
             <w:jobs target="accountType"/>
             <i:extensions name="templates-user-accounts-sidebar" page="accounts" />
         </div>
@@ -28,7 +27,7 @@
                     <i:extensions name="templates-user-accounts-table" page="accounts" position="'first-column-head'" />
                     <th>
                         @i18n("LoginData.username")<br>
-                        <span class="muted">@i18n("Model.id")</span>
+                        <small class="muted"> @i18n("LoginData.lastLogin") (@i18n("LoginData.numberOfLogins"))</small>
                     </th>
                     <th>
                         @i18n("Model.name")<br>
@@ -38,10 +37,6 @@
                         @i18n("LoginData.password")<br>
                         <span class="muted">@i18n("LoginData.generatedPassword")</span>
                     </th>
-                    <th class="align-right">
-                        @i18n("LoginData.lastLogin")<br>
-                        <span class="muted">@i18n("LoginData.numberOfLogins")</span>
-                    </th>
 
                     <i:extensions name="templates-user-accounts-table" page="accounts" position="'last-column-head'" />
                     <th/>
@@ -50,10 +45,18 @@
                 <tbody>
                 <i:for type="sirius.biz.tenants.UserAccount" var="account" items="accounts.getItems()">
                     <tr @if (account.getUserAccountData().getLogin().isAccountLocked()) { class="warning" }>
+                        <i:extensions name="templates-user-accounts-table" page="accounts" account="account" position="'first-column'" />
                         <td>
                             <a class="link"
-                               href="/user-account/@account.getIdAsString()">@account.getUserAccountData().getLogin().getUsername()</a><br>
-                            <span class="muted">@account.getIdAsString()</span>
+                               href="/user-account/@account.getIdAsString()">@account.getUserAccountData().getLogin().getUsername()</a>
+                            <br>
+                            <small class="muted">
+                                <i:if test="account.getUserAccountData().getLogin().getLastLogin() != null">
+                                    @toSpokenDate(account.getUserAccountData().getLogin().getLastLogin().toLocalDate())
+                                     (@account.getUserAccountData().getLogin().getNumberOfLogins())
+                                    <i:else>-</i:else>
+                                </i:if>
+                            </small>
                         </td>
                         <td>
                             @account.getUserAccountData().getPerson()<br>
@@ -61,6 +64,11 @@
                         </td>
                         <td>
                             <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
+                                <a href="@accounts.linkToCurrentPage(apply('/user-account/%s/generate-password', account.getIdAsString()))"
+                                   class="link">
+                                    <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generate")
+                                </a>
+                                <br>
                                 <i:if test="@account.getUserAccountData().canSendGeneratedPassword()">
                                     <a href="@accounts.linkToCurrentPage(apply('/user-account/%s/generate-and-send-password', account.getIdAsString()))"
                                        class="link">
@@ -69,12 +77,6 @@
                                     </a>
                                     <br>
                                 </i:if>
-
-                                <a href="@accounts.linkToCurrentPage(apply('/user-account/%s/generate-password', account.getIdAsString()))"
-                                   class="link">
-                                    <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generate")
-                                </a>
-                                <br>
                             </i:if>
 
                             <i:if test="@account.getUserAccountData().getLogin().isDisplayGeneratedPassword()">
@@ -86,10 +88,6 @@
                                     </i:if>
                                 </i:else>
                             </i:if>
-                        </td>
-                        <td class="align-right">
-                            @toUserString(account.getUserAccountData().getLogin().getLastLogin())<br>
-                            <span class="muted">@account.getUserAccountData().getLogin().getNumberOfLogins()</span>
                         </td>
                         <i:extensions name="templates-user-accounts-table" page="accounts" account="account" position="'last-column'" />
                         <td class="align-center">
@@ -124,6 +122,7 @@
                                     </i:else>
                                 </i:if>
                             </div>
+                            <i:extensions name="templates-user-accounts-table" page="accounts" account="account" position="'actions'" />
                         </td>
                     </tr>
                 </i:for>
