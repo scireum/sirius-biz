@@ -36,6 +36,9 @@
         </i:for>
     </w:singleSelect>
 </div>
+
+<i:extensions name="templates-user-account-details" account="account"/>
+
 <div class="row">
     <div class="col-md-6">
         <w:heading labelKey="Model.security"/>
@@ -66,5 +69,5 @@
     </div>
 </div>
 
-<i:extensions name="templates-user-account-details" account="account"/>
+<i:extensions name="templates-user-account-details-bottom" account="account"/>
 
