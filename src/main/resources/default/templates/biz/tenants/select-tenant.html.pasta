@@ -39,7 +39,7 @@
             <tr>
                 <i:extensions name="templates-select-tenant-table" page="tenants" tenant="tenant"
                               position="'first-column'"/>
-                <td>
+                <td class="title">
                     <a class="link" href="/tenants/select/@tenant.getIdAsString()">@tenant.getTenantData().getName()</a><br>
                     <small class="muted">@tenant.getIdAsString()</small>
                 </td>

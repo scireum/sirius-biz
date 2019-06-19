@@ -14,7 +14,7 @@
         <div class="col-md-3">
             <w:filterbox page="accounts" baseUrl="/user-accounts"/>
             <w:jobs target="accountType"/>
-            <i:extensions name="templates-user-accounts-sidebar" page="accounts" />
+            <i:extensions name="templates-user-accounts-sidebar" page="accounts"/>
         </div>
         <div class="col-md-9">
             <w:tableSearchHeader page="accounts" baseUrl="/user-accounts">
@@ -24,7 +24,7 @@
             <w:table data="accounts">
                 <thead>
                 <tr>
-                    <i:extensions name="templates-user-accounts-table" page="accounts" position="'first-column-head'" />
+                    <i:extensions name="templates-user-accounts-table" page="accounts" position="'first-column-head'"/>
                     <th>
                         @i18n("LoginData.username")<br>
                         <small class="muted"> @i18n("LoginData.lastLogin") (@i18n("LoginData.numberOfLogins"))</small>
@@ -38,22 +38,23 @@
                         <span class="muted">@i18n("LoginData.generatedPassword")</span>
                     </th>
 
-                    <i:extensions name="templates-user-accounts-table" page="accounts" position="'last-column-head'" />
+                    <i:extensions name="templates-user-accounts-table" page="accounts" position="'last-column-head'"/>
                     <th/>
                 </tr>
                 </thead>
                 <tbody>
                 <i:for type="sirius.biz.tenants.UserAccount" var="account" items="accounts.getItems()">
                     <tr @if (account.getUserAccountData().getLogin().isAccountLocked()) { class="warning" }>
-                        <i:extensions name="templates-user-accounts-table" page="accounts" account="account" position="'first-column'" />
-                        <td>
+                        <i:extensions name="templates-user-accounts-table" page="accounts" account="account"
+                                      position="'first-column'"/>
+                        <td class="title">
                             <a class="link"
                                href="/user-account/@account.getIdAsString()">@account.getUserAccountData().getLogin().getUsername()</a>
                             <br>
                             <small class="muted">
                                 <i:if test="account.getUserAccountData().getLogin().getLastLogin() != null">
                                     @toSpokenDate(account.getUserAccountData().getLogin().getLastLogin().toLocalDate())
-                                     (@account.getUserAccountData().getLogin().getNumberOfLogins())
+                                    (@account.getUserAccountData().getLogin().getNumberOfLogins())
                                     <i:else>-</i:else>
                                 </i:if>
                             </small>
@@ -89,7 +90,8 @@
                                 </i:else>
                             </i:if>
                         </td>
-                        <i:extensions name="templates-user-accounts-table" page="accounts" account="account" position="'last-column'" />
+                        <i:extensions name="templates-user-accounts-table" page="accounts" account="account"
+                                      position="'last-column'"/>
                         <td class="align-center">
                             <w:permission permission="permission-select-user-account">
                                 <div>
@@ -122,7 +124,8 @@
                                     </i:else>
                                 </i:if>
                             </div>
-                            <i:extensions name="templates-user-accounts-table" page="accounts" account="account" position="'actions'" />
+                            <i:extensions name="templates-user-accounts-table" page="accounts" account="account"
+                                          position="'actions'"/>
                         </td>
                     </tr>
                 </i:for>
