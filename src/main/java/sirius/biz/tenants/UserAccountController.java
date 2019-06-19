@@ -49,11 +49,17 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         extends BizController {
 
     /**
-     * The permission required to add, modify or lock accounts
+     * The permission required to add, modify or lock accounts.
      */
     public static final String PERMISSION_MANAGE_USER_ACCOUNTS = "permission-manage-user-accounts";
+
     /**
-     * The permission required to delete accounts
+     * The feature required to provide a custom config per user account.
+     */
+    public static final String FEATURE_USER_ACCOUNT_CONFIG = "feature-user-account-config";
+
+    /**
+     * The permission required to delete accounts.
      */
     public static final String PERMISSION_DELETE_USER_ACCOUNTS = "permission-delete-user-accounts";
 
@@ -183,6 +189,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     @Routed("/user-account/:1/config")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
+    @Permission(FEATURE_USER_ACCOUNT_CONFIG)
     public void accountConfig(WebContext ctx, String accountId) {
         U userAccount = findForTenant(getUserClass(), accountId);
         assertNotNew(userAccount);
@@ -206,8 +213,11 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         if (ctx.hasParameter(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERMISSIONS)
                                                           .inner(PermissionData.CONFIG_STRING)
                                                           .getName())) {
-            userAccount.getUserAccountData().getPermissions().getConfig();
+            if (hasPermission(FEATURE_USER_ACCOUNT_CONFIG)) {
+                userAccount.getUserAccountData().getPermissions().getConfig();
+            }
         }
+
         userAccount.getMapper().update(userAccount);
     }
 
