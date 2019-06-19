@@ -15,6 +15,7 @@
             <w:filterbox page="accounts" baseUrl="/user-accounts"/>
 
             <w:jobs target="accountType"/>
+            <i:extensions name="templates-user-accounts-sidebar" page="accounts" />
         </div>
         <div class="col-md-9">
             <w:tableSearchHeader page="accounts" baseUrl="/user-accounts">
@@ -24,6 +25,7 @@
             <w:table data="accounts">
                 <thead>
                 <tr>
+                    <i:extensions name="templates-user-accounts-table" page="accounts" position="'first-column-head'" />
                     <th>
                         @i18n("LoginData.username")<br>
                         <span class="muted">@i18n("Model.id")</span>
@@ -40,6 +42,8 @@
                         @i18n("LoginData.lastLogin")<br>
                         <span class="muted">@i18n("LoginData.numberOfLogins")</span>
                     </th>
+
+                    <i:extensions name="templates-user-accounts-table" page="accounts" position="'last-column-head'" />
                     <th/>
                 </tr>
                 </thead>
@@ -87,6 +91,7 @@
                             @toUserString(account.getUserAccountData().getLogin().getLastLogin())<br>
                             <span class="muted">@account.getUserAccountData().getLogin().getNumberOfLogins()</span>
                         </td>
+                        <i:extensions name="templates-user-accounts-table" page="accounts" account="account" position="'last-column'" />
                         <td class="align-center">
                             <w:permission permission="permission-select-user-account">
                                 <div>
