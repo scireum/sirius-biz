@@ -191,6 +191,15 @@ public class UserAccountData extends Composite implements MessageProvider {
         return super.is(type);
     }
 
+    /**
+     * Generates a string representation of this user.
+     * By default this uses the full Name {@link PersonData#toString()}
+     * If {@link #hasName} is false, returns {@link LoginData#getUsername()}.
+     * If this is also empty, {@link #email)} is returned.
+     * As last option an anonymous identifier is used.
+     *
+     * @return a string representation of this user
+     */
     @Override
     public String toString() {
         if (hasName()) {
@@ -198,6 +207,9 @@ public class UserAccountData extends Composite implements MessageProvider {
         }
         if (Strings.isFilled(getLogin().getUsername())) {
             return getLogin().getUsername();
+        }
+        if (Strings.isFilled(email)) {
+            return email;
         }
 
         return NLS.get("Model.userAccount");
@@ -210,6 +222,21 @@ public class UserAccountData extends Composite implements MessageProvider {
      */
     public boolean hasName() {
         return Strings.isFilled(getPerson().getLastname());
+    }
+
+    /**
+     * Generates a string which is used to address the person.
+     * Depending on the filled fields this will result in either calling
+     * Default {@link PersonData#getAddressableName()} e.g. <tt>Mr. Foo Bar</tt>
+     * If neither {@link PersonData#getSalutation()} or {@link PersonData#getTitle()} is set, {@link #toString} is called.
+     *
+     * @return a short string used to address the person
+     */
+    public String getAdressableName() {
+        if (hasName() && (Strings.isFilled(getPerson().getSalutation()) || Strings.isFilled(getPerson().getTitle()))) {
+            return getPerson().getAddressableName();
+        }
+        return toString();
     }
 
     @Override
