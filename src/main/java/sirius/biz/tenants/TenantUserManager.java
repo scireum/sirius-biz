@@ -766,7 +766,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     private Set<String> computeRoles(U user, T tenant, boolean isSystemTenant) {
         Set<String> roles = Sets.newTreeSet();
         roles.add(UserInfo.PERMISSION_LOGGED_IN);
-        roles.addAll(user.getUserAccountData().getPermissions().getPermissions().modify());
+        roles.addAll(user.getUserAccountData().getPermissions().getPermissions().data());
         roles.addAll(tenant.getTenantData().getPackageData().computeCombinedPermissions());
 
         if (Strings.isFilled(tenant.getTenantData().getAccountNumber())) {
