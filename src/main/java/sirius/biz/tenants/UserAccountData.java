@@ -232,7 +232,7 @@ public class UserAccountData extends Composite implements MessageProvider {
      *
      * @return a short string used to address the person
      */
-    public String getAdressableName() {
+    public String getAddressableName() {
         if (hasName() && (Strings.isFilled(getPerson().getSalutation()) || Strings.isFilled(getPerson().getTitle()))) {
             return getPerson().getAddressableName();
         }
