@@ -31,7 +31,11 @@
                     </i:if>
 
                     <w:infoboxElement labelKey="LoginData.apiToken" value="@userAccount.getUserAccountData().getLogin().getApiToken()"/>
+
+                    <i:extensions name="templates-profile-sidebar-infos" account="userAccount"/>
                 </w:infobox>
+
+                <i:extensions name="templates-profile-sidebar-additional" account="userAccount"/>
 
                 <w:jobs target="userAccount" />
 
@@ -80,6 +84,8 @@
                         </i:for>
                     </w:singleSelect>
                 </div>
+
+                <i:extensions name="templates-profile-details" account="userAccount"/>
             </div>
             <div class="col-md-4">
                 <i:extensions name="templates-profile-image" userAccount="@userAccount"/>
