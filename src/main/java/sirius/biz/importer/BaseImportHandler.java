@@ -121,8 +121,6 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
 
     /**
      * Parses the value for the given property.
-     * <p>
-     * Overwrite this method for smart / complext properties - especially to load referenced entities.
      *
      * @param entity   the entity to fill
      * @param property the property to parse
@@ -130,8 +128,24 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @param data     the full context which is being imported
      */
     protected void parseProperty(E entity, Property property, Value value, Context data) {
+        if (parseComplexProperty(entity, property, value, data)) {
+            return;
+        }
+
         property.parseValueFromImport(entity, value);
     }
+
+    /**
+     * Invoked to load complex properties (referenced entities).
+     *
+     * @param entity   the entity to fill
+     * @param property the property to parse
+     * @param value    the value to parse
+     * @param data     the full context which is being imported
+     * @return <tt>true</tt> if the load was handled, <tt>false</tt> if a regular load via
+     * {@link Property#parseValueFromImport(Object, Value)} should be attempted.
+     */
+    protected abstract boolean parseComplexProperty(E entity, Property property, Value value, Context data);
 
     /**
      * Ensures that if the entity itself is tenant aware and the property being loaded also, that the tenants match.

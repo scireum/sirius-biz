@@ -11,7 +11,10 @@ package sirius.biz.importer;
 import sirius.biz.tenants.TenantData;
 import sirius.biz.tenants.jdbc.SQLTenant;
 import sirius.db.jdbc.batch.FindQuery;
+import sirius.db.mixing.Property;
+import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Register;
 
 import java.util.function.BiConsumer;
@@ -55,5 +58,10 @@ public class SQLTenantImportHandler extends SQLEntityImportHandler<SQLTenant> {
                              () -> context.getBatchContext()
                                           .findQuery(SQLTenant.class,
                                                      SQLTenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)));
+    }
+
+    @Override
+    protected boolean parseComplexProperty(SQLTenant entity, Property property, Value value, Context data) {
+        return false;
     }
 }

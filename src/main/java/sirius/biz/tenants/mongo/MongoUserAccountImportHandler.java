@@ -14,7 +14,9 @@ import sirius.biz.importer.ImporterContext;
 import sirius.biz.importer.MongoEntityImportHandler;
 import sirius.biz.model.LoginData;
 import sirius.biz.tenants.UserAccountData;
+import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Register;
 
 import java.util.Optional;
@@ -71,5 +73,10 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
         }
 
         return Optional.empty();
+    }
+
+    @Override
+    protected boolean parseComplexProperty(MongoUserAccount entity, Property property, Value value, Context data) {
+        return false;
     }
 }
