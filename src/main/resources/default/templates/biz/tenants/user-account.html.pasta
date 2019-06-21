@@ -41,6 +41,24 @@
                     <w:infoboxElement labelKey="LoginData.apiToken" value="@account.getUserAccountData().getLogin().getApiToken()"/>
                     
                     <i:extensions name="templates-user-account-sidebar-infos" account="account" page="page"/>
+
+                    <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
+                        <w:infoboxElement>
+                            <a href="@apply('/user-account/%s/generate-password', account.getIdAsString())"
+                               class="link">
+                                <i class="fa fa-angle-double-right"></i> @i18n("LoginData.password.generate")
+                            </a>
+                            <br>
+                            <i:if test="@account.getUserAccountData().canSendGeneratedPassword()">
+                                <a href="@apply('/user-account/%s/generate-and-send-password', account.getIdAsString())"
+                                   class="link">
+                                    <i class="fa fa-angle-double-right"></i>
+                                    @i18n("LoginData.password.generateAndSend")
+                                </a>
+                                <br>
+                            </i:if>
+                        </w:infoboxElement>
+                    </i:if>
                 </w:infobox>
 
                 <i:extensions name="templates-user-account-sidebar-additional" account="account" page="page"/>
