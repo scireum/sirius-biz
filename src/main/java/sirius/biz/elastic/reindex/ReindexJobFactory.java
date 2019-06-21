@@ -25,6 +25,7 @@ import sirius.kernel.nls.NLS;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -47,7 +48,13 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
 
     @Override
     public String getLabel() {
-        return "ES: Reindex";
+        return "Re-Index Elasticseach Entity";
+    }
+
+    @Nullable
+    @Override
+    public String getDescription() {
+        return "Creates a new index for the given entity and moves all data from the current index into the next one.";
     }
 
     @Override
