@@ -17,7 +17,13 @@
         <i:render name="breadcrumbs" />
     </i:block>
 
-    <w:pageHeader titleKey="Model.userAccount" />
+    <w:pageHeader>
+        @i18n("Model.userAccount")
+
+        <span class="pull-right">
+            <i:extensions name="templates-user-account-header" account="account" page="page"/>
+        </span>
+    </w:pageHeader>
     <div class="row">
         <i:if test="!account.isNew()">
             <div class="col-md-3">
