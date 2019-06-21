@@ -213,7 +213,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
                                   .getExtension("importer.aliases", descriptor.getType().getSimpleName().toLowerCase());
         descriptor.getProperties().stream().map(Property::getName).forEach(mapping -> {
             dict.withAlias(mapping, mapping);
-            if (aliases.getConfig().hasPath(mapping)) {
+            if (aliases != null && aliases.getConfig().hasPath(mapping)) {
                 aliases.getStringList(mapping).forEach(alias -> dict.withAlias(mapping, alias));
             }
         });
