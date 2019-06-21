@@ -93,14 +93,40 @@ public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob i
         } else {
             Watch w = Watch.start();
             try {
-                Context ctx = aliases.transform(row);
-                handleRow(index, ctx);
+                Context ctx = filterEmptyValues(aliases.transform(row));
+                if (!isEmptyContext(ctx)) {
+                    handleRow(index, ctx);
+                }
+            } catch (HandledException e) {
+                process.handle(Exceptions.createHandled()
+                                         .to(Log.BACKGROUND)
+                                         .withNLSKey("LineBasedImportHandler.errorInRow")
+                                         .set("row", index)
+                                         .set("message", e.getMessage())
+                                         .handle());
             } catch (Exception e) {
-                process.handle(e);
+                process.handle(Exceptions.handle()
+                                         .to(Log.BACKGROUND)
+                                         .error(e)
+                                         .withNLSKey("LineBasedImportHandler.failureInRow")
+                                         .set("row", index)
+                                         .handle());
             } finally {
                 process.addTiming(descriptor.getPluralLabel(), w.elapsedMillis());
             }
         }
+    }
+
+    private Context filterEmptyValues(Context source) {
+        if (ignoreEmptyValues) {
+            return source.removeEmpty();
+        }
+
+        return source;
+    }
+
+    private boolean isEmptyContext(Context ctx) {
+        return ctx.entrySet().stream().noneMatch(entry -> Strings.isFilled(entry.getValue()));
     }
 
     /**
@@ -110,7 +136,16 @@ public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob i
      * @param ctx   the row represented as context
      */
     protected void handleRow(int index, Context ctx) {
-        importer.createOrUpdateInBatch(fillAndVerify(findAndLoad(ctx)));
+        E entity = findAndLoad(ctx);
+        try {
+            importer.createOrUpdateInBatch(fillAndVerify(entity));
+        } catch (HandledException e) {
+            throw Exceptions.createHandled()
+                            .withNLSKey("LineBasedImportHandler.cannotHandleEntity")
+                            .set("entity", entity.toString())
+                            .set("message", e.getMessage())
+                            .handle();
+        }
     }
 
     /**
