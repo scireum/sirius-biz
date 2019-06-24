@@ -1,5 +1,9 @@
+<i:local name="userName"
+         value="user.getCurrentUser().as(sirius.biz.tenants.UserAccount.class).getUserAccountData().getShortName()"/>
+<i:local name="tenantName" value="user.getCurrentUser().getTenantName()"/>
+
 <w:menuDropdown
-        title="@format('${user}[ (${tenant})]').set('user', user.getCurrentUser().getUserName()).set('tenant', user.getCurrentUser().getTenantName()).smartFormat()"
+        title="@format('${user}[ (${tenant})]').set('user', userName).set('tenant', tenantName).smartFormat()"
         permission="flag-logged-in">
 
     <i:extensions name="templates-user-menu"/>
@@ -9,8 +13,9 @@
     </w:menuSection>
 
     <w:menuSection>
-            <w:menuItem titleKey="JobsController.jobs" url="/jobs" permission="permission-execute-jobs" framework="biz.jobs"/>
-            <w:menuItem titleKey="Process.plural" url="/ps" framework="biz.processes"/>
+        <w:menuItem titleKey="JobsController.jobs" url="/jobs" permission="permission-execute-jobs"
+                    framework="biz.jobs"/>
+        <w:menuItem titleKey="Process.plural" url="/ps" framework="biz.processes"/>
     </w:menuSection>
 
     <w:menuSection>

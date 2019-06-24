@@ -216,6 +216,20 @@ public class UserAccountData extends Composite implements MessageProvider {
     }
 
     /**
+     * Generates a short name, for this user.
+     * By default this is "Firstname Lastname", if the lastname is filled.
+     * If {@link #hasName} is false, {@link #toString} is called.
+     *
+     * @return a short name for this user
+     */
+    public String getShortName() {
+        if (hasName()) {
+            return getPerson().getShortName();
+        }
+        return toString();
+    }
+
+    /**
      * Determines if the user has a real name.
      *
      * @return <tt>true</tt> if a real name was provided, <tt>false</tt> otherwise
