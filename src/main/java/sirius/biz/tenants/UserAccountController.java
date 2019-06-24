@@ -22,6 +22,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.info.Product;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.DefaultRoute;
@@ -292,15 +293,21 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                 Context context = Context.create();
 
                 context.set(PARAM_PASSWORD, userAccount.getUserAccountData().getLogin().getGeneratedPassword())
-                       .set(PARAM_NAME, userAccount.getUserAccountData().getPerson().getAddressableName())
+                       .set(PARAM_NAME, userAccount.getUserAccountData().getAddressableName())
                        .set(PARAM_USERNAME, userAccount.getUserAccountData().getLogin().getUsername())
                        .set(PARAM_URL, getBaseUrl())
+                       .set(PARAM_REASON,
+                            NLS.fmtr("UserAccountController.generatedPassword.reason")
+                               .set("product", Product.getProduct().getName())
+                               .format())
                        .set(PARAM_ROOT, wondergemRoot);
 
                 mails.createEmail()
                      .to(userAccount.getUserAccountData().getEmail(),
-                         userAccount.getUserAccountData().getPerson().toString())
-                     .subject(NLS.get("mail-password.subject"))
+                         userAccount.getUserAccountData().toString())
+                     .subject(NLS.fmtr("UserAccountController.generatedPassword.subject")
+                                 .set("product", Product.getProduct().getName())
+                                 .format())
                      .textTemplate("mail/useraccount/password.pasta", context)
                      .htmlTemplate("mail/useraccount/password.html.pasta", context)
                      .send();
@@ -381,13 +388,13 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                                                  .format())
                                          .set(PARAM_PASSWORD,
                                               account.getUserAccountData().getLogin().getGeneratedPassword())
-                                         .set(PARAM_NAME, account.getUserAccountData().getPerson().getAddressableName())
+                                         .set(PARAM_NAME, account.getUserAccountData().getAddressableName())
                                          .set(PARAM_USERNAME, account.getUserAccountData().getLogin().getUsername())
                                          .set(PARAM_URL, getBaseUrl())
                                          .set(PARAM_ROOT, wondergemRoot);
                 mails.createEmail()
-                     .to(account.getUserAccountData().getEmail(), account.getUserAccountData().getPerson().toString())
-                     .subject(NLS.get("mail-password.subject"))
+                     .to(account.getUserAccountData().getEmail(), account.getUserAccountData().toString())
+                     .subject(NLS.get("UserAccountController.forgotPassword.subject"))
                      .textTemplate("mail/useraccount/password.pasta", context)
                      .htmlTemplate("mail/useraccount/password.html.pasta", context)
                      .send();
