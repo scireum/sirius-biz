@@ -273,6 +273,12 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                         .getPermissions()
                         .getPermissions()
                         .addAll(currentUser.getUserAccountData().getPermissions().getPermissions().modify());
+            modifiedUser.getUserAccountData()
+                        .getPerson()
+                        .setFirstname(currentUser.getUserAccountData().getPerson().getFirstname());
+            modifiedUser.getUserAccountData()
+                        .getPerson()
+                        .setLastname(currentUser.getUserAccountData().getPerson().getLastname());
             return modifiedUser;
         } catch (Exception e) {
             throw Exceptions.handle(Log.APPLICATION, e);
