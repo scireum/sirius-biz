@@ -98,6 +98,21 @@ public class PersonData extends Composite {
     }
 
     /**
+     * Generates the name without salutation and title, e.g. Firstname Lastname.
+     *
+     * @return the first and lastname as string, or empty if the lastname is not filled.
+     */
+    public String getShortName() {
+        if (Strings.isEmpty(lastname)) {
+            return "";
+        }
+        return Formatter.create("[${firstname} ]${lastname}")
+                        .set("firstname", getFirstname())
+                        .set("lastname", getLastname())
+                        .smartFormat();
+    }
+
+    /**
      * Generates a string representation of the full name.
      *
      * @return the full name (if filled)
