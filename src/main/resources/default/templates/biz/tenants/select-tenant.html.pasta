@@ -10,52 +10,64 @@
 
     <w:pageHeader titleKey="Tenant.select"/>
 
-    <w:tableSearchHeader page="tenants" baseUrl="/tenants/select">
-        <i:if test="isSpy">
-            <a class="btn btn-primary" href="/tenants/select/main">@i18n("Tenant.selectMain")</a>
+    <div class="row">
+        
+        <i:if test="@tenants.hasFacets()">
+            <div class="col-md-3">
+                <w:filterbox page="tenants" baseUrl="/tenants/select"/>
+            </div>
         </i:if>
-    </w:tableSearchHeader>
+        
+        <div class="@if (tenants.hasFacets()) { col-md-9 } else { col-md-12 }">
 
-    <w:table data="tenants">
-        <thead>
-        <tr>
-            <i:extensions name="templates-select-tenant-table" page="tenants" position="'first-column-head'"/>
-            <th>
-                @i18n("Model.name")<br>
-                <small class="muted">@i18n("Model.id")</small>
-            </th>
-            <th>
-                @i18n("Tenant.accountNumber")
-            </th>
-            <th>
-                @i18n("AddressData.street")<br>
-                @i18n("AddressData.zip") @i18n("AddressData.city")
-            </th>
-            <i:extensions name="templates-select-tenant-table" page="tenants" position="'last-column-head'"/>
-        </tr>
-        </thead>
-        <tbody>
-        <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants.getItems()">
-            <tr>
-                <i:extensions name="templates-select-tenant-table" page="tenants" tenant="tenant"
-                              position="'first-column'"/>
-                <td class="title">
-                    <a class="link" href="/tenants/select/@tenant.getIdAsString()">@tenant.getTenantData().getName()</a><br>
-                    <small class="muted">@tenant.getIdAsString()</small>
-                </td>
-                <td>
-                    @tenant.getTenantData().getAccountNumber()
-                </td>
-                <td>
-                    @tenant.getTenantData().getAddress().getStreet()<br>
-                    @tenant.getTenantData().getAddress().getZip() @tenant.getTenantData().getAddress().getCity()
-                </td>
-                <i:extensions name="templates-select-tenant-table" page="tenants" tenant="tenant"
-                              position="'last-column'"/>
-            </tr>
-        </i:for>
-        </tbody>
-    </w:table>
+            <w:tableSearchHeader page="tenants" baseUrl="/tenants/select">
+                <i:if test="isSpy">
+                    <a class="btn btn-primary" href="/tenants/select/main">@i18n("Tenant.selectMain")</a>
+                </i:if>
+            </w:tableSearchHeader>
 
-    <w:pagination page="tenants" baseUrl="/tenants/select"/>
+            <w:table data="tenants">
+                <thead>
+                <tr>
+                    <i:extensions name="templates-select-tenant-table" page="tenants" position="'first-column-head'"/>
+                    <th>
+                        @i18n("Model.name")<br>
+                        <small class="muted">@i18n("Model.id")</small>
+                    </th>
+                    <th>
+                        @i18n("Tenant.accountNumber")
+                    </th>
+                    <th>
+                        @i18n("AddressData.street")<br>
+                        @i18n("AddressData.zip") @i18n("AddressData.city")
+                    </th>
+                    <i:extensions name="templates-select-tenant-table" page="tenants" position="'last-column-head'"/>
+                </tr>
+                </thead>
+                <tbody>
+                <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants.getItems()">
+                    <tr>
+                        <i:extensions name="templates-select-tenant-table" page="tenants" tenant="tenant"
+                                      position="'first-column'"/>
+                        <td class="title">
+                            <a class="link" href="/tenants/select/@tenant.getIdAsString()">@tenant.getTenantData().getName()</a><br>
+                            <small class="muted">@tenant.getIdAsString()</small>
+                        </td>
+                        <td>
+                            @tenant.getTenantData().getAccountNumber()
+                        </td>
+                        <td>
+                            @tenant.getTenantData().getAddress().getStreet()<br>
+                            @tenant.getTenantData().getAddress().getZip() @tenant.getTenantData().getAddress().getCity()
+                        </td>
+                        <i:extensions name="templates-select-tenant-table" page="tenants" tenant="tenant"
+                                      position="'last-column'"/>
+                    </tr>
+                </i:for>
+                </tbody>
+            </w:table>
+
+            <w:pagination page="tenants" baseUrl="/tenants/select"/>
+        </div>
+    </div>
 </w:page>
