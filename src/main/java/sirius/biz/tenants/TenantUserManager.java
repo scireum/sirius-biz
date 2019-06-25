@@ -859,6 +859,13 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                                  .collect(Collectors.toList());
     }
 
+    @Override
+    public void logout(@Nonnull WebContext ctx) {
+        super.logout(ctx);
+        ctx.setSessionValue(scope.getScopeId() + SPY_ID_SUFFIX, null);
+        ctx.setSessionValue(scope.getScopeId() + TENANT_SPY_ID_SUFFIX, null);
+    }
+
     /**
      * Returns the id of the system tenant.
      * <p>
