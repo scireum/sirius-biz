@@ -303,8 +303,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                        .set(PARAM_ROOT, wondergemRoot);
 
                 mails.createEmail()
-                     .to(userAccount.getUserAccountData().getEmail(),
-                         userAccount.getUserAccountData().toString())
+                     .to(userAccount.getUserAccountData().getEmail(), userAccount.getUserAccountData().toString())
                      .subject(NLS.fmtr("UserAccountController.generatedPassword.subject")
                                  .set("product", Product.getProduct().getName())
                                  .format())
@@ -547,7 +546,13 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     @Routed("/user-accounts/select/:1")
     public void selectUserAccount(final WebContext ctx, String id) {
         if ("main".equals(id)) {
-            auditLog.neutral("AuditLog.switchedToMainUser").causedByCurrentUser().forCurrentUser().log();
+            String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
+            UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
+            auditLog.neutral("AuditLog.switchedToMainUser")
+                    .hideFromUser()
+                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                    .forCurrentUser()
+                    .log();
 
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX, null);
             ctx.respondWith().redirectTemporarily("/user-accounts/select");
@@ -568,6 +573,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         }
 
         auditLog.neutral("AuditLog.selectedUser")
+                .hideFromUser()
                 .causedByCurrentUser()
                 .forUser(user.getUniqueName(), user.getUserAccountData().getLogin().getUsername())
                 .forTenant(String.valueOf(user.getTenant().getId()),

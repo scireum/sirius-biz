@@ -74,7 +74,8 @@ public class AuditLog implements Initializable {
         @CheckReturnValue
         public AuditLogBuilder forCurrentUser() {
             UserInfo user = UserContext.getCurrentUser();
-            return forUser(user.getUserId(), user.getProtocolUsername()).forTenant(user.getTenantId(), user.getTenantName());
+            return forUser(user.getUserId(), user.getProtocolUsername()).forTenant(user.getTenantId(),
+                                                                                   user.getTenantName());
         }
 
         /**
@@ -129,6 +130,20 @@ public class AuditLog implements Initializable {
         public AuditLogBuilder forTenant(@Nullable String id, @Nullable String name) {
             entry.setTenant(id);
             entry.setTenantName(name);
+
+            return this;
+        }
+
+        /**
+         * Marks this entry as {@link AuditLogEntry#HIDDEN}.
+         * <p>
+         * Such entries are not visible to the user but only to the system tenant.
+         *
+         * @return the builder for fluent method calls
+         */
+        @CheckReturnValue
+        public AuditLogBuilder hideFromUser() {
+            entry.setHidden(true);
 
             return this;
         }

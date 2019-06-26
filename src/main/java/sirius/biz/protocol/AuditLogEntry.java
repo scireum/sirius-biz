@@ -79,6 +79,14 @@ public class AuditLogEntry extends SearchableEntity {
     private String causedByUserName;
 
     /**
+     * Determines if the entry is hidden from the user / tenant for which it was recorded.
+     * <p>
+     * Such events are only visible to the system tenant.
+     */
+    public static final Mapping HIDDEN = Mapping.named("hidden");
+    private boolean hidden;
+
+    /**
      * Determines if the entry represents an error / warning or an informative entry.
      */
     public static final Mapping NEGATIVE = Mapping.named("negative");
@@ -139,6 +147,14 @@ public class AuditLogEntry extends SearchableEntity {
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
     }
 
     public boolean isNegative() {
