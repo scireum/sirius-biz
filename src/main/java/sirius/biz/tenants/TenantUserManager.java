@@ -797,8 +797,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         }
 
         Set<String> transformedRoles = transformRoles(roles);
-        roles.add(PERMISSION_SYSTEM_TENANT_MEMBER);
         if (isSystemTenant) {
+            roles.add(PERMISSION_SYSTEM_TENANT_MEMBER);
             if (transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
                 roles.add(PERMISSION_SYSTEM_TENANT);
             }
