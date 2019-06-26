@@ -58,9 +58,7 @@
             <div class="checkbox">
                 <label>
                     <input type="checkbox" name="roles" value="@role"
-                           @if (account.getUserAccountData().getPermissions().getPermissions().contains(role)) {
-                           checked="checked"
-                           }/>
+                           @checked="account.getUserAccountData().getPermissions().getPermissions().contains(role)"/>
                     @controller.getRoleName(role)
                     <span class="help-block checkbox-help"> @controller.getRoleDescription(role)</span>
                 </label>
