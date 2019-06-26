@@ -66,12 +66,21 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         extends GenericUserManager {
 
     /**
-     * This flag permission is granted to all users which belong to the system tenant.
+     * This flag permission is granted to <b>all administrators</b> (users with permission <tt>permission-manage-system</tt>)
+     * of the system tenant.
      * <p>
      * The id of the system tenant can be set in the scope config. The system tenant usually is the administrative
      * company which owns / runs the system.
      */
     public static final String PERMISSION_SYSTEM_TENANT = "flag-system-tenant";
+
+    /**
+     * This flag permission is granted to <b>all users</b> which belong to the system tenant.
+     * <p>
+     * The id of the system tenant can be set in the scope config. The system tenant usually is the administrative
+     * company which owns / runs the system.
+     */
+    public static final String PERMISSION_SYSTEM_TENANT_MEMBER = "flag-system-tenant-member";
 
     /**
      * This flag permission is granted to all users which access the application from outside of
@@ -560,6 +569,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         }
 
         auditLog.negative("AuditLog.loginRejected")
+                .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                 .forTenant(String.valueOf(account.getTenant().getId()),
                            account.getTenant().getValue().getTenantData().getName())
                 .log();
@@ -788,11 +798,16 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         }
 
         Set<String> transformedRoles = transformRoles(roles);
-        if (isSystemTenant && transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
-            roles.add(PERMISSION_SYSTEM_TENANT);
+        if (isSystemTenant) {
+            roles.add(PERMISSION_SYSTEM_TENANT_MEMBER);
+            if (transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
+                roles.add(PERMISSION_SYSTEM_TENANT);
+            }
             transformedRoles = transformRoles(roles);
         }
+
         transformedRoles.removeAll(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
+
         return transformedRoles;
     }
 
