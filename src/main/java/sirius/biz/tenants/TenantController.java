@@ -370,7 +370,8 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     @Routed("/tenants/select/:1")
     public void selectTenant(final WebContext ctx, String id) {
         if ("main".equals(id) || Strings.areEqual(determineOriginalTenantId(ctx), id)) {
-            UserAccount<?, ?> account = UserContext.getCurrentUser().as(UserAccount.class);
+            String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
+            UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
             auditLog.neutral("AuditLog.switchedToMainTenant")
                     .hideFromUser()
                     .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
