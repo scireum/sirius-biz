@@ -10,40 +10,44 @@
         </li>
     </i:block>
 
-    <w:editForm url="/profile">
-        <div class="row">
-            <div class="col-md-3">
-                <w:infobox titleKey="Model.details">
-                    <w:infoboxElement labelKey="LoginData.username" value="@userAccount.getUserAccountData().getLogin().getUsername()"/>
-                    <i:if test="userAccount.getUserAccountData().hasName()">
-                        <w:infoboxElement labelKey="Model.name" value="@userAccount.getUserAccountData().getPerson()"/>
-                    </i:if>
-                    <w:infoboxElement labelKey="Model.email" value="@userAccount.getUserAccountData().getEmail()"/>
+    <div class="row">
+        <div class="col-md-3">
+            <w:infobox titleKey="Model.details">
+                <w:infoboxElement labelKey="LoginData.username"
+                                  value="@userAccount.getUserAccountData().getLogin().getUsername()"/>
+                <i:if test="userAccount.getUserAccountData().hasName()">
+                    <w:infoboxElement labelKey="Model.name" value="@userAccount.getUserAccountData().getPerson()"/>
+                </i:if>
+                <w:infoboxElement labelKey="Model.email" value="@userAccount.getUserAccountData().getEmail()"/>
 
-                    <i:if test="@userAccount.getUserAccountData().getLogin().isDisplayGeneratedPassword()">
-                        <w:infoboxElement labelKey="LoginData.generatedPassword" value="@userAccount.getUserAccountData().getLogin().getGeneratedPassword()"/>
+                <i:if test="@userAccount.getUserAccountData().getLogin().isDisplayGeneratedPassword()">
+                    <w:infoboxElement labelKey="LoginData.generatedPassword"
+                                      value="@userAccount.getUserAccountData().getLogin().getGeneratedPassword()"/>
 
-                        <i:else>
-                            <i:if test="isFilled(userAccount.getUserAccountData().getLogin().getGeneratedPassword())">
-                                <w:infoboxElement labelKey="LoginData.generatedPassword" value="@i18n('LoginData.password.hiddenGeneratedShort')"/>
-                            </i:if>
-                        </i:else>
-                    </i:if>
+                    <i:else>
+                        <i:if test="isFilled(userAccount.getUserAccountData().getLogin().getGeneratedPassword())">
+                            <w:infoboxElement labelKey="LoginData.generatedPassword"
+                                              value="@i18n('LoginData.password.hiddenGeneratedShort')"/>
+                        </i:if>
+                    </i:else>
+                </i:if>
 
-                    <w:infoboxElement labelKey="LoginData.apiToken" value="@userAccount.getUserAccountData().getLogin().getApiToken()"/>
+                <w:infoboxElement labelKey="LoginData.apiToken"
+                                  value="@userAccount.getUserAccountData().getLogin().getApiToken()"/>
 
-                    <i:extensions name="templates-profile-sidebar-infos" account="userAccount"/>
-                </w:infobox>
+                <i:extensions name="templates-profile-sidebar-infos" account="userAccount"/>
+            </w:infobox>
 
-                <i:extensions name="templates-profile-sidebar-additional" account="userAccount"/>
+            <i:extensions name="templates-profile-sidebar-additional" account="userAccount"/>
 
-                <w:jobs target="userAccount" />
+            <w:jobs target="userAccount"/>
 
-                <w:rateLimitBox>
-                    <w:rateLimitsPerType type="user" scope="userAccount.getIdAsString()" />
-                </w:rateLimitBox>
-            </div>
-            <div class="col-md-9">
+            <w:rateLimitBox>
+                <w:rateLimitsPerType type="user" scope="userAccount.getIdAsString()"/>
+            </w:rateLimitBox>
+        </div>
+        <div class="col-md-9">
+            <w:editForm url="/profile">
                 <div class="row">
                     <w:textfield span="12"
                                  name="userAccountData_email"
@@ -86,12 +90,13 @@
                 </div>
 
                 <i:extensions name="templates-profile-details" account="userAccount"/>
-            </div>
-            <div class="col-md-4">
-                <i:extensions name="templates-profile-image" userAccount="@userAccount"/>
-            </div>
+            </w:editForm>
         </div>
-    </w:editForm>
+        <div class="col-md-4">
+            <i:extensions name="templates-profile-image" userAccount="@userAccount"/>
+        </div>
+    </div>
+
 
     <w:formBar>
         <div class="pull-right">
