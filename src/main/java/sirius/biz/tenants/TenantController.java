@@ -53,7 +53,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
 
     /**
      * Contains the scope of packages and upgrades to use.
-     *
      */
     public static final String PACKAGE_SCOPE_TENANT = "tenant";
 
@@ -137,7 +136,9 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         saveHelper.withPreSaveHandler(isNew -> {
             tenant.getTenantData()
                   .getPackageData()
-                  .loadPackageAndUpgrades("tenant", ctx.getParameters("upgrades"), ctx.get("package").asString());
+                  .loadPackageAndUpgrades(PACKAGE_SCOPE_TENANT,
+                                          ctx.getParameters("upgrades"),
+                                          ctx.get("package").asString());
         });
 
         boolean requestHandled = saveHelper.saveEntity(tenant);
@@ -369,7 +370,15 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     @Routed("/tenants/select/:1")
     public void selectTenant(final WebContext ctx, String id) {
         if ("main".equals(id) || Strings.areEqual(determineOriginalTenantId(ctx), id)) {
-            auditLog.neutral("AuditLog.switchedToMainTenant").causedByCurrentUser().forCurrentUser().log();
+            String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
+            UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
+            auditLog.neutral("AuditLog.switchedToMainTenant")
+                    .hideFromUser()
+                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                    .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                    .forTenant(account.getTenant().getIdAsString(),
+                               account.getTenant().getValue().getTenantData().getName())
+                    .log();
 
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
                                 null);
@@ -386,10 +395,17 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
             return;
         }
 
-        auditLog.neutral("AuditLog.selectedTenant").causedByCurrentUser().forCurrentUser().log();
+        T effectiveTenant = tenant.get();
+        auditLog.neutral("AuditLog.selectedTenant")
+                .hideFromUser()
+                .causedByCurrentUser()
+                .forCurrentUser()
+                .forTenant(effectiveTenant.getIdAsString(), effectiveTenant.getTenantData().getName())
+                .log();
 
         ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
-                            tenant.get().getIdAsString());
+                            effectiveTenant.getIdAsString());
+
         ctx.respondWith().redirectTemporarily(ctx.get("goto").asString(wondergemRoot));
     }
 

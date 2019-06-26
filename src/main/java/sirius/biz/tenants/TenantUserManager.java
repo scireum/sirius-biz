@@ -560,6 +560,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         }
 
         auditLog.negative("AuditLog.loginRejected")
+                .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                 .forTenant(String.valueOf(account.getTenant().getId()),
                            account.getTenant().getValue().getTenantData().getName())
                 .log();
