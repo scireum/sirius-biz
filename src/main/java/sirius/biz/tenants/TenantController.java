@@ -375,7 +375,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
                     .hideFromUser()
                     .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                     .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forTenant(String.valueOf(account.getTenant().getId()),
+                    .forTenant(account.getTenant().getIdAsString(),
                                account.getTenant().getValue().getTenantData().getName())
                     .log();
 
@@ -399,7 +399,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
                 .hideFromUser()
                 .causedByCurrentUser()
                 .forCurrentUser()
-                .forTenant(String.valueOf(effectiveTenant.getId()), effectiveTenant.getTenantData().getName())
+                .forTenant(effectiveTenant.getIdAsString(), effectiveTenant.getTenantData().getName())
                 .log();
 
         ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
