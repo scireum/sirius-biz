@@ -43,12 +43,10 @@
     <div class="col-md-6">
         <w:heading labelKey="Model.security"/>
         <div class="row">
-            <w:checkbox span="12" name="userAccountData_login_accountLocked"
-                        value="account.getUserAccountData().getLogin().isAccountLocked()"
-                        labelKey="LoginData.accountLocked"/>
-            <w:checkbox span="12" name="userAccountData_externalLoginRequired"
-                        value="account.getUserAccountData().isExternalLoginRequired()"
-                        labelKey="UserAccount.externalLoginRequired" helpKey="UserAccount.externalLoginRequired.help"/>
+            <w:booleanSelect span="12" name="userAccountData_login_accountLocked"
+                             value="account.getUserAccountData().getLogin().isAccountLocked()"
+                             labelKey="LoginData.accountLocked"
+                             helpKey="LoginData.accountLocked.help"/>
         </div>
 
     </div>
@@ -58,9 +56,7 @@
             <div class="checkbox">
                 <label>
                     <input type="checkbox" name="roles" value="@role"
-                           @if (account.getUserAccountData().getPermissions().getPermissions().contains(role)) {
-                           checked="checked"
-                           }/>
+                           @checked="account.getUserAccountData().getPermissions().getPermissions().contains(role)"/>
                     @controller.getRoleName(role)
                     <span class="help-block checkbox-help"> @controller.getRoleDescription(role)</span>
                 </label>
