@@ -218,7 +218,7 @@ public class TenantData extends Composite implements Journaled {
      * Contains the package, upgrades and additional and revoked permissions for this tenant.
      */
     public static final Mapping PACKAGE_DATA = Mapping.named("packageData");
-    private final PackageData packageData = new PackageData();
+    private final PackageData packageData;
 
     /**
      * Contains a custom configuration which is added to the config of the current {@link
@@ -259,6 +259,7 @@ public class TenantData extends Composite implements Journaled {
     public TenantData(BaseEntity<?> tenantObject) {
         this.tenantObject = tenantObject;
         this.journal = new JournalData(tenantObject);
+        this.packageData = new PackageData(tenantObject);
     }
 
     @BeforeSave
