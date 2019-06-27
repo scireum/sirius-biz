@@ -12,8 +12,8 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.model.InternationalAddressData;
-import sirius.biz.packages.PackageData;
 import sirius.biz.mongo.PrefixSearchContent;
+import sirius.biz.packages.PackageData;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.web.Autoloaded;
@@ -86,7 +86,7 @@ public class TenantData extends Composite implements Journaled {
     private Integer externalLoginIntervalDays;
 
     /**
-     * Contains the name of the tenant.
+     * Contains the display name of the tenant.
      */
     public static final Mapping NAME = Mapping.named("name");
     @Trim
@@ -96,6 +96,18 @@ public class TenantData extends Composite implements Journaled {
     @PrefixSearchContent
     @Length(255)
     private String name;
+
+    /**
+     * Contains the full company name of the tenant.
+     */
+    public static final Mapping FULL_NAME = Mapping.named("fullName");
+    @Trim
+    @Autoloaded
+    @AutoImport
+    @PrefixSearchContent
+    @Length(255)
+    @NullAllowed
+    private String fullName;
 
     /**
      * Contains the customer number assigned to the tenant.
@@ -326,12 +338,76 @@ public class TenantData extends Composite implements Journaled {
         }
     }
 
+    @Override
+    public String toString() {
+        if (Strings.isFilled(name)) {
+            return name;
+        }
+
+        return NLS.get("Model.tenant");
+    }
+
+    /**
+     * Returns the parsed config for the tenant.
+     *
+     * @return the parsed configuration
+     */
+    @Nullable
+    public Config getConfig() {
+        if (config == null) {
+            if (Strings.isFilled(configString)) {
+                try {
+                    config = ConfigFactory.parseString(configString);
+                } catch (Exception e) {
+                    throw Exceptions.handle()
+                                    .to(BizController.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage("Cannot load config of %s (%s): %s (%s)",
+                                                            tenantObject,
+                                                            tenantObject.getId())
+                                    .handle();
+                }
+            } else {
+                return null;
+            }
+        }
+
+        return config;
+    }
+
+    /**
+     * Returns the config as string.
+     *
+     * @return the individual config as string
+     */
+    public String getConfigString() {
+        return configString;
+    }
+
+    /**
+     * Sets the config as string.
+     *
+     * @param configString the individual config as string
+     */
+    public void setConfigString(String configString) {
+        this.configString = configString;
+        this.config = null;
+    }
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getAccountNumber() {
@@ -439,15 +515,6 @@ public class TenantData extends Composite implements Journaled {
         return journal;
     }
 
-    @Override
-    public String toString() {
-        if (Strings.isFilled(name)) {
-            return name;
-        }
-
-        return NLS.get("Model.tenant");
-    }
-
     public String getLang() {
         return lang;
     }
@@ -458,52 +525,5 @@ public class TenantData extends Composite implements Journaled {
 
     public PackageData getPackageData() {
         return packageData;
-    }
-
-    /**
-     * Returns the parsed config for the tenant.
-     *
-     * @return the parsed configuration
-     */
-    @Nullable
-    public Config getConfig() {
-        if (config == null) {
-            if (Strings.isFilled(configString)) {
-                try {
-                    config = ConfigFactory.parseString(configString);
-                } catch (Exception e) {
-                    throw Exceptions.handle()
-                                    .to(BizController.LOG)
-                                    .error(e)
-                                    .withSystemErrorMessage("Cannot load config of %s (%s): %s (%s)",
-                                                            tenantObject,
-                                                            tenantObject.getId())
-                                    .handle();
-                }
-            } else {
-                return null;
-            }
-        }
-
-        return config;
-    }
-
-    /**
-     * Returns the config as string.
-     *
-     * @return the individual config as string
-     */
-    public String getConfigString() {
-        return configString;
-    }
-
-    /**
-     * Sets the config as string.
-     *
-     * @param configString the individual config as string
-     */
-    public void setConfigString(String configString) {
-        this.configString = configString;
-        this.config = null;
     }
 }

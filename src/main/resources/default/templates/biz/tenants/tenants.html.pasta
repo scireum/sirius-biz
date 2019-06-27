@@ -26,11 +26,12 @@
                 <tr>
                     <i:extensions name="templates-tenants-table" page="tenants" position="'first-column-head'"/>
                     <th>
-                        @i18n("Model.name")<br>
+                        @i18n("TenantData.name")<br>
                         <small class="muted">@i18n("Model.id")</small>
                     </th>
                     <th>
-                        @i18n("TenantData.accountNumber")
+                        <div>@i18n("TenantData.fullName")</div>
+                        <div>@i18n("TenantData.accountNumber")</div>
                     </th>
                     <th>
                         @i18n("AddressData.street")<br>
@@ -50,7 +51,8 @@
                             <small class="muted">@tenant.getIdAsString()</small>
                         </td>
                         <td>
-                            @tenant.getTenantData().getAccountNumber()
+                            <div>@tenant.getTenantData().getFullName()</div>
+                            <div>@tenant.getTenantData().getAccountNumber()</div>
                         </td>
                         <td>
                             @tenant.getTenantData().getAddress().getStreet()<br>
