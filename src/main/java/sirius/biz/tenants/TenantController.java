@@ -132,7 +132,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     public void tenant(WebContext ctx, String tenantId) {
         T tenant = find(getTenantClass(), tenantId);
 
-        SaveHelper saveHelper = prepareSave(ctx).withAfterCreateURI("/tenant/${id}").withAfterSaveURI("/tenants");
+        SaveHelper saveHelper = prepareSave(ctx).withAfterCreateURI("/tenant/${id}");
         saveHelper.withPreSaveHandler(isNew -> {
             tenant.getTenantData()
                   .getPackageData()
