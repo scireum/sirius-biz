@@ -8,6 +8,7 @@
 
 package sirius.biz.packages;
 
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
@@ -15,7 +16,9 @@ import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.StringList;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.Parts;
 import sirius.web.security.Permissions;
 
 import java.util.Collections;
@@ -31,6 +34,12 @@ public class PackageData extends Composite {
 
     @Part
     private static Packages packages;
+
+    @Parts(AdditionalPackagePermissionsProvider.class)
+    private static PartCollection<AdditionalPackagePermissionsProvider> additionalPackagePermissionsProviders;
+
+    @Transient
+    private final BaseEntity<?> parent;
 
     /**
      * The selected package
@@ -66,6 +75,15 @@ public class PackageData extends Composite {
 
     @Transient
     private Set<String> directPermissions;
+
+    /**
+     * Creates a new instance for the given parent.
+     *
+     * @param parent the parent entity which contains this composite.
+     */
+    public PackageData(BaseEntity<?> parent) {
+        this.parent = parent;
+    }
 
     public void setPackage(String packageString) {
         this.packageString = packageString;
@@ -120,6 +138,11 @@ public class PackageData extends Composite {
                 packageAndUpgradeFeatures.add(getPackage());
             }
             packageAndUpgradeFeatures.addAll(getUpgrades().data());
+
+            for (AdditionalPackagePermissionsProvider permissionsProvider : additionalPackagePermissionsProviders) {
+                permissionsProvider.addAdditionalPermissions(this, parent, packageAndUpgradeFeatures::add);
+            }
+
             directPermissions = Permissions.applyProfiles(packageAndUpgradeFeatures);
         }
 
