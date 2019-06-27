@@ -21,6 +21,7 @@
                 <div class="col-md-8 value">
                     <div>@toUserString(trace.getCreatedAt())</div>
                     <div>@trace.getCreatedBy()</div>
+                    <div class="muted">@trace.getCreatedOn()</div>
                     <div class="muted">@trace.getCreatedIn()</div>
                 </div>
             </div>
@@ -32,6 +33,7 @@
                 <div class="col-md-8 value">
                     <div>@toUserString(trace.getChangedAt())</div>
                     <div>@trace.getChangedBy()</div>
+                    <div class="muted">@trace.getChangedOn()</div>
                     <div class="muted">@trace.getChangedIn()</div>
                 </div>
             </div>
