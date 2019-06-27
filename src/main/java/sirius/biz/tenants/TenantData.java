@@ -27,6 +27,7 @@ import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
+import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.annotations.Unique;
 import sirius.kernel.commons.Strings;
@@ -44,6 +45,7 @@ import java.util.TreeSet;
 /**
  * Represents a tenant using the system.
  */
+@TranslationSource(Tenant.class)
 public class TenantData extends Composite implements Journaled {
 
     @Transient
