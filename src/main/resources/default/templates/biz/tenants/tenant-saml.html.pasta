@@ -6,15 +6,15 @@
         <w:subHeading labelKey="Tenant.saml"/>
         <div class="row">
             <w:textfield name="tenantData_samlRequestIssuerName" value="@tenant.getTenantData().getSamlRequestIssuerName()"
-                         labelKey="Tenant.samlRequestIssuerName" helpKey="Tenant.samlRequestIssuerName.help"/>
+                         labelKey="TenantData.samlRequestIssuerName" helpKey="TenantData.samlRequestIssuerName.help"/>
             <w:textfield name="tenantData_samlIssuerIndex" value="@tenant.getTenantData().getSamlIssuerIndex()"
-                         labelKey="Tenant.samlIssuerIndex" helpKey="Tenant.samlIssuerIndex.help"/>
+                         labelKey="TenantData.samlIssuerIndex" helpKey="TenantData.samlIssuerIndex.help"/>
             <w:textfield name="tenantData_samlIssuerUrl" value="@tenant.getTenantData().getSamlIssuerUrl()"
-                         labelKey="Tenant.samlIssuerUrl" span="12" helpKey="Tenant.samlIssuerUrl.help"/>
+                         labelKey="TenantData.samlIssuerUrl" span="12" helpKey="TenantData.samlIssuerUrl.help"/>
             <w:textfield name="tenantData_samlIssuerName" value="@tenant.getTenantData().getSamlIssuerName()"
-                         labelKey="Tenant.samlIssuerName" span="12" helpKey="Tenant.samlIssuerName.help"/>
+                         labelKey="TenantData.samlIssuerName" span="12" helpKey="TenantData.samlIssuerName.help"/>
             <w:textfield name="tenantData_samlFingerprint" value="@tenant.getTenantData().getSamlFingerprint()"
-                         labelKey="Tenant.samlFingerprint" span="12" helpKey="Tenant.samlFingerprint.help"/>
+                         labelKey="TenantData.samlFingerprint" span="12" helpKey="TenantData.samlFingerprint.help"/>
         </div>
     </w:editForm>
 
