@@ -39,7 +39,7 @@ public class PackageData extends Composite {
     private static PartCollection<AdditionalPackagePermissionsProvider> additionalPackagePermissionsProviders;
 
     @Transient
-    private final BaseEntity<?> parent;
+    private final BaseEntity<?> owner;
 
     /**
      * The selected package
@@ -77,12 +77,12 @@ public class PackageData extends Composite {
     private Set<String> directPermissions;
 
     /**
-     * Creates a new instance for the given parent.
+     * Creates a new instance for the given owner.
      *
-     * @param parent the parent entity which contains this composite.
+     * @param owner the owner entity which contains this composite.
      */
-    public PackageData(BaseEntity<?> parent) {
-        this.parent = parent;
+    public PackageData(BaseEntity<?> owner) {
+        this.owner = owner;
     }
 
     public void setPackage(String packageString) {
@@ -140,7 +140,7 @@ public class PackageData extends Composite {
             packageAndUpgradeFeatures.addAll(getUpgrades().data());
 
             for (AdditionalPackagePermissionsProvider permissionsProvider : additionalPackagePermissionsProviders) {
-                permissionsProvider.addAdditionalPermissions(this, parent, packageAndUpgradeFeatures::add);
+                permissionsProvider.addAdditionalPermissions(this, packageAndUpgradeFeatures::add);
             }
 
             directPermissions = Permissions.applyProfiles(packageAndUpgradeFeatures);
@@ -220,5 +220,9 @@ public class PackageData extends Composite {
                 getRevokedPermissions().add(permission);
             }
         }
+    }
+
+    public BaseEntity<?> getOwner() {
+        return owner;
     }
 }

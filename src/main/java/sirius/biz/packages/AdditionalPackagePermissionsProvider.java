@@ -8,8 +8,6 @@
 
 package sirius.biz.packages;
 
-import sirius.db.mixing.BaseEntity;
-
 import java.util.function.Consumer;
 
 /**
@@ -25,8 +23,7 @@ public interface AdditionalPackagePermissionsProvider {
      * Adds additional roles to the given permissionConsumer, based on the given {@link PackageData} and parent.
      *
      * @param packageData        the {@link PackageData} instance this is called from
-     * @param parent             the parent entity of the {@link PackageData}
      * @param permissionConsumer the consumer for the additonal permissions
      */
-    void addAdditionalPermissions(PackageData packageData, BaseEntity<?> parent, Consumer<String> permissionConsumer);
+    void addAdditionalPermissions(PackageData packageData, Consumer<String> permissionConsumer);
 }
