@@ -34,6 +34,7 @@ public class MongoCodeListController extends CodeListController<String, MongoCod
     protected BasePageHelper<MongoCodeListEntry, ?, ?, ?> getEntriesAsPage(MongoCodeList codeList) {
         return MongoPageHelper.withQuery(mango.select(MongoCodeListEntry.class)
                                               .eq(MongoCodeListEntry.CODE_LIST, codeList)
+                                              .orderAsc(MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.PRIORITY))
                                               .orderAsc(MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE)));
     }
 
