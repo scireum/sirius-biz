@@ -39,11 +39,11 @@
     <w:editForm url="/saml">
         <div class="row">
             <w:textfield name="issuerName" value="@call.get('issuerName').asString()"
-                         labelKey="Tenant.samlRequestIssuerName"
+                         labelKey="TenantData.samlRequestIssuerName"
                          required="true"/>
             <w:textfield name="issuerIndex" value="@call.get('issuerIndex').asString('0')"
-                         labelKey="Tenant.samlIssuerIndex" required="true"/>
-            <w:textfield name="issuerUrl" value="@call.get('issuerUrl').asString()" labelKey="Tenant.samlIssuerUrl"
+                         labelKey="TenantData.samlIssuerIndex" required="true"/>
+            <w:textfield name="issuerUrl" value="@call.get('issuerUrl').asString()" labelKey="TenantData.samlIssuerUrl"
                          required="true" span="12"/>
         </div>
 

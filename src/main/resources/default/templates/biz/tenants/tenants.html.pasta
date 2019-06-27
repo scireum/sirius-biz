@@ -30,7 +30,7 @@
                         <small class="muted">@i18n("Model.id")</small>
                     </th>
                     <th>
-                        @i18n("Tenant.accountNumber")
+                        @i18n("TenantData.accountNumber")
                     </th>
                     <th>
                         @i18n("AddressData.street")<br>
