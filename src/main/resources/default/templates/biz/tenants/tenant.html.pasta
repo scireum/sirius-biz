@@ -30,7 +30,7 @@
             <div class="col-md-3">
                 <w:infobox titleKey="Model.details">
                     <w:infoboxElement labelKey="Model.name" value="@tenant.getTenantData().getName()"/>
-                    <w:infoboxElement labelKey="Tenant.accountNumber" value="@tenant.getTenantData().getAccountNumber()"/>
+                    <w:infoboxElement labelKey="TenantData.accountNumber" value="@tenant.getTenantData().getAccountNumber()"/>
                     <w:infoboxElement labelKey="AddressData.street" value="@tenant.getTenantData().getAddress().getStreet()"/>
                     <w:infoboxElement labelKey="AddressData.zip" value="@tenant.getTenantData().getAddress().getZip()"/>
                     <w:infoboxElement labelKey="AddressData.city" value="@tenant.getTenantData().getAddress().getCity()"/>
