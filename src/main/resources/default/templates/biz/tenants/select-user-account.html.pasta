@@ -33,7 +33,7 @@
         </thead>
         <tbody>
         <i:for type="sirius.biz.tenants.UserAccount" var="selectableUser" items="users.getItems()">
-            <tr>
+            <tr @if (selectableUser.getUserAccountData().getLogin().isAccountLocked()) { class="warning" }>
                 <i:extensions name="templates-select-user-accounts-table" page="users" account="selectableUser"
                               position="'first-column'"/>
                 <td>
