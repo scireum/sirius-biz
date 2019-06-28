@@ -11,10 +11,6 @@
 </div>
 
 <div class="row">
-
-</div>
-
-<div class="row">
     <w:codelistSelect span="3" name="userAccountData_person_salutation" list="salutations"
                       value="@account.getUserAccountData().getPerson().getSalutation()"
                       labelKey="PersonData.salutation" optional="true"/>
@@ -37,7 +33,7 @@
     </w:singleSelect>
 </div>
 
-<i:extensions name="templates-user-account-details" account="account"/>
+<i:extensions target="user-account-details" point="below-details" account="account"/>
 
 <div class="row">
     <div class="col-md-6">
@@ -65,5 +61,5 @@
     </div>
 </div>
 
-<i:extensions name="templates-user-account-details-bottom" account="account"/>
+<i:extensions target="user-account-details" point="bottom" account="account"/>
 

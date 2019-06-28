@@ -35,10 +35,10 @@
                 <w:infoboxElement labelKey="LoginData.apiToken"
                                   value="@userAccount.getUserAccountData().getLogin().getApiToken()"/>
 
-                <i:extensions name="templates-profile-sidebar-infos" account="userAccount"/>
+                <i:extensions target="profile" point="sidebar-infos" account="userAccount"/>
             </w:infobox>
 
-            <i:extensions name="templates-profile-sidebar-additional" account="userAccount"/>
+            <i:extensions target="profile" point="sidebar-additional" account="userAccount"/>
 
             <w:jobs target="userAccount"/>
 
@@ -89,11 +89,11 @@
                     </w:singleSelect>
                 </div>
 
-                <i:extensions name="templates-profile-details" account="userAccount"/>
+                <i:extensions target="profile" point="details" account="userAccount"/>
             </w:editForm>
         </div>
         <div class="col-md-4">
-            <i:extensions name="templates-profile-image" userAccount="@userAccount"/>
+            <i:extensions target="profile" point="image" userAccount="@userAccount"/>
         </div>
     </div>
 

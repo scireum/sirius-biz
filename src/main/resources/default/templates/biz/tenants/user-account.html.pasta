@@ -21,7 +21,7 @@
         @i18n("Model.userAccount")
 
         <span class="pull-right">
-            <i:extensions name="templates-user-account-header" account="account" page="page"/>
+            <i:extensions target="user-account" point="header" account="account" page="page"/>
         </span>
     </w:pageHeader>
     <div class="row">
@@ -45,8 +45,8 @@
                     </i:if>
 
                     <w:infoboxElement labelKey="LoginData.apiToken" value="@account.getUserAccountData().getLogin().getApiToken()"/>
-                    
-                    <i:extensions name="templates-user-account-sidebar-infos" account="account" page="page"/>
+
+                    <i:extensions target="user-account" point="sidebar-infos" account="account" page="page"/>
 
                     <i:if test="@account.getUserAccountData().isPasswordGenerationPossible()">
                         <w:infoboxElement>
@@ -67,7 +67,7 @@
                     </i:if>
                 </w:infobox>
 
-                <i:extensions name="templates-user-account-sidebar-additional" account="account" page="page"/>
+                <i:extensions target="user-account" point="sidebar-additional" account="account" page="page"/>
 
                 <w:navbox labelKey="Model.links">
                     <w:navboxLink labelKey="Model.details" url="@apply('/user-account/%s', account.getIdAsString())" active="page == 'details'"/>
@@ -75,7 +75,7 @@
                         <w:navboxLink labelKey="Model.config" url="@apply('/user-account/%s/config', account.getIdAsString())" active="page == 'config'"/>
                     </w:permission>
 
-                    <i:extensions name="templates-user-account-sidebar-menu" account="account" page="page"/>
+                    <i:extensions target="user-account" point="sidebar-menu" account="account" page="page"/>
                 </w:navbox>
 
                 <w:jobs target="account" />

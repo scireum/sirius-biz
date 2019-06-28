@@ -18,6 +18,9 @@
         </i:for>
     </w:singleSelect>
 </div>
+
+<i:extensions target="tenant-details" point="below-details" tenant="tenant" controller="controller"/>
+
 <w:subHeading labelKey="Model.address"/>
 <div class="row">
     <w:textfield span="12" name="tenantData_address_street" value="@tenant.getTenantData().getAddress().getStreet()"
@@ -32,6 +35,9 @@
                       value="@tenant.getTenantData().getAddress().getCountry()"
                       labelKey="InternationalAddressData.country"/>
 </div>
+
+<i:extensions target="tenant-details" point="below-address" tenant="tenant" controller="controller"/>
+
 <w:subHeading labelKey="Model.security"/>
 <div class="row">
     <w:textfield name="tenantData_loginIntervalDays"
@@ -50,6 +56,9 @@
                  labelKey="TenantData.rolesToKeep"
                  helpKey="TenantData.rolesToKeep.help"/>
 </div>
+
+<i:extensions target="tenant-details" point="below-security" tenant="tenant" controller="controller"/>
+
 <div class="row">
     <div class="col-md-6">
         <w:subHeading labelKey="Tenant.administration"/>
@@ -76,4 +85,4 @@
     </div>
 </div>
 
-<i:extensions name="templates-tenant-details" tenant="tenant" controller="controller"/>
+<i:extensions target="tenant-details" point="bottom" tenant="tenant" controller="controller"/>

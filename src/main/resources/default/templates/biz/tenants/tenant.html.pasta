@@ -21,7 +21,7 @@
         <small>@tenant.getTenantData().getAccountNumber()</small>
 
         <span class="pull-right">
-            <i:extensions name="templates-tenant-header" tenant="tenant" page="page"/>
+            <i:extensions target="tenant" point="head" tenant="tenant" page="page"/>
         </span>
     </w:pageHeader>
 
@@ -35,7 +35,7 @@
                     <w:infoboxElement labelKey="AddressData.zip" value="@tenant.getTenantData().getAddress().getZip()"/>
                     <w:infoboxElement labelKey="AddressData.city" value="@tenant.getTenantData().getAddress().getCity()"/>
 
-                    <i:extensions name="templates-tenant-sidebar-infos" tenant="tenant" page="page"/>
+                    <i:extensions target="tenant" point="sidebar-infos" tenant="tenant" controller="controller" page="page"/>
                 </w:infobox>
 
 
@@ -51,7 +51,7 @@
                     <w:navboxLink labelKey="Model.saml" url="@apply('/tenant/%s/saml', tenant.getIdAsString())"
                                   active="page == 'saml'"/>
 
-                    <i:extensions name="templates-tenant-sidebar-menu" tenant="tenant" controller="controller" page="page"/>
+                    <i:extensions target="tenant" point="sidebar-menu" tenant="tenant" controller="controller" page="page"/>
                 </w:navbox>
 
                 <w:jobs target="tenant" />

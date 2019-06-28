@@ -1,5 +1,5 @@
-<i:pragma name="inline" value="true" />
 <i:pragma name="description" value="Provides an infobox to rendered in the sidebar which can use rateLimitInfo to output rate limits. If none are available, the box remains hidden." />
+
 <i:if test="isenguard != null">
     <w:permission permission="permission-view-rate-limits">
         <i:local name="content" value="@renderToString('body')"/>

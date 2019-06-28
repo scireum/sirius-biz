@@ -1,3 +1,0 @@
-<w:menuDropdown titleKey="Menu.settings" permission="flag-logged-in">
-    <i:extensions name="templates-menu-settings"/>
-</w:menuDropdown>
