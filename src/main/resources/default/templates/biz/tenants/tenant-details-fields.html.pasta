@@ -2,8 +2,10 @@
 <i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 
 <div class="row">
-    <w:textfield span="12" name="tenantData_name" value="@tenant.getTenantData().getName()" labelKey="Model.name"
+    <w:textfield name="tenantData_name" value="@tenant.getTenantData().getName()" labelKey="TenantData.name"
                  required="true"/>
+    <w:textfield name="tenantData_fullName" value="@tenant.getTenantData().getFullName()"
+                 labelKey="TenantData.fullName"/>
 </div>
 <div class="row">
     <w:textfield name="tenantData_accountNumber" value="@tenant.getTenantData().getAccountNumber()"
