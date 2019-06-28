@@ -195,7 +195,7 @@ public class PackageData extends Composite {
         List<String> accessibleUpgrades = packages.getUpgrades(packagesScope);
         packages.loadAccessiblePermissions(upgrades, accessibleUpgrades::contains, getUpgrades().modify());
 
-        if (packages.getPackages(packagesScope).contains(packageString)) {
+        if (Strings.isEmpty(packageString) || packages.getPackages(packagesScope).contains(packageString)) {
             setPackage(packageString);
         }
     }
