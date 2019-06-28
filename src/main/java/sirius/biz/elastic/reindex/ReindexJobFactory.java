@@ -34,7 +34,7 @@ import java.util.function.Consumer;
  * Implements a job which reindexes a given index in elastic.
  */
 @Register(classes = JobFactory.class)
-@Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
+@Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
 
     @Part

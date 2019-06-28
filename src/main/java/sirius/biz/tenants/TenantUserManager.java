@@ -72,7 +72,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
      * The id of the system tenant can be set in the scope config. The system tenant usually is the administrative
      * company which owns / runs the system.
      */
-    public static final String PERMISSION_SYSTEM_TENANT = "flag-system-tenant";
+    public static final String PERMISSION_SYSTEM_ADMINISTRATOR = "flag-system-administrator";
 
     /**
      * This flag permission is granted to <b>all users</b> which belong to the system tenant.
@@ -233,8 +233,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         List<String> extraRoles = Lists.newArrayList();
         extraRoles.add(PERMISSION_SPY_USER);
         extraRoles.add(PERMISSION_SELECT_USER_ACCOUNT);
-        if (rootUser.hasPermission(PERMISSION_SYSTEM_TENANT)) {
-            extraRoles.add(PERMISSION_SYSTEM_TENANT);
+        if (rootUser.hasPermission(PERMISSION_SYSTEM_ADMINISTRATOR)) {
+            extraRoles.add(PERMISSION_SYSTEM_ADMINISTRATOR);
         }
         return asUser(spyUser,
                       extraRoles,
@@ -259,7 +259,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         // And overwrite with the new tenant...
         modifiedUser.getTenant().setValue(tenant);
 
-        Set<String> roles = computeRoles(modifiedUser, tenant, originalUser.hasPermission(PERMISSION_SYSTEM_TENANT));
+        Set<String> roles =
+                computeRoles(modifiedUser, tenant, originalUser.hasPermission(PERMISSION_SYSTEM_ADMINISTRATOR));
         roles.add(PERMISSION_SPY_USER);
         roles.add(PERMISSION_SELECT_TENANT);
         return asUserWithRoles(modifiedUser, roles, () -> computeTenantname(null, originalUser.getTenantId()));
@@ -801,7 +802,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         if (isSystemTenant) {
             roles.add(PERMISSION_SYSTEM_TENANT_MEMBER);
             if (transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
-                roles.add(PERMISSION_SYSTEM_TENANT);
+                roles.add(PERMISSION_SYSTEM_ADMINISTRATOR);
             }
             transformedRoles = transformRoles(roles);
         }
@@ -886,7 +887,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
      * <p>
      * Note that this method should only be used by the framework itself. Otherwise use
      * {@link UserInfo#hasPermission(String)} or {@link Tenant#hasPermission(String)} and
-     * {@link TenantUserManager#PERMISSION_SYSTEM_TENANT}.
+     * {@link #PERMISSION_SYSTEM_ADMINISTRATOR} or {@link #PERMISSION_SYSTEM_TENANT_MEMBER}.
      *
      * @return the id of the system tenant
      */

@@ -83,7 +83,7 @@ public class RateLimitEventsReportJobFactory extends ReportJobFactory {
         SmartQuery<RateLimitingTriggeredEvent> query = oma.select(RateLimitingTriggeredEvent.class)
                                                           .eqIgnoreNull(RateLimitingTriggeredEvent.SCOPE,
                                                                         SCOPE_PARAMETER.get(context).orElse(null));
-        if (!UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+        if (!UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)) {
             query.eq(RateLimitingTriggeredEvent.TENANT, UserContext.getCurrentUser().getTenantId());
         }
 
@@ -91,7 +91,7 @@ public class RateLimitEventsReportJobFactory extends ReportJobFactory {
         report.addColumn("realm", "Realm");
         report.addColumn("scope", "Scope");
 
-        if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+        if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)) {
             report.addColumn("tenant", "Tenant");
         }
 
@@ -106,7 +106,7 @@ public class RateLimitEventsReportJobFactory extends ReportJobFactory {
             values.add(cells.of(event.getEventTimestamp()));
             values.add(cells.of(event.getRealm()));
             values.add(cells.of(event.getScope()));
-            if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+            if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)) {
                 values.add(cells.of(event.getTenant()));
             }
             values.add(cells.rightAligned(event.getLimit()));

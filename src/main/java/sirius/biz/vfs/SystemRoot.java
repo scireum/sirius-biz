@@ -36,7 +36,7 @@ public class SystemRoot implements VFSRoot {
 
     @Override
     public void collectRootFolders(VirtualFile parent, Consumer<VirtualFile> fileCollector) {
-        if (!UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+        if (!UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)) {
             return;
         }
 

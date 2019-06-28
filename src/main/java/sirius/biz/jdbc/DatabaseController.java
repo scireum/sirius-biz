@@ -65,7 +65,7 @@ public class DatabaseController extends BasicController {
      *
      * @param ctx the current request
      */
-    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/sql")
     public void sql(WebContext ctx) {
         // Only display selectable databases which are properly configured..
@@ -82,7 +82,7 @@ public class DatabaseController extends BasicController {
      * @param out the JSON response
      * @throws SQLException in case of a database error
      */
-    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed(value = "/system/sql/api/execute", jsonCall = true)
     public void executeQuery(WebContext ctx, JSONStructuredOutput out) throws SQLException {
         Watch w = Watch.start();
@@ -157,7 +157,7 @@ public class DatabaseController extends BasicController {
      *
      * @param ctx the current request
      */
-    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/schema")
     public void changes(WebContext ctx) {
         ctx.respondWith().template("templates/biz/model/schema.html.pasta");
@@ -169,7 +169,7 @@ public class DatabaseController extends BasicController {
      * @param ctx the current request
      * @param out the JSON response
      */
-    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed(value = "/system/schema/api/list", jsonCall = true)
     public void changesList(WebContext ctx, JSONStructuredOutput out) {
         schema.computeRequiredSchemaChanges();
@@ -194,7 +194,7 @@ public class DatabaseController extends BasicController {
      * @param ctx the current request
      * @param out the JSON response
      */
-    @Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed(value = "/system/schema/api/execute", jsonCall = true)
     public void execute(WebContext ctx, JSONStructuredOutput out) {
         SchemaUpdateAction result = schema.executeSchemaUpdateAction(ctx.get("id").asString());

@@ -33,7 +33,7 @@ import java.util.function.Consumer;
  * Implements a job which moves the alias which marks an active index to a desired destination index.
  */
 @Register(classes = JobFactory.class)
-@Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
+@Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
 
     @Part
