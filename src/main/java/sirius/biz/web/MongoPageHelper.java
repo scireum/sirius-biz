@@ -30,7 +30,6 @@ import sirius.web.controller.Page;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Implements a page helper for {@link MongoQuery MongoDB queries}.
@@ -141,37 +140,37 @@ public class MongoPageHelper<E extends MongoEntity>
      * @return the helper itself for fluent method calls
      */
     public MongoPageHelper<E> addBooleanAggregation(Mapping field) {
-        Objects.requireNonNull(ctx);
-
         Facet facet = new Facet(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
                                 field.toString(),
-                                ctx.get(field.toString()).asString(),
+                                null,
                                 null);
-        facet.addItem("true", NLS.get("NLS.yes"), -1);
-        facet.addItem("false", NLS.get("NLS.no"), -1);
-
-        baseQuery.addFacet(new MongoBooleanFacet(field).onComplete(mongoFacet -> {
-
-            Iterator<FacetItem> iter = facet.getAllItems().iterator();
-            while (iter.hasNext()) {
-                FacetItem item = iter.next();
-                int numberOfHits =
-                        Strings.areEqual(item.getKey(), "true") ? mongoFacet.getNumTrue() : mongoFacet.getNumFalse();
-                if (numberOfHits > 0 || item.isActive()) {
-                    item.setCount(numberOfHits);
-                } else {
-                    // If the item has no matches and isn't an active filter - remove as
-                    // it is unneccessary...
-                    iter.remove();
-                }
-            }
-        }));
 
         return addFacet(facet, (f, q) -> {
+            f.addItem("true", NLS.get("NLS.yes"), -1);
+            f.addItem("false", NLS.get("NLS.no"), -1);
+
             Value filterValue = Value.of(f.getValue());
             if (filterValue.isFilled()) {
                 q.eq(Mapping.named(f.getName()), filterValue.asBoolean());
             }
+
+            q.addFacet(new MongoBooleanFacet(field).onComplete(mongoFacet -> {
+
+                Iterator<FacetItem> iter = facet.getAllItems().iterator();
+                while (iter.hasNext()) {
+                    FacetItem item = iter.next();
+                    int numberOfHits = Strings.areEqual(item.getKey(), "true") ?
+                                       mongoFacet.getNumTrue() :
+                                       mongoFacet.getNumFalse();
+                    if (numberOfHits > 0 || item.isActive()) {
+                        item.setCount(numberOfHits);
+                    } else {
+                        // If the item has no matches and isn't an active filter - remove as
+                        // it is unneccessary...
+                        iter.remove();
+                    }
+                }
+            }));
         });
     }
 
