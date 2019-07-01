@@ -6,8 +6,9 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.web;
+package sirius.biz.web.autoloading;
 
+import sirius.biz.web.BizController;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;

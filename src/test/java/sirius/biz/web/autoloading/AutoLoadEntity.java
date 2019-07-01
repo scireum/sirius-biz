@@ -6,8 +6,9 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.web;
+package sirius.biz.web.autoloading;
 
+import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.StringList;
 import sirius.db.mongo.MongoEntity;
