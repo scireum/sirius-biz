@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.web
+package sirius.biz.web.autoloading
 
 import sirius.db.mongo.Mango
 import sirius.kernel.BaseSpecification

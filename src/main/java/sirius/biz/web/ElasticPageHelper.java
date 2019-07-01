@@ -155,13 +155,14 @@ public class ElasticPageHelper<E extends ElasticEntity>
                                 field.toString(),
                                 null,
                                 null);
-        facet.addItem("1", NLS.get("NLS.yes"), -1);
-        facet.addItem("0", NLS.get("NLS.no"), -1);
 
         aggregatingFacets.add(Tuple.create(facet, null));
         baseQuery.addTermAggregation(field.toString(), field, 3);
 
         return addFacet(facet, (f, q) -> {
+            f.addItem("1", NLS.get("NLS.yes"), -1);
+            f.addItem("0", NLS.get("NLS.no"), -1);
+
             Value filterValue = Value.of(f.getValue());
             if (filterValue.isFilled()) {
                 q.eq(Mapping.named(f.getName()), Strings.areEqual(f.getValue(), "1"));

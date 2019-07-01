@@ -236,7 +236,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
 
-        boolean handled = prepareSave(ctx).disableAutoload().withAfterSaveURI("/tenants").withPreSaveHandler(isNew -> {
+        boolean handled = prepareSave(ctx).disableAutoload().withPreSaveHandler(isNew -> {
             tenant.getTenantData()
                   .getPackageData()
                   .loadRevokedAndAdditionalPermission(getPermissions(), ctx::getParameter);
