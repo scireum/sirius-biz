@@ -54,15 +54,20 @@
     <div class="col-md-6">
         <w:subHeading labelKey="Tenant.administration"/>
         <div class="row">
-
-            <w:singleSelect span="12" name="parent" optional="true" labelKey="Tenant.parent"
-                            helpKey="Tenant.parent.help">
-                <i:for type="sirius.biz.tenants.Tenant" var="t" items="controller.getPossibleParentTenants()">
-                    <option value="@t.getIdAsString()" @if(tenant.getParent().is(t)) {selected="selected" }>
-                        @t.getTenantData().getName()
+            <w:autocompleteSingleSelect span="12"
+                                        name="parent"
+                                        labelKey="Tenant.parent"
+                                        helpKey="Tenant.parent.help"
+                                        required="false"
+                                        optional="true"
+                                        serviceUri="/tenants/autocomplete">
+                <i:if test="tenant.getParent().isFilled()">
+                    <option value="@tenant.getParent().getId()" selected="selected">
+                        @tenant.getParent().getValue()
                     </option>
-                </i:for>
-            </w:singleSelect>
+                </i:if>
+            </w:autocompleteSingleSelect>
+
             <w:checkbox span="12" name="tenantData_parentCanAccess" value="tenant.getTenantData().isParentCanAccess()"
                         labelKey="TenantData.parentCanAccess" helpKey="TenantData.parentCanAccess.help"/>
             <w:checkbox span="12" name="tenantData_canAccessParent" value="tenant.getTenantData().isCanAccessParent()"
