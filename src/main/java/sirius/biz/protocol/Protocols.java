@@ -132,10 +132,6 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             return;
         }
 
-        if (!message.isReceiverWouldLog()) {
-            return;
-        }
-
         try {
             LoggedMessage msg = new LoggedMessage();
             msg.setCategory(message.getReceiver().getName());
@@ -156,7 +152,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             return true;
         }
 
-        if (message == null || !message.isReceiverWouldLog()) {
+        if (message == null) {
             return true;
         }
 
