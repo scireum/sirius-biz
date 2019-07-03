@@ -166,19 +166,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     }
 
     /**
-     * Provides the list of possible parent tenants to the template.
-     *
-     * @return the list of possible parent tenants
-     */
-    public List<BaseEntity<?>> getPossibleParentTenants() {
-        return mixing.getDescriptor(getTenantClass())
-                     .getMapper()
-                     .select(getTenantClass())
-                     .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME))
-                     .queryList();
-    }
-
-    /**
      * Returns the effective entity class used to represent tenants.
      *
      * @return the effective entity class for tenants
