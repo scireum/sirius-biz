@@ -13,6 +13,7 @@ import com.google.common.hash.Hashing;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.db.jdbc.OMA;
@@ -122,6 +123,17 @@ public class BizController extends BasicController {
 
     private HandledException invalidTenantException() {
         return Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
+    }
+
+
+    /**
+     * Checks whether the current user is an account of the system tenant. This can be useful for granting extra features.
+     *
+     * @return <tt>true</tt> if the user is an account of the system tenant, <tt>false</tt> otherwise.
+     */
+    protected boolean isUserAccountOfSystemTenant() {
+        TenantUserManager<?, ?, ?> userManager = tenants.getTenantUserManager();
+        return userManager.getSystemTenantId().equals(userManager.getOriginalTenantId());
     }
 
     /**

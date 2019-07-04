@@ -52,7 +52,7 @@
                         <w:infoboxElement labelKey="Process.completed" value="@process.getCompletedAsString()"/>
                     </i:else>
                 </i:if>
-                <i:extensions name="templates-process-details" process="@process"/>
+                <i:extensions target="process" point="details" process="@process"/>
             </w:infobox>
 
             <w:navbox labelKey="Model.links">
@@ -65,12 +65,12 @@
                                   active="page == 'output-' + output.getName()"/>
                 </i:for>
 
-                <i:extensions name="templates-process-sidebar-menu" process="@process"/>
+                <i:extensions target="process" point="sidebar-menu" process="@process"/>
             </w:navbox>
 
-            <i:extensions name="templates-process-sidebar-top" process="@process"/>
+            <i:extensions target="process" point="sidebar-top" process="@process"/>
             <i:render name="sidebar" />
-            <i:extensions name="templates-process-sidebar-bottom" process="@process"/>
+            <i:extensions target="process" point="sidebar-bottom" process="@process"/>
 
             <w:jobs target="process" />
 

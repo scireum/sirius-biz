@@ -66,12 +66,21 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         extends GenericUserManager {
 
     /**
-     * This flag permission is granted to all users which belong to the system tenant.
+     * This flag permission is granted to <b>all administrators</b> (users with permission <tt>permission-manage-system</tt>)
+     * of the system tenant.
      * <p>
      * The id of the system tenant can be set in the scope config. The system tenant usually is the administrative
      * company which owns / runs the system.
      */
-    public static final String PERMISSION_SYSTEM_TENANT = "flag-system-tenant";
+    public static final String PERMISSION_SYSTEM_ADMINISTRATOR = "flag-system-administrator";
+
+    /**
+     * This flag permission is granted to <b>all users</b> which belong to the system tenant.
+     * <p>
+     * The id of the system tenant can be set in the scope config. The system tenant usually is the administrative
+     * company which owns / runs the system.
+     */
+    public static final String PERMISSION_SYSTEM_TENANT_MEMBER = "flag-system-tenant-member";
 
     /**
      * This flag permission is granted to all users which access the application from outside of
@@ -224,8 +233,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         List<String> extraRoles = Lists.newArrayList();
         extraRoles.add(PERMISSION_SPY_USER);
         extraRoles.add(PERMISSION_SELECT_USER_ACCOUNT);
-        if (rootUser.hasPermission(PERMISSION_SYSTEM_TENANT)) {
-            extraRoles.add(PERMISSION_SYSTEM_TENANT);
+        if (rootUser.hasPermission(PERMISSION_SYSTEM_ADMINISTRATOR)) {
+            extraRoles.add(PERMISSION_SYSTEM_ADMINISTRATOR);
         }
         return asUser(spyUser,
                       extraRoles,
@@ -250,7 +259,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         // And overwrite with the new tenant...
         modifiedUser.getTenant().setValue(tenant);
 
-        Set<String> roles = computeRoles(modifiedUser, tenant, originalUser.hasPermission(PERMISSION_SYSTEM_TENANT));
+        Set<String> roles =
+                computeRoles(modifiedUser, tenant, originalUser.hasPermission(PERMISSION_SYSTEM_ADMINISTRATOR));
         roles.add(PERMISSION_SPY_USER);
         roles.add(PERMISSION_SELECT_TENANT);
         return asUserWithRoles(modifiedUser, roles, () -> computeTenantname(null, originalUser.getTenantId()));
@@ -273,6 +283,12 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                         .getPermissions()
                         .getPermissions()
                         .addAll(currentUser.getUserAccountData().getPermissions().getPermissions().modify());
+            modifiedUser.getUserAccountData()
+                        .getPerson()
+                        .setFirstname(currentUser.getUserAccountData().getPerson().getFirstname());
+            modifiedUser.getUserAccountData()
+                        .getPerson()
+                        .setLastname(currentUser.getUserAccountData().getPerson().getLastname());
             return modifiedUser;
         } catch (Exception e) {
             throw Exceptions.handle(Log.APPLICATION, e);
@@ -554,6 +570,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         }
 
         auditLog.negative("AuditLog.loginRejected")
+                .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                 .forTenant(String.valueOf(account.getTenant().getId()),
                            account.getTenant().getValue().getTenantData().getName())
                 .log();
@@ -766,7 +783,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     private Set<String> computeRoles(U user, T tenant, boolean isSystemTenant) {
         Set<String> roles = Sets.newTreeSet();
         roles.add(UserInfo.PERMISSION_LOGGED_IN);
-        roles.addAll(user.getUserAccountData().getPermissions().getPermissions().modify());
+        roles.addAll(user.getUserAccountData().getPermissions().getPermissions().data());
         roles.addAll(tenant.getTenantData().getPackageData().computeCombinedPermissions());
 
         if (Strings.isFilled(tenant.getTenantData().getAccountNumber())) {
@@ -782,11 +799,16 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         }
 
         Set<String> transformedRoles = transformRoles(roles);
-        if (isSystemTenant && transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
-            roles.add(PERMISSION_SYSTEM_TENANT);
+        if (isSystemTenant) {
+            roles.add(PERMISSION_SYSTEM_TENANT_MEMBER);
+            if (transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
+                roles.add(PERMISSION_SYSTEM_ADMINISTRATOR);
+            }
             transformedRoles = transformRoles(roles);
         }
+
         transformedRoles.removeAll(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
+
         return transformedRoles;
     }
 
@@ -853,12 +875,19 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                                  .collect(Collectors.toList());
     }
 
+    @Override
+    public void logout(@Nonnull WebContext ctx) {
+        super.logout(ctx);
+        ctx.setSessionValue(scope.getScopeId() + SPY_ID_SUFFIX, null);
+        ctx.setSessionValue(scope.getScopeId() + TENANT_SPY_ID_SUFFIX, null);
+    }
+
     /**
      * Returns the id of the system tenant.
      * <p>
      * Note that this method should only be used by the framework itself. Otherwise use
      * {@link UserInfo#hasPermission(String)} or {@link Tenant#hasPermission(String)} and
-     * {@link TenantUserManager#PERMISSION_SYSTEM_TENANT}.
+     * {@link #PERMISSION_SYSTEM_ADMINISTRATOR} or {@link #PERMISSION_SYSTEM_TENANT_MEMBER}.
      *
      * @return the id of the system tenant
      */

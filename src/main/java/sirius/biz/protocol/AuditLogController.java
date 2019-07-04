@@ -54,6 +54,8 @@ public class AuditLogController extends BizController {
                                                Elastic.FILTERS.eq(AuditLogEntry.CAUSED_BY_USER,
                                                                   UserContext.getCurrentUser().getUserId())));
             }
+
+            query.eq(AuditLogEntry.HIDDEN, false);
         }
 
         ElasticPageHelper<AuditLogEntry> ph = ElasticPageHelper.withQuery(query);

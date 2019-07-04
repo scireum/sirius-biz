@@ -53,7 +53,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
 
     /**
      * Contains the scope of packages and upgrades to use.
-     *
      */
     public static final String PACKAGE_SCOPE_TENANT = "tenant";
 
@@ -110,9 +109,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     @DefaultRoute
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void tenants(WebContext ctx) {
-        BasePageHelper<T, ?, ?, ?> ph = getTenantsAsPage();
-        ph.withContext(ctx);
-        ctx.respondWith().template("templates/biz/tenants/tenants.html.pasta", ph.asPage());
+        ctx.respondWith().template("templates/biz/tenants/tenants.html.pasta", getTenantsAsPage(ctx).asPage());
     }
 
     /**
@@ -120,7 +117,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      *
      * @return the list of available tenants wrapped as page helper
      */
-    protected abstract BasePageHelper<T, ?, ?, ?> getTenantsAsPage();
+    protected abstract BasePageHelper<T, ?, ?, ?> getTenantsAsPage(WebContext ctx);
 
     /**
      * Provides an editor for updating a tenant.
@@ -133,11 +130,13 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     public void tenant(WebContext ctx, String tenantId) {
         T tenant = find(getTenantClass(), tenantId);
 
-        SaveHelper saveHelper = prepareSave(ctx).withAfterCreateURI("/tenant/${id}").withAfterSaveURI("/tenants");
+        SaveHelper saveHelper = prepareSave(ctx).withAfterCreateURI("/tenant/${id}");
         saveHelper.withPreSaveHandler(isNew -> {
             tenant.getTenantData()
                   .getPackageData()
-                  .loadPackageAndUpgrades("tenant", ctx.getParameters("upgrades"), ctx.get("package").asString());
+                  .loadPackageAndUpgrades(PACKAGE_SCOPE_TENANT,
+                                          ctx.getParameters("upgrades"),
+                                          ctx.get("package").asString());
         });
 
         boolean requestHandled = saveHelper.saveEntity(tenant);
@@ -164,19 +163,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      */
     public List<Tuple<String, String>> getAvailableLanguages() {
         return tenants.getTenantUserManager().getAvailableLanguages();
-    }
-
-    /**
-     * Provides the list of possible parent tenants to the template.
-     *
-     * @return the list of possible parent tenants
-     */
-    public List<BaseEntity<?>> getPossibleParentTenants() {
-        return mixing.getDescriptor(getTenantClass())
-                     .getMapper()
-                     .select(getTenantClass())
-                     .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME))
-                     .queryList();
     }
 
     /**
@@ -235,7 +221,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
 
-        boolean handled = prepareSave(ctx).disableAutoload().withAfterSaveURI("/tenants").withPreSaveHandler(isNew -> {
+        boolean handled = prepareSave(ctx).disableAutoload().withPreSaveHandler(isNew -> {
             tenant.getTenantData()
                   .getPackageData()
                   .loadRevokedAndAdditionalPermission(getPermissions(), ctx::getParameter);
@@ -305,8 +291,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     @Permission(TenantUserManager.PERMISSION_SELECT_TENANT)
     public void selectTenants(WebContext ctx) {
         BasePageHelper<T, ?, ?, ?> ph = getSelectableTenantsAsPage(ctx, determineCurrentTenant(ctx));
-        ph.withContext(ctx);
-
         ctx.respondWith()
            .template("templates/biz/tenants/select-tenant.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
     }
@@ -369,7 +353,15 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     @Routed("/tenants/select/:1")
     public void selectTenant(final WebContext ctx, String id) {
         if ("main".equals(id) || Strings.areEqual(determineOriginalTenantId(ctx), id)) {
-            auditLog.neutral("AuditLog.switchedToMainTenant").causedByCurrentUser().forCurrentUser().log();
+            String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
+            UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
+            auditLog.neutral("AuditLog.switchedToMainTenant")
+                    .hideFromUser()
+                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                    .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                    .forTenant(account.getTenant().getIdAsString(),
+                               account.getTenant().getValue().getTenantData().getName())
+                    .log();
 
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
                                 null);
@@ -386,10 +378,17 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
             return;
         }
 
-        auditLog.neutral("AuditLog.selectedTenant").causedByCurrentUser().forCurrentUser().log();
+        T effectiveTenant = tenant.get();
+        auditLog.neutral("AuditLog.selectedTenant")
+                .hideFromUser()
+                .causedByCurrentUser()
+                .forCurrentUser()
+                .forTenant(effectiveTenant.getIdAsString(), effectiveTenant.getTenantData().getName())
+                .log();
 
         ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
-                            tenant.get().getIdAsString());
+                            effectiveTenant.getIdAsString());
+
         ctx.respondWith().redirectTemporarily(ctx.get("goto").asString(wondergemRoot));
     }
 
@@ -403,7 +402,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     public void tenantsAutocomplete(final WebContext ctx) {
         AutocompleteHelper.handle(ctx, (query, result) -> {
             BasePageHelper<T, ?, ?, ?> ph = getSelectableTenantsAsPage(ctx, determineCurrentTenant(ctx));
-            ph.withContext(ctx);
 
             ph.asPage().getItems().forEach(tenant -> {
                 result.accept(new AutocompleteHelper.Completion(tenant.getIdAsString(),

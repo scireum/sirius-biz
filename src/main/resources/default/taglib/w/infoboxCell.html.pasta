@@ -1,7 +1,7 @@
 <i:arg type="String" name="labelKey" default="" />
 <i:arg type="String" name="label" default="@i18n(labelKey)" />
 <i:arg type="sirius.biz.analytics.reports.Cell" name="value" default="" />
-<i:pragma name="inline" value="true" />
+
 <i:pragma name="description" value="Provides a line rendering a Cell within an infobox" />
 
 <i:if test="value != null && value.isFilled()">

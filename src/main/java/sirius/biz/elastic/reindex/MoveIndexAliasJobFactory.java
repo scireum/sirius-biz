@@ -25,6 +25,7 @@ import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -32,7 +33,7 @@ import java.util.function.Consumer;
  * Implements a job which moves the alias which marks an active index to a desired destination index.
  */
 @Register(classes = JobFactory.class)
-@Permission(TenantUserManager.PERMISSION_SYSTEM_TENANT)
+@Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
 
     @Part
@@ -45,15 +46,18 @@ public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
     private IndexMappings mappings;
 
     private ElasticEntityDescriptorParameter entityDescriptorParameter =
-            (ElasticEntityDescriptorParameter) new ElasticEntityDescriptorParameter("ed",
-                                                                                    "Entity")
-                    .markRequired();
-    private StringParameter destinationParameter =
-            new StringParameter("destination", "Destination").markRequired();
+            (ElasticEntityDescriptorParameter) new ElasticEntityDescriptorParameter("ed", "Entity").markRequired();
+    private StringParameter destinationParameter = new StringParameter("destination", "Destination").markRequired();
 
     @Override
     public String getLabel() {
-        return "ES: Move Index Alias";
+        return "Move Elasticsearch Index Alias";
+    }
+
+    @Nullable
+    @Override
+    public String getDescription() {
+        return "Moves the alias of the given entity to the given target index.";
     }
 
     @Override

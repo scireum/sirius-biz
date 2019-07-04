@@ -22,6 +22,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.info.Product;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.DefaultRoute;
@@ -49,11 +50,17 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         extends BizController {
 
     /**
-     * The permission required to add, modify or lock accounts
+     * The permission required to add, modify or lock accounts.
      */
     public static final String PERMISSION_MANAGE_USER_ACCOUNTS = "permission-manage-user-accounts";
+
     /**
-     * The permission required to delete accounts
+     * The feature required to provide a custom config per user account.
+     */
+    public static final String FEATURE_USER_ACCOUNT_CONFIG = "feature-user-account-config";
+
+    /**
+     * The permission required to delete accounts.
      */
     public static final String PERMISSION_DELETE_USER_ACCOUNTS = "permission-delete-user-accounts";
 
@@ -183,6 +190,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     @Routed("/user-account/:1/config")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
+    @Permission(FEATURE_USER_ACCOUNT_CONFIG)
     public void accountConfig(WebContext ctx, String accountId) {
         U userAccount = findForTenant(getUserClass(), accountId);
         assertNotNew(userAccount);
@@ -206,8 +214,11 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         if (ctx.hasParameter(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERMISSIONS)
                                                           .inner(PermissionData.CONFIG_STRING)
                                                           .getName())) {
-            userAccount.getUserAccountData().getPermissions().getConfig();
+            if (hasPermission(FEATURE_USER_ACCOUNT_CONFIG)) {
+                userAccount.getUserAccountData().getPermissions().getConfig();
+            }
         }
+
         userAccount.getMapper().update(userAccount);
     }
 
@@ -282,15 +293,20 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                 Context context = Context.create();
 
                 context.set(PARAM_PASSWORD, userAccount.getUserAccountData().getLogin().getGeneratedPassword())
-                       .set(PARAM_NAME, userAccount.getUserAccountData().getPerson().getAddressableName())
+                       .set(PARAM_NAME, userAccount.getUserAccountData().getAddressableName())
                        .set(PARAM_USERNAME, userAccount.getUserAccountData().getLogin().getUsername())
                        .set(PARAM_URL, getBaseUrl())
+                       .set(PARAM_REASON,
+                            NLS.fmtr("UserAccountController.generatedPassword.reason")
+                               .set("product", Product.getProduct().getName())
+                               .format())
                        .set(PARAM_ROOT, wondergemRoot);
 
                 mails.createEmail()
-                     .to(userAccount.getUserAccountData().getEmail(),
-                         userAccount.getUserAccountData().getPerson().toString())
-                     .subject(NLS.get("mail-password.subject"))
+                     .to(userAccount.getUserAccountData().getEmail(), userAccount.getUserAccountData().toString())
+                     .subject(NLS.fmtr("UserAccountController.generatedPassword.subject")
+                                 .set("product", Product.getProduct().getName())
+                                 .format())
                      .textTemplate("mail/useraccount/password.pasta", context)
                      .htmlTemplate("mail/useraccount/password.html.pasta", context)
                      .send();
@@ -371,13 +387,13 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                                                  .format())
                                          .set(PARAM_PASSWORD,
                                               account.getUserAccountData().getLogin().getGeneratedPassword())
-                                         .set(PARAM_NAME, account.getUserAccountData().getPerson().getAddressableName())
+                                         .set(PARAM_NAME, account.getUserAccountData().getAddressableName())
                                          .set(PARAM_USERNAME, account.getUserAccountData().getLogin().getUsername())
                                          .set(PARAM_URL, getBaseUrl())
                                          .set(PARAM_ROOT, wondergemRoot);
                 mails.createEmail()
-                     .to(account.getUserAccountData().getEmail(), account.getUserAccountData().getPerson().toString())
-                     .subject(NLS.get("mail-password.subject"))
+                     .to(account.getUserAccountData().getEmail(), account.getUserAccountData().toString())
+                     .subject(NLS.get("UserAccountController.forgotPassword.subject"))
                      .textTemplate("mail/useraccount/password.pasta", context)
                      .htmlTemplate("mail/useraccount/password.html.pasta", context)
                      .send();
@@ -530,7 +546,13 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     @Routed("/user-accounts/select/:1")
     public void selectUserAccount(final WebContext ctx, String id) {
         if ("main".equals(id)) {
-            auditLog.neutral("AuditLog.switchedToMainUser").causedByCurrentUser().forCurrentUser().log();
+            String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
+            UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
+            auditLog.neutral("AuditLog.switchedToMainUser")
+                    .hideFromUser()
+                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                    .forCurrentUser()
+                    .log();
 
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX, null);
             ctx.respondWith().redirectTemporarily("/user-accounts/select");
@@ -546,11 +568,12 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             return;
         }
 
-        if (!hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT)) {
+        if (!isUserAccountOfSystemTenant()) {
             assertTenant(user);
         }
 
         auditLog.neutral("AuditLog.selectedUser")
+                .hideFromUser()
                 .causedByCurrentUser()
                 .forUser(user.getUniqueName(), user.getUserAccountData().getLogin().getUsername())
                 .forTenant(String.valueOf(user.getTenant().getId()),

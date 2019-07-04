@@ -1,7 +1,7 @@
 <i:arg type="String" name="type" />
 <i:arg type="String" name="scope" />
 
-<i:pragma name="inline" value="true" />
+
 <i:pragma name="description" value="Outputs all limits for realms of the given type for the given scope." />
 
 <i:if test="isenguard != null">

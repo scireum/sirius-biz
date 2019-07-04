@@ -66,7 +66,7 @@ public class SQLTenant extends BizEntity implements Tenant<Long> {
         if (effectivePermissions == null) {
             Set<String> permissions = new TreeSet<>(getTenantData().getPackageData().computeExpandedPermissions());
             if (Strings.areEqual(getIdAsString(), tenants.getTenantUserManager().getSystemTenantId())) {
-                permissions.add(TenantUserManager.PERMISSION_SYSTEM_TENANT);
+                permissions.add(PERMISSION_SYSTEM_TENANT);
             }
 
             if (Strings.isFilled(tenantData.getAccountNumber())) {

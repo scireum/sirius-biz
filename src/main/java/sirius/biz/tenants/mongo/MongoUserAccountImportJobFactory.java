@@ -33,7 +33,10 @@ public class MongoUserAccountImportJobFactory extends LineBasedImportJobFactory 
     protected LineBasedImportJob<?> createJob(ProcessContext process) {
         MongoTenant currentTenant = tenants.getRequiredTenant();
 
-        return new LineBasedImportJob<MongoUserAccount>(fileParameter, MongoUserAccount.class, process) {
+        return new LineBasedImportJob<MongoUserAccount>(fileParameter,
+                                                        ignoreEmptyParameter,
+                                                        MongoUserAccount.class,
+                                                        process) {
             @Override
             protected MongoUserAccount fillAndVerify(MongoUserAccount entity) {
                 setOrVerify(entity, entity.getTenant(), currentTenant);

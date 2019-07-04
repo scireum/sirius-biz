@@ -15,7 +15,10 @@ import sirius.biz.importer.SQLEntityImportHandler;
 import sirius.biz.model.LoginData;
 import sirius.biz.tenants.UserAccountData;
 import sirius.db.jdbc.batch.FindQuery;
+import sirius.db.mixing.Property;
+import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Register;
 
 import java.util.function.BiConsumer;
@@ -63,5 +66,10 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
                                           .findQuery(SQLUserAccount.class,
                                                      SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                      .inner(LoginData.USERNAME)));
+    }
+
+    @Override
+    protected boolean parseComplexProperty(SQLUserAccount entity, Property property, Value value, Context data) {
+        return false;
     }
 }

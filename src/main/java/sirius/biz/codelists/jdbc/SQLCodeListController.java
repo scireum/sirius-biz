@@ -33,6 +33,7 @@ public class SQLCodeListController extends CodeListController<Long, SQLCodeList,
     protected BasePageHelper<SQLCodeListEntry, ?, ?, ?> getEntriesAsPage(SQLCodeList codeList) {
         return SQLPageHelper.withQuery(oma.select(SQLCodeListEntry.class)
                                           .eq(SQLCodeListEntry.CODE_LIST, codeList)
+                                          .orderAsc(SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.PRIORITY))
                                           .orderAsc(SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE)));
     }
 

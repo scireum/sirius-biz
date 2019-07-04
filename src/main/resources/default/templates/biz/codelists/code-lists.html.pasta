@@ -42,7 +42,8 @@
                     @list.getCodeListData().getDescription()
                 </td>
                 <td class="col-md-2 align-center">
-                    <w:deleteLink url="@apply('/code-list/%s/delete?%s', list.getIdAsString(), lists.createQueryString())"/>
+                    <w:deleteLink url="@apply('/code-list/%s/delete', list.getIdAsString())"
+                                  page="lists"/>
                 </td>
             </tr>
         </i:for>

@@ -11,13 +11,9 @@
 </div>
 
 <div class="row">
-
-</div>
-
-<div class="row">
     <w:codelistSelect span="3" name="userAccountData_person_salutation" list="salutations"
                       value="@account.getUserAccountData().getPerson().getSalutation()"
-                      labelKey="PersonData.salutation"/>
+                      labelKey="PersonData.salutation" optional="true"/>
     <w:textfield span="3" name="userAccountData_person_title"
                  value="@account.getUserAccountData().getPerson().getTitle()" labelKey="PersonData.title"/>
     <w:textfield name="userAccountData_person_firstname"
@@ -36,16 +32,17 @@
         </i:for>
     </w:singleSelect>
 </div>
+
+<i:extensions target="user-account-details" point="below-details" account="account"/>
+
 <div class="row">
     <div class="col-md-6">
         <w:heading labelKey="Model.security"/>
         <div class="row">
-            <w:checkbox span="12" name="userAccountData_login_accountLocked"
-                        value="account.getUserAccountData().getLogin().isAccountLocked()"
-                        labelKey="LoginData.accountLocked"/>
-            <w:checkbox span="12" name="userAccountData_externalLoginRequired"
-                        value="account.getUserAccountData().isExternalLoginRequired()"
-                        labelKey="UserAccount.externalLoginRequired" helpKey="UserAccount.externalLoginRequired.help"/>
+            <w:booleanSelect span="12" name="userAccountData_login_accountLocked"
+                             value="account.getUserAccountData().getLogin().isAccountLocked()"
+                             labelKey="LoginData.accountLocked"
+                             helpKey="LoginData.accountLocked.help"/>
         </div>
 
     </div>
@@ -55,9 +52,7 @@
             <div class="checkbox">
                 <label>
                     <input type="checkbox" name="roles" value="@role"
-                           @if (account.getUserAccountData().getPermissions().getPermissions().contains(role)) {
-                           checked="checked"
-                           }/>
+                           @checked="account.getUserAccountData().getPermissions().getPermissions().contains(role)"/>
                     @controller.getRoleName(role)
                     <span class="help-block checkbox-help"> @controller.getRoleDescription(role)</span>
                 </label>
@@ -66,5 +61,5 @@
     </div>
 </div>
 
-<i:extensions name="templates-user-account-details" account="account"/>
+<i:extensions target="user-account-details" point="bottom" account="account"/>
 

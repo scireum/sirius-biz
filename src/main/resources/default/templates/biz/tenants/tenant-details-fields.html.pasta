@@ -2,12 +2,14 @@
 <i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 
 <div class="row">
-    <w:textfield span="12" name="tenantData_name" value="@tenant.getTenantData().getName()" labelKey="Model.name"
+    <w:textfield name="tenantData_name" value="@tenant.getTenantData().getName()" labelKey="TenantData.name"
                  required="true"/>
+    <w:textfield name="tenantData_fullName" value="@tenant.getTenantData().getFullName()"
+                 labelKey="TenantData.fullName"/>
 </div>
 <div class="row">
     <w:textfield name="tenantData_accountNumber" value="@tenant.getTenantData().getAccountNumber()"
-                 labelKey="Tenant.accountNumber"/>
+                 labelKey="TenantData.accountNumber"/>
     <w:singleSelect name="tenantData_lang" labelKey="Model.lang" required="true">
         <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
             <option value="@language.getFirst()" @selected="language.getFirst() == tenant.getTenantData().getLang()">
@@ -16,6 +18,9 @@
         </i:for>
     </w:singleSelect>
 </div>
+
+<i:extensions target="tenant-details" point="below-details" tenant="tenant" controller="controller"/>
+
 <w:subHeading labelKey="Model.address"/>
 <div class="row">
     <w:textfield span="12" name="tenantData_address_street" value="@tenant.getTenantData().getAddress().getStreet()"
@@ -30,41 +35,52 @@
                       value="@tenant.getTenantData().getAddress().getCountry()"
                       labelKey="InternationalAddressData.country"/>
 </div>
+
+<i:extensions target="tenant-details" point="below-address" tenant="tenant" controller="controller"/>
+
 <w:subHeading labelKey="Model.security"/>
 <div class="row">
     <w:textfield name="tenantData_loginIntervalDays"
                  value="@toUserString(tenant.getTenantData().getLoginIntervalDays())"
-                 addonText="@i18n('Tenant.suffixDays')" labelKey="Tenant.loginIntervalDays"
-                 helpKey="Tenant.loginIntervalDays.help"/>
+                 addonText="@i18n('Tenant.suffixDays')" labelKey="TenantData.loginIntervalDays"
+                 helpKey="TenantData.loginIntervalDays.help"/>
     <w:textfield name="tenantData_externalLoginIntervalDays"
                  value="@toUserString(tenant.getTenantData().getExternalLoginIntervalDays())"
-                 addonText="@i18n('Tenant.suffixDays')" labelKey="Tenant.externalLoginIntervalDays"
-                 helpKey="Tenant.externalLoginIntervalDays.help"/>
+                 addonText="@i18n('Tenant.suffixDays')" labelKey="TenantData.externalLoginIntervalDays"
+                 helpKey="TenantData.externalLoginIntervalDays.help"/>
 
-    <w:textfield name="tenantData_ipRange" value="@tenant.getTenantData().getIpRange()" labelKey="Tenant.ipRange"
-                 helpKey="Tenant.ipRange.help"/>
+    <w:textfield name="tenantData_ipRange" value="@tenant.getTenantData().getIpRange()" labelKey="TenantData.ipRange"
+                 helpKey="TenantData.ipRange.help"/>
 
     <w:textfield name="tenantData_rolesToKeep" value="@tenant.getTenantData().getRolesToKeep()"
-                 labelKey="Tenant.rolesToKeep"
-                 helpKey="Tenant.rolesToKeep.help"/>
+                 labelKey="TenantData.rolesToKeep"
+                 helpKey="TenantData.rolesToKeep.help"/>
 </div>
+
+<i:extensions target="tenant-details" point="below-security" tenant="tenant" controller="controller"/>
+
 <div class="row">
     <div class="col-md-6">
         <w:subHeading labelKey="Tenant.administration"/>
         <div class="row">
-
-            <w:singleSelect span="12" name="parent" optional="true" labelKey="Tenant.parent"
-                            helpKey="Tenant.parent.help">
-                <i:for type="sirius.biz.tenants.Tenant" var="t" items="controller.getPossibleParentTenants()">
-                    <option value="@t.getIdAsString()" @if(tenant.getParent().is(t)) {selected="selected" }>
-                        @t.getTenantData().getName()
+            <w:autocompleteSingleSelect span="12"
+                                        name="parent"
+                                        labelKey="Tenant.parent"
+                                        helpKey="Tenant.parent.help"
+                                        required="false"
+                                        optional="true"
+                                        serviceUri="/tenants/autocomplete">
+                <i:if test="tenant.getParent().isFilled()">
+                    <option value="@tenant.getParent().getId()" selected="selected">
+                        @tenant.getParent().getValue()
                     </option>
-                </i:for>
-            </w:singleSelect>
+                </i:if>
+            </w:autocompleteSingleSelect>
+
             <w:checkbox span="12" name="tenantData_parentCanAccess" value="tenant.getTenantData().isParentCanAccess()"
-                        labelKey="Tenant.parentCanAccess" helpKey="Tenant.parentCanAccess.help"/>
+                        labelKey="TenantData.parentCanAccess" helpKey="TenantData.parentCanAccess.help"/>
             <w:checkbox span="12" name="tenantData_canAccessParent" value="tenant.getTenantData().isCanAccessParent()"
-                        labelKey="Tenant.canAccessParent" helpKey="Tenant.canAccessParent.help"/>
+                        labelKey="TenantData.canAccessParent" helpKey="TenantData.canAccessParent.help"/>
         </div>
     </div>
     <div class="col-md-6">
@@ -74,4 +90,4 @@
     </div>
 </div>
 
-<i:extensions name="templates-tenant-details" tenant="tenant" controller="controller"/>
+<i:extensions target="tenant-details" point="bottom" tenant="tenant" controller="controller"/>

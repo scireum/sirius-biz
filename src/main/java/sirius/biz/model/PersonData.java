@@ -77,7 +77,7 @@ public class PersonData extends Composite {
     private String lastname;
 
     @Part
-    private static CodeLists<?,?,?> codeLists;
+    private static CodeLists<?, ?, ?> codeLists;
 
     /**
      * Generates a string which is used to address the person.
@@ -94,6 +94,21 @@ public class PersonData extends Composite {
                         .set("salutation", getTranslatedSalutation())
                         .set("title", title)
                         .set("lastname", lastname)
+                        .smartFormat();
+    }
+
+    /**
+     * Generates the name without salutation and title, e.g. Firstname Lastname.
+     *
+     * @return the first and lastname as string, or empty if the lastname is not filled.
+     */
+    public String getShortName() {
+        if (Strings.isEmpty(lastname)) {
+            return "";
+        }
+        return Formatter.create("[${firstname} ]${lastname}")
+                        .set("firstname", getFirstname())
+                        .set("lastname", getLastname())
                         .smartFormat();
     }
 

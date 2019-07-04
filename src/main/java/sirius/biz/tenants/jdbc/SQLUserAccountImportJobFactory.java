@@ -33,7 +33,10 @@ public class SQLUserAccountImportJobFactory extends LineBasedImportJobFactory {
     protected LineBasedImportJob<?> createJob(ProcessContext process) {
         SQLTenant currentTenant = tenants.getRequiredTenant();
 
-        return new LineBasedImportJob<SQLUserAccount>(fileParameter, SQLUserAccount.class, process) {
+        return new LineBasedImportJob<SQLUserAccount>(fileParameter,
+                                                      ignoreEmptyParameter,
+                                                      SQLUserAccount.class,
+                                                      process) {
             @Override
             protected SQLUserAccount fillAndVerify(SQLUserAccount entity) {
                 setOrVerify(entity, entity.getTenant(), currentTenant);

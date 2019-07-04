@@ -30,7 +30,7 @@ public class BooleanParameter extends Parameter<Boolean, BooleanParameter> {
 
     @Override
     public String getTemplateName() {
-        return "/templates/biz/jobs/params/checkbox.html.pasta";
+        return "/templates/biz/jobs/params/selectBoolean.html.pasta";
     }
 
     /**
@@ -49,6 +49,12 @@ public class BooleanParameter extends Parameter<Boolean, BooleanParameter> {
         }
 
         return NLS.toMachineString(input.asBoolean());
+    }
+
+    @Override
+    public BooleanParameter markRequired() {
+        throw new UnsupportedOperationException(
+                "A boolean parameter must not be marked as required as it is inherently so!");
     }
 
     @Override
