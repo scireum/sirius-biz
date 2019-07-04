@@ -38,7 +38,7 @@ public class LogController extends BizController {
                 ElasticPageHelper.withQuery(elastic.select(LoggedMessage.class).orderDesc(LoggedMessage.TOD));
         ph.withContext(ctx);
         ph.withPageSize(100);
-        ph.addTermAggregation(LoggedMessage.CATEGORY);
+        ph.addTermAggregation(LoggedMessage.CATEGORY, 100);
         ph.addTermAggregation(LoggedMessage.LEVEL);
         ph.addTermAggregation(LoggedMessage.NODE);
         ph.addTimeAggregation(LoggedMessage.TOD,
