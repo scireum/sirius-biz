@@ -8,6 +8,8 @@
 
 package sirius.biz.tenants.mongo;
 
+import sirius.biz.packages.PackageData;
+import sirius.biz.packages.Packages;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantController;
 import sirius.biz.tenants.TenantData;
@@ -16,6 +18,7 @@ import sirius.biz.web.MongoPageHelper;
 import sirius.db.mixing.query.QueryField;
 import sirius.db.mongo.MongoQuery;
 import sirius.db.mongo.QueryBuilder;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
 import sirius.web.http.WebContext;
@@ -28,25 +31,30 @@ import java.util.Optional;
 @Register(classes = {Controller.class, TenantController.class}, framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
 public class MongoTenantController extends TenantController<String, MongoTenant, MongoUserAccount> {
 
-    @Override
-    protected BasePageHelper<MongoTenant, ?, ?, ?> getTenantsAsPage() {
-        MongoPageHelper<MongoTenant> pageHelper = MongoPageHelper.withQuery(mango.select(MongoTenant.class)
-                                                                                 .orderAsc(Tenant.TENANT_DATA.inner(
-                                                                                         TenantData.NAME)));
-        pageHelper.withSearchFields(QueryField.startsWith(MongoTenant.SEARCH_PREFIXES));
+    @Part
+    private Packages packages;
 
-        return pageHelper;
+    @Override
+    protected BasePageHelper<MongoTenant, ?, ?, ?> getTenantsAsPage(WebContext ctx) {
+        return createTenantPageHelper(ctx,
+                                      mango.select(MongoTenant.class)
+                                           .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME)));
     }
 
     @Override
     protected BasePageHelper<MongoTenant, ?, ?, ?> getSelectableTenantsAsPage(WebContext ctx,
                                                                               MongoTenant currentTenant) {
+        return createTenantPageHelper(ctx,
+                                      queryPossibleTenants(currentTenant).orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME)));
+    }
 
-        MongoPageHelper<MongoTenant> pageHelper =
-                MongoPageHelper.withQuery(queryPossibleTenants(currentTenant).orderAsc(Tenant.TENANT_DATA.inner(
-                        TenantData.NAME)));
+    private MongoPageHelper<MongoTenant> createTenantPageHelper(WebContext ctx, MongoQuery<MongoTenant> query) {
+        MongoPageHelper<MongoTenant> pageHelper = MongoPageHelper.withQuery(query).withContext(ctx);
         pageHelper.withSearchFields(QueryField.startsWith(MongoTenant.SEARCH_PREFIXES));
-
+        pageHelper.addTermAggregation(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA.inner(PackageData.PACKAGE_STRING)),
+                                      name -> packages.getPackageName(TenantController.PACKAGE_SCOPE_TENANT, name));
+        pageHelper.addTermAggregation(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA.inner(PackageData.UPGRADES)),
+                                      name -> packages.getUpgradeName(TenantController.PACKAGE_SCOPE_TENANT, name));
         return pageHelper;
     }
 
