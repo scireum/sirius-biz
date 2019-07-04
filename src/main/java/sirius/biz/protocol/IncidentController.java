@@ -37,7 +37,7 @@ public class IncidentController extends BizController {
         ElasticPageHelper<StoredIncident> ph = ElasticPageHelper.withQuery(elastic.select(StoredIncident.class)
                                                                                   .orderDesc(StoredIncident.LAST_OCCURRENCE));
         ph.withContext(ctx);
-        ph.addTermAggregation(StoredIncident.CATEGORY);
+        ph.addTermAggregation(StoredIncident.CATEGORY, 100);
         ph.addTermAggregation(StoredIncident.NODE);
         ph.addTimeAggregation(StoredIncident.LAST_OCCURRENCE,
                               DateRange.lastFiveMinutes(),
