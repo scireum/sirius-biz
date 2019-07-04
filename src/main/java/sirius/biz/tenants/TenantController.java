@@ -109,9 +109,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     @DefaultRoute
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void tenants(WebContext ctx) {
-        BasePageHelper<T, ?, ?, ?> ph = getTenantsAsPage();
-        ph.withContext(ctx);
-        ctx.respondWith().template("templates/biz/tenants/tenants.html.pasta", ph.asPage());
+        ctx.respondWith().template("templates/biz/tenants/tenants.html.pasta", getTenantsAsPage(ctx).asPage());
     }
 
     /**
@@ -119,7 +117,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      *
      * @return the list of available tenants wrapped as page helper
      */
-    protected abstract BasePageHelper<T, ?, ?, ?> getTenantsAsPage();
+    protected abstract BasePageHelper<T, ?, ?, ?> getTenantsAsPage(WebContext ctx);
 
     /**
      * Provides an editor for updating a tenant.
@@ -165,19 +163,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      */
     public List<Tuple<String, String>> getAvailableLanguages() {
         return tenants.getTenantUserManager().getAvailableLanguages();
-    }
-
-    /**
-     * Provides the list of possible parent tenants to the template.
-     *
-     * @return the list of possible parent tenants
-     */
-    public List<BaseEntity<?>> getPossibleParentTenants() {
-        return mixing.getDescriptor(getTenantClass())
-                     .getMapper()
-                     .select(getTenantClass())
-                     .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME))
-                     .queryList();
     }
 
     /**
@@ -306,8 +291,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     @Permission(TenantUserManager.PERMISSION_SELECT_TENANT)
     public void selectTenants(WebContext ctx) {
         BasePageHelper<T, ?, ?, ?> ph = getSelectableTenantsAsPage(ctx, determineCurrentTenant(ctx));
-        ph.withContext(ctx);
-
         ctx.respondWith()
            .template("templates/biz/tenants/select-tenant.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
     }
@@ -419,7 +402,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     public void tenantsAutocomplete(final WebContext ctx) {
         AutocompleteHelper.handle(ctx, (query, result) -> {
             BasePageHelper<T, ?, ?, ?> ph = getSelectableTenantsAsPage(ctx, determineCurrentTenant(ctx));
-            ph.withContext(ctx);
 
             ph.asPage().getItems().forEach(tenant -> {
                 result.accept(new AutocompleteHelper.Completion(tenant.getIdAsString(),
