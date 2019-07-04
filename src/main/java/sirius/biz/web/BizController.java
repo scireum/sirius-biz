@@ -76,6 +76,12 @@ public class BizController extends BasicController {
     @Part
     private Tasks tasks;
 
+    /**
+     * Provides access to the generic tenants manager.
+     * <p>
+     * Note that a concrete implementation like {@link sirius.biz.tenants.jdbc.SQLTenants} can be accessed by
+     * using {@code tenants.as(SQLTenants.class)}. This also applies for {@link sirius.biz.tenants.mongo.MongoTenants}.
+     */
     @Part
     protected Tenants<?, ?, ?> tenants;
 
@@ -124,7 +130,6 @@ public class BizController extends BasicController {
     private HandledException invalidTenantException() {
         return Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
     }
-
 
     /**
      * Checks whether the current user is an account of the system tenant. This can be useful for granting extra features.
