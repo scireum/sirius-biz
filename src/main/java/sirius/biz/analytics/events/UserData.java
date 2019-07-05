@@ -64,4 +64,16 @@ public class UserData extends Composite {
     public String getScopeId() {
         return scopeId;
     }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    public void setScopeId(String scopeId) {
+        this.scopeId = scopeId;
+    }
 }
