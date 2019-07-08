@@ -33,4 +33,11 @@ public interface SQLPageHelperExtender<E extends SQLEntity> extends Priorized {
      * @return the target entity for which the page helper is to be extended
      */
     Class<E> getTargetType();
+
+    /**
+     * Returns the extension name which triggers this extender.
+     * <p>
+     * This permits to select appropriate extenders when calling {@link SQLPageHelper#applyExtenders(String)}.
+     */
+    String getTargetExtension();
 }

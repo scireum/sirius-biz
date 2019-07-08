@@ -154,24 +154,27 @@ public class MongoPageHelper<E extends MongoEntity>
                 q.eq(Mapping.named(f.getName()), filterValue.asBoolean());
             }
 
-            q.addFacet(new MongoBooleanFacet(field).onComplete(mongoFacet -> {
-
-                Iterator<FacetItem> iter = facet.getAllItems().iterator();
-                while (iter.hasNext()) {
-                    FacetItem item = iter.next();
-                    int numberOfHits = Strings.areEqual(item.getKey(), "true") ?
-                                       mongoFacet.getNumTrue() :
-                                       mongoFacet.getNumFalse();
-                    if (numberOfHits > 0 || item.isActive()) {
-                        item.setCount(numberOfHits);
-                    } else {
-                        // If the item has no matches and isn't an active filter - remove as
-                        // it is unneccessary...
-                        iter.remove();
-                    }
-                }
-            }));
+            addBooleanQueryFacet(q, facet, field);
         });
+    }
+
+    private void addBooleanQueryFacet(MongoQuery<E> query, Facet facet, Mapping field) {
+        query.addFacet(new MongoBooleanFacet(field).onComplete(mongoFacet -> {
+            Iterator<FacetItem> iter = facet.getAllItems().iterator();
+            while (iter.hasNext()) {
+                FacetItem item = iter.next();
+                int numberOfHits = Strings.areEqual(item.getKey(), "true") ?
+                                   mongoFacet.getNumTrue() :
+                                   mongoFacet.getNumFalse();
+                if (numberOfHits > 0 || item.isActive()) {
+                    item.setCount(numberOfHits);
+                } else {
+                    // If the item has no matches and isn't an active filter - remove as
+                    // it is unneccessary...
+                    iter.remove();
+                }
+            }
+        }));
     }
 
     /**
@@ -226,14 +229,21 @@ public class MongoPageHelper<E extends MongoEntity>
         super.fillPage(w, result, items);
     }
 
+    /**
+     * Applies all {@link MongoPageHelperExtender extenders} which are registered for the given name and the target
+     * type of this page helper.
+     *
+     * @param extensionName the name of extensions to trigger (as given in
+     *                      {@link MongoPageHelperExtender#getTargetExtension()}).
+     * @return the helper itself for fluent method calls
+     */
     @SuppressWarnings("unchecked")
-    @Override
-    public Page<E> asPage() {
-        for (MongoPageHelperExtender<?> extender : extenders) {
-            if (extender.getTargetType().isAssignableFrom(baseQuery.getDescriptor().getType())) {
-                ((MongoPageHelperExtender<E>) extender).extend(this);
-            }
-        }
-        return super.asPage();
+    public MongoPageHelper<E> applyExtenders(String extensionName) {
+        extenders.stream()
+                 .filter(extender -> Strings.areEqual(extensionName, extender.getTargetExtension()))
+                 .filter(extender -> extender.getTargetType().isAssignableFrom(baseQuery.getDescriptor().getType()))
+                 .forEach(extender -> ((MongoPageHelperExtender<E>) extender).extend(this));
+
+        return this;
     }
 }
