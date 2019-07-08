@@ -33,7 +33,10 @@ public abstract class MongoAnalyticalTaskScheduler extends BaseAnalyticalTaskSch
     @Override
     protected void scheduleBatches(Class<? extends MongoEntity> type, Consumer<JSONObject> batchConsumer) {
         try {
-            batchEmitter.computeBatches(type, this::extendBatchQuery, getBatchSize(), batchConsumer);
+            batchEmitter.computeBatches(type, this::extendBatchQuery, getBatchSize(), batch -> {
+                batchConsumer.accept(batch);
+                return true;
+            });
         } catch (Exception e) {
             Exceptions.handle(Log.BACKGROUND, e);
         }
