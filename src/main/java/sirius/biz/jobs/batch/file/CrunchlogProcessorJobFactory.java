@@ -112,12 +112,16 @@ public abstract class CrunchlogProcessorJobFactory extends SimpleBatchProcessJob
             InsertQuery<Event> qry = queries.computeIfAbsent(event.getClass(),
                                                              type -> (InsertQuery<Event>) batchContext.insertQuery(type,
                                                                                                                    false));
-            qry.insert(event, true, true);
+            qry.insert(event, shouldInvokeChecks(), true);
         } catch (Exception e) {
             process.handle(e);
         } finally {
             process.addTiming("Line", w.elapsedMillis());
         }
+    }
+
+    protected boolean shouldInvokeChecks() {
+        return true;
     }
 
     protected abstract Event handleObject(JSONObject parseObject, ProcessContext process);

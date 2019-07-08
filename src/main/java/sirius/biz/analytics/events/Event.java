@@ -81,6 +81,14 @@ public abstract class Event extends SQLEntity {
         this.eventTimestamp = eventTimestamp;
     }
 
+    public void setEventDate(LocalDate eventDate) {
+        this.eventDate = eventDate;
+    }
+
+    public void setNode(String node) {
+        this.node = node;
+    }
+
     public LocalDate getEventDate() {
         return eventDate;
     }
