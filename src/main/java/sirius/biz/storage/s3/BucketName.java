@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.s3;
+package sirius.biz.storage.s3;
 
 import java.util.Objects;
 

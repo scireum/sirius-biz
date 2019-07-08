@@ -1,4 +1,4 @@
-<i:arg type="sirius.biz.jobs.JobFactory" name="job"/>
+<i:arg type="sirius.biz.jobs.interactive.InteractiveJobFactory" name="job"/>
 <i:arg type="Map" name="context"/>
 <i:arg type="String" name="labels"/>
 <i:arg type="List" name="datasets"/>

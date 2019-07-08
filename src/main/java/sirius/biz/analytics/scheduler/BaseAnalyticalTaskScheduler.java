@@ -65,7 +65,7 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
      * Schedules the batches for the given type of entities.
      *
      * @param type          the type of entities to schedule
-     * @param batchConsumer the consumer which will distribute the batches accross the cluster
+     * @param batchConsumer the consumer which will distribute the batches across the cluster
      */
     protected abstract void scheduleBatches(Class<? extends B> type, Consumer<JSONObject> batchConsumer);
 

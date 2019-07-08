@@ -127,7 +127,7 @@ public class ProcessController extends BizController {
     public void processDetails(WebContext ctx, String processId) {
         Process process = findAccessibleProcess(processId);
 
-        ElasticQuery<ProcessLog> query = buildLogsQuery(process);
+        ElasticQuery<ProcessLog> query = buildLogsQuery(process).orderDesc(ProcessLog.SORT_KEY);
         ctx.respondWith()
            .template("templates/biz/process/process-details.html.pasta", process, query.limit(5).queryList());
     }
@@ -143,7 +143,7 @@ public class ProcessController extends BizController {
     public void processLogs(WebContext ctx, String processId) {
         Process process = findAccessibleProcess(processId);
 
-        ElasticQuery<ProcessLog> query = buildLogsQuery(process);
+        ElasticQuery<ProcessLog> query = buildLogsQuery(process).orderAsc(ProcessLog.SORT_KEY);
 
         ElasticPageHelper<ProcessLog> ph = ElasticPageHelper.withQuery(query);
         ph.withContext(ctx);
@@ -262,8 +262,7 @@ public class ProcessController extends BizController {
     private ElasticQuery<ProcessLog> buildLogsQuery(Process process) {
         ElasticQuery<ProcessLog> query = elastic.select(ProcessLog.class)
                                                 .where(Elastic.FILTERS.notExists(ProcessLog.OUTPUT))
-                                                .eq(ProcessLog.PROCESS, process)
-                                                .orderAsc(ProcessLog.SORT_KEY);
+                                                .eq(ProcessLog.PROCESS, process);
 
         UserInfo user = UserContext.getCurrentUser();
         if (!user.hasPermission(PERMISSION_MANAGE_ALL_PROCESSES)) {
