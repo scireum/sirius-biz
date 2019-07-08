@@ -9,9 +9,9 @@
 package sirius.biz.process;
 
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import sirius.biz.s3.BucketName;
-import sirius.biz.s3.ObjectStore;
-import sirius.biz.s3.ObjectStores;
+import sirius.biz.storage.s3.BucketName;
+import sirius.biz.storage.s3.ObjectStore;
+import sirius.biz.storage.s3.ObjectStores;
 import sirius.db.KeyGenerator;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
