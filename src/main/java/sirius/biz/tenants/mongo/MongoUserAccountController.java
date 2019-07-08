@@ -36,6 +36,9 @@ public class MongoUserAccountController extends UserAccountController<String, Mo
         MongoPageHelper<MongoUserAccount> pageHelper = MongoPageHelper.withQuery(tenants.forCurrentTenant(baseQuery));
         pageHelper.withSearchFields(QueryField.startsWith(MongoUserAccount.SEARCH_PREFIXES));
 
+        pageHelper.applyExtenders("/user-accounts");
+        pageHelper.applyExtenders("/user-accounts/*");
+
         return pageHelper;
     }
 
@@ -52,6 +55,9 @@ public class MongoUserAccountController extends UserAccountController<String, Mo
 
         MongoPageHelper<MongoUserAccount> pageHelper = MongoPageHelper.withQuery(baseQuery);
         pageHelper.withSearchFields(QueryField.startsWith(MongoUserAccount.SEARCH_PREFIXES));
+
+        pageHelper.applyExtenders("/user-accounts/select");
+        pageHelper.applyExtenders("/user-accounts/*");
 
         return pageHelper;
     }

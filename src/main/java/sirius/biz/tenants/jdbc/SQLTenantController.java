@@ -40,6 +40,9 @@ public class SQLTenantController extends TenantController<Long, SQLTenant, SQLUs
                                     QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS)
                                                                           .inner(AddressData.CITY)));
 
+        pageHelper.applyExtenders("/tenants/*");
+        pageHelper.applyExtenders("/tenants");
+
         return pageHelper;
     }
 
@@ -54,6 +57,10 @@ public class SQLTenantController extends TenantController<Long, SQLTenant, SQLUs
                                                                           .inner(AddressData.STREET)),
                                     QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS)
                                                                           .inner(AddressData.CITY)));
+
+        pageHelper.applyExtenders("/tenants/*");
+        pageHelper.applyExtenders("/tenants/select");
+
         return pageHelper;
     }
 
