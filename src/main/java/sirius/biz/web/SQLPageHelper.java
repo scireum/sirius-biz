@@ -21,7 +21,6 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.health.Exceptions;
 import sirius.web.controller.Facet;
-import sirius.web.controller.Page;
 
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -90,14 +89,21 @@ public class SQLPageHelper<E extends SQLEntity>
         });
     }
 
+    /**
+     * Applies all {@link SQLPageHelperExtender extenders} which are registered for the given name and the target
+     * type of this page helper.
+     *
+     * @param extensionName the name of extensions to trigger (as given in
+     *                      {@link SQLPageHelperExtender#getTargetExtension()}).
+     * @return the helper itself for fluent method calls
+     */
     @SuppressWarnings("unchecked")
-    @Override
-    public Page<E> asPage() {
-        for (SQLPageHelperExtender<?> extender : extenders) {
-            if (extender.getTargetType().isAssignableFrom(baseQuery.getDescriptor().getType())) {
-                ((SQLPageHelperExtender<E>) extender).extend(this);
-            }
-        }
-        return super.asPage();
+    public SQLPageHelper<E> applyExtenders(String extensionName) {
+        extenders.stream()
+                 .filter(extender -> Strings.areEqual(extensionName, extender.getTargetExtension()))
+                 .filter(extender -> extender.getTargetType().isAssignableFrom(baseQuery.getDescriptor().getType()))
+                 .forEach(extender -> ((SQLPageHelperExtender<E>) extender).extend(this));
+
+        return this;
     }
 }
