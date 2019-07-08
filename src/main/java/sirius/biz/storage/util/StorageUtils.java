@@ -22,6 +22,11 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Collection;
 
+/**
+ * Provides various helpers for the storage framework.
+ * <p>
+ * This provides access to the configuration for all layers and some authentication utilities.
+ */
 @Register(classes = StorageUtils.class)
 public class StorageUtils {
 
@@ -30,23 +35,29 @@ public class StorageUtils {
      */
     public static final String FRAMEWORK_STORAGE = "biz.storage";
 
+    /**
+     * Represents the central logger for the whole storage framework.
+     */
     public static final Log LOG = Log.get("storage");
-    public static final String KEY_PHYSICAL_ENGINE = "engine";
-    public static final String KEY_PHYSICAL_STORE_PER_YEAR = "storePerYear";
-    public static final String KEY_PHYSICAL_PATH = "path";
-    public static final String KEY_PHYSICAL_BASE_DIR = "baseDir";
-    public static final String KEY_PHYSICAL_HTTP_ACCESS = "access";
-    public static final String KEY_PHYSICAL_STORE = "store";
-    public static final String KEY_PHYSICAL_REPLICATION_SPACE = "replicationSpace";
 
-    public static final String SCOPE_PHYSICAL = "physical";
+    /**
+     * Lists the layers which are placed in the config as <tt>storage.layer1</tt> etc. Each of
+     * these layers provide a list of {@link Extension extensions} - one per storage space.
+     */
+    public enum ConfigScope {LAYER1, LAYER2, LAYER3}
 
     @ConfigValue("storage.sharedSecret")
     private String sharedSecret;
     private String safeSharedSecret;
 
-    public Collection<Extension> getStorageSpaces(String scope) {
-        return Sirius.getSettings().getExtensions("storage."+scope+".spaces");
+    /**
+     * Returns all configured extensions / storage spaces for the given scope.
+     *
+     * @param scope the scope to query
+     * @return the list of extensions available for this scope
+     */
+    public Collection<Extension> getStorageSpaces(ConfigScope scope) {
+        return Sirius.getSettings().getExtensions("storage." + scope.name().toLowerCase() + ".spaces");
     }
 
     /**
@@ -76,82 +87,6 @@ public class StorageUtils {
 
         return false;
     }
-
-//    /**
-//     * Creates a builder to construct a download URL for an object.
-//     *
-//     * @param bucket    the bucket containing the object
-//     * @param objectKey the object to create an URL for
-//     * @return a builder to construct a download URL
-//     */
-//    public DownloadBuilder prepareDownload(String bucket, String objectKey) {
-//        return new DownloadBuilder(this, bucket, objectKey);
-//    }
-//
-//    /**
-//     * Creates a builder for download URLs based on a {@link VirtualObject} which might avoid a lookup.
-//     *
-//     * @param object the object to deliver
-//     * @return a builder to construct a download URL
-//     */
-//    protected DownloadBuilder prepareDownload(VirtualObject object) {
-//        return new DownloadBuilder(this, object);
-//    }
-//
-//    /**
-//     * Creates a download URL for a fully populated builder.
-//     *
-//     * @param downloadBuilder the builder specifying the details of the url
-//     * @return a download URL for the object described by the builder
-//     */
-//    protected String createURL(DownloadBuilder downloadBuilder) {
-//        String result = getStorageEngine(downloadBuilder.getBucket()).createURL(downloadBuilder);
-//        if (result == null) {
-//            result = buildURL(downloadBuilder);
-//        }
-//
-//        return result;
-//    }
-//
-//    /**
-//     * Provides a facility to provide an internal download URL which utilizes {@link
-//     * PhysicalStorageEngine#deliver(WebContext, String, String, String)}.
-//     * <p>
-//     * This is the default way of delivering files. However, a {@link PhysicalStorageEngine} can provide its
-//     * own URLs which are handled outside of the system.
-//     *
-//     * @param downloadBuilder the builder specifying the details of the download
-//     * @return the download URL
-//     */
-//    private String buildURL(DownloadBuilder downloadBuilder) {
-//        StringBuilder result = new StringBuilder();
-//        if (Strings.isFilled(downloadBuilder.getBaseURL())) {
-//            result.append(downloadBuilder.getBaseURL());
-//        }
-//        result.append("/storage/physical/");
-//        result.append(downloadBuilder.getBucket());
-//        result.append("/");
-//        if (downloadBuilder.isEternallyValid()) {
-//            result.append(computeEternallyValidHash(downloadBuilder.getPhysicalKey()));
-//        } else {
-//            result.append(computeHash(downloadBuilder.getPhysicalKey(), 0));
-//        }
-//        result.append("/");
-//        if (Strings.isFilled(downloadBuilder.getAddonText())) {
-//            result.append(Strings.reduceCharacters(NON_URL_CHARACTERS.matcher(downloadBuilder.getAddonText())
-//                                                                     .replaceAll("-")));
-//            result.append("--");
-//        }
-//        result.append(downloadBuilder.getPhysicalKey());
-//        result.append(".");
-//        result.append(downloadBuilder.getFileExtension());
-//        if (Strings.isFilled(downloadBuilder.getFilename())) {
-//            result.append("?name=");
-//            result.append(Strings.urlEncode(downloadBuilder.getFilename()));
-//        }
-//
-//        return result.toString();
-//    }
 
     /**
      * Computes an authentication hash for the given physical storage key and the offset in days (from the current).
