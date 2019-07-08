@@ -19,6 +19,7 @@ import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.di.transformers.Composable;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.web.security.ScopeInfo;
@@ -32,13 +33,14 @@ import java.util.Optional;
 /**
  * Helps for extract the current {@link UserAccount} and {@link Tenant}.
  * <p>
- * Also some boiler plate methods are provided to perform some assertions.
+ * Also some boilerplate methods are provided to perform some assertions.
  *
  * @param <I> the type of database IDs used by the concrete implementation
  * @param <T> specifies the effective entity type used to represent Tenants
  * @param <U> specifies the effective entity type used to represent UserAccounts
  */
-public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>> {
+public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+        extends Composable {
 
     /**
      * Names the framework which must be enabled to activate the tenant based user management.
