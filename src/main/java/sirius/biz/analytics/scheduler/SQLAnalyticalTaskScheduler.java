@@ -33,7 +33,10 @@ public abstract class SQLAnalyticalTaskScheduler extends BaseAnalyticalTaskSched
     @Override
     protected void scheduleBatches(Class<? extends SQLEntity> type, Consumer<JSONObject> batchConsumer) {
         try {
-            batchEmitter.computeBatches(type, this::extendBatchQuery, getBatchSize(), batchConsumer);
+            batchEmitter.computeBatches(type, this::extendBatchQuery, getBatchSize(), batch -> {
+                batchConsumer.accept(batch);
+                return true;
+            });
         } catch (Exception e) {
             Exceptions.handle(Log.BACKGROUND, e);
         }

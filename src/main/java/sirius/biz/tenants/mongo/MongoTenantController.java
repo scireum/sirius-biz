@@ -36,25 +36,37 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
 
     @Override
     protected BasePageHelper<MongoTenant, ?, ?, ?> getTenantsAsPage(WebContext ctx) {
-        return createTenantPageHelper(ctx,
-                                      mango.select(MongoTenant.class)
-                                           .orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME)));
+        MongoPageHelper<MongoTenant> pageHelper = createTenantPageHelper(ctx,
+                                                                               mango.select(MongoTenant.class)
+                                                                                    .orderAsc(Tenant.TENANT_DATA.inner(
+                                                                                            TenantData.NAME)));
+        pageHelper.applyExtenders("/tenants");
+        return pageHelper;
     }
 
     @Override
     protected BasePageHelper<MongoTenant, ?, ?, ?> getSelectableTenantsAsPage(WebContext ctx,
                                                                               MongoTenant currentTenant) {
-        return createTenantPageHelper(ctx,
-                                      queryPossibleTenants(currentTenant).orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME)));
+        MongoPageHelper<MongoTenant> pageHelper = createTenantPageHelper(ctx,
+                                                                               queryPossibleTenants(currentTenant).orderAsc(
+                                                                                       Tenant.TENANT_DATA.inner(
+                                                                                               TenantData.NAME)));
+        pageHelper.applyExtenders("/tenants/select");
+        return pageHelper;
     }
 
     private MongoPageHelper<MongoTenant> createTenantPageHelper(WebContext ctx, MongoQuery<MongoTenant> query) {
         MongoPageHelper<MongoTenant> pageHelper = MongoPageHelper.withQuery(query).withContext(ctx);
+
         pageHelper.withSearchFields(QueryField.startsWith(MongoTenant.SEARCH_PREFIXES));
+
         pageHelper.addTermAggregation(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA.inner(PackageData.PACKAGE_STRING)),
                                       name -> packages.getPackageName(TenantController.PACKAGE_SCOPE_TENANT, name));
         pageHelper.addTermAggregation(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA.inner(PackageData.UPGRADES)),
                                       name -> packages.getUpgradeName(TenantController.PACKAGE_SCOPE_TENANT, name));
+
+        pageHelper.applyExtenders("/tenants/*");
+
         return pageHelper;
     }
 

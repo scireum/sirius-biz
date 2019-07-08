@@ -46,6 +46,9 @@ public class SQLUserAccountController extends UserAccountController<Long, SQLTen
                                     QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                      .inner(PersonData.LASTNAME)));
 
+        pageHelper.applyExtenders("/user-accounts");
+        pageHelper.applyExtenders("/user-accounts/*");
+
         return pageHelper;
     }
 
@@ -80,6 +83,9 @@ public class SQLUserAccountController extends UserAccountController<Long, SQLTen
                                     QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                      .inner(LoginData.USERNAME)),
                                     QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL)));
+
+        pageHelper.applyExtenders("/user-accounts/select");
+        pageHelper.applyExtenders("/user-accounts/*");
 
         return pageHelper;
     }

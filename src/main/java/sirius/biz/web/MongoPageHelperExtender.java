@@ -33,4 +33,11 @@ public interface MongoPageHelperExtender<E extends MongoEntity> extends Priorize
      * @return the target entity for which the page helper is to be extended
      */
     Class<E> getTargetType();
+
+    /**
+     * Returns the extension name which triggers this extender.
+     * <p>
+     * This permits to select appropriate extenders when calling {@link MongoPageHelper#applyExtenders(String)}.
+     */
+    String getTargetExtension();
 }
