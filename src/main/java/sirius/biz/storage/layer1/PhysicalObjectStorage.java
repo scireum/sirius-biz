@@ -49,16 +49,16 @@ public class PhysicalObjectStorage {
                                                                                      StorageUtils.ConfigScope.LAYER1,
                                                                                      this::resolveStorageEngine);
 
-    private PhysicalStorageEngine resolveStorageEngine(Extension ext) {
+    private PhysicalStorageEngine resolveStorageEngine(Extension extension) {
         PhysicalStorageEngine result =
-                globalContext.getPart(ext.getString(CONFIG_KEY_LAYER1_ENGINE), PhysicalStorageEngine.class);
+                globalContext.getPart(extension.getString(CONFIG_KEY_LAYER1_ENGINE), PhysicalStorageEngine.class);
         if (result != null) {
             return result;
         }
 
         StorageUtils.LOG.WARN("Layer 1: An invalid storage engine (%s) was given for space '%s' - defaulting to '%s'",
-                              ext.getString(CONFIG_KEY_LAYER1_ENGINE),
-                              ext.getId(),
+                              extension.getString(CONFIG_KEY_LAYER1_ENGINE),
+                              extension.getId(),
                               defaultEngine);
         return globalContext.getPart(defaultEngine, PhysicalStorageEngine.class);
     }

@@ -123,7 +123,6 @@ public class PhysicalStorageSpace {
         try {
             engine.deliver(ctx,
                            name,
-
                            objectId,
                            fileExtension,
                            status -> handleHttpError(ctx, objectId, fileExtension, null, status));
@@ -154,7 +153,6 @@ public class PhysicalStorageSpace {
         try {
             engine.deliverAsDownload(ctx,
                                      name,
-
                                      objectId,
                                      filename,
                                      status -> handleHttpError(ctx, objectId, null, filename, status));
@@ -188,16 +186,13 @@ public class PhysicalStorageSpace {
             return;
         }
 
-        ValueHolder<Integer> effectiveStatus = new ValueHolder<>(HttpResponseStatus.OK.code());
         try {
             if (Strings.isFilled(filename)) {
                 replicationSpace.engine.deliverAsDownload(ctx, name, objectId, filename, nextStatus -> {
-                    effectiveStatus.accept(nextStatus);
                     ctx.respondWith().error(HttpResponseStatus.valueOf(nextStatus));
                 });
             } else {
                 replicationSpace.engine.deliver(ctx, name, objectId, fileExtension, nextStatus -> {
-                    effectiveStatus.accept(nextStatus);
                     ctx.respondWith().error(HttpResponseStatus.valueOf(nextStatus));
                 });
             }
@@ -207,12 +202,12 @@ public class PhysicalStorageSpace {
             } catch (Exception ex) {
                 Exceptions.ignore(ex);
             }
-            effectiveStatus.accept(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
+
             throw Exceptions.handle()
                             .error(e)
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage(
-                                    "Storage Layer 1: An error occurred when delivering %s (%s) via replication %s for %s: %s (%s)",
+                                    "Layer 1: An error occurred when delivering %s (%s) via replication %s for %s: %s (%s)",
                                     objectId,
                                     name,
                                     replicationSpace.name,
