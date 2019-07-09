@@ -40,14 +40,30 @@ class ReplicationSpec extends BaseSpecification {
         given:
         def testData = "test".getBytes(Charsets.UTF_8)
         when:
-        storage.getSpace("repl-primary").upload("test", new ByteArrayInputStream(testData), testData.length)
+        storage.getSpace("repl-primary").upload("repl-update-test", new ByteArrayInputStream(testData), testData.length)
         and:
         awaitReplication()
-        def downloaded = storage.getSpace("reply-secondary").download("test")
+        def downloaded = storage.getSpace("reply-secondary").download("repl-update-test")
         then:
         downloaded.isPresent()
         and:
         CharStreams.toString(new InputStreamReader(downloaded.get().getInputStream(), Charsets.UTF_8)) == "test"
+    }
+
+    def "deletes are replicated correctly"() {
+        given:
+        def testData = "test".getBytes(Charsets.UTF_8)
+        when:
+        storage.getSpace("repl-primary").upload("repl-delete-test", new ByteArrayInputStream(testData), testData.length)
+        and:
+        awaitReplication()
+        and:
+        storage.getSpace("repl-primary").delete("repl-delete-test")
+        and:
+        awaitReplication()
+        def downloaded = storage.getSpace("reply-secondary").download("repl-delete-test")
+        then:
+        !downloaded.isPresent()
     }
 
 }
