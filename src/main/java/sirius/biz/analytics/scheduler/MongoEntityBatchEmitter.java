@@ -110,8 +110,8 @@ public class MongoEntityBatchEmitter {
     public <E extends MongoEntity> void evaluateBatch(JSONObject batchDescription,
                                                       @Nullable Consumer<MongoQuery<E>> queryExtender,
                                                       Consumer<E> entityConsumer) {
-        long startId = batchDescription.getLongValue(START_ID);
-        long endId = batchDescription.getLongValue(END_ID);
+        String startId = batchDescription.getString(START_ID);
+        String endId = batchDescription.getString(END_ID);
         String typeName = batchDescription.getString(TYPE);
 
         Class<E> type = (Class<E>) mixing.getDescriptor(typeName).getType();
