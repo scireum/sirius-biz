@@ -56,11 +56,10 @@ public class PhysicalStorageSpace {
             throw Exceptions.handle()
                             .error(e)
                             .to(StorageUtils.LOG)
-                            .withSystemErrorMessage(
-                                    "Storage Layer 1: An error occurred when uploading %s to %s (%s): %s (%s)",
-                                    file.getAbsolutePath(),
-                                    objectId,
-                                    name)
+                            .withSystemErrorMessage("Layer 1: An error occurred when uploading %s to %s (%s): %s (%s)",
+                                                    file.getAbsolutePath(),
+                                                    objectId,
+                                                    name)
                             .handle();
         }
     }
@@ -80,10 +79,9 @@ public class PhysicalStorageSpace {
             throw Exceptions.handle()
                             .error(e)
                             .to(StorageUtils.LOG)
-                            .withSystemErrorMessage(
-                                    "Storage Layer 1: An error occurred when uploading data to %s (%s): %s (%s)",
-                                    objectId,
-                                    name)
+                            .withSystemErrorMessage("Layer 1: An error occurred when uploading data to %s (%s): %s (%s)",
+                                                    objectId,
+                                                    name)
                             .handle();
         }
     }
@@ -101,10 +99,9 @@ public class PhysicalStorageSpace {
             throw Exceptions.handle()
                             .error(e)
                             .to(StorageUtils.LOG)
-                            .withSystemErrorMessage(
-                                    "Storage Layer 1: An error occurred when downloading %s (%s): %s (%s)",
-                                    objectId,
-                                    name)
+                            .withSystemErrorMessage("Layer 1: An error occurred when downloading %s (%s): %s (%s)",
+                                                    objectId,
+                                                    name)
                             .handle();
         }
     }
@@ -130,11 +127,10 @@ public class PhysicalStorageSpace {
             throw Exceptions.handle()
                             .error(e)
                             .to(StorageUtils.LOG)
-                            .withSystemErrorMessage(
-                                    "Storage Layer 1: An error occurred when delivering %s (%s) for %s: %s (%s)",
-                                    objectId,
-                                    name,
-                                    ctx.getRequestedURI())
+                            .withSystemErrorMessage("Layer 1: An error occurred when delivering %s (%s) for %s: %s (%s)",
+                                                    objectId,
+                                                    name,
+                                                    ctx.getRequestedURI())
                             .handle();
         }
     }
@@ -165,11 +161,10 @@ public class PhysicalStorageSpace {
             throw Exceptions.handle()
                             .error(e)
                             .to(StorageUtils.LOG)
-                            .withSystemErrorMessage(
-                                    "Storage Layer 1: An error occurred when delivering %s (%s) for %s: %s (%s)",
-                                    objectId,
-                                    name,
-                                    ctx.getRequestedURI())
+                            .withSystemErrorMessage("Layer 1: An error occurred when delivering %s (%s) for %s: %s (%s)",
+                                                    objectId,
+                                                    name,
+                                                    ctx.getRequestedURI())
                             .handle();
         }
     }
@@ -231,7 +226,7 @@ public class PhysicalStorageSpace {
             throw Exceptions.handle()
                             .error(e)
                             .to(StorageUtils.LOG)
-                            .withSystemErrorMessage("Storage Layer 1: An error occurred when deleting %s (%s): %s (%s)",
+                            .withSystemErrorMessage("Layer 1: An error occurred when deleting %s (%s): %s (%s)",
                                                     objectId,
                                                     name)
                             .handle();
