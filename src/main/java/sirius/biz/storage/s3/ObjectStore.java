@@ -12,6 +12,7 @@ import com.amazonaws.SdkClientException;
 import com.amazonaws.event.ProgressEvent;
 import com.amazonaws.event.ProgressEventType;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
@@ -24,6 +25,7 @@ import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.internal.S3ProgressListener;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.Operation;
 import sirius.kernel.async.TaskContext;
@@ -37,6 +39,7 @@ import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -332,8 +335,9 @@ public class ObjectStore {
      * @param bucket   the bucket in which the object resides
      * @param objectId the object to download
      * @return the downloaded object as file
+     * @throws FileNotFoundException if the requested object does not exist
      */
-    public File download(BucketName bucket, String objectId) {
+    public File download(BucketName bucket, String objectId) throws FileNotFoundException {
         File dest = null;
         try {
             dest = File.createTempFile("AMZS3", null);
@@ -353,9 +357,21 @@ public class ObjectStore {
                                     bucket,
                                     objectId)
                             .handle();
+        } catch (AmazonS3Exception e) {
+            Files.delete(dest);
+            if (e.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+                throw new FileNotFoundException(objectId);
+            }
+
+            throw Exceptions.handle()
+                            .to(ObjectStores.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("An error occurred while trying to download: %s/%s - %s (%s)",
+                                                    bucket,
+                                                    objectId)
+                            .handle();
         } catch (Exception e) {
             Files.delete(dest);
-
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
                             .error(e)

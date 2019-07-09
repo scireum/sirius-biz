@@ -15,9 +15,11 @@ import sirius.biz.storage.s3.ObjectStores;
 import sirius.db.KeyGenerator;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
 import sirius.web.http.WebContext;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 
 //TODO maybe we should directly use Storage..
 @Register(framework = Processes.FRAMEWORK_PROCESSES)
@@ -50,10 +52,14 @@ public class ObjectStoreFileStorage implements ProcessFileStorage {
 
     @Override
     public File download(Process process, ProcessFile file) {
-        ObjectStore store = objectStores.store();
-        BucketName bucket = getBucket(process, store);
+        try {
+            ObjectStore store = objectStores.store();
+            BucketName bucket = getBucket(process, store);
 
-        return store.download(bucket, getObjectId(process, file.getFileId()));
+            return store.download(bucket, getObjectId(process, file.getFileId()));
+        } catch (FileNotFoundException e) {
+            throw Exceptions.createHandled().withSystemErrorMessage("Not found: %s", file.getFilename()).handle();
+        }
     }
 
     @Override

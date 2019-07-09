@@ -41,7 +41,7 @@ public class StorageUtils {
     public static final Log LOG = Log.get("storage");
 
     /**
-     * Lists the layers which are placed in the config as <tt>storage.layer1</tt> etc. Each of
+     * Lists the layers which are placed in the config as <tt>storage.layer1.spaces</tt> etc. Each of
      * these layers provide a list of {@link Extension extensions} - one per storage space.
      */
     public enum ConfigScope {LAYER1, LAYER2, LAYER3}
