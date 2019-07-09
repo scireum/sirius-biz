@@ -12,7 +12,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.web.http.WebContext;
