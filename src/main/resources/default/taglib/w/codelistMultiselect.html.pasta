@@ -1,0 +1,25 @@
+<i:arg name="span" type="int" default="6"/>
+<i:arg name="list" type="String"/>
+<i:arg name="name" type="String"/>
+<i:arg name="value" type="List"/>
+<i:arg name="labelKey" type="String" default=""/>
+<i:arg name="label" type="String" default="@i18n(labelKey)"/>
+<i:arg name="helpKey" type="String" default=""/>
+<i:arg name="help" type="String" default="@i18n(helpKey)"/>
+<i:arg name="optional" type="boolean" default="false"/>
+<i:arg name="required" type="boolean" default="false"/>
+<i:arg name="readonly" type="boolean" default="false"/>
+<i:arg name="adminOnly" type="boolean" default="false"/>
+
+<i:pragma name="inline" value="true"/>
+<i:pragma name="description" value="Renders a multiselect dropdown field for a codelist"/>
+
+<w:multiSelect span="@span" name="@name" label="@label" help="@help" optional="@optional" required="@required"
+                readonly="@readonly" adminOnly="@adminOnly">
+    <i:for var="entry" type="sirius.biz.codelists.CodeListEntry" items="@codeLists.getEntries(list)">
+        <option value="@entry.getCodeListEntryData().getCode()"
+                @selected="value.contains(entry.getCodeListEntryData().getCode())">
+            @entry.getCodeListEntryData().getTranslatedValue()
+        </option>
+    </i:for>
+</w:multiSelect>
