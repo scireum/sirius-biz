@@ -32,9 +32,20 @@ import java.util.function.Function;
 @Register(classes = MongoEntityBatchEmitter.class)
 public class MongoEntityBatchEmitter {
 
-    private static final String TYPE = "type";
-    private static final String START_ID = "startId";
-    private static final String END_ID = "endId";
+    /**
+     * Contains the type of entities being batched.
+     */
+    public static final String TYPE = "type";
+
+    /**
+     * Contains the first id in the batch.
+     */
+    public static final String START_ID = "startId";
+
+    /**
+     * Contains the last id in the batch.
+     */
+    public static final String END_ID = "endId";
 
     @Part
     protected Mango mango;
