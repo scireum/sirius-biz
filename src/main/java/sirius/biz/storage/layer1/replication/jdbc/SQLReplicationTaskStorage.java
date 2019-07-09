@@ -129,7 +129,6 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
                     .set("executionLimit", LocalDateTime.now())
                     .set("lowerBound", batch.getLongValue(SQLEntityBatchEmitter.START_ID))
                     .set("upperBound", batch.getLongValue(SQLEntityBatchEmitter.END_ID))
-                    .set("scheduled", LocalDateTime.now())
                     .executeUpdate();
         } catch (SQLException e) {
             Exceptions.handle()
