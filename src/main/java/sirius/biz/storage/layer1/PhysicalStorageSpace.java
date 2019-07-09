@@ -89,7 +89,7 @@ public class PhysicalStorageSpace {
     }
 
     /**
-     * Downloads an provides the contents of the requested object.
+     * Downloads and provides the contents of the requested object.
      *
      * @param objectId the physical storage key (a key is always only used once)
      * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist

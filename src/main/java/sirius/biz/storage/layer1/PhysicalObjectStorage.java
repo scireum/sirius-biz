@@ -25,7 +25,7 @@ import sirius.kernel.settings.Extension;
  * Additionally a replication framework is available which can synchronize all objects in one storage space
  * with a second one.
  * <p>
- * Note that this layer neither keeps track of the objects being store nor known paths, files or directory. This
+ * Note that this layer neither keeps track of the objects being stored nor known paths, files or directory. This
  * is completely handled in the layer 2.
  */
 @Register(classes = PhysicalObjectStorage.class)
@@ -74,7 +74,7 @@ public class PhysicalObjectStorage {
     }
 
     /**
-     * Returns the storage space wit hthe given name.
+     * Returns the storage space with the given name.
      *
      * @param name the name of the space
      * @return a wrapper which is used to access the objects stored in the storage space
