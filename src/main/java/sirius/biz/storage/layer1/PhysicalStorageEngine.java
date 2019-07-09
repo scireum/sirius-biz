@@ -30,14 +30,12 @@ public interface PhysicalStorageEngine {
      * @param objectKey            the physical storage key (a key is always only used once)
      * @param data                 the data to store
      * @param size                 the byte length of the data
-     * @param invokeWhileUploading a callback which is invoked while or after the upload has taken place
      * @throws IOException in case of an IO error
      */
     void storePhysicalObject(String space,
                              String objectKey,
                              InputStream data,
-                             long size,
-                             @Nullable Runnable invokeWhileUploading) throws IOException;
+                             long size) throws IOException;
 
     /**
      * Stores the given data for the given key in the given bucket.
@@ -45,10 +43,9 @@ public interface PhysicalStorageEngine {
      * @param space                the bucket to store the object in
      * @param objectKey            the physical storage key (a key is always only used once)
      * @param file                 the data to store
-     * @param invokeWhileUploading a callback which is invoked while or after the upload has taken place
      * @throws IOException in case of an IO error
      */
-    void storePhysicalObject(String space, String objectKey, File file, @Nullable Runnable invokeWhileUploading)
+    void storePhysicalObject(String space, String objectKey, File file)
             throws IOException;
 
     /**

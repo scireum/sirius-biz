@@ -50,9 +50,8 @@ public class PhysicalStorageSpace {
      */
     public void upload(String objectId, File file) {
         try {
-            engine.storePhysicalObject(name,
-
-                                       objectId, file, () -> replicationManager.notifyAboutUpdate(name, objectId));
+            engine.storePhysicalObject(name, objectId, file);
+            replicationManager.notifyAboutUpdate(name, objectId);
         } catch (IOException e) {
             throw Exceptions.handle()
                             .error(e)
@@ -75,9 +74,8 @@ public class PhysicalStorageSpace {
      */
     public void upload(String objectId, InputStream inputStream, long contentLength) {
         try {
-            engine.storePhysicalObject(name, objectId, inputStream, contentLength, () -> {
-                replicationManager.notifyAboutUpdate(name, objectId);
-            });
+            engine.storePhysicalObject(name, objectId, inputStream, contentLength);
+            replicationManager.notifyAboutUpdate(name, objectId);
         } catch (IOException e) {
             throw Exceptions.handle()
                             .error(e)

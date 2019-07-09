@@ -82,11 +82,9 @@ public class S3StorageEngine implements PhysicalStorageEngine, Named {
     public void storePhysicalObject(String space,
                                     String objectKey,
                                     InputStream data,
-                                    long size,
-                                    Runnable invokeWhileUploading) throws IOException {
+                                    long size) throws IOException {
         ObjectStore store = stores.get(space);
         Upload upload = store.uploadAsync(bucketName(store, space), objectKey, data, size);
-        invokeWhileUploading.run();
         try {
             upload.waitForUploadResult();
         } catch (InterruptedException e) {
@@ -103,7 +101,7 @@ public class S3StorageEngine implements PhysicalStorageEngine, Named {
     }
 
     @Override
-    public void storePhysicalObject(String space, String objectKey, File file, Runnable invokeWhileUploading)
+    public void storePhysicalObject(String space, String objectKey, File file)
             throws IOException {
         ObjectStore store = stores.get(space);
         store.upload(bucketName(store, space), objectKey, file);

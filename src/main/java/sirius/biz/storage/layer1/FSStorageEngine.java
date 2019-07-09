@@ -119,10 +119,10 @@ public class FSStorageEngine implements PhysicalStorageEngine, Named {
     }
 
     @Override
-    public void storePhysicalObject(String space, String objectKey, File file, Runnable invokeWhileUploading)
+    public void storePhysicalObject(String space, String objectKey, File file)
             throws IOException {
         try (FileInputStream inputStream = new FileInputStream(file)) {
-            storePhysicalObject(space, objectKey, inputStream, file.length(), invokeWhileUploading);
+            storePhysicalObject(space, objectKey, inputStream, file.length());
         }
     }
 
@@ -130,14 +130,11 @@ public class FSStorageEngine implements PhysicalStorageEngine, Named {
     public void storePhysicalObject(String space,
                                     String objectKey,
                                     InputStream data,
-                                    long size,
-                                    Runnable invokeWhileUploading) throws IOException {
+                                    long size) throws IOException {
         File file = getFile(space, objectKey);
         try (FileOutputStream out = new FileOutputStream(file)) {
             ByteStreams.copy(data, out);
         }
-
-        invokeWhileUploading.run();
     }
 
     @Override
