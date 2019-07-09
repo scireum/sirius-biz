@@ -26,6 +26,9 @@ import javax.annotation.Nullable;
 @Register(classes = BackgroundLoop.class, framework = StorageUtils.FRAMEWORK_STORAGE)
 public class ReplicationBackgroundLoop extends BackgroundLoop {
 
+    private static final double EVERY_TWO_SECONDS = 1d / 2;
+    private static final double EVERY_MINUTE = 1d / 60;
+
     @Part
     private DistributedTasks distributedTasks;
 
@@ -40,7 +43,7 @@ public class ReplicationBackgroundLoop extends BackgroundLoop {
 
     @Override
     public double maxCallFrequency() {
-        return Sirius.isStartedAsTest() ? 1d / 2 : 1d / 60;
+        return Sirius.isStartedAsTest() ? EVERY_TWO_SECONDS : EVERY_MINUTE;
     }
 
     @Nullable
