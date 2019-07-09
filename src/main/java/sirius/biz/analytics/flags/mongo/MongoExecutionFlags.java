@@ -29,7 +29,7 @@ public class MongoExecutionFlags extends ExecutionFlags implements EveryDay {
     /**
      * Determines the name of the framework which enables this implementation.
      */
-    public static final String FRAMEWORK_EXECUTION_FLAGS_MONGO = "biz.analytics.execution-flags-mongo";
+    public static final String FRAMEWORK_EXECUTION_FLAGS_MONGO = "biz.analytics-execution-flags-mongo";
 
     @Part
     private Mango mango;

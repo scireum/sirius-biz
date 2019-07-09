@@ -28,7 +28,7 @@ public class SQLExecutionFlags extends ExecutionFlags implements EveryDay {
     /**
      * Determines the name of the framework which enables this implementation.
      */
-    public static final String FRAMEWORK_EXECUTION_FLAGS_JDBC = "biz.analytics.execution-flags-jdbc";
+    public static final String FRAMEWORK_EXECUTION_FLAGS_JDBC = "biz.analytics-execution-flags-jdbc";
 
     @Part
     private OMA oma;
