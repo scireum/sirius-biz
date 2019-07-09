@@ -87,7 +87,7 @@ public class DerivedSpaceInfo<I> {
                                                     + " in scope '%s'. Please verify the system configuration.",
                                                     description,
                                                     space,
-                                                    scope)
+                                                    scope.name().toLowerCase())
                             .handle();
         }
         return info;
