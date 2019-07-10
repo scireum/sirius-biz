@@ -46,7 +46,7 @@ public class MongoReplicationTask extends MongoEntity {
     private String objectKey;
 
     /**
-     * Determines the earlies expected execution of this task.
+     * Determines the earliest expected execution of this task.
      */
     public static final Mapping EARLIEST_EXECUTION = Mapping.named("earliestExecution");
     private LocalDateTime earliestExecution;

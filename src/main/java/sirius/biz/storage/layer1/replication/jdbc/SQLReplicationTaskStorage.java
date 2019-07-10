@@ -105,26 +105,29 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
         Database database = oma.getDatabase(mixing.getDescriptor(SQLReplicationTask.class).getRealm());
         AtomicInteger numberOfBatches = new AtomicInteger(maxBatches);
         AtomicInteger scheduledTasks = new AtomicInteger(0);
-        emitter.computeBatches(SQLReplicationTask.class, qry -> enhanceQuery(qry, true), batchSize, batch -> {
-            distributedTasks.submitFIFOTask(ReplicationTaskExecutor.class, batch);
-            scheduledTasks.addAndGet(batchSize);
+        emitter.computeBatches(SQLReplicationTask.class,
+                               query -> filterOnExecutableTasks(query, true),
+                               batchSize,
+                               batch -> {
+                                   distributedTasks.submitFIFOTask(ReplicationTaskExecutor.class, batch);
+                                   scheduledTasks.addAndGet(batchSize);
 
-            markTasksAsScheduled(database, batch);
+                                   markTasksAsScheduled(database, batch);
 
-            return numberOfBatches.decrementAndGet() > 0;
-        });
+                                   return numberOfBatches.decrementAndGet() > 0;
+                               });
 
         return scheduledTasks.get();
     }
 
     private void markTasksAsScheduled(Database database, JSONObject batch) {
         try {
-            database.createQuery("UPDATE sqlreplicationtask "
-                                 + "SET scheduled = ${scheduled} "
-                                 + "WHERE id >= ${lowerBound}"
-                                 + " AND id <= ${upperBound}"
-                                 + " AND failed = 0"
-                                 + " AND earliestExecution < ${executionLimit}")
+            database.createQuery("UPDATE sqlreplicationtask"
+                                 + " SET scheduled = ${scheduled}"
+                                 + " WHERE id >= ${lowerBound}"
+                                 + "    AND id <= ${upperBound}"
+                                 + "    AND failed = 0"
+                                 + "    AND earliestExecution < ${executionLimit}")
                     .set("scheduled", LocalDateTime.now())
                     .set("executionLimit", LocalDateTime.now())
                     .set("lowerBound", batch.getLongValue(SQLEntityBatchEmitter.START_ID))
@@ -140,19 +143,19 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
         }
     }
 
-    private void enhanceQuery(SmartQuery<SQLReplicationTask> qry, boolean forScheduling) {
-        qry.eq(SQLReplicationTask.FAILED, false);
-        qry.where(OMA.FILTERS.lt(SQLReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()));
+    private void filterOnExecutableTasks(SmartQuery<SQLReplicationTask> query, boolean forScheduling) {
+        query.eq(SQLReplicationTask.FAILED, false);
+        query.where(OMA.FILTERS.lt(SQLReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()));
         if (forScheduling) {
-            qry.eq(SQLReplicationTask.SCHEDULED, null);
+            query.eq(SQLReplicationTask.SCHEDULED, null);
         } else {
-            qry.ne(SQLReplicationTask.SCHEDULED, null);
+            query.ne(SQLReplicationTask.SCHEDULED, null);
         }
     }
 
     @Override
     public void executeBatch(JSONObject batch) {
-        emitter.evaluateBatch(batch, qry -> enhanceQuery(qry, false), this::executeTask);
+        emitter.evaluateBatch(batch, query -> filterOnExecutableTasks(query, false), this::executeTask);
     }
 
     @Override

@@ -108,14 +108,17 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
     public int emitBatches() {
         AtomicInteger numberOfBatches = new AtomicInteger(maxBatches);
         AtomicInteger scheduledTasks = new AtomicInteger(0);
-        emitter.computeBatches(MongoReplicationTask.class, qry -> enhanceQuery(qry, true), batchSize, batch -> {
-            distributedTasks.submitFIFOTask(ReplicationTaskExecutor.class, batch);
-            scheduledTasks.addAndGet(batchSize);
+        emitter.computeBatches(MongoReplicationTask.class,
+                               qry -> filterOnExecutableTasks(qry, true),
+                               batchSize,
+                               batch -> {
+                                   distributedTasks.submitFIFOTask(ReplicationTaskExecutor.class, batch);
+                                   scheduledTasks.addAndGet(batchSize);
 
-            markTasksAsScheduled(batch);
+                                   markTasksAsScheduled(batch);
 
-            return numberOfBatches.decrementAndGet() > 0;
-        });
+                                   return numberOfBatches.decrementAndGet() > 0;
+                               });
 
         return scheduledTasks.get();
     }
@@ -141,19 +144,19 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
         }
     }
 
-    private void enhanceQuery(MongoQuery<MongoReplicationTask> qry, boolean forScheduling) {
-        qry.eq(MongoReplicationTask.FAILED, false);
-        qry.where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()));
+    private void filterOnExecutableTasks(MongoQuery<MongoReplicationTask> query, boolean forScheduling) {
+        query.eq(MongoReplicationTask.FAILED, false);
+        query.where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()));
         if (forScheduling) {
-            qry.eq(MongoReplicationTask.SCHEDULED, null);
+            query.eq(MongoReplicationTask.SCHEDULED, null);
         } else {
-            qry.ne(MongoReplicationTask.SCHEDULED, null);
+            query.ne(MongoReplicationTask.SCHEDULED, null);
         }
     }
 
     @Override
     public void executeBatch(JSONObject batch) {
-        emitter.evaluateBatch(batch, qry -> enhanceQuery(qry, false), this::executeTask);
+        emitter.evaluateBatch(batch, query -> filterOnExecutableTasks(query, false), this::executeTask);
     }
 
     @Override
