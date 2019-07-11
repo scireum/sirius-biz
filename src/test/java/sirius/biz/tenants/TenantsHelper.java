@@ -17,7 +17,9 @@ import sirius.db.jdbc.OMA;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.web.http.TestRequest;
+import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
+import sirius.web.security.UserInfo;
 
 import java.time.Duration;
 import java.util.List;
@@ -94,9 +96,10 @@ public class TenantsHelper {
      * @param request the request to perform as test user and tenant
      */
     public static void installBackendUser(TestRequest request) {
-        request.setSessionValue("default-tenant-id", getTestTenant().getId());
-        request.setSessionValue("default-tenant-name", getTestTenant().getTenantData().getName());
-        request.setSessionValue("default-user-id", getTestUser().getUniqueName());
+        SQLTenantUserManager tenantUserManager = (SQLTenantUserManager) UserContext.get().getUserManager();
+        UserInfo userInfo = tenantUserManager.findUserByUserId(getTestUser().getUniqueName());
+
+        tenantUserManager.updateLoginCookie(request, userInfo, true);
     }
 
     public static void clearCurrentUser() {
