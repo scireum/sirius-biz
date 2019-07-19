@@ -6,5 +6,5 @@ One user of this framework is the [AnalyticalEngine](../scheduler/AnalyticalEngi
 schedulers which are only to be invoked once per month.
 
 This is a database independent framework. Use [ExecutionFlags](ExecutionFlags.java) as main entry point and
-enable either **biz.analytics.execution-flags-jdbc** or **biz.analytics.execution-flags-mongo** as framework
+enable either **biz.analytics-execution-flags-jdbc** or **biz.analytics-execution-flags-mongo** as framework
 depending on the database being used.  

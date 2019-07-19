@@ -8,6 +8,7 @@
 
 package sirius.biz.cluster.work;
 
+import sirius.kernel.Sirius;
 import sirius.kernel.async.AsyncExecutor;
 import sirius.kernel.async.BackgroundLoop;
 import sirius.kernel.async.Tasks;
@@ -33,6 +34,9 @@ import java.util.concurrent.locks.ReentrantLock;
 @Register(classes = BackgroundLoop.class)
 public class WorkLoaderLoop extends BackgroundLoop {
 
+    private static final double EVERY_SECOND = 1d;
+    private static final double EVERY_FIVE_SECONDS = 1 / 5d;
+
     @Part
     private Tasks tasks;
 
@@ -49,7 +53,7 @@ public class WorkLoaderLoop extends BackgroundLoop {
 
     @Override
     public double maxCallFrequency() {
-        return 1 / 5d;
+        return Sirius.isStartedAsTest() ? EVERY_SECOND : EVERY_FIVE_SECONDS;
     }
 
     @Override

@@ -33,7 +33,7 @@ public class SQLMetrics extends BasicMetrics {
     /**
      * Contains the name of the framework which controls whether storing metrics in a JDBC database is supported.
      */
-    public static final String FRAMEWORK_JDBC_METRICS = "biz.analytics.metrics-jdbc";
+    public static final String FRAMEWORK_JDBC_METRICS = "biz.analytics-metrics-jdbc";
 
     @Part
     private OMA oma;
