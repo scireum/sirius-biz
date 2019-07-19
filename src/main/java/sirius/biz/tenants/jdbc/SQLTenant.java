@@ -13,7 +13,6 @@ import sirius.biz.jdbc.BizEntity;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantData;
-import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.web.Autoloaded;
 import sirius.db.jdbc.SQLEntityRef;

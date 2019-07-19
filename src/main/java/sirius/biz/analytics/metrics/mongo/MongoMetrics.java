@@ -35,7 +35,7 @@ public class MongoMetrics extends BasicMetrics {
     /**
      * Contains the name of the framework which controls whether storing metrics in MongoDB is supported.
      */
-    public static final String FRAMEWORK_MONGO_METRICS = "biz.analytics.metrics-mongo";
+    public static final String FRAMEWORK_MONGO_METRICS = "biz.analytics-metrics-mongo";
 
     @Part
     private Mango mango;

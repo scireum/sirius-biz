@@ -16,7 +16,6 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.TranslationSource;
-import sirius.db.mixing.annotations.Versioned;
 import sirius.db.mongo.Mango;
 import sirius.kernel.di.std.Framework;
 import sirius.web.controller.Message;

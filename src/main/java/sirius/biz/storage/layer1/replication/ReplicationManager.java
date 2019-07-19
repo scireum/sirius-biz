@@ -167,6 +167,11 @@ public class ReplicationManager {
         }
     }
 
+    /**
+     * Provides access to the underlying replication task storage (if available).
+     *
+     * @return the metadata store for the replication tasks or an empty optional if no store is available
+     */
     public Optional<ReplicationTaskStorage> getReplicationTaskStorage() {
         return Optional.ofNullable(taskStorage);
     }

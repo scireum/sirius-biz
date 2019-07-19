@@ -13,7 +13,7 @@ so that they can be readily displayed in dashboards without much computation.
 This framework therefore provides a database independent storage called [Metrics](Metrics.java)
 which has an implementation for [JDBC](jdbc/SQLMetrics.java) and [MongoDB](mongo/MongoMetrics.java).
 
-One of these frameworks (**biz.analytics.metrics-jdbc** or **biz.analytics.metrics-mongo**) has to be enabled.
+One of these frameworks (**biz.analytics-metrics-jdbc** or **biz.analytics-metrics-mongo**) has to be enabled.
 
 ## Computation
 
