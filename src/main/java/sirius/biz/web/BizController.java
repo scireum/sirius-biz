@@ -86,7 +86,7 @@ public class BizController extends BasicController {
     protected Tenants<?, ?, ?> tenants;
 
     @ConfigValue("product.baseUrl")
-    private String baseUrl;
+    private static String baseUrl;
     private static boolean baseUrlChecked;
 
     @ConfigValue("controller.secret")
@@ -182,7 +182,7 @@ public class BizController extends BasicController {
      *
      * @return the base URL like <tt>http://www.mydomain.stuff</tt>
      */
-    protected String getBaseUrl() {
+    public static String getBaseUrl() {
         if (!baseUrlChecked) {
             baseUrlChecked = true;
             if (Strings.isEmpty(baseUrl)) {
@@ -488,7 +488,7 @@ public class BizController extends BasicController {
      * Computes a signature used by {@link #signLink(String)} and {@link #verifySignedLink(WebContext)}.
      *
      * @param uri the uri to sign
-     * @return a signature (hash) based an the given URL, a timestamp and <tt>controller.secret</tt> from the
+      * @return a signature (hash) based an the given URL, a timestamp and <tt>controller.secret</tt> from the
      * system configuration
      */
     public static String computeURISignature(String uri) {

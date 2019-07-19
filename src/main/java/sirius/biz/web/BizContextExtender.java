@@ -66,6 +66,7 @@ public class BizContextExtender implements GlobalContextExtender {
         globalParameterCollector.accept("jobsService", jobs);
         globalParameterCollector.accept("isenguard", isenguard);
         globalParameterCollector.accept("tenantsHelper", tenantsHelper);
+        globalParameterCollector.accept("appBaseUrl", BizController.getBaseUrl());
     }
 
     @Override
