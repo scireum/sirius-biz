@@ -79,7 +79,7 @@ Contains a facility which stores files / objects in an object store but keeps al
 either a **JDBC** database or **MongoDB** for efficient access. Also provides a management and maintenance UI.
 * [Virtual File System Layer](src/main/java/sirius/biz/vfs)\
 Provides an abstraction layer for virtual file systems which can be accessed via remote protocols like FTP(S).
-* [ObjectStore access](src/main/java/sirius/biz/s3)\
+* [ObjectStore access](src/main/java/sirius/biz/storage/s3)\
 Contains a thin abstraction layer for AWS compatible S3 object stores.
 * [Code lists](src/main/java/sirius/biz/codelists)\
 Permits to manage and access code lists which are either stored in **JDBC** databases or **MongoDB**.
