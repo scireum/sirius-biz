@@ -25,11 +25,11 @@ import java.util.Optional;
 public class PartListParameter<E> extends Parameter<E, PartListParameter<E>> {
 
     @Part
-    private static GlobalContext globalContext;
+    protected static GlobalContext globalContext;
 
-    private final Class<E> type;
+    protected final Class<E> type;
 
-    private Collection<E> parts;
+    protected Collection<E> parts;
 
     /**
      * Creates a new parameter with the given name and label.
