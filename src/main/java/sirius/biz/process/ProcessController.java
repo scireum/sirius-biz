@@ -56,6 +56,8 @@ public class ProcessController extends BizController {
      */
     public static final String PERMISSION_MANAGE_ALL_PROCESSES = "permission-manage-all-processes";
 
+    private static final int NUMBER_OF_PREVIEW_LOGS = 15;
+
     @Part
     private Processes processes;
 
@@ -128,9 +130,18 @@ public class ProcessController extends BizController {
     public void processDetails(WebContext ctx, String processId) {
         Process process = findAccessibleProcess(processId);
 
-        ElasticQuery<ProcessLog> query = buildLogsQuery(process).orderDesc(ProcessLog.SORT_KEY);
-        ctx.respondWith()
-           .template("templates/biz/process/process-details.html.pasta", process, query.limit(5).queryList());
+        ElasticQuery<ProcessLog> query = buildLogsQuery(process);
+
+        // If the whole logs fit into the preview, we sort them in natoral order,
+        // otherwise we show the last N (descending)
+        long numberOfLogs = query.count();
+        if (numberOfLogs > NUMBER_OF_PREVIEW_LOGS) {
+            query = query.orderDesc(ProcessLog.SORT_KEY).limit(NUMBER_OF_PREVIEW_LOGS);
+        } else {
+            query = query.orderAsc(ProcessLog.SORT_KEY);
+        }
+
+        ctx.respondWith().template("templates/biz/process/process-details.html.pasta", process, query.queryList());
     }
 
     /**
