@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Helper class to build a query, bind it to values given in a {@link WebContext} and create a resulting {@link Page}
@@ -232,6 +233,64 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
         }
 
         return (B) this;
+    }
+
+    /**
+     * Creates a facet which is used for sorting rather than filtering.
+     *
+     * @param sortOptions  the list of available sort options
+     * @param translator   provides a translation for a search option. By default {@link NLS#smartGet(String)} is used
+     * @param sortFunction the function which applies the selected sort option
+     * @return the helper itself for fluent method calls
+     */
+    public B addSortFacet(@Nonnull List<String> sortOptions,
+                          @Nullable ValueComputer<String, String> translator,
+                          BiConsumer<String, Q> sortFunction) {
+        return addFacet(new Facet(NLS.get("BasePageHelper.sort"),
+                                  "sort",
+                                  null,
+                                  translator == null ? NLS::smartGet : translator), (f, q) -> {
+            if (f.getValue() != null) {
+                sortFunction.accept(f.getValue(), q);
+            } else {
+                // If no sort option is selected, use the first one...
+                sortOptions.stream().findFirst().ifPresent(item -> sortFunction.accept(item, q));
+            }
+        }, (f, q) -> {
+            // Make all sort options visible and mark the first as selected if no other is active
+            f.addItems(sortOptions);
+            if (f.getValue() == null) {
+                f.getItems().stream().findFirst().ifPresent(item -> item.setActive(true));
+            }
+        });
+    }
+
+    /**
+     * Adds a sort facet based on the given sort options.
+     *
+     * @param sortOptions the options to provide
+     * @param translator  provides a translation for a search option. By default {@link NLS#smartGet(String)} is used
+     * @return the helper itself for fluent method calls
+     */
+    public B addSortFacet(@Nonnull List<Tuple<String, Consumer<Q>>> sortOptions,
+                          @Nullable ValueComputer<String, String> translator) {
+        return addSortFacet(Tuple.firsts(sortOptions),
+                            translator,
+                            (key, query) -> sortOptions.stream()
+                                                       .filter(option -> Strings.areEqual(option.getFirst(), key))
+                                                       .findFirst()
+                                                       .ifPresent(option -> option.getSecond().accept(query)));
+    }
+
+    /**
+     * Adds a sort facet based on the given sort options.
+     *
+     * @param sortOptions the options to provide
+     * @return the helper itself for fluent method calls
+     */
+    @SafeVarargs
+    public final B addSortFacet(Tuple<String, Consumer<Q>>... sortOptions) {
+        return addSortFacet(Arrays.asList(sortOptions), null);
     }
 
     /**
