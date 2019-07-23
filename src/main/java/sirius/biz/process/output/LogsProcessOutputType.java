@@ -70,7 +70,7 @@ public class LogsProcessOutputType implements ProcessOutputType {
         ph.withContext(ctx);
         ph.addTermAggregation(ProcessLog.TYPE, ProcessLogType.class);
         ph.addTermAggregation(ProcessLog.STATE, ProcessLogState.class);
-        ph.addTermAggregation(ProcessLog.MESSAGE_HANDLER, NLS::smartGet);
+        ph.addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
         ph.addTimeAggregation(ProcessLog.TIMESTAMP,
                               DateRange.lastFiveMinutes(),
                               DateRange.lastFiveteenMinutes(),

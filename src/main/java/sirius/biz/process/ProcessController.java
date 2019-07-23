@@ -150,7 +150,7 @@ public class ProcessController extends BizController {
         ph.withPageSize(100);
         ph.addTermAggregation(ProcessLog.TYPE, ProcessLogType.class);
         ph.addTermAggregation(ProcessLog.STATE, ProcessLogState.class);
-        ph.addTermAggregation(ProcessLog.MESSAGE_HANDLER, value -> NLS.getIfExists(value, null).orElse(null));
+        ph.addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
         ph.addTimeAggregation(ProcessLog.TIMESTAMP,
                               DateRange.lastFiveMinutes(),
                               DateRange.lastFiveteenMinutes(),

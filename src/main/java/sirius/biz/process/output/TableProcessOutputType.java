@@ -77,6 +77,7 @@ public class TableProcessOutputType implements ProcessOutputType {
                               DateRange.lastFiveteenMinutes(),
                               DateRange.lastTwoHours());
         ph.addTermAggregation(ProcessLog.NODE);
+        ph.addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
         ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
         List<String> columns = Arrays.asList(output.getContext().get(CONTEXT_KEY_COLUMNS).orElse("").split("\\|"));

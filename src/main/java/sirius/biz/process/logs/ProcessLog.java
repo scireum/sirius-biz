@@ -111,6 +111,13 @@ public class ProcessLog extends SearchableEntity {
     private String messageHandler;
 
     /**
+     * Contains a custom message type which will be shown as filter using {@link NLS#smartGet(String)}.
+     */
+    public static final Mapping MESSAGE_TYPE = Mapping.named("messageType");
+    @NullAllowed
+    private String messageType;
+
+    /**
      * Contains the task state of this log entry. Remain null if there is no and was never a task associated with
      * this entry.
      */
@@ -288,6 +295,19 @@ public class ProcessLog extends SearchableEntity {
      */
     public ProcessLog withMessageHandler(ProcessLogHandler handler) {
         this.messageHandler = handler.getName();
+        return this;
+    }
+
+    /**
+     * Specifies a custom message type to be used as facet filter.
+     * <p>
+     * Values will be {@link NLS#smartGet(String) smart translated}.
+     *
+     * @param messageType the custom message type to provide as filter value.
+     * @return the log entry itself for fluent method calls
+     */
+    public ProcessLog withMessageType(String messageType) {
+        this.messageType = messageType;
         return this;
     }
 
@@ -485,5 +505,9 @@ public class ProcessLog extends SearchableEntity {
 
     public long getSortKey() {
         return sortKey;
+    }
+
+    public String getMessageType() {
+        return messageType;
     }
 }
