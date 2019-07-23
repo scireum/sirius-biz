@@ -111,7 +111,7 @@ public class ProcessLog extends SearchableEntity {
     private String messageHandler;
 
     /**
-     * Contains a custome message type which will be shown as filter using {@link NLS#smartGet(String)}.Ø
+     * Contains a custom message type which will be shown as filter using {@link NLS#smartGet(String)}.
      */
     public static final Mapping MESSAGE_TYPE = Mapping.named("messageType");
     @NullAllowed
