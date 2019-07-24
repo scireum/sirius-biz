@@ -132,7 +132,7 @@ public class ProcessController extends BizController {
 
         ElasticQuery<ProcessLog> query = buildLogsQuery(process);
 
-        // If the whole logs fit into the preview, we sort them in natoral order,
+        // If the whole logs fit into the preview, we sort them in natural order,
         // otherwise we show the last N (descending)
         long numberOfLogs = query.count();
         if (numberOfLogs > NUMBER_OF_PREVIEW_LOGS) {
