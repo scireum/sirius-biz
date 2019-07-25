@@ -45,7 +45,7 @@ public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob i
     protected final EntityDescriptor descriptor;
     protected LineBasedAliases aliases;
     protected Class<E> type;
-    protected final BooleanParameter ignoreEmptyParameter;
+    private final BooleanParameter ignoreEmptyParameter;
     protected boolean ignoreEmptyValues;
 
     @Part
