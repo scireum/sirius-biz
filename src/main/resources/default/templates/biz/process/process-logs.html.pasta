@@ -42,7 +42,7 @@
                     </div>
                     <div>
                         <i:for type="sirius.biz.process.logs.ProcessLogAction" var="action" items="log.getActions()">
-                            <a href="@action.getUri()?returnUrl=@urlEncode(apply('/ps/%s/logs?%s', process.getId(), logs.createQueryString()))"
+                            <a href="@action.getUri()?returnUrl=@logs.linkToCurrentPage(urlEncode(apply('/ps/%s/logs', process.getId())))"
                                class="link link-inline"><i class="fa @action.getIcon()"></i> @action.getLabel()</a>
                         </i:for>
                     </div>
