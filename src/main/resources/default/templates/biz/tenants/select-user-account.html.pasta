@@ -19,7 +19,7 @@
     <w:table data="users">
         <thead>
         <tr>
-            <i:extensions name="templates-select-user-accounts-table" page="users" position="'first-column-head'"/>
+            <i:extensions target="templates-select-user-accounts-table" page="users" position="'first-column-head'"/>
             <th>
                 @i18n("Model.name")<br>
                 <small class="muted">@i18n("LoginData.username")</small>
@@ -28,13 +28,13 @@
                 @i18n("Model.tenant")<br>
                 @i18n("TenantData.accountNumber")
             </th>
-            <i:extensions name="templates-select-user-accounts-table" page="users" position="'last-column-head'"/>
+            <i:extensions target="templates-select-user-accounts-table" page="users" position="'last-column-head'"/>
         </tr>
         </thead>
         <tbody>
         <i:for type="sirius.biz.tenants.UserAccount" var="selectableUser" items="users.getItems()">
             <tr @if (selectableUser.getUserAccountData().getLogin().isAccountLocked()) { class="warning" }>
-                <i:extensions name="templates-select-user-accounts-table" page="users" account="selectableUser"
+                <i:extensions target="templates-select-user-accounts-table" page="users" account="selectableUser"
                               position="'first-column'"/>
                 <td>
                     <i:if test="selectableUser.getUserAccountData().hasName()">
@@ -49,7 +49,7 @@
                     @selectableUser.getTenant().getValue().as(sirius.biz.tenants.Tenant.class).getTenantData().getName()<br>
                     @selectableUser.getTenant().getValue().as(sirius.biz.tenants.Tenant.class).getTenantData().getAccountNumber()
                 </td>
-                <i:extensions name="templates-select-user-accounts-table" page="users" account="selectableUser"
+                <i:extensions target="templates-select-user-accounts-table" page="users" account="selectableUser"
                               position="'actions'"/>
             </tr>
         </i:for>
