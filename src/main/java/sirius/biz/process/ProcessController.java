@@ -24,6 +24,7 @@ import sirius.db.mixing.query.QueryField;
 import sirius.kernel.async.DelayLine;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -54,6 +55,8 @@ public class ProcessController extends BizController {
      * Defines the permission required to view and manage processes of other tenants.
      */
     public static final String PERMISSION_MANAGE_ALL_PROCESSES = "permission-manage-all-processes";
+
+    private static final int NUMBER_OF_PREVIEW_LOGS = 15;
 
     @Part
     private Processes processes;
@@ -127,9 +130,18 @@ public class ProcessController extends BizController {
     public void processDetails(WebContext ctx, String processId) {
         Process process = findAccessibleProcess(processId);
 
-        ElasticQuery<ProcessLog> query = buildLogsQuery(process).orderDesc(ProcessLog.SORT_KEY);
-        ctx.respondWith()
-           .template("templates/biz/process/process-details.html.pasta", process, query.limit(5).queryList());
+        ElasticQuery<ProcessLog> query = buildLogsQuery(process);
+
+        // If the whole logs fit into the preview, we sort them in natural order,
+        // otherwise we show the last N (descending)
+        long numberOfLogs = query.count();
+        if (numberOfLogs > NUMBER_OF_PREVIEW_LOGS) {
+            query = query.orderDesc(ProcessLog.SORT_KEY).limit(NUMBER_OF_PREVIEW_LOGS);
+        } else {
+            query = query.orderAsc(ProcessLog.SORT_KEY);
+        }
+
+        ctx.respondWith().template("templates/biz/process/process-details.html.pasta", process, query.queryList());
     }
 
     /**
@@ -143,9 +155,7 @@ public class ProcessController extends BizController {
     public void processLogs(WebContext ctx, String processId) {
         Process process = findAccessibleProcess(processId);
 
-        ElasticQuery<ProcessLog> query = buildLogsQuery(process).orderAsc(ProcessLog.SORT_KEY);
-
-        ElasticPageHelper<ProcessLog> ph = ElasticPageHelper.withQuery(query);
+        ElasticPageHelper<ProcessLog> ph = ElasticPageHelper.withQuery(buildLogsQuery(process));
         ph.withContext(ctx);
         ph.withPageSize(100);
         ph.addTermAggregation(ProcessLog.TYPE, ProcessLogType.class);
@@ -156,6 +166,8 @@ public class ProcessController extends BizController {
                               DateRange.lastFiveteenMinutes(),
                               DateRange.lastTwoHours());
         ph.addTermAggregation(ProcessLog.NODE);
+        ph.addSortFacet(Tuple.create("$ProcessController.sortDesc", qry -> qry.orderDesc(ProcessLog.SORT_KEY)),
+                        Tuple.create("$ProcessController.sortAsc", qry -> qry.orderAsc(ProcessLog.SORT_KEY)));
         ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
         ctx.respondWith().template("templates/biz/process/process-logs.html.pasta", process, ph.asPage());
