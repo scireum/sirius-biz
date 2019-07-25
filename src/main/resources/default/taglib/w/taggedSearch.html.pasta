@@ -16,8 +16,7 @@
                 <span>
                     <i:render name="body"/>
                 </span>
-                    <a class="btn btn-default" href="@baseUrl?@page.createQueryString()"><i
-                            class="fa fa-refresh"></i></a>
+                    <a class="btn btn-default" href="@page.linkToCurrentPage(baseUrl)"><i class="fa fa-refresh"></i></a>
                 </div>
             </div>
         </div>
@@ -63,7 +62,7 @@
 
         function makeTag(data) {
             var contents = /\|\|([^|]+)\|([^|]+)\|([^|]+)\|(.*)/.exec(data.substring(0, data.length - 2));
-            return $('<span>').text(contents[4]).addClass('suggestion').addClass('suggestion-'+contents[1]).css('background-color', contents[2]).data('content', data);
+            return $('<span>').text(contents[4]).addClass('suggestion').addClass('suggestion-' + contents[1]).css('background-color', contents[2]).data('content', data);
         }
 
         function makeInput(text) {

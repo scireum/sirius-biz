@@ -12,11 +12,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.nls.NLS;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 /**
  * Provides the selection of a {@link Part} from a list of parts with a common {@link sirius.kernel.di.std.Register registered} superclass as parameter.
@@ -43,12 +39,6 @@ public class PriorizedPartListParameter<E extends Priorized> extends PartListPar
      */
     @Override
     public Collection<E> getValues() {
-        if (parts == null) {
-            List<E> sortedParts = new ArrayList<>(globalContext.getParts(type));
-            sortedParts.sort(Comparator.comparingInt(Priorized::getPriority));
-
-            parts = sortedParts;
-        }
-        return Collections.unmodifiableCollection(parts);
+        return globalContext.getPriorizedParts(type);
     }
 }
