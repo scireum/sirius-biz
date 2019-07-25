@@ -16,8 +16,7 @@
                 <span>
                     <i:render name="body"/>
                 </span>
-                    <a class="btn btn-default" href="@baseUrl?@page.createQueryString()"><i
-                            class="fa fa-refresh"></i></a>
+                    <a class="btn btn-default" href="@page.linkToCurrentPage(baseUrl)"><i class="fa fa-refresh"></i></a>
                 </div>
             </div>
         </div>
