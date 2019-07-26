@@ -1,50 +1,56 @@
-<script>
+<i:arg type="String" name="point" />
 
-    /**
-     * On success function.
-     *
-     * Called every time the upload file function was successfully called.
-     */
-    var onSuccessfulFileUpload = Function();
+<i:switch test="@point">
+    <i:block name="footer">
+        <script>
 
-    /**
-     * On error function.
-     *
-     * Called every time the upload file function was not successfully called.
-     */
-    var onErrorneousFileUpload = Function();
+            /**
+             * On success function.
+             *
+             * Called every time the upload file function was successfully called.
+             */
+            var onSuccessfulFileUpload = Function();
 
-    /**
-     * Uploads a file into the given storage bucket.
-     *
-     * @@param eventOnChange the on change event triggered by an file upload input element
-     * @@param $select the jquery object of the autocomplete select
-     * @@param bucketName the name of the bucket to upload to
-     */
-    function uploadFile(eventOnChange, $select, bucketName) {
-        if (!eventOnChange.target.files || eventOnChange.target.files.length === 0) {
-            return;
-        }
+            /**
+             * On error function.
+             *
+             * Called every time the upload file function was not successfully called.
+             */
+            var onErrorneousFileUpload = Function();
 
-        var formData = new FormData();
-        var fileToUpload = eventOnChange.target.files[0];
-        formData.append('file', fileToUpload, fileToUpload.name);
+            /**
+             * Uploads a file into the given storage bucket.
+             *
+             * @@param eventOnChange the on change event triggered by an file upload input element
+             * @@param $select the jquery object of the autocomplete select
+             * @@param bucketName the name of the bucket to upload to
+             */
+            function uploadFile(eventOnChange, $select, bucketName) {
+                if (!eventOnChange.target.files || eventOnChange.target.files.length === 0) {
+                    return;
+                }
 
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/storage/upload/' + bucketName + '/?filename=' + encodeURIComponent(fileToUpload.name), true);
+                var formData = new FormData();
+                var fileToUpload = eventOnChange.target.files[0];
+                formData.append('file', fileToUpload, fileToUpload.name);
 
-        xhr.onload = function () {
-            if (xhr.status === 200) {
-                var jsonResponse = JSON.parse(xhr.responseText);
-                var newState = new Option(fileToUpload.name, jsonResponse.fileId, true, true);
-                $select.append(newState).trigger('change');
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/storage/upload/' + bucketName + '/?filename=' + encodeURIComponent(fileToUpload.name), true);
 
-                onSuccessfulFileUpload(jsonResponse, eventOnChange, $select);
-                return;
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        var jsonResponse = JSON.parse(xhr.responseText);
+                        var newState = new Option(fileToUpload.name, jsonResponse.fileId, true, true);
+                        $select.append(newState).trigger('change');
+
+                        onSuccessfulFileUpload(jsonResponse, eventOnChange, $select);
+                        return;
+                    }
+                    onErrorneousFileUpload(jsonResponse, eventOnChange, $select);
+                };
+
+                xhr.send(fileToUpload);
             }
-            onErrorneousFileUpload(jsonResponse, eventOnChange, $select);
-        };
-
-        xhr.send(fileToUpload);
-    }
-</script>
+        </script>
+    </i:block>
+</i:switch>
