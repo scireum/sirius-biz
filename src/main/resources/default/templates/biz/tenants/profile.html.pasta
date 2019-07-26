@@ -93,7 +93,7 @@
             </w:editForm>
         </div>
         <div class="col-md-4">
-            <i:extensions target="profile" point="image" userAccount="@userAccount"/>
+            <i:extensions target="profile" point="image" account="@userAccount"/>
         </div>
     </div>
 
