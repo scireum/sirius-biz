@@ -53,7 +53,7 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
                             QueryField.contains(CodeList.CODE_LIST_DATA.inner(CodeListData.NAME)),
                             QueryField.contains(CodeList.CODE_LIST_DATA.inner(CodeListData.DESCRIPTION)));
 
-        ctx.respondWith().template("templates/biz/codelists/code-lists.html.pasta", ph.asPage());
+        ctx.respondWith().template("/templates/biz/codelists/code-lists.html.pasta", ph.asPage());
     }
 
     protected abstract BasePageHelper<L, ?, ?, ?> getListsAsPage();

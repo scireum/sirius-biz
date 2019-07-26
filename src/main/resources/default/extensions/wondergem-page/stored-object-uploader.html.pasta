@@ -1,0 +1,312 @@
+<i:arg type="String" name="point" />
+
+<i:switch test="@point">
+    <i:block name="footer">
+        <script type="text/javascript">
+            (function ($) {
+                $.fn.storedObjectUploader = function (options) {
+                    var element = this;
+                    var button = $(this).find('.qq-upload-button-js').get(0);
+
+                    var $dropArea = $(this).find('.qq-upload-drop-area-js');
+                    var $file = $(this).find('.file-upload-file-js');
+                    var $filename = $(this).find('.file-upload-name-js');
+                    var $preview = $(this).find('.file-upload-preview-js');
+                    var $icon = $(this).find('.file-upload-icon-js');
+                    var $progress = $(this).find('.file-upload-progress-js');
+                    var $percent = $progress.find('.file-upload-progress-percent-js');
+                    var $urlButton = $(this).find('[data-toggle=popover]');
+                    var $resetButton = $(this).find('.btn-reset-js');
+                    var $storedObjectInput = $('#' + options.inputId);
+
+                    var allowedExtensions = [];
+
+                    if (options.allowedExtensions.length > 0) {
+                        allowedExtensions = options.allowedExtensions.toLowerCase().replace(' ', '').split(',');
+                    }
+
+                    var uploader = new qq.FileUploaderBasic({
+                        element: element,
+                        button: button,
+                        action: options.action,
+                        debug: false,
+                        allowedExtensions: allowedExtensions,
+                        multiple: false,
+                        params: options.params,
+                        messages: {
+                            typeError: '@i18n("StoredObject.errInvalidExtension")',
+                            sizeError: '@i18n("StoredObject.errTooLarge")',
+                            minSizeError: '@i18n("StoredObject.errTooSmall")',
+                            emptyError: '@i18n("StoredObject.errEmpty")'
+                        },
+                        showMessage: function (message) {
+                            // We generally send a flag "error" which is true or false as part of the response. Sadly,
+                            // fileUploader.js checks for this flag (expecting a string) and invokes showMessage is present.
+                            // Therefore we have to filter this here :-/
+                            if (message !== true) {
+                                clearMessages();
+                                addError(message);
+                            }
+                        },
+                        onSubmit: function (id, filename) {
+                            if ($(element).data('id') !== undefined) {
+                                uploader._handler.cancel($(element).data('id'));
+                            }
+
+                            $(element).data('id', id);
+
+                            $progress.find('.file-upload-progress-name-js').text(filename);
+
+                            $progress.removeClass('hide');
+                            $file.addClass('hide');
+                        },
+                        onProgress: function (id, filename, loaded, total) {
+                            var progress = Math.round(loaded / total * 100);
+
+                            $percent.text(progress + '%');
+                        },
+                        onCancel: function (id, filename) {
+                            $(element).removeData('id');
+
+                            $progress.addClass('hide');
+                            $file.removeClass('hide');
+                            showOrHideResetButton();
+                        },
+                        onComplete: function (id, filename, responseJSON) {
+                            clearMessages();
+                            $(element).removeData('id');
+
+                            $progress.addClass('hide');
+                            $file.removeClass('hide');
+
+                            if (responseJSON.error) {
+                                addError(responseJSON.message);
+                            } else if (responseJSON.message) {
+                                addInfo(responseJSON.message);
+                            }
+
+                            if (responseJSON.previewUrl) {
+                                $filename.text(filename).attr('href', responseJSON.previewUrl);
+
+                                updatePreview(element, responseJSON.previewUrl);
+                            }
+
+                            if (responseJSON.fileId) {
+                                $storedObjectInput.val(responseJSON.fileId);
+                            }
+
+                            showOrHideResetButton();
+                        }
+                    });
+
+                    setupDragDrop(uploader, $dropArea);
+                    updatePreview(element, $filename.attr('href'));
+
+                    $progress.find('a').click(function (e) {
+                        e.preventDefault();
+
+                        uploader._handler.cancel($(element).data('id'));
+                    });
+
+                    $urlButton.popover({
+                        html: true, trigger: 'manual', content: function () {
+                            return $(element).find('.popover-content').html();
+                        }
+                    });
+
+                    $urlButton.on('inserted.bs.popover', function () {
+                        var $popup = $(this);
+                        var $closeButton = $popup.next('.popover').find('.button-close');
+                        var $applyButton = $popup.next('.popover').find('.button-apply');
+                        var $input = $popup.next('.popover').find('input');
+
+                        $closeButton.click(function () {
+                            $popup.popover('hide');
+                        });
+
+                        $input.bind("input propertychange", function () {
+                            checkURL($input.val(), $applyButton);
+                        });
+
+                        $input.keyup(function (e) {
+                            if (e.which === 13) {
+                                updateURL(element, $input.val(), $storedObjectInput);
+                            }
+                        });
+
+                        $applyButton.click(function () {
+                            updateURL(element, $input.val(), $storedObjectInput);
+                        });
+                    });
+
+                    $urlButton.click(function () {
+                        var url = $filename.attr('href');
+
+                        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                            url = '';
+                        }
+
+                        $(this).blur();
+                        $(this).popover('toggle');
+
+                        var $input = $(this).next('.popover').find('input');
+                        var $applyButton = $(this).next('.popover').find('.button-apply');
+
+                        $input.val(url).select();
+
+                        checkURL($input.val(), $applyButton);
+                    });
+
+                    $resetButton.click(function (e) {
+                        e.preventDefault();
+
+                        $storedObjectInput.val('');
+                        $filename.text('');
+                        $icon.addClass('hide');
+
+                        if (options.defaultPreview.length > 0) {
+                            $preview.attr('src', options.defaultPreview).removeClass('hide');
+                        } else {
+                            $preview.addClass('hide');
+                        }
+
+                        $(this).blur();
+                        showOrHideResetButton();
+                    });
+
+                    var showOrHideResetButton = function() {
+                        if ($preview.hasClass("hide")){
+                            $resetButton.addClass("hide");
+                        } else {
+                            $resetButton.removeClass("hide");
+                        }
+                    };
+
+                    return this;
+                };
+
+                var setupDragDrop = function (uploader, $dropArea) {
+                    var dz = new qq.UploadDropZone({
+                        element: $dropArea.get(0),
+                        onEnter: function (e) {
+                            $dropArea.addClass('qq-upload-drop-area-active');
+                            e.stopPropagation();
+                        },
+                        onLeave: function (e) {
+                            e.stopPropagation();
+                        },
+                        onLeaveNotDescendants: function (e) {
+                            $dropArea.removeClass('qq-upload-drop-area-active');
+                        },
+                        onDrop: function (e) {
+                            $dropArea.removeClass('qq-upload-drop-area-active');
+                            uploader._uploadFileList(e.dataTransfer.files);
+                        }
+                    });
+
+                    qq.attach(document, 'dragenter', function (e) {
+                        if (!dz._isValidFileDrag(e)) return;
+                    });
+                    qq.attach(document, 'dragleave', function (e) {
+                        if (!dz._isValidFileDrag(e)) return;
+                    });
+                };
+
+                /**
+                 * Updates the image in the upload box and the url in the form.
+                 *
+                 * @@param element the upload element
+                 * @@param url     the new URL
+                 * @@param $input  the input to fill with the URL
+                 */
+                var updateURL = function (element, url, $input) {
+                    if (url.startsWith('http://') || url.startsWith('https://')) {
+                        var $filename = $(element).find('.file-upload-name-js');
+                        var filename = url.substr(url.lastIndexOf("/") + 1);
+
+                        $filename.text(filename).attr('href', url);
+
+                        updatePreview(element, url);
+                        $input.val(url);
+
+                        $(element).find('[data-toggle=popover]').popover('hide');
+                    }
+                };
+
+                /**
+                 * Updates the preview image or displays an appropriate icon.
+                 *
+                 * @@param element the upload element
+                 * @@param url     the URL
+                 */
+                var updatePreview = function (element, url) {
+                    if (url.length === 0) {
+                        return;
+                    }
+
+                    var $preview = $(element).find('.file-upload-preview-js');
+                    var $icon = $(element).find('.file-upload-icon-js');
+
+                    $preview.addClass('hide');
+                    $icon.removeClass().addClass('fa fa-3x file-upload-icon-js hide');
+
+                    if (url.startsWith('http://') || url.startsWith('https://')) {
+                        $icon.addClass('fa-external-link').removeClass('hide');
+                        return;
+                    }
+
+                    var extension = url.substr(url.lastIndexOf(".") + 1).toLowerCase();
+
+                    if (extension === "jpg" || extension === "jpeg" || extension === "png" || extension === "bmp") {
+                        $preview.attr('src', url).removeClass('hide');
+                        return;
+                    }
+
+                    var icon = 'fa-file-o';
+
+                    if (extension === "pdf") {
+                        icon = 'fa-file-pdf-o';
+                    }
+
+                    if (extension === "tif" || extension === "tiff") {
+                        icon = 'fa-file-image-o';
+                    }
+
+                    if (extension === "doc" || extension === "docx") {
+                        icon = 'fa-file-word-o';
+                    }
+
+                    if (extension === "xls" || extension === "xlsx") {
+                        icon = 'fa-file-excel-o';
+                    }
+
+                    if (extension === "ppt" || extension === "pps" || extension === "pptx" || extension === "ppsx") {
+                        icon = 'fa-file-powerpoint-o';
+                    }
+
+                    if (extension === "zip" || extension === "rar") {
+                        icon = 'fa-file-archive-o';
+                    }
+
+                    $icon.addClass(icon).removeClass('hide');
+                };
+
+                /**
+                 * Checks if the specified URL is a valid one and disables or enables the apply button accordingly.
+                 *
+                 * @@param url               the new URL
+                 * @@param $applyButton      the button to enable/disable
+                 * @@param allowedExtensions the allowed extensions
+                 */
+                var checkURL = function (url, $applyButton) {
+                    if ('undefined' === typeof url || !(url.startsWith('http://') || url.startsWith('https://'))) {
+                        $applyButton.prop('disabled', true);
+                        return;
+                    }
+
+                    $applyButton.prop('disabled', false);
+                };
+            }(jQuery));
+        </script>
+    </i:block>
+</i:switch>

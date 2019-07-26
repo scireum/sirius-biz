@@ -109,7 +109,7 @@ public class ProcessController extends BizController {
                                       DateRange.lastWeek());
         pageHelper.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
-        ctx.respondWith().template("templates/biz/process/processes.html.pasta", pageHelper.asPage());
+        ctx.respondWith().template("/templates/biz/process/processes.html.pasta", pageHelper.asPage());
     }
 
     private Process findAccessibleProcess(String processId) {
@@ -141,7 +141,7 @@ public class ProcessController extends BizController {
             query = query.orderAsc(ProcessLog.SORT_KEY);
         }
 
-        ctx.respondWith().template("templates/biz/process/process-details.html.pasta", process, query.queryList());
+        ctx.respondWith().template("/templates/biz/process/process-details.html.pasta", process, query.queryList());
     }
 
     /**
@@ -170,7 +170,7 @@ public class ProcessController extends BizController {
                         Tuple.create("$ProcessController.sortAsc", qry -> qry.orderAsc(ProcessLog.SORT_KEY)));
         ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
-        ctx.respondWith().template("templates/biz/process/process-logs.html.pasta", process, ph.asPage());
+        ctx.respondWith().template("/templates/biz/process/process-logs.html.pasta", process, ph.asPage());
     }
 
     /**

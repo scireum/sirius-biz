@@ -42,10 +42,10 @@ public class BizInterceptor implements Interceptor {
             return false;
         }
         if (!UserContext.getCurrentUser().isLoggedIn()) {
-            ctx.respondWith().template("templates/biz/login.html.pasta", ctx.getRequest().uri());
+            ctx.respondWith().template("/templates/biz/login.html.pasta", ctx.getRequest().uri());
         } else {
             ctx.respondWith()
-               .template("templates/wondergem/error.html.pasta",
+               .template("/templates/wondergem/error.html.pasta",
                          NLS.fmtr("BizInterceptor.missingPermission").set("permission", permission).format());
         }
         return true;
