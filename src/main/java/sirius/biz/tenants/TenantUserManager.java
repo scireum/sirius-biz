@@ -94,14 +94,6 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     public static final String PERMISSION_HAS_CHILDREN = "flag-has-children";
 
     /**
-     * Contains the permission required to manage the system.
-     * <p>
-     * If this permission is granted for user accounts that belong to the system tenant, the PERMISSION_SYSTEM_TENANT
-     * flag is added to the users roles
-     */
-    public static final String PERMISSION_MANAGE_SYSTEM = "permission-manage-system";
-
-    /**
      * This flag indicates that the current user either has taken control over another tenant or uses account.
      */
     public static final String PERMISSION_SPY_USER = "flag-spy-user";
@@ -786,6 +778,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         roles.addAll(user.getUserAccountData().getPermissions().getPermissions().data());
         roles.addAll(tenant.getTenantData().getPackageData().computeCombinedPermissions());
 
+        if (isSystemTenant) {
+            roles.add(Tenant.PERMISSION_SYSTEM_TENANT);
+        }
         if (Strings.isFilled(tenant.getTenantData().getAccountNumber())) {
             roles.add("tenant-" + tenant.getTenantData().getAccountNumber());
         }
@@ -799,14 +794,6 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         }
 
         Set<String> transformedRoles = transformRoles(roles);
-        if (isSystemTenant) {
-            roles.add(PERMISSION_SYSTEM_TENANT_MEMBER);
-            if (transformedRoles.contains(PERMISSION_MANAGE_SYSTEM)) {
-                roles.add(PERMISSION_SYSTEM_ADMINISTRATOR);
-            }
-            transformedRoles = transformRoles(roles);
-        }
-
         transformedRoles.removeAll(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
 
         return transformedRoles;
