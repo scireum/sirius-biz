@@ -307,8 +307,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                      .subject(NLS.fmtr("UserAccountController.generatedPassword.subject")
                                  .set("product", Product.getProduct().getName())
                                  .format())
-                     .textTemplate("mail/useraccount/password.pasta", context)
-                     .htmlTemplate("mail/useraccount/password.html.pasta", context)
+                     .textTemplate("/mail/useraccount/password.pasta", context)
+                     .htmlTemplate("/mail/useraccount/password.html.pasta", context)
                      .send();
             });
         } else {
@@ -394,8 +394,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                 mails.createEmail()
                      .to(account.getUserAccountData().getEmail(), account.getUserAccountData().toString())
                      .subject(NLS.get("UserAccountController.forgotPassword.subject"))
-                     .textTemplate("mail/useraccount/password.pasta", context)
-                     .htmlTemplate("mail/useraccount/password.html.pasta", context)
+                     .textTemplate("/mail/useraccount/password.pasta", context)
+                     .htmlTemplate("/mail/useraccount/password.html.pasta", context)
                      .send();
             });
         }
