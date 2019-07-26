@@ -50,7 +50,7 @@ public class IncidentController extends BizController {
         ph.withSearchFields(QueryField.contains(StoredIncident.SEARCH_FIELD));
 
         ctx.respondWith()
-           .template("templates/biz/protocol/errors.html.pasta",
+           .template("/templates/biz/protocol/errors.html.pasta",
                      ph.asPage(),
                      (int) elastic.select(StoredIncident.class).count());
     }
@@ -65,6 +65,6 @@ public class IncidentController extends BizController {
     @Routed("/system/error/:1")
     public void error(WebContext ctx, String id) {
         StoredIncident incident = find(StoredIncident.class, id);
-        ctx.respondWith().template("templates/biz/protocol/error.html.pasta", incident);
+        ctx.respondWith().template("/templates/biz/protocol/error.html.pasta", incident);
     }
 }

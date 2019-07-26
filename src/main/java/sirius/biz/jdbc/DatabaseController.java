@@ -72,7 +72,7 @@ public class DatabaseController extends BasicController {
         List<String> availableDatabases = selectableDatabases.stream()
                                                              .filter(name -> databases.getDatabases().contains(name))
                                                              .collect(Collectors.toList());
-        ctx.respondWith().template("templates/biz/model/sql.html.pasta", availableDatabases, defaultDatabase);
+        ctx.respondWith().template("/templates/biz/model/sql.html.pasta", availableDatabases, defaultDatabase);
     }
 
     /**
@@ -160,7 +160,7 @@ public class DatabaseController extends BasicController {
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/schema")
     public void changes(WebContext ctx) {
-        ctx.respondWith().template("templates/biz/model/schema.html.pasta");
+        ctx.respondWith().template("/templates/biz/model/schema.html.pasta");
     }
 
     /**

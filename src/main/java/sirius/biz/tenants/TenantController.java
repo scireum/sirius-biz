@@ -109,7 +109,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     @DefaultRoute
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void tenants(WebContext ctx) {
-        ctx.respondWith().template("templates/biz/tenants/tenants.html.pasta", getTenantsAsPage(ctx).asPage());
+        ctx.respondWith().template("/templates/biz/tenants/tenants.html.pasta", getTenantsAsPage(ctx).asPage());
     }
 
     /**
@@ -143,7 +143,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         if (!requestHandled) {
             validate(tenant);
 
-            ctx.respondWith().template("templates/biz/tenants/tenant-details.html.pasta", tenant, this);
+            ctx.respondWith().template("/templates/biz/tenants/tenant-details.html.pasta", tenant, this);
         }
     }
 
@@ -206,7 +206,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     public void tenantConfig(WebContext ctx, String tenantId) {
         T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
-        ctx.respondWith().template("templates/biz/tenants/tenant-config.html.pasta", tenant, this);
+        ctx.respondWith().template("/templates/biz/tenants/tenant-config.html.pasta", tenant, this);
     }
 
     /**
@@ -228,7 +228,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         }).saveEntity(tenant);
 
         if (!handled) {
-            ctx.respondWith().template("templates/biz/tenants/tenant-permissions.html.pasta", tenant, this);
+            ctx.respondWith().template("/templates/biz/tenants/tenant-permissions.html.pasta", tenant, this);
         }
     }
 
@@ -254,7 +254,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
                                           .saveEntity(tenant);
 
         if (!handled) {
-            ctx.respondWith().template("templates/biz/tenants/tenant-saml.html.pasta", tenant, this);
+            ctx.respondWith().template("/templates/biz/tenants/tenant-saml.html.pasta", tenant, this);
         }
     }
 
@@ -292,7 +292,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     public void selectTenants(WebContext ctx) {
         BasePageHelper<T, ?, ?, ?> ph = getSelectableTenantsAsPage(ctx, determineCurrentTenant(ctx));
         ctx.respondWith()
-           .template("templates/biz/tenants/select-tenant.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
+           .template("/templates/biz/tenants/select-tenant.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
     }
 
     private boolean isCurrentlySpying(WebContext ctx) {

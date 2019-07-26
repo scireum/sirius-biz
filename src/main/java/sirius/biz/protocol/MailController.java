@@ -50,7 +50,7 @@ public class MailController extends BizController {
                               DateRange.lastWeek());
         ph.withSearchFields(QueryField.contains(MailProtocol.SEARCH_FIELD));
 
-        ctx.respondWith().template("templates/biz/protocol/mails.html.pasta", ph.asPage());
+        ctx.respondWith().template("/templates/biz/protocol/mails.html.pasta", ph.asPage());
     }
 
     /**
@@ -63,6 +63,6 @@ public class MailController extends BizController {
     @Routed("/system/mail/:1")
     public void mail(final WebContext ctx, String id) {
         MailProtocol mailLogEntry = find(MailProtocol.class, id);
-        ctx.respondWith().template("templates/biz/protocol/mail.html.pasta", mailLogEntry);
+        ctx.respondWith().template("/templates/biz/protocol/mail.html.pasta", mailLogEntry);
     }
 }

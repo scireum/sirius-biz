@@ -103,7 +103,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                                                         .inner(LoginData.ACCOUNT_LOCKED)
                                                         .toString(), NLS.get("LoginData.accountLocked"));
 
-        ctx.respondWith().template("templates/biz/tenants/user-accounts.html.pasta", ph.asPage(), getUserClass());
+        ctx.respondWith().template("/templates/biz/tenants/user-accounts.html.pasta", ph.asPage(), getUserClass());
     }
 
     /**
@@ -157,7 +157,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
 
         if (!requestHandled) {
             validate(userAccount);
-            ctx.respondWith().template("templates/biz/tenants/user-account-details.html.pasta", userAccount, this);
+            ctx.respondWith().template("/templates/biz/tenants/user-account-details.html.pasta", userAccount, this);
         }
     }
 
@@ -194,7 +194,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     public void accountConfig(WebContext ctx, String accountId) {
         U userAccount = findForTenant(getUserClass(), accountId);
         assertNotNew(userAccount);
-        ctx.respondWith().template("templates/biz/tenants/user-account-config.html.pasta", userAccount);
+        ctx.respondWith().template("/templates/biz/tenants/user-account-config.html.pasta", userAccount);
     }
 
     /**
@@ -521,7 +521,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         ph.withContext(ctx);
 
         ctx.respondWith()
-           .template("templates/biz/tenants/select-user-account.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
+           .template("/templates/biz/tenants/select-user-account.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
     }
 
     private boolean isCurrentlySpying(WebContext ctx) {
