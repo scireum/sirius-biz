@@ -45,7 +45,6 @@ public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob i
     protected final EntityDescriptor descriptor;
     protected LineBasedAliases aliases;
     protected Class<E> type;
-    private final BooleanParameter ignoreEmptyParameter;
     protected boolean ignoreEmptyValues;
 
     @Part
@@ -64,17 +63,11 @@ public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob i
                               Class<E> type,
                               ProcessContext process) {
         super(fileParameter, process);
-        this.ignoreEmptyParameter = ignoreEmptyParameter;
+        this.ignoreEmptyValues = process.getParameter(ignoreEmptyParameter).orElse(false);
         this.dictionary = importer.getDictionary(type);
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);
         enhanceDictionary();
-    }
-
-    @Override
-    public void execute() throws Exception {
-        this.ignoreEmptyValues = process.getParameter(ignoreEmptyParameter).orElse(false);
-        super.execute();
     }
 
     /**
