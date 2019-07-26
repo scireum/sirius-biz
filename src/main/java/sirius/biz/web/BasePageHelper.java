@@ -364,4 +364,8 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
             result.addFacet(f.getFirst());
         }
     }
+
+    public Q getBaseQuery() {
+        return baseQuery;
+    }
 }
