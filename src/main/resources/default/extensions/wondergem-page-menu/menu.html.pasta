@@ -46,7 +46,6 @@
                 <w:menuSection>
                     <w:menuItem title="Console" url="/system/console" permission="permission-system-console"/>
                     <w:menuItem title="Timing" url="/system/timing" permission="permission-system-timing"/>
-                    <w:menuItem title="Scripting" url="/system/scripting" permission="permission-system-scripting"/>
                     <w:menuItem title="Schema" url="/system/schema" permission="flag-system-administrator"/>
                     <w:menuItem title="SQL" url="/system/sql" permission="flag-system-administrator"/>
                     <w:menuItem title="State" url="/system/state" permission="flag-system-administrator"/>
