@@ -22,6 +22,7 @@ import sirius.kernel.di.std.Parts;
 import sirius.web.security.Permissions;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -133,7 +134,7 @@ public class PackageData extends Composite {
      */
     public Set<String> getPackageAndUpgradePermissions() {
         if (directPermissions == null) {
-            Set<String> packageAndUpgradeFeatures = new TreeSet<>();
+            Set<String> packageAndUpgradeFeatures = new HashSet<>();
             if (Strings.isFilled(getPackage())) {
                 packageAndUpgradeFeatures.add(getPackage());
             }
@@ -143,7 +144,8 @@ public class PackageData extends Composite {
                 permissionsProvider.addAdditionalPermissions(this, packageAndUpgradeFeatures::add);
             }
 
-            directPermissions = Permissions.applyProfiles(packageAndUpgradeFeatures);
+            Permissions.applyProfiles(packageAndUpgradeFeatures);
+            directPermissions = packageAndUpgradeFeatures;
         }
 
         return Collections.unmodifiableSet(directPermissions);
@@ -172,13 +174,13 @@ public class PackageData extends Composite {
      * @return a set of every permission granted
      */
     public Set<String> computeExpandedPermissions() {
-        Set<String> permissions = new TreeSet<>();
+        Set<String> permissions = new HashSet<>();
         if (Strings.isFilled(getPackage())) {
             permissions.add(getPackage());
         }
         permissions.addAll(getUpgrades().data());
         permissions.addAll(getAdditionalPermissions().data());
-        permissions = Permissions.applyProfiles(permissions);
+        Permissions.applyProfiles(permissions);
         permissions.removeAll(getRevokedPermissions().data());
 
         return permissions;
