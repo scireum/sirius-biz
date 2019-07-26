@@ -59,7 +59,7 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
                                    NLS.get("SchedulerData.enabled"));
         pageHelper.withSearchFields(QueryField.contains(SchedulerEntry.JOB_CONFIG_DATA.inner(JobConfigData.JOB_NAME)));
 
-        ctx.respondWith().template("templates/biz/jobs/scheduler/entries.html.pasta", pageHelper.asPage());
+        ctx.respondWith().template("/templates/biz/jobs/scheduler/entries.html.pasta", pageHelper.asPage());
     }
 
     /**
@@ -95,7 +95,7 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
 
         if (!requestHandled) {
             validate(entry);
-            ctx.respondWith().template("templates/biz/jobs/scheduler/entry.html.pasta", entry);
+            ctx.respondWith().template("/templates/biz/jobs/scheduler/entry.html.pasta", entry);
         }
     }
 
@@ -124,7 +124,7 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
         if (entry.isNew() && ctx.isSafePOST()) {
             if (ctx.hasParameter("selectedJob")) {
                 entry.getJobConfigData().setJob(ctx.get("selectedJob").asString());
-                ctx.respondWith().template("templates/biz/jobs/scheduler/entry.html.pasta", entry);
+                ctx.respondWith().template("/templates/biz/jobs/scheduler/entry.html.pasta", entry);
                 return true;
             } else if (ctx.hasParameter("job")) {
                 entry.getJobConfigData().setJob(ctx.get("job").asString());
@@ -136,7 +136,7 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
 
     private boolean handleNewEntryWithoutJob(J entry, WebContext ctx) {
         if (Strings.isEmpty(entry.getJobConfigData().getJob())) {
-            ctx.respondWith().template("templates/biz/jobs/scheduler/create-entry.html.pasta", entry);
+            ctx.respondWith().template("/templates/biz/jobs/scheduler/create-entry.html.pasta", entry);
             return true;
         }
 
