@@ -9,6 +9,7 @@
 package sirius.biz.tenants.mongo;
 
 import sirius.biz.model.PersonData;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountController;
 import sirius.biz.tenants.UserAccountData;
@@ -46,7 +47,7 @@ public class MongoUserAccountController extends UserAccountController<String, Mo
     protected BasePageHelper<MongoUserAccount, ?, ?, ?> getSelectableUsersAsPage() {
         MongoQuery<MongoUserAccount> baseQuery = mango.select(MongoUserAccount.class);
 
-        if (!isUserAccountOfSystemTenant()) {
+        if (!getUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_AFFILIATE)) {
             baseQuery = baseQuery.eq(UserAccount.TENANT, tenants.getRequiredTenant());
         }
 

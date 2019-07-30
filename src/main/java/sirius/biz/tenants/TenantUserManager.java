@@ -83,6 +83,15 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     public static final String PERMISSION_SYSTEM_TENANT_MEMBER = "flag-system-tenant-member";
 
     /**
+     * This flag permission is granted to <b>all users</b> which originally belong to the system tenant.
+     * <p>
+     * The id of the system tenant can be set in the scope config. The system tenant usually is the administrative
+     * company which owns / runs the system.
+     * Unlike {@link #PERMISSION_SYSTEM_TENANT_MEMBER}, this flag is kept when the user either has taken control over another tenant or user account.
+     */
+    public static final String PERMISSION_SYSTEM_TENANT_AFFILIATE = "flag-system-tenant-affiliate";
+
+    /**
      * This flag permission is granted to all users which access the application from outside of
      * the configured ip range.
      */
@@ -94,7 +103,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     public static final String PERMISSION_HAS_CHILDREN = "flag-has-children";
 
     /**
-     * This flag indicates that the current user either has taken control over another tenant or uses account.
+     * This flag indicates that the current user either has taken control over another tenant or user account.
      */
     public static final String PERMISSION_SPY_USER = "flag-spy-user";
 
@@ -225,8 +234,11 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         List<String> extraRoles = Lists.newArrayList();
         extraRoles.add(PERMISSION_SPY_USER);
         extraRoles.add(PERMISSION_SELECT_USER_ACCOUNT);
-        if (rootUser.hasPermission(PERMISSION_SYSTEM_ADMINISTRATOR)) {
-            extraRoles.add(PERMISSION_SYSTEM_ADMINISTRATOR);
+        if (rootUser.hasPermission(PERMISSION_SYSTEM_TENANT_AFFILIATE)) {
+            extraRoles.add(PERMISSION_SYSTEM_TENANT_AFFILIATE);
+            if (rootUser.hasPermission(PERMISSION_SYSTEM_ADMINISTRATOR)) {
+                extraRoles.add(PERMISSION_SYSTEM_ADMINISTRATOR);
+            }
         }
         return asUser(spyUser,
                       extraRoles,

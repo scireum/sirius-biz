@@ -13,6 +13,7 @@ import sirius.biz.packages.Packages;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantController;
 import sirius.biz.tenants.TenantData;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.MongoPageHelper;
 import sirius.db.mixing.query.QueryField;
@@ -37,9 +38,9 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
     @Override
     protected BasePageHelper<MongoTenant, ?, ?, ?> getTenantsAsPage(WebContext ctx) {
         MongoPageHelper<MongoTenant> pageHelper = createTenantPageHelper(ctx,
-                                                                               mango.select(MongoTenant.class)
-                                                                                    .orderAsc(Tenant.TENANT_DATA.inner(
-                                                                                            TenantData.NAME)));
+                                                                         mango.select(MongoTenant.class)
+                                                                              .orderAsc(Tenant.TENANT_DATA.inner(
+                                                                                      TenantData.NAME)));
         pageHelper.applyExtenders("/tenants");
         return pageHelper;
     }
@@ -48,9 +49,8 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
     protected BasePageHelper<MongoTenant, ?, ?, ?> getSelectableTenantsAsPage(WebContext ctx,
                                                                               MongoTenant currentTenant) {
         MongoPageHelper<MongoTenant> pageHelper = createTenantPageHelper(ctx,
-                                                                               queryPossibleTenants(currentTenant).orderAsc(
-                                                                                       Tenant.TENANT_DATA.inner(
-                                                                                               TenantData.NAME)));
+                                                                         queryPossibleTenants(currentTenant).orderAsc(
+                                                                                 Tenant.TENANT_DATA.inner(TenantData.NAME)));
         pageHelper.applyExtenders("/tenants/select");
         return pageHelper;
     }
@@ -77,23 +77,20 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
 
     private MongoQuery<MongoTenant> queryPossibleTenants(MongoTenant currentTenant) {
         MongoQuery<MongoTenant> baseQuery = mango.select(MongoTenant.class);
-
-        if (!isUserAccountOfSystemTenant()) {
-            if (currentTenant.getTenantData().isCanAccessParent()) {
-                baseQuery.where(QueryBuilder.FILTERS.or(QueryBuilder.FILTERS.and(QueryBuilder.FILTERS.eq(Tenant.PARENT,
-                                                                                                         currentTenant),
-                                                                                 QueryBuilder.FILTERS.eq(Tenant.TENANT_DATA
-                                                                                                                 .inner(TenantData.PARENT_CAN_ACCESS),
-                                                                                                         true)),
-                                                        QueryBuilder.FILTERS.eq(MongoTenant.ID,
-                                                                                currentTenant.getParent().getId())));
-            } else {
-                baseQuery.where(QueryBuilder.FILTERS.and(QueryBuilder.FILTERS.eq(Tenant.PARENT, currentTenant),
-                                                         QueryBuilder.FILTERS.eq(Tenant.TENANT_DATA.inner(TenantData.PARENT_CAN_ACCESS),
-                                                                                 true)));
-            }
+        if (getUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_AFFILIATE)) {
+            return baseQuery;
         }
-
-        return baseQuery;
+        if (currentTenant.getTenantData().isCanAccessParent()) {
+            return baseQuery.where(QueryBuilder.FILTERS.or(QueryBuilder.FILTERS.and(QueryBuilder.FILTERS.eq(Tenant.PARENT,
+                                                                                                            currentTenant),
+                                                                                    QueryBuilder.FILTERS.eq(Tenant.TENANT_DATA
+                                                                                                                    .inner(TenantData.PARENT_CAN_ACCESS),
+                                                                                                            true)),
+                                                           QueryBuilder.FILTERS.eq(MongoTenant.ID,
+                                                                                   currentTenant.getParent().getId())));
+        }
+        return baseQuery.where(QueryBuilder.FILTERS.and(QueryBuilder.FILTERS.eq(Tenant.PARENT, currentTenant),
+                                                        QueryBuilder.FILTERS.eq(Tenant.TENANT_DATA.inner(TenantData.PARENT_CAN_ACCESS),
+                                                                                true)));
     }
 }
