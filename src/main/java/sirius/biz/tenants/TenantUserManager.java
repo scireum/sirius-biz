@@ -87,7 +87,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
      * <p>
      * The id of the system tenant can be set in the scope config. The system tenant usually is the administrative
      * company which owns / runs the system.
-     * Unlike {@link #PERMISSION_SYSTEM_TENANT_MEMBER}, this flag is kept when when the user either has taken control over another tenant or uses account.
+     * Unlike {@link #PERMISSION_SYSTEM_TENANT_MEMBER}, this flag is kept when the user either has taken control over another tenant or user account.
      */
     public static final String PERMISSION_SYSTEM_TENANT_AFFILIATE = "flag-system-tenant-affiliate";
 
@@ -103,7 +103,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     public static final String PERMISSION_HAS_CHILDREN = "flag-has-children";
 
     /**
-     * This flag indicates that the current user either has taken control over another tenant or uses account.
+     * This flag indicates that the current user either has taken control over another tenant or user account.
      */
     public static final String PERMISSION_SPY_USER = "flag-spy-user";
 
