@@ -12,6 +12,7 @@ import sirius.biz.model.LoginData;
 import sirius.biz.model.PersonData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantData;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountController;
 import sirius.biz.tenants.UserAccountData;
@@ -69,7 +70,7 @@ public class SQLUserAccountController extends UserAccountController<Long, SQLTen
                                                   .orderAsc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                          .inner(PersonData.FIRSTNAME));
 
-        if (!isUserAccountOfSystemTenant()) {
+        if (!getUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_AFFILIATE)) {
             baseQuery = baseQuery.eq(UserAccount.TENANT, tenants.getRequiredTenant());
         }
 
