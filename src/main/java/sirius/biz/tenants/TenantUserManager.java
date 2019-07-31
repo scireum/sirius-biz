@@ -263,8 +263,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         // And overwrite with the new tenant...
         modifiedUser.getTenant().setValue(tenant);
 
-        Set<String> roles =
-                computeRoles(modifiedUser, tenant, originalUser.hasPermission(PERMISSION_SYSTEM_ADMINISTRATOR));
+        Set<String> roles = computeRoles(modifiedUser,
+                                         tenant,
+                                         Strings.areEqual(systemTenant, String.valueOf(originalUser.getTenantId())));
         roles.add(PERMISSION_SPY_USER);
         roles.add(PERMISSION_SELECT_TENANT);
         return asUserWithRoles(modifiedUser, roles, () -> computeTenantname(null, originalUser.getTenantId()));
