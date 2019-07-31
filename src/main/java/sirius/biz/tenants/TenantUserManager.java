@@ -78,7 +78,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
      * This flag permission is granted to <b>all users</b> which belong to the system tenant.
      * <p>
      * The id of the system tenant can be set in the scope config. The system tenant usually is the administrative
-     * company which owns / runs the system.
+     * company which owns / runs the system, this flag is kept when the user has taken control over another tenant,
+     * but is removed if the user has taken control over another user directly.
      */
     public static final String PERMISSION_SYSTEM_TENANT_MEMBER = "flag-system-tenant-member";
 
@@ -87,7 +88,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
      * <p>
      * The id of the system tenant can be set in the scope config. The system tenant usually is the administrative
      * company which owns / runs the system.
-     * Unlike {@link #PERMISSION_SYSTEM_TENANT_MEMBER}, this flag is kept when the user either has taken control over another tenant or user account.
+     * Unlike {@link #PERMISSION_SYSTEM_TENANT_MEMBER}, this flag is kept always even when the user either has taken control over another tenant or user account.
      */
     public static final String PERMISSION_SYSTEM_TENANT_AFFILIATE = "flag-system-tenant-affiliate";
 
@@ -226,6 +227,15 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return rootUser;
     }
 
+    /**
+     * Makes the user become/switch to another user.
+     * <p>
+     * See {@link UserAccountController#selectUserAccount}.
+     * 
+     * @param spyId the id of the user to become
+     * @param rootUser the original user that is becoming another user
+     * @return the new user that was switched to
+     */
     private UserInfo becomeSpyUser(String spyId, UserInfo rootUser) {
         U spyUser = fetchAccount(spyId);
         if (spyUser == null) {
@@ -256,7 +266,19 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         if (tenant == null) {
             return originalUser;
         }
+        return switchTenant(originalUser, tenant);
+    }
 
+    /**
+     * Makes the User appear as he is from another tenant.
+     * <p>
+     * See {@link TenantController#selectTenant}.
+     *
+     * @param originalUser the user to be switched
+     * @param tenant       the tenant to switch to
+     * @return user the new user, now belonging to the given tenant
+     */
+    private UserInfo switchTenant(UserInfo originalUser, T tenant) {
         // Copy all relevant data into a new object (outside of the cache)...
         U modifiedUser = cloneUser(originalUser);
 

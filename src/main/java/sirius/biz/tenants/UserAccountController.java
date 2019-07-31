@@ -537,10 +537,15 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     protected abstract BasePageHelper<U, ?, ?, ?> getSelectableUsersAsPage();
 
     /**
-     * Makes the current user belong to the given tenant.
+     * Switches fromt the current user to the given user.
+     * The current user can act on the behalf of the given user, he will appear as he is that user,
+     * and he will have the roles the given user has.
+     * The only permissions kept from the original user may be {@link TenantUserManager#PERMISSION_SYSTEM_TENANT_AFFILIATE},
+     * and {@link TenantUserManager#PERMISSION_SELECT_USER_ACCOUNT} (to switch back).
+     * Additionatly, the permission {@link TenantUserManager#PERMISSION_SPY_USER} is given, so the system can identify the user switch.
      *
      * @param ctx the current request
-     * @param id  the id of the tenant to switch to
+     * @param id  the id of the user to switch to
      */
     @LoginRequired
     @Routed("/user-accounts/select/:1")
