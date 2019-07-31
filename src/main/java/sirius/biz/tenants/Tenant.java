@@ -30,8 +30,8 @@ public interface Tenant<I> extends Transformable, Traced, Journaled, RateLimited
     /**
      * This flag permission is granted to tenant objects only.
      * <p>
-     * This can be used in role / permission mappings to filter specific user roles for the system
-     * tenant. When a user of the system tenant takes control over another tenant, this permission is kept.
+     * This can be used in role / permission mappings to filter specific user roles for the system tenant.
+     * When a user of the system tenant takes control over another tenant, this permission is kept.
      * <p>
      * Use {@link #hasPermission(String)} to check for this flag. For user specific permissions the flags
      * {@link TenantUserManager#PERMISSION_SYSTEM_TENANT_MEMBER} and

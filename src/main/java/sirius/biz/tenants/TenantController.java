@@ -345,6 +345,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
 
     /**
      * Makes the current user belong to the given tenant.
+     * <p>
      * The user is will keep the permissions tied to its user,
      * but the permissions granted by his tenant will change to the new tenant.
      * Exception to this is {@link Tenant#PERMISSION_SYSTEM_TENANT}, this will be kept if the user originally belonged to the system tenant.
