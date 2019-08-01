@@ -5,9 +5,9 @@
     <i:block name="system">
         <w:menuSection>
             <w:menuItem title="State" icon="circle" url="/system/state"
-                        permission="permission-system-state"/>
+                        permission="flag-system-tenant-member"/>
             <w:menuItem title="System Load" icon="dashboard" url="/system/load"
-                        permission="permission-system-state"/>
+                        permission="flag-system-tenant-member"/>
             <w:menuItem title="Console" icon="terminal" url="/system/console"
                         permission="permission-system-console"/>
             <w:menuItem title="Timing" icon="clock-o" url="/system/timing"
