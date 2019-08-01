@@ -10,15 +10,15 @@
     <i:block name="system">
         <w:menuSection>
             <w:permission permission="permission-system-protocols">
-                <w:menuItem titleKey="LoggedMessage.plural" iconClass="fa fa-fw fa-list-ul" url="/system/logs"
+                <w:menuItem titleKey="LoggedMessage.plural" icon="list-ul" url="/system/logs"
                             framework="biz.protocols"/>
-                <w:menuItem titleKey="StoredIncident.plural" iconClass="fa fa-fw fa-fire-extinguisher"
+                <w:menuItem titleKey="StoredIncident.plural" icon="fire-extinguisher"
                             url="/system/errors" framework="biz.protocols"/>
-                <w:menuItem titleKey="MailProtocol.plural" iconClass="fa fa-fw fa-envelope" url="/system/mails"
+                <w:menuItem titleKey="MailProtocol.plural" icon="envelope" url="/system/mails"
                             framework="biz.protocols"/>
             </w:permission>
             <w:permission permission="permission-system-journal">
-                <w:menuItem titleKey="JournalEntry.plural" iconClass="fa fa-fw fa-history" url="/system/protocol"
+                <w:menuItem titleKey="JournalEntry.plural" icon="history" url="/system/protocol"
                             framework="biz.journal"/>
             </w:permission>
         </w:menuSection>
