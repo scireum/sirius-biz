@@ -67,9 +67,10 @@ public class SaveHelper {
     }
 
     /**
-     * Specifies what mappings should be loaded from the request context
+     * Specifies what mappings should be loaded from the request context.
      * <p>
-     * if not set all marked as {@link Autoloaded} properties of the entity are loaded
+     * Note that by default also all properties wearing an {@link Autoloaded} annotation will be loaded. To suppress
+     * this bebahviour {@link #disableAutoload()} has to be called.
      *
      * @param columns array of {@link Mapping} objects
      * @return the helper itself for fluent method calls
@@ -168,7 +169,7 @@ public class SaveHelper {
             }
 
             bizController.showSavedMessage();
-            
+
             if (!entity.getMapper().hasValidationWarnings(entity) && Strings.isFilled(afterSaveURI)) {
                 ctx.respondWith()
                    .redirectToGet(Formatter.create(afterSaveURI).set("id", entity.getIdAsString()).format());
