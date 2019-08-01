@@ -8,6 +8,8 @@
 
 package sirius.biz.jobs;
 
+import sirius.biz.jobs.infos.JobInfo;
+import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Monoflop;
@@ -65,7 +67,23 @@ public abstract class BasicJobFactory implements JobFactory {
     @Nullable
     @Override
     public String getDetailDescription() {
-        return NLS.getIfExists(getClass().getSimpleName() + ".detailDescription", null).orElse(getDescription());
+        return NLS.getIfExists(getClass().getSimpleName() + ".detailDescription", null).orElse(null);
+    }
+
+    @Override
+    public List<JobInfo> getJobInfos() {
+        JobInfoCollector collector = new JobInfoCollector();
+        collectJobInfos(collector);
+        return collector.getInfos();
+    }
+
+    /**
+     * Overwrite to provide additional documentation for a job.
+     *
+     * @param collector the collector used to supply additional info sections for a job
+     */
+    protected void collectJobInfos(JobInfoCollector collector) {
+        collector.addText(getDetailDescription());
     }
 
     @Override

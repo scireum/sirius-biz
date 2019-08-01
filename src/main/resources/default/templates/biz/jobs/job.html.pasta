@@ -11,11 +11,22 @@
         </li>
     </i:block>
 
-    <w:pageHeader title="@job.getLabel()"/>
+    <w:pageHeader>
+        <div class="row">
+            <div class="col-md-8">
+                @job.getLabel()
+            </div>
+            <div class="col-md-4 align-right">
+                <i:if test="!job.getJobInfos().isEmpty()">
+                    <a class="btn btn-default" href="/jobs/infos/@job.getName()">@i18n("JobsController.showInfos")</a>
+                </i:if>
+            </div>
+        </div>
+    </w:pageHeader>
 
-    <i:if test="isFilled(job.getDetailDescription())">
+    <i:if test="isFilled(job.getDescription())">
         <div class="well">
-            @job.getDetailDescription()
+            @job.getDescription()
         </div>
     </i:if>
 

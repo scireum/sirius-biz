@@ -1,0 +1,22 @@
+<i:arg type="sirius.biz.jobs.JobFactory" name="job"/>
+
+<w:page title="@job.getLabel()">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/jobs">@i18n("JobFactory.plural")</a>
+        </li>
+        <li>
+            <a href="/job/@job.getName()">@job.getLabel()</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader title="@job.getLabel()"/>
+
+    <i:for type="sirius.biz.jobs.infos.JobInfo" var="info" items="job.getJobInfos()">
+        <i:dynamicInvoke template="@info.getTemplateName()" job="job" info="info" />
+    </i:for>
+
+    <div class="form-actions">
+        <a href="/job/@job.getName()" class="btn">@i18n("NLS.back")</a>
+    </div>
+</w:page>

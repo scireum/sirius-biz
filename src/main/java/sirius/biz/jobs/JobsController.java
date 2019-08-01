@@ -61,6 +61,20 @@ public class JobsController extends BizController {
     }
 
     /**
+     * /**
+     * Launches the job with the given name.
+     *
+     * @param ctx     the current request
+     * @param jobType the name of the job to launch
+     */
+    @Routed("/jobs/infos/:1")
+    @LoginRequired
+    public void infos(WebContext ctx, String jobType) {
+        ctx.respondWith()
+           .template("/templates/biz/jobs/infos.html.pasta", jobs.findFactory(jobType, JobFactory.class));
+    }
+
+    /**
      * Uses a JSON call to invoke a job.
      *
      * @param ctx     the current request
