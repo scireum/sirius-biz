@@ -12,6 +12,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.nls.NLS;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -59,6 +60,17 @@ public class Report {
         }
 
         return false;
+    }
+
+    /**
+     * Adds a row to the report.
+     *
+     * @param row a list of cells to add as row (has to match the number and order of the column of this report).
+     * @return <tt>true</tt> if the row was added, <tt>false</tt> if the report reached {@link #MAX_ROWS} and the row
+     * was therefore rejected
+     */
+    public boolean addCells(Cell... row) {
+        return addCells(Arrays.asList(row));
     }
 
     /**
