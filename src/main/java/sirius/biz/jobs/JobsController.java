@@ -61,17 +61,15 @@ public class JobsController extends BizController {
     }
 
     /**
-     * /**
-     * Launches the job with the given name.
+     * Outputs the documentation for a job.
      *
      * @param ctx     the current request
-     * @param jobType the name of the job to launch
+     * @param jobType the name of the job to fetch the documentation for
      */
     @Routed("/jobs/infos/:1")
     @LoginRequired
     public void infos(WebContext ctx, String jobType) {
-        ctx.respondWith()
-           .template("/templates/biz/jobs/infos.html.pasta", jobs.findFactory(jobType, JobFactory.class));
+        ctx.respondWith().template("/templates/biz/jobs/infos.html.pasta", jobs.findFactory(jobType, JobFactory.class));
     }
 
     /**
