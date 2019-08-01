@@ -1,13 +1,15 @@
-<i:arg type="String" name="point" />
-<i:pragma name="priority" value="100"/>
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="120"/>
 
 <i:switch test="@point">
     <i:block name="settings">
-        <w:menuItem titleKey="CodeList.plural" url="/code-lists"
-                    permission="permission-manage-code-lists"
-                    framework="biz.code-lists-jdbc"/>
-        <w:menuItem titleKey="CodeList.plural" url="/code-lists"
-                    permission="permission-manage-code-lists"
-                    framework="biz.code-lists-mongo"/>
+        <w:menuSection>
+            <w:menuItem titleKey="CodeList.plural" url="/code-lists"
+                        permission="permission-manage-code-lists"
+                        framework="biz.code-lists-jdbc"/>
+            <w:menuItem titleKey="CodeList.plural" url="/code-lists"
+                        permission="permission-manage-code-lists"
+                        framework="biz.code-lists-mongo"/>
+        </w:menuSection>
     </i:block>
 </i:switch>

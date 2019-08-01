@@ -1,0 +1,24 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="120"/>
+
+<i:switch test="@point">
+    <i:block name="system">
+        <w:menuSection>
+            <w:menuItem title="State" iconClass="fa fa-fw fa-info-circle" url="/system/state"
+                        permission="permission-system-state"/>
+            <w:menuItem title="System Load" iconClass="fa fa-fw fa-dashboard" url="/system/load"
+                        permission="permission-system-state"/>
+            <w:menuItem title="Console" iconClass="fa fa-fw fa-terminal" url="/system/console"
+                        permission="permission-system-console"/>
+            <w:menuItem title="Timing" iconClass="fa fa-fw fa-clock-o" url="/system/timing"
+                        permission="permission-system-timing"/>
+            <w:menuItem title="Schema" iconClass="fa fa-fw fa-table" url="/system/schema"
+                        permission="flag-system-administrator"/>
+            <w:menuItem title="SQL" iconClass="fa fa-fw fa-database" url="/system/sql"
+                        permission="flag-system-administrator"/>
+            <w:menuItem title="Cluster" iconClass="fa fa-fw fa-sitemap" url="/system/cluster"
+                        permission="permission-system-cluster"/>
+        </w:menuSection>
+    </i:block>
+</i:switch>
+
