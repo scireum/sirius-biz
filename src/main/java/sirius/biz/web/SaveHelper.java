@@ -70,7 +70,7 @@ public class SaveHelper {
      * Specifies what mappings should be loaded from the request context.
      * <p>
      * Note that by default also all properties wearing an {@link Autoloaded} annotation will be loaded. To suppress
-     * this bebahviour {@link #disableAutoload()} has to be called.
+     * this behaviour {@link #disableAutoload()} has to be called.
      *
      * @param columns array of {@link Mapping} objects
      * @return the helper itself for fluent method calls
