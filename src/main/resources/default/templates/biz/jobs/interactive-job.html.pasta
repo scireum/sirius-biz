@@ -13,7 +13,18 @@
         </li>
     </i:block>
 
-    <w:pageHeader title="@job.getCurrentLabel(context)"/>
+    <w:pageHeader>
+        <div class="row">
+            <div class="col-md-8">
+                @job.getCurrentLabel(context)
+            </div>
+            <div class="col-md-4 align-right">
+                <i:if test="!job.getJobInfos().isEmpty()">
+                    <a class="btn btn-default" href="/jobs/infos/@job.getName()">@i18n("JobsController.showInfos")</a>
+                </i:if>
+            </div>
+        </div>
+    </w:pageHeader>
 
     <div class="row">
         <i:local name="parameters"

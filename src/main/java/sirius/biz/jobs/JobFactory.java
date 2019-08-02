@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs;
 
+import sirius.biz.jobs.infos.JobInfo;
 import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Named;
@@ -64,6 +65,13 @@ public interface JobFactory extends Named, Priorized {
      */
     @Nullable
     String getDetailDescription();
+
+    /**
+     * Provides a detailed documentation of what the job does, which data it expects etc.
+     *
+     * @return a list of documentation sections for the job
+     */
+    List<JobInfo> getJobInfos();
 
     /**
      * Returns a list of permissions which a user must have in order to run this job.

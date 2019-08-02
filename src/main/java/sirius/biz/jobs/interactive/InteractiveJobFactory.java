@@ -71,10 +71,10 @@ public abstract class InteractiveJobFactory extends BasicJobFactory {
      * Returns the description to show based on the given parameter values.
      *
      * @param context the current set of parameters
-     * @return the description to use. By default, {@link #getDetailDescription()} will be returned
+     * @return the description to use. By default, {@link #getDescription()} will be returned
      */
     public String getCurrentDescription(Map<String, String> context) {
-        return getDetailDescription();
+        return getDescription();
     }
 
     @Override
