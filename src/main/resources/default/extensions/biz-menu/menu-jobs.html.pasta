@@ -1,0 +1,17 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="110"/>
+
+<i:switch test="@point">
+    <i:block name="settings">
+        <w:menuSection framework="biz.storage">
+            <w:menuItem titleKey="StorageController.buckets" url="/storage"
+                        permission="permission-manage-files"/>
+        </w:menuSection>
+
+        <w:menuSection>
+            <w:menuItem titleKey="JobsController.jobs" url="/jobs" permission="permission-execute-jobs"
+                        framework="biz.jobs"/>
+            <w:menuItem titleKey="Process.plural" url="/ps" framework="biz.processes"/>
+        </w:menuSection>
+    </i:block>
+</i:switch>

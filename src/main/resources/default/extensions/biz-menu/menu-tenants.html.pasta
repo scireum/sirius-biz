@@ -1,13 +1,16 @@
 <i:arg type="String" name="point"/>
-<i:pragma name="priority" value="100"/>
+<i:pragma name="priority" value="90"/>
 
 <i:switch test="@point">
-    <i:block name="user">
+    <i:block name="settings">
         <w:menuSection framework="biz.tenants">
             <w:menuItem titleKey="Tenant.plural" url="/tenants" permission="permission-manage-tenants"/>
             <w:menuItem titleKey="UserAccount.plural" url="/user-accounts"
                         permission="permission-manage-user-accounts"/>
         </w:menuSection>
+
+    </i:block>
+    <i:block name="user">
         <w:menuSection framework="biz.tenants">
             <w:menuItem titleKey="ProfileController.myProfile" url="/profile"/>
             <w:menuItem titleKey="Model.password.set" url="/profile/password"/>

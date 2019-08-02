@@ -1,0 +1,10 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="1000"/>
+
+<i:switch test="@point">
+    <i:block name="user">
+        <w:menuSection framework="biz.tenants">
+            <w:menuItem titleKey="UserAccountController.logout" url="/logout"/>
+        </w:menuSection>
+    </i:block>
+</i:switch>
