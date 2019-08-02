@@ -4,7 +4,7 @@
 <i:switch test="@point">
     <i:block name="system">
         <w:menuSection>
-            <w:menuItem title="State" icon="circle" url="/system/state"
+            <w:menuItem title="State" icon="info-circle" url="/system/state"
                         permission="flag-system-tenant-member"/>
             <w:menuItem title="System Load" icon="dashboard" url="/system/load"
                         permission="flag-system-tenant-member"/>
