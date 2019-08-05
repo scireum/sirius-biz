@@ -87,7 +87,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      * @return a translated name for the permission
      */
     public String getPermissionName(String role) {
-        return NLS.get("TenantPermission." + role);
+        return NLS.get("Permission." + role);
     }
 
     /**
@@ -97,7 +97,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      * @return the translated description of the permission
      */
     public String getPermissionDescription(String role) {
-        return NLS.getIfExists("TenantPermission." + role + ".description", null).orElse("");
+        return NLS.getIfExists("Permission." + role + ".description", null).orElse("");
     }
 
     /**

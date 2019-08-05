@@ -239,7 +239,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      * @return a translated name for the given role
      */
     public String getRoleName(String role) {
-        return NLS.get("Role." + role);
+        return NLS.get("Permission." + role);
     }
 
     /**
@@ -249,7 +249,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      * @return the description of the given role
      */
     public String getRoleDescription(String role) {
-        return NLS.get("Role." + role + ".description");
+        return NLS.get("Permission." + role + ".description");
     }
 
     /**
