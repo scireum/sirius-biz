@@ -13,6 +13,7 @@ import sirius.kernel.nls.NLS;
 import sirius.web.controller.Controller;
 import sirius.web.controller.Interceptor;
 import sirius.web.http.WebContext;
+import sirius.web.security.Permissions;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 
@@ -46,7 +47,9 @@ public class BizInterceptor implements Interceptor {
         } else {
             ctx.respondWith()
                .template("/templates/wondergem/error.html.pasta",
-                         NLS.fmtr("BizInterceptor.missingPermission").set("permission", permission).format());
+                         NLS.fmtr("BizInterceptor.missingPermission")
+                            .set("permission", Permissions.getTranslatedPermission(permission))
+                            .format());
         }
         return true;
     }

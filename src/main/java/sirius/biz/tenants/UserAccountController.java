@@ -32,6 +32,7 @@ import sirius.web.http.WebContext;
 import sirius.web.mails.Mails;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
+import sirius.web.security.Permissions;
 import sirius.web.security.UserContext;
 import sirius.web.services.JSONStructuredOutput;
 
@@ -239,7 +240,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      * @return a translated name for the given role
      */
     public String getRoleName(String role) {
-        return NLS.get("Role." + role);
+        return Permissions.getTranslatedPermission(role);
     }
 
     /**
@@ -249,7 +250,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      * @return the description of the given role
      */
     public String getRoleDescription(String role) {
-        return NLS.get("Role." + role + ".description");
+        return Permissions.getPermissionDescription(role);
     }
 
     /**

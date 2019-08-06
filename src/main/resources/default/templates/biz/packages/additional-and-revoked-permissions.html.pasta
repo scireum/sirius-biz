@@ -1,5 +1,4 @@
 <i:arg type="sirius.biz.packages.PackageData" name="packageData"/>
-<i:arg type="String" name="translationPrefix"/>
 <i:arg type="List" name="allPermissions"/>
 
 <i:pragma name="inline" value="true"/>
@@ -25,9 +24,9 @@
         <i:for var="permission" items="allPermissions" type="String">
             <tr>
                 <td>
-                    @i18n(apply("%s.%s", translationPrefix, permission))
+                    @i18n(apply("Permission.%s", permission))
                     <span class="help-block" style="margin-bottom: 0;">
-                        @i18n(apply("%s.%s.description", translationPrefix, permission))
+                        @i18n(apply("Permission.%s.description", permission))
                     </span>
                 </td>
                 <i:local name="isEnabled" value="packageData.getAdditionalPermissions().contains(permission)"/>
