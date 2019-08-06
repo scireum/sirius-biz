@@ -64,16 +64,16 @@ public class BizContextExtender implements GlobalContextExtender {
         globalParameterCollector.collect("jobsService", jobs, Jobs.class);
         globalParameterCollector.collect("isenguard", isenguard, Isenguard.class);
         globalParameterCollector.collect("tenantsHelper", tenantsHelper, Tenants.class);
-        globalParameterCollector.collect("appBaseUrl", BizController.getBaseUrl());
+        globalParameterCollector.collect("appBaseUrl", BizController.getBaseUrl(), String.class);
     }
 
     @Override
     public void collectScripting(Collector globalParameterCollector) {
-        globalParameterCollector.collect("oma", oma);
-        globalParameterCollector.collect("mongo", mongo);
-        globalParameterCollector.collect("mango", mango);
-        globalParameterCollector.collect("elastic", elastic);
-        globalParameterCollector.collect("databases", databases);
-        globalParameterCollector.collect("redis", redis);
+        globalParameterCollector.collect("oma", oma, OMA.class);
+        globalParameterCollector.collect("mongo", mongo, Mongo.class);
+        globalParameterCollector.collect("mango", mango, Mango.class);
+        globalParameterCollector.collect("elastic", elastic, Elastic.class);
+        globalParameterCollector.collect("databases", databases, Databases.class);
+        globalParameterCollector.collect("redis", redis, Redis.class);
     }
 }
