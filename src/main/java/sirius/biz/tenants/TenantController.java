@@ -27,6 +27,7 @@ import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
+import sirius.web.security.Permissions;
 import sirius.web.security.UserContext;
 import sirius.web.services.JSONStructuredOutput;
 
@@ -87,7 +88,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      * @return a translated name for the permission
      */
     public String getPermissionName(String role) {
-        return NLS.get("Permission." + role);
+        return Permissions.getTranslatedPermission(role);
     }
 
     /**
@@ -97,7 +98,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      * @return the translated description of the permission
      */
     public String getPermissionDescription(String role) {
-        return NLS.getIfExists("Permission." + role + ".description", null).orElse("");
+        return Permissions.getPermissionDescription(role);
     }
 
     /**
