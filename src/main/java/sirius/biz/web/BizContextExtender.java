@@ -22,8 +22,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.templates.GlobalContextExtender;
 
-import java.util.function.BiConsumer;
-
 /**
  * Makes central frameworks available in Tagliatelle without any import or reference.
  */
@@ -65,7 +63,7 @@ public class BizContextExtender implements GlobalContextExtender {
         globalParameterCollector.collect("codeLists", codeLists, CodeLists.class);
         globalParameterCollector.collect("jobsService", jobs, Jobs.class);
         globalParameterCollector.collect("isenguard", isenguard, Isenguard.class);
-        globalParameterCollector.collect("tenantsHelper", tenantsHelper,Tenants.class);
+        globalParameterCollector.collect("tenantsHelper", tenantsHelper, Tenants.class);
         globalParameterCollector.collect("appBaseUrl", BizController.getBaseUrl());
     }
 
