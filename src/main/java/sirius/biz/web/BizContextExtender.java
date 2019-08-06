@@ -22,8 +22,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.templates.GlobalContextExtender;
 
-import java.util.function.BiConsumer;
-
 /**
  * Makes central frameworks available in Tagliatelle without any import or reference.
  */
@@ -61,21 +59,21 @@ public class BizContextExtender implements GlobalContextExtender {
     private Tenants<?, ?, ?> tenantsHelper;
 
     @Override
-    public void collectTemplate(BiConsumer<String, Object> globalParameterCollector) {
-        globalParameterCollector.accept("codeLists", codeLists);
-        globalParameterCollector.accept("jobsService", jobs);
-        globalParameterCollector.accept("isenguard", isenguard);
-        globalParameterCollector.accept("tenantsHelper", tenantsHelper);
-        globalParameterCollector.accept("appBaseUrl", BizController.getBaseUrl());
+    public void collectTemplate(Collector globalParameterCollector) {
+        globalParameterCollector.collect("codeLists", codeLists, CodeLists.class);
+        globalParameterCollector.collect("jobsService", jobs, Jobs.class);
+        globalParameterCollector.collect("isenguard", isenguard, Isenguard.class);
+        globalParameterCollector.collect("tenantsHelper", tenantsHelper, Tenants.class);
+        globalParameterCollector.collect("appBaseUrl", BizController.getBaseUrl(), String.class);
     }
 
     @Override
-    public void collectScripting(BiConsumer<String, Object> globalParameterCollector) {
-        globalParameterCollector.accept("oma", oma);
-        globalParameterCollector.accept("mongo", mongo);
-        globalParameterCollector.accept("mango", mango);
-        globalParameterCollector.accept("elastic", elastic);
-        globalParameterCollector.accept("databases", databases);
-        globalParameterCollector.accept("redis", redis);
+    public void collectScripting(Collector globalParameterCollector) {
+        globalParameterCollector.collect("oma", oma, OMA.class);
+        globalParameterCollector.collect("mongo", mongo, Mongo.class);
+        globalParameterCollector.collect("mango", mango, Mango.class);
+        globalParameterCollector.collect("elastic", elastic, Elastic.class);
+        globalParameterCollector.collect("databases", databases, Databases.class);
+        globalParameterCollector.collect("redis", redis, Redis.class);
     }
 }

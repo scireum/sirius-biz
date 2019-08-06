@@ -17,7 +17,6 @@ import sirius.db.jdbc.OMA;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.web.http.TestRequest;
-import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
