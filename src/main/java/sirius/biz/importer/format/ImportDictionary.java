@@ -28,7 +28,8 @@ import java.util.function.Function;
 /**
  * Defines a record or dataset by declaring which fields are expected.
  * <p>
- * This can be used to load data (fields can provided aliases to be more flexible) and/or to verify a given dataset.
+ * This can be used to load data (fields can provided aliases to be more flexible). Also the provided field definitions
+ * can be used to verify an imported dataset.
  */
 public class ImportDictionary {
 
@@ -214,7 +215,7 @@ public class ImportDictionary {
     }
 
     /**
-     * Verifies that the given record fulfilly the check given for each field.
+     * Verifies that the given record fulfills the check given for each field.
      *
      * @param record the accessor function to the record to verify
      * @throws sirius.kernel.health.HandledException in case if invalid data
@@ -242,7 +243,7 @@ public class ImportDictionary {
     }
 
     /**
-     * Verifies that the given record fulfilly the check given for each field.
+     * Verifies that the given record fulfills the check given for each field.
      *
      * @param record the record to verify
      * @throws sirius.kernel.health.HandledException in case if invalid data
@@ -265,7 +266,7 @@ public class ImportDictionary {
     }
 
     /**
-     * Normalizes an alias or fieldname to simplify compaing them.
+     * Normalizes an alias or fieldname to simplify comparing them.
      * <p>
      * This will remove everything except characters, digits and "_". All characters will be lowercased.
      *
