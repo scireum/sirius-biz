@@ -17,7 +17,10 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.jdbc.Row;
 import sirius.db.jdbc.SQLQuery;
+import sirius.db.mixing.EntityDescriptor;
+import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Amount;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
@@ -26,8 +29,10 @@ import sirius.web.security.Permission;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Provides a report which shows the utilization of the Clickhouse database which stores all recorded events.
@@ -46,6 +51,10 @@ public class ClickhousePartsReportJobFactory extends ReportJobFactory {
     @Part
     private EventRecorder recorder;
 
+    @Part
+    private Mixing mixing;
+
+    private Map<String, String> tableNameToType;
 
     @Override
     public String getLabel() {
@@ -88,8 +97,9 @@ public class ClickhousePartsReportJobFactory extends ReportJobFactory {
         Amount numberOfPartitions = Amount.ZERO;
 
         for (Row row : query.queryList()) {
+            String tableName = row.getValue(COLUMN_TABLE).asString();
             report.addCells(cells.of(row.getValue(COLUMN_DATABASE).get()),
-                            cells.of(row.getValue(COLUMN_TABLE).get()),
+                            cells.link(tableName, determineLinkToSizeChart(tableName)),
                             cells.rightAligned(row.getValue(COLUMN_ROWS).getAmount()),
                             cells.rightAligned(NLS.formatSize(row.getValue(COLUMN_SIZE).asLong(0))),
                             cells.rightAligned(NLS.formatSize(row.getValue(COLUMN_DISK_SIZE).asLong(0))),
@@ -108,6 +118,21 @@ public class ClickhousePartsReportJobFactory extends ReportJobFactory {
         additionalMetricConsumer.accept("Total Disk Size",
                                         cells.of(NLS.formatSize(totalDiskSize.getAmount().longValue())));
         additionalMetricConsumer.accept("Num. Partitions", cells.of(numberOfPartitions));
+    }
+
+    private String determineLinkToSizeChart(String tableName) {
+        if (tableNameToType == null) {
+            tableNameToType = mixing.getDesciptors()
+                                    .stream()
+                                    .collect(Collectors.toMap(EntityDescriptor::getRelationName,
+                                                              descriptor -> Mixing.getNameForType(descriptor.getType())));
+        }
+
+        return Optional.ofNullable(tableNameToType.get(tableName))
+                       .map(typeName -> Strings.apply("/job/%s?type=%s",
+                                                      ClickhouseSizeChartJobFactory.JOB_NAME,
+                                                      Strings.urlEncode(typeName)))
+                       .orElse(null);
     }
 
     @Override
