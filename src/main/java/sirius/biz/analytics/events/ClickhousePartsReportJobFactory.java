@@ -24,6 +24,7 @@ import sirius.kernel.nls.NLS;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -44,6 +45,18 @@ public class ClickhousePartsReportJobFactory extends ReportJobFactory {
 
     @Part
     private EventRecorder recorder;
+
+
+    @Override
+    public String getLabel() {
+        return "Clickhouse Utilization";
+    }
+
+    @Nullable
+    @Override
+    public String getDescription() {
+        return "Shows the size of the analytics data warehouse stored in Clickhouse.";
+    }
 
     @Override
     protected void computeReport(Map<String, String> context,
