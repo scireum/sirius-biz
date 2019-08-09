@@ -17,7 +17,9 @@
             $(document).ready(function () {
                 var datasets = [];
                 @for(sirius.biz.analytics.charts.Dataset dataset : datasets) {
-                    datasets.push({ label: '@dataset.getLabel()', data: [ @raw { @dataset.getData() } ]});
+                    datasets.push({ label: '@dataset.getLabel()',
+                                    data: [ @raw { @dataset.getData() } ],
+                                    axis: @raw { @dataset.getAxis() }});
                 }
                 lineChart('#chart', [ @labels ], datasets);
             });

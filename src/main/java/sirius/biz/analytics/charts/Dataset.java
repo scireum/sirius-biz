@@ -23,6 +23,12 @@ import java.util.stream.Collectors;
  */
 public class Dataset {
 
+    /**
+     * Contains the id of the right Y axis.
+     */
+    public static final String AXIS_RIGHT = "right";
+
+    private String axis;
     private String label;
     private List<Number> values = new ArrayList<>();
 
@@ -33,6 +39,17 @@ public class Dataset {
      */
     public Dataset(String label) {
         this.label = label;
+    }
+
+    /**
+     * Specifies which axis to use.
+     *
+     * @param axisId the axis to use. Most probably this will be {@link #AXIS_RIGHT} as left is the default
+     * @return the dataset itself for fluent method calls
+     */
+    public Dataset onAxis(String axisId) {
+        this.axis = axisId;
+        return this;
     }
 
     /**
@@ -77,5 +94,18 @@ public class Dataset {
      */
     public List<Number> getValues() {
         return Collections.unmodifiableList(values);
+    }
+
+    /**
+     * Returns the axis to use.
+     *
+     * @return the axis properly encoded to be directly used in JavaScript
+     */
+    public String getAxis() {
+        if (axis == null) {
+            return "null";
+        }
+
+        return "'" + axis + "'";
     }
 }
