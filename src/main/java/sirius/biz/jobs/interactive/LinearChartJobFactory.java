@@ -68,6 +68,10 @@ public abstract class LinearChartJobFactory extends InteractiveJobFactory {
      * @return the labels encoded as JS string
      */
     protected static String formatLabels(List<String> labels) {
+        if (labels == null) {
+            return "";
+        }
+
         return labels.stream().map(label -> "'" + label + "'").collect(Collectors.joining(","));
     }
 
