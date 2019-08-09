@@ -68,6 +68,10 @@ public abstract class LinearChartJobFactory extends InteractiveJobFactory {
      * @return the labels encoded as JS string
      */
     protected static String formatLabels(List<String> labels) {
+        if (labels == null) {
+            return "";
+        }
+
         return labels.stream().map(label -> "'" + label + "'").collect(Collectors.joining(","));
     }
 
@@ -90,9 +94,10 @@ public abstract class LinearChartJobFactory extends InteractiveJobFactory {
      * @param datasetConsumer          used to collect datasets which each represent either a line or bar
      * @param additionalMetricConsumer used to collect additional metrics (label and the value represented as cell).
      *                                 This can be used to output averages, min and max values etc.
+     * @throws Exception in case of an unexpected error which aborted the computations
      */
     protected abstract void computeChartData(Map<String, String> context,
                                              Consumer<List<String>> labelConsumer,
                                              Consumer<Dataset> datasetConsumer,
-                                             BiConsumer<String, Cell> additionalMetricConsumer);
+                                             BiConsumer<String, Cell> additionalMetricConsumer) throws Exception;
 }

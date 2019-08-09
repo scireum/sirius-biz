@@ -62,8 +62,9 @@ public abstract class SingleDatasetChartJobFactory extends InteractiveJobFactory
      * @param valueConsumer            used to collect datapoints (label and value) to render as chart
      * @param additionalMetricConsumer used to collect additional metrics (label and the value represented as cell).
      *                                 This can be used to output averages, min and max values etc.
+     * @throws Exception in case of an unexpected error which aborted the computations
      */
     protected abstract void computeChartData(Map<String, String> context,
                                              BiConsumer<String, Number> valueConsumer,
-                                             BiConsumer<String, Cell> additionalMetricConsumer);
+                                             BiConsumer<String, Cell> additionalMetricConsumer) throws Exception;
 }

@@ -8,7 +8,7 @@
                 help="@param.getDescription()"
                 optional="@!param.isRequired()"
                 required="@param.isRequired()">
-    <i:for var="value" type="String" items="@param.getValues()">
-        <option value="@value" @selected="value == param.get(context).orElse(null)">@value</option>
+    <i:for var="descriptor" type="sirius.db.mixing.EntityDescriptor" items="@param.getValues()">
+        <option value="@param.getLookupName(descriptor)" @selected="descriptor == param.get(context).orElse(null)">@descriptor.getType().getSimpleName()</option>
     </i:for>
 </w:singleSelect>

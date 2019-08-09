@@ -10,7 +10,7 @@ package sirius.biz.elastic.reindex;
 
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
-import sirius.biz.jobs.params.ElasticEntityDescriptorParameter;
+import sirius.biz.jobs.params.EntityDescriptorParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.TenantUserManager;
@@ -43,8 +43,9 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     @Part
     private IndexMappings mappings;
 
-    private ElasticEntityDescriptorParameter entityDescriptorParameter =
-            (ElasticEntityDescriptorParameter) new ElasticEntityDescriptorParameter("ed", "Entity").markRequired();
+    private EntityDescriptorParameter entityDescriptorParameter =
+            new EntityDescriptorParameter("ed", "Entity").withFilter(EntityDescriptorParameter::isElasticEntity)
+                                                         .markRequired();
 
     @Override
     public String getLabel() {
