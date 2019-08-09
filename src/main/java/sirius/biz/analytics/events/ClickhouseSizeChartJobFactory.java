@@ -50,13 +50,13 @@ public class ClickhouseSizeChartJobFactory extends LinearChartJobFactory {
 
     @Override
     public String getLabel() {
-        return "Clickhouse Growth";
+        return "Clickhouse size per month";
     }
 
     @Override
     public String getCurrentLabel(Map<String, String> context) {
         return entityDescriptorParameter.get(context)
-                                        .map(descriptor -> Strings.apply("Clickhouse growth for: %s",
+                                        .map(descriptor -> Strings.apply("Clickhouse size for: %s",
                                                                          descriptor.getType().getSimpleName()))
                                         .orElse(getLabel());
     }
@@ -64,13 +64,13 @@ public class ClickhouseSizeChartJobFactory extends LinearChartJobFactory {
     @Nullable
     @Override
     public String getDescription() {
-        return "Shows the growth of the analytics data warehouse stored in Clickhouse.";
+        return "Shows the monthly size of the analytics data warehouse stored in Clickhouse.";
     }
 
     @Override
     public String getCurrentDescription(Map<String, String> context) {
         return entityDescriptorParameter.get(context)
-                                        .map(descriptor -> Strings.apply("Shows the growth of %s",
+                                        .map(descriptor -> Strings.apply("Shows the monthly size of %s",
                                                                          descriptor.getType().getSimpleName()))
                                         .orElse(getDescription());
     }
