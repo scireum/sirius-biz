@@ -31,9 +31,10 @@ public interface TimeseriesDataProvider extends Named {
      * @param context           the context defining the filters to apply
      * @param dataset           the dataset to populate
      * @param additionalMetrics if present, can be used to output additional metrics like min / max / avg etc.
+     * @throws Exception in case of an unexpected error which aborted the computations
      */
     void provideData(Timeseries timeseries,
                      Map<String, String> context,
                      Dataset dataset,
-                     Optional<BiConsumer<String, Cell>> additionalMetrics);
+                     Optional<BiConsumer<String, Cell>> additionalMetrics) throws Exception;
 }

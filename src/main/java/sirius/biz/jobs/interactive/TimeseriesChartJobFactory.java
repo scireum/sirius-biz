@@ -71,7 +71,7 @@ public abstract class TimeseriesChartJobFactory extends LinearChartJobFactory im
     protected void computeChartData(Map<String, String> context,
                                     Consumer<List<String>> labelConsumer,
                                     Consumer<Dataset> datasetConsumer,
-                                    BiConsumer<String, Cell> additionalMetricConsumer) {
+                                    BiConsumer<String, Cell> additionalMetricConsumer) throws Exception {
         LocalDate start = PARAM_START.require(context);
         LocalDate end = PARAM_END.require(context);
         Unit unit = PARAM_UNIT.get(context).orElse(null);
