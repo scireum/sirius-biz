@@ -8,15 +8,20 @@
 
 package sirius.biz.jobs.params;
 
+import sirius.db.es.ElasticEntity;
+import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
+import sirius.db.mongo.MongoEntity;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Provides a parameter which accepts {@link EntityDescriptor}.
@@ -26,6 +31,8 @@ public class EntityDescriptorParameter extends Parameter<EntityDescriptor, Entit
     @Part
     protected static Mixing mixing;
 
+    private Predicate<EntityDescriptor> filter;
+
     /**
      * Creates a new parameter with the given name and label.
      *
@@ -34,6 +41,50 @@ public class EntityDescriptorParameter extends Parameter<EntityDescriptor, Entit
      */
     public EntityDescriptorParameter(String name, String label) {
         super(name, label);
+    }
+
+    /**
+     * Provides a filter to only select entities stored in <tt>Elasticsearch</tt>.
+     *
+     * @param descriptor the descriptor to filter
+     * @return <tt>true</tt> if the associated entities are stored in ES, <tt>false</tt> otherwise
+     * @see #withFilter(Predicate)
+     */
+    public static boolean isElasticEntity(EntityDescriptor descriptor) {
+        return ElasticEntity.class.isAssignableFrom(descriptor.getType());
+    }
+
+    /**
+     * Provides a filter to only select entities stored in a <tt>JDBC</tt> database.
+     *
+     * @param descriptor the descriptor to filter
+     * @return <tt>true</tt> if the associated entities are stored in a JDBC database, <tt>false</tt> otherwise
+     * @see #withFilter(Predicate)
+     */
+    public static boolean isSQLEntity(EntityDescriptor descriptor) {
+        return SQLEntity.class.isAssignableFrom(descriptor.getType());
+    }
+
+    /**
+     * Provides a filter to only select entities stored in <tt>MongoDB</tt>.
+     *
+     * @param descriptor the descriptor to filter
+     * @return <tt>true</tt> if the associated entities are stored in MongoDB, <tt>false</tt> otherwise
+     * @see #withFilter(Predicate)
+     */
+    public static boolean isMongoEntity(EntityDescriptor descriptor) {
+        return MongoEntity.class.isAssignableFrom(descriptor.getType());
+    }
+
+    /**
+     * Applies a filter used to determine which descriptors can be selected.
+     *
+     * @param filter the filter to apply
+     * @return the parameter itself for fluent method calls
+     */
+    public EntityDescriptorParameter withFilter(Predicate<EntityDescriptor> filter) {
+        this.filter = filter;
+        return self();
     }
 
     @Override
@@ -46,11 +97,23 @@ public class EntityDescriptorParameter extends Parameter<EntityDescriptor, Entit
      *
      * @return the list of value defined by the enum type
      */
-    public List<String> getValues() {
-        return mixing.getDesciptors()
-                     .stream()
-                     .map(entityDescriptor -> Mixing.getNameForType(entityDescriptor.getType()))
-                     .collect(Collectors.toList());
+    public List<EntityDescriptor> getValues() {
+        Stream<EntityDescriptor> descriptors = mixing.getDesciptors().stream();
+        if (filter != null) {
+            descriptors = descriptors.filter(filter);
+        }
+
+        return descriptors.collect(Collectors.toList());
+    }
+
+    /**
+     * Used by the template to determine the unique type name to later resolve the descriptor using {@link Mixing#getDescriptor(String)}.
+     *
+     * @param descriptor the descriptor to get the name for
+     * @return the unique type name of the descriptor
+     */
+    public String getLookupName(EntityDescriptor descriptor) {
+        return Mixing.getNameForType(descriptor.getType());
     }
 
     @Override
