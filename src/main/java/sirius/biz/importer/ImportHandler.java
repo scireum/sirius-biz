@@ -8,6 +8,7 @@
 
 package sirius.biz.importer;
 
+import sirius.biz.importer.format.ImportDictionary;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
 

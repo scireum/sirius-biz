@@ -8,8 +8,7 @@
 
 package sirius.biz.jobs.batch.file;
 
-import sirius.biz.importer.ImportDictionary;
-import sirius.biz.importer.LineBasedAliases;
+import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.VirtualObjectParameter;
 import sirius.biz.process.ProcessContext;
@@ -18,7 +17,6 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Context;
-import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Values;
 import sirius.kernel.commons.Watch;
@@ -26,6 +24,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
+import sirius.kernel.nls.NLS;
 import sirius.web.data.LineBasedProcessor;
 import sirius.web.data.RowProcessor;
 
@@ -43,7 +42,6 @@ public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob i
 
     protected final ImportDictionary dictionary;
     protected final EntityDescriptor descriptor;
-    protected LineBasedAliases aliases;
     protected Class<E> type;
     protected boolean ignoreEmptyValues;
 
@@ -56,31 +54,24 @@ public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob i
      * @param fileParameter        the parameter which is used to derive the import file from
      * @param ignoreEmptyParameter the parameter which is used to determine if empty values should be ignored
      * @param type                 the type of entities being imported
+     * @param dictionary           the import dictionary to use
      * @param process              the process context itself
      */
     public LineBasedImportJob(VirtualObjectParameter fileParameter,
                               BooleanParameter ignoreEmptyParameter,
                               Class<E> type,
+                              ImportDictionary dictionary,
                               ProcessContext process) {
         super(fileParameter, process);
         this.ignoreEmptyValues = process.getParameter(ignoreEmptyParameter).orElse(false);
-        this.dictionary = importer.getDictionary(type);
+        this.dictionary = dictionary;
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);
-        enhanceDictionary();
-    }
-
-    /**
-     * Adds the possibility to enhance a dicitonary during the setup of the job
-     */
-    @SuppressWarnings("squid:S1186")
-    @Explain("Do nothing by default since we only need this for imports which contain more than one Entity")
-    protected void enhanceDictionary() {
     }
 
     @Override
     protected void executeForStream(String filename, InputStream in) throws Exception {
-        aliases = null;
+        dictionary.resetMappings();
         LineBasedProcessor.create(filename, in).run(this, error -> {
             process.handle(error);
             return true;
@@ -98,13 +89,14 @@ public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob i
             return;
         }
 
-        if (aliases == null) {
-            aliases = new LineBasedAliases(row, dictionary);
-            process.log(ProcessLog.info().withMessage(aliases.toString()));
+        if (!dictionary.hasMappings()) {
+            dictionary.determineMappingFromHeadings(row, false);
+
+            process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
         } else {
             Watch w = Watch.start();
             try {
-                Context ctx = filterEmptyValues(aliases.transform(row));
+                Context ctx = filterEmptyValues(dictionary.load(row));
                 if (!isEmptyContext(ctx)) {
                     handleRow(index, ctx);
                 }

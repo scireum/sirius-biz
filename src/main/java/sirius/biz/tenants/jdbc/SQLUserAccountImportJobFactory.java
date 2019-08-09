@@ -11,8 +11,10 @@ package sirius.biz.tenants.jdbc;
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.LineBasedImportJob;
 import sirius.biz.jobs.batch.file.LineBasedImportJobFactory;
+import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.UserAccountController;
+import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
@@ -36,6 +38,7 @@ public class SQLUserAccountImportJobFactory extends LineBasedImportJobFactory {
         return new LineBasedImportJob<SQLUserAccount>(fileParameter,
                                                       ignoreEmptyParameter,
                                                       SQLUserAccount.class,
+                                                      getDictionary(),
                                                       process) {
             @Override
             protected SQLUserAccount fillAndVerify(SQLUserAccount entity) {
@@ -43,6 +46,11 @@ public class SQLUserAccountImportJobFactory extends LineBasedImportJobFactory {
                 return super.fillAndVerify(entity);
             }
         };
+    }
+
+    @Override
+    protected Class<? extends BaseEntity<?>> getImportType() {
+        return SQLUserAccount.class;
     }
 
     @Override

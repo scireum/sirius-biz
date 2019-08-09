@@ -8,6 +8,9 @@
 
 package sirius.biz.importer;
 
+import sirius.biz.importer.format.FieldDefinition;
+import sirius.biz.importer.format.FieldDefinitionSupplier;
+import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
@@ -31,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 
 /**
@@ -201,15 +205,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
 
     @Override
     public ImportDictionary getDictionary() {
-        ImportDictionary dict = new ImportDictionary(field -> {
-            Property property = descriptor.findProperty(field);
-            if (property != null) {
-                return property.getLabel();
-            } else {
-                return field;
-            }
-        });
-
+        ImportDictionary dict = new ImportDictionary();
         loadAliases(dict);
 
         return dict;
@@ -225,12 +221,22 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     protected void loadAliases(ImportDictionary dict) {
         Extension aliases = Sirius.getSettings()
                                   .getExtension("importer.aliases", descriptor.getType().getSimpleName().toLowerCase());
-        descriptor.getProperties().stream().map(Property::getName).forEach(mapping -> {
-            dict.withAlias(mapping, mapping);
-            if (aliases != null && aliases.getConfig().hasPath(mapping)) {
-                aliases.getStringList(mapping).forEach(alias -> dict.withAlias(mapping, alias));
-            }
-        });
+        getAutoImportMappings().stream()
+                               .map(descriptor::getProperty)
+                               .map(property -> property.tryAs(FieldDefinitionSupplier.class)
+                                                        .map(FieldDefinitionSupplier::get)
+                                                        .orElse(null))
+                               .filter(Objects::nonNull)
+                               .map(field -> expandAliases(field, aliases))
+                               .forEach(dict::addField);
+    }
+
+    protected FieldDefinition expandAliases(FieldDefinition field, Extension aliases) {
+        if (aliases != null && aliases.getConfig().hasPath(field.getName())) {
+            aliases.getStringList(field.getName()).forEach(field::addAlias);
+        }
+
+        return field;
     }
 
     /**

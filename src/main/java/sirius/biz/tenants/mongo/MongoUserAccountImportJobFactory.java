@@ -13,6 +13,7 @@ import sirius.biz.jobs.batch.file.LineBasedImportJob;
 import sirius.biz.jobs.batch.file.LineBasedImportJobFactory;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.UserAccountController;
+import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
@@ -36,6 +37,7 @@ public class MongoUserAccountImportJobFactory extends LineBasedImportJobFactory 
         return new LineBasedImportJob<MongoUserAccount>(fileParameter,
                                                         ignoreEmptyParameter,
                                                         MongoUserAccount.class,
+                                                        getDictionary(),
                                                         process) {
             @Override
             protected MongoUserAccount fillAndVerify(MongoUserAccount entity) {
@@ -43,6 +45,11 @@ public class MongoUserAccountImportJobFactory extends LineBasedImportJobFactory 
                 return super.fillAndVerify(entity);
             }
         };
+    }
+
+    @Override
+    protected Class<? extends BaseEntity<?>> getImportType() {
+        return MongoUserAccount.class;
     }
 
     @Nonnull
