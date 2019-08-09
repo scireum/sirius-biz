@@ -49,7 +49,6 @@ public class ClickhousePartsReportJobFactory extends ReportJobFactory {
     protected void computeReport(Map<String, String> context,
                                  Report report,
                                  BiConsumer<String, Cell> additionalMetricConsumer) throws Exception {
-        recorder.record(new TestEvent());
         SQLQuery query = recorder.getDatabase()
                                  .createQuery("SELECT database,"
                                               + " table,"
