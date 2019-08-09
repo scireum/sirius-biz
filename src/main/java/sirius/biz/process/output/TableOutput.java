@@ -45,9 +45,25 @@ public class TableOutput {
         this.columns = Collections.unmodifiableList(columns);
     }
 
-    private TableOutput addMap(Map<String, String> rowAsMap) {
-        process.log(new ProcessLog().withType(ProcessLogType.INFO).into(name).withContext(rowAsMap));
+    private TableOutput addMap(Map<String, String> rowAsMap, String messageType) {
+        process.log(new ProcessLog().withType(ProcessLogType.INFO)
+                                    .withMessageType(messageType)
+                                    .into(name)
+                                    .withContext(rowAsMap));
         return this;
+    }
+
+    /**
+     * Adds a new row represented as column name and data.
+     *
+     * @param row         the list of columns (name and actual cell)
+     * @param messageType the {@link ProcessLog#withMessageType(String) message type} which can be used for filtering
+     * @return the table output itself for fluent method calls
+     */
+    public TableOutput addRowWithType(List<Tuple<String, Cell>> row, String messageType) {
+        Map<String, String> rowAsMap =
+                row.stream().collect(Collectors.toMap(Tuple::getFirst, t -> t.getSecond().serializeToString()));
+        return addMap(rowAsMap, messageType);
     }
 
     /**
@@ -57,33 +73,44 @@ public class TableOutput {
      * @return the table output itself for fluent method calls
      */
     public TableOutput addRow(List<Tuple<String, Cell>> data) {
-        Map<String, String> rowAsMap =
-                data.stream().collect(Collectors.toMap(Tuple::getFirst, t -> t.getSecond().serializeToString()));
-        return addMap(rowAsMap);
+        return addRowWithType(data, null);
     }
 
     /**
      * Adds a new row represented as list of cells.
      * <p>
-     * Note that this may only be invoked if <tt>columns</tt> was properly populated when calling the consturctor.
+     * Note that this may only be invoked if <tt>columns</tt> was properly populated when calling the constructor.
      *
-     * @param data the list of cells to add
+     * @param cellList    the list of cells to add
+     * @param messageType the {@link ProcessLog#withMessageType(String) message type} which can be used for filtering
      * @return the table output itself for fluent method calls
      */
-    public TableOutput addCells(List<Cell> data) {
+    public TableOutput addCellsWithType(List<Cell> cellList, String messageType) {
         if (columns == null) {
-            throw new IllegalStateException("column is null");
+            throw new IllegalStateException("columns is null");
         }
 
         Map<String, String> rowAsMap = new HashMap<>();
         for (int i = 0; i < columns.size(); i++) {
-            if (i < data.size()) {
-                rowAsMap.put(columns.get(i), data.get(i).serializeToString());
+            if (i < cellList.size()) {
+                rowAsMap.put(columns.get(i), cellList.get(i).serializeToString());
             } else {
                 rowAsMap.put(columns.get(i), "");
             }
         }
 
-        return addMap(rowAsMap);
+        return addMap(rowAsMap, messageType);
+    }
+
+    /**
+     * Adds a new row represented as list of cells.
+     * <p>
+     * Note that this may only be invoked if <tt>columns</tt> was properly populated when calling the constructor.
+     *
+     * @param cellList the list of cells to add
+     * @return the table output itself for fluent method calls
+     */
+    public TableOutput addCells(List<Cell> cellList) {
+        return addCellsWithType(cellList, null);
     }
 }
