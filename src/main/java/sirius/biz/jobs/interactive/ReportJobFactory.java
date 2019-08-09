@@ -62,8 +62,9 @@ public abstract class ReportJobFactory extends InteractiveJobFactory {
      * @param report                   the report to populate
      * @param additionalMetricConsumer used to collect additional metrics (label and the value represented as cell).
      *                                 This can be used to output averages, min and max values etc.
+     * @throws Exception in case of an unexpected error which aborted the computations
      */
     protected abstract void computeReport(Map<String, String> context,
                                           Report report,
-                                          BiConsumer<String, Cell> additionalMetricConsumer);
+                                          BiConsumer<String, Cell> additionalMetricConsumer) throws Exception;
 }
