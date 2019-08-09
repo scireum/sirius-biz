@@ -81,6 +81,33 @@ public class Cells {
     }
 
     /**
+     * Creates a bold cell value.
+     *
+     * @param value the value to render
+     * @return a cell containing the given value printed in a bold font face
+     */
+    public Cell bold(Object value) {
+        if (Strings.isEmpty(value)) {
+            return of(value);
+        }
+
+        return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
+                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "bold")
+                                        .fluentPut(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
+    }
+
+    /**
+     * Creates a cell which contains a list of bullet points.
+     *
+     * @param values the values to render
+     * @return a cell containing the given values
+     */
+    public Cell list(List<String> values) {
+        return new Cell(new JSONObject().fluentPut(KEY_TYPE, ListCellFormat.TYPE)
+                                        .fluentPut(ListCellFormat.KEY_VALUES, values));
+    }
+
+    /**
      * Generates a colored cell.
      *
      * @param value     the value to output
