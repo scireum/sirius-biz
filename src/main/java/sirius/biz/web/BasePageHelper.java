@@ -335,6 +335,22 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
         return result;
     }
 
+    /**
+     * Applies the facets and iterates trough the given query up to 9999 items, ignoring {@link #pageSize}.
+     * <p>
+     * This for example can be used to easily export all pages of a page/table view.
+     *
+     * @param consumer the consumer for the query result
+     */
+    public void iterateAllPages(Consumer<E> consumer) {
+        for (Tuple<Facet, BiConsumer<Facet, Q>> f : facets) {
+            if (f.getSecond() != null) {
+                f.getSecond().accept(f.getFirst(), baseQuery);
+            }
+        }
+        baseQuery.limit(9999).iterateAll(consumer);
+    }
+
     protected void fillPage(Watch w, Page<E> result, List<E> items) {
         result.withDuration(w.duration());
         result.withItems(items);
