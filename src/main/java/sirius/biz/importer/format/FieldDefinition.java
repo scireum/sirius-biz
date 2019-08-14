@@ -62,6 +62,18 @@ public class FieldDefinition {
     }
 
     /**
+     * Boilerplate to create a new string field with the given <tt>maxLength</tt> which is also enforced by a
+     * {@link LengthCheck}.
+     *
+     * @param name      the name of the field
+     * @param maxLength the maximal length of the string
+     * @return the newly created field
+     */
+    public static FieldDefinition stringField(String name, int maxLength) {
+        return new FieldDefinition(name, typeString(maxLength)).withCheck(new LengthCheck(maxLength));
+    }
+
+    /**
      * Helper to create a type description for a numeric field with a given precision and scale.
      *
      * @param precision the precision of the field
@@ -74,6 +86,18 @@ public class FieldDefinition {
         }
 
         return NLS.fmtr("FieldDefinition.typeNumber.length").set("precision", precision).set("scale", scale).format();
+    }
+
+    /**
+     * Boilerplate to create a new numeric field with the given <tt>precision</tt> and <tt>scale</tt>}.
+     *
+     * @param name      the name of the field
+     * @param precision the precision of the field
+     * @param scale     the scale of the field
+     * @return the newly created field
+     */
+    public static FieldDefinition numericField(String name, int precision, int scale) {
+        return new FieldDefinition(name, typeNumber(precision, scale));
     }
 
     /**
