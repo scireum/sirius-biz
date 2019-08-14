@@ -139,6 +139,15 @@ public class FieldDefinition {
     }
 
     /**
+     * Boilerplate to add a {@link RequiredCheck} to this field.
+     *
+     * @return the field itself for fluent method calls
+     */
+    public FieldDefinition markRequired() {
+        return withCheck(new RequiredCheck());
+    }
+
+    /**
      * Adds an alias for the field.
      * <p>
      * Aliases are used by {@link ImportDictionary#determineMappingFromHeadings(Values, boolean)} to "learn" which
