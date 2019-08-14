@@ -169,6 +169,10 @@ public class FieldDefinition {
      * @return the label to use for this field
      */
     public String getLabel() {
+        if (label == null) {
+            return name;
+        }
+
         return label.get();
     }
 
