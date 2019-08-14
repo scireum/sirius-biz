@@ -107,6 +107,19 @@ public class ImportDictionary {
     }
 
     /**
+     * Returns the mapping function (order of fields).
+     *
+     * @return the mapping function which is currently used or an empty list if the mapping hasn't been specified yet
+     */
+    public List<String> getMappings() {
+        if (mappingFunction == null) {
+            return Collections.emptyList();
+        }
+
+        return Collections.unmodifiableList(mappingFunction);
+    }
+
+    /**
      * Uses the order of the fields as mapping.
      *
      * @return the instance itself for fluent method calls
