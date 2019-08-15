@@ -74,6 +74,17 @@ public class FieldDefinition {
     }
 
     /**
+     * Boilerplate to create a new string field with a given list of permitted values.
+     *
+     * @param name       then name of the field
+     * @param enumValues the list of permitted values
+     * @return the newly created field
+     */
+    public static FieldDefinition enumStringField(String name, List<String> enumValues) {
+        return new FieldDefinition(name, typeString(null)).withCheck(new ValueInListCheck(enumValues));
+    }
+
+    /**
      * Helper to create a type description for a numeric field with a given precision and scale.
      *
      * @param precision the precision of the field
@@ -110,12 +121,32 @@ public class FieldDefinition {
     }
 
     /**
+     * Boilerplate to create a new boolean field.
+     *
+     * @param name the name of the field
+     * @return the newly created field
+     */
+    public static FieldDefinition booleanField(String name) {
+        return new FieldDefinition(name, typeBoolean());
+    }
+
+    /**
      * Helper to create a type description for a date field.
      *
      * @return a description to be shown to the user
      */
     public static String typeDate() {
         return NLS.get("FieldDefinition.typeDate");
+    }
+
+    /**
+     * Boilerplate to create a new date field.
+     *
+     * @param name the name of the field
+     * @return the newly created field
+     */
+    public static FieldDefinition dateField(String name) {
+        return new FieldDefinition(name, typeDate());
     }
 
     /**
