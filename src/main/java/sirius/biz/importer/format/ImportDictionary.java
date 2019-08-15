@@ -107,6 +107,19 @@ public class ImportDictionary {
     }
 
     /**
+     * Returns the mapping function (order of fields).
+     *
+     * @return the mapping function which is currently used or an empty list if the mapping hasn't been specified yet
+     */
+    public List<String> getMappings() {
+        if (mappingFunction == null) {
+            return Collections.emptyList();
+        }
+
+        return Collections.unmodifiableList(mappingFunction);
+    }
+
+    /**
      * Uses the order of the fields as mapping.
      *
      * @return the instance itself for fluent method calls
@@ -224,7 +237,7 @@ public class ImportDictionary {
         fields.values().forEach(field -> {
             try {
                 field.verify(record.apply(field.getName()));
-            } catch (HandledException e) {
+            } catch (IllegalArgumentException | HandledException e) {
                 throw Exceptions.createHandled()
                                 .withNLSKey("ImportDictionary.fieldError")
                                 .set("field", field.getName())

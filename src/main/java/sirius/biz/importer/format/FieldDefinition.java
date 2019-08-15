@@ -62,6 +62,29 @@ public class FieldDefinition {
     }
 
     /**
+     * Boilerplate to create a new string field with the given <tt>maxLength</tt> which is also enforced by a
+     * {@link LengthCheck}.
+     *
+     * @param name      the name of the field
+     * @param maxLength the maximal length of the string
+     * @return the newly created field
+     */
+    public static FieldDefinition stringField(String name, int maxLength) {
+        return new FieldDefinition(name, typeString(maxLength)).withCheck(new LengthCheck(maxLength));
+    }
+
+    /**
+     * Boilerplate to create a new string field with a given list of permitted values.
+     *
+     * @param name       then name of the field
+     * @param enumValues the list of permitted values
+     * @return the newly created field
+     */
+    public static FieldDefinition enumStringField(String name, List<String> enumValues) {
+        return new FieldDefinition(name, typeString(null)).withCheck(new ValueInListCheck(enumValues));
+    }
+
+    /**
      * Helper to create a type description for a numeric field with a given precision and scale.
      *
      * @param precision the precision of the field
@@ -77,6 +100,18 @@ public class FieldDefinition {
     }
 
     /**
+     * Boilerplate to create a new numeric field with the given <tt>precision</tt> and <tt>scale</tt>}.
+     *
+     * @param name      the name of the field
+     * @param precision the precision of the field
+     * @param scale     the scale of the field
+     * @return the newly created field
+     */
+    public static FieldDefinition numericField(String name, int precision, int scale) {
+        return new FieldDefinition(name, typeNumber(precision, scale));
+    }
+
+    /**
      * Helper to create a type description for a boolean field.
      *
      * @return a description to be shown to the user
@@ -86,12 +121,32 @@ public class FieldDefinition {
     }
 
     /**
+     * Boilerplate to create a new boolean field.
+     *
+     * @param name the name of the field
+     * @return the newly created field
+     */
+    public static FieldDefinition booleanField(String name) {
+        return new FieldDefinition(name, typeBoolean());
+    }
+
+    /**
      * Helper to create a type description for a date field.
      *
      * @return a description to be shown to the user
      */
     public static String typeDate() {
         return NLS.get("FieldDefinition.typeDate");
+    }
+
+    /**
+     * Boilerplate to create a new date field.
+     *
+     * @param name the name of the field
+     * @return the newly created field
+     */
+    public static FieldDefinition dateField(String name) {
+        return new FieldDefinition(name, typeDate());
     }
 
     /**
@@ -139,6 +194,15 @@ public class FieldDefinition {
     }
 
     /**
+     * Boilerplate to add a {@link RequiredCheck} to this field.
+     *
+     * @return the field itself for fluent method calls
+     */
+    public FieldDefinition markRequired() {
+        return withCheck(new RequiredCheck());
+    }
+
+    /**
      * Adds an alias for the field.
      * <p>
      * Aliases are used by {@link ImportDictionary#determineMappingFromHeadings(Values, boolean)} to "learn" which
@@ -169,6 +233,10 @@ public class FieldDefinition {
      * @return the label to use for this field
      */
     public String getLabel() {
+        if (label == null) {
+            return name;
+        }
+
         return label.get();
     }
 
