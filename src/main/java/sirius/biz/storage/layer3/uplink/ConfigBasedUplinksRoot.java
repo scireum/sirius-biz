@@ -1,0 +1,92 @@
+/*
+ * Made with all the love in the world
+ * by scireum in Remshalden, Germany
+ *
+ * Copyright by scireum GmbH
+ * http://www.scireum.de - info@scireum.de
+ */
+
+package sirius.biz.storage.layer3.uplink;
+
+import sirius.biz.storage.layer3.FileSearch;
+import sirius.biz.storage.layer3.VFSRoot;
+import sirius.biz.storage.layer3.VirtualFile;
+import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.Sirius;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.di.GlobalContext;
+import sirius.kernel.di.std.Part;
+import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.settings.Extension;
+
+import javax.annotation.Nonnull;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+/**
+ * Collects all available {@link ConfigBasedUplink uplinks} and enumerates them in the root directory.
+ */
+@Register
+public class ConfigBasedUplinksRoot implements VFSRoot {
+
+    private List<ConfigBasedUplink> uplinks;
+
+    @Part
+    private GlobalContext ctx;
+
+    @Override
+    public Optional<VirtualFile> findChild(VirtualFile parent, String name) {
+        return getUplinks().stream()
+                           .filter(uplink -> Strings.areEqual(name, uplink.getDirectoryName()))
+                           .filter(ConfigBasedUplink::checkPermission)
+                           .map(uplink -> uplink.getFile(parent))
+                           .findFirst();
+    }
+
+    private List<ConfigBasedUplink> getUplinks() {
+        if (uplinks == null) {
+            uplinks = initializeUplinks();
+        }
+        return uplinks;
+    }
+
+    private List<ConfigBasedUplink> initializeUplinks() {
+        return Sirius.getSettings()
+                     .getExtensions("storage.layer3.roots")
+                     .stream()
+                     .map(this::makeUplink)
+                     .filter(Objects::nonNull)
+                     .collect(Collectors.toList());
+    }
+
+    private ConfigBasedUplink makeUplink(Extension extension) {
+        try {
+            return ctx.findPart(extension.get("type").asString(), ConfigBasedUplinkFactory.class).make(extension);
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage(
+                              "Layer 3: An error occured while initializing the uplink '%s' from the system configuration: %s (%s)",
+                              extension.getId())
+                      .handle();
+            return null;
+        }
+    }
+
+    @Override
+    public void enumerate(@Nonnull VirtualFile parent, FileSearch search) {
+        getUplinks().stream()
+                    .filter(ConfigBasedUplink::checkPermission)
+                    .map(uplink -> uplink.getFile(parent))
+                    .forEach(search::processResult);
+    }
+
+    @Override
+    public int getPriority() {
+        return 200;
+    }
+}
