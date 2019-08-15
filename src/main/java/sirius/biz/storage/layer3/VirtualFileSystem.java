@@ -35,6 +35,9 @@ public class VirtualFileSystem {
     @PriorityParts(VFSRoot.class)
     private List<VFSRoot> rootProviders;
 
+    /**
+     * Inline implementation which delegates all calls to the collected <tt>rootProviders</tt>.
+     */
     private class RootProvider implements ChildProvider {
 
         @Override
