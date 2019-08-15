@@ -93,7 +93,7 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
                                                                     .withCreateDirectoryHandler(this::createDirectoryHandler)
                                                                     .withCanProvideInputStream(this::canProvideInputStreamHandler)
                                                                     .withInputStreamSupplier(this::inputStreamSupplier)
-                                                                    .withCanProvideOutputStream(this::canCreateOutputStream)
+                                                                    .withCanProvideOutputStream(this::canProvideOutputStreamHandler)
                                                                     .withOutputStreamSupplier(this::outputStreamSupplier)
                                                                     .withCanRenameHandler(this::canRenameHandler)
                                                                     .withRenameHandler(this::renameHandler)
@@ -142,7 +142,7 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
         return !readonly && file.exists();
     }
 
-    private boolean canCreateOutputStream(VirtualFile file) {
+    private boolean canProvideOutputStreamHandler(VirtualFile file) {
         return !readonly && !file.isDirectory();
     }
 
@@ -188,12 +188,8 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
 
     private boolean deleteHandler(VirtualFile file) {
         try {
-            if (readonly) {
-                return false;
-            } else {
-                sirius.kernel.commons.Files.delete(file.as(File.class));
-                return true;
-            }
+            sirius.kernel.commons.Files.delete(file.as(File.class));
+            return true;
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
@@ -254,11 +250,7 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
 
     private OutputStream outputStreamSupplier(VirtualFile file) {
         try {
-            if (!readonly) {
-                return new FileOutputStream(file.as(File.class));
-            } else {
-                return null;
-            }
+            return new FileOutputStream(file.as(File.class));
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
