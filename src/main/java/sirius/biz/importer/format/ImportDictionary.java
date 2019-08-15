@@ -237,7 +237,7 @@ public class ImportDictionary {
         fields.values().forEach(field -> {
             try {
                 field.verify(record.apply(field.getName()));
-            } catch (HandledException e) {
+            } catch (IllegalArgumentException | HandledException e) {
                 throw Exceptions.createHandled()
                                 .withNLSKey("ImportDictionary.fieldError")
                                 .set("field", field.getName())
