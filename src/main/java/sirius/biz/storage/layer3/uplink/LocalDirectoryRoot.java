@@ -54,6 +54,10 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
     protected LocalDirectoryRoot(Extension extension, File root) {
         super(extension);
         this.root = root;
+        if (!root.exists() || !root.isDirectory()) {
+            throw new IllegalArgumentException(Strings.apply("The given baseDir '%s' isn't an existing directory!",
+                                                             root.getAbsolutePath()));
+        }
     }
 
     @Override
