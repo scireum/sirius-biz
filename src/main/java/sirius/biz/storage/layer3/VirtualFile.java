@@ -215,11 +215,15 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean canDelete() {
         try {
-            if (canDeleteHandler != null) {
-                return canDeleteHandler.test(this);
+            if (deleteHandler == null) {
+                return false;
             }
 
-            return deleteHandler != null;
+            if (canDeleteHandler != null) {
+                return canDeleteHandler.test(this);
+            } else {
+                return true;
+            }
         } catch (Exception e) {
             throw handleErrorInCallback(e, "canDeleteHandler");
         }
@@ -232,11 +236,11 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean tryDelete() {
         try {
-            if (deleteHandler != null) {
-                return deleteHandler.apply(this);
+            if (!canDelete()) {
+                return false;
             }
 
-            return false;
+            return deleteHandler.apply(this);
         } catch (Exception e) {
             throw handleErrorInCallback(e, "deleteHandler");
         }
@@ -260,11 +264,15 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean canRename() {
         try {
-            if (canRenameHandler != null) {
-                return canRenameHandler.test(this);
+            if (renameHandler == null) {
+                return false;
             }
 
-            return renameHandler != null;
+            if (canRenameHandler != null) {
+                return canRenameHandler.test(this);
+            } else {
+                return true;
+            }
         } catch (Exception e) {
             throw handleErrorInCallback(e, "canRenameHandler");
         }
@@ -278,11 +286,11 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean tryRename(String newName) {
         try {
-            if (renameHandler != null) {
-                return renameHandler.apply(this, newName);
+            if (!canRename()) {
+                return false;
             }
 
-            return false;
+            return renameHandler.apply(this, newName);
         } catch (Exception e) {
             throw handleErrorInCallback(e, "renameHandler");
         }
@@ -307,11 +315,15 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean canFastMove() {
         try {
-            if (canMoveHandler != null) {
-                return canMoveHandler.test(this);
+            if (moveHandler == null) {
+                return false;
             }
 
-            return moveHandler != null;
+            if (canMoveHandler != null) {
+                return canMoveHandler.test(this);
+            } else {
+                return true;
+            }
         } catch (Exception e) {
             throw handleErrorInCallback(e, "canMoveHandler");
         }
@@ -325,11 +337,11 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean tryFastMoveTo(VirtualFile newParent) {
         try {
-            if (moveHandler != null) {
-                return moveHandler.apply(this, newParent);
+            if (!canFastMove()) {
+                return false;
             }
 
-            return false;
+            return moveHandler.apply(this, newParent);
         } catch (Exception e) {
             throw handleErrorInCallback(e, "moveHandler");
         }
@@ -550,11 +562,15 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return false;
             }
 
-            if (canCreateDirectoryHandler != null) {
-                return canCreateDirectoryHandler.test(this);
+            if (createDirectoryHandler == null) {
+                return false;
             }
 
-            return createDirectoryHandler != null;
+            if (canCreateDirectoryHandler != null) {
+                return canCreateDirectoryHandler.test(this);
+            } else {
+                return true;
+            }
         } catch (Exception e) {
             throw handleErrorInCallback(e, "canCreateDirectoryHandler");
         }
@@ -571,7 +587,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return isDirectory();
             }
 
-            if (createDirectoryHandler == null) {
+            if (!canCreateAsDirectory()) {
                 return false;
             }
 
@@ -604,11 +620,15 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean canCreateOutputStream() {
         try {
-            if (canProvideOutputStream != null) {
-                return canProvideOutputStream.test(this);
+            if (outputStreamSupplier == null) {
+                return false;
             }
 
-            return outputStreamSupplier != null;
+            if (canProvideOutputStream != null) {
+                return canProvideOutputStream.test(this);
+            } else {
+                return true;
+            }
         } catch (Exception e) {
             throw handleErrorInCallback(e, "canProvideOutputStream");
         }
@@ -621,11 +641,11 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public Optional<OutputStream> tryCreateOutputStream() {
         try {
-            if (outputStreamSupplier != null) {
-                return Optional.ofNullable(outputStreamSupplier.apply(this));
+            if (!canCreateOutputStream()) {
+                return Optional.empty();
             }
 
-            return Optional.empty();
+            return Optional.ofNullable(outputStreamSupplier.apply(this));
         } catch (Exception e) {
             throw handleErrorInCallback(e, "outputStreamSupplier");
         }
@@ -671,11 +691,15 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean canCreateInputStream() {
         try {
-            if (canProvideInputStream != null) {
-                return canProvideInputStream.test(this);
+            if (inputStreamSupplier == null) {
+                return false;
             }
 
-            return inputStreamSupplier != null;
+            if (canProvideInputStream != null) {
+                return canProvideInputStream.test(this);
+            } else {
+                return true;
+            }
         } catch (Exception e) {
             throw handleErrorInCallback(e, "canProvideInputStream");
         }
@@ -688,7 +712,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public Optional<InputStream> tryCreateInputStream() {
         try {
-            if (inputStreamSupplier == null) {
+            if (!canCreateInputStream()) {
                 return Optional.empty();
             }
 
@@ -760,7 +784,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             tunnelHandler.accept(this, webContext.respondWith().download(name()));
         } catch (Exception e) {
             webContext.respondWith()
-               .error(HttpResponseStatus.INTERNAL_SERVER_ERROR, handleErrorInCallback(e, "tunnelHandler"));
+                      .error(HttpResponseStatus.INTERNAL_SERVER_ERROR, handleErrorInCallback(e, "tunnelHandler"));
         }
     }
 
@@ -779,7 +803,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             tunnelHandler.accept(this, webContext.respondWith().named(name()));
         } catch (Exception e) {
             webContext.respondWith()
-               .error(HttpResponseStatus.INTERNAL_SERVER_ERROR, handleErrorInCallback(e, "tunnelHandler"));
+                      .error(HttpResponseStatus.INTERNAL_SERVER_ERROR, handleErrorInCallback(e, "tunnelHandler"));
         }
     }
 
@@ -792,7 +816,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             }
 
             try (OutputStream to = response.outputStream(HttpResponseStatus.OK,
-                                                          MimeHelper.guessMimeType(file.name()))) {
+                                                         MimeHelper.guessMimeType(file.name()))) {
                 ByteStreams.copy(from, to);
             }
         } catch (IOException e) {
