@@ -47,7 +47,7 @@ public class CIFSRoot extends ConfigBasedUplink {
             try {
                 if (Strings.isFilled(user)) {
                     if (Strings.isEmpty(domain)) {
-                        throw new IllegalArgumentException("A user has been specified but not domain was given!");
+                        throw new IllegalArgumentException("A user has been specified but no domain was given!");
                     }
                     return new CIFSRoot(config,
                                         new SmbFile(url, new NtlmPasswordAuthentication(domain, user, password)));
