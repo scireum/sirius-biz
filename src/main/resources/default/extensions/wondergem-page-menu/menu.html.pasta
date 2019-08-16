@@ -21,7 +21,7 @@
                 <i:extensions target="biz-menu" point="user"/>
             </w:menuDropdown>
         </w:permission>
-        <w:menuDropdown icon="cogs">
+        <w:menuDropdown icon="fa-cogs">
             <i:extensions target="biz-menu" point="system"/>
         </w:menuDropdown>
     </i:block>
