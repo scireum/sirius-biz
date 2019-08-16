@@ -80,7 +80,7 @@ public class CIFSRoot extends ConfigBasedUplink {
         try {
             SmbFile parentFile = parent.tryAs(SmbFile.class)
                                        .orElseThrow(() -> new IllegalArgumentException(Strings.apply(
-                                               "Invalid parent: %s! Expecte a SmbFile!",
+                                               "Invalid parent: %s! Expected a SmbFile!",
                                                parent)));
             SmbFile child = new SmbFile(parentFile, name);
             if (child.isDirectory()) {
