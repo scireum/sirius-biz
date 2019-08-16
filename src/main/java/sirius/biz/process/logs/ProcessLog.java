@@ -337,8 +337,8 @@ public class ProcessLog extends SearchableEntity {
      * @param value the value to add to the context
      * @return the log entry itself for fluent method calls
      */
-    public ProcessLog withContext(String key, String value) {
-        this.context.modify().put(key, value);
+    public ProcessLog withContext(String key, Object value) {
+        this.context.modify().put(key, NLS.toUserString(value));
         return this;
     }
 
