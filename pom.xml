@@ -18,7 +18,7 @@
 
     <properties>
         <sirius.kernel>13.5</sirius.kernel>
-        <sirius.web>24.0-rc17</sirius.web>
+        <sirius.web>24.0-rc19</sirius.web>
         <sirius.db>8.4</sirius.db>
     </properties>
 
