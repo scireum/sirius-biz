@@ -24,6 +24,8 @@ import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Optional;
 
 /**
@@ -67,6 +69,21 @@ public class CIFSRoot extends ConfigBasedUplink {
             return "cifs";
         }
     }
+
+    private static final Comparator<SmbFile> SORT_BY_DIRECTORY = Comparator.comparing(file -> {
+        try {
+            return file.isDirectory() ? 0 : 1;
+        } catch (SmbException e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Layer 3/CIFS: Cannot determine is the file: %s is a directory: %s (%s)",
+                                              file.getName())
+                      .handle();
+            return 0;
+        }
+    });
+    private static final Comparator<SmbFile> SORT_BY_NAME = Comparator.comparing(file -> file.getName().toLowerCase());
 
     protected SmbFile smbRoot;
 
@@ -298,7 +315,9 @@ public class CIFSRoot extends ConfigBasedUplink {
                                            "Invalid parent: %s! Expecte a SmbFile!",
                                            parent)));
         try {
-            for (SmbFile smbFile : parentFile.listFiles()) {
+            SmbFile[] children = parentFile.listFiles();
+            Arrays.sort(children, SORT_BY_DIRECTORY.thenComparing(SORT_BY_NAME));
+            for (SmbFile smbFile : children) {
                 if (!search.processResult(wrapSmbFile(parent, smbFile))) {
                     return;
                 }
