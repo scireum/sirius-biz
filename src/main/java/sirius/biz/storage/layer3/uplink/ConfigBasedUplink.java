@@ -61,7 +61,7 @@ public abstract class ConfigBasedUplink {
     }
 
     /**
-     * Creates the root directory of this uplink.
+     * Returns the root directory of this uplink.
      *
      * @param parent the parent to use
      * @return the root directory of this uplink
@@ -70,6 +70,7 @@ public abstract class ConfigBasedUplink {
         if (file == null) {
             file = makeDirectory(parent);
         }
+
         return file;
     }
 
