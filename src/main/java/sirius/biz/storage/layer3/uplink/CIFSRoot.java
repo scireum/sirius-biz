@@ -23,6 +23,7 @@ import sirius.kernel.settings.Extension;
 import javax.annotation.Nonnull;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.util.Optional;
 
 /**
@@ -37,19 +38,26 @@ public class CIFSRoot extends ConfigBasedUplink {
     public static class Factory implements ConfigBasedUplinkFactory {
 
         @Override
-        public ConfigBasedUplink make(Extension config) throws Exception {
+        public ConfigBasedUplink make(Extension config) {
             String url = config.get("url").asString();
             String domain = config.get("domain").asString();
             String user = config.get("user").asString();
             String password = config.get("password").asString();
 
-            if (Strings.isFilled(user)) {
-                if (Strings.isEmpty(domain)) {
-                    throw new IllegalArgumentException("A user has been specified but not domain was given!");
+            try {
+                if (Strings.isFilled(user)) {
+                    if (Strings.isEmpty(domain)) {
+                        throw new IllegalArgumentException("A user has been specified but not domain was given!");
+                    }
+                    return new CIFSRoot(config,
+                                        new SmbFile(url, new NtlmPasswordAuthentication(domain, user, password)));
+                } else {
+                    return new CIFSRoot(config, new SmbFile(url));
                 }
-                return new CIFSRoot(config, new SmbFile(url, new NtlmPasswordAuthentication(domain, user, password)));
-            } else {
-                return new CIFSRoot(config, new SmbFile(url));
+            } catch (MalformedURLException e) {
+                throw new IllegalArgumentException(Strings.apply("An invalid url (%s) was given: %s",
+                                                                 url,
+                                                                 e.getMessage()));
             }
         }
 
