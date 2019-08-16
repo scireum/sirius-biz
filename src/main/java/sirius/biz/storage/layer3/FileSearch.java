@@ -28,7 +28,7 @@ public class FileSearch {
 
     private boolean onlyDirectories;
     private String prefixFilter;
-    private Limit limit;
+    private Limit limit = Limit.UNLIMITED;
     private Function<VirtualFile, Boolean> resultProcessor;
 
     protected FileSearch(Function<VirtualFile, Boolean> resultProcessor) {
@@ -145,7 +145,12 @@ public class FileSearch {
      * @return the search itself for fluent method calls
      */
     public FileSearch withLimit(Limit limit) {
-        this.limit = limit;
+        if (limit == null) {
+            this.limit = Limit.UNLIMITED;
+        } else {
+            this.limit = limit;
+        }
+
         return this;
     }
 
@@ -155,15 +160,14 @@ public class FileSearch {
      * @return <tt>true</tt> if a limit is present, <tt>false</tt> otherwise
      */
     public boolean hasLimit() {
-        return limit != null && limit.getRemainingItems() != null;
+        return limit.getRemainingItems() != null;
     }
 
     /**
      * Obtains the limit which has been set.
      *
-     * @return the limit
+     * @return the limit or {@link Limit#UNLIMITED} if no limit has been specified
      */
-    @Nullable
     public Limit getLimit() {
         return limit;
     }
@@ -177,7 +181,7 @@ public class FileSearch {
      * @return the search itself for fluent method calls
      */
     public FileSearch disableLimit() {
-        this.limit = null;
+        this.limit = Limit.UNLIMITED;
         return this;
     }
 
@@ -196,7 +200,7 @@ public class FileSearch {
             }
         }
 
-        return limit == null || limit.shouldContinue();
+        return limit.shouldContinue();
     }
 
     /**
@@ -209,7 +213,7 @@ public class FileSearch {
         FileSearch result = new FileSearch(this::processResult);
         result.onlyDirectories = onlyDirectories;
         result.prefixFilter = prefixFilter;
-        if (limit != null && limit.getRemainingItems() != null) {
+        if (limit.getRemainingItems() != null) {
             result.limit = new Limit(0, limit.getRemainingItems());
         }
 
