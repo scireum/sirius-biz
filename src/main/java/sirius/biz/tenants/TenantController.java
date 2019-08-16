@@ -30,6 +30,7 @@ import sirius.web.security.Permission;
 import sirius.web.security.Permissions;
 import sirius.web.security.UserContext;
 import sirius.web.services.JSONStructuredOutput;
+import sirius.web.util.LinkBuilder;
 
 import java.util.Collections;
 import java.util.List;
@@ -110,7 +111,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     @DefaultRoute
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void tenants(WebContext ctx) {
-        ctx.respondWith().template("/templates/biz/tenants/tenants.html.pasta", getTenantsAsPage(ctx).asPage());
+        ctx.respondWith().template("/templates/biz/tenants/tenants.html.pasta", getTenantsAsPage(ctx).asPage(), this);
     }
 
     /**
@@ -260,26 +261,13 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     }
 
     /**
-     * Deletes the given tenant and returns the list of tenants.
+     * Returns the uri to the tenant delete job.
      *
-     * @param ctx      the current request
      * @param tenantId the id of the tenant to delete
+     * @return the uri to the job config page
      */
-    @Routed("/tenant/:1/delete")
-    @LoginRequired
-    @Permission(PERMISSION_MANAGE_TENANTS)
-    public void deleteTenant(WebContext ctx, String tenantId) {
-        Optional<T> optionalTenant =
-                mixing.getDescriptor(getTenantClass()).getMapper().find(getTenantClass(), tenantId);
-
-        optionalTenant.ifPresent(tenant -> {
-            if (tenant.equals(tenants.getRequiredTenant())) {
-                throw Exceptions.createHandled().withNLSKey("TenantController.cannotDeleteSelf").handle();
-            }
-        });
-
-        deleteEntity(ctx, optionalTenant);
-        tenants(ctx);
+    public String getDeleteLink(String tenantId) {
+        return new LinkBuilder("/job/delete-tenant").append("simulate", true).append("tenant", tenantId).toString();
     }
 
     /**

@@ -1,4 +1,5 @@
 <i:arg type="Page" name="tenants"/>
+<i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 
 <w:page titleKey="Tenant.plural">
     <i:block name="breadcrumbs">
@@ -70,7 +71,10 @@
                                 </div>
                             </w:permission>
                             <div>
-                                <w:deleteLink url="@apply('/tenant/%s/delete', tenant.getIdAsString())" page="tenants"/>
+                                <i class="fa fa-trash"></i>
+                                <a href="@controller.getDeleteLink(tenant.getIdAsString())" class="link link-red">
+                                    @i18n("NLS.delete")
+                                </a>
                             </div>
                         </td>
                     </tr>
