@@ -23,5 +23,5 @@ public interface ConfigBasedUplinkFactory extends Named {
      * @return the uplink based on the given config
      * @throws IllegalArgumentException in case of an invalid configuration
      */
-    ConfigBasedUplink make(Extension config) throws IllegalArgumentException;
+    ConfigBasedUplink make(Extension config);
 }

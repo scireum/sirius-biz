@@ -24,6 +24,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Optional;
 
 /**
@@ -48,6 +50,9 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
             return "fs";
         }
     }
+
+    private static final Comparator<File> SORT_BY_DIRECTORY = Comparator.comparing(file -> file.isDirectory() ? 0 : 1);
+    private static final Comparator<File> SORT_BY_NAME = Comparator.comparing(file -> file.getName().toLowerCase());
 
     private File root;
 
@@ -128,7 +133,8 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
 
     private boolean renameHandler(VirtualFile file, String name) {
         try {
-            return file.as(File.class).renameTo(new File(name));
+            File unwrappedFile = file.as(File.class);
+            return unwrappedFile.renameTo(new File(unwrappedFile.getParentFile(), name));
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
@@ -267,7 +273,12 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
                                         "Invalid parent: %s! Expected a File!",
                                         parent)));
         try {
-            for (File file : parentFile.listFiles()) {
+            File[] children = parentFile.listFiles();
+            if (children == null) {
+                return;
+            }
+            Arrays.sort(children, SORT_BY_DIRECTORY.thenComparing(SORT_BY_NAME));
+            for (File file : children) {
                 if (!search.processResult(wrapFile(parent, file))) {
                     return;
                 }
