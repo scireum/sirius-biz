@@ -21,6 +21,9 @@ import java.util.stream.Collectors;
 
 /**
  * Ensures that a value in the associated field is one of a given list.
+ * <p>
+ * Note that empty values are ignored by this check. Use a {@link RequiredCheck} or
+ * {@link FieldDefinition#markRequired()} to strongly enforce the value list.
  */
 public class ValueInListCheck implements ValueCheck {
 
@@ -53,6 +56,9 @@ public class ValueInListCheck implements ValueCheck {
 
     @Override
     public void perform(Value value) {
+        if (value.isEmptyString()) {
+            return;
+        }
         if (!values.contains(value.asString())) {
             throw new IllegalArgumentException(NLS.fmtr("ValueInListCheck.errorMsg")
                                                   .set("value", value.asString())
