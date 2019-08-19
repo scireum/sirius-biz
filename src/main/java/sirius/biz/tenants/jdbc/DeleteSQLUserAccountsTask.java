@@ -53,6 +53,6 @@ public class DeleteSQLUserAccountsTask implements DeleteTenantTask {
 
     @Override
     public int getPriority() {
-        return 100;
+        return 200;
     }
 }
