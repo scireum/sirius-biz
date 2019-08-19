@@ -77,7 +77,7 @@ public class CIFSRoot extends ConfigBasedUplink {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
                       .error(e)
-                      .withSystemErrorMessage("Layer 3/CIFS: Cannot determine is the file: %s is a directory: %s (%s)",
+                      .withSystemErrorMessage("Layer 3/CIFS: Cannot determine if the file: %s is a directory: %s (%s)",
                                               file.getName())
                       .handle();
             return 0;
