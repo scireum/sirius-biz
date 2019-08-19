@@ -14,7 +14,6 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.deletion.DeleteTenantJobFactory;
 import sirius.biz.tenants.deletion.DeleteTenantTask;
-import sirius.biz.tenants.jdbc.SQLTenants;
 import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
@@ -25,7 +24,7 @@ import sirius.kernel.di.std.Register;
 /**
  * Deletes all {@link CodeList code lists} of the given tenant.
  */
-@Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
+@Register(framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
 public class DeleteSQLCodeListsTask implements DeleteTenantTask {
 
     @Part
