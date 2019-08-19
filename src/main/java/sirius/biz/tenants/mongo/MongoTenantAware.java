@@ -25,7 +25,7 @@ public abstract class MongoTenantAware extends MongoBizEntity implements TenantA
     /**
      * Contains the tenant the entity belongs to.
      */
-    private final MongoRef<MongoTenant> tenant = MongoRef.on(MongoTenant.class, MongoRef.OnDelete.CASCADE);
+    private final MongoRef<MongoTenant> tenant = MongoRef.on(MongoTenant.class, MongoRef.OnDelete.REJECT);
 
     @Override
     public MongoRef<MongoTenant> getTenant() {

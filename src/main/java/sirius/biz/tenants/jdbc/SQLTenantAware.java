@@ -12,6 +12,7 @@ import sirius.biz.jdbc.BizEntity;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.SQLEntityRef;
+import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.di.std.Part;
 
 /**
@@ -25,7 +26,7 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
     /**
      * Contains the tenant the entity belongs to.
      */
-    private final SQLEntityRef<SQLTenant> tenant = SQLEntityRef.on(SQLTenant.class, SQLEntityRef.OnDelete.CASCADE);
+    private final SQLEntityRef<SQLTenant> tenant = SQLEntityRef.on(SQLTenant.class, SQLEntityRef.OnDelete.REJECT);
 
     @Override
     public SQLEntityRef<SQLTenant> getTenant() {
