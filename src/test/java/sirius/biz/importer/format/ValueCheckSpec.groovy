@@ -30,7 +30,7 @@ class ValueCheckSpec extends Specification {
         then:
         thrown IllegalArgumentException
         where:
-        number << [1234, "1234", 1234.56, "1234.56"]
+        number << [1234, "1234", 123456, "123456", 1234.56, "1234.56"]
     }
 
     def "numbers exceeding the provided scale are correctly marked as invalid"() {
