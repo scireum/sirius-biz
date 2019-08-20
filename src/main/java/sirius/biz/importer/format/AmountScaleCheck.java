@@ -8,6 +8,7 @@
 
 package sirius.biz.importer.format;
 
+import sirius.kernel.commons.Doubles;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
@@ -53,7 +54,7 @@ public class AmountScaleCheck implements ValueCheck {
         }
 
         BigDecimal rounded = new BigDecimal(number.unscaledValue(), number.scale()).setScale(scale, RoundingMode.FLOOR);
-        if (number.subtract(rounded).compareTo(BigDecimal.valueOf(0.00001)) > 0) {
+        if (number.subtract(rounded).compareTo(BigDecimal.valueOf(Doubles.EPSILON)) > 0) {
             throw new IllegalArgumentException(NLS.fmtr("AmountScaleCheck.errorMsg.scaleExceeded")
                                                   .set(PARAM_VALUE, value.toString())
                                                   .set(PARAM_SCALE, scale)
