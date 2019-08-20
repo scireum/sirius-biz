@@ -108,7 +108,8 @@ public class FieldDefinition {
      * @return the newly created field
      */
     public static FieldDefinition numericField(String name, int precision, int scale) {
-        return new FieldDefinition(name, typeNumber(precision, scale));
+        return new FieldDefinition(name, typeNumber(precision, scale)).withCheck(new AmountScaleCheck(precision,
+                                                                                                      scale));
     }
 
     /**
