@@ -18,6 +18,9 @@ import java.math.RoundingMode;
 
 /**
  * Enforces a given numeric scale and precision.
+ * <p>
+ * This check marks the given value as invalid if its non numeric, it consists of more decimal places than the provided scale
+ * or the number of total digits exceeds the provided precision (following the specifications of fixed point arithmetic).
  */
 public class AmountScaleCheck implements ValueCheck {
 
