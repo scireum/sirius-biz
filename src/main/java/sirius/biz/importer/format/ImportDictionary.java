@@ -212,10 +212,20 @@ public class ImportDictionary {
     /**
      * Uses the previously determined <tt>mapping function</tt> to transform a row into a field map.
      *
-     * @param row the row to parse
+     * @param row                    the row to parse
+     * @param failForAdditionalCells <tt>true</tt> to fail if there are "too many" cells in the given row, <tt>false</tt> to
+     *                               simply ignore those
      * @return the field map represented as {@link Context}
      */
-    public Context load(Values row) {
+    public Context load(Values row, boolean failForAdditionalCells) {
+        if (row.length() > mappingFunction.size() && failForAdditionalCells) {
+            throw Exceptions.createHandled()
+                            .withNLSKey("ImportDictionary.tooManyColumns")
+                            .set("count", row.length())
+                            .set("columns", Strings.join(mappingFunction, ", "))
+                            .handle();
+        }
+
         Context result = new Context();
         for (int index = 0; index < mappingFunction.size(); index++) {
             String fieldName = mappingFunction.get(index);
