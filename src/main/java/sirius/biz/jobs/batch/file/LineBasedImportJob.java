@@ -24,7 +24,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
-import sirius.kernel.nls.NLS;
 import sirius.web.data.LineBasedProcessor;
 import sirius.web.data.RowProcessor;
 
@@ -96,7 +95,7 @@ public class LineBasedImportJob<E extends BaseEntity<?>> extends FileImportJob i
         } else {
             Watch w = Watch.start();
             try {
-                Context ctx = filterEmptyValues(dictionary.load(row));
+                Context ctx = filterEmptyValues(dictionary.load(row, false));
                 if (!isEmptyContext(ctx)) {
                     handleRow(index, ctx);
                 }
