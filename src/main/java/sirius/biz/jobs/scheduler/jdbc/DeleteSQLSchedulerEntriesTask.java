@@ -35,7 +35,7 @@ public class DeleteSQLSchedulerEntriesTask implements DeleteTenantTask {
     }
 
     @Override
-    public void beforeExecution(ProcessContext process, Tenant<?> tenant, boolean simulate) {
+    public void beforeExecution(ProcessContext process, Tenant<?> tenant) {
         long schedulerEntryCount = getQuery(tenant).count();
         process.log(ProcessLog.info()
                               .withNLSKey("DeleteSchedulerEntriesTask.beforeExecution")

@@ -35,7 +35,7 @@ public class DeleteSQLUserAccountsTask implements DeleteTenantTask {
     }
 
     @Override
-    public void beforeExecution(ProcessContext process, Tenant<?> tenant, boolean simulate) {
+    public void beforeExecution(ProcessContext process, Tenant<?> tenant) {
         long userCount = getQuery(tenant).count();
         process.log(ProcessLog.info()
                               .withNLSKey("DeleteUserAccountsTask.beforeExecution")
