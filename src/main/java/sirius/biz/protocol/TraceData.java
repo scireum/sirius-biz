@@ -116,6 +116,16 @@ public class TraceData extends Composite {
     }
 
     /**
+     * Checks if the entity this trace is attached to was changed after the provided point in time.
+     *
+     * @param time the time in point to check against
+     * @return <tt>true<tt> if the entity was changed after the point in time, <tt>false</tt> otherwise
+     */
+    public boolean hasChangedSince(LocalDateTime time) {
+        return getChangedAt() != null && getChangedAt().isAfter(time);
+    }
+
+    /**
      * Determines if change tracking is currently disabled.
      *
      * @return <tt>true</tt>, if change tracking is currently disabled, <tt>false</tt> otherwise
