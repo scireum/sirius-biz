@@ -43,8 +43,7 @@ public abstract class DeleteMongoEntitiesTask implements DeleteTenantTask {
     public void execute(ProcessContext processContext, Tenant<?> tenant) {
         getQuery(tenant).iterateAll(entity -> {
             Watch watch = Watch.start();
-            // forceDelete so we don't get interrupted by OptimisticLockExceptions
-            mango.forceDelete(entity);
+            mango.delete(entity);
             processContext.addTiming(DeleteTenantJobFactory.TIMING_DELETED_ITEMS, watch.elapsedMillis());
         });
     }
