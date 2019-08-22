@@ -86,7 +86,7 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
 
         for (DeleteTenantTask task : deletionTasks) {
             try {
-                task.beforeExecution(process, tenant);
+                task.beforeExecution(process, tenant, simulate);
                 if (!simulate) {
                     task.execute(process, tenant);
                 }

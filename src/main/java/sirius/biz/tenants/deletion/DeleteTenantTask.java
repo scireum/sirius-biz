@@ -27,10 +27,12 @@ public interface DeleteTenantTask extends Priorized {
      * Invoked before the handler itself ({@link #execute(ProcessContext, Tenant)} is called.
      * <p>
      * This should report how many objects will be deleted.
-     *  @param process  the process to log to
+     *
+     * @param process  the process to log to
      * @param tenant   the tenant which is about to be deleted
+     * @param simulate <tt>true</tt> if this is a simulation run, <tt>false</tt> otherwise
      */
-    void beforeExecution(ProcessContext process, Tenant<?> tenant);
+    void beforeExecution(ProcessContext process, Tenant<?> tenant, boolean simulate);
 
     /**
      * Called to actually perfrom the delete.

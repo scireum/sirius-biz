@@ -36,7 +36,7 @@ public class DeleteSQLCodeListsTask implements DeleteTenantTask {
     }
 
     @Override
-    public void beforeExecution(ProcessContext process, Tenant<?> tenant) {
+    public void beforeExecution(ProcessContext process, Tenant<?> tenant, boolean simulate) {
         long codeListCount = getQuery(tenant).count();
         process.log(ProcessLog.info()
                               .withNLSKey("DeleteTenantTask.beforeExecution")
