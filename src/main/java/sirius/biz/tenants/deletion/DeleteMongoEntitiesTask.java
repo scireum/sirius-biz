@@ -20,7 +20,8 @@ import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 
 /**
- * Provides basic functionality to delete a list of MongoEntities of a tenant.
+ * Provides functionality to delete a list of MongoEntities of a tenant. Extending classes with basic use-cases only
+ * need to define the class of the entity which should be deleted.
  */
 public abstract class DeleteMongoEntitiesTask implements DeleteTenantTask {
 
