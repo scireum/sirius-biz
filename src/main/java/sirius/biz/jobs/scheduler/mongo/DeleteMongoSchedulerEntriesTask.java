@@ -9,9 +9,9 @@
 package sirius.biz.jobs.scheduler.mongo;
 
 import sirius.biz.jobs.scheduler.SchedulerEntry;
-import sirius.biz.mongo.MongoBizEntity;
 import sirius.biz.tenants.deletion.DeleteMongoEntitiesTask;
 import sirius.biz.tenants.deletion.DeleteTenantTask;
+import sirius.biz.tenants.mongo.MongoTenantAware;
 import sirius.kernel.di.std.Register;
 
 /**
@@ -21,7 +21,7 @@ import sirius.kernel.di.std.Register;
 public class DeleteMongoSchedulerEntriesTask extends DeleteMongoEntitiesTask {
 
     @Override
-    protected Class<? extends MongoBizEntity> getEntityClass() {
+    protected Class<? extends MongoTenantAware> getEntityClass() {
         return MongoSchedulerEntry.class;
     }
 

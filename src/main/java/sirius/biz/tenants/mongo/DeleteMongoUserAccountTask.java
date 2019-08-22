@@ -8,7 +8,6 @@
 
 package sirius.biz.tenants.mongo;
 
-import sirius.biz.mongo.MongoBizEntity;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.deletion.DeleteMongoEntitiesTask;
 import sirius.biz.tenants.deletion.DeleteTenantTask;
@@ -21,7 +20,7 @@ import sirius.kernel.di.std.Register;
 public class DeleteMongoUserAccountTask extends DeleteMongoEntitiesTask {
 
     @Override
-    protected Class<? extends MongoBizEntity> getEntityClass() {
+    protected Class<? extends MongoTenantAware> getEntityClass() {
         return MongoUserAccount.class;
     }
 
