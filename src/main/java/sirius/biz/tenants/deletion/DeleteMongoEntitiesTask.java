@@ -47,7 +47,7 @@ public abstract class DeleteMongoEntitiesTask implements DeleteTenantTask {
         });
     }
 
-    protected MongoQuery<? extends MongoBizEntity> getQuery(Tenant<?> tenant) {
+    protected MongoQuery<? extends MongoTenantAware> getQuery(Tenant<?> tenant) {
         return mango.select(getEntityClass()).eq(TenantAware.TENANT, tenant);
     }
 
