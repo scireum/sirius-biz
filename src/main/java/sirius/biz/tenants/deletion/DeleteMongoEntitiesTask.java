@@ -61,9 +61,4 @@ public abstract class DeleteMongoEntitiesTask implements DeleteTenantTask {
     protected String getEntityName() {
         return mixing.getDescriptor(getEntityClass()).getPluralLabel();
     }
-
-    @Override
-    public int getPriority() {
-        return 100;
-    }
 }
