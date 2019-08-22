@@ -20,6 +20,7 @@ import sirius.db.jdbc.SmartQuery;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.nls.NLS;
 
 /**
  * Deletes all {@link CodeList code lists} of the given tenant.
@@ -38,8 +39,9 @@ public class DeleteSQLCodeListsTask implements DeleteTenantTask {
     public void beforeExecution(ProcessContext process, Tenant<?> tenant) {
         long codeListCount = getQuery(tenant).count();
         process.log(ProcessLog.info()
-                              .withNLSKey("DeleteCodeListsTask.beforeExecution")
-                              .withContext("count", codeListCount));
+                              .withNLSKey("DeleteTenantTask.beforeExecution")
+                              .withContext("count", codeListCount)
+                              .withContext("name", NLS.get("CodeList.plural")));
     }
 
     @Override

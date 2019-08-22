@@ -20,6 +20,7 @@ import sirius.db.jdbc.SmartQuery;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.nls.NLS;
 
 /**
  * Deletes all {@link SchedulerEntry scheduler entries} of the given tenant.
@@ -38,8 +39,9 @@ public class DeleteSQLSchedulerEntriesTask implements DeleteTenantTask {
     public void beforeExecution(ProcessContext process, Tenant<?> tenant) {
         long schedulerEntryCount = getQuery(tenant).count();
         process.log(ProcessLog.info()
-                              .withNLSKey("DeleteSchedulerEntriesTask.beforeExecution")
-                              .withContext("count", schedulerEntryCount));
+                              .withNLSKey("DeleteTenantTask.beforeExecution")
+                              .withContext("count", schedulerEntryCount)
+                              .withContext("name", NLS.get("SchedulerEntry.plural")));
     }
 
     @Override

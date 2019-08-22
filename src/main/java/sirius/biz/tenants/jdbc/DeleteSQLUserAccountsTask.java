@@ -20,6 +20,7 @@ import sirius.db.jdbc.SmartQuery;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.nls.NLS;
 
 /**
  * Deletes all {@link UserAccount user accounts} of the given tenant.
@@ -38,8 +39,9 @@ public class DeleteSQLUserAccountsTask implements DeleteTenantTask {
     public void beforeExecution(ProcessContext process, Tenant<?> tenant) {
         long userCount = getQuery(tenant).count();
         process.log(ProcessLog.info()
-                              .withNLSKey("DeleteUserAccountsTask.beforeExecution")
-                              .withContext("count", userCount));
+                              .withNLSKey("DeleteTenantTask.beforeExecution")
+                              .withContext("count", userCount)
+                              .withContext("name", NLS.get("UserAccount.plural")));
     }
 
     @Override
