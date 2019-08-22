@@ -32,7 +32,7 @@ public abstract class DeleteMongoEntitiesTask implements DeleteTenantTask {
     protected Mixing mixing;
 
     @Override
-    public void beforeExecution(ProcessContext processContext, Tenant<?> tenant) {
+    public void beforeExecution(ProcessContext processContext, Tenant<?> tenant, boolean simulate) {
         processContext.log(ProcessLog.info()
                                      .withNLSKey("DeleteTenantTask.beforeExecution")
                                      .withContext("count", getQuery(tenant).count())
