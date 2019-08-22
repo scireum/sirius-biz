@@ -8,10 +8,10 @@
 
 package sirius.biz.tenants.deletion;
 
-import sirius.biz.mongo.MongoBizEntity;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.mongo.MongoTenantAware;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.Mixing;
 import sirius.db.mongo.Mango;
@@ -56,7 +56,7 @@ public abstract class DeleteMongoEntitiesTask implements DeleteTenantTask {
      *
      * @return the class of the entities to be deleted
      */
-    protected abstract Class<? extends MongoBizEntity> getEntityClass();
+    protected abstract Class<? extends MongoTenantAware> getEntityClass();
 
     protected String getEntityName() {
         return mixing.getDescriptor(getEntityClass()).getPluralLabel();
