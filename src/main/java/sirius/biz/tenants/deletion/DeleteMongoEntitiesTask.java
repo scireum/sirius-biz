@@ -52,6 +52,11 @@ public abstract class DeleteMongoEntitiesTask implements DeleteTenantTask {
         return mango.select(getEntityClass()).eq(TenantAware.TENANT, tenant);
     }
 
+    /**
+     * This methode defines the class of entities which should be deleted.
+     *
+     * @return the class of the entities which should be deleted
+     */
     protected abstract Class<? extends MongoBizEntity> getEntityClass();
 
     protected String getEntityName() {
