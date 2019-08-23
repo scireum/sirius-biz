@@ -8,47 +8,20 @@
 
 package sirius.biz.tenants.jdbc;
 
-import sirius.biz.process.ProcessContext;
-import sirius.biz.process.logs.ProcessLog;
-import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.UserAccount;
-import sirius.biz.tenants.deletion.DeleteTenantJobFactory;
+import sirius.biz.tenants.deletion.DeleteSQLEntitiesTask;
 import sirius.biz.tenants.deletion.DeleteTenantTask;
-import sirius.biz.web.TenantAware;
-import sirius.db.jdbc.OMA;
-import sirius.db.jdbc.SmartQuery;
-import sirius.kernel.commons.Watch;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 /**
  * Deletes all {@link UserAccount user accounts} of the given tenant.
  */
-@Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
-public class DeleteSQLUserAccountsTask implements DeleteTenantTask {
-
-    @Part
-    private OMA oma;
-
-    private SmartQuery<SQLUserAccount> getQuery(Tenant<?> tenant) {
-        return oma.select(SQLUserAccount.class).eq(TenantAware.TENANT, tenant);
-    }
+@Register(classes = DeleteTenantTask.class, framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
+public class DeleteSQLUserAccountsTask extends DeleteSQLEntitiesTask {
 
     @Override
-    public void beforeExecution(ProcessContext process, Tenant<?> tenant, boolean simulate) {
-        long userCount = getQuery(tenant).count();
-        process.log(ProcessLog.info()
-                              .withNLSKey("DeleteUserAccountsTask.beforeExecution")
-                              .withContext("count", userCount));
-    }
-
-    @Override
-    public void execute(ProcessContext process, Tenant<?> tenant) throws Exception {
-        getQuery(tenant).iterateAll(entry -> {
-            Watch watch = Watch.start();
-            oma.delete(entry);
-            process.addTiming(DeleteTenantJobFactory.TIMING_DELETED_ITEMS, watch.elapsedMillis());
-        });
+    protected Class<? extends SQLTenantAware> getEntityClass() {
+        return SQLUserAccount.class;
     }
 
     @Override
