@@ -20,11 +20,15 @@ class LocksSpec extends BaseSpecification {
         when:
         locks.tryLock("test", null)
         then:
-        locks.tryLock("test", null) == false
+        locks.tryLock("test", null)
         and:
         locks.unlock("test")
-        locks.tryLock("test", null) == true
+        and:
+        locks.isLocked("test")
+        and:
         locks.unlock("test")
+        and:
+        locks.isLocked("test") == false
     }
 
 }
