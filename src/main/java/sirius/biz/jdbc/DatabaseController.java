@@ -34,6 +34,7 @@ import sirius.web.security.Permission;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -146,9 +147,17 @@ public class DatabaseController extends BasicController {
         }
         out.beginArray("row");
         for (Tuple<String, Object> col : row.getFieldsList()) {
-            out.property("column", col.getSecond());
+            out.property("column", formatValue(col.getSecond()));
         }
         out.endArray();
+    }
+
+    private String formatValue(Object value) {
+        if (value.getClass().isArray()) {
+            return Arrays.stream((Object[]) value).map(NLS::toUserString).collect(Collectors.joining(", "));
+        }
+
+        return NLS.toUserString(value);
     }
 
     /**
