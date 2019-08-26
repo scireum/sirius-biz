@@ -8,6 +8,7 @@
 
 package sirius.biz.importer.format;
 
+import com.google.common.collect.ImmutableList;
 import sirius.kernel.commons.Lambdas;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
@@ -28,6 +29,9 @@ import java.util.stream.Collectors;
  * This can be used to import and check datasets (mostly row based ones like CSV or MS Excel).
  */
 public class FieldDefinition {
+
+    private static final ValueInListCheck BOOLEAN_VALUES_CHECK =
+            new ValueInListCheck(ImmutableList.of("true", "false"));
 
     protected String name;
     protected String type;
@@ -108,7 +112,8 @@ public class FieldDefinition {
      * @return the newly created field
      */
     public static FieldDefinition numericField(String name, int precision, int scale) {
-        return new FieldDefinition(name, typeNumber(precision, scale));
+        return new FieldDefinition(name, typeNumber(precision, scale)).withCheck(new AmountScaleCheck(precision,
+                                                                                                      scale));
     }
 
     /**
@@ -127,7 +132,7 @@ public class FieldDefinition {
      * @return the newly created field
      */
     public static FieldDefinition booleanField(String name) {
-        return new FieldDefinition(name, typeBoolean());
+        return new FieldDefinition(name, typeBoolean()).withCheck(BOOLEAN_VALUES_CHECK);
     }
 
     /**
