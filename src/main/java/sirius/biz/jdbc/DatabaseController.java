@@ -16,6 +16,7 @@ import sirius.db.jdbc.SQLQuery;
 import sirius.db.jdbc.schema.Schema;
 import sirius.db.jdbc.schema.SchemaUpdateAction;
 import sirius.kernel.commons.Limit;
+import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
@@ -34,7 +35,6 @@ import sirius.web.services.JSONStructuredOutput;
 
 import java.sql.SQLException;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -107,9 +107,9 @@ public class DatabaseController extends BasicController {
         } else if (isModifyStatement(sqlStatement)) {
             out.property("rowModified", qry.executeUpdate());
         } else {
-            AtomicBoolean arrayStarted = new AtomicBoolean();
-            qry.iterateAll(r -> outputRow(out, arrayStarted, r), new Limit(0, ctx.get("limit").asInt(DEFAULT_LIMIT)));
-            if (arrayStarted.get()) {
+            Monoflop monoflop = Monoflop.create();
+            qry.iterateAll(r -> outputRow(out, monoflop, r), new Limit(0, ctx.get("limit").asInt(DEFAULT_LIMIT)));
+            if (monoflop.successiveCall()) {
                 out.endArray();
             }
         }
@@ -135,9 +135,8 @@ public class DatabaseController extends BasicController {
                 "create");
     }
 
-    private void outputRow(JSONStructuredOutput out, AtomicBoolean arrayStarted, Row row) {
-        if (!arrayStarted.get()) {
-            arrayStarted.set(true);
+    private void outputRow(JSONStructuredOutput out, Monoflop monoflop, Row row) {
+        if (monoflop.firstCall()) {
             out.beginArray("columns");
             for (Tuple<String, Object> col : row.getFieldsList()) {
                 out.property("column", col.getFirst());
