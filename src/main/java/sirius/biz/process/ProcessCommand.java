@@ -39,6 +39,7 @@ public abstract class ProcessCommand implements Command {
         String processId = processes.createProcessForCurrentUser(null,
                                                                  createTitle(argumentValues),
                                                                  getIcon(argumentValues),
+                                                                 PersistencePeriod.THREE_MONTHS,
                                                                  context);
         tasks.defaultExecutor().fork(() -> processes.execute(processId, this::executeProcess));
 

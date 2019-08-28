@@ -13,6 +13,7 @@ import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.TenantParameter;
+import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.Tenant;
@@ -124,6 +125,11 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
     @Override
     public String getIcon() {
         return "fa-trash";
+    }
+
+    @Override
+    protected PersistencePeriod getPersistencePeriod() {
+        return PersistencePeriod.TEN_YEARS;
     }
 
     @Nonnull

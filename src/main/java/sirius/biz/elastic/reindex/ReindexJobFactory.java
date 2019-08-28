@@ -12,6 +12,7 @@ import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.EntityDescriptorParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.es.Elastic;
@@ -61,6 +62,11 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     @Override
     protected String createProcessTitle(Map<String, String> context) {
         return Strings.apply("Reindexing mapping '%s'", entityDescriptorParameter.require(context).getRelationName());
+    }
+
+    @Override
+    protected PersistencePeriod getPersistencePeriod() {
+        return PersistencePeriod.THREE_MONTHS;
     }
 
     @Override

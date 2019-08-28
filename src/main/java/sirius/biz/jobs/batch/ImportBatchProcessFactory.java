@@ -10,6 +10,7 @@ package sirius.biz.jobs.batch;
 
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.jobs.JobCategory;
+import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 
 /**
@@ -47,4 +48,10 @@ public abstract class ImportBatchProcessFactory extends BatchProcessJobFactory {
     public String getIcon() {
         return "fa-upload";
     }
+
+    @Override
+    protected PersistencePeriod getPersistencePeriod() {
+        return PersistencePeriod.SIX_YEARS;
+    }
+
 }

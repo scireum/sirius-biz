@@ -12,6 +12,7 @@ import com.alibaba.fastjson.JSONObject;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.jobs.BasicJobFactory;
+import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.ProcessLink;
 import sirius.biz.process.Processes;
@@ -83,6 +84,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
         String processId = processes.createProcessForCurrentUser(getClass().getSimpleName() + ".label",
                                                                  createProcessTitle(context),
                                                                  getIcon(),
+                                                                 getPersistencePeriod(),
                                                                  context);
         logScheduledMessage(processId);
         addLinkToJob(processId);
@@ -129,6 +131,13 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
      * @return the title to use for the process
      */
     protected abstract String createProcessTitle(Map<String, String> context);
+
+    /**
+     * Determines the persistence period for the generated {@link sirius.biz.process.Process}.
+     *
+     * @return the persistence period to apply
+     */
+    protected abstract PersistencePeriod getPersistencePeriod();
 
     /**
      * Returns the executor which is responsible for resolving the created {@link sirius.biz.process.Process} and

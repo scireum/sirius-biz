@@ -11,6 +11,7 @@ package sirius.biz.web;
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.Tenants;
@@ -330,6 +331,7 @@ public class BizController extends BasicController {
                                                                     .set("entity", Strings.limit(entity, 30))
                                                                     .format(),
                                                                  "fa-trash",
+                                                                 PersistencePeriod.THREE_MONTHS,
                                                                  Collections.emptyMap());
         tasks.defaultExecutor().fork(() -> {
             processes.execute(processId, process -> {
