@@ -12,12 +12,14 @@ import com.alibaba.fastjson.JSONObject
 import sirius.biz.cluster.work.DistributedTaskExecutor
 import sirius.biz.cluster.work.DistributedTasks
 import sirius.kernel.BaseSpecification
+import sirius.kernel.Scope
 import sirius.kernel.async.Future
 import sirius.kernel.commons.Wait
 import sirius.kernel.di.std.Part
 
 import java.time.Duration
 
+@Scope(Scope.SCOPE_NIGHTLY)
 class DistributedTasksSpec extends BaseSpecification {
 
     @Part

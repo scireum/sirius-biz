@@ -1,0 +1,209 @@
+<i:arg type="sirius.biz.storage.layer3.VirtualFile" name="dir"/>
+<i:arg type="List" name="path"/>
+<i:arg type="Page" name="children"/>
+
+<w:page title="@dir.name()">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/fs">@i18n("VFSController.root")</a>
+        </li>
+        <i:for type="sirius.biz.storage.layer3.VirtualFile" var="pathElement" items="path">
+            <i:if test="pathElement.parent() != null">
+                <li>
+                    <a href="/fs?path=@urlEncode(pathElement.path())">@pathElement.name()</a>
+                </li>
+            </i:if>
+        </i:for>
+    </i:block>
+
+    <w:pageHeader title="@dir.name()"/>
+
+    <div class="row">
+        <i:if test="dir.canCreateChildren()">
+            <div class="col-md-3">
+                <w:fileUpload uploadUrl="@apply('/fs/upload?path=%s', urlEncode(dir.path()))" />
+            </div>
+        </i:if>
+        <div class="@(dir.canCreateChildren() ? 'col-md-9' : 'col-md-12')">
+            <w:tableSearchHeader page="children" baseUrl="@apply('/fs?path=%s', dir.path())">
+                <i:if test="dir.canCreateChildren()">
+                    <a class="btn btn-primary" href="javascript:createDirectory()">@i18n("VFSController.createDirectory")</a>
+                </i:if>
+            </w:tableSearchHeader>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>
+                        @i18n("Model.name")<br>
+                        <small class="muted">@i18n("Model.description")</small>
+                    </th>
+                    <th class="align-right">
+                        @i18n("VirtualFile.lastModified")
+                    </th>
+                    <th class="align-right">
+                        @i18n("VirtualFile.size")
+                    </th>
+                    <th>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <i:if test="dir.parent() != null">
+                    <tr>
+                        <td>
+                            <a class="link" href="/fs?path=@urlEncode(dir.parent().path())">
+                                <i class="fa fa-folder-open"></i>
+                                ..
+                            </a>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </i:if>
+                <i:for type="sirius.biz.storage.layer3.VirtualFile" var="child" items="children.getItems()">
+                    <tr>
+                        <td>
+                            <div>
+                                <a class="link" href="/fs?path=@urlEncode(child.path())">
+                                    <i:if test="child.isDirectory()">
+                                        <i class="fa fa-folder-open"></i>
+                                        <i:else>
+                                            <i class="fa fa-file"></i>
+                                        </i:else>
+                                    </i:if>
+                                    @child.name()
+                                </a>
+                            </div>
+                            <div>
+                                <small class="muted">@child.description()</small>
+                            </div>
+                        </td>
+                        <td class="align-right">
+                            @toUserString(child.lastModifiedDate())
+                        </td>
+                        <td class="align-right">
+                            <i:if test="!child.isDirectory()">
+                                @formatSize(child.size())
+                            </i:if>
+                        </td>
+                        <td class="align-right">
+                            <w:dropdown titleKey="VFSController.actions" icon="fa-gears">
+                                <i:local name="jobs" value="@jobsService.getMatchingInteractiveJobs(child)"/>
+                                <i:if test="child.canRename()">
+                                    <li class="dropdown-item">
+                                        <a href="javascript:renameFile('@child.path()', '@child.name()')">
+                                            <i class="fa fa-tag"></i>
+                                            @i18n("VFSController.rename")</a>
+                                    </li>
+                                </i:if>
+                                <i:if test="child.canMove()">
+                                    <li class="dropdown-item">
+                                        <a href="javascript:moveFile('@child.path()')">
+                                            <i class="fa fa-arrow-right"></i>
+                                            @i18n("VFSController.move")</a>
+                                    </li>
+                                </i:if>
+                                <i:for type="Tuple" var="linkAndJob" items="jobs">
+                                    <i:local name="job"
+                                             value="linkAndJob.getSecond().as(sirius.biz.jobs.JobFactory.class)"/>
+                                    <li class="dropdown-item">
+                                        <a href="@linkAndJob.getFirst()">
+                                            <i class="fa @job.getIcon()"></i> @job.getLabel()
+                                        </a>
+                                    </li>
+                                </i:for>
+                            </w:dropdown>
+
+                            <i:if test="child.canDelete()">
+                                <w:deleteLink url="@apply('/fs/delete?path=%s', urlEncode(child.path()))" page="children"/>
+                            </i:if>
+                        </td>
+                    </tr>
+                </i:for>
+                </tbody>
+            </table>
+
+            <w:pagination page="children" baseUrl="@apply('/fs?path=%s', dir.path())"/>
+        </div>
+    </div>
+
+    <w:modal name="rename-modal" titleKey="VFSController.rename">
+        <form id="rename-form" method="post" action="/fs/rename">
+            <w:modalBody>
+                <fieldset>
+                    <input type="hidden" id="rename-path" name="path"/>
+                    <input name="CSRFToken" value="@csrf.getCSRFToken(call)" type="hidden"/>
+                    <w:textfield span="12" id="rename-name" name="name" value="" labelKey="Model.name" required="true"/>
+                </fieldset>
+            </w:modalBody>
+            <w:modalFooter submitKey="NLS.ok" cancelKey="NLS.cancel"/>
+        </form>
+    </w:modal>
+    <form id="move-file-form" method="post" action="/fs/move">
+        <input type="hidden" name="path" value=""/>
+        <input type="hidden" name="newParent" value=""/>
+        <input name="CSRFToken" value="@csrf.getCSRFToken(call)" type="hidden"/>
+    </form>
+    <w:modal name="create-directory-modal" titleKey="VFSController.createDirectory">
+        <form id="create-directory-form" method="post" action="/fs/createDirectory">
+            <w:modalBody>
+                <fieldset>
+                    <input type="hidden" name="parent" value="@dir.path()"/>
+                    <input name="CSRFToken" value="@csrf.getCSRFToken(call)" type="hidden"/>
+                    <w:textfield span="12" id="directory-name" name="name" value="" labelKey="Model.name"
+                                 required="true"/>
+                </fieldset>
+            </w:modalBody>
+            <w:modalFooter submitKey="NLS.ok" cancelKey="NLS.cancel"/>
+        </form>
+    </w:modal>
+    <w:modal name="create-file-modal" titleKey="VFSController.createFile">
+        <form id="create-file-form" method="post" action="/fs/createFile">
+            <w:modalBody>
+                <fieldset>
+                    <input type="hidden" name="parent" value="@dir.path()"/>
+                    <input name="CSRFToken" value="@csrf.getCSRFToken(call)" type="hidden"/>
+                    <w:textfield span="12" id="file-name" name="name" value="" labelKey="Model.name" required="true"/>
+                </fieldset>
+            </w:modalBody>
+            <w:modalFooter submitKey="NLS.ok" cancelKey="NLS.cancel"/>
+        </form>
+    </w:modal>
+
+    <script type="text/javascript">
+        function renameFile(path, name) {
+            var modalElement = $("#rename-modal");
+            modalElement.find("#rename-name").val(name);
+            modalElement.find("#rename-path").val(path);
+
+            modalElement.on('shown.bs.modal', function () {
+                modalElement.find("#rename-name").focus();
+            }).modal('show');
+        }
+
+        function moveFile(filePath) {
+            $form = $('#move-file-form');
+
+            selectVFSDirectory('@dir.path()').then(function (newParent) {
+                $form.find("input[name='path']").val(filePath);
+                $form.find("input[name='newParent']").val(newParent);
+                $form.submit();
+            });
+        }
+
+        function createDirectory() {
+            var modalElement = $("#create-directory-modal");
+            modalElement.on('shown.bs.modal', function () {
+                modalElement.find("#directory-name").focus();
+            }).modal('show');
+        }
+
+        function createFile() {
+            var modalElement = $("#create-file-modal");
+            modalElement.on('shown.bs.modal', function () {
+                modalElement.find("#select-file-modal-search-filter").focus();
+            }).modal('show');
+        }
+    </script>
+</w:page>

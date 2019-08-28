@@ -30,6 +30,8 @@ import java.io.OutputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -144,6 +146,21 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
 
         return name();
+    }
+
+    /**
+     * Returns the path a list of virtual files.
+     *
+     * @return the path (from the root directory to this file) as list  
+     */
+    public List<VirtualFile> pathList() {
+        List<VirtualFile> result = new ArrayList<>();
+        VirtualFile current = this;
+        while (current != null) {
+            result.add(0, current);
+            current = current.parent();
+        }
+        return result;
     }
 
     /**
