@@ -16,6 +16,7 @@ import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
+import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.ComplexDelete;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.types.NestedList;
@@ -197,6 +198,21 @@ public class Process extends SearchableEntity {
     private LocalDateTime completed;
 
     /**
+     * Contains the date when the process will be deleted.
+     */
+    public static final Mapping EXPIRES = Mapping.named("expires");
+    @NullAllowed
+    private LocalDate expires;
+
+    /**
+     * Contains period for which this process will be kept.
+     * <p>
+     * For {@link ProcessState#STANDBY standby} processes the denotes the duration for which logs will be kept.
+     */
+    public static final Mapping PERSISTENCE_PERIOD = Mapping.named("persistencePeriod");
+    private PersistencePeriod persistencePeriod = PersistencePeriod.THREE_MONTHS;
+
+    /**
      * Determines if this process failed or encountered errors during its execution.
      */
     public static final Mapping ERRORNEOUS = Mapping.named("errorneous");
@@ -222,6 +238,17 @@ public class Process extends SearchableEntity {
 
     @Part
     private static Processes processes;
+
+    @BeforeSave
+    protected void beforeSave() {
+        if (persistencePeriod == null) {
+            if (state == ProcessState.STANDBY) {
+                persistencePeriod = PersistencePeriod.THREE_MONTHS;
+            } else {
+                persistencePeriod = PersistencePeriod.SIX_YEARS;
+            }
+        }
+    }
 
     @AfterDelete
     protected void onDelete() {
@@ -290,6 +317,15 @@ public class Process extends SearchableEntity {
      */
     public String getCompletedAsString() {
         return formatTimestamp(getCompleted());
+    }
+
+    /**
+     * Returns the expiry date formatted as string.
+     *
+     * @return the expiry date as string
+     */
+    public String getExpiresAsString() {
+        return NLS.toUserString(getExpires());
     }
 
     /**
@@ -553,5 +589,21 @@ public class Process extends SearchableEntity {
 
     public StringList getReferences() {
         return references;
+    }
+
+    public LocalDate getExpires() {
+        return expires;
+    }
+
+    public void setExpires(LocalDate expires) {
+        this.expires = expires;
+    }
+
+    public PersistencePeriod getPersistencePeriod() {
+        return persistencePeriod;
+    }
+
+    public void setPersistencePeriod(PersistencePeriod persistencePeriod) {
+        this.persistencePeriod = persistencePeriod;
     }
 }
