@@ -61,8 +61,9 @@
             field('priority').val('');
             $('#dlgMessageBox').hide();
 
-            $('#editEntry').modal('show');
-            $('#code').focus();
+            $('#editEntry').on('shown.bs.modal', function () {
+                field('code').focus();
+            }).modal('show');
         }
 
         function editEntry(code, value, additionalValue, description, priority) {
@@ -73,8 +74,9 @@
             field('priority').val(priority);
             $('#dlgMessageBox').hide();
 
-            $('#editEntry').modal('show');
-            $('#code').focus();
+            $('#editEntry').on('shown.bs.modal', function () {
+                field('code').focus();
+            }).modal('show');
         }
 
         function updateEntry() {

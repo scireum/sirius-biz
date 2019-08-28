@@ -26,7 +26,7 @@ public abstract class TextParameter<V, P extends TextParameter<V, P>> extends Pa
      * @param name  the name of the parameter
      * @param label the label of the parameter, which will be {@link NLS#smartGet(String) auto translated}
      */
-    public TextParameter(String name, String label) {
+    protected TextParameter(String name, String label) {
         super(name, label);
     }
 
