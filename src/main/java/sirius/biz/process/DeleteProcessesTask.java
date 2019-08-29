@@ -20,7 +20,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 
 /**
- * Deletes all processes for a gicen tenant.
+ * Deletes all processes for a given tenant.
  */
 @Register(framework = Processes.FRAMEWORK_PROCESSES)
 public class DeleteProcessesTask implements DeleteTenantTask {

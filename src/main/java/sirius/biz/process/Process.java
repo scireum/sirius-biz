@@ -207,7 +207,7 @@ public class Process extends SearchableEntity {
     /**
      * Contains period for which this process will be kept.
      * <p>
-     * For {@link ProcessState#STANDBY standby} processes the denotes the duration for which logs will be kept.
+     * For {@link ProcessState#STANDBY standby} processes this denotes the duration for which logs will be kept.
      */
     public static final Mapping PERSISTENCE_PERIOD = Mapping.named("persistencePeriod");
     private PersistencePeriod persistencePeriod = PersistencePeriod.THREE_MONTHS;

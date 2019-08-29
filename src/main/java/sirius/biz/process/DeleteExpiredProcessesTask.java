@@ -39,11 +39,11 @@ public class DeleteExpiredProcessesTask implements EveryDay {
     @Override
     public void runTimer() throws Exception {
         if (elastic != null && elastic.getReadyFuture().isCompleted() && !Sirius.isStartedAsTest()) {
-            tasks.defaultExecutor().fork(this::clenaup);
+            tasks.defaultExecutor().fork(this::cleanup);
         }
     }
 
-    private void clenaup() {
+    private void cleanup() {
         elastic.select(Process.class)
                .eq(Process.STATE, ProcessState.TERMINATED)
                .where(Elastic.FILTERS.lte(Process.EXPIRES, LocalDate.now()))
