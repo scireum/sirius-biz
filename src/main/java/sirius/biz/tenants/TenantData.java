@@ -275,7 +275,6 @@ public class TenantData extends Composite implements Journaled {
     }
 
     @BeforeSave
-    @BeforeDelete
     protected void onModify() {
         if (journal.hasJournaledChanges()) {
             TenantUserManager.flushCacheForTenant((Tenant<?>) tenantObject);
@@ -285,6 +284,12 @@ public class TenantData extends Composite implements Journaled {
         if (Strings.isFilled(samlFingerprint)) {
             samlFingerprint = samlFingerprint.replace(" ", "").toLowerCase();
         }
+    }
+
+    @BeforeDelete
+    protected void onDelete() {
+        TenantUserManager.flushCacheForTenant((Tenant<?>) tenantObject);
+        tenants.flushTenantChildrenCache();
     }
 
     /**
