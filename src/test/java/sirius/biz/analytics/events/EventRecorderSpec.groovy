@@ -8,9 +8,13 @@
 
 package sirius.biz.analytics.events
 
+
 import sirius.db.jdbc.Databases
 import sirius.kernel.BaseSpecification
+import sirius.kernel.async.BackgroundLoop
 import sirius.kernel.di.std.Part
+
+import java.time.Duration
 
 class EventRecorderSpec extends BaseSpecification {
 
@@ -19,6 +23,14 @@ class EventRecorderSpec extends BaseSpecification {
 
     @Part
     private static Databases dbs
+
+    def setupSpec() {
+        BackgroundLoop.disable(EventProcessorLoop.class).await(Duration.ofMinutes(1))
+    }
+
+    def cleanupSpec() {
+        BackgroundLoop.enable(EventProcessorLoop.class)
+    }
 
     def "events are recorded"() {
         when:
