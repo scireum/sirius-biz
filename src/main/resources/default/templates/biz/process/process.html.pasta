@@ -44,12 +44,15 @@
             <w:infobox titleKey="Model.details">
                 <i:if test="process.getState() == sirius.biz.process.ProcessState.STANDBY">
                     <w:infoboxElement labelKey="Process.lastInteraction" value="@process.getStartedAsString()"/>
+                    <w:infoboxElement labelKey="Process.persistencePeriod" value="@process.getPersistencePeriod()"/>
                     <i:else>
                         <w:infoboxElement labelKey="Process.userName" value="@process.getUserName()"/>
                         <w:infoboxElement labelKey="Process.tenantName" value="@process.getTenantName()"/>
                         <w:infoboxElement labelKey="Process.started" value="@process.getStartedAsString()"/>
                         <w:infoboxElement labelKey="Process.runtime" value="@process.getRuntimeAsString()"/>
                         <w:infoboxElement labelKey="Process.completed" value="@process.getCompletedAsString()"/>
+                        <w:infoboxElement labelKey="Process.persistencePeriod" value="@process.getPersistencePeriod()"/>
+                        <w:infoboxElement labelKey="Process.expires" value="@process.getExpiresAsString()"/>
                     </i:else>
                 </i:if>
                 <i:extensions target="process" point="details" process="@process"/>

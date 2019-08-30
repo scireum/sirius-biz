@@ -40,6 +40,7 @@ import sirius.web.services.JSONStructuredOutput;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
@@ -102,17 +103,19 @@ public class Processes {
     /**
      * Creates a new process.
      *
-     * @param type    the type of the process (which can be used for filtering in the backend)
-     * @param title   the title to show in the UI
-     * @param icon    the icon to use for this process
-     * @param user    the user that belongs to the process
-     * @param context the context passed into the process
+     * @param type              the type of the process (which can be used for filtering in the backend)
+     * @param title             the title to show in the UI
+     * @param icon              the icon to use for this process
+     * @param user              the user that belongs to the process
+     * @param persistencePeriod the period for which this process is kept
+     * @param context           the context passed into the process
      * @return the newly created process
      */
     public String createProcess(@Nullable String type,
                                 String title,
                                 String icon,
                                 UserInfo user,
+                                PersistencePeriod persistencePeriod,
                                 Map<String, String> context) {
         Process process = new Process();
         process.setTitle(title);
@@ -124,6 +127,7 @@ public class Processes {
         process.setState(ProcessState.RUNNING);
         process.setProcessType(type);
         process.setStarted(LocalDateTime.now());
+        process.setPersistencePeriod(persistencePeriod);
         process.getContext().modify().putAll(context);
 
         elastic.update(process);
@@ -136,17 +140,19 @@ public class Processes {
     /**
      * Creates a new process for the currently active user.
      *
-     * @param type    the type of the process (which can be used for filtering in the backend)
-     * @param title   the title to show in the UI
-     * @param icon    the icon to use for this process
-     * @param context the context passed into the process
+     * @param type              the type of the process (which can be used for filtering in the backend)
+     * @param title             the title to show in the UI
+     * @param icon              the icon to use for this process
+     * @param persistencePeriod the period for which this process is kept
+     * @param context           the context passed into the process
      * @return the newly created process
      */
     public String createProcessForCurrentUser(@Nullable String type,
                                               String title,
                                               String icon,
+                                              PersistencePeriod persistencePeriod,
                                               Map<String, String> context) {
-        return createProcess(type, title, icon, UserContext.getCurrentUser(), context);
+        return createProcess(type, title, icon, UserContext.getCurrentUser(), persistencePeriod, context);
     }
 
     /**
@@ -196,10 +202,10 @@ public class Processes {
                                         Consumer<ProcessContext> task) {
         Process process = fetchStandbyProcess(type, tenantId);
 
-        if (process == null) {
-            process = fetchStandbyProcessInLock(type, titleSupplier.get(), tenantId, tenantNameSupplier.get());
-        } else {
+        if (process != null) {
             modify(process.getId(), p -> p.getState() == ProcessState.STANDBY, p -> p.setStarted(LocalDateTime.now()));
+        } else {
+            process = fetchStandbyProcessInLock(type, titleSupplier.get(), tenantId, tenantNameSupplier.get());
         }
 
         partiallyExecute(process.getId(), task);
@@ -434,6 +440,7 @@ public class Processes {
             if (process.getState() != ProcessState.STANDBY) {
                 process.setState(ProcessState.TERMINATED);
                 process.setCompleted(LocalDateTime.now());
+                process.setExpires(process.getPersistencePeriod().plus(LocalDate.now()));
             }
 
             if (timings != null) {
@@ -607,7 +614,7 @@ public class Processes {
     /**
      * Await until the process really exists.
      * <p>
-     * As {@link #createProcess(String, String, String, UserInfo, Map)} performs an insert into ES without any
+     * As {@link #createProcess(String, String, String, UserInfo, PersistencePeriod, Map)} performs an insert into ES without any
      * delay, the same process might not yet be visible on another node (due to the 1s insert delay of ES). Therefore
      * we check the existence of the process and wait a certain amount of time if it doesn't exist.
      * <p>
