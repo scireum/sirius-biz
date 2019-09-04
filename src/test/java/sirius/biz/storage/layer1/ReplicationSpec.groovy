@@ -10,11 +10,17 @@ package sirius.biz.storage.layer1
 
 import com.google.common.base.Charsets
 import com.google.common.io.CharStreams
+import sirius.biz.storage.layer1.replication.ReplicationBackgroundLoop
 import sirius.biz.storage.layer1.replication.ReplicationManager
 import sirius.kernel.BaseSpecification
+import sirius.kernel.Scope
+import sirius.kernel.async.BackgroundLoop
 import sirius.kernel.commons.Wait
 import sirius.kernel.di.std.Part
 
+import java.time.Duration
+
+@Scope(Scope.SCOPE_NIGHTLY)
 class ReplicationSpec extends BaseSpecification {
 
     @Part
@@ -24,16 +30,7 @@ class ReplicationSpec extends BaseSpecification {
     private static ReplicationManager replicationManager
 
     def awaitReplication() {
-        int maxWait = 5
-        while (maxWait-- > 0) {
-            if (replicationManager.getReplicationTaskStorage().get().countTotalNumberOfTasks() == 0) {
-                return
-            }
-
-            Wait.seconds(10)
-        }
-
-        throw new IllegalStateException("Replication did not complete within 5 attempts")
+        BackgroundLoop.nextExecution(ReplicationBackgroundLoop.class).await(Duration.ofMinutes(1))
     }
 
     def "updates are replicated correctly"() {
