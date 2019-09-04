@@ -147,11 +147,12 @@ public class FieldDefinition {
     /**
      * Boilerplate to create a new date field.
      *
-     * @param name the name of the field
+     * @param name   the name of the field
+     * @param format the date format of the field
      * @return the newly created field
      */
-    public static FieldDefinition dateField(String name) {
-        return new FieldDefinition(name, typeDate());
+    public static FieldDefinition dateField(String name, String format) {
+        return new FieldDefinition(name, typeDate()).withCheck(new DateTimeFormatCheck(format));
     }
 
     /**
