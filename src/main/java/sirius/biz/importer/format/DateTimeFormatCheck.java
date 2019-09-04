@@ -36,6 +36,10 @@ public class DateTimeFormatCheck implements ValueCheck {
 
     @Override
     public void perform(Value value) {
+        if (value.isEmptyString()) {
+            return;
+        }
+
         String stringValue = value.asString();
         try {
             formatter.parse(stringValue);
