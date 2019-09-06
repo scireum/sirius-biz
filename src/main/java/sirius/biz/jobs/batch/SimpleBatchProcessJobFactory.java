@@ -56,6 +56,6 @@ public abstract class SimpleBatchProcessJobFactory extends BatchProcessJobFactor
 
     @Override
     protected PersistencePeriod getPersistencePeriod() {
-        return PersistencePeriod.SIX_YEARS;
+        return PersistencePeriod.THREE_MONTHS;
     }
 }
