@@ -10,10 +10,8 @@ package sirius.biz.jobs.batch.file;
 
 import sirius.biz.jobs.batch.ImportBatchProcessFactory;
 import sirius.biz.jobs.params.Parameter;
-import sirius.biz.jobs.params.VirtualObjectParameter;
-import sirius.biz.storage.Storage;
-import sirius.biz.storage.VirtualObject;
-import sirius.kernel.di.std.Part;
+import sirius.biz.storage.layer3.FileParameter;
+import sirius.biz.storage.layer3.VirtualFile;
 
 import java.util.Map;
 import java.util.function.Consumer;
@@ -23,25 +21,19 @@ import java.util.function.Consumer;
  */
 public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
 
-    @Part
-    protected Storage storage;
-
     /**
-     * Contains the parameter which is used to select the file (as <tt>VirtualObject</tt>) out of the WORK bucket.
+     * Contains the parameter which is used to select the file (as <tt>VirtualFile</tt>).
      */
-    protected final VirtualObjectParameter fileParameter = new VirtualObjectParameter("file").markRequired();
+    protected final FileParameter fileParameter =
+            new FileParameter("file", "$FileImportJobFactory.file").withBasePath("/work").markRequired();
 
     @Override
     protected String createProcessTitle(Map<String, String> context) {
-        return getLabel() + ": " + fileParameter.get(context).map(VirtualObject::toString).orElse("-");
+        return getLabel() + ": " + fileParameter.get(context).map(VirtualFile::toString).orElse("-");
     }
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
         parameterCollector.accept(fileParameter);
-    }
-
-    public VirtualObjectParameter getFileParameter() {
-        return fileParameter;
     }
 }
