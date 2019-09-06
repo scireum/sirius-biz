@@ -15,7 +15,8 @@ import sirius.biz.process.ProcessContext;
 import java.util.function.Consumer;
 
 /**
- * Provides a base implementation for batch jobs which import line based files using a {@link LineBasedImportJob}.
+ * Provides a base implementation for batch jobs which import line based files using a
+ * {@link sirius.biz.importer.format.ImportDictionary}.
  */
 public abstract class DictionaryBasedImportJobFactory extends LineBasedImportJobFactory {
 

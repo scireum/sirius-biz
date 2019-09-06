@@ -21,7 +21,8 @@ import sirius.kernel.health.Log;
 import java.util.function.Consumer;
 
 /**
- * Provides a base implementation for batch jobs which import line based files using a {@link LineBasedImportJob}.
+ * Provides a base implementation for batch jobs which import line based files using a
+ * {@link sirius.biz.importer.ImportHandler}.
  */
 public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFactory {
 
