@@ -11,7 +11,6 @@ package sirius.biz.tenants.mongo;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.deletion.DeleteTenantTask;
-import sirius.biz.tenants.mongo.MongoTenants;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
