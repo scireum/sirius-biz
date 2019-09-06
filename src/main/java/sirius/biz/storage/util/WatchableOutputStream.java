@@ -59,8 +59,7 @@ public class WatchableOutputStream extends OutputStream {
                 completionFuture.success();
             }
         } catch (IOException e) {
-            // Close might be invoked several times (e.g. by some ZIP implementations).
-            // Therefore we filter this to only fulfill the future once.
+            // Filter duplicate completions (s.a.)...
             if (!completionFuture.isCompleted()) {
                 completionFuture.fail(e);
             }
