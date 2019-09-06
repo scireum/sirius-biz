@@ -65,11 +65,6 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     }
 
     @Override
-    protected PersistencePeriod getPersistencePeriod() {
-        return PersistencePeriod.THREE_MONTHS;
-    }
-
-    @Override
     protected void execute(ProcessContext process) throws Exception {
         EntityDescriptor ed = process.require(entityDescriptorParameter);
         String nextIndex = determineNextIndexName(ed);
