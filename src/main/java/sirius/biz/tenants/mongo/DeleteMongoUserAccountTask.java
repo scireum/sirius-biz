@@ -9,7 +9,6 @@
 package sirius.biz.tenants.mongo;
 
 import sirius.biz.tenants.UserAccount;
-import sirius.biz.tenants.deletion.DeleteMongoEntitiesTask;
 import sirius.biz.tenants.deletion.DeleteTenantTask;
 import sirius.kernel.di.std.Register;
 
