@@ -8,20 +8,14 @@
 
 package sirius.biz.storage.layer3;
 
-import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.commons.Value;
-import sirius.kernel.di.std.Part;
-import sirius.kernel.nls.NLS;
 
 import java.util.Optional;
 
 /**
  * Permits to select a file in the {@link VirtualFileSystem}.
  */
-public class FileParameter extends Parameter<VirtualFile, FileParameter> {
-
-    @Part
-    private static VirtualFileSystem vfs;
+public class FileParameter extends BaseFileParameter<FileParameter> {
 
     /**
      * Creates a new parameter with the given name and label.
@@ -39,16 +33,8 @@ public class FileParameter extends Parameter<VirtualFile, FileParameter> {
     }
 
     @Override
-    protected String checkAndTransformValue(Value input) {
-        if (input.isEmptyString()) {
-            return null;
-        }
-
-        Optional<VirtualFile> virtualFile = resolveFromString(input);
-        if (!virtualFile.isPresent()) {
-            throw new IllegalArgumentException(NLS.fmtr("FileParameter.invalidPath").set("path", input.asString()).format());
-        }
-        return virtualFile.get().path();
+    protected String getErrorMessageKey() {
+        return "FileParameter.invalidPath";
     }
 
     @Override
