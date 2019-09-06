@@ -10,6 +10,7 @@ package sirius.biz.jobs.batch;
 
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.jobs.JobCategory;
+import sirius.biz.process.PersistencePeriod;
 
 /**
  * Provides a base implementation for batch jobs which are executed by the {@link ExportBatchProcessTaskExecutor}.
@@ -42,5 +43,10 @@ public abstract class ExportBatchProcessFactory extends BatchProcessJobFactory {
     @Override
     public String getIcon() {
         return "fa-download";
+    }
+
+    @Override
+    protected PersistencePeriod getPersistencePeriod() {
+        return PersistencePeriod.ONE_YEAR;
     }
 }
