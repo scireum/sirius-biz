@@ -9,6 +9,7 @@
 package sirius.biz.importer;
 
 import sirius.biz.tenants.mongo.MongoTenantAware;
+import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
@@ -18,6 +19,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 
 import java.util.Optional;
+import java.util.function.BiConsumer;
 
 /**
  * Provides a base implementation for all {@link MongoEntity MongoDB entities}.
@@ -59,37 +61,14 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
         return e;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Optional<E> tryFindInCache(Context data) {
-        Tuple<Class<?>, String> cacheKey = Tuple.create(descriptor.getType(), determineCacheKey(data));
-        if (Strings.isFilled(cacheKey.getSecond())) {
-            Object result = context.getLocalCache().getIfPresent(cacheKey);
-            if (result != null) {
-                return Optional.of((E) result);
-            }
-        }
-
-        Optional<E> result = tryFind(data);
-        if (result.isPresent() && Strings.isFilled(cacheKey)) {
-            context.getLocalCache().put(cacheKey, result.get());
-        }
-
-        return result;
+    protected void collectExportableMappings(BiConsumer<Integer, Mapping> collector) {
+        // Empty by default as this is kind of an exotic way to extend the handler
     }
 
-    /**
-     * Determines the cache key used by {@link #tryFindInCache(Context)} to find an instance in the cache.
-     * <p>
-     * Note that this isn't implemented by default and has to be overwritten by subclasses which want to support caching.
-     *
-     * @param data the data used to determine the cache key from
-     * @return a unique string representation used for cache lookups or <tt>null</tt> to indicate that either caching
-     * is completely disabled or that the example instance doesn't provide values in the relevant fields to support a
-     * cache lookup.
-     */
-    protected String determineCacheKey(Context data) {
-        throw new UnsupportedOperationException();
+    @Override
+    protected void collectDefaultExportableMappings(BiConsumer<Integer, Mapping> collector) {
+        collector.accept(10, SQLEntity.ID);
     }
 
     @Override

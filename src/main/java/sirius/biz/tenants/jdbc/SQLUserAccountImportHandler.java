@@ -59,8 +59,7 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
 
     @Override
     protected void collectFindQueries(BiConsumer<Predicate<SQLUserAccount>, Supplier<FindQuery<SQLUserAccount>>> queryConsumer) {
-        queryConsumer.accept(user -> !user.isNew(),
-                             () -> context.getBatchContext().findQuery(SQLUserAccount.class, SQLUserAccount.ID));
+        super.collectFindQueries(queryConsumer);
         queryConsumer.accept(user -> Strings.isFilled(user.getUserAccountData().getLogin().getUsername()),
                              () -> context.getBatchContext()
                                           .findQuery(SQLUserAccount.class,
