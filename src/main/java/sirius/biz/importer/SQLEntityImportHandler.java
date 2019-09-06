@@ -165,22 +165,6 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
         return Optional.empty();
     }
 
-    protected boolean containsAllRequiredFields(Context data, Mapping[] mappings) {
-        return Arrays.stream(mappings).map(Mapping::toString).allMatch(data::containsKey);
-    }
-
-    private Optional<E> tryFindByExample(E example, Tuple<Predicate<E>, Supplier<FindQuery<E>>> predicateAndQuery) {
-        if (!predicateAndQuery.getFirst().test(example)) {
-            return Optional.empty();
-        }
-
-        if (!(predicateAndQuery.getSecond() instanceof ValueHolder<?>)) {
-            predicateAndQuery.setSecond(new ValueHolder<>(predicateAndQuery.getSecond().get()));
-        }
-
-        return predicateAndQuery.getSecond().get().find(example);
-    }
-
     /**
      * Tries to find a persistent entity using the given example.
      *

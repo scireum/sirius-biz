@@ -243,19 +243,6 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     @Override
     public ImportDictionary getDictionary() {
         ImportDictionary dict = new ImportDictionary();
-        loadAliases(dict);
-
-        return dict;
-    }
-
-    /**
-     * Determines the aliases and writes them into the given dictionary.
-     * <p>
-     * This will consult the system configuration under <tt>importer.aliases.ENTITY</tt>.
-     *
-     * @param dict the import dictionary to fill.
-     */
-    protected void loadAliases(ImportDictionary dict) {
         Extension aliases = Sirius.getSettings()
                                   .getExtension("importer.aliases", descriptor.getType().getSimpleName().toLowerCase());
         getAutoImportMappings().stream()
@@ -276,18 +263,14 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         return field;
     }
 
-    /**
-     * Determines all mappings which wear an {@link AutoImport} annotation.
-     * <p>
-     * Additional mappings can also added by providing an {@link EntityImportHandlerExtender} if extending
-     * the importer class itself isn't a viable option.
-     *
-     * @return all mappings which wear the <tt>AutoImport</tt> annotation and are therefore to be considered to load
-     * when updating or creating an entity.
-     */
-    @SuppressWarnings("unchecked")
     protected List<Mapping> getAutoImportMappings() {
-        List<Mapping> result = new ArrayList<>();
+        return descriptor.getProperties()
+                         .stream()
+                         .filter(property -> property.getAnnotation(AutoImport.class).isPresent())
+                         .map(Property::getName)
+                         .map(Mapping::named)
+                         .collect(Collectors.toList());
+    }
         descriptor.getProperties()
                   .stream()
                   .filter(property -> property.getAnnotation(AutoImport.class).isPresent())

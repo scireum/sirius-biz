@@ -43,18 +43,6 @@ public interface EntityImportHandlerExtender {
         // intentionally left empty as not all extenders will customize all methods
     }
 
-    /**
-     * Enumerates additional mappings which should be automatically loaded by the given handler.
-     *
-     * @param handler         the handler which can be extended
-     * @param descriptor      the descriptor determining what kind of entities are processed by the given handler
-     * @param context         the surrounding importer context
-     * @param mappingConsumer the consumer which collects additional mappings to load
-     */
-    default void collectAutoImportMappings(BaseImportHandler<BaseEntity<?>> handler,
-                                           EntityDescriptor descriptor,
-                                           ImporterContext context,
-                                           Consumer<Mapping> mappingConsumer) {
         // intentionally left empty as not all extenders will customize all methods
     }
 }
