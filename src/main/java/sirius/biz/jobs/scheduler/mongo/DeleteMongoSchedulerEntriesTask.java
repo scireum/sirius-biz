@@ -9,7 +9,7 @@
 package sirius.biz.jobs.scheduler.mongo;
 
 import sirius.biz.jobs.scheduler.SchedulerEntry;
-import sirius.biz.tenants.deletion.DeleteMongoEntitiesTask;
+import sirius.biz.tenants.mongo.DeleteMongoEntitiesTask;
 import sirius.biz.tenants.deletion.DeleteTenantTask;
 import sirius.biz.tenants.mongo.MongoTenantAware;
 import sirius.kernel.di.std.Register;

@@ -6,12 +6,12 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.deletion;
+package sirius.biz.tenants.mongo;
 
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.Tenant;
-import sirius.biz.tenants.jdbc.SQLTenant;
-import sirius.biz.tenants.jdbc.SQLTenants;
+import sirius.biz.tenants.deletion.DeleteTenantTask;
+import sirius.biz.tenants.mongo.MongoTenants;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -20,15 +20,15 @@ import sirius.kernel.health.Exceptions;
  * Makes sure the tenant which we are deleting does not have children. Or else the children need to be deleted before
  * the parent.
  */
-@Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
-public class CheckForSQLChildrenTask implements DeleteTenantTask {
+@Register(framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
+public class CheckForMongoChildrenTask implements DeleteTenantTask {
 
     @Part
-    private SQLTenants tenants;
+    private MongoTenants tenants;
 
     @Override
     public void beforeExecution(ProcessContext process, Tenant<?> tenant, boolean simulate) {
-        if (tenants.hasChildTenants(((SQLTenant) tenant).getId())) {
+        if (tenants.hasChildTenants(tenant.getIdAsString())) {
             throw Exceptions.createHandled().withNLSKey("CheckForChildrenTask.hasChildren").handle();
         }
     }

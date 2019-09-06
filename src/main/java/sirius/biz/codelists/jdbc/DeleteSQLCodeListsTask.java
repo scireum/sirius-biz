@@ -9,7 +9,7 @@
 package sirius.biz.codelists.jdbc;
 
 import sirius.biz.codelists.CodeList;
-import sirius.biz.tenants.deletion.DeleteSQLEntitiesTask;
+import sirius.biz.tenants.jdbc.DeleteSQLEntitiesTask;
 import sirius.biz.tenants.deletion.DeleteTenantTask;
 import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.kernel.di.std.Register;
