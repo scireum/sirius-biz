@@ -24,7 +24,7 @@ import java.util.function.Supplier;
  *
  * @param <E> the type of entities being processed by the import handler to be extended
  */
-public class SQLEntityImportHandlerExtender<E extends SQLEntity> implements EntityImportHandlerExtender {
+public abstract class SQLEntityImportHandlerExtender<E extends SQLEntity> implements EntityImportHandlerExtender {
 
     /**
      * Enumerates additional {@link FindQuery find queries} for the given handler.
