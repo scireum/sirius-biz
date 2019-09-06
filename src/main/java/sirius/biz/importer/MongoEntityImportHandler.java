@@ -9,6 +9,7 @@
 package sirius.biz.importer;
 
 import sirius.biz.tenants.mongo.MongoTenantAware;
+import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
@@ -18,6 +19,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 
 import java.util.Optional;
+import java.util.function.BiConsumer;
 
 /**
  * Provides a base implementation for all {@link MongoEntity MongoDB entities}.
@@ -60,8 +62,13 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
     }
 
     @Override
+    protected void collectExportableMappings(BiConsumer<Integer, Mapping> collector) {
+        // Empty by default as this is kind of an exotic way to extend the handler
     }
 
+    @Override
+    protected void collectDefaultExportableMappings(BiConsumer<Integer, Mapping> collector) {
+        collector.accept(10, SQLEntity.ID);
     }
 
     @Override

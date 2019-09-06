@@ -9,6 +9,7 @@
 package sirius.biz.importer;
 
 import sirius.biz.tenants.jdbc.SQLTenantAware;
+import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.batch.DeleteQuery;
 import sirius.db.jdbc.batch.FindQuery;
@@ -20,11 +21,9 @@ import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
-import sirius.kernel.commons.Value;
 import sirius.kernel.commons.ValueHolder;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -90,6 +89,16 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
                          .map(Mapping::named)
                          .filter(mapping -> !SQLEntity.ID.equals(mapping))
                          .collect(Collectors.toList());
+    }
+
+    @Override
+    protected void collectExportableMappings(BiConsumer<Integer, Mapping> collector) {
+        // Empty by default as this is kind of an exotic way to extend the handler
+    }
+
+    @Override
+    protected void collectDefaultExportableMappings(BiConsumer<Integer, Mapping> collector) {
+        collector.accept(10, SQLEntity.ID);
     }
 
     /**
