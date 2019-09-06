@@ -103,7 +103,20 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      *
      * @param queryConsumer the consumer to be supplied with queries
      */
-    protected abstract void collectFindQueries(BiConsumer<Predicate<E>, Supplier<FindQuery<E>>> queryConsumer);
+    @SuppressWarnings("unchecked")
+    protected void collectFindQueries(BiConsumer<Predicate<E>, Supplier<FindQuery<E>>> queryConsumer) {
+        if (TenantAware.class.isAssignableFrom(descriptor.getType())) {
+            queryConsumer.accept(entity -> Strings.isFilled(entity.getIdAsString()),
+                                 () -> context.getBatchContext()
+                                              .findQuery((Class<E>) descriptor.getType(),
+                                                         SQLEntity.ID,
+                                                         TenantAware.TENANT));
+        } else {
+            queryConsumer.accept(entity -> Strings.isFilled(entity.getIdAsString()),
+                                 () -> context.getBatchContext()
+                                              .findQuery((Class<E>) descriptor.getType(), SQLEntity.ID));
+        }
+    }
 
     /**
      * Returns a list of mappings to use (compare) if an entity is being updated.
