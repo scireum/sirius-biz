@@ -64,12 +64,11 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @param clazz   the type of entities being handled
      * @param context the import context to use
      */
-    @SuppressWarnings("unchecked")
     protected BaseImportHandler(Class<?> clazz, ImporterContext context) {
         this.context = context;
         descriptor = mixing.getDescriptor(clazz);
         for (EntityImportHandlerExtender extender : extenders) {
-            extender.collectLoaders((BaseImportHandler<BaseEntity<?>>) this, descriptor, context, loaders::put);
+            extender.collectLoaders(this, descriptor, context, loaders::put);
         }
     }
 

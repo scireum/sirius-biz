@@ -36,7 +36,7 @@ public interface EntityImportHandlerExtender {
      * @param loaderCollector the collector which consumes loader functions (reading from the given context and writing
      *                        into the given object).
      */
-    default void collectLoaders(BaseImportHandler<BaseEntity<?>> handler,
+    default void collectLoaders(BaseImportHandler<? extends BaseEntity<?>> handler,
                                 EntityDescriptor descriptor,
                                 ImporterContext context,
                                 BiConsumer<Mapping, BiConsumer<Context, Object>> loaderCollector) {
