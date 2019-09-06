@@ -39,6 +39,10 @@ import java.util.function.BiConsumer;
 
 /**
  * Provides a base implementation for all import handlers which mainly takes care of the convenience methods.
+ * <p>
+ * Subclasses might most probably want to overwrite:
+ * {@link #determineCacheKey(Context)} and {@link #getAutoImportMappings()}
+ * as well as maybe {@link #parseProperty(BaseEntity, Property, Value, Context)}.
  *
  * @param <E> the generic type of entities being handled by this import handler.
  */
