@@ -297,8 +297,6 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     @Override
     public ImportDictionary getExportDictionary() {
         ImportDictionary dict = new ImportDictionary();
-        Extension aliases = Sirius.getSettings()
-                                  .getExtension("importer.aliases", descriptor.getType().getSimpleName().toLowerCase());
         getExportableMappings().stream()
                                .map(descriptor::getProperty)
                                .map(property -> property.tryAs(FieldDefinitionSupplier.class)
