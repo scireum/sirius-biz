@@ -13,8 +13,11 @@ import sirius.biz.importer.ImportHandlerFactory;
 import sirius.biz.importer.ImporterContext;
 import sirius.biz.importer.SQLEntityImportHandler;
 import sirius.biz.model.LoginData;
+import sirius.biz.model.PermissionData;
+import sirius.biz.model.PersonData;
 import sirius.biz.tenants.UserAccountData;
 import sirius.db.jdbc.batch.FindQuery;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
@@ -71,5 +74,34 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
     @Override
     protected boolean parseComplexProperty(SQLUserAccount entity, Property property, Value value, Context data) {
         return false;
+    }
+
+    @Override
+    protected void collectDefaultExportableMappings(BiConsumer<Integer, Mapping> collector) {
+        collector.accept(100, SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.USERNAME));
+        collector.accept(110, SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL));
+        collector.accept(120,
+                         SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON).inner(PersonData.SALUTATION));
+        collector.accept(130, SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON).inner(PersonData.TITLE));
+        collector.accept(140,
+                         SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON).inner(PersonData.FIRSTNAME));
+        collector.accept(150,
+                         SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON).inner(PersonData.LASTNAME));
+        collector.accept(200,
+                         SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERMISSIONS)
+                                                         .inner(PermissionData.PERMISSIONS));
+        collector.accept(210,
+                         SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.ACCOUNT_LOCKED));
+        collector.accept(300,
+                         SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.LAST_LOGIN));
+        collector.accept(310,
+                         SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                         .inner(LoginData.NUMBER_OF_LOGINS));
+        collector.accept(320,
+                         SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                         .inner(LoginData.LAST_EXTERNAL_LOGIN));
+        collector.accept(330,
+                         SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                         .inner(LoginData.LAST_PASSWORD_CHANGE));
     }
 }
