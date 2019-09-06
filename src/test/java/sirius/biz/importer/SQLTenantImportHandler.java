@@ -52,8 +52,7 @@ public class SQLTenantImportHandler extends SQLEntityImportHandler<SQLTenant> {
 
     @Override
     protected void collectFindQueries(BiConsumer<Predicate<SQLTenant>, Supplier<FindQuery<SQLTenant>>> queryConsumer) {
-        queryConsumer.accept(tenant -> Strings.isFilled(tenant.getIdAsString()),
-                             () -> context.getBatchContext().findQuery(SQLTenant.class, SQLTenant.ID));
+        super.collectFindQueries(queryConsumer);
         queryConsumer.accept(tenant -> Strings.isFilled(tenant.getTenantData().getAccountNumber()),
                              () -> context.getBatchContext()
                                           .findQuery(SQLTenant.class,
