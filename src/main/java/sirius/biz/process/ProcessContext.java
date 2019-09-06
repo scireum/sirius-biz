@@ -51,6 +51,13 @@ public interface ProcessContext extends TaskContextAdapter {
     String getTitle();
 
     /**
+     * Provides a new title for the process.
+     *
+     * @param newTitle the new title to use
+     */
+    void updateTitle(String newTitle);
+
+    /**
      * Increments the given performance counter by one and supplies a loop duration in milliseconds if the current
      * process has debugging enabled.
      * <p>
