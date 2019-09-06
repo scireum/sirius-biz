@@ -280,6 +280,11 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         return field;
     }
 
+    /**
+     * Returns all mappings wearing a {@link AutoImport} annotation.
+     *
+     * @return a list of all mappings which are marked as auto import
+     */
     protected List<Mapping> getAutoImportMappings() {
         return descriptor.getProperties()
                          .stream()
@@ -306,6 +311,19 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         return dict;
     }
 
+    /**
+     * Returns all exportable mappings.
+     * <p>
+     * A mapping can be marked as exportable via four ways:
+     * <ol>
+     *    <li>By adding a {@link Exportable} annotation to the underlying field</li>
+     *    <li>By providing an appropriate entry via {@link #collectDefaultExportableMappings(BiConsumer)}</li>
+     *    <li>By providing an appropriate entry via {@link #collectExportableMappings(BiConsumer)}</li>
+     *    <li>By providing an appropriate entry via a {@link EntityImportHandlerExtender}</li>
+     * </ol>
+     *
+     * @return a list of all exportable mappings
+     */
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     @Explain("False positive - the check is done within the stream")
     protected List<Mapping> getExportableMappings() {
