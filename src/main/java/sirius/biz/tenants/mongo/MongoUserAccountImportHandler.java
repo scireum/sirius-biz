@@ -26,6 +26,9 @@ import java.util.Optional;
  */
 public class MongoUserAccountImportHandler extends MongoEntityImportHandler<MongoUserAccount> {
 
+    @Part
+    protected MongoTenants tenants;
+
     /**
      * Provides the factory to instantiate this import handler.
      */
@@ -58,6 +61,7 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
         if (data.containsKey(MongoUserAccount.ID.getName())) {
             return mango.select(MongoUserAccount.class)
                         .eq(MongoUserAccount.ID, data.getValue(MongoUserAccount.ID.getName()).asString())
+                        .eq(MongoUserAccount.TENANT, tenants.getRequiredTenant())
                         .one();
         }
 
@@ -69,6 +73,7 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
                             data.getValue(MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                             .inner(LoginData.USERNAME)
                                                                             .getName()))
+                        .eq(MongoUserAccount.TENANT, tenants.getRequiredTenant())
                         .one();
         }
 
