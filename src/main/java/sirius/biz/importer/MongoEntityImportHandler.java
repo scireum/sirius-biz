@@ -59,37 +59,9 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
         return e;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Optional<E> tryFindInCache(Context data) {
-        Tuple<Class<?>, String> cacheKey = Tuple.create(descriptor.getType(), determineCacheKey(data));
-        if (Strings.isFilled(cacheKey.getSecond())) {
-            Object result = context.getLocalCache().getIfPresent(cacheKey);
-            if (result != null) {
-                return Optional.of((E) result);
-            }
-        }
-
-        Optional<E> result = tryFind(data);
-        if (result.isPresent() && Strings.isFilled(cacheKey)) {
-            context.getLocalCache().put(cacheKey, result.get());
-        }
-
-        return result;
     }
 
-    /**
-     * Determines the cache key used by {@link #tryFindInCache(Context)} to find an instance in the cache.
-     * <p>
-     * Note that this isn't implemented by default and has to be overwritten by subclasses which want to support caching.
-     *
-     * @param data the data used to determine the cache key from
-     * @return a unique string representation used for cache lookups or <tt>null</tt> to indicate that either caching
-     * is completely disabled or that the example instance doesn't provide values in the relevant fields to support a
-     * cache lookup.
-     */
-    protected String determineCacheKey(Context data) {
-        throw new UnsupportedOperationException();
     }
 
     @Override

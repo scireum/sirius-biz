@@ -36,10 +36,6 @@ import java.util.stream.Collectors;
 
 /**
  * Provides a base implementation and also generic handler for all {@link SQLEntity JDBC/SQL entities}.
- * <p>
- * Subclasses might most probably want to overwrite:
- * {@link #determineCacheKey(SQLEntity)} and {@link #getAutoImportMappings()}
- * as well as maybe {@link #parseProperty(BaseEntity, Property, Value, Context)}.
  *
  * @param <E> the type of entity being handled by this handler
  */
@@ -189,38 +185,16 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
         return Optional.empty();
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public Optional<E> tryFindInCache(Context data) {
-        E example = load(data, mappingsToLoadForFind);
-        Tuple<Class<?>, String> cacheKey = Tuple.create(descriptor.getType(), determineCacheKey(example));
-        if (Strings.isFilled(cacheKey.getSecond())) {
-            Object result = context.getLocalCache().getIfPresent(cacheKey);
-            if (result != null) {
-                return Optional.of((E) result);
-            }
+    private Optional<E> tryFindByExample(E example, Tuple<Predicate<E>, Supplier<FindQuery<E>>> predicateAndQuery) {
+        if (!predicateAndQuery.getFirst().test(example)) {
+            return Optional.empty();
         }
 
-        Optional<E> result = tryFindByExample(load(data, mappingsToLoadForFind));
-        if (result.isPresent() && Strings.isFilled(cacheKey)) {
-            context.getLocalCache().put(cacheKey, result.get());
+        if (!(predicateAndQuery.getSecond() instanceof ValueHolder<?>)) {
+            predicateAndQuery.setSecond(new ValueHolder<>(predicateAndQuery.getSecond().get()));
         }
 
-        return result;
-    }
-
-    /**
-     * Determines the cache key used by {@link #tryFindInCache(Context)} to find an instance in the cache.
-     * <p>
-     * Note that this isn't implemented by default and has to be overwritten by subclasses which want to support caching.
-     *
-     * @param example the entity to derive the cache key from
-     * @return a unique string representation used for cache lookups or <tt>null</tt> to indicate that either caching
-     * is completely disabled or that the example instance doesn't provide values in the relevant fields to support a
-     * cache lookup.
-     */
-    protected String determineCacheKey(E example) {
-        throw new UnsupportedOperationException();
+        return predicateAndQuery.getSecond().get().find(example);
     }
 
     @Override
