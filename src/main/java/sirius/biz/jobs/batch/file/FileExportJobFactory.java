@@ -32,7 +32,11 @@ public abstract class FileExportJobFactory extends ExportBatchProcessFactory {
 
     @Override
     protected String createProcessTitle(Map<String, String> context) {
-        return getLabel() + ": " + destinationParameter.get(context).map(VirtualFile::toString).orElse("-");
+        return getLabel() + destinationParameter.get(context)
+                                                .filter(VirtualFile::isFile)
+                                                .map(VirtualFile::toString)
+                                                .map(filename -> ": " + filename)
+                                                .orElse("");
     }
 
     @Override

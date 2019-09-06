@@ -51,11 +51,13 @@ public abstract class FileExportJob extends BatchJob {
                 if (shouldUseProvidedOutputFile()) {
                     return destination.createOutputStream();
                 } else if (shouldUseProvidedOutputDirectory()) {
-                    return createUniqueFile(destination).createOutputStream();
+                    VirtualFile effectiveDestinationFile = createUniqueFile(destination);
+                    process.updateTitle(process.getTitle() + ": " + effectiveDestinationFile.toString());
+                    return effectiveDestinationFile.createOutputStream();
                 }
             }
 
-            return process.addFile(determineEffectiveFilename());
+            return process.addFile(determineFilenameWithoutExtension() + "." + determineFileExtension()));
         } catch (IOException e) {
             throw process.handle(e);
         }
