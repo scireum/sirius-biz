@@ -28,7 +28,7 @@ import java.util.function.Consumer;
  * Provides a base implementation for batch jobs which export entities into line based files using a
  * {@link EntityExportJob}.
  */
-public abstract class EntityExportJobFactory extends LineBasedExportJobFactory {
+public abstract class EntityExportJobFactory<E extends BaseEntity<?>> extends LineBasedExportJobFactory {
 
     protected final FileParameter templateFileParameter;
 
@@ -45,7 +45,15 @@ public abstract class EntityExportJobFactory extends LineBasedExportJobFactory {
     }
 
     @Override
-    protected abstract EntityExportJob<?> createJob(ProcessContext process);
+    protected EntityExportJob<E> createJob(ProcessContext process) {
+        return new EntityExportJob<>(templateFileParameter,
+                                     destinationParameter,
+                                     fileTypeParameter,
+                                     getExportType(),
+                                     getDictionary(),
+                                     getDefaultMapping(),
+                                     process);
+    }
 
     /**
      * Creates the dictionary used by the export.
@@ -80,7 +88,7 @@ public abstract class EntityExportJobFactory extends LineBasedExportJobFactory {
      *
      * @return the type of entities being imported
      */
-    protected abstract Class<? extends BaseEntity<?>> getExportType();
+    protected abstract Class<E> getExportType();
 
     /**
      * Adds the possibility to enhance a dicitonary during the setup of the job

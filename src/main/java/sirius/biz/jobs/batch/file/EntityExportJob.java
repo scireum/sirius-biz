@@ -58,7 +58,7 @@ import java.util.stream.Collectors;
  *
  * @param <E> the type of entities being exported by this job
  */
-public abstract class EntityExportJob<E extends BaseEntity<?>> extends LineBasedExportJob {
+public class EntityExportJob<E extends BaseEntity<?>> extends LineBasedExportJob {
 
     protected final VirtualFile templateFile;
     protected final ImportDictionary dictionary;
@@ -85,7 +85,7 @@ public abstract class EntityExportJob<E extends BaseEntity<?>> extends LineBased
      * @param defaultMapping        the default mapping (default column order) to use
      * @param process               the process context itself
      */
-    protected EntityExportJob(FileParameter templateFileParameter,
+    public EntityExportJob(FileParameter templateFileParameter,
                               FileOrDirectoryParameter destinationParameter,
                               EnumParameter<ExportFileType> fileTypeParameter,
                               Class<E> type,
