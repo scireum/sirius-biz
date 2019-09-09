@@ -26,7 +26,7 @@ public enum ImportMode {
     UPDATE_ONLY,
 
     /**
-     * ONly creates new entities.
+     * Only creates new entities.
      */
     NEW_ONLY;
 

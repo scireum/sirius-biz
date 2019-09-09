@@ -73,11 +73,11 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
             dictionary.determineMappingFromHeadings(row, false);
             process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
         } else {
-            Watch w = Watch.start();
+            Watch watch = Watch.start();
             try {
-                Context ctx = filterEmptyValues(dictionary.load(row, false));
-                if (!isEmptyContext(ctx)) {
-                    handleRow(index, ctx);
+                Context context = filterEmptyValues(dictionary.load(row, false));
+                if (!isEmptyContext(context)) {
+                    handleRow(index, context);
                 }
             } catch (HandledException e) {
                 process.handle(Exceptions.createHandled()
@@ -94,7 +94,7 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
                                          .set("row", index)
                                          .handle());
             } finally {
-                process.addTiming(NLS.get("LineBasedJob.row"), w.elapsedMillis());
+                process.addTiming(NLS.get("LineBasedJob.row"), watch.elapsedMillis());
             }
         }
     }
@@ -107,15 +107,15 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
         return source;
     }
 
-    protected boolean isEmptyContext(Context ctx) {
-        return ctx.entrySet().stream().noneMatch(entry -> Strings.isFilled(entry.getValue()));
+    protected boolean isEmptyContext(Context context) {
+        return context.entrySet().stream().noneMatch(entry -> Strings.isFilled(entry.getValue()));
     }
 
     /**
      * Handles a single row of the import.
      *
      * @param index the index of the row being processed
-     * @param ctx   the row represented as context
+     * @param context   the row represented as context
      */
-    protected abstract void handleRow(int index, Context ctx);
+    protected abstract void handleRow(int index, Context context);
 }

@@ -68,12 +68,12 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     }
 
     @Override
-    protected void handleRow(int index, Context ctx) {
-        Watch w = Watch.start();
-        E entity = findAndLoad(ctx);
+    protected void handleRow(int index, Context context) {
+        Watch watch = Watch.start();
+        E entity = findAndLoad(context);
         try {
             if (mode == ImportMode.NEW_ONLY && !entity.isNew() || (mode == ImportMode.UPDATE_ONLY && entity.isNew())) {
-                process.addTiming(NLS.get("EntityImportJob.rowIgnored"), w.elapsedMillis());
+                process.addTiming(NLS.get("EntityImportJob.rowIgnored"), watch.elapsedMillis());
                 return;
             }
             importer.createOrUpdateInBatch(fillAndVerify(entity));
@@ -107,10 +107,10 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     /**
      * Tries to resolve the context into an entity.
      *
-     * @param ctx the context containing all relevant data
+     * @param context the context containing all relevant data
      * @return the entity which was either found in he database or create using the given data
      */
-    protected E findAndLoad(Context ctx) {
-        return importer.findAndLoad(type, ctx);
+    protected E findAndLoad(Context context) {
+        return importer.findAndLoad(type, context);
     }
 }
