@@ -9,6 +9,7 @@
 package sirius.biz.importer;
 
 import sirius.biz.tenants.jdbc.SQLTenantAware;
+import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.batch.DeleteQuery;
 import sirius.db.jdbc.batch.FindQuery;
@@ -20,11 +21,9 @@ import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
-import sirius.kernel.commons.Value;
 import sirius.kernel.commons.ValueHolder;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -36,10 +35,6 @@ import java.util.stream.Collectors;
 
 /**
  * Provides a base implementation and also generic handler for all {@link SQLEntity JDBC/SQL entities}.
- * <p>
- * Subclasses might most probably want to overwrite:
- * {@link #determineCacheKey(SQLEntity)} and {@link #getAutoImportMappings()}
- * as well as maybe {@link #parseProperty(BaseEntity, Property, Value, Context)}.
  *
  * @param <E> the type of entity being handled by this handler
  */
@@ -96,6 +91,16 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
                          .collect(Collectors.toList());
     }
 
+    @Override
+    protected void collectExportableMappings(BiConsumer<Integer, Mapping> collector) {
+        // Empty by default as this is kind of an exotic way to extend the handler
+    }
+
+    @Override
+    protected void collectDefaultExportableMappings(BiConsumer<Integer, Mapping> collector) {
+        collector.accept(10, SQLEntity.ID);
+    }
+
     /**
      * Provides a list of mappings, which each is used to compute a {@link FindQuery}.
      * <p>
@@ -107,7 +112,20 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      *
      * @param queryConsumer the consumer to be supplied with queries
      */
-    protected abstract void collectFindQueries(BiConsumer<Predicate<E>, Supplier<FindQuery<E>>> queryConsumer);
+    @SuppressWarnings("unchecked")
+    protected void collectFindQueries(BiConsumer<Predicate<E>, Supplier<FindQuery<E>>> queryConsumer) {
+        if (TenantAware.class.isAssignableFrom(descriptor.getType())) {
+            queryConsumer.accept(entity -> Strings.isFilled(entity.getIdAsString()),
+                                 () -> context.getBatchContext()
+                                              .findQuery((Class<E>) descriptor.getType(),
+                                                         SQLEntity.ID,
+                                                         TenantAware.TENANT));
+        } else {
+            queryConsumer.accept(entity -> Strings.isFilled(entity.getIdAsString()),
+                                 () -> context.getBatchContext()
+                                              .findQuery((Class<E>) descriptor.getType(), SQLEntity.ID));
+        }
+    }
 
     /**
      * Returns a list of mappings to use (compare) if an entity is being updated.
@@ -156,22 +174,6 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
         return Optional.empty();
     }
 
-    protected boolean containsAllRequiredFields(Context data, Mapping[] mappings) {
-        return Arrays.stream(mappings).map(Mapping::toString).allMatch(data::containsKey);
-    }
-
-    private Optional<E> tryFindByExample(E example, Tuple<Predicate<E>, Supplier<FindQuery<E>>> predicateAndQuery) {
-        if (!predicateAndQuery.getFirst().test(example)) {
-            return Optional.empty();
-        }
-
-        if (!(predicateAndQuery.getSecond() instanceof ValueHolder<?>)) {
-            predicateAndQuery.setSecond(new ValueHolder<>(predicateAndQuery.getSecond().get()));
-        }
-
-        return predicateAndQuery.getSecond().get().find(example);
-    }
-
     /**
      * Tries to find a persistent entity using the given example.
      *
@@ -189,38 +191,16 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
         return Optional.empty();
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public Optional<E> tryFindInCache(Context data) {
-        E example = load(data, mappingsToLoadForFind);
-        Tuple<Class<?>, String> cacheKey = Tuple.create(descriptor.getType(), determineCacheKey(example));
-        if (Strings.isFilled(cacheKey.getSecond())) {
-            Object result = context.getLocalCache().getIfPresent(cacheKey);
-            if (result != null) {
-                return Optional.of((E) result);
-            }
+    private Optional<E> tryFindByExample(E example, Tuple<Predicate<E>, Supplier<FindQuery<E>>> predicateAndQuery) {
+        if (!predicateAndQuery.getFirst().test(example)) {
+            return Optional.empty();
         }
 
-        Optional<E> result = tryFindByExample(load(data, mappingsToLoadForFind));
-        if (result.isPresent() && Strings.isFilled(cacheKey)) {
-            context.getLocalCache().put(cacheKey, result.get());
+        if (!(predicateAndQuery.getSecond() instanceof ValueHolder<?>)) {
+            predicateAndQuery.setSecond(new ValueHolder<>(predicateAndQuery.getSecond().get()));
         }
 
-        return result;
-    }
-
-    /**
-     * Determines the cache key used by {@link #tryFindInCache(Context)} to find an instance in the cache.
-     * <p>
-     * Note that this isn't implemented by default and has to be overwritten by subclasses which want to support caching.
-     *
-     * @param example the entity to derive the cache key from
-     * @return a unique string representation used for cache lookups or <tt>null</tt> to indicate that either caching
-     * is completely disabled or that the example instance doesn't provide values in the relevant fields to support a
-     * cache lookup.
-     */
-    protected String determineCacheKey(E example) {
-        throw new UnsupportedOperationException();
+        return predicateAndQuery.getSecond().get().find(example);
     }
 
     @Override

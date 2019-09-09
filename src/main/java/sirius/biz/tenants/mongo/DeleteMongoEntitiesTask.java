@@ -6,11 +6,12 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.tenants.deletion;
+package sirius.biz.tenants.mongo;
 
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.Tenant;
-import sirius.biz.tenants.mongo.MongoTenantAware;
+import sirius.biz.tenants.deletion.DeleteEntitiesTask;
+import sirius.biz.tenants.deletion.DeleteTenantJobFactory;
 import sirius.biz.web.TenantAware;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoQuery;

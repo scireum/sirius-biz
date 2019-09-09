@@ -125,7 +125,7 @@ public class ImporterContext {
      * @see ImportJob#close()
      */
     public boolean hasBatchContext() {
-        return batchContext != null;
+        return batchContext != null && !batchContext.isEmpty();
     }
 
     /**

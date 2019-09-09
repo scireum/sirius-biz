@@ -482,6 +482,19 @@ public class Processes {
     }
 
     /**
+     * Updates the title of the given process.
+     *
+     * @param processId the process to update
+     * @param newTitle  the title to set
+     * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
+     */
+    protected boolean updateTitle(String processId, String newTitle) {
+        return modify(processId,
+                      process -> process.getState() != ProcessState.TERMINATED && Strings.isFilled(newTitle),
+                      process -> process.setTitle(newTitle));
+    }
+
+    /**
      * Adds the given link to the given process.
      *
      * @param processId the process to update

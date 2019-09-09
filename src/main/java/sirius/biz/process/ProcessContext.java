@@ -21,6 +21,8 @@ import sirius.kernel.health.HandledException;
 
 import javax.annotation.Nonnull;
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -49,6 +51,13 @@ public interface ProcessContext extends TaskContextAdapter {
      * @return the title of the process
      */
     String getTitle();
+
+    /**
+     * Provides a new title for the process.
+     *
+     * @param newTitle the new title to use
+     */
+    void updateTitle(String newTitle);
 
     /**
      * Increments the given performance counter by one and supplies a loop duration in milliseconds if the current
@@ -218,4 +227,16 @@ public interface ProcessContext extends TaskContextAdapter {
      * @param data     the data to persist
      */
     void addFile(String filename, File data);
+
+    /**
+     * Adds a file to the process which will contain the data written into the {@link OutputStream}.
+     * <p>
+     * This will create a temporary file which will buffer everything written into the returned output stream.
+     * Once the stream is closed, the file is added using {@link #addFile(String, File)} and then deleted locally.
+     *
+     * @param filename the filename to use
+     * @return an output stream to be supplied with the contents of the file
+     * @throws IOException in case of a local IO error
+     */
+    OutputStream addFile(String filename) throws IOException;
 }
