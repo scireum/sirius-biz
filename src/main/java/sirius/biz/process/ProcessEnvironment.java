@@ -123,6 +123,11 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
+    public void updateTitle(String newTitle) {
+        processes.updateTitle(processId, newTitle);
+    }
+
+    @Override
     public void log(ProcessLog logEntry) {
         processes.log(processId, logEntry);
     }
