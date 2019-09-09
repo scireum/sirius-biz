@@ -222,7 +222,7 @@ public interface ProcessContext extends TaskContextAdapter {
     void addFile(String filename, File data);
 
     /**
-     * Adds a file to the process which will containd the data written into the {@link OutputStream}.
+     * Adds a file to the process which will contain the data written into the {@link OutputStream}.
      * <p>
      * This will create a temporary file which will buffer everything written into the returned output stream.
      * Once the stream is closed, the file is added using {@link #addFile(String, File)} and then deleted locally.
