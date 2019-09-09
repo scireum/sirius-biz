@@ -15,6 +15,8 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.Storage;
 import sirius.biz.storage.VirtualObject;
+import sirius.biz.storage.layer3.FileParameter;
+import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -34,7 +36,7 @@ public abstract class FileImportJob extends ImportJob {
     @Part
     private static Storage storage;
 
-    private VirtualObjectParameter fileParameter;
+    private FileParameter fileParameter;
 
     /**
      * Creates a new job for the given factory and process context.
@@ -42,30 +44,30 @@ public abstract class FileImportJob extends ImportJob {
      * @param fileParameter the parameter which is used to derive the import file from
      * @param process       the process context in which the job is executed
      */
-    protected FileImportJob(VirtualObjectParameter fileParameter, ProcessContext process) {
+    protected FileImportJob(FileParameter fileParameter, ProcessContext process) {
         super(process);
         this.fileParameter = fileParameter;
     }
 
     @Override
     public void execute() throws Exception {
-        VirtualObject file = process.require(fileParameter);
+        VirtualFile file = process.require(fileParameter);
 
-        if (canHandleFileExtension(file.getFileExtension())) {
-            try (InputStream in = storage.getData(file)) {
-                executeForStream(file.getFilename(), in);
+        if (canHandleFileExtension(file.fileExtension())) {
+            try (InputStream in = file.createInputStream()) {
+                executeForStream(file.name(), in);
             }
-        } else if (FILE_EXTENSION_ZIP.equalsIgnoreCase(file.getFileExtension())) {
+        } else if (FILE_EXTENSION_ZIP.equalsIgnoreCase(file.fileExtension())) {
             executeForZIP(file);
         } else {
             throw Exceptions.createHandled().withNLSKey("FileImportJob.fileNotSupported").handle();
         }
     }
 
-    private void executeForZIP(VirtualObject file) throws Exception {
+    private void executeForZIP(VirtualFile file) throws Exception {
         process.log(ProcessLog.info().withNLSKey("FileImportJob.importingZipFile"));
 
-        try (ZipInputStream zipInputStream = new ZipInputStream(storage.getData(file))) {
+        try (ZipInputStream zipInputStream = new ZipInputStream(file.createInputStream())) {
             ZipEntry entry = zipInputStream.getNextEntry();
 
             int filesImported = 0;
