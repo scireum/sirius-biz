@@ -7,20 +7,4 @@
             <w:menuItem titleKey="AuditLogEntry.plural" url="/audit-log" framework="biz.protocols"/>
         </w:menuSection>
     </i:block>
-    <i:block name="system">
-        <w:menuSection>
-            <w:permission permission="permission-system-protocols">
-                <w:menuItem titleKey="LoggedMessage.plural" icon="fa-list-ul" url="/system/logs"
-                            framework="biz.protocols"/>
-                <w:menuItem titleKey="StoredIncident.plural" icon="fa-fire-extinguisher"
-                            url="/system/errors" framework="biz.protocols"/>
-                <w:menuItem titleKey="MailProtocol.plural" icon="fa-envelope" url="/system/mails"
-                            framework="biz.protocols"/>
-            </w:permission>
-            <w:permission permission="permission-system-journal">
-                <w:menuItem titleKey="JournalEntry.plural" icon="fa-history" url="/system/protocol"
-                            framework="biz.journal"/>
-            </w:permission>
-        </w:menuSection>
-    </i:block>
 </i:switch>

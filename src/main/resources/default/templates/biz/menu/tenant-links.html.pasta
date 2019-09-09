@@ -1,0 +1,5 @@
+<w:menuSection framework="biz.tenants">
+    <w:menuItem titleKey="Tenant.plural" url="/tenants" permission="permission-manage-tenants" />
+    <w:menuItem titleKey="UserAccount.plural" url="/user-accounts"
+                permission="permission-manage-user-accounts" />
+</w:menuSection>
