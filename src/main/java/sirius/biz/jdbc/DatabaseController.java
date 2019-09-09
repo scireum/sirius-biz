@@ -33,6 +33,7 @@ import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
 import sirius.web.services.JSONStructuredOutput;
 
+import javax.annotation.Nullable;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -152,7 +153,11 @@ public class DatabaseController extends BasicController {
         out.endArray();
     }
 
-    private String formatValue(Object value) {
+    private String formatValue(@Nullable Object value) {
+        if (value == null) {
+            return "";
+        }
+        
         if (value.getClass().isArray()) {
             return Arrays.stream((Object[]) value).map(NLS::toUserString).collect(Collectors.joining(", "));
         }
