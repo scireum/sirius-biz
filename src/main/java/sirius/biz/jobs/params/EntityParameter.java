@@ -21,6 +21,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 
 import java.util.Map;
@@ -143,6 +144,13 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
         V entity = getMapper().find(getType(), input.get()).orElse(null);
 
         if (entity == null) {
+            if (input.isFilled()) {
+                throw Exceptions.createHandled()
+                                .withNLSKey("Parameter.invalidValue")
+                                .set("name", getLabel())
+                                .set("message", NLS.get("EntityParameter.mustExist"))
+                                .handle();
+            }
             return null;
         }
 

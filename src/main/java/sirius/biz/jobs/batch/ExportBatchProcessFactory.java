@@ -47,6 +47,6 @@ public abstract class ExportBatchProcessFactory extends BatchProcessJobFactory {
 
     @Override
     protected PersistencePeriod getPersistencePeriod() {
-        return PersistencePeriod.ONE_YEAR;
+        return PersistencePeriod.FOURTEEN_DAYS;
     }
 }

@@ -23,9 +23,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Defines a record or dataset by declaring which fields are expected.
@@ -42,10 +46,9 @@ public class ImportDictionary {
     private static final Pattern EXPANDED_COLUMN_HEADING = Pattern.compile("\\[([^]]+)]");
 
     private static final String PARAM_INDEX = "index";
-    private static final String PARAM_COLUMN = "column";
     private static final String PARAM_EXPECTED = "expected";
+    private static final String PARAM_COLUMN = "column";
     private static final String PARAM_COUNT = "count";
-    private static final String PARAM_COLUMNS = "columns";
     private static final String PARAM_FIELD = "field";
     private static final String PARAM_LABEL = "label";
     private static final String PARAM_MESSAGE = "message";
@@ -232,51 +235,191 @@ public class ImportDictionary {
      * Verifies the given header row against the specified <tt>mapping function</tt>.
      *
      * @param header                   the row which contains the column headings
+     * @param problemConsumer          the consumer to be supplied with all errors being detected
      * @param failForAdditionalColumns <tt>true</tt> to fail if there are "too many" column, <tt>false</tt> to
      *                                 simply ignore those
-     * @throws sirius.kernel.health.HandledException in case of an invalid header row
+     * @return <tt>true</tt> if at least one problem was detected, <tt>false</tt> otherwise
      */
-    public void verifyHeadings(Values header, boolean failForAdditionalColumns) {
+    public boolean detectHeaderProblems(Values header,
+                                        Consumer<String> problemConsumer,
+                                        boolean failForAdditionalColumns) {
         if (mappingFunction == null) {
             throw new IllegalStateException("Cannot verify headings as the mapping function hasn't been specified yet.");
         }
 
-        for (int index = 0; index < Math.min(mappingFunction.size(), header.length()); index++) {
-            String headerName = header.at(index).asString();
-            String headerField = resolve(headerName).orElse(headerName);
-            String expectedField = mappingFunction.get(index);
-            if (expectedField != null && !Strings.areEqual(headerField, expectedField)) {
-                throw Exceptions.createHandled()
-                                .withNLSKey("ImportDictionary.wrongColumn")
-                                .set(PARAM_INDEX, index + 1)
-                                .set(PARAM_COLUMN, headerName)
-                                .set(PARAM_EXPECTED, expectedField)
-                                .handle();
+        AtomicBoolean problemDetected = new AtomicBoolean(false);
+
+        Values headerFields = Values.of(header.asList()
+                                              .stream()
+                                              .map(String::valueOf)
+                                              .map(field -> resolve(field).orElse(field))
+                                              .collect(Collectors.toList()));
+
+        Values mappingValues = Values.of(mappingFunction);
+        AtomicInteger mappingIndex = new AtomicInteger(0);
+        AtomicInteger headerIndex = new AtomicInteger(0);
+
+        while (mappingIndex.get() < mappingValues.length()) {
+            String expectedField = mappingValues.at(mappingIndex.get()).asString();
+            String headerField = headerFields.at(headerIndex.get()).asString();
+
+            if (Strings.isEmpty(expectedField) || Strings.areEqual(headerField, expectedField)) {
+                // We have a match, advance both indices...
+                mappingIndex.incrementAndGet();
+                headerIndex.incrementAndGet();
+            } else {
+                problemDetected.set(true);
+
+                if (Strings.isEmpty(headerField)) {
+                    // We're out of header columns - report missing column...
+                    problemConsumer.accept(NLS.fmtr("ImportDictionary.missingColumn")
+                                              .set(PARAM_INDEX, headerIndex.get() + 1)
+                                              .set(PARAM_EXPECTED, expectedField)
+                                              .format());
+                    mappingIndex.incrementAndGet();
+                } else {
+                    // Try to diagnose why the headers don't match...
+                    diagnoseHeaderProblem(header,
+                                          problemConsumer,
+                                          headerFields,
+                                          mappingValues,
+                                          mappingIndex,
+                                          headerIndex);
+                }
             }
         }
 
-        if (header.length() < mappingFunction.size()) {
-            throw Exceptions.createHandled()
-                            .withNLSKey("ImportDictionary.tooFewColumns")
-                            .set(PARAM_COUNT, header.length())
-                            .set(PARAM_COLUMNS, Strings.join(mappingFunction, ", "))
-                            .handle();
+        if (failForAdditionalColumns) {
+            for (int superfluousIndex = headerIndex.get();
+                 superfluousIndex < headerFields.length();
+                 superfluousIndex++) {
+                problemDetected.set(true);
+                problemConsumer.accept(NLS.fmtr("ImportDictionary.superfluousColumn")
+                                          .set(PARAM_INDEX, superfluousIndex + 1)
+                                          .set(PARAM_COLUMN, header.at(superfluousIndex))
+                                          .format());
+            }
         }
-        if (header.length() > mappingFunction.size() && failForAdditionalColumns) {
-            throw Exceptions.createHandled()
-                            .withNLSKey("ImportDictionary.tooManyColumns")
-                            .set(PARAM_COUNT, header.length())
-                            .set(PARAM_COLUMNS, Strings.join(mappingFunction, ", "))
-                            .handle();
+
+        return problemDetected.get();
+    }
+
+    /**
+     * Tries to diagnose why columns (mapping vs. headers) don't match.
+     * <p>
+     * The reason can be one of three things:
+     * <ol>
+     *     <li>There are superfluous columns in the headings - report those and sync the given indices again</li>
+     *     <li>There are missing columns in the headings - report those and sync the given indices again</li>
+     *     <li>A column is given, which is completely unexpected - report this mismatch and advance both indices by one</li>
+     * </ol>
+     *
+     * @param header          the actual header values
+     * @param problemConsumer the consumer to be supplied with all errors being detected
+     * @param headerFields    the resolved header fields (after applying aliases)
+     * @param mappingValues   the mapping values (expected columns)
+     * @param mappingIndex    the current index in the mapping values as mutable reference
+     * @param headerIndex     the current index in the header values as mutable reference
+     */
+    protected void diagnoseHeaderProblem(Values header,
+                                         Consumer<String> problemConsumer,
+                                         Values headerFields,
+                                         Values mappingValues,
+                                         AtomicInteger mappingIndex,
+                                         AtomicInteger headerIndex) {
+        String expectedField = mappingValues.at(mappingIndex.get()).asString();
+        String headerField = headerFields.at(headerIndex.get()).asString();
+
+        if (handleSuperfluousColumns(header, problemConsumer, headerFields, headerIndex, expectedField)) {
+            return;
         }
+
+        if (handleMissingColumns(problemConsumer, mappingValues, mappingIndex, headerField)) {
+            return;
+        }
+
+        problemConsumer.accept(NLS.fmtr("ImportDictionary.wrongColumn")
+                                  .set(PARAM_INDEX, mappingIndex.get() + 1)
+                                  .set(PARAM_COLUMN, headerField)
+                                  .set(PARAM_EXPECTED, expectedField)
+                                  .format());
+
+        mappingIndex.incrementAndGet();
+        headerIndex.incrementAndGet();
+    }
+
+    /**
+     * Determines if there are some missing columns in the header.
+     * <p>
+     * Tries to find the next header column matching <tt>headerField</tt>, if found, all intermediate columns are
+     * reported as missing and the indices are synced to match again.
+     * </p>
+     *
+     * @param problemConsumer the consumer to be supplied with all errors being detected
+     * @param mappingValues   the mapping values (expected columns)
+     * @param mappingIndex    the current index in the mapping values as mutable reference
+     * @param headerField     the currently active header field
+     * @return <tt>true</tt> if there was one or more missing columns detected, <tt>false</tt> otherwise
+     */
+    private boolean handleMissingColumns(Consumer<String> problemConsumer,
+                                         Values mappingValues,
+                                         AtomicInteger mappingIndex,
+                                         String headerField) {
+        int nextHeaderOccurrence = mappingValues.asList().indexOf(headerField);
+        if (nextHeaderOccurrence <= mappingIndex.get()) {
+            return false;
+        }
+
+        for (int missingIndex = mappingIndex.get(); missingIndex < nextHeaderOccurrence; missingIndex++) {
+            problemConsumer.accept(NLS.fmtr("ImportDictionary.missingColumn")
+                                      .set(PARAM_INDEX, missingIndex + 1)
+                                      .set(PARAM_EXPECTED, mappingValues.at(missingIndex))
+                                      .format());
+        }
+        mappingIndex.set(nextHeaderOccurrence);
+        return true;
+    }
+
+    /**
+     * Determines if there are some superfluous columns in the header.
+     * <p>
+     * Tries to find the next mapping column matching <tt>expectedField</tt>, if found, all intermediate header columns
+     * are reported as superfluous and the indices are synced to match again.
+     * </p>
+     *
+     * @param problemConsumer the consumer to be supplied with all errors being detected
+     * @param headerFields    the resolved header fields (after applying aliases)
+     * @param headerIndex     the current index in the header values as mutable reference
+     * @param expectedField   the currently active (expected) mapping field
+     * @return <tt>true</tt> if there was one or more missing columns detected, <tt>false</tt> otherwise
+     */
+    private boolean handleSuperfluousColumns(Values header,
+                                             Consumer<String> problemConsumer,
+                                             Values headerFields,
+                                             AtomicInteger headerIndex,
+                                             String expectedField) {
+        int nextMappingOccurrence = headerFields.asList().indexOf(expectedField);
+        if (nextMappingOccurrence <= headerIndex.get()) {
+            return false;
+        }
+
+        for (int superfluousIndex = headerIndex.get(); superfluousIndex < nextMappingOccurrence; superfluousIndex++) {
+            problemConsumer.accept(NLS.fmtr("ImportDictionary.superfluousColumn")
+                                      .set(PARAM_INDEX, superfluousIndex + 1)
+                                      .set(PARAM_COLUMN, header.at(superfluousIndex))
+                                      .format());
+        }
+
+        headerIndex.set(nextMappingOccurrence);
+        return true;
     }
 
     /**
      * Uses the previously determined <tt>mapping function</tt> to transform a row into a field map.
      *
      * @param row                    the row to parse
-     * @param failForAdditionalCells <tt>true</tt> to fail if there are "too many" cells in the given row, <tt>false</tt> to
-     *                               simply ignore those
+     * @param failForAdditionalCells <tt>true</tt> to fail if there are "too many" cells in the given row,
+     *                               <tt>false</tt> to simply ignore those
      * @return the field map represented as {@link Context}
      */
     public Context load(Values row, boolean failForAdditionalCells) {
@@ -284,7 +427,6 @@ public class ImportDictionary {
             throw Exceptions.createHandled()
                             .withNLSKey("ImportDictionary.tooManyColumns")
                             .set(PARAM_COUNT, row.length())
-                            .set(PARAM_COLUMNS, Strings.join(mappingFunction, ", "))
                             .handle();
         }
 
@@ -302,39 +444,44 @@ public class ImportDictionary {
     /**
      * Verifies that the given record fulfills the check given for each field.
      *
-     * @param record the accessor function to the record to verify
-     * @throws sirius.kernel.health.HandledException in case if invalid data
+     * @param record          the accessor function to the record to verify
+     * @param problemConsumer the consumer to be supplied with all detected problems
+     * @return <tt>true</tt> if at least one problem was detected, <tt>false</tt> otherwise
      */
-    public void verifyRecord(Function<String, Value> record) {
+    public boolean detectRecordProblems(Function<String, Value> record, Consumer<String> problemConsumer) {
+        AtomicBoolean problemDetected = new AtomicBoolean(false);
         fields.values().forEach(field -> {
             try {
                 field.verify(record.apply(field.getName()));
             } catch (IllegalArgumentException | HandledException e) {
-                throw Exceptions.createHandled()
-                                .withNLSKey("ImportDictionary.fieldError")
-                                .set(PARAM_FIELD, field.getName())
-                                .set(PARAM_LABEL, field.getLabel())
-                                .set(PARAM_MESSAGE, e.getMessage())
-                                .handle();
+                problemDetected.set(true);
+                problemConsumer.accept(NLS.fmtr("ImportDictionary.fieldError")
+                                          .set(PARAM_FIELD, field.getName())
+                                          .set(PARAM_LABEL, field.getLabel())
+                                          .set(PARAM_MESSAGE, e.getMessage())
+                                          .format());
             } catch (Exception e) {
-                throw Exceptions.createHandled()
-                                .withNLSKey("ImportDictionary.severeFieldError")
-                                .set(PARAM_FIELD, field.getName())
-                                .set(PARAM_LABEL, field.getLabel())
-                                .set(PARAM_MESSAGE, Exceptions.handle(Log.BACKGROUND, e).getMessage())
-                                .handle();
+                problemDetected.set(true);
+                problemConsumer.accept(NLS.fmtr("ImportDictionary.severeFieldError")
+                                          .set(PARAM_FIELD, field.getName())
+                                          .set(PARAM_LABEL, field.getLabel())
+                                          .set(PARAM_MESSAGE, Exceptions.handle(Log.BACKGROUND, e).getMessage())
+                                          .format());
             }
         });
+
+        return problemDetected.get();
     }
 
     /**
      * Verifies that the given record fulfills the check given for each field.
      *
-     * @param record the record to verify
-     * @throws sirius.kernel.health.HandledException in case if invalid data
+     * @param record          the record to verify
+     * @param problemConsumer the consumer to be supplied with all detected problems
+     * @return <tt>true</tt> if at least one problem was detected, <tt>false</tt> otherwise
      */
-    public void verifyRecord(Context record) {
-        verifyRecord(record::getValue);
+    public boolean detectRecordProblems(Context record, Consumer<String> problemConsumer) {
+        return detectRecordProblems(record::getValue, problemConsumer);
     }
 
     /**

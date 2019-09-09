@@ -57,7 +57,7 @@ public abstract class FileExportJob extends BatchJob {
                 }
             }
 
-            return process.addFile(determineFilenameWithoutExtension() + "." + determineFileExtension()));
+            return process.addFile(determineFilenameWithoutExtension() + "." + determineFileExtension());
         } catch (IOException e) {
             throw process.handle(e);
         }

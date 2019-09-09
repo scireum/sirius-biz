@@ -71,11 +71,6 @@ public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
     }
 
     @Override
-    protected PersistencePeriod getPersistencePeriod() {
-        return PersistencePeriod.THREE_MONTHS;
-    }
-
-    @Override
     protected void execute(ProcessContext process) throws Exception {
         String destination = process.require(destinationParameter);
         EntityDescriptor ed = process.require(entityDescriptorParameter);
