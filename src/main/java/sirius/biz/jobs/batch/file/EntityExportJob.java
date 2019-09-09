@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
  * perform some mappings. To control which entities should be exported {@link #createFullExportQuery()} has to be
  * overwritten.
  * <p>
- * that this job can operate in three modes:
+ * This job can operate in three modes:
  * <ol>
  *     <li>Simply export all matching entities using the standard mapping (column order)</li>
  *     <li>Use a template file which declares the expected column order (via the first non-empty line)</li>
@@ -148,7 +148,7 @@ public class EntityExportJob<E extends BaseEntity<?>> extends LineBasedExportJob
      * If the template file contains more than one row, this will enhance all rows, otherwise all matching entities will
      * be exported via {@link #fullExportWithGivenMapping()}.
      *
-     * @throws Exception in case or a severe problem which should abort the job
+     * @throws Exception in case of a severe problem which should abort the job
      */
     private void templateBasedExport() throws Exception {
         AtomicBoolean seenTemplateRow = new AtomicBoolean(false);
@@ -200,7 +200,7 @@ public class EntityExportJob<E extends BaseEntity<?>> extends LineBasedExportJob
     }
 
     /**
-     * Creates an extractor for each known column if the effective mapping.
+     * Creates an extractor for each known column of the effective mapping.
      */
     private void setupExtractors() {
         extractors = dictionary.getMappings().stream().map(mapping -> {
