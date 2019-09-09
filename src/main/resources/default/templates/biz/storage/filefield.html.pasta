@@ -6,10 +6,6 @@
              name="@param.getName()"
              label="@param.getLabel()"
              help="@param.getDescription()"
-<<<<<<< Updated upstream
-             value="@toUserString(param.get(context).orElse(null))"
-=======
              value="@param.getFieldValue(context)"
              basePath="@param.getBasePath()"
->>>>>>> Stashed changes
              required="@param.isRequired()"/>
