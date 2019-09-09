@@ -24,6 +24,7 @@ import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.query.Query;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Values;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
@@ -37,7 +38,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -86,12 +86,12 @@ public class EntityExportJob<E extends BaseEntity<?>> extends LineBasedExportJob
      * @param process               the process context itself
      */
     public EntityExportJob(FileParameter templateFileParameter,
-                              FileOrDirectoryParameter destinationParameter,
-                              EnumParameter<ExportFileType> fileTypeParameter,
-                              Class<E> type,
-                              ImportDictionary dictionary,
-                              List<String> defaultMapping,
-                              ProcessContext process) {
+                           FileOrDirectoryParameter destinationParameter,
+                           EnumParameter<ExportFileType> fileTypeParameter,
+                           Class<E> type,
+                           ImportDictionary dictionary,
+                           List<String> defaultMapping,
+                           ProcessContext process) {
         super(destinationParameter, fileTypeParameter, process);
         this.defaultMapping = new ArrayList<>(defaultMapping);
         this.templateFile = process.getParameter(templateFileParameter).orElse(null);
@@ -151,7 +151,7 @@ public class EntityExportJob<E extends BaseEntity<?>> extends LineBasedExportJob
      * @throws Exception in case of a severe problem which should abort the job
      */
     private void templateBasedExport() throws Exception {
-        AtomicBoolean seenTemplateRow = new AtomicBoolean(false);
+        Monoflop seenTemplateRow = Monoflop.create();
         LineBasedProcessor.create(templateFile.name(), templateFile.createInputStream()).run((rowNumber, row) -> {
             if (row.length() == 0) {
                 return;
@@ -160,9 +160,8 @@ public class EntityExportJob<E extends BaseEntity<?>> extends LineBasedExportJob
             if (!dictionary.hasMappings()) {
                 determineMappingsFromRow(rowNumber, row);
             } else {
-                if (!seenTemplateRow.get()) {
+                if (seenTemplateRow.firstCall()) {
                     process.log(ProcessLog.info().withNLSKey("EntityExportJob.startingTemplateBasedExport"));
-                    seenTemplateRow.set(true);
                 }
                 handleTemplateRow(rowNumber, row);
             }
@@ -171,7 +170,7 @@ public class EntityExportJob<E extends BaseEntity<?>> extends LineBasedExportJob
             return true;
         });
 
-        if (!seenTemplateRow.get()) {
+        if (!seenTemplateRow.isToggled()) {
             fullExportWithGivenMapping();
         }
     }
