@@ -37,13 +37,13 @@ import java.util.stream.Collectors;
  */
 public class ImportDictionary {
 
-    public static final String PARAM_INDEX = "index";
-    public static final String PARAM_EXPECTED = "expected";
-    public static final String PARAM_COLUMN = "column";
-    public static final String PARAM_COUNT = "count";
-    public static final String PARAM_FIELD = "field";
-    public static final String PARAM_LABEL = "label";
-    public static final String PARAM_MESSAGE = "message";
+    private static final String PARAM_INDEX = "index";
+    private static final String PARAM_EXPECTED = "expected";
+    private static final String PARAM_COLUMN = "column";
+    private static final String PARAM_COUNT = "count";
+    private static final String PARAM_FIELD = "field";
+    private static final String PARAM_LABEL = "label";
+    private static final String PARAM_MESSAGE = "message";
     private Map<String, FieldDefinition> fields = new LinkedHashMap<>();
     private Map<String, String> aliases = new LinkedHashMap<>();
     private List<String> mappingFunction;
