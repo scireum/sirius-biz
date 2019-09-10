@@ -78,7 +78,7 @@ public class PhysicalObjectStorage {
      *
      * @param name the name of the space
      * @return a wrapper which is used to access the objects stored in the storage space
-     * @throws sirius.kernel.health.HandledException if an unknow storage space is requested.
+     * @throws sirius.kernel.health.HandledException if an unknown storage space is requested.
      */
     public PhysicalStorageSpace getSpace(String name) {
         return new PhysicalStorageSpace(name, engines.get(name));
