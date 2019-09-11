@@ -17,6 +17,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.timer.EveryDay;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 /**
  * Deletes expired {@link Process processes} and {@link ProcessLog logs} of {@link ProcessState#STANDBY standby}
@@ -55,7 +56,9 @@ public class DeleteExpiredProcessesTask implements EveryDay {
     }
 
     private void deleteExpiredStandbyLogs(Process process) {
-        LocalDate limit = process.getPersistencePeriod().minus(LocalDate.now());
+        LocalDate limit = Optional.ofNullable(process.getPersistencePeriod())
+                                  .orElse(PersistencePeriod.THREE_MONTHS)
+                                  .minus(LocalDate.now());
         elastic.select(ProcessLog.class)
                .eq(ProcessLog.PROCESS, process)
                .where(Elastic.FILTERS.lt(ProcessLog.TIMESTAMP, limit))
