@@ -149,6 +149,23 @@ public class Locks implements MetricProvider {
      * @return <tt>true</tt> if the lock is currently active, <tt>false</tt> otherwise
      */
     public synchronized boolean isLocked(@Nonnull String lock) {
+        Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lock);
+
+        if (localLockInfo != null) {
+            return true;
+        }
+
+        return manager.isLocked(lock);
+    }
+
+
+    /**
+     * Determines if the given lock is currently locked by the current thread.
+     *
+     * @param lock the lock to check
+     * @return <tt>true</tt> if the lock is currently active, <tt>false</tt> otherwise
+     */
+    public synchronized boolean isLockedByCurrentThread(@Nonnull String lock) {
         Long currentThreadId = Thread.currentThread().getId();
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lock);
 
