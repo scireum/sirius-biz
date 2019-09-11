@@ -21,7 +21,7 @@ import java.util.function.Consumer;
  * Represents the actual physical storage layer for objects within buckets.
  */
 @ParametersAreNonnullByDefault
-public interface PhysicalStorageEngine {
+public interface StorageEngine {
 
     /**
      * Stores the given data for the given key in the given bucket.

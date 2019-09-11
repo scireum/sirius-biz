@@ -15,7 +15,6 @@ import sirius.biz.storage.layer1.replication.ReplicationManager
 import sirius.kernel.BaseSpecification
 import sirius.kernel.Scope
 import sirius.kernel.async.BackgroundLoop
-import sirius.kernel.commons.Wait
 import sirius.kernel.di.std.Part
 
 import java.time.Duration
@@ -24,7 +23,7 @@ import java.time.Duration
 class ReplicationSpec extends BaseSpecification {
 
     @Part
-    private static PhysicalObjectStorage storage
+    private static ObjectStorage storage
 
     @Part
     private static ReplicationManager replicationManager
