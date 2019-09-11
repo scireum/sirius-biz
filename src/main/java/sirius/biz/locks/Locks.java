@@ -169,11 +169,8 @@ public class Locks implements MetricProvider {
         Long currentThreadId = Thread.currentThread().getId();
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lock);
 
-        if (localLockInfo != null) {
-            return Objects.equals(currentThreadId, localLockInfo.getFirst());
-        }
 
-        return manager.isLocked(lock);
+        return localLockInfo != null && Objects.equals(currentThreadId, localLockInfo.getFirst());
     }
 
     /**
