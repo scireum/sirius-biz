@@ -66,19 +66,13 @@ public class Locks implements MetricProvider {
      * @param acquireTimeout the max duration during which retires will be performed
      * @return <tt>true</tt> if the lock was acquired, <tt>false</tt> otherwise
      */
-    public synchronized boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout) {
-        Long currentThreadId = Thread.currentThread().getId();
-        Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
-
-        if (localLockInfo != null && Objects.equals(currentThreadId, localLockInfo.getFirst())) {
-            // Already locked by this thread - increment the nesting level to handle the unlock
-            // calls properly...
-            localLockInfo.getSecond().incrementAndGet();
+    public boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout) {
+        if (getLock(lockName) != null) {
             return true;
         }
 
         if (manager.tryLock(lockName, acquireTimeout)) {
-            localLocks.put(lockName, Tuple.create(currentThreadId, new AtomicInteger(1)));
+            localLocks.put(lockName, Tuple.create(Thread.currentThread().getId(), new AtomicInteger(1)));
             return true;
         }
 
@@ -96,9 +90,22 @@ public class Locks implements MetricProvider {
      * @param lockTimeout    the max duration for which the lock will be kept before auto-releasing it
      * @return <tt>true</tt> if the lock was acquired, <tt>false</tt> otherwise
      */
-    public synchronized boolean tryLock(@Nonnull String lockName,
-                                        @Nullable Duration acquireTimeout,
-                                        @Nonnull Duration lockTimeout) {
+    public boolean tryLock(@Nonnull String lockName,
+                           @Nullable Duration acquireTimeout,
+                           @Nonnull Duration lockTimeout) {
+        if (getLock(lockName) != null) {
+            return true;
+        }
+
+        if (manager.tryLock(lockName, acquireTimeout, lockTimeout)) {
+            localLocks.put(lockName, Tuple.create(Thread.currentThread().getId(), new AtomicInteger(1)));
+            return true;
+        }
+
+        return false;
+    }
+
+    private synchronized Tuple<Long, AtomicInteger> getLock(String lockName) {
         Long currentThreadId = Thread.currentThread().getId();
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
 
@@ -106,15 +113,10 @@ public class Locks implements MetricProvider {
             // Already locked by this thread - increment the nesting level to handle the unlock
             // calls properly...
             localLockInfo.getSecond().incrementAndGet();
-            return true;
+            return localLockInfo;
         }
 
-        if (manager.tryLock(lockName, acquireTimeout, lockTimeout)) {
-            localLocks.put(lockName, Tuple.create(currentThreadId, new AtomicInteger(1)));
-            return true;
-        }
-
-        return false;
+        return null;
     }
 
     /**
