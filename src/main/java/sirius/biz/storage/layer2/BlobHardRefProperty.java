@@ -11,7 +11,6 @@ package sirius.biz.storage.layer2;
 import sirius.biz.storage.Storage;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
-import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.schema.SQLPropertyInfo;
 import sirius.db.jdbc.schema.Table;
 import sirius.db.jdbc.schema.TableColumn;
@@ -160,7 +159,7 @@ public class BlobHardRefProperty extends Property implements SQLPropertyInfo {
                .markAsUsed(((BaseEntity<?>) entity).getUniqueName(), getName(), ref.getKey());
             ref.getBlob()
                .getStorageSpace()
-               .deleteReferencedObjects(((BaseEntity<?>) entity).getUniqueName(), getName(), ref.getKey());
+               .deleteReferencedBlobs(((BaseEntity<?>) entity).getUniqueName(), getName(), ref.getKey());
         }
         ref.changed = false;
     }
@@ -171,7 +170,7 @@ public class BlobHardRefProperty extends Property implements SQLPropertyInfo {
         if (ref.isFilled()) {
             ref.getBlob()
                .getStorageSpace()
-               .deleteReferencedObjects(((BaseEntity<?>) entity).getUniqueName(), getName(), null);
+               .deleteReferencedBlobs(((BaseEntity<?>) entity).getUniqueName(), getName(), null);
         }
     }
 }
