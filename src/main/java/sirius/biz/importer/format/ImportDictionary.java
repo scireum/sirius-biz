@@ -40,6 +40,7 @@ public class ImportDictionary {
     private static final String PARAM_INDEX = "index";
     private static final String PARAM_EXPECTED = "expected";
     private static final String PARAM_COLUMN = "column";
+    private static final String PARAM_COLUMNS = "columns";
     private static final String PARAM_COUNT = "count";
     private static final String PARAM_FIELD = "field";
     private static final String PARAM_LABEL = "label";
@@ -373,6 +374,7 @@ public class ImportDictionary {
             throw Exceptions.createHandled()
                             .withNLSKey("ImportDictionary.tooManyColumns")
                             .set(PARAM_COUNT, row.length())
+                            .set(PARAM_COLUMNS, Strings.join(mappingFunction, ", "))
                             .handle();
         }
 
