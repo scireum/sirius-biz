@@ -374,7 +374,7 @@ public class ImportDictionary {
             throw Exceptions.createHandled()
                             .withNLSKey("ImportDictionary.tooManyColumns")
                             .set(PARAM_COUNT, row.length())
-                            .set(PARAM_COLUMNS, Strings.join(mappingFunction, ", "))
+                            .set(PARAM_COLUMNS, mappingFunction.size())
                             .handle();
         }
 
