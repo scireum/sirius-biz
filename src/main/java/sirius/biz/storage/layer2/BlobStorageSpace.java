@@ -7,14 +7,6 @@
  */
 
 package sirius.biz.storage.layer2;
-//
-//- L3 als independent PR
-//- L3 UI (Dateien)
-//- L3 SelectFileUI
-//
-//------
-//- L2 Space unterteilt in Tenants unterteilt in FS / Ref jede Ref unterteilt in block mit designator und FS unterteilt nach
-//dir (ein root dir je tenant)
 
 import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
