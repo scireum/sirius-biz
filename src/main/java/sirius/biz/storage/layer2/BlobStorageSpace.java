@@ -70,15 +70,6 @@ public abstract class BlobStorageSpace {
     public abstract Directory getRoot(String tenantId);
 
     /**
-     * Tries to find the blob with the given path, for the given tenant. If it doesn't exist, it is
-     * created.
-     *
-     * @param path the path used to lookup the blob
-     * @return the blob with the given path which was either found or newly created
-     */
-    public abstract Blob findOrCreateObjectByPath(String tenantId, String path);
-
-    /**
      * Creates a new temporary blob to be used in a {@link BlobHardRef}.
      * <p>
      * Such objects will be automatically deleted if the referencing entity is
@@ -121,19 +112,6 @@ public abstract class BlobStorageSpace {
      * @param referencingEntity the referencing entity
      */
     protected abstract void deleteAttachedBlobs(String referencingEntity);
-
-    //{
-//        if (Strings.isEmpty(reference)) {
-//            return;
-//        }
-//        SmartQuery<VirtualObject> qry = oma.select(VirtualObject.class).eq(VirtualObject.REFERENCE, reference);
-//        if (Strings.isFilled(excludedObjectKey)) {
-//            qry.ne(VirtualObject.OBJECT_KEY, excludedObjectKey);
-//        }
-//
-//        qry.delete();
-//    }
-//
 
     /**
      * Used by {@link BlobHardRef} when the referencing entity is persisted.
