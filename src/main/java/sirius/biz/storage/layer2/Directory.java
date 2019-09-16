@@ -93,7 +93,9 @@ public interface Directory {
      * @param limit          the limit to apply
      * @param childProcessor the processor which is used to iterate over the result
      */
-    void listDirectories(@Nullable String prefixFilter, Limit limit, Function<? extends Blob, Boolean> childProcessor);
+    void listChildDirectories(@Nullable String prefixFilter,
+                              Limit limit,
+                              Function<? super Directory, Boolean> childProcessor);
 
     /**
      * Lists all child blobs.
@@ -103,10 +105,10 @@ public interface Directory {
      * @param limit          the limit to apply
      * @param childProcessor the processor which is used to iterate over the result
      */
-    void listBlobs(@Nullable String prefixFilter,
-                   @Nullable Set<String> fileTypes,
-                   Limit limit,
-                   Function<? extends Blob, Boolean> childProcessor);
+    void listChildBlobs(@Nullable String prefixFilter,
+                        @Nullable Set<String> fileTypes,
+                        Limit limit,
+                        Function<? super Blob, Boolean> childProcessor);
 
     /**
      * Deletes the directory along with all children.
