@@ -152,7 +152,7 @@ public interface Blob {
     void rename(String newName);
 
     /**
-     * Provides a new contents for this blob.
+     * Provides new content for this blob.
      * <p>
      * Note that this will create a new physical object and might keep the original one as <{@link BlobRevision}.
      *
@@ -162,7 +162,7 @@ public interface Blob {
     void updateContent(@Nullable String filename, File file);
 
     /**
-     * Provides a new contents for this blob.
+     * Provides new content for this blob.
      * <p>
      * Note that this will create a new physical object and might keep the original one as <{@link BlobRevision}.
      *
