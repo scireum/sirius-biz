@@ -130,4 +130,11 @@ public interface Directory {
      * @throws HandledException if the directory cannot be renamed
      */
     void rename(String newName);
+
+    /**
+     * Determines if this is the root directory of a space and tenant.
+     *
+     * @return <tt>true</tt> if this is a root directory, <tt>false</tt> otherwise
+     */
+    boolean isRoot();
 }
