@@ -49,7 +49,7 @@ public class BlobSoftRef extends BlobHardRef {
     @Override
     public String getFilename() {
         if (isURL()) {
-            return Strings.splitAtLast(getKey(), "/").;
+            return Strings.splitAtLast(getKey(), "/").getSecond();
         }
 
         return super.getFilename();
