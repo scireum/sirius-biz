@@ -12,7 +12,9 @@ import sirius.biz.importer.format.ImportDictionary;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Executes the operations provided by {@link Importer} for a specific type of entities.
@@ -31,11 +33,11 @@ import java.util.Optional;
 public interface ImportHandler<E extends BaseEntity<?>> {
 
     /**
-     * Returns the dictionary which can be used to map aliases when importing or exporting fields.
+     * Returns the dictionary which can be used to map aliases when importing fields.
      *
      * @return the dictionary to be used when mapping incoming data
      */
-    ImportDictionary getDictionary();
+    ImportDictionary getImportDictionary();
 
     /**
      * Fills the given entity it using the supplied <tt>data</tt>.
@@ -136,4 +138,36 @@ public interface ImportHandler<E extends BaseEntity<?>> {
      * Forces a batch to be processed (independent of it size, as long as it isn't empty).
      */
     void commit();
+
+    /**
+     * Returns the dictionary which can be used to map aliases when exporting fields.
+     *
+     * @return the dictionary to be used when mapping outgoing data
+     */
+    ImportDictionary getExportDictionary();
+
+    /**
+     * Returns the default export mapping (list of columns) to use.
+     *
+     * @return the list of columns to be exported unless to user as provided a custom column order.
+     */
+    List<String> getDefaultExportMapping();
+
+    /**
+     * Creates an extractor which determines the exportable value for a given field / column.
+     *
+     * @param fieldToExport the field or column to export
+     * @return a function which extracts the field to be exported from a given entity
+     */
+    Function<E, Object> createExtractor(String fieldToExport);
+
+    /**
+     * Returns the default representation of an entity of this type with the given id.
+     * <p>
+     * This is used to fill in a column value for a {@link sirius.db.mixing.types.BaseEntityRef}.
+     *
+     * @param entityId the id to lookup
+     * @return the column value to return for this id.
+     */
+    Object renderExportRepresentation(Object entityId);
 }

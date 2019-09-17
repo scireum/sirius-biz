@@ -95,13 +95,23 @@ public class Importer implements Closeable {
     }
 
     /**
-     * Returns the dictionary used / understood by the handler of the given type.
+     * Returns the import dictionary used / understood by the handler of the given type.
      *
      * @param type the type to determine the dictionary for
-     * @return the dictionary used by the {@link ImportHandler} of the given type
+     * @return the import dictionary used by the {@link ImportHandler} of the given type
      */
-    public ImportDictionary getDictionary(Class<? extends BaseEntity<?>> type) {
-        return context.findHandler(type).getDictionary();
+    public ImportDictionary getImportDictionary(Class<? extends BaseEntity<?>> type) {
+        return context.findHandler(type).getImportDictionary();
+    }
+
+    /**
+     * Returns the export dictionary used / understood by the handler of the given type.
+     *
+     * @param type the type to determine the dictionary for
+     * @return the export dictionary used by the {@link ImportHandler} of the given type
+     */
+    public ImportDictionary getExportDictionary(Class<? extends BaseEntity<?>> type) {
+        return context.findHandler(type).getExportDictionary();
     }
 
     /**

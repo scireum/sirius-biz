@@ -19,10 +19,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -51,10 +51,8 @@ public class Locks implements MetricProvider {
 
     /**
      * Contains a map of locally held locks (name to thread id).
-     * <p>
-     * As all mutators are in a synchronized method, the doesn't need to be thread safe.
      */
-    private Map<String, Tuple<Long, AtomicInteger>> localLocks = new HashMap<>();
+    private Map<String, Tuple<Long, AtomicInteger>> localLocks = new ConcurrentHashMap<>();
 
     /**
      * Tries to acquire the given lock in the given timeslot.
@@ -66,14 +64,9 @@ public class Locks implements MetricProvider {
      * @param acquireTimeout the max duration during which retires will be performed
      * @return <tt>true</tt> if the lock was acquired, <tt>false</tt> otherwise
      */
-    public synchronized boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout) {
+    public boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout) {
         Long currentThreadId = Thread.currentThread().getId();
-        Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
-
-        if (localLockInfo != null && Objects.equals(currentThreadId, localLockInfo.getFirst())) {
-            // Already locked by this thread - increment the nesting level to handle the unlock
-            // calls properly...
-            localLockInfo.getSecond().incrementAndGet();
+        if (hasLocalLock(lockName, currentThreadId)) {
             return true;
         }
 
@@ -96,16 +89,11 @@ public class Locks implements MetricProvider {
      * @param lockTimeout    the max duration for which the lock will be kept before auto-releasing it
      * @return <tt>true</tt> if the lock was acquired, <tt>false</tt> otherwise
      */
-    public synchronized boolean tryLock(@Nonnull String lockName,
-                                        @Nullable Duration acquireTimeout,
-                                        @Nonnull Duration lockTimeout) {
+    public boolean tryLock(@Nonnull String lockName,
+                           @Nullable Duration acquireTimeout,
+                           @Nonnull Duration lockTimeout) {
         Long currentThreadId = Thread.currentThread().getId();
-        Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
-
-        if (localLockInfo != null && Objects.equals(currentThreadId, localLockInfo.getFirst())) {
-            // Already locked by this thread - increment the nesting level to handle the unlock
-            // calls properly...
-            localLockInfo.getSecond().incrementAndGet();
+        if (hasLocalLock(lockName, currentThreadId)) {
             return true;
         }
 
@@ -115,6 +103,24 @@ public class Locks implements MetricProvider {
         }
 
         return false;
+    }
+
+    private boolean hasLocalLock(String lockName, Long currentThreadId) {
+        Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
+
+        if (localLockInfo == null) {
+            return false;
+        }
+
+        if (!Objects.equals(currentThreadId, localLockInfo.getFirst())) {
+            return false;
+        }
+
+        // Already locked by this thread - increment the nesting level to handle the unlock
+        // calls properly...
+        localLockInfo.getSecond().incrementAndGet();
+        return true;
+
     }
 
     /**
@@ -146,15 +152,27 @@ public class Locks implements MetricProvider {
      * @param lock the lock to check
      * @return <tt>true</tt> if the lock is currently active, <tt>false</tt> otherwise
      */
-    public synchronized boolean isLocked(@Nonnull String lock) {
-        Long currentThreadId = Thread.currentThread().getId();
+    public boolean isLocked(@Nonnull String lock) {
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lock);
 
         if (localLockInfo != null) {
-            return Objects.equals(currentThreadId, localLockInfo.getFirst());
+            return true;
         }
 
         return manager.isLocked(lock);
+    }
+    
+    /**
+     * Determines if the given lock is currently locked by the current thread.
+     *
+     * @param lock the lock to check
+     * @return <tt>true</tt> if the lock is currently active, <tt>false</tt> otherwise
+     */
+    public boolean isLockedByCurrentThread(@Nonnull String lock) {
+        Long currentThreadId = Thread.currentThread().getId();
+        Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lock);
+
+        return localLockInfo != null && Objects.equals(currentThreadId, localLockInfo.getFirst());
     }
 
     /**
@@ -173,15 +191,15 @@ public class Locks implements MetricProvider {
      * @param force if <tt>true</tt>, the lock will even be released if it is held by another node. This is a very
      *              dangerous operation and should only be used by maintenance and management tools.
      */
-    public synchronized void unlock(String lock, boolean force) {
+    public void unlock(String lock, boolean force) {
         if (!force) {
             if (unlockLocally(lock)) {
                 return;
             }
         }
 
-        manager.unlock(lock, force);
         localLocks.remove(lock);
+        manager.unlock(lock, force);
     }
 
     /**

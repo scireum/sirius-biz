@@ -32,7 +32,7 @@ import java.util.function.BiConsumer;
 public class PermissionDataImportExtender implements EntityImportHandlerExtender {
 
     @Override
-    public void collectLoaders(BaseImportHandler<BaseEntity<?>> handler,
+    public void collectLoaders(BaseImportHandler<? extends BaseEntity<?>> handler,
                                EntityDescriptor descriptor,
                                ImporterContext context,
                                BiConsumer<Mapping, BiConsumer<Context, Object>> loaderCollector) {
