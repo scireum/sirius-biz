@@ -9,7 +9,7 @@
 package sirius.biz.codelists.mongo;
 
 import sirius.biz.codelists.CodeList;
-import sirius.biz.tenants.deletion.DeleteMongoEntitiesTask;
+import sirius.biz.tenants.mongo.DeleteMongoEntitiesTask;
 import sirius.biz.tenants.deletion.DeleteTenantTask;
 import sirius.biz.tenants.mongo.MongoTenantAware;
 import sirius.kernel.di.std.Register;

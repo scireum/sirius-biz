@@ -9,7 +9,6 @@
 package sirius.biz.tenants.jdbc;
 
 import sirius.biz.tenants.UserAccount;
-import sirius.biz.tenants.deletion.DeleteSQLEntitiesTask;
 import sirius.biz.tenants.deletion.DeleteTenantTask;
 import sirius.kernel.di.std.Register;
 

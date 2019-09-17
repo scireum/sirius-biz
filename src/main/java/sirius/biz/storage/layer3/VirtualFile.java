@@ -11,6 +11,7 @@ package sirius.biz.storage.layer3;
 import com.google.common.io.ByteStreams;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.transformers.Composable;
@@ -112,6 +113,16 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
     }
 
+
+    /**
+     * Determines if the file represents a file.
+     *
+     * @return <tt>true</tt> if the file represents a file, <tt>false</tt> otherwise
+     */
+    public boolean isFile() {
+        return !isDirectory();
+    }
+
     private HandledException handleErrorInCallback(Exception e, String callback) {
         return Exceptions.handle()
                          .to(StorageUtils.LOG)
@@ -151,7 +162,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Returns the path a list of virtual files.
      *
-     * @return the path (from the root directory to this file) as list  
+     * @return the path (from the root directory to this file) as list
      */
     public List<VirtualFile> pathList() {
         List<VirtualFile> result = new ArrayList<>();
@@ -170,6 +181,16 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public String name() {
         return name == null ? "/" : name;
+    }
+
+    /**
+     * Returns the file extension of the {@link #name()}.
+     *
+     * @return the file extension or <tt>null</tt> if there is none
+     */
+    @Nullable
+    public String fileExtension() {
+        return Files.getFileExtension(name());
     }
 
     /**

@@ -14,9 +14,9 @@ import sirius.kernel.nls.NLS;
 import java.util.Optional;
 
 /**
- * Permits to select a directory in the {@link VirtualFileSystem}.
+ * Permits to select either a file or a directory in the {@link VirtualFileSystem}.
  */
-public class DirectoryParameter extends BaseFileParameter<DirectoryParameter> {
+public class FileOrDirectoryParameter extends BaseFileParameter<FileOrDirectoryParameter> {
 
     /**
      * Creates a new parameter with the given name and label.
@@ -24,18 +24,18 @@ public class DirectoryParameter extends BaseFileParameter<DirectoryParameter> {
      * @param name  the name of the parameter
      * @param label the label of the parameter, which will be {@link NLS#smartGet(String) auto translated}
      */
-    public DirectoryParameter(String name, String label) {
+    public FileOrDirectoryParameter(String name, String label) {
         super(name, label);
     }
 
     @Override
     public String getTemplateName() {
-        return "/templates/biz/storage/directoryfield.html.pasta";
+        return "/templates/biz/storage/fileordirectoryfield.html.pasta";
     }
 
     @Override
     protected String getErrorMessageKey() {
-        return "DirectoryParameter.invalidPath";
+        return "FileOrDirectoryParameter.invalidPath";
     }
 
     @Override
@@ -44,6 +44,6 @@ public class DirectoryParameter extends BaseFileParameter<DirectoryParameter> {
             return Optional.empty();
         }
 
-        return vfs.tryResolve(input.asString()).filter(file -> file.exists() && file.isDirectory());
+        return vfs.tryResolve(input.asString()).filter(file -> file.exists() || file.parent().exists());
     }
 }

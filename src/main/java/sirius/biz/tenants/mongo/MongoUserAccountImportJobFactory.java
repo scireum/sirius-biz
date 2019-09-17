@@ -9,12 +9,11 @@
 package sirius.biz.tenants.mongo;
 
 import sirius.biz.jobs.JobFactory;
-import sirius.biz.jobs.batch.file.LineBasedImportJob;
-import sirius.biz.jobs.batch.file.LineBasedImportJobFactory;
+import sirius.biz.jobs.batch.file.EntityImportJob;
+import sirius.biz.jobs.batch.file.EntityImportJobFactory;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.mixing.BaseEntity;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
@@ -25,31 +24,27 @@ import javax.annotation.Nonnull;
  */
 @Register(classes = JobFactory.class, framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
 @Permission(UserAccountController.PERMISSION_MANAGE_USER_ACCOUNTS)
-public class MongoUserAccountImportJobFactory extends LineBasedImportJobFactory {
-
-    @Part
-    private MongoTenants tenants;
+public class MongoUserAccountImportJobFactory extends EntityImportJobFactory {
 
     @Override
-    protected LineBasedImportJob<?> createJob(ProcessContext process) {
-        MongoTenant currentTenant = tenants.getRequiredTenant();
-
-        return new LineBasedImportJob<MongoUserAccount>(fileParameter,
-                                                        ignoreEmptyParameter,
-                                                        MongoUserAccount.class,
-                                                        getDictionary(),
-                                                        process) {
-            @Override
-            protected MongoUserAccount fillAndVerify(MongoUserAccount entity) {
-                setOrVerify(entity, entity.getTenant(), currentTenant);
-                return super.fillAndVerify(entity);
-            }
+    protected EntityImportJob<?> createJob(ProcessContext process) {
+        return new EntityImportJob<MongoUserAccount>(fileParameter,
+                                                     ignoreEmptyParameter,
+                                                     importModeParameter,
+                                                     MongoUserAccount.class,
+                                                     getDictionary(),
+                                                     process) {
         };
     }
 
     @Override
     protected Class<? extends BaseEntity<?>> getImportType() {
         return MongoUserAccount.class;
+    }
+
+    @Override
+    protected boolean hasPresetFor(Object targetObject) {
+        return targetObject == MongoUserAccount.class;
     }
 
     @Nonnull

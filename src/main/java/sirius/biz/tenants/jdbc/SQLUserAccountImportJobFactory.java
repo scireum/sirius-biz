@@ -9,9 +9,8 @@
 package sirius.biz.tenants.jdbc;
 
 import sirius.biz.jobs.JobFactory;
-import sirius.biz.jobs.batch.file.LineBasedImportJob;
-import sirius.biz.jobs.batch.file.LineBasedImportJobFactory;
-import sirius.biz.jobs.infos.JobInfoCollector;
+import sirius.biz.jobs.batch.file.EntityImportJob;
+import sirius.biz.jobs.batch.file.EntityImportJobFactory;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.mixing.BaseEntity;
@@ -26,26 +25,16 @@ import javax.annotation.Nonnull;
  */
 @Register(classes = JobFactory.class, framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
 @Permission(UserAccountController.PERMISSION_MANAGE_USER_ACCOUNTS)
-public class SQLUserAccountImportJobFactory extends LineBasedImportJobFactory {
-
-    @Part
-    private SQLTenants tenants;
+public class SQLUserAccountImportJobFactory extends EntityImportJobFactory {
 
     @Override
-    protected LineBasedImportJob<?> createJob(ProcessContext process) {
-        SQLTenant currentTenant = tenants.getRequiredTenant();
-
-        return new LineBasedImportJob<SQLUserAccount>(fileParameter,
-                                                      ignoreEmptyParameter,
-                                                      SQLUserAccount.class,
-                                                      getDictionary(),
-                                                      process) {
-            @Override
-            protected SQLUserAccount fillAndVerify(SQLUserAccount entity) {
-                setOrVerify(entity, entity.getTenant(), currentTenant);
-                return super.fillAndVerify(entity);
-            }
-        };
+    protected EntityImportJob<?> createJob(ProcessContext process) {
+        return new EntityImportJob<SQLUserAccount>(fileParameter,
+                                                   ignoreEmptyParameter,
+                                                   importModeParameter,
+                                                   SQLUserAccount.class,
+                                                   getDictionary(),
+                                                   process) {};
     }
 
     @Override
