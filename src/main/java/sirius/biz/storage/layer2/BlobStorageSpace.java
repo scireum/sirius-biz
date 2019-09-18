@@ -10,10 +10,16 @@ package sirius.biz.storage.layer2;
 
 import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
+import sirius.biz.storage.layer2.jdbc.SQLBlob;
+import sirius.biz.storage.util.StorageUtils;
 import sirius.db.KeyGenerator;
+import sirius.kernel.commons.Files;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,10 +32,21 @@ public abstract class BlobStorageSpace {
     protected static ObjectStorage objectStorage;
 
     @Part
-    protected KeyGenerator keyGenerator;
+    protected static KeyGenerator keyGenerator;
 
-    protected String name;
+    @Part
+    protected static StorageUtils utils;
+
+    protected String spaceName;
+    protected boolean browsable;
+    protected boolean readonly;
     private ObjectStorageSpace objectStorageSpace;
+
+    protected BlobStorageSpace(String spaceName, boolean browsable, boolean readonly) {
+        this.spaceName = spaceName;
+        this.browsable = browsable;
+        this.readonly = readonly;
+    }
 
     /**
      * Returns the associated layer 1 space which actually stores the data.
@@ -38,7 +55,7 @@ public abstract class BlobStorageSpace {
      */
     public ObjectStorageSpace getPhysicalSpace() {
         if (objectStorageSpace == null) {
-            objectStorageSpace = objectStorage.getSpace(name);
+            objectStorageSpace = objectStorage.getSpace(spaceName);
         }
         return objectStorageSpace;
     }
@@ -184,4 +201,24 @@ public abstract class BlobStorageSpace {
      * @return the total size in bytes
      */
     public abstract long getSizeOfBlobs();
+
+    /**
+     * Determines if this space is browsable (available as virtual file system in layer 3).
+     *
+     * @return <tt>true</tt> if this space is available as file system in layer 3, <tt>false</tt> otherwise
+     * @see L3Uplink
+     * @see sirius.biz.storage.layer3.VirtualFileSystem
+     */
+    public boolean isBrowsable() {
+        return browsable;
+    }
+
+    /**
+     * Determines if this space is readonly when browsing through it.
+     *
+     * @return <tt>true</tt> if this space is readonly, <tt>false</tt> otherwise
+     */
+    public boolean isReadonly() {
+        return readonly;
+    }
 }
