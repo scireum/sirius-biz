@@ -10,7 +10,7 @@ package sirius.biz.storage.layer2;
 
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.kernel.health.HandledException;
-import sirius.web.http.WebContext;
+import sirius.web.http.Response;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -95,18 +95,11 @@ public interface Blob {
     Optional<FileHandle> download();
 
     /**
-     * Delivers the data of this blob into the given request.
+     * Delivers the data of this blob into the given HTTP response.
      *
-     * @param ctx the request to send a respond to
+     * @param response the HTTP response to populate
      */
-    void deliver(WebContext ctx);
-
-    /**
-     * Delivers the data of this blob as a download into the given request.
-     *
-     * @param ctx the request to send a respond to
-     */
-    void deliverAsDownload(WebContext ctx);
+    void deliver(Response response);
 
     /**
      * Determines if this blob is still marked as temporary.
