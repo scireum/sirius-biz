@@ -39,7 +39,7 @@ public class BlobHardRef {
     }
 
     /**
-     * Returns the referenced blob or <tt>null</tt>.
+     * Retrieves the actual referenced blob from the storage layer.
      *
      * @return the referenced blob or <tt>null</tt> if there is no referenced blob
      */
@@ -149,7 +149,7 @@ public class BlobHardRef {
     }
 
     /**
-     * Returns the space in which referenced bobs are stored.
+     * Returns the space in which referenced blobs are stored.
      *
      * @return the name of the space in which referenced blobs are stored
      */

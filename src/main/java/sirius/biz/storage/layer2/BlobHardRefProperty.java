@@ -80,7 +80,7 @@ public class BlobHardRefProperty extends Property implements SQLPropertyInfo {
                             .to(OMA.LOG)
                             .error(e)
                             .withSystemErrorMessage(
-                                    "Unable to obtain StoredObjectRef object from entity ref field ('%s' in '%s'): %s (%s)",
+                                    "Unable to obtain a reference object from entity ref field ('%s' in '%s'): %s (%s)",
                                     getName(),
                                     descriptor.getType().getName())
                             .handle();
