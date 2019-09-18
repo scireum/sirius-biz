@@ -8,7 +8,7 @@
 
 package sirius.biz.storage.layer1;
 
-import sirius.web.http.WebContext;
+import sirius.web.http.Response;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -26,27 +26,23 @@ public interface StorageEngine {
     /**
      * Stores the given data for the given key in the given bucket.
      *
-     * @param space                the bucket to store the object in
-     * @param objectKey            the physical storage key (a key is always only used once)
-     * @param data                 the data to store
-     * @param size                 the byte length of the data
+     * @param space     the bucket to store the object in
+     * @param objectKey the physical storage key (a key is always only used once)
+     * @param data      the data to store
+     * @param size      the byte length of the data
      * @throws IOException in case of an IO error
      */
-    void storePhysicalObject(String space,
-                             String objectKey,
-                             InputStream data,
-                             long size) throws IOException;
+    void storePhysicalObject(String space, String objectKey, InputStream data, long size) throws IOException;
 
     /**
      * Stores the given data for the given key in the given bucket.
      *
-     * @param space                the bucket to store the object in
-     * @param objectKey            the physical storage key (a key is always only used once)
-     * @param file                 the data to store
+     * @param space     the bucket to store the object in
+     * @param objectKey the physical storage key (a key is always only used once)
+     * @param file      the data to store
      * @throws IOException in case of an IO error
      */
-    void storePhysicalObject(String space, String objectKey, File file)
-            throws IOException;
+    void storePhysicalObject(String space, String objectKey, File file) throws IOException;
 
     /**
      * Deletes the physical object in the given bucket with the given id
@@ -58,26 +54,9 @@ public interface StorageEngine {
     void deletePhysicalObject(String space, String objectKey) throws IOException;
 
     /**
-     * Delivers the requested object to the given request as response.
+     * Delivers the requested object to the given HTTP response.
      *
-     * @param ctx            the request to provide a response for
-     * @param space          the bucket of the object to deliver
-     * @param objectKey      the id of the object to deliver
-     * @param filename       the filename to use
-     * @param failureHandler a handler which cann be invoked if the download cannot be performed.
-     *                       This will be supplied with the HTTP error code.
-     * @throws IOException in case of an IO error
-     */
-    void deliverAsDownload(WebContext ctx,
-                           String space,
-                           String objectKey,
-                           String filename,
-                           @Nullable Consumer<Integer> failureHandler) throws IOException;
-
-    /**
-     * Delivers the requested object to the given request as response.
-     *
-     * @param ctx            the request to provide a response for
+     * @param response       the response to populate
      * @param space          the bucket of the object to deliver
      * @param objectKey      the id of the object to deliver
      * @param fileExtension  the file extension e.g. to setup a matching <tt>Content-Type</tt>
@@ -85,7 +64,7 @@ public interface StorageEngine {
      *                       This will be supplied with the HTTP error code.
      * @throws IOException in case of an IO error
      */
-    void deliver(WebContext ctx,
+    void deliver(Response response,
                  String space,
                  String objectKey,
                  String fileExtension,

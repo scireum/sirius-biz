@@ -11,10 +11,9 @@ package sirius.biz.storage.layer1;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.util.StorageUtils;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
-import sirius.web.http.WebContext;
+import sirius.web.http.Response;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -106,22 +105,22 @@ public class ObjectStorageSpace {
     }
 
     /**
-     * Delivers the requested object to the given request as response.
+     * Delivers the requested object to the given HTTP response.
      * <p>
      * If replication is active and delivery from the primary storage fails a delivery from the backup space is
      * attempted automatically (for 5XX HTTP errors).
      *
-     * @param ctx           the request to provide a response for
+     * @param response      the response to populate
      * @param objectId      the id of the object to deliver
      * @param fileExtension the file extension e.g. to setup a matching <tt>Content-Type</tt>
      */
-    public void deliver(WebContext ctx, String objectId, String fileExtension) {
+    public void deliver(Response response, String objectId, String fileExtension) {
         try {
-            engine.deliver(ctx,
+            engine.deliver(response,
                            name,
                            objectId,
                            fileExtension,
-                           status -> handleHttpError(ctx, objectId, fileExtension, null, status));
+                           status -> handleHttpError(response, objectId, fileExtension, status));
         } catch (IOException e) {
             throw Exceptions.handle()
                             .error(e)
@@ -129,70 +128,26 @@ public class ObjectStorageSpace {
                             .withSystemErrorMessage("Layer 1: An error occurred when delivering %s (%s) for %s: %s (%s)",
                                                     objectId,
                                                     name,
-                                                    ctx.getRequestedURI())
+                                                    response.getWebContext().getRequestedURI())
                             .handle();
         }
     }
 
-    /**
-     * Delivers the requested object to the given request as response.
-     * <p>
-     * If replication is active and delivery from the primary storage fails a delivery from the backup space is
-     * attempted automatically (for 5XX HTTP errors).
-     *
-     * @param ctx      the request to provide a response for
-     * @param objectId the id of the object to deliver
-     * @param filename the file name to specify
-     */
-    public void deliverAsDownload(WebContext ctx, String objectId, String filename) {
-        try {
-            engine.deliverAsDownload(ctx,
-                                     name,
-                                     objectId,
-                                     filename,
-                                     status -> handleHttpError(ctx, objectId, null, filename, status));
-        } catch (IOException e) {
-            try {
-                ctx.respondWith().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-            } catch (Exception ex) {
-                Exceptions.ignore(ex);
-            }
-            throw Exceptions.handle()
-                            .error(e)
-                            .to(StorageUtils.LOG)
-                            .withSystemErrorMessage("Layer 1: An error occurred when delivering %s (%s) for %s: %s (%s)",
-                                                    objectId,
-                                                    name,
-                                                    ctx.getRequestedURI())
-                            .handle();
-        }
-    }
-
-    private void handleHttpError(WebContext ctx,
-                                 String objectId,
-                                 @Nullable String fileExtension,
-                                 @Nullable String filename,
-                                 int status) {
+    private void handleHttpError(Response response, String objectId, @Nullable String fileExtension, int status) {
         ObjectStorageSpace replicationSpace = replicationManager.getReplicationSpace(name).orElse(null);
         if (replicationSpace == null) {
-            ctx.respondWith().error(HttpResponseStatus.valueOf(status));
+            response.error(HttpResponseStatus.valueOf(status));
             //TODO bump stats + record event
             return;
         }
 
         try {
-            if (Strings.isFilled(filename)) {
-                replicationSpace.engine.deliverAsDownload(ctx, name, objectId, filename, nextStatus -> {
-                    ctx.respondWith().error(HttpResponseStatus.valueOf(nextStatus));
-                });
-            } else {
-                replicationSpace.engine.deliver(ctx, name, objectId, fileExtension, nextStatus -> {
-                    ctx.respondWith().error(HttpResponseStatus.valueOf(nextStatus));
-                });
-            }
+            replicationSpace.engine.deliver(response, name, objectId, fileExtension, nextStatus -> {
+                response.error(HttpResponseStatus.valueOf(nextStatus));
+            });
         } catch (IOException e) {
             try {
-                ctx.respondWith().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                response.error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
             } catch (Exception ex) {
                 Exceptions.ignore(ex);
             }
@@ -205,7 +160,7 @@ public class ObjectStorageSpace {
                                     objectId,
                                     name,
                                     replicationSpace.name,
-                                    ctx.getRequestedURI())
+                                    response.getWebContext().getRequestedURI())
                             .handle();
         }
 
