@@ -11,16 +11,26 @@ package sirius.biz.storage.util;
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import sirius.kernel.Sirius;
+import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.kernel.settings.Extension;
 
+import javax.annotation.Nullable;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Collection;
+import java.util.function.Consumer;
 
 /**
  * Provides various helpers for the storage framework.
@@ -139,5 +149,84 @@ public class StorageUtils {
         }
 
         return safeSharedSecret;
+    }
+
+    /**
+     * Normalizes the given path.
+     *
+     * @param path the path to cleanup
+     * @return the normalized path without \ or // or " "
+     */
+    @Nullable
+    public static String normalizePath(@Nullable String path) {
+        if (Strings.isEmpty(path)) {
+            return null;
+        }
+
+        String normalizedPath = path.trim().replace(" ", "").replace("\\", "/").replaceAll("/+", "/").toLowerCase();
+        if (normalizedPath.length() == 0) {
+            return null;
+        }
+
+        if (!normalizedPath.startsWith("/")) {
+            normalizedPath = "/" + normalizedPath;
+        }
+
+        return normalizedPath;
+    }
+
+    /**
+     * Creates an output stream which writes into a local buffer and invokes the given consumer once the stream is closed.
+     * <p>
+     * Note that the local buffer is automatically deleted once the consumer has completed.
+     *
+     * @param dataConsumer the consumer which processes the locally buffered file
+     * @return the output stream which can be used to fill the buffer
+     * @throws IOException in case of an IO error while creating the local buffer
+     */
+    public OutputStream createLocalBuffer(Consumer<File> dataConsumer) throws IOException {
+        File bufferFile = File.createTempFile("local-file-buffer", null);
+        WatchableOutputStream out = new WatchableOutputStream(new FileOutputStream(bufferFile));
+        out.getCompletionFuture().onFailure(error -> {
+            bufferFile.delete();
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .error(error)
+                            .withSystemErrorMessage("An error occured while writing to a temporary buffer: %s (%s)")
+                            .handle();
+        });
+        out.getCompletionFuture().onSuccess(() -> {
+            try {
+                dataConsumer.accept(bufferFile);
+            } finally {
+                Files.delete(bufferFile);
+            }
+        });
+
+        return out;
+    }
+
+    /**
+     * Creates an output stream which writes into a local buffer and invokes the given consumer once the stream is closed.
+     * <p>
+     * Note that the local buffer is deleted once the consumer has completed.
+     *
+     * @param dataConsumer the consumer which processes the local buffer by reading from an input stream
+     * @return the output stream which can be used to fill the buffer
+     * @throws IOException in case of an IO error while creating the local buffer
+     */
+    public OutputStream createLocallyBufferedStream(Consumer<InputStream> dataConsumer) throws IOException {
+        return createLocalBuffer(bufferFile -> {
+            try (InputStream in = new FileInputStream(bufferFile)) {
+                dataConsumer.accept(in);
+            } catch (IOException e) {
+                throw Exceptions.handle()
+                                .to(StorageUtils.LOG)
+                                .error(e)
+                                .withSystemErrorMessage(
+                                        "An error occured while reading from a temporary buffer: %s (%s)")
+                                .handle();
+            }
+        });
     }
 }
