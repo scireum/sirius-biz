@@ -22,9 +22,9 @@ public class AmountRangeCheck implements ValueCheck {
     private static final String PARAM_OPERATOR = "operator";
     private static final String PARAM_LIMIT = "limit";
 
-    private Amount min;
+    private Amount min = Amount.NOTHING;
     private boolean includeMin;
-    private Amount max;
+    private Amount max = Amount.NOTHING;
     private boolean includeMax;
     private NumberFormat numberFormat;
 
@@ -89,15 +89,19 @@ public class AmountRangeCheck implements ValueCheck {
     public void perform(Value value) {
         Amount amount = value.getAmount();
         if (min.isFilled()) {
-            if (includeMin && amount.isLessThan(min)) {
-                throwRangeError(amount, ">=", min);
+            if (includeMin) {
+                if (amount.isLessThan(min)) {
+                    throwRangeError(amount, ">=", min);
+                }
             } else if (amount.isLessThanOrEqual(min)) {
                 throwRangeError(amount, ">", min);
             }
         }
         if (max.isFilled()) {
-            if (includeMax && amount.isGreaterThan(max)) {
-                throwRangeError(amount, "<=", max);
+            if (includeMax) {
+                if (amount.isGreaterThan(max)) {
+                    throwRangeError(amount, "<=", max);
+                }
             } else if (amount.isGreaterThanOrEqual(max)) {
                 throwRangeError(amount, "<", max);
             }
