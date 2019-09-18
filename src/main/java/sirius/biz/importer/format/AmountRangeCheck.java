@@ -22,9 +22,9 @@ public class AmountRangeCheck implements ValueCheck {
     private static final String PARAM_OPERATOR = "operator";
     private static final String PARAM_LIMIT = "limit";
 
-    private Amount min;
+    private Amount min = Amount.NOTHING;
     private boolean includeMin;
-    private Amount max;
+    private Amount max = Amount.NOTHING;
     private boolean includeMax;
     private NumberFormat numberFormat;
 
