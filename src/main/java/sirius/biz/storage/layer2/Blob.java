@@ -35,7 +35,7 @@ public interface Blob {
     BlobStorageSpace getStorageSpace();
 
     /**
-     * Returns the parent directory if this blob if associated to one.
+     * Returns the parent directory if this blob is associated to one.
      *
      * @return the parent directory or <tt>null</tt> if this blob isn't stored in a browsable location
      */
@@ -155,7 +155,7 @@ public interface Blob {
     /**
      * Provides new content for this blob.
      * <p>
-     * Note that this will create a new physical object and might keep the original one as <{@link BlobRevision}.
+     * Note that this will create a new physical object and might keep the original one as a {@link BlobRevision}.
      *
      * @param filename the new filename to use (if given)
      * @param file     the file providing the new data to use
@@ -165,7 +165,7 @@ public interface Blob {
     /**
      * Provides new content for this blob.
      * <p>
-     * Note that this will create a new physical object and might keep the original one as <{@link BlobRevision}.
+     * Note that this will create a new physical object and might keep the original one as a {@link BlobRevision}.
      *
      * @param filename      the new filename to use (if given)
      * @param data          the stream providing the data to use
