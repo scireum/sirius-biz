@@ -40,7 +40,11 @@ import java.util.function.Consumer;
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ClickhouseSizeChartJobFactory extends LinearChartJobFactory {
 
+    /**
+     * Contains the job name as constant to be referenced by the {@link ClickhousePartsReportJobFactory}.
+     */
     public static final String JOB_NAME = "clickhouse-size";
+
     @Part
     private EventRecorder recorder;
 
@@ -50,7 +54,7 @@ public class ClickhouseSizeChartJobFactory extends LinearChartJobFactory {
 
     @Override
     public String getLabel() {
-        return "Clickhouse size per month";
+        return "Clickhouse Size per Month";
     }
 
     @Override
@@ -141,5 +145,4 @@ public class ClickhouseSizeChartJobFactory extends LinearChartJobFactory {
     public String getName() {
         return JOB_NAME;
     }
-
 }

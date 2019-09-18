@@ -28,8 +28,8 @@ import sirius.kernel.settings.Extension;
  * Note that this layer neither keeps track of the objects being stored nor known paths, files or directory. This
  * is completely handled in the layer 2.
  */
-@Register(classes = PhysicalObjectStorage.class)
-public class PhysicalObjectStorage {
+@Register(classes = ObjectStorage.class)
+public class ObjectStorage {
 
     /**
      * Contains the config attribute which determines which storage engine to use for a space.
@@ -45,13 +45,13 @@ public class PhysicalObjectStorage {
     @ConfigValue("storage.layer1.spaces.default.engine")
     private String defaultEngine;
 
-    private DerivedSpaceInfo<PhysicalStorageEngine> engines = new DerivedSpaceInfo<>(CONFIG_KEY_LAYER1_ENGINE,
-                                                                                     StorageUtils.ConfigScope.LAYER1,
-                                                                                     this::resolveStorageEngine);
+    private DerivedSpaceInfo<StorageEngine> engines = new DerivedSpaceInfo<>(CONFIG_KEY_LAYER1_ENGINE,
+                                                                             StorageUtils.ConfigScope.LAYER1,
+                                                                             this::resolveStorageEngine);
 
-    private PhysicalStorageEngine resolveStorageEngine(Extension extension) {
-        PhysicalStorageEngine result =
-                globalContext.getPart(extension.getString(CONFIG_KEY_LAYER1_ENGINE), PhysicalStorageEngine.class);
+    private StorageEngine resolveStorageEngine(Extension extension) {
+        StorageEngine result =
+                globalContext.getPart(extension.getString(CONFIG_KEY_LAYER1_ENGINE), StorageEngine.class);
         if (result != null) {
             return result;
         }
@@ -60,7 +60,7 @@ public class PhysicalObjectStorage {
                               extension.getString(CONFIG_KEY_LAYER1_ENGINE),
                               extension.getId(),
                               defaultEngine);
-        return globalContext.getPart(defaultEngine, PhysicalStorageEngine.class);
+        return globalContext.getPart(defaultEngine, StorageEngine.class);
     }
 
     /**
@@ -78,9 +78,9 @@ public class PhysicalObjectStorage {
      *
      * @param name the name of the space
      * @return a wrapper which is used to access the objects stored in the storage space
-     * @throws sirius.kernel.health.HandledException if an unknow storage space is requested.
+     * @throws sirius.kernel.health.HandledException if an unknown storage space is requested.
      */
-    public PhysicalStorageSpace getSpace(String name) {
-        return new PhysicalStorageSpace(name, engines.get(name));
+    public ObjectStorageSpace getSpace(String name) {
+        return new ObjectStorageSpace(name, engines.get(name));
     }
 }

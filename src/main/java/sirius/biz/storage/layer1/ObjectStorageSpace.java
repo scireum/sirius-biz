@@ -25,18 +25,18 @@ import java.util.Optional;
 /**
  * Provides access to a layer 1 storage space.
  * <p>
- * This is essentially a bridge to the underlying {@link PhysicalStorageEngine} for this space. This is also
+ * This is essentially a bridge to the underlying {@link StorageEngine} for this space. This is also
  * responsible for invoking the {@link ReplicationManager} if needed.
  */
-public class PhysicalStorageSpace {
+public class ObjectStorageSpace {
 
     private String name;
-    private PhysicalStorageEngine engine;
+    private StorageEngine engine;
 
     @Part
     private static ReplicationManager replicationManager;
 
-    protected PhysicalStorageSpace(String name, PhysicalStorageEngine engine) {
+    protected ObjectStorageSpace(String name, StorageEngine engine) {
         this.name = name;
         this.engine = engine;
     }
@@ -173,7 +173,7 @@ public class PhysicalStorageSpace {
                                  @Nullable String fileExtension,
                                  @Nullable String filename,
                                  int status) {
-        PhysicalStorageSpace replicationSpace = replicationManager.getReplicationSpace(name).orElse(null);
+        ObjectStorageSpace replicationSpace = replicationManager.getReplicationSpace(name).orElse(null);
         if (replicationSpace == null) {
             ctx.respondWith().error(HttpResponseStatus.valueOf(status));
             //TODO bump stats + record event
