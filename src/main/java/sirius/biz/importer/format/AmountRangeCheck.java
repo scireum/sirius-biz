@@ -89,15 +89,19 @@ public class AmountRangeCheck implements ValueCheck {
     public void perform(Value value) {
         Amount amount = value.getAmount();
         if (min.isFilled()) {
-            if (includeMin && amount.isLessThan(min)) {
-                throwRangeError(amount, ">=", min);
+            if (includeMin) {
+                if (amount.isLessThan(min)) {
+                    throwRangeError(amount, ">=", min);
+                }
             } else if (amount.isLessThanOrEqual(min)) {
                 throwRangeError(amount, ">", min);
             }
         }
         if (max.isFilled()) {
-            if (includeMax && amount.isGreaterThan(max)) {
-                throwRangeError(amount, "<=", max);
+            if (includeMax) {
+                if (amount.isGreaterThan(max)) {
+                    throwRangeError(amount, "<=", max);
+                }
             } else if (amount.isGreaterThanOrEqual(max)) {
                 throwRangeError(amount, "<", max);
             }
