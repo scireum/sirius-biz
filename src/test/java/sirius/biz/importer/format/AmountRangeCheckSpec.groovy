@@ -43,7 +43,7 @@ class AmountRangeCheckSpec extends Specification {
         thrown IllegalArgumentException
     }
 
-    def "values equal to the exclusive lower limit are correctly marked as valid"() {
+    def "values equal to the exclusive lower limit are correctly marked as invalid"() {
         when:
         new AmountRangeCheck(NumberFormat.NO_DECIMAL_PLACES).withLowerLimitExclusive(Amount.ONE).perform(Value.of(1))
         then:
