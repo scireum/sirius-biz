@@ -14,6 +14,7 @@ import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.transformers.Composable;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
@@ -25,6 +26,7 @@ import sirius.web.http.WebContext;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -69,6 +71,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     protected Function<VirtualFile, Boolean> deleteHandler;
     protected Predicate<VirtualFile> canProvideOutputStream;
     protected Function<VirtualFile, OutputStream> outputStreamSupplier;
+    protected Predicate<VirtualFile> canConsumeStream;
+    protected BiConsumer<VirtualFile, Tuple<InputStream, Long>> consumeStreamHandler;
+    protected Predicate<VirtualFile> canConsumeFile;
+    protected BiConsumer<VirtualFile, File> consumeFileHandler;
     protected Predicate<VirtualFile> canProvideInputStream;
     protected Function<VirtualFile, InputStream> inputStreamSupplier;
     protected BiConsumer<VirtualFile, Response> tunnelHandler = VirtualFile::defaultTunnelHandler;
@@ -76,6 +82,9 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     protected BiFunction<VirtualFile, VirtualFile, Boolean> moveHandler;
     protected Predicate<VirtualFile> canRenameHandler;
     protected BiFunction<VirtualFile, String, Boolean> renameHandler;
+
+    @Part
+    private static StorageUtils utils;
 
     /**
      * Internal constructor to create the "/" directory.
@@ -686,36 +695,109 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if an output stream can be created, <tt>false</tt> otherwise
      */
     public boolean canCreateOutputStream() {
-        try {
-            if (outputStreamSupplier == null) {
-                return false;
-            }
+        if (isReadonly()) {
+            return false;
+        }
 
-            if (canProvideOutputStream != null) {
-                return canProvideOutputStream.test(this);
-            } else {
-                return true;
-            }
+        if (internalCanCreateOutputStream()) {
+            return true;
+        }
+
+        if (internalCanConsumeFile()) {
+            return true;
+        }
+
+        return internalCanConsumeStream();
+    }
+
+    protected boolean internalCanCreateOutputStream() {
+        try {
+            return consumeStreamHandler != null && (canConsumeStream == null || canConsumeStream.test(this));
+        } catch (Exception e) {
+            throw handleErrorInCallback(e, "canConsumeStream");
+        }
+    }
+
+    protected boolean internalCanConsumeStream() {
+        try {
+            return outputStreamSupplier != null && (canProvideOutputStream == null
+                                                    || canProvideOutputStream.test(this));
         } catch (Exception e) {
             throw handleErrorInCallback(e, "canProvideOutputStream");
         }
     }
 
+    protected boolean internalCanConsumeFile() {
+        try {
+            return consumeFileHandler != null && (canConsumeFile == null || canConsumeFile.test(this));
+        } catch (Exception e) {
+            throw handleErrorInCallback(e, "canConsumeFile");
+        }
+    }
+
     /**
      * Tries to create an output stream to write to the file.
+     * <p>
+     * Note that if the stream will be used to transfer data from a file or another stream, {@link #consumeFile(File)}
+     * or {@link #consumeStream(InputStream, long)} should be used as these are likely to be more efficient.
      *
-     * @return an output stream to provide the contents of the child or an empty optional if no output stream can be created
+     * @return an output stream to provide the contents of the child or an empty optional if no output stream can be
+     * created
      */
     public Optional<OutputStream> tryCreateOutputStream() {
-        try {
-            if (!canCreateOutputStream()) {
-                return Optional.empty();
-            }
+        if (!canCreateOutputStream()) {
+            return Optional.empty();
+        }
 
-            return Optional.ofNullable(outputStreamSupplier.apply(this));
+        try {
+            if (outputStreamSupplier != null) {
+                return Optional.ofNullable(outputStreamSupplier.apply(this));
+            }
         } catch (Exception e) {
             throw handleErrorInCallback(e, "outputStreamSupplier");
         }
+
+        if (consumeFileHandler != null) {
+            try {
+                return Optional.of(utils.createLocalBuffer(data -> {
+                    try {
+                        consumeFileHandler.accept(this, data);
+                    } catch (Exception e) {
+                        throw handleErrorInCallback(e, "consumeFileHandler");
+                    }
+                }));
+            } catch (Exception e) {
+                throw Exceptions.handle()
+                                .to(StorageUtils.LOG)
+                                .error(e)
+                                .withSystemErrorMessage(
+                                        "Layer 3/VFS: An error occurred in 'tryCreateOutputStream' of '%s': %s (%s)",
+                                        path())
+                                .handle();
+            }
+        }
+
+        if (consumeStreamHandler != null) {
+            try {
+                return Optional.of(utils.createLocalBuffer(data -> {
+                    try (FileInputStream in = new FileInputStream(data)) {
+                        consumeStreamHandler.accept(this, Tuple.create(in, data.length()));
+                    } catch (Exception e) {
+                        throw handleErrorInCallback(e, "consumeFileHandler");
+                    }
+                }));
+            } catch (Exception e) {
+                throw Exceptions.handle()
+                                .to(StorageUtils.LOG)
+                                .error(e)
+                                .withSystemErrorMessage(
+                                        "Layer 3/VFS: An error occurred in 'tryCreateOutputStream' of '%s': %s (%s)",
+                                        path())
+                                .handle();
+            }
+        }
+
+        return Optional.empty();
     }
 
     /**
@@ -729,6 +811,177 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                                                                    .withNLSKey("VirtualFile.cannotWrite")
                                                                    .set("file", path())
                                                                    .handle());
+    }
+
+    /**
+     * Determines if a given stream can be consumed to update the contents of this file.
+     * <p>
+     * Note that {@link #isWriteable()} is probably the better check.
+     *
+     * @return <tt>true</tt> if a stream can be consumed, <tt>false</tt> otherwise
+     */
+    public boolean canConsumeStream() {
+        if (isReadonly()) {
+            return false;
+        }
+
+        if (internalCanCreateOutputStream()) {
+            return true;
+        }
+
+        if (internalCanCreateOutputStream()) {
+            return true;
+        }
+
+        return internalCanConsumeFile();
+    }
+
+    /**
+     * Tries to consume the given stream to update the contents of this file.
+     * <p>
+     * Note that if the source i a {@link File} {@link #consumeFile(File)} can be used which is likely to be more
+     * efficient.
+     *
+     * @param inputStream the stream to read the contents from
+     * @param length      the total number of bytes which will be provided via the given stream
+     * @return <tt>true</tt> if the stream was consumed and the contents were updated, <tt>false</tt> otherwise
+     */
+    public boolean tryConsumeStream(InputStream inputStream, long length) {
+        if (!canConsumeStream()) {
+            return false;
+        }
+
+        if (consumeStreamHandler != null) {
+            try {
+                consumeStreamHandler.accept(this, Tuple.create(inputStream, length));
+                return true;
+            } catch (Exception e) {
+                throw handleErrorInCallback(e, "consumeFileHandler");
+            }
+        }
+
+        if (outputStreamSupplier != null) {
+            try (OutputStream out = outputStreamSupplier.apply(this)) {
+                ByteStreams.copy(inputStream, out);
+                return true;
+            } catch (Exception e) {
+                throw handleErrorInCallback(e, "outputStreamSupplier");
+            }
+        }
+
+        if (consumeFileHandler != null) {
+            try (OutputStream out = utils.createLocalBuffer(bufferedData -> {
+                try {
+                    consumeFileHandler.accept(this, bufferedData);
+                } catch (Exception e) {
+                    throw handleErrorInCallback(e, "consumeFileHandler");
+                }
+            })) {
+                ByteStreams.copy(inputStream, out);
+                return true;
+            } catch (Exception e) {
+                throw Exceptions.handle()
+                                .to(StorageUtils.LOG)
+                                .error(e)
+                                .withSystemErrorMessage(
+                                        "Layer 3/VFS: An error occurred in 'tryConsumeStream' of '%s': %s (%s)",
+                                        path())
+                                .handle();
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Consumes the given stream to update the contents of this file or throws an exception if this fails.
+     * <p>
+     * Note that if the source i a {@link File} {@link #consumeFile(File)} can be used which is likely to be more
+     * efficient.
+     *
+     * @param inputStream the stream to read the contents from
+     * @param length      the total number of bytes which will be provided via the given stream
+     * @throws HandledException if the stream cannot be consumed
+     */
+    public void consumeStream(InputStream inputStream, long length) {
+        if (!tryConsumeStream(inputStream, length)) {
+            throw Exceptions.createHandled().withNLSKey("VirtualFile.cannotWrite").set("file", path()).handle();
+        }
+    }
+
+    /**
+     * Determines if a given file can be consumed to update the contents of this file.
+     * <p>
+     * Note that {@link #isWriteable()} is probably the better check.
+     *
+     * @return <tt>true</tt> if a file can be consumed, <tt>false</tt> otherwise
+     */
+    public boolean canConsumeFile() {
+        if (isReadonly()) {
+            return false;
+        }
+
+        if (internalCanConsumeFile()) {
+            return true;
+        }
+
+        if (internalCanCreateOutputStream()) {
+            return true;
+        }
+
+        return internalCanConsumeStream();
+    }
+
+    /**
+     * Tries to consume the given file to update the contents of this file.
+     *
+     * @param data the file to read the contents from
+     * @return <tt>true</tt> if the file was consumed and the contents were updated, <tt>false</tt> otherwise
+     */
+    public boolean tryConsumeFile(File data) {
+        if (!canConsumeFile()) {
+            return false;
+        }
+
+        if (consumeFileHandler != null) {
+            try {
+                consumeFileHandler.accept(this, data);
+            } catch (Exception e) {
+                throw handleErrorInCallback(e, "consumeFileHandler");
+            }
+        }
+
+        if (consumeStreamHandler != null) {
+            try (FileInputStream in = new FileInputStream(data)) {
+                consumeStreamHandler.accept(this, Tuple.create(in, data.length()));
+                return true;
+            } catch (Exception e) {
+                throw handleErrorInCallback(e, "consumeFileHandler");
+            }
+        }
+
+        if (outputStreamSupplier != null) {
+            try (OutputStream out = outputStreamSupplier.apply(this); FileInputStream in = new FileInputStream(data)) {
+                ByteStreams.copy(in, out);
+                return true;
+            } catch (Exception e) {
+                throw handleErrorInCallback(e, "outputStreamSupplier");
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Consumes the given file to update the contents of this file or throws an exception if this fails.
+     *
+     * @param data the file to read the contents from
+     * @throws HandledException if the file cannot be consumed
+     */
+    public void consumeFile(File data) {
+        if (!tryConsumeFile(data)) {
+            throw Exceptions.createHandled().withNLSKey("VirtualFile.cannotWrite").set("file", path()).handle();
+        }
     }
 
     /**
