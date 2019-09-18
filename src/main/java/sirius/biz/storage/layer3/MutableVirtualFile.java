@@ -72,6 +72,20 @@ public class MutableVirtualFile extends VirtualFile {
     }
 
     /**
+     * Determines if file is generally considered readonly.
+     * <p>
+     * If a file is marked as readonly, all mutators like {@link #canDelete()} or {@link #canConsumeFile} etc. will
+     * automatically return false.
+     *
+     * @param readonlyHandler the predicate used to determine if this file is considered readonly
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withReadonlyHandler(Predicate<VirtualFile> readonlyHandler) {
+        this.readonlyHandler = readonlyHandler;
+        return this;
+    }
+
+    /**
      * Used to retrieve all child files of a directory.
      *
      * @param childProvider the provider which supplies all children for a given search query

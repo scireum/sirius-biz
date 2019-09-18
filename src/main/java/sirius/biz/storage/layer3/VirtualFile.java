@@ -61,6 +61,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     protected Function<VirtualFile, Long> sizeSupplier;
     protected Predicate<VirtualFile> directoryFlagSupplier;
     protected Predicate<VirtualFile> existsFlagSupplier;
+    protected Predicate<VirtualFile> readonlyHandler;
     protected Predicate<VirtualFile> canCreateChildrenHandler;
     protected Predicate<VirtualFile> canCreateDirectoryHandler;
     protected Function<VirtualFile, Boolean> createDirectoryHandler;
@@ -112,7 +113,6 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             throw handleErrorInCallback(e, "directoryFlagSupplier");
         }
     }
-
 
     /**
      * Determines if the file represents a file.
@@ -247,6 +247,19 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     }
 
     /**
+     * Determines if the file is considered readonly.
+     *
+     * @return <tt>true</tt> if the file is considered readonly, <tt>false</tt> otherwise
+     */
+    protected boolean isReadonly() {
+        try {
+            return readonlyHandler != null && readonlyHandler.test(this);
+        } catch (Exception e) {
+            throw handleErrorInCallback(e, "readonlySupplier");
+        }
+    }
+
+    /**
      * Determines if this file can (probably) be deleted.
      *
      * @return <tt>true</tt> if this file can be delete or <tt>false</tt> otherwise
@@ -254,6 +267,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     public boolean canDelete() {
         try {
             if (deleteHandler == null) {
+                return false;
+            }
+
+            if (isReadonly()) {
                 return false;
             }
 
@@ -306,6 +323,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return false;
             }
 
+            if (isReadonly()) {
+                return false;
+            }
+
             if (canRenameHandler != null) {
                 return canRenameHandler.test(this);
             } else {
@@ -354,6 +375,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     public boolean canFastMove() {
         try {
             if (moveHandler == null) {
+                return false;
+            }
+
+            if (isReadonly()) {
                 return false;
             }
 
@@ -579,6 +604,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean canCreateChildren() {
         try {
+            if (isReadonly()) {
+                return false;
+            }
+
             if (canCreateChildrenHandler != null) {
                 return canCreateChildrenHandler.test(this);
             }
