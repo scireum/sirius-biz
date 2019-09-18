@@ -31,10 +31,10 @@ import java.io.InputStream;
 import java.util.function.Consumer;
 
 /**
- * Provides a {@link PhysicalStorageEngine} which operates on the local file system.
+ * Provides a {@link StorageEngine} which operates on the local file system.
  */
 @Register(framework = StorageUtils.FRAMEWORK_STORAGE)
-public class FSStorageEngine implements PhysicalStorageEngine, Named {
+public class FSStorageEngine implements StorageEngine, Named {
 
     /**
      * Contains the full path used to store objects.
@@ -55,7 +55,7 @@ public class FSStorageEngine implements PhysicalStorageEngine, Named {
                                                                      this::resolveEffectiveBaseDir);
 
     private boolean filterByStorageEngine(Extension ext) {
-        return Strings.areEqual(ext.getString(PhysicalObjectStorage.CONFIG_KEY_LAYER1_ENGINE), getName());
+        return Strings.areEqual(ext.getString(ObjectStorage.CONFIG_KEY_LAYER1_ENGINE), getName());
     }
 
     private File resolveEffectiveBaseDir(Extension ext) {

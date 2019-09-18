@@ -9,8 +9,8 @@
 package sirius.biz.storage.layer1.replication;
 
 import sirius.biz.storage.layer1.FileHandle;
-import sirius.biz.storage.layer1.PhysicalObjectStorage;
-import sirius.biz.storage.layer1.PhysicalStorageSpace;
+import sirius.biz.storage.layer1.ObjectStorage;
+import sirius.biz.storage.layer1.ObjectStorageSpace;
 import sirius.biz.storage.util.DerivedSpaceInfo;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
@@ -40,7 +40,7 @@ public class ReplicationManager {
     public static final String CONFIG_KEY_LAYER1_REPLICATION_SPACE = "replicationSpace";
 
     @Part
-    private PhysicalObjectStorage physicalObjectStorage;
+    private ObjectStorage objectStorage;
 
     @Part
     private ReplicationTaskStorage taskStorage;
@@ -63,7 +63,7 @@ public class ReplicationManager {
             return "";
         }
 
-        if (!physicalObjectStorage.isKnown(replicationSpace)) {
+        if (!objectStorage.isKnown(replicationSpace)) {
             StorageUtils.LOG.WARN("Layer 1: Cannot use unknown space '%s' as replication space for '%s'!",
                                   replicationSpace,
                                   ext.getId());
@@ -102,13 +102,13 @@ public class ReplicationManager {
      * @param primarySpace the space to determine the replication space for
      * @return the replication space wrapped as optional or an empty one if there is no replication configured
      */
-    public Optional<PhysicalStorageSpace> getReplicationSpace(String primarySpace) {
+    public Optional<ObjectStorageSpace> getReplicationSpace(String primarySpace) {
         String replicationSpace = replicationSpaces.get(primarySpace);
         if (Strings.isEmpty(replicationSpace)) {
             return Optional.empty();
         }
 
-        return Optional.of(physicalObjectStorage.getSpace(replicationSpace));
+        return Optional.of(objectStorage.getSpace(replicationSpace));
     }
 
     /**
@@ -150,7 +150,7 @@ public class ReplicationManager {
             throw new IllegalStateException("Cannot execute replication tasks without a storage!");
         }
 
-        PhysicalStorageSpace replicationSpace = getReplicationSpace(space).orElse(null);
+        ObjectStorageSpace replicationSpace = getReplicationSpace(space).orElse(null);
         if (replicationSpace == null) {
             return;
         }
@@ -158,7 +158,7 @@ public class ReplicationManager {
         if (performDelete) {
             replicationSpace.delete(objectId);
         } else {
-            PhysicalStorageSpace primarySpace = physicalObjectStorage.getSpace(space);
+            ObjectStorageSpace primarySpace = objectStorage.getSpace(space);
             try (FileHandle handle = primarySpace.download(objectId).orElse(null)) {
                 if (handle != null) {
                     replicationSpace.upload(objectId, handle.getFile());

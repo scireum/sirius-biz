@@ -13,10 +13,10 @@ import com.google.common.io.CharStreams
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
 
-class PhysicalObjectStorageSpec extends BaseSpecification {
+class ObjectStorageSpec extends BaseSpecification {
 
     @Part
-    private static PhysicalObjectStorage storage
+    private static ObjectStorage storage
 
     def "fs engine stores and fetches data as expected"() {
         given:

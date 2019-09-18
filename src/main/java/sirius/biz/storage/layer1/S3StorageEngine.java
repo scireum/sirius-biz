@@ -32,10 +32,10 @@ import java.io.InputStream;
 import java.util.function.Consumer;
 
 /**
- * Provides a {@link PhysicalStorageEngine} which stores all objects in a bucket in a S3 compatible store.
+ * Provides a {@link StorageEngine} which stores all objects in a bucket in a S3 compatible store.
  */
 @Register(framework = StorageUtils.FRAMEWORK_STORAGE)
-public class S3StorageEngine implements PhysicalStorageEngine, Named {
+public class S3StorageEngine implements StorageEngine, Named {
 
     /**
      * Contains the name of the {@link ObjectStore} used to connect to the S3 compatible store.
@@ -51,7 +51,7 @@ public class S3StorageEngine implements PhysicalStorageEngine, Named {
                                                                           this::resolveObjectStore);
 
     private boolean filterByStorageEngine(Extension ext) {
-        return Strings.areEqual(ext.getString(PhysicalObjectStorage.CONFIG_KEY_LAYER1_ENGINE), getName());
+        return Strings.areEqual(ext.getString(ObjectStorage.CONFIG_KEY_LAYER1_ENGINE), getName());
     }
 
     private ObjectStore resolveObjectStore(Extension ext) {
