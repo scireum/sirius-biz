@@ -23,12 +23,33 @@ import java.util.stream.Stream;
 public abstract class BlobStorage {
 
     /**
+     * Contains the name of the config key used by {@link #browsable} to determine if a space is browsable.
+     *
+     * @see #browsable
+     */
+    public static final String CONFIG_KEY_LAYER2_BROWSABLE = "browsable";
+
+    /**
+     * Contains the name of the config key used by {@link #readonly} to determine if a space is readonly.
+     *
+     * @see #readonly
+     */
+    public static final String CONFIG_KEY_LAYER2_READONLY = "readonly";
+
+    @Part
+    protected StorageUtils util;
+
+    /**
      * Determines if the space is browsable.
      * <p>
      * A browsable space has a root directory per tenant and can be viewed and used like a regular file system
      * via the {@link L3Uplink uplink}.
      */
-    public static final String CONFIG_KEY_LAYER2_BROWSABLE = "browsable";
+    protected DerivedSpaceInfo<Boolean> browsable = new DerivedSpaceInfo<>(CONFIG_KEY_LAYER2_BROWSABLE,
+                                                                           StorageUtils.ConfigScope.LAYER2,
+                                                                           extension -> extension.get(
+                                                                                   CONFIG_KEY_LAYER2_BROWSABLE)
+                                                                                                 .asBoolean());
 
     /**
      * Determines if the space is mounted as readonly.
@@ -36,17 +57,6 @@ public abstract class BlobStorage {
      * A {@link #browsable} space can me mounted readonly which will suppress all mutating calls via the Layer 3
      * {@link L3Uplink uplink}.
      */
-    public static final String CONFIG_KEY_LAYER2_READONLY = "readonly";
-
-    @Part
-    protected StorageUtils util;
-
-    protected DerivedSpaceInfo<Boolean> browsable = new DerivedSpaceInfo<>(CONFIG_KEY_LAYER2_BROWSABLE,
-                                                                           StorageUtils.ConfigScope.LAYER2,
-                                                                           extension -> extension.get(
-                                                                                   CONFIG_KEY_LAYER2_BROWSABLE)
-                                                                                                 .asBoolean());
-
     protected DerivedSpaceInfo<Boolean> readonly = new DerivedSpaceInfo<>(CONFIG_KEY_LAYER2_READONLY,
                                                                           StorageUtils.ConfigScope.LAYER2,
                                                                           extension -> extension.get(
