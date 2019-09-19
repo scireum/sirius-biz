@@ -587,6 +587,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean canCreateChildren() {
         try {
+            if (exists() && !isDirectory()) {
                 return false;
             }
 
