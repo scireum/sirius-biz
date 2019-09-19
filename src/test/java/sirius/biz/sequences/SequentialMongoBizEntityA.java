@@ -9,11 +9,9 @@
 package sirius.biz.sequences;
 
 import sirius.biz.mongo.MongoBizEntity;
+import sirius.biz.mongo.SequenceId;
 
+@SequenceId
 public class SequentialMongoBizEntityA extends MongoBizEntity {
 
-    @Override
-    protected IdGeneratorType getIdGeneratorType() {
-        return IdGeneratorType.SEQUENCE_FOR_TYPE;
-    }
 }
