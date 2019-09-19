@@ -73,7 +73,7 @@ public class MutableVirtualFile extends VirtualFile {
     }
 
     /**
-     * Determines if file is generally considered readonly.
+     * Determines if the file is generally considered readonly.
      * <p>
      * If a file is marked as readonly, all mutators like {@link #canDelete()} or {@link #canConsumeFile} etc. will
      * automatically return false.
