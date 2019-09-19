@@ -13,7 +13,7 @@ import sirius.biz.storage.layer2.BlobStorageSpace;
 import sirius.kernel.di.std.Register;
 
 /**
- * Provides the adapter to make the JDBC based implementation the metadate storage for the layer 2.
+ * Provides the adapter to make the JDBC based implementation the metadata storage for the layer 2.
  */
 @Register(classes = BlobStorage.class,framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class SQLBlobStorage extends BlobStorage {

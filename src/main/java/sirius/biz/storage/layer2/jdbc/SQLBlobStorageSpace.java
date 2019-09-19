@@ -41,6 +41,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+/**
+ * Provides a storage facility which stores blobs and directories as {@link SQLBlob} and {@link SQLDirectory} in a
+ * JDBC datasource.
+ */
 public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirectory> {
 
     @Part
