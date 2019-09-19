@@ -138,6 +138,15 @@ public class MutableVirtualFile extends VirtualFile {
     }
 
     /**
+     * Marks this file as existing file.
+     *
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile markAsExistingFile() {
+        return withDirectoryFlagSupplier(CONSTANT_FALSE).withExistsFlagSupplier(CONSTANT_TRUE);
+    }
+
+    /**
      * Determines if a file can be created as directory.
      *
      * @param canCreateDirectoryHandler the prediacte which determines if the given file can be created as directory
