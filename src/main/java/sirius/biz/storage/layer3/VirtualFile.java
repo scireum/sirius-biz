@@ -805,7 +805,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Tries to consume the given stream to update the contents of this file.
      * <p>
-     * Note that if the source i a {@link File} {@link #consumeFile(File)} can be used which is likely to be more
+     * Note that if the source is a {@link File} {@link #consumeFile(File)} can be used which is likely to be more
      * efficient.
      *
      * @param inputStream the stream to read the contents from
@@ -862,7 +862,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Consumes the given stream to update the contents of this file or throws an exception if this fails.
      * <p>
-     * Note that if the source i a {@link File} {@link #consumeFile(File)} can be used which is likely to be more
+     * Note that if the source is a {@link File} {@link #consumeFile(File)} can be used which is likely to be more
      * efficient.
      *
      * @param inputStream the stream to read the contents from
