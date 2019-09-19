@@ -60,7 +60,7 @@ public abstract class MongoBizEntity extends PrefixSearchableEntity implements T
     }
 
     private String generateSequenceId() {
-        if (!Sirius.isFrameworkEnabled(Sequences.FRAMEWORK_SEQUENCES)) {
+        if (sequences == null) {
             throw Exceptions.handle()
                             .to(Mongo.LOG)
                             .withSystemErrorMessage(
