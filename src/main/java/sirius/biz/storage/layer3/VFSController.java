@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer3;
 
 import com.google.common.io.ByteStreams;
+import io.netty.handler.codec.http.HttpHeaderNames;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
@@ -111,11 +112,17 @@ public class VFSController extends BizController {
         }
 
         try {
-            try (OutputStream outputStream = file.createOutputStream()) {
-                ctx.markAsLongCall();
-                ByteStreams.copy(inputStream, outputStream);
-            } finally {
-                inputStream.close();
+            ctx.markAsLongCall();
+            long size = ctx.getHeaderValue(HttpHeaderNames.CONTENT_LENGTH).asLong(0);
+            if (size > 0) {
+                file.consumeStream(inputStream, size);
+            } else {
+                try (OutputStream outputStream = file.createOutputStream()) {
+                    ctx.markAsLongCall();
+                    ByteStreams.copy(inputStream, outputStream);
+                } finally {
+                    inputStream.close();
+                }
             }
 
             out.property("file", file.path());

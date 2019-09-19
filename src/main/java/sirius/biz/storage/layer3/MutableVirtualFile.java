@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer3;
 
+import sirius.kernel.commons.Tuple;
 import sirius.web.http.Response;
 
 import javax.annotation.Nonnull;
@@ -68,6 +69,20 @@ public class MutableVirtualFile extends VirtualFile {
      */
     public MutableVirtualFile withCanCreateChildren(Predicate<VirtualFile> canCreateChildrenHandler) {
         this.canCreateChildrenHandler = canCreateChildrenHandler;
+        return this;
+    }
+
+    /**
+     * Determines if the file is generally considered readonly.
+     * <p>
+     * If a file is marked as readonly, all mutators like {@link #canDelete()} or {@link #canConsumeFile} etc. will
+     * automatically return false.
+     *
+     * @param readonlyHandler the predicate used to determine if this file is considered readonly
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withReadonlyHandler(Predicate<VirtualFile> readonlyHandler) {
+        this.readonlyHandler = readonlyHandler;
         return this;
     }
 
@@ -193,6 +208,30 @@ public class MutableVirtualFile extends VirtualFile {
     }
 
     /**
+     * Determines if a stream can be consumed.
+     *
+     * @param canConsumeStream the predicate which determines if a given stream can be consumed to provide the new
+     *                         contents of this file
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withCanConsumeStream(Predicate<VirtualFile> canConsumeStream) {
+        this.canConsumeStream = canConsumeStream;
+        return this;
+    }
+
+    /**
+     * Determines if a file can be consumed.
+     *
+     * @param canConsumeFile the predicate which determines if a file can be consumed to provide the new
+     *                       contents of this file
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withCanConsumeFile(Predicate<VirtualFile> canConsumeFile) {
+        this.canConsumeFile = canConsumeFile;
+        return this;
+    }
+
+    /**
      * Determines if an input stream can be created.
      *
      * @param canProvideInputStream the predicate which determines if an input stream can be created for the
@@ -223,6 +262,30 @@ public class MutableVirtualFile extends VirtualFile {
      */
     public MutableVirtualFile withOutputStreamSupplier(Function<VirtualFile, OutputStream> outputStreamSupplier) {
         this.outputStreamSupplier = outputStreamSupplier;
+        return this;
+    }
+
+    /**
+     * Provides a handler which consumes the given stream to provide the new contents of this file.
+     *
+     * @param consumeStreamHandler the handler which consumes a given stream and its known length to provide the new
+     *                             contents if this file
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withConsumeStreamHandler(BiConsumer<VirtualFile, Tuple<InputStream, Long>> consumeStreamHandler) {
+        this.consumeStreamHandler = consumeStreamHandler;
+        return this;
+    }
+
+    /**
+     * Provides a handler which consumes the given file to provide the new contents of this file.
+     *
+     * @param consumeFileHandler the handler which consumes a given file to provide the new
+     *                           contents if this file
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withConsumeFileHandler(BiConsumer<VirtualFile, File> consumeFileHandler) {
+        this.consumeFileHandler = consumeFileHandler;
         return this;
     }
 

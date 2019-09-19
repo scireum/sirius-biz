@@ -10,11 +10,12 @@ package sirius.biz.storage.layer2;
 
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.kernel.health.HandledException;
-import sirius.web.http.WebContext;
+import sirius.web.http.Response;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -95,18 +96,11 @@ public interface Blob {
     Optional<FileHandle> download();
 
     /**
-     * Delivers the data of this blob into the given request.
+     * Delivers the data of this blob into the given HTTP response.
      *
-     * @param ctx the request to send a respond to
+     * @param response the HTTP response to populate
      */
-    void deliver(WebContext ctx);
-
-    /**
-     * Delivers the data of this blob as a download into the given request.
-     *
-     * @param ctx the request to send a respond to
-     */
-    void deliverAsDownload(WebContext ctx);
+    void deliver(Response response);
 
     /**
      * Determines if this blob is still marked as temporary.
@@ -166,12 +160,44 @@ public interface Blob {
      * Provides new content for this blob.
      * <p>
      * Note that this will create a new physical object and might keep the original one as a {@link BlobRevision}.
+     * <p>
+     * Also note that if a file is used to provide the new contents of this blob, use
+     * {@link #updateContent(String, File)} as this is likely way more efficient.
      *
      * @param filename      the new filename to use (if given)
      * @param data          the stream providing the data to use
      * @param contentLength the exact number of bytes which will be provided by data
+     * @see #updateContent(String, File)
      */
     void updateContent(@Nullable String filename, InputStream data, long contentLength);
+
+    /**
+     * Creates a output stream which can be used to update the contents of this blob.
+     * <p>
+     * The data written into the output stream will be buffered locally and used to update the contents once the
+     * stream is closed. Use {@link #updateContent(String, File)} if a file is used to update the contents or
+     * {@link #updateContent(String, InputStream, long)} if a stream with known length is used. Both methods
+     * are likely to be way more efficient as no local buffer is required.
+     *
+     * @param filename the new filename to use (if given)
+     * @return an output stream which can be used to update the contents of this blob
+     * @see #updateContent(String, File)
+     * @see #updateContent(String, InputStream, long)
+     */
+    OutputStream createOutputStream(@Nullable String filename);
+
+    /**
+     * Creates an input stream which can be used to read the contents of this blob.
+     * <p>
+     * Note that this might required to download the blob from an external storage device into a local buffer. When
+     * responding to a HTTP request use {@link #deliver(Response)} which might be more efficient in this case. Use
+     * {@link #download()} to have full control over the downloaded file handle.
+     *
+     * @return an input stream providing the contents of this blob
+     * @see #download()
+     * @see #deliver(Response)
+     */
+    InputStream createInputStream();
 
     /**
      * Lists all known variants of this blob.

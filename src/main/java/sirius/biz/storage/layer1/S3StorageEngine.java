@@ -21,7 +21,6 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 import sirius.web.http.Response;
-import sirius.web.http.WebContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -79,10 +78,7 @@ public class S3StorageEngine implements StorageEngine, Named {
     }
 
     @Override
-    public void storePhysicalObject(String space,
-                                    String objectKey,
-                                    InputStream data,
-                                    long size) throws IOException {
+    public void storePhysicalObject(String space, String objectKey, InputStream data, long size) throws IOException {
         ObjectStore store = stores.get(space);
         Upload upload = store.uploadAsync(bucketName(store, space), objectKey, data, size);
         try {
@@ -101,8 +97,7 @@ public class S3StorageEngine implements StorageEngine, Named {
     }
 
     @Override
-    public void storePhysicalObject(String space, String objectKey, File file)
-            throws IOException {
+    public void storePhysicalObject(String space, String objectKey, File file) throws IOException {
         ObjectStore store = stores.get(space);
         store.upload(bucketName(store, space), objectKey, file);
     }
@@ -114,26 +109,12 @@ public class S3StorageEngine implements StorageEngine, Named {
     }
 
     @Override
-    public void deliverAsDownload(WebContext ctx,
-                                  String space,
-                                  String objectKey,
-                                  String filename,
-                                  Consumer<Integer> failureHandler) throws IOException {
-        ObjectStore store = stores.get(space);
-        Response response = ctx.respondWith().infinitelyCached();
-        response.download(filename);
-        response.tunnel(store.objectUrl(bucketName(store, space), objectKey), failureHandler);
-    }
-
-    @Override
-    public void deliver(WebContext ctx,
+    public void deliver(Response response,
                         String space,
                         String objectKey,
                         String fileExtension,
                         Consumer<Integer> failureHandler) throws IOException {
         ObjectStore store = stores.get(space);
-        Response response = ctx.respondWith().infinitelyCached();
-        response.named(objectKey + "." + fileExtension);
         response.tunnel(store.objectUrl(bucketName(store, space), objectKey), failureHandler);
     }
 

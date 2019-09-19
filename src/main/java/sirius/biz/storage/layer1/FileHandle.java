@@ -14,7 +14,6 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -87,7 +86,7 @@ public class FileHandle implements Closeable {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         if (deleteOnClose) {
             Files.delete(file);
         }

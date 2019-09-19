@@ -9,25 +9,18 @@
 package sirius.biz.storage.util;
 
 import sirius.kernel.async.Future;
-import sirius.kernel.commons.Files;
-import sirius.kernel.health.Exceptions;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.function.Consumer;
 
 /**
- * Wraps an {@link OutputStream} and provides a {@link Future completion future}.
+ * Wraps an {@link InputStream} and provides a {@link Future completion future}.
  * <p>
  * The future is fullfilled once the stream is closed.
  */
-public class WatchableOutputStream extends OutputStream {
+public class WatchableInputStream extends InputStream {
 
-    private final OutputStream delegate;
+    private final InputStream delegate;
     private final Future completionFuture;
 
     /**
@@ -35,24 +28,49 @@ public class WatchableOutputStream extends OutputStream {
      *
      * @param delegate the stream to wrap
      */
-    public WatchableOutputStream(OutputStream delegate) {
+    public WatchableInputStream(InputStream delegate) {
         this.delegate = delegate;
         this.completionFuture = new Future();
     }
 
     @Override
-    public void write(byte[] b) throws IOException {
-        delegate.write(b);
+    public int read() throws IOException {
+        return delegate.read();
     }
 
     @Override
-    public void write(byte[] b, int off, int len) throws IOException {
-        delegate.write(b, off, len);
+    public int read(byte[] b) throws IOException {
+        return delegate.read(b);
     }
 
     @Override
-    public void flush() throws IOException {
-        delegate.flush();
+    public int read(byte[] b, int off, int len) throws IOException {
+        return delegate.read(b, off, len);
+    }
+
+    @Override
+    public long skip(long n) throws IOException {
+        return delegate.skip(n);
+    }
+
+    @Override
+    public int available() throws IOException {
+        return delegate.available();
+    }
+
+    @Override
+    public void mark(int readlimit) {
+        delegate.mark(readlimit);
+    }
+
+    @Override
+    public void reset() throws IOException {
+        delegate.reset();
+    }
+
+    @Override
+    public boolean markSupported() {
+        return delegate.markSupported();
     }
 
     @Override
@@ -60,23 +78,17 @@ public class WatchableOutputStream extends OutputStream {
         try {
             delegate.close();
 
-            // Close might be invoked several times (e.g. by some ZIP implementations).
-            // Therefore we filter this to only fulfill the future once.
+            // Filter duplicate completions...
             if (!completionFuture.isCompleted()) {
                 completionFuture.success();
             }
         } catch (IOException e) {
-            // Filter duplicate completions (s.a.)...
+            // Filter duplicate completions...
             if (!completionFuture.isCompleted()) {
                 completionFuture.fail(e);
             }
             throw e;
         }
-    }
-
-    @Override
-    public void write(int b) throws IOException {
-        delegate.write(b);
     }
 
     /**

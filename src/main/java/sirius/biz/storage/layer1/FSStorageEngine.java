@@ -149,27 +149,9 @@ public class FSStorageEngine implements StorageEngine, Named {
         }
     }
 
-    @Override
-    public void deliverAsDownload(WebContext ctx,
-                                  String space,
-                                  String objectKey,
-                                  String filename,
-                                  Consumer<Integer> failureHandler) throws IOException {
-        File file = getFile(space, objectKey);
-
-        if (file.isHidden() || !file.exists() || !file.isFile()) {
-            failureHandler.accept(HttpResponseStatus.NOT_FOUND.code());
-            return;
-        }
-
-        Response response = ctx.respondWith().infinitelyCached();
-        response.download(filename);
-
-        response.file(file);
-    }
 
     @Override
-    public void deliver(WebContext ctx,
+    public void deliver(Response response,
                         String space,
                         String objectKey,
                         String fileExtension,
@@ -180,9 +162,6 @@ public class FSStorageEngine implements StorageEngine, Named {
             failureHandler.accept(HttpResponseStatus.NOT_FOUND.code());
             return;
         }
-
-        Response response = ctx.respondWith().infinitelyCached();
-        response.named(objectKey + "." + fileExtension);
 
         response.file(file);
     }
