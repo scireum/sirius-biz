@@ -118,10 +118,12 @@ public interface Directory {
     /**
      * Moves this directory into a new directory.
      *
-     * @param newParent the new directory to move the directory to
+     * @param newParent the new directory to move the directory to.  Note that if <tt>null</tt> is passed in, a directory was
+     *                  probably selected which was known to be incompatible - therefore the method is expected
+     *                  to throw an appropriate exception.
      * @throws HandledException if the directory cannot be moved into the given directory (different space etc).
      */
-    void move(Directory newParent);
+    void move(@Nullable Directory newParent);
 
     /**
      * Renames this directory.
