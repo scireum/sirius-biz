@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
 /**
  * Annotates a {@link MongoBizEntity} that it uses {@link sirius.biz.sequences.Sequences} to generate its ids.
  *
- * See {@link MongoBizEntity#generateId()}.
+ * @see MongoBizEntity#generateId()
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
