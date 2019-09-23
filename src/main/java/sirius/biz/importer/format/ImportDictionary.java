@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -447,25 +448,29 @@ public class ImportDictionary {
      * Verifies that the given record fulfills the check given for each field.
      *
      * @param record          the accessor function to the record to verify
-     * @param problemConsumer the consumer to be supplied with all detected problems
+     * @param problemConsumer the consumer to be supplied with all detected problems (the first argument being the name
+     *                        of the field and the second being a describing error message)
      * @return <tt>true</tt> if at least one problem was detected, <tt>false</tt> otherwise
      */
-    public boolean detectRecordProblems(Function<String, Value> record, Consumer<String> problemConsumer) {
+    public boolean detectRecordProblems(Function<String, Value> record, BiConsumer<String, String> problemConsumer) {
         AtomicBoolean problemDetected = new AtomicBoolean(false);
         fields.values().forEach(field -> {
+            String fieldName = field.getName();
             try {
-                field.verify(record.apply(field.getName()));
+                field.verify(record.apply(fieldName));
             } catch (IllegalArgumentException | HandledException e) {
                 problemDetected.set(true);
-                problemConsumer.accept(NLS.fmtr("ImportDictionary.fieldError")
-                                          .set(PARAM_FIELD, field.getName())
+                problemConsumer.accept(fieldName,
+                                       NLS.fmtr("ImportDictionary.fieldError")
+                                          .set(PARAM_FIELD, fieldName)
                                           .set(PARAM_LABEL, field.getLabel())
                                           .set(PARAM_MESSAGE, e.getMessage())
                                           .format());
             } catch (Exception e) {
                 problemDetected.set(true);
-                problemConsumer.accept(NLS.fmtr("ImportDictionary.severeFieldError")
-                                          .set(PARAM_FIELD, field.getName())
+                problemConsumer.accept(fieldName,
+                                       NLS.fmtr("ImportDictionary.severeFieldError")
+                                          .set(PARAM_FIELD, fieldName)
                                           .set(PARAM_LABEL, field.getLabel())
                                           .set(PARAM_MESSAGE, Exceptions.handle(Log.BACKGROUND, e).getMessage())
                                           .format());
@@ -479,10 +484,11 @@ public class ImportDictionary {
      * Verifies that the given record fulfills the check given for each field.
      *
      * @param record          the record to verify
-     * @param problemConsumer the consumer to be supplied with all detected problems
+     * @param problemConsumer the consumer to be supplied with all detected problems (the first argument being the name
+     *                        of the field and the second being a describing error message)
      * @return <tt>true</tt> if at least one problem was detected, <tt>false</tt> otherwise
      */
-    public boolean detectRecordProblems(Context record, Consumer<String> problemConsumer) {
+    public boolean detectRecordProblems(Context record, BiConsumer<String, String> problemConsumer) {
         return detectRecordProblems(record::getValue, problemConsumer);
     }
 
