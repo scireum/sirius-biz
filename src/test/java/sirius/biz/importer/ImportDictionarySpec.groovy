@@ -21,7 +21,7 @@ class ImportDictionarySpec extends BaseSpecification {
         and:
         def problems = new ArrayList()
         then:
-        dict.detectHeaderProblems(Values.of("A", "C", "D", "E"), { problem -> problems.add(problem) }, true)
+        dict.detectHeaderProblems(Values.of("A", "C", "D", "E"), { problem, _ -> problems.add(problem) }, true)
         and:
         problems.get(0) == "Die Spalte 2 ('B') fehlt."
         problems.size() == 1
@@ -34,7 +34,7 @@ class ImportDictionarySpec extends BaseSpecification {
         and:
         def problems = new ArrayList()
         then:
-        dict.detectHeaderProblems(Values.of("A", "D", "E"), { problem -> problems.add(problem) }, true)
+        dict.detectHeaderProblems(Values.of("A", "D", "E"), { problem, _ -> problems.add(problem) }, true)
         and:
         problems.get(0) == "Die Spalte 2 ('B') fehlt."
         problems.get(1) == "Die Spalte 3 ('C') fehlt."
@@ -48,7 +48,7 @@ class ImportDictionarySpec extends BaseSpecification {
         and:
         def problems = new ArrayList()
         then:
-        dict.detectHeaderProblems(Values.of("A", "A1", "B", "C"), { problem -> problems.add(problem) }, true)
+        dict.detectHeaderProblems(Values.of("A", "A1", "B", "C"), { problem, _ -> problems.add(problem) }, true)
         and:
         problems.get(0) == "Die Spalte 2 ('A1') ist unerwartet."
         problems.size() == 1
@@ -61,7 +61,7 @@ class ImportDictionarySpec extends BaseSpecification {
         and:
         def problems = new ArrayList()
         then:
-        dict.detectHeaderProblems(Values.of("A", "A1", "A2", "B", "C"), { problem -> problems.add(problem) }, true)
+        dict.detectHeaderProblems(Values.of("A", "A1", "A2", "B", "C"), { problem, _ -> problems.add(problem) }, true)
         and:
         problems.get(0) == "Die Spalte 2 ('A1') ist unerwartet."
         problems.get(1) == "Die Spalte 3 ('A2') ist unerwartet."
@@ -75,7 +75,7 @@ class ImportDictionarySpec extends BaseSpecification {
         and:
         def problems = new ArrayList()
         then:
-        dict.detectHeaderProblems(Values.of("A", "F", "G", "H"), { problem -> problems.add(problem) }, true)
+        dict.detectHeaderProblems(Values.of("A", "F", "G", "H"), { problem, _ -> problems.add(problem) }, true)
         and:
         problems.get(0) == "In der Spalte 2 wurde 'B' erwartet, aber 'F' gefunden."
         problems.get(1) == "In der Spalte 3 wurde 'C' erwartet, aber 'G' gefunden."
@@ -90,7 +90,7 @@ class ImportDictionarySpec extends BaseSpecification {
         and:
         def problems = new ArrayList()
         then:
-        dict.detectHeaderProblems(Values.of("A", "B", "C", "D"), { problem -> problems.add(problem) }, true)
+        dict.detectHeaderProblems(Values.of("A", "B", "C", "D"), { problem, _ -> problems.add(problem) }, true)
         and:
         problems.get(0) == "Die Spalte 4 ('D') ist unerwartet."
         problems.size() == 1
@@ -103,7 +103,7 @@ class ImportDictionarySpec extends BaseSpecification {
         and:
         def problems = new ArrayList()
         then:
-        dict.detectHeaderProblems(Values.of("A", "B", "C"), { problem -> problems.add(problem) }, true)
+        dict.detectHeaderProblems(Values.of("A", "B", "C"), { problem, _ -> problems.add(problem) }, true)
         and:
         problems.get(0) == "Die Spalte 4 ('D') fehlt."
         problems.size() == 1
