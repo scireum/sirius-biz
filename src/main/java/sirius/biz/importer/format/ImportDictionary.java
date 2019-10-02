@@ -255,11 +255,8 @@ public class ImportDictionary {
 
         AtomicBoolean problemDetected = new AtomicBoolean(false);
 
-        Values headerFields = Values.of(header.asList()
-                                              .stream()
-                                              .map(String::valueOf)
-                                              .map(field -> resolve(field).orElse(field))
-                                              .collect(Collectors.toList()));
+        Values headerFields =
+                Values.of(header.asList().stream().map(String::valueOf).map(String::trim).collect(Collectors.toList()));
 
         Values mappingValues = Values.of(mappingFunction);
         AtomicInteger mappingIndex = new AtomicInteger(0);
@@ -268,17 +265,8 @@ public class ImportDictionary {
         while (mappingIndex.get() < mappingValues.length()) {
             String expectedField = mappingValues.at(mappingIndex.get()).asString();
             String headerField = headerFields.at(headerIndex.get()).asString();
-            if (Strings.isEmpty(headerField)) {
-                // Unknown column, check if we can apply an alias...
-                headerField = resolve(extractLabel(headerField)).orElse(null);
-                if (Strings.areEqual(headerField, expectedField)) {
-                    // Yes, warn, but go...
-                    problemConsumer.accept(NLS.fmtr("ImportDictionary.wrongColumn")
-                                              .set(PARAM_INDEX, mappingIndex.get() + 1)
-                                              .set(PARAM_COLUMN, headerField)
-                                              .set(PARAM_EXPECTED, expectedField)
-                                              .format(), false);
-                }
+            if (!Strings.areEqual(expectedField, headerField)) {
+                headerField = detectAliasedColumn(problemConsumer, mappingIndex, expectedField, headerField);
             }
 
             if (Strings.isEmpty(expectedField) || Strings.areEqual(headerField, expectedField)) {
@@ -287,18 +275,17 @@ public class ImportDictionary {
                 headerIndex.incrementAndGet();
             } else {
                 problemDetected.set(true);
-
                 if (Strings.isEmpty(headerField)) {
                     // We're out of header columns - report missing column...
                     problemConsumer.accept(NLS.fmtr("ImportDictionary.missingColumn")
                                               .set(PARAM_INDEX, headerIndex.get() + 1)
                                               .set(PARAM_EXPECTED, expectedField)
-                                              .format());
+                                              .format(), true);
                     mappingIndex.incrementAndGet();
                 } else {
                     // Try to diagnose why the headers don't match...
                     diagnoseHeaderProblem(header,
-                                          problemConsumer,
+                                          problem -> problemConsumer.accept(problem, true),
                                           headerFields,
                                           mappingValues,
                                           mappingIndex,
@@ -320,6 +307,41 @@ public class ImportDictionary {
         }
 
         return problemDetected.get();
+    }
+
+    /**
+     * Uses the known aliases to resolve a column header conflict.
+     * <p>
+     * If an invalid header column is detected, this will try the resolve the effective column. If the column can be
+     * resolved a warning is emitted and the effective name is returned so that all successive checks will be passed.
+     * Otherwise the original header value is returned.
+     *
+     * @param problemConsumer     the consumer to be supplied with an appropriate warning
+     * @param mappingIndex        the index within the mapping list which will be used to report the appropriate
+     *                            position of the error
+     * @param expectedField       the expected column name
+     * @param originalHeaderField the given header name to resolve
+     * @return either the resolved header name or the <tt>originalHeaderField</tt> if no alias matches
+     * @see #resolve(String)
+     */
+    protected String detectAliasedColumn(BiConsumer<String, Boolean> problemConsumer,
+                                         AtomicInteger mappingIndex,
+                                         String expectedField,
+                                         String originalHeaderField) {
+        // Unknown column, check if we can apply an alias...
+        String effectiveHeaderField = resolve(extractLabel(originalHeaderField)).orElse(null);
+        if (Strings.areEqual(effectiveHeaderField, expectedField)) {
+            // Yes, warn, but go...
+            problemConsumer.accept(NLS.fmtr("ImportDictionary.wrongColumn")
+                                      .set(PARAM_INDEX, mappingIndex.get() + 1)
+                                      .set(PARAM_COLUMN, originalHeaderField)
+                                      .set(PARAM_EXPECTED, expectedField)
+                                      .format(), false);
+
+            return effectiveHeaderField;
+        }
+
+        return originalHeaderField;
     }
 
     /**
