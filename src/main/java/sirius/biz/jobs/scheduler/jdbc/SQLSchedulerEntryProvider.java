@@ -9,7 +9,9 @@
 package sirius.biz.jobs.scheduler.jdbc;
 
 import sirius.biz.jobs.scheduler.SchedulerData;
+import sirius.biz.jobs.scheduler.SchedulerEntry;
 import sirius.biz.jobs.scheduler.SchedulerEntryProvider;
+import sirius.biz.jobs.scheduler.UploadTriggerData;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -56,5 +58,12 @@ public class SQLSchedulerEntryProvider implements SchedulerEntryProvider<SQLSche
     public void markExecuted(SQLSchedulerEntry job, LocalDateTime timestamp) {
         job.getSchedulerData().rememberExecution(timestamp);
         oma.update(job);
+    }
+
+    @Override
+    public List<SQLSchedulerEntry> getFileTriggeredJobs() {
+        return oma.select(SQLSchedulerEntry.class)
+                .eq(SchedulerEntry.UPLOAD_TRIGGER_DATA.inner(UploadTriggerData.ENABLED), true)
+                .queryList();
     }
 }

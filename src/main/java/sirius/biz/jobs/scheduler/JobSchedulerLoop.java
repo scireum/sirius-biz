@@ -13,6 +13,8 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.process.ProcessLink;
 import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
+import sirius.biz.storage.StoredObject;
+import sirius.db.jdbc.OMA;
 import sirius.kernel.async.BackgroundLoop;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
@@ -26,11 +28,15 @@ import sirius.web.security.UserInfo;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Responsible for executing all {@link SchedulerEntry scheduler entries} of all {@link SchedulerEntryProvider providers}.
  */
-@Register(classes = BackgroundLoop.class)
+@Register(classes = {BackgroundLoop.class, JobSchedulerLoop.class})
 public class JobSchedulerLoop extends BackgroundLoop {
 
     @Part
@@ -41,6 +47,11 @@ public class JobSchedulerLoop extends BackgroundLoop {
 
     @Parts(SchedulerEntryProvider.class)
     private PartCollection<SchedulerEntryProvider<?>> providers;
+
+    private Set<String> changedFiles = new HashSet<>();
+
+    @Part
+    private OMA oma;
 
     @Nonnull
     @Override
@@ -53,6 +64,21 @@ public class JobSchedulerLoop extends BackgroundLoop {
         return 1d / 50;
     }
 
+    /**
+     * Method can be used to add a changed file to background loop execution process.
+     *
+     * @param fileObjectKey the {@link StoredObject#getObjectKey()} of the file changed
+     */
+    public synchronized void trackChangedFile(String fileObjectKey) {
+        this.changedFiles.add(fileObjectKey);
+    }
+
+    private synchronized List<String> getChangedFiles() {
+        List<String> list = new ArrayList<>(changedFiles);
+        changedFiles.clear();
+        return list;
+    }
+
     @Nullable
     @Override
     protected String doWork() throws Exception {
@@ -60,6 +86,7 @@ public class JobSchedulerLoop extends BackgroundLoop {
         int startedJobs = 0;
         for (SchedulerEntryProvider<?> provider : providers) {
             startedJobs += executeEntriesOfProvider(now, provider);
+            startedJobs += executeEntriesOfChangedFiles(now, provider);
         }
 
         if (startedJobs == 0) {
@@ -67,6 +94,36 @@ public class JobSchedulerLoop extends BackgroundLoop {
         }
 
         return "Started Jobs: " + startedJobs;
+    }
+
+    private <J extends SchedulerEntry> int executeEntriesOfChangedFiles(LocalDateTime now,
+                                                                        SchedulerEntryProvider<J> provider) {
+        List<String> changedFilesToProcess = getChangedFiles();
+
+        if (changedFilesToProcess.isEmpty()) {
+            return 0;
+        }
+
+        int startedJobs = 0;
+
+        for (J entry : provider.getFileTriggeredJobs()) {
+            try {
+                if (entry.getUploadTriggerData().shouldRun(changedFilesToProcess)) {
+                    executeJob(provider, entry, now);
+                    startedJobs++;
+                }
+            } catch (Exception e) {
+                Exceptions.handle()
+                        .to(Log.BACKGROUND)
+                        .error(e)
+                        .withSystemErrorMessage("An error occured while checking a scheduled task of %s: %s - %s (%s)",
+                                provider.getClass().getSimpleName(),
+                                entry)
+                        .handle();
+            }
+        }
+
+        return startedJobs;
     }
 
     private <J extends SchedulerEntry> int executeEntriesOfProvider(LocalDateTime now,
@@ -99,12 +156,12 @@ public class JobSchedulerLoop extends BackgroundLoop {
             UserContext.get().runAs(user, () -> executeJobAsUser(provider, entry, now));
         } catch (Exception e) {
             Exceptions.handle()
-                      .to(Log.BACKGROUND)
-                      .error(e)
-                      .withSystemErrorMessage("An error occured while starting a scheduled task of %s: %s - %s (%s)",
-                                              provider.getClass().getSimpleName(),
-                                              entry)
-                      .handle();
+                    .to(Log.BACKGROUND)
+                    .error(e)
+                    .withSystemErrorMessage("An error occured while starting a scheduled task of %s: %s - %s (%s)",
+                            provider.getClass().getSimpleName(),
+                            entry)
+                    .handle();
         }
     }
 

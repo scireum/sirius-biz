@@ -13,6 +13,7 @@ import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.Files;
+import sirius.biz.jobs.scheduler.JobSchedulerLoop;
 import sirius.biz.protocol.TraceData;
 import sirius.biz.tenants.jdbc.SQLTenant;
 import sirius.db.KeyGenerator;
@@ -98,6 +99,9 @@ public class Storage {
 
     @Part
     private GlobalContext context;
+
+    @Part
+    private JobSchedulerLoop schedulerLoop;
 
     @ConfigValue("storage.sharedSecret")
     private String sharedSecret;
@@ -444,6 +448,10 @@ public class Storage {
 
             // Delete old file
             engine.deletePhysicalObject(object.getBucket(), oldPhysicalKey);
+
+            if (Strings.areEqual(object.getBucket(), "work")) {
+                schedulerLoop.trackChangedFile(object.getObjectKey());
+            }
         } catch (IOException e) {
             throw Exceptions.handle().to(LOG).error(e).withNLSKey("Storage.uploadFailed").handle();
         }

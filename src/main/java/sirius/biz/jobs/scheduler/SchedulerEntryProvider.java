@@ -43,4 +43,11 @@ public interface SchedulerEntryProvider<J extends SchedulerEntry> {
      * @param timestamp the timestamp when the execution was scheduled
      */
     void markExecuted(J job, LocalDateTime timestamp);
+
+    /**
+     * Provides a list of all {@link SchedulerEntry} which should be triggered via file upload.
+     *
+     * @return list of all {@link SchedulerEntry} which might need to be executed when a file is changed.
+     */
+    List<J> getFileTriggeredJobs();
 }

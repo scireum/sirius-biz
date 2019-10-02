@@ -16,6 +16,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -59,5 +60,10 @@ public class MongoSchedulerEntryProvider implements SchedulerEntryProvider<Mongo
     public void markExecuted(MongoSchedulerEntry job, LocalDateTime timestamp) {
         job.getSchedulerData().rememberExecution(timestamp);
         mango.update(job);
+    }
+
+    @Override
+    public List<MongoSchedulerEntry> getFileTriggeredJobs() {
+        return Collections.emptyList();
     }
 }
