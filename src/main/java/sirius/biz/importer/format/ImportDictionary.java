@@ -237,13 +237,17 @@ public class ImportDictionary {
      * Verifies the given header row against the specified <tt>mapping function</tt>.
      *
      * @param header                   the row which contains the column headings
-     * @param problemConsumer          the consumer to be supplied with all errors being detected
+     * @param problemConsumer          the consumer to be supplied with all errors being detected. The consumer will
+     *                                 be supplied with an error message as string and a flag which indicates if the
+     *                                 error is fatal (<tt>true</tt>) or rather a warning (<tt>false</tt>). An example
+     *                                 of a fatal error would be an unknown column where a column which can be resolved
+     *                                 into a proper column by using an alias will be a warning.
      * @param failForAdditionalColumns <tt>true</tt> to fail if there are "too many" column, <tt>false</tt> to
      *                                 simply ignore those
      * @return <tt>true</tt> if at least one problem was detected, <tt>false</tt> otherwise
      */
     public boolean detectHeaderProblems(Values header,
-                                        Consumer<String> problemConsumer,
+                                        BiConsumer<String, Boolean> problemConsumer,
                                         boolean failForAdditionalColumns) {
         if (mappingFunction == null) {
             throw new IllegalStateException("Cannot verify headings as the mapping function hasn't been specified yet.");
@@ -264,6 +268,18 @@ public class ImportDictionary {
         while (mappingIndex.get() < mappingValues.length()) {
             String expectedField = mappingValues.at(mappingIndex.get()).asString();
             String headerField = headerFields.at(headerIndex.get()).asString();
+            if (Strings.isEmpty(headerField)) {
+                // Unknown column, check if we can apply an alias...
+                headerField = resolve(extractLabel(headerField)).orElse(null);
+                if (Strings.areEqual(headerField, expectedField)) {
+                    // Yes, warn, but go...
+                    problemConsumer.accept(NLS.fmtr("ImportDictionary.wrongColumn")
+                                              .set(PARAM_INDEX, mappingIndex.get() + 1)
+                                              .set(PARAM_COLUMN, headerField)
+                                              .set(PARAM_EXPECTED, expectedField)
+                                              .format(), false);
+                }
+            }
 
             if (Strings.isEmpty(expectedField) || Strings.areEqual(headerField, expectedField)) {
                 // We have a match, advance both indices...
@@ -299,7 +315,7 @@ public class ImportDictionary {
                 problemConsumer.accept(NLS.fmtr("ImportDictionary.superfluousColumn")
                                           .set(PARAM_INDEX, superfluousIndex + 1)
                                           .set(PARAM_COLUMN, header.at(superfluousIndex))
-                                          .format());
+                                          .format(), true);
             }
         }
 
