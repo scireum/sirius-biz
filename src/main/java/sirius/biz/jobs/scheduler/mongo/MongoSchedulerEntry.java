@@ -11,6 +11,7 @@ package sirius.biz.jobs.scheduler.mongo;
 import sirius.biz.jobs.scheduler.JobConfigData;
 import sirius.biz.jobs.scheduler.SchedulerData;
 import sirius.biz.jobs.scheduler.SchedulerEntry;
+import sirius.biz.jobs.scheduler.UploadTriggerData;
 import sirius.biz.tenants.mongo.MongoTenantAware;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.commons.Strings;
@@ -25,6 +26,7 @@ public class MongoSchedulerEntry extends MongoTenantAware implements SchedulerEn
 
     private final SchedulerData schedulerData = new SchedulerData();
     private final JobConfigData jobConfigData = new JobConfigData();
+    private final UploadTriggerData uploadTriggerData = new UploadTriggerData(this);
 
     @Override
     public SchedulerData getSchedulerData() {
@@ -34,6 +36,11 @@ public class MongoSchedulerEntry extends MongoTenantAware implements SchedulerEn
     @Override
     public JobConfigData getJobConfigData() {
         return jobConfigData;
+    }
+
+    @Override
+    public UploadTriggerData getUploadTriggerData() {
+        return getUploadTriggerData();
     }
 
     @Override

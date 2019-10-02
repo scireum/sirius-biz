@@ -85,6 +85,20 @@
                          helpKey="SchedulerData.minute.help"
                          value="@entry.getSchedulerData().getMinute()"/>
         </div>
+
+        <i:if test="@entry.getUploadTriggerData().showUploadTriggerData()">
+            <w:subHeading labelKey="SchedulderController.triggerWithUpload"/>
+            <div class="row">
+                <w:booleanSelect span="6"
+                                 name="uploadTriggerData_enabled"
+                                 labelKey="UploadTriggerData.enabled"
+                                 helpKey="UploadTriggerData.enabled.help"
+                                 trueLabelKey="UploadTriggerData.enabled.true"
+                                 falseLabelKey="UploadTriggerData.enabled.false"
+                                 value="entry.getUploadTriggerData().isEnabled()"/>
+            </div>
+        </i:if>
+
         <w:subHeading labelKey="SchedulderController.parameters"/>
         <div class="row">
             <i:for type="sirius.biz.jobs.params.Parameter" var="param"

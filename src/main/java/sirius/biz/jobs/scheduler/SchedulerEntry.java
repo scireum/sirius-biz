@@ -30,6 +30,12 @@ public interface SchedulerEntry {
     Mapping JOB_CONFIG_DATA = Mapping.named("jobConfigData");
 
     /**
+     * Contains the upload trigger data configuration which controls if the job should be executed if the file
+     * is uploaded to the work directory of the user.
+     */
+    Mapping UPLOAD_TRIGGER_DATA = Mapping.named("uploadTriggerData");
+
+    /**
      * Makes {@link BaseEntity#getIdAsString()} visible so that it can be used in Tagliatelle templates.
      *
      * @return the id of the underlying entity as string
@@ -63,6 +69,14 @@ public interface SchedulerEntry {
      * @return the job configuration of this entry.
      */
     JobConfigData getJobConfigData();
+
+
+    /**
+     * Provides acces to the job upload trigger data.
+     *
+     * @return the {@link UploadTriggerData}
+     */
+    UploadTriggerData getUploadTriggerData();
 
     @Override
     String toString();
