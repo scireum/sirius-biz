@@ -106,7 +106,7 @@ public abstract class BasicJobFactory implements JobFactory {
      * @param parameterCollector the collector to be supplied with the expected parameters
      */
     protected abstract void collectParameters(Consumer<Parameter<?, ?>> parameterCollector);
-
+    
     @Nullable
     @Override
     public String generatePresetUrl(Object targetObject) {
