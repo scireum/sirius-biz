@@ -11,6 +11,8 @@ package sirius.biz.jobs;
 import sirius.biz.jobs.infos.JobInfo;
 import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.process.ProcessContext;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
@@ -106,6 +108,16 @@ public abstract class BasicJobFactory implements JobFactory {
      * @param parameterCollector the collector to be supplied with the expected parameters
      */
     protected abstract void collectParameters(Consumer<Parameter<?, ?>> parameterCollector);
+
+    @Override
+    public void logParameters(ProcessContext process) {
+        String output = "Parameter \"%s\": %s";
+
+        collectParameters(param -> {
+            String value = process.getParameter(param).map(NLS::toUserString).orElse("");
+            process.log(ProcessLog.info().withFormattedMessage(output, param.getLabel(), value));
+        });
+    }
 
     @Nullable
     @Override

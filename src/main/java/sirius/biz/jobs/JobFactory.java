@@ -10,6 +10,7 @@ package sirius.biz.jobs;
 
 import sirius.biz.jobs.infos.JobInfo;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.process.ProcessContext;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Named;
 import sirius.kernel.di.std.Priorized;
@@ -154,4 +155,11 @@ public interface JobFactory extends Named, Priorized {
      * @return the name of the job category
      */
     String getCategory();
+
+    /**
+     * Writes all parameters with its values to the process log.
+     *
+     * @param process the current {@link ProcessContext}
+     */
+    void logParameters(ProcessContext process);
 }
