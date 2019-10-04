@@ -179,11 +179,16 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     protected abstract BatchJob createJob(ProcessContext process) throws Exception;
 
     private void logParameters(ProcessContext process) {
-        String output = "Parameter \"%s\": %s";
+        StringBuilder output = new StringBuilder();
+        output.append("Parameter:\n\n");
 
         getParameters().forEach(param -> {
             String value = process.getParameter(param).map(NLS::toUserString).orElse("");
-            process.log(ProcessLog.info().withFormattedMessage(output, param.getLabel(), value));
+            output.append(param.getLabel());
+            output.append(": ");
+            output.append(value);
+            output.append("\n");
         });
+        process.log(ProcessLog.info().withMessage(output.toString().trim()));
     }
 }
