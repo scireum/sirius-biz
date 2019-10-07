@@ -11,7 +11,7 @@ package sirius.biz.jobs.presets.mongo;
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.presets.JobPreset;
 import sirius.biz.jobs.presets.JobPresets;
-import sirius.biz.jobs.scheduler.JobConfigData;
+import sirius.biz.jobs.JobConfigData;
 import sirius.biz.tenants.mongo.MongoTenants;
 import sirius.db.mongo.Mango;
 import sirius.kernel.di.std.Part;

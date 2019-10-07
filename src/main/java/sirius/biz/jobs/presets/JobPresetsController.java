@@ -9,7 +9,7 @@
 package sirius.biz.jobs.presets;
 
 import com.google.common.collect.ImmutableSet;
-import sirius.biz.jobs.scheduler.JobConfigData;
+import sirius.biz.jobs.JobConfigData;
 import sirius.biz.web.BizController;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;

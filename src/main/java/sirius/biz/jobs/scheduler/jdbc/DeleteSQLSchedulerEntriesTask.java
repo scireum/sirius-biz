@@ -9,8 +9,8 @@
 package sirius.biz.jobs.scheduler.jdbc;
 
 import sirius.biz.jobs.scheduler.SchedulerEntry;
-import sirius.biz.tenants.jdbc.DeleteSQLEntitiesTask;
 import sirius.biz.tenants.deletion.DeleteTenantTask;
+import sirius.biz.tenants.jdbc.DeleteSQLEntitiesTask;
 import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.kernel.di.std.Register;
 

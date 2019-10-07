@@ -9,7 +9,7 @@
 package sirius.biz.jobs.presets.jdbc;
 
 import sirius.biz.jobs.presets.JobPreset;
-import sirius.biz.jobs.scheduler.JobConfigData;
+import sirius.biz.jobs.JobConfigData;
 import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.di.std.Framework;

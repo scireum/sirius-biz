@@ -9,7 +9,7 @@
 package sirius.biz.jobs.presets.mongo;
 
 import sirius.biz.jobs.presets.JobPreset;
-import sirius.biz.jobs.scheduler.JobConfigData;
+import sirius.biz.jobs.JobConfigData;
 import sirius.biz.tenants.mongo.MongoTenantAware;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.di.std.Framework;

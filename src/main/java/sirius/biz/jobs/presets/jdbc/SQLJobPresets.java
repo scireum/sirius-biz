@@ -11,7 +11,7 @@ package sirius.biz.jobs.presets.jdbc;
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.presets.JobPreset;
 import sirius.biz.jobs.presets.JobPresets;
-import sirius.biz.jobs.scheduler.JobConfigData;
+import sirius.biz.jobs.JobConfigData;
 import sirius.biz.tenants.jdbc.SQLTenants;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.di.std.Part;

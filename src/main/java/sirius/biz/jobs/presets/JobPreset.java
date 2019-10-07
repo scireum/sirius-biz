@@ -8,7 +8,7 @@
 
 package sirius.biz.jobs.presets;
 
-import sirius.biz.jobs.scheduler.JobConfigData;
+import sirius.biz.jobs.JobConfigData;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
