@@ -2,7 +2,7 @@
 <i:arg type="Map" name="context"/>
 
 
-<div class="col-md-@param.getSpan()">
+<div class="col-md-12">
     <div class="row">
         <w:autocompleteSingleSelect span="12"
                                     smallSpan="12"
