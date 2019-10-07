@@ -11,10 +11,12 @@ package sirius.biz.jobs;
 import sirius.biz.jobs.infos.JobInfo;
 import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.presets.JobPresets;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
@@ -47,6 +49,9 @@ public abstract class BasicJobFactory implements JobFactory {
      * Contains the {@link TaskContext#setSystem(String) system string} for jobs.
      */
     public static final String SYSTEM_JOBS = "JOBS";
+
+    @Part
+    private JobPresets presets;
 
     @Override
     public int getPriority() {
@@ -168,7 +173,7 @@ public abstract class BasicJobFactory implements JobFactory {
         checkPermissions();
         setupTaskContext();
 
-        AtomicBoolean submit = new AtomicBoolean(request.isSafePOST());
+        AtomicBoolean submit = new AtomicBoolean(request.isSafePOST() && !request.get("updateOnly").asBoolean());
         Map<String, String> context = buildAndVerifyContext(request::get, submit.get(), error -> {
             UserContext.message(Message.error(error));
             submit.set(false);
@@ -179,7 +184,7 @@ public abstract class BasicJobFactory implements JobFactory {
             return;
         }
 
-        request.respondWith().template("/templates/biz/jobs/job.html.pasta", this, context);
+        request.respondWith().template("/templates/biz/jobs/job.html.pasta", this, context, presets);
     }
 
     /**
