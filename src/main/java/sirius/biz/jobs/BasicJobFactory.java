@@ -51,7 +51,7 @@ public abstract class BasicJobFactory implements JobFactory {
     public static final String SYSTEM_JOBS = "JOBS";
 
     /**
-     * Represents a special paramete which can be set when submitting a set of job parameters to
+     * Represents a special parameter which can be set when submitting a set of job parameters to
      * {@link #startInteractively(WebContext)}. This will only digest the given parameters but not
      * actually try to start the job.
      * <p>
