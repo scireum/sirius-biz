@@ -77,6 +77,9 @@ public class Processes {
     @Part
     private Locks locks;
 
+    @Part
+    private Tasks tasks;
+
     /**
      * Due to some shortcomings in Elasticsearch (1 second delay until writes are visible), we need a layered cache
      * architecture here.
@@ -806,5 +809,17 @@ public class Processes {
         elastic.update(processLog);
         JournalData.addJournalEntry(processLog, NLS.get("ProcessLog.state") + ": " + newState.toString());
         delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> ctx.respondWith().redirectToGet(returnUrl));
+    }
+
+    /**
+     * Determines if the given process is still "active" and processing should continue.
+     *
+     * @param processId the id of the process which should be checked
+     * @return <tt>true</tt> if execution should be continued, <tt>false</tt> otherwise
+     */
+    public boolean isActive(String processId) {
+        return fetchProcess(processId).map(proc -> proc.getState() == ProcessState.RUNNING
+                                                   || proc.getState() == ProcessState.STANDBY).orElse(false)
+               && tasks.isRunning();
     }
 }

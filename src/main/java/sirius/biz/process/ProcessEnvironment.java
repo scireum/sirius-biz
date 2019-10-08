@@ -204,9 +204,7 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public boolean isActive() {
-        return processes.fetchProcess(processId)
-                        .map(proc -> proc.getState() == ProcessState.RUNNING || proc.getState() == ProcessState.STANDBY)
-                        .orElse(false) && tasks.isRunning();
+        return processes.isActive(processId);
     }
 
     @Nullable
