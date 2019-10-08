@@ -392,28 +392,6 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         }
     }
 
-    protected void hide(SQLBlob blob) {
-        try {
-            oma.getDatabase(Mixing.DEFAULT_REALM)
-               .createQuery("UPDATE sqlblob"
-                            + " SET hidden=${hidden}"
-                            + " WHERE spaceName=${spaceName}"
-                            + "   AND blobKey=${blobKey}")
-               .set("hidden", true)
-               .set("spaceName", spaceName)
-               .set("blobKey", blob.getBlobKey())
-               .executeUpdate();
-        } catch (SQLException e) {
-            Exceptions.handle()
-                      .to(StorageUtils.LOG)
-                      .error(e)
-                      .withSystemErrorMessage(
-                              "Layer 2/SQL: An error occured, when marking the blob '%s' as hidden: %s (%s)",
-                              blob.getBlobKey())
-                      .handle();
-        }
-    }
-
     protected void delete(SQLBlob blob) {
         //TODO oma API
         try {
@@ -711,31 +689,4 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         throw new UnsupportedOperationException("Will be implemented separately.");
     }
 
-    public InputStream createInputStream(SQLBlob blob) {
-        FileHandle fileHandle = blob.download().filter(FileHandle::exists).orElse(null);
-        if (fileHandle == null) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .withSystemErrorMessage("Layer 2/SQL: Cannot obtain a file handle for %s (%s)",
-                                                    blob.getId(),
-                                                    blob.getFilename())
-                            .handle();
-        }
-
-        WatchableInputStream result = null;
-        try {
-            result = new WatchableInputStream(fileHandle.getInputStream());
-            result.getCompletionFuture().onSuccess(() -> fileHandle.close()).onFailure(e -> fileHandle.close());
-        } catch (FileNotFoundException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 2/SQL: Cannot obtain a file handle for %s (%s): %s (%s)",
-                                                    blob.getId(),
-                                                    blob.getFilename())
-                            .handle();
-        }
-
-        return result;
-    }
 }
