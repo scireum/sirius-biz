@@ -1,0 +1,224 @@
+/*
+ * Made with all the love in the world
+ * by scireum in Remshalden, Germany
+ *
+ * Copyright by scireum GmbH
+ * http://www.scireum.de - info@scireum.de
+ */
+
+package sirius.biz.storage.layer3.downlink.ssh;
+
+import sirius.biz.storage.layer3.VirtualFile;
+import sirius.biz.storage.layer3.VirtualFileSystem;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Part;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+import java.util.Iterator;
+import java.util.Objects;
+
+public class BridgePath implements Path {
+
+    @Part
+    private static VirtualFileSystem vfs;
+
+    private VirtualFile virtualFile;
+    private BridgeFileSystem fs;
+
+    public BridgePath(VirtualFile virtualFile) {
+        this.virtualFile = virtualFile;
+    }
+
+    public BridgePath(VirtualFile virtualFile, BridgeFileSystem fs) {
+        this.virtualFile = virtualFile;
+        this.fs = fs;
+    }
+
+    @Override
+    public FileSystem getFileSystem() {
+        return fs;
+    }
+
+    @Override
+    public boolean isAbsolute() {
+        return true;
+    }
+
+    @Override
+    public Path getRoot() {
+        return this;
+    }
+
+    @Override
+    public Path getFileName() {
+        return new StringPath(virtualFile.name());
+    }
+
+    @Override
+    public Path getParent() {
+        if (virtualFile.parent() == null) {
+            return null;
+        }
+
+        return new BridgePath(virtualFile.parent(), fs);
+    }
+
+    @Override
+    public int getNameCount() {
+        VirtualFile parent = virtualFile.parent();
+        int count = 0;
+        while (parent != null) {
+            count++;
+            parent = parent.parent();
+        }
+        return count;
+    }
+
+    @Override
+    public Path getName(int index) {
+        return this;
+    }
+
+    @Override
+    public Path subpath(int beginIndex, int endIndex) {
+        throw new UnsupportedOperationException("subpath");
+    }
+
+    @Override
+    public boolean startsWith(Path other) {
+        throw new UnsupportedOperationException("startsWith");
+    }
+
+    @Override
+    public boolean startsWith(String other) {
+        throw new UnsupportedOperationException("startsWith");
+    }
+
+    @Override
+    public boolean endsWith(Path other) {
+        throw new UnsupportedOperationException("endsWith");
+    }
+
+    @Override
+    public boolean endsWith(String other) {
+        throw new UnsupportedOperationException("endsWith");
+    }
+
+    @Override
+    public Path normalize() {
+        return this;
+    }
+
+    @Override
+    public Path resolve(Path other) {
+        throw new UnsupportedOperationException("resolve");
+    }
+
+    @Override
+    public Path resolve(String other) {
+        if (".".equals(other)) {
+            return this;
+        }
+
+        if (Strings.isFilled(other) && other.startsWith("/")) {
+            return new BridgePath(vfs.resolve(other), fs);
+        }
+
+        return new BridgePath(virtualFile.resolve(other), fs);
+    }
+
+    @Override
+    public Path resolveSibling(Path other) {
+        throw new UnsupportedOperationException("resolveSibling");
+    }
+
+    @Override
+    public Path resolveSibling(String other) {
+        throw new UnsupportedOperationException("resolveSibling");
+    }
+
+    @Override
+    public Path relativize(Path other) {
+        throw new UnsupportedOperationException("relativize");
+    }
+
+    @Override
+    public URI toUri() {
+        throw new UnsupportedOperationException("toUri");
+    }
+
+    @Override
+    public Path toAbsolutePath() {
+        return this;
+    }
+
+    @Override
+    public Path toRealPath(LinkOption... options) throws IOException {
+        return this;
+    }
+
+    @Override
+    public File toFile() {
+        throw new UnsupportedOperationException("toFile");
+    }
+
+    @Override
+    public WatchKey register(WatchService watcher, WatchEvent.Kind<?>[] events, WatchEvent.Modifier... modifiers)
+            throws IOException {
+        throw new UnsupportedOperationException("register");
+    }
+
+    @Override
+    public WatchKey register(WatchService watcher, WatchEvent.Kind<?>... events) throws IOException {
+        throw new UnsupportedOperationException("register");
+    }
+
+    @Override
+    public Iterator<Path> iterator() {
+        throw new UnsupportedOperationException("iterator");
+    }
+
+    @Override
+    public int compareTo(Path other) {
+        if (other instanceof BridgePath) {
+            return Objects.compare(virtualFile, ((BridgePath) other).virtualFile, VirtualFile::compareTo);
+        }
+
+        return 1;
+    }
+
+    public VirtualFile getVirtualFile() {
+        return virtualFile;
+    }
+
+    @Override
+    public String toString() {
+        return virtualFile.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+
+        if (obj instanceof BridgePath) {
+            return Objects.equals(virtualFile, ((BridgePath) obj).virtualFile);
+        }
+
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return virtualFile.hashCode();
+    }
+}
