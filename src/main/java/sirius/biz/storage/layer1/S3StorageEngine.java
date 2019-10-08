@@ -112,7 +112,6 @@ public class S3StorageEngine implements StorageEngine, Named {
     public void deliver(Response response,
                         String space,
                         String objectKey,
-                        String fileExtension,
                         Consumer<Integer> failureHandler) throws IOException {
         ObjectStore store = stores.get(space);
         response.tunnel(store.objectUrl(bucketName(store, space), objectKey), failureHandler);
