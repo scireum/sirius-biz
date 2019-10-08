@@ -19,7 +19,6 @@ import sirius.biz.process.output.TableProcessOutputType;
 import sirius.biz.storage.util.WatchableOutputStream;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.async.CompletionHandler;
-import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.RateLimit;
 import sirius.kernel.commons.Tuple;
@@ -59,9 +58,6 @@ class ProcessEnvironment implements ProcessContext {
 
     @Part
     private static Processes processes;
-
-    @Part
-    private static Tasks tasks;
 
     protected ProcessEnvironment(String processId) {
         this.processId = processId;
