@@ -117,9 +117,6 @@ public class SQLBlob extends SQLEntity implements Blob {
     private final SQLEntityRef<SQLDirectory> parent =
             SQLEntityRef.on(SQLDirectory.class, BaseEntityRef.OnDelete.REJECT);
 
-    public static final Mapping HIDDEN = Mapping.named("hidden");
-    private boolean hidden;
-
     /**
      * Stores if the blob was marked as deleted.
      */
@@ -188,12 +185,7 @@ public class SQLBlob extends SQLEntity implements Blob {
 
     @Override
     public void deliver(Response response) {
-        getStorageSpace().deliver(this, response);
-    }
-
-    @Override
-    public void hide() {
-        getStorageSpace().hide(this);
+        throw new UnsupportedOperationException("Will be implemented separately.");
     }
 
     @Override
@@ -286,10 +278,6 @@ public class SQLBlob extends SQLEntity implements Blob {
         this.referenceDesignator = referenceDesignator;
     }
 
-    public void setHidden(boolean hidden) {
-        this.hidden = hidden;
-    }
-
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
     }
@@ -338,10 +326,5 @@ public class SQLBlob extends SQLEntity implements Blob {
     @Override
     public LocalDateTime getLastModified() {
         return lastModified;
-    }
-
-    @Override
-    public boolean isHidden() {
-        return hidden;
     }
 }
