@@ -184,15 +184,15 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
             return;
         }
 
-        SmartQuery<SQLBlob> qry = oma.select(SQLBlob.class)
+        SmartQuery<SQLBlob> query = oma.select(SQLBlob.class)
                                      .eq(SQLBlob.SPACE_NAME, spaceName)
                                      .eq(SQLBlob.REFERENCE, referencingEntity)
                                      .eq(SQLBlob.REFERENCE_DESIGNATOR, referenceDesignator);
         if (Strings.isFilled(excludedBlobKey)) {
-            qry.ne(SQLBlob.BLOB_KEY, excludedBlobKey);
+            query.ne(SQLBlob.BLOB_KEY, excludedBlobKey);
         }
 
-        qry.delete();
+        query.delete();
     }
 
     @Override
@@ -704,13 +704,11 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     protected List<BlobVariant> fetchVariants(SQLBlob blob) {
-        //TODO
-        return Collections.emptyList();
+        throw new UnsupportedOperationException("Will be implemented separately.");
     }
 
     protected List<BlobRevision> fetchRevisions(SQLBlob blob) {
-        //TODO
-        return Collections.emptyList();
+        throw new UnsupportedOperationException("Will be implemented separately.");
     }
 
     public InputStream createInputStream(SQLBlob blob) {

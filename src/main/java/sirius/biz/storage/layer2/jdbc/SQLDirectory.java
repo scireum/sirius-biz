@@ -35,22 +35,34 @@ import java.util.function.Function;
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class SQLDirectory extends SQLEntity implements Directory {
 
+    /**
+     * Contains the tenant which owns this directory.
+     */
     public static final Mapping TENANT_ID = Mapping.named("tenantId");
     @Length(64)
     private String tenantId;
 
-    @Transient
-    private SQLBlobStorageSpace space;
-
+    /**
+     * Contains the space to which this directory belongs.
+     */
     public static final Mapping SPACE_NAME = Mapping.named("spaceName");
     @Length(64)
     private String spaceName;
 
+    /**
+     * Contains the directory name.
+     */
     public static final Mapping DIRECTORY_NAME = Mapping.named("directoryName");
     @Length(255)
     @NullAllowed
     private String directoryName;
 
+    /**
+     * Contains a reference to the parent directory.
+     * <p>
+     * Note that there must only be one directory per tenant which doesn't have a parent. This root directory
+     * will be autocreated when needed.
+     */
     public static final Mapping PARENT = Mapping.named("parent");
     @NullAllowed
     private final SQLEntityRef<SQLDirectory> parent =
@@ -58,6 +70,9 @@ public class SQLDirectory extends SQLEntity implements Directory {
 
     @Part
     private static BlobStorage layer2;
+
+    @Transient
+    private SQLBlobStorageSpace space;
 
     @Override
     public SQLBlobStorageSpace getStorageSpace() {
