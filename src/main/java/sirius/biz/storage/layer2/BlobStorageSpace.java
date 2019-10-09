@@ -39,7 +39,8 @@ public interface BlobStorageSpace {
      * Creates a new temporary blob to be used in a {@link BlobHardRef}.
      * <p>
      * Such objects will be automatically deleted if the referencing entity is
-     * deleted. It is made permanent as soon as the referencing entity is saved.
+     * deleted. It is made permanent as soon as the referencing entity is saved, otherwise it will be deleted
+     * automatically.
      *
      * @return the newly created temporary blob. To make this blob permanent, it has to be stored in a
      * {@link BlobHardRef} and the referencing entity has to be persisted.
