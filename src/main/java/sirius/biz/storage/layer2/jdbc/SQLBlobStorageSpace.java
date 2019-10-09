@@ -612,7 +612,6 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                   .eq(SQLBlob.PARENT, parent)
                   .eq(SQLBlob.FILENAME, childName)
                   .ne(SQLBlob.DELETED, true)
-                  .ne(SQLBlob.HIDDEN, true)
                   .first();
     }
 
@@ -637,7 +636,6 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                    .eq(SQLBlob.PARENT, parent)
                    .eq(SQLBlob.FILENAME, childName)
                    .ne(SQLBlob.DELETED, true)
-                   .ne(SQLBlob.HIDDEN, true)
                    .count() > 1) {
                 oma.delete(newBlob);
             } else {
