@@ -65,7 +65,7 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
                                  ctx.get(PARAM_PRESET_NAME).asString())
                              .queryFirst();
         if (preset == null) {
-            preset = getPresetType().newInstance();
+            preset = getPresetType().getDeclaredConstructor().newInstance();
             preset.getJobConfigData().setJob(ctx.get(PARAM_JOB_FACTORY).asString());
             preset.getJobConfigData().setLabel(ctx.get(PARAM_PRESET_NAME).asString());
             preset.fillWithCurrentTenant();
