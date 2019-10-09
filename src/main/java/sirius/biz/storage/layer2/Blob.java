@@ -110,22 +110,6 @@ public interface Blob {
     boolean isTemporary();
 
     /**
-     * Determines if this file is hidden.
-     *
-     * @return <tt>true</tt> if the file is hidden, <tt>false</tt> otherwise
-     * @see #hide()
-     */
-    boolean isHidden();
-
-    /**
-     * Marks the blob as hidden.
-     * <p>
-     * This can be used to temporarily make blobs invisible to the user while still being able to access
-     * the data.
-     */
-    void hide();
-
-    /**
      * Deletes the blob.
      */
     void delete();

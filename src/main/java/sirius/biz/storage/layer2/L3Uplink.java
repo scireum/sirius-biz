@@ -193,16 +193,20 @@ public class L3Uplink implements VFSRoot {
 
         @Override
         public void enumerate(VirtualFile parent, FileSearch search) {
-            //TODO search + limit
             Optional<Directory> parentDirectory = parent.tryAs(Directory.class);
             if (parentDirectory.isPresent()) {
                 parentDirectory.get()
-                               .listChildDirectories(null,
-                                                     null,
+                               .listChildDirectories(search.getPrefixFilter().orElse(null),
+                                                     search.getMaxRemainingItems().orElse(0),
                                                      directory -> search.processResult(wrapDirectory(parent,
                                                                                                      directory)));
-                parentDirectory.get()
-                               .listChildBlobs(null, null, null, blob -> search.processResult(wrapBlob(parent, blob)));
+                if (!search.isOnlyDirectories()) {
+                    parentDirectory.get()
+                                   .listChildBlobs(search.getPrefixFilter().orElse(null),
+                                                   search.getFileExtensionFilters(),
+                                                   search.getMaxRemainingItems().orElse(0),
+                                                   blob -> search.processResult(wrapBlob(parent, blob)));
+                }
             }
         }
     }
