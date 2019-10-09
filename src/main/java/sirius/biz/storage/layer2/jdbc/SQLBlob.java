@@ -91,6 +91,24 @@ public class SQLBlob extends SQLEntity implements Blob {
     private String filename;
 
     /**
+     * Contains the filename in lowercase (if one was provided).
+     */
+    public static final Mapping NORMALIZED_FILENAME = Mapping.named("normalizedFilename");
+    @NullAllowed
+    @Length(255)
+    private String normalizedFilename;
+
+    /**
+     * Contains the file extension if a filename was provided.
+     * <p>
+     * For a <tt>test.pdf</tt> this would store "pdf" - which is the lowercased file extension without the ".".
+     */
+    public static final Mapping FILE_EXTENSION = Mapping.named("fileExtension");
+    @NullAllowed
+    @Length(255)
+    private String fileExtension;
+
+    /**
      * Contains an {@link sirius.db.mixing.Mixing#getUniqueName(Class, Object) unique object name} of an entity
      * for which this blob was stored.
      */
@@ -151,6 +169,18 @@ public class SQLBlob extends SQLEntity implements Blob {
     protected void beforeSave() {
         if (Strings.isEmpty(blobKey)) {
             blobKey = keyGen.generateId();
+        }
+
+        if (Strings.isFilled(filename)) {
+            this.filename = filename.trim();
+            if (Strings.isFilled(filename)) {
+                this.normalizedFilename = filename.toLowerCase();
+                this.fileExtension = Strings.splitAtLast(normalizedFilename, ".").getSecond();
+            } else {
+                this.filename = null;
+                this.normalizedFilename = null;
+                this.fileExtension = null;
+            }
         }
     }
 

@@ -14,11 +14,12 @@ import sirius.biz.storage.layer2.Directory;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
-import sirius.kernel.commons.Limit;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 
@@ -58,6 +59,14 @@ public class SQLDirectory extends SQLEntity implements Directory {
     private String directoryName;
 
     /**
+     * Contains the directory name in lowercase.
+     */
+    public static final Mapping NORMALIZED_DIRECTORY_NAME = Mapping.named("normalizedDirectoryName");
+    @Length(255)
+    @NullAllowed
+    private String normalizedDirectoryName;
+
+    /**
      * Contains a reference to the parent directory.
      * <p>
      * Note that there must only be one directory per tenant which doesn't have a parent. This root directory
@@ -80,6 +89,19 @@ public class SQLDirectory extends SQLEntity implements Directory {
             space = (SQLBlobStorageSpace) layer2.getSpace(spaceName);
         }
         return space;
+    }
+
+    @BeforeSave
+    protected void beforeSave() {
+        if (Strings.isFilled(directoryName)) {
+            this.directoryName = directoryName.trim();
+            if (Strings.isFilled(directoryName)) {
+                this.normalizedDirectoryName = directoryName.toLowerCase();
+            } else {
+                this.directoryName = null;
+                this.normalizedDirectoryName = null;
+            }
+        }
     }
 
     protected SQLEntityRef<SQLDirectory> getParentRef() {
@@ -128,17 +150,17 @@ public class SQLDirectory extends SQLEntity implements Directory {
 
     @Override
     public void listChildDirectories(@Nullable String prefixFilter,
-                                     Limit limit,
+                                     int maxResults,
                                      Function<? super Directory, Boolean> childProcessor) {
-        getStorageSpace().listChildDirectories(this, prefixFilter, limit, childProcessor);
+        getStorageSpace().listChildDirectories(this, prefixFilter, maxResults, childProcessor);
     }
 
     @Override
     public void listChildBlobs(@Nullable String prefixFilter,
                                @Nullable Set<String> fileTypes,
-                               Limit limit,
+                               int maxResults,
                                Function<? super Blob, Boolean> childProcessor) {
-        getStorageSpace().listChildBlobs(this, prefixFilter, fileTypes, limit, childProcessor);
+        getStorageSpace().listChildBlobs(this, prefixFilter, fileTypes, maxResults, childProcessor);
     }
 
     @Override
