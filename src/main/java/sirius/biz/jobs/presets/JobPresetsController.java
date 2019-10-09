@@ -20,9 +20,9 @@ import sirius.web.services.JSONStructuredOutput;
 /**
  * Provides the database independent part for the controller which is responsible for managing job presets.
  *
- * @param <J> the generic entity type on which the actual controller will operate on
+ * @param <P> the generic entity type on which the actual controller will operate on
  */
-public abstract class JobPresetsController<J extends BaseEntity<?> & JobPreset> extends BizController {
+public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> extends BizController {
 
     private static final String PARAM_JOB_FACTORY = "jobFactory";
     private static final String PARAM_PRESET = "preset";
@@ -41,7 +41,7 @@ public abstract class JobPresetsController<J extends BaseEntity<?> & JobPreset> 
      *
      * @return the entity class being used by this controller.
      */
-    protected abstract Class<J> getPresetType();
+    protected abstract Class<P> getPresetType();
 
     /**
      * Updates or creates the preset for the submitted job and name.
@@ -55,7 +55,7 @@ public abstract class JobPresetsController<J extends BaseEntity<?> & JobPreset> 
     @SuppressWarnings("unchecked")
     @Routed(value = "/jobs/preset/create", jsonCall = true)
     public void create(WebContext ctx, JSONStructuredOutput out) throws Exception {
-        J preset = (J) mixing.getDescriptor(getPresetType())
+        P preset = (P) mixing.getDescriptor(getPresetType())
                              .getMapper()
                              .select(getPresetType())
                              .eq(TenantAware.TENANT, tenants.getRequiredTenant())
@@ -91,7 +91,7 @@ public abstract class JobPresetsController<J extends BaseEntity<?> & JobPreset> 
     @Routed(value = "/jobs/preset/load", jsonCall = true)
     public void load(WebContext ctx, JSONStructuredOutput out) {
         out.beginArray(RESPONSE_PARAMS);
-        J preset = mixing.getDescriptor(getPresetType())
+        P preset = mixing.getDescriptor(getPresetType())
                          .getMapper()
                          .find(getPresetType(), ctx.get(PARAM_PRESET).asString())
                          .orElse(null);
@@ -116,7 +116,7 @@ public abstract class JobPresetsController<J extends BaseEntity<?> & JobPreset> 
     @Routed(value = "/jobs/preset/delete", jsonCall = true)
     public void delete(WebContext ctx, JSONStructuredOutput out) {
         if (ctx.isSafePOST()) {
-            J preset = mixing.getDescriptor(getPresetType())
+            P preset = mixing.getDescriptor(getPresetType())
                              .getMapper()
                              .find(getPresetType(), ctx.get(PARAM_PRESET).asString())
                              .orElse(null);
