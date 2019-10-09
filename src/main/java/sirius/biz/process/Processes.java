@@ -51,6 +51,20 @@ import java.util.function.Supplier;
 
 /**
  * Provides the central facility to create and use {@link Process processes}.
+ * <p>
+ * There are essentially two types of processes. "Normal" ones which run for a certain amount of time and then complete.
+ * These can be created via {@link Processes#createProcess(String, String, String, UserInfo, PersistencePeriod, Map)}
+ * and then used to execute code within them via {@link Processes#execute(String, Consumer)} or
+ * {@link Processes#partiallyExecute(String, Consumer)}. Where the latter executes some code but doesn't complete
+ * the process so that other tasks or even other nodes can perform more action within it.
+ * <p>
+ * The other type of processes are "standby" processes which are created on demand and then "run" forever.
+ * These can be used for regular background activity (like a web service interface which needs to report
+ * an error every once in a while). From time to time the system will cleanup these processes and remove old logs
+ * so that the system doesn't overload itself. A standby process can be fetched via
+ * {@link Processes#executeInStandbyProcess(String, Supplier, String, Supplier, Consumer)}.
+ * <p>
+ * Every direct interaction with the {@link Process} should be performed via the provided {@link ProcessContext}.
  */
 @Register(classes = Processes.class, framework = Processes.FRAMEWORK_PROCESSES)
 public class Processes {
