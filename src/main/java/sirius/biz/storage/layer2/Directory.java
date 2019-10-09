@@ -90,11 +90,11 @@ public interface Directory {
      * Lists all child directories.
      *
      * @param prefixFilter   the prefix filer to apply on the name
-     * @param limit          the limit to apply
+     * @param maxResults     the maximal number of results to return or 0 to indicate that there is no upper limit
      * @param childProcessor the processor which is used to iterate over the result
      */
     void listChildDirectories(@Nullable String prefixFilter,
-                              Limit limit,
+                              int maxResults,
                               Function<? super Directory, Boolean> childProcessor);
 
     /**
@@ -102,12 +102,12 @@ public interface Directory {
      *
      * @param prefixFilter   the prefix filer to apply on the name
      * @param fileTypes      the list of accepted file types
-     * @param limit          the limit to apply
+     * @param maxResults     the maximal number of results to return or 0 to indicate that there is no upper limit
      * @param childProcessor the processor which is used to iterate over the result
      */
     void listChildBlobs(@Nullable String prefixFilter,
                         @Nullable Set<String> fileTypes,
-                        Limit limit,
+                        int maxResults,
                         Function<? super Blob, Boolean> childProcessor);
 
     /**

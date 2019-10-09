@@ -8,19 +8,16 @@
 
 package sirius.biz.storage.layer2.jdbc;
 
-import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.BlobRevision;
 import sirius.biz.storage.layer2.BlobVariant;
 import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.util.StorageUtils;
-import sirius.biz.storage.util.WatchableInputStream;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Files;
-import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Part;
@@ -28,7 +25,6 @@ import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -184,15 +180,15 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
             return;
         }
 
-        SmartQuery<SQLBlob> qry = oma.select(SQLBlob.class)
-                                     .eq(SQLBlob.SPACE_NAME, spaceName)
-                                     .eq(SQLBlob.REFERENCE, referencingEntity)
-                                     .eq(SQLBlob.REFERENCE_DESIGNATOR, referenceDesignator);
+        SmartQuery<SQLBlob> query = oma.select(SQLBlob.class)
+                                       .eq(SQLBlob.SPACE_NAME, spaceName)
+                                       .eq(SQLBlob.REFERENCE, referencingEntity)
+                                       .eq(SQLBlob.REFERENCE_DESIGNATOR, referenceDesignator);
         if (Strings.isFilled(excludedBlobKey)) {
-            qry.ne(SQLBlob.BLOB_KEY, excludedBlobKey);
+            query.ne(SQLBlob.BLOB_KEY, excludedBlobKey);
         }
 
-        qry.delete();
+        query.delete();
     }
 
     @Override
@@ -389,28 +385,6 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                             .withSystemErrorMessage("Layer 2/SQL: Cannot determine the size of all blobs of %s: %s (%s)",
                                                     spaceName)
                             .handle();
-        }
-    }
-
-    protected void hide(SQLBlob blob) {
-        try {
-            oma.getDatabase(Mixing.DEFAULT_REALM)
-               .createQuery("UPDATE sqlblob"
-                            + " SET hidden=${hidden}"
-                            + " WHERE spaceName=${spaceName}"
-                            + "   AND blobKey=${blobKey}")
-               .set("hidden", true)
-               .set("spaceName", spaceName)
-               .set("blobKey", blob.getBlobKey())
-               .executeUpdate();
-        } catch (SQLException e) {
-            Exceptions.handle()
-                      .to(StorageUtils.LOG)
-                      .error(e)
-                      .withSystemErrorMessage(
-                              "Layer 2/SQL: An error occured, when marking the blob '%s' as hidden: %s (%s)",
-                              blob.getBlobKey())
-                      .handle();
         }
     }
 
@@ -634,7 +608,6 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                   .eq(SQLBlob.PARENT, parent)
                   .eq(SQLBlob.FILENAME, childName)
                   .ne(SQLBlob.DELETED, true)
-                  .ne(SQLBlob.HIDDEN, true)
                   .first();
     }
 
@@ -659,7 +632,6 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                    .eq(SQLBlob.PARENT, parent)
                    .eq(SQLBlob.FILENAME, childName)
                    .ne(SQLBlob.DELETED, true)
-                   .ne(SQLBlob.HIDDEN, true)
                    .count() > 1) {
                 oma.delete(newBlob);
             } else {
@@ -680,64 +652,38 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
 
     protected void listChildDirectories(SQLDirectory parent,
                                         String prefixFilter,
-                                        Limit limit,
+                                        int maxResults,
                                         Function<? super Directory, Boolean> childProcessor) {
-        //TODO limit
-        //TODO filtering
         oma.select(SQLDirectory.class)
            .eq(SQLDirectory.SPACE_NAME, spaceName)
            .eq(SQLDirectory.PARENT, parent)
+           .where(OMA.FILTERS.like(SQLDirectory.NORMALIZED_DIRECTORY_NAME)
+                             .startsWith(prefixFilter)
+                             .ignoreEmpty()
+                             .build())
+           .limit(maxResults)
            .iterate(child -> childProcessor.apply(child));
     }
 
     protected void listChildBlobs(SQLDirectory parent,
                                   String prefixFilter,
                                   Set<String> fileTypes,
-                                  Limit limit,
+                                  int maxResults,
                                   Function<? super Blob, Boolean> childProcessor) {
-        //TODO limit
-        //TODO filtering
         oma.select(SQLBlob.class)
            .eq(SQLBlob.SPACE_NAME, spaceName)
            .eq(SQLBlob.PARENT, parent)
+           .where(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME).startsWith(prefixFilter).ignoreEmpty().build())
+           .where(OMA.FILTERS.containsOne(SQLBlob.FILE_EXTENSION, fileTypes.toArray()).build())
+           .limit(maxResults)
            .iterate(child -> childProcessor.apply(child));
     }
 
     protected List<BlobVariant> fetchVariants(SQLBlob blob) {
-        //TODO
-        return Collections.emptyList();
+        throw new UnsupportedOperationException("Will be implemented separately.");
     }
 
     protected List<BlobRevision> fetchRevisions(SQLBlob blob) {
-        //TODO
-        return Collections.emptyList();
-    }
-
-    public InputStream createInputStream(SQLBlob blob) {
-        FileHandle fileHandle = blob.download().filter(FileHandle::exists).orElse(null);
-        if (fileHandle == null) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .withSystemErrorMessage("Layer 2/SQL: Cannot obtain a file handle for %s (%s)",
-                                                    blob.getId(),
-                                                    blob.getFilename())
-                            .handle();
-        }
-
-        WatchableInputStream result = null;
-        try {
-            result = new WatchableInputStream(fileHandle.getInputStream());
-            result.getCompletionFuture().onSuccess(() -> fileHandle.close()).onFailure(e -> fileHandle.close());
-        } catch (FileNotFoundException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 2/SQL: Cannot obtain a file handle for %s (%s): %s (%s)",
-                                                    blob.getId(),
-                                                    blob.getFilename())
-                            .handle();
-        }
-
-        return result;
+        throw new UnsupportedOperationException("Will be implemented separately.");
     }
 }

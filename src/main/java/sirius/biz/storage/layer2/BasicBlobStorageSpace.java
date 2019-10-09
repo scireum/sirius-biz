@@ -8,21 +8,22 @@
 
 package sirius.biz.storage.layer2;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.locks.Locks;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.biz.storage.util.WatchableInputStream;
 import sirius.db.KeyGenerator;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
-import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
-import sirius.web.http.Response;
+import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nullable;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.time.Duration;
 import java.util.Optional;
 
@@ -139,21 +140,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob, D extends Directory>
     protected abstract D lookupDirectoryById(String idAsString);
 
     /**
-     * Delivers the blob into the given response.
-     *
-     * @param blob     the blob to deliver
-     * @param response the response to fullfill
-     */
-    public void deliver(Blob blob, Response response) {
-        if (Strings.isEmpty(blob.getPhysicalObjectId())) {
-            response.error(HttpResponseStatus.NOT_FOUND);
-            return;
-        }
-
-        getPhysicalSpace().deliver(response, blob.getPhysicalObjectId(), Files.getFileExtension(blob.getFilename()));
-    }
-
-    /**
      * Performs a download / fetch of the given blob to make its data locally accessible.
      *
      * @param blob the blob to fetch the data for
@@ -166,5 +152,37 @@ public abstract class BasicBlobStorageSpace<B extends Blob, D extends Directory>
         }
 
         return getPhysicalSpace().download(blob.getPhysicalObjectId());
+    }
+
+    /**
+     * Donloads the contents of the given blob and provides access via an {@link InputStream}.
+     *
+     * @param blob the blob to fetch the data for
+     * @return an input stream to read and process the contents of the blob
+     */
+    public InputStream createInputStream(Blob blob) {
+        FileHandle fileHandle = blob.download().filter(FileHandle::exists).orElse(null);
+        if (fileHandle == null) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .withSystemErrorMessage("Layer 2/SQL: Cannot obtain a file handle for %s (%s)",
+                                                    blob.getBlobKey(),
+                                                    blob.getFilename())
+                            .handle();
+        }
+
+        try {
+            WatchableInputStream result = new WatchableInputStream(fileHandle.getInputStream());
+            result.getCompletionFuture().onSuccess(() -> fileHandle.close()).onFailure(e -> fileHandle.close());
+            return result;
+        } catch (FileNotFoundException e) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Layer 2/SQL: Cannot obtain a file handle for %s (%s): %s (%s)",
+                                                    blob.getBlobKey(),
+                                                    blob.getFilename())
+                            .handle();
+        }
     }
 }
