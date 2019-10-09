@@ -8,19 +8,16 @@
 
 package sirius.biz.storage.layer2.jdbc;
 
-import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.BlobRevision;
 import sirius.biz.storage.layer2.BlobVariant;
 import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.util.StorageUtils;
-import sirius.biz.storage.util.WatchableInputStream;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Files;
-import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Part;
@@ -28,7 +25,6 @@ import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -185,9 +181,9 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         }
 
         SmartQuery<SQLBlob> query = oma.select(SQLBlob.class)
-                                     .eq(SQLBlob.SPACE_NAME, spaceName)
-                                     .eq(SQLBlob.REFERENCE, referencingEntity)
-                                     .eq(SQLBlob.REFERENCE_DESIGNATOR, referenceDesignator);
+                                       .eq(SQLBlob.SPACE_NAME, spaceName)
+                                       .eq(SQLBlob.REFERENCE, referencingEntity)
+                                       .eq(SQLBlob.REFERENCE_DESIGNATOR, referenceDesignator);
         if (Strings.isFilled(excludedBlobKey)) {
             query.ne(SQLBlob.BLOB_KEY, excludedBlobKey);
         }
@@ -656,26 +652,30 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
 
     protected void listChildDirectories(SQLDirectory parent,
                                         String prefixFilter,
-                                        Limit limit,
+                                        int maxResults,
                                         Function<? super Directory, Boolean> childProcessor) {
-        //TODO limit
-        //TODO filtering
         oma.select(SQLDirectory.class)
            .eq(SQLDirectory.SPACE_NAME, spaceName)
            .eq(SQLDirectory.PARENT, parent)
+           .where(OMA.FILTERS.like(SQLDirectory.NORMALIZED_DIRECTORY_NAME)
+                             .startsWith(prefixFilter)
+                             .ignoreEmpty()
+                             .build())
+           .limit(maxResults)
            .iterate(child -> childProcessor.apply(child));
     }
 
     protected void listChildBlobs(SQLDirectory parent,
                                   String prefixFilter,
                                   Set<String> fileTypes,
-                                  Limit limit,
+                                  int maxResults,
                                   Function<? super Blob, Boolean> childProcessor) {
-        //TODO limit
-        //TODO filtering
         oma.select(SQLBlob.class)
            .eq(SQLBlob.SPACE_NAME, spaceName)
            .eq(SQLBlob.PARENT, parent)
+           .where(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME).startsWith(prefixFilter).ignoreEmpty().build())
+           .where(OMA.FILTERS.containsOne(SQLBlob.FILE_EXTENSION, fileTypes.toArray()).build())
+           .limit(maxResults)
            .iterate(child -> childProcessor.apply(child));
     }
 
@@ -686,5 +686,4 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     protected List<BlobRevision> fetchRevisions(SQLBlob blob) {
         throw new UnsupportedOperationException("Will be implemented separately.");
     }
-
 }
