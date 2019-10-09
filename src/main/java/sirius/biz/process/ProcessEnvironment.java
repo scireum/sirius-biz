@@ -253,6 +253,11 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
+    public void addReference(String reference) {
+        processes.addReference(processId, reference);
+    }
+
+    @Override
     public void addOutput(ProcessOutput output) {
         processes.addOutput(processId, output);
     }
