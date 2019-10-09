@@ -14,6 +14,7 @@ import sirius.biz.storage.layer2.BlobRevision;
 import sirius.biz.storage.layer2.BlobStorage;
 import sirius.biz.storage.layer2.BlobVariant;
 import sirius.biz.storage.layer2.Directory;
+import sirius.biz.storage.layer2.URLBuilder;
 import sirius.db.KeyGenerator;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
@@ -254,8 +255,8 @@ public class SQLBlob extends SQLEntity implements Blob {
     }
 
     @Override
-    public boolean isTemporary() {
-        return temporary;
+    public URLBuilder url() {
+        return new URLBuilder(getStorageSpace(), this);
     }
 
     @Override
@@ -266,6 +267,11 @@ public class SQLBlob extends SQLEntity implements Blob {
     @Override
     public List<BlobRevision> getRevisions() {
         return getStorageSpace().fetchRevisions(this);
+    }
+
+    @Override
+    public boolean isTemporary() {
+        return temporary;
     }
 
     public String getSpaceName() {

@@ -202,4 +202,11 @@ public interface Blob {
      * @return a list of all known revisions
      */
     List<BlobRevision> getRevisions();
+
+    /**
+     * Provides a builder which can be used to create a delivery or download link.
+     *
+     * @return a builder to create a download or delivery URL
+     */
+    URLBuilder url();
 }
