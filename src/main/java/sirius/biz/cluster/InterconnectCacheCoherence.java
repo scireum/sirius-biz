@@ -73,8 +73,12 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
             CacheManager.removeCoherentCacheKeyLocally(cache, key);
         } else if (Strings.areEqual(type, TYPE_PUT)) {
             String node = event.getString(MESSAGE_NODE);
+            // on a "put" event, we want to remove the key from all nodes, except the node "put" was called on
+            // (in contrast to "remove". on "remove" the key should be removed on every node)
             if (!Strings.areEqual(node, CallContext.getNodeName())) {
                 String key = event.getString(MESSAGE_KEY);
+                // when another node changes the value by a "put" we simply remove the key, because this node may never
+                // need the actual value, or should recalculate the value lazily
                 CacheManager.removeCoherentCacheKeyLocally(cache, key);
             }
         }
