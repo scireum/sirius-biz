@@ -25,12 +25,14 @@ class UpdatingOutputStream extends OutputStream {
     public static final byte[] EMPTY_BUFFER = new byte[0];
     private Storage storage;
     private StoredObject destination;
+    private Runnable completionHandler;
     private File bufferFile;
     private FileOutputStream buffer;
 
-    protected UpdatingOutputStream(Storage storage, StoredObject obj) {
+    protected UpdatingOutputStream(Storage storage, StoredObject obj, Runnable completionHandler) {
         this.storage = storage;
         this.destination = obj;
+        this.completionHandler = completionHandler;
     }
 
     @Override
@@ -71,6 +73,10 @@ class UpdatingOutputStream extends OutputStream {
                 storage.updateFile(destination, bufferFile, null);
             } else {
                 storage.updateFile(destination, new ByteArrayInputStream(EMPTY_BUFFER), null, null, 0L);
+            }
+
+            if (completionHandler != null) {
+                completionHandler.run();
             }
         } finally {
             if (bufferFile != null && bufferFile.exists()) {

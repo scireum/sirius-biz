@@ -459,7 +459,21 @@ public class Storage {
      * @return an output stream to write the contents to.
      */
     public OutputStream updateFile(@Nonnull StoredObject file) {
-        return new UpdatingOutputStream(this, file);
+        return new UpdatingOutputStream(this, file, null);
+    }
+
+    /**
+     * Creates a new output stream which updates the contents of the given file.
+     * <p>
+     * Note that most probably, the file will be updated once the stream is closed and not immediatelly on a write.
+     * Also note that it is essential to close the stream to release underlying resources.
+     *
+     * @param file              the file to update.
+     * @param completionHandler invoked once the output stream was closed and all data has been handled
+     * @return an output stream to write the contents to.
+     */
+    public OutputStream updateFile(@Nonnull StoredObject file, Runnable completionHandler) {
+        return new UpdatingOutputStream(this, file, completionHandler);
     }
 
     /**
