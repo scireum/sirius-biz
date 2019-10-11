@@ -34,7 +34,7 @@ public class ExportXLSX implements LineBasedExport {
     }
 
     protected ExcelExport createExcelExport() {
-        return ExcelExport.asXSLX();
+        return ExcelExport.asStreamingXLSX();
     }
 
     @Override

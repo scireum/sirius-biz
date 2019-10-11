@@ -6,11 +6,9 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jobs.scheduler;
+package sirius.biz.jobs;
 
 import com.alibaba.fastjson.JSON;
-import sirius.biz.jobs.JobFactory;
-import sirius.biz.jobs.Jobs;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
