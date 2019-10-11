@@ -47,7 +47,7 @@ public class PermissionData extends Composite {
     @Autoloaded
     @NullAllowed
     @AutoImport
-    @Length(4096)
+    @Lob
     private final StringList permissions = new StringList();
 
     /**
