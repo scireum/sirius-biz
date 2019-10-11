@@ -11,6 +11,7 @@ package sirius.biz.storage.s3;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.event.ProgressEvent;
 import com.amazonaws.event.ProgressEventType;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
@@ -56,7 +57,7 @@ public class ObjectStore {
 
     protected final ObjectStores stores;
     protected final String name;
-    protected final AmazonS3Client client;
+    protected final AmazonS3 client;
     protected final TransferManager transferManager;
     protected final String bucketSuffix;
 
@@ -103,7 +104,7 @@ public class ObjectStore {
         }
     }
 
-    protected ObjectStore(ObjectStores stores, String name, AmazonS3Client client, String bucketSuffix) {
+    protected ObjectStore(ObjectStores stores, String name, AmazonS3 client, String bucketSuffix) {
         this.stores = stores;
         this.name = name;
         this.client = client;
@@ -124,7 +125,7 @@ public class ObjectStore {
      *
      * @return the client used to talk to the S3 store
      */
-    public AmazonS3Client getClient() {
+    public AmazonS3 getClient() {
         return client;
     }
 
@@ -288,7 +289,7 @@ public class ObjectStore {
 
     private boolean checkExistence(BucketName bucket) {
         try {
-            return client.doesBucketExist(bucket.getName());
+            return client.doesBucketExistV2(bucket.getName());
         } catch (SdkClientException e) {
             Exceptions.handle()
                       .to(ObjectStores.LOG)

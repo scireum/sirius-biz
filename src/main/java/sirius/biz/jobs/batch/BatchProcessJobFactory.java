@@ -18,6 +18,7 @@ import sirius.biz.process.ProcessLink;
 import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.nls.NLS;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
@@ -169,10 +170,25 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
      * @throws Exception in case of any error which should abort this job
      */
     protected void executeTask(ProcessContext process) throws Exception {
+        logParameters(process);
         try (BatchJob job = createJob(process)) {
             job.execute();
         }
     }
 
     protected abstract BatchJob createJob(ProcessContext process) throws Exception;
+
+    private void logParameters(ProcessContext process) {
+        StringBuilder output = new StringBuilder();
+        output.append("Parameter:\n\n");
+
+        getParameters().forEach(param -> {
+            String value = process.getParameter(param).map(NLS::toUserString).orElse("");
+            output.append(param.getLabel());
+            output.append(": ");
+            output.append(value);
+            output.append("\n");
+        });
+        process.log(ProcessLog.info().withMessage(output.toString().trim()));
+    }
 }

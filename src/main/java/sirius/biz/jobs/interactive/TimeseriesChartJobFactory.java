@@ -35,21 +35,20 @@ public abstract class TimeseriesChartJobFactory extends LinearChartJobFactory im
      */
     public static final LocalDateParameter PARAM_START =
             new LocalDateParameter("start", "$TimeseriesDataProvider.start").withDefault(() -> LocalDate.now()
-                                                                                                        .minusDays(30))
-                                                                            .withSpan(12, 12);
+                                                                                                        .minusDays(30));
 
     /**
      * Determines the end of the timeseries.
      */
     public static final LocalDateParameter PARAM_END =
-            new LocalDateParameter("end", "$TimeseriesDataProvider.end").withDefault(() -> LocalDate.now().minusDays(1))
-                                                                        .withSpan(12, 12);
+            new LocalDateParameter("end", "$TimeseriesDataProvider.end").withDefault(() -> LocalDate.now()
+                                                                                                    .minusDays(1));
 
     /**
      * Determines the desired unit or resolution of the timeseries.
      */
     public static final EnumParameter<Unit> PARAM_UNIT =
-            new EnumParameter<>("unit", "$TimeseriesDataProvider.unit", Unit.class).withSpan(12, 12);
+            new EnumParameter<>("unit", "$TimeseriesDataProvider.unit", Unit.class);
 
     /**
      * Determines the desirec compariso period for the timeseries.
@@ -57,7 +56,7 @@ public abstract class TimeseriesChartJobFactory extends LinearChartJobFactory im
     public static final EnumParameter<ComparisonPeriod> PARAM_COMPARISON_PERIOD =
             new EnumParameter<>("comparisonPeriod",
                                 "$TimeseriesChartJobFactory.comparisonPeriod",
-                                ComparisonPeriod.class).withSpan(12, 12);
+                                ComparisonPeriod.class);
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
