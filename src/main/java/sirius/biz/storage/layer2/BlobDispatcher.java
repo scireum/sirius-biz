@@ -214,7 +214,7 @@ public class BlobDispatcher implements WebDispatcher {
     }
 
     /**
-     * Strips of a SEO text to retrieve the effective filename.
+     * Strips off a SEO text to retrieve the effective filename.
      * <p>
      * Such an "enhanced" filename is generated when {@link URLBuilder#withAddonText(String)} was used.
      *
