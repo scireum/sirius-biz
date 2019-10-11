@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer2;
 
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.kernel.health.HandledException;
 import sirius.web.http.Response;
 

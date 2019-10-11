@@ -6,9 +6,10 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage.layer2;
+package sirius.biz.storage.layer2.variants;
 
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.biz.storage.layer2.Blob;
 import sirius.web.http.WebContext;
 
 import java.time.LocalDateTime;
@@ -33,21 +34,19 @@ public interface BlobVariant {
      *
      * @return the variant designator
      */
-    String getVariantString();
+    String getVariantName();
 
     /**
      * Contains the physical key used by the {@link sirius.biz.storage.layer1.ObjectStorageSpace} to store the data.
      *
      * @return the layer 1 object key which contains the data of this revision
      */
-    String getPhysicalObjectId();
+    String getPhysicalObjectKey();
 
     /**
-     * Returns the timestamp when the revision was created.
      *
-     * @return the creation timestamp of this revision
      */
-    LocalDateTime getCreatedTimestamp();
+    LocalDateTime getLastConversionAttempt();
 
     /**
      * Returns the size of the revision in bytes.
@@ -63,17 +62,7 @@ public interface BlobVariant {
      */
     Optional<FileHandle> download();
 
-    /**
-     * Delivers the data of this blob into the given request.
-     *
-     * @param ctx the request to send a respond to
-     */
-    void deliver(WebContext ctx);
+    boolean isQueuedForConversion();
 
-    /**
-     * Delivers the data of this blob as a download into the given request.
-     *
-     * @param ctx the request to send a respond to
-     */
-    void deliverAsDownload(WebContext ctx);
+    int getNumAttempts();
 }
