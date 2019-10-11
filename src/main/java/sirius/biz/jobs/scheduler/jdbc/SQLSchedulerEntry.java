@@ -8,7 +8,7 @@
 
 package sirius.biz.jobs.scheduler.jdbc;
 
-import sirius.biz.jobs.scheduler.JobConfigData;
+import sirius.biz.jobs.JobConfigData;
 import sirius.biz.jobs.scheduler.SchedulerData;
 import sirius.biz.jobs.scheduler.SchedulerEntry;
 import sirius.biz.tenants.jdbc.SQLTenantAware;

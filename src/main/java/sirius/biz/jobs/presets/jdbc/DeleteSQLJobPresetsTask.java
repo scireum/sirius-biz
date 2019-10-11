@@ -6,23 +6,22 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.jobs.scheduler.jdbc;
+package sirius.biz.jobs.presets.jdbc;
 
-import sirius.biz.jobs.scheduler.SchedulerEntry;
 import sirius.biz.tenants.deletion.DeleteTenantTask;
 import sirius.biz.tenants.jdbc.DeleteSQLEntitiesTask;
 import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.kernel.di.std.Register;
 
 /**
- * Deletes all {@link SchedulerEntry scheduler entries} of the given tenant.
+ * Deletes all {@link sirius.biz.jobs.presets.JobPreset job presets} of the given tenant.
  */
-@Register(classes = DeleteTenantTask.class, framework = SQLSchedulerController.FRAMEWORK_SCHEDULER_JDBC)
-public class DeleteSQLSchedulerEntriesTask extends DeleteSQLEntitiesTask {
+@Register(classes = DeleteTenantTask.class, framework = SQLJobPresets.FRAMEWORK_PRESETS_JDBC)
+public class DeleteSQLJobPresetsTask extends DeleteSQLEntitiesTask {
 
     @Override
     protected Class<? extends SQLTenantAware> getEntityClass() {
-        return SQLSchedulerEntry.class;
+        return SQLJobPreset.class;
     }
 
     @Override
