@@ -8,6 +8,10 @@
 
 package sirius.biz.storage.layer2;
 
+import sirius.biz.storage.layer1.ObjectStorageSpace;
+import sirius.web.http.Response;
+
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +20,20 @@ import java.util.Optional;
  * Represents a layer 2 storage space which manages {@link Blob blobs} and {@link Directory directories}.
  */
 public interface BlobStorageSpace {
+
+    /**
+     * Returns the name of this blog storage space.
+     *
+     * @return the name of this space
+     */
+    String getName();
+
+    /**
+     * Returns the associated layer 1 space which actually stores the data.
+     *
+     * @return the associated physical storage space
+     */
+    ObjectStorageSpace getPhysicalSpace();
 
     /**
      * Tries to find the blob with the given key.
@@ -173,4 +191,21 @@ public interface BlobStorageSpace {
      * @return <tt>true</tt> if this space is readonly, <tt>false</tt> otherwise
      */
     boolean isReadonly();
+
+    /**
+     * Resolves the filename of the given blob.
+     *
+     * @param blobKey the blob to lookup the filename for
+     * @return the filename if present or an empty optional if non was found
+     */
+    Optional<String> resolveFilename(@Nonnull String blobKey);
+
+    /**
+     * Delivers the requested blob to the given HTTP response.
+     *
+     * @param response the response to populate
+     * @param blobKey  the {@link Blob#getBlobKey()} of the {@link Blob} to deliver
+     * @param variant  the variant to deliver. Use {@link URLBuilder#VARIANT_RAW} to deliver the blob itself
+     */
+    void deliver(@Nonnull String blobKey, @Nonnull String variant, @Nonnull Response response);
 }
