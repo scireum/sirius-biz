@@ -87,11 +87,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Part
     private static Locks locks;
 
-    @Part
-    protected static ConversionEngine conversionEngine;
-
-    @Part
-    protected static Tasks tasks;
+    protected static Cache<String, Directory> directoryByIdCache =
+            CacheManager.createCoherentCache("storage-directories");
 
     protected final Extension config;
     protected String spaceName;
