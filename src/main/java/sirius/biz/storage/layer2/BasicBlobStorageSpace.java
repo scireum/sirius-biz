@@ -60,11 +60,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         implements BlobStorageSpace {
 
     /**
-     * Specifies the total number of attempts for the optimistic locking strategies used by this class.
-     */
-    private static final int NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS = 5;
-
-    /**
      * Contains the name of the config key used to determine if a space is browsable.
      */
     private static final String CONFIG_KEY_BROWSABLE = "browsable";
@@ -97,21 +92,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     @Part
     protected static Tasks tasks;
-
-    @ConfigValue("storage.conversion.enbaled")
-    protected static boolean conversionEnabled;
-
-    @ConfigValue("storage.conversion.hosts")
-    protected static List<String> conversionHosts;
-
-    protected static Cache<String, Directory> directoryByIdCache =
-            CacheManager.createCoherentCache("storage-directories");
-
-    protected static Cache<String, String> blobKeyToFilenameCache =
-            CacheManager.createCoherentCache("storage-filenames");
-
-    protected static Cache<String, String> blobKeyToPhysicalCache =
-            CacheManager.createCoherentCache("storage-physical-keys");
 
     protected final Extension config;
     protected String spaceName;
