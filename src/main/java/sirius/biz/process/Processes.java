@@ -51,6 +51,20 @@ import java.util.function.Supplier;
 
 /**
  * Provides the central facility to create and use {@link Process processes}.
+ * <p>
+ * There are essentially two types of processes. "Normal" ones which run for a certain amount of time and then complete.
+ * These can be created via {@link Processes#createProcess(String, String, String, UserInfo, PersistencePeriod, Map)}
+ * and then used to execute code within them via {@link Processes#execute(String, Consumer)} or
+ * {@link Processes#partiallyExecute(String, Consumer)}. Where the latter executes some code but doesn't complete
+ * the process so that other tasks or even other nodes can perform more action within it.
+ * <p>
+ * The other type of processes are "standby" processes which are created on demand and then "run" forever.
+ * These can be used for regular background activity (like a web service interface which needs to report
+ * an error every once in a while). From time to time the system will cleanup these processes and remove old logs
+ * so that the system doesn't overload itself. A standby process can be fetched via
+ * {@link Processes#executeInStandbyProcess(String, Supplier, String, Supplier, Consumer)}.
+ * <p>
+ * Every direct interaction with the {@link Process} should be performed via the provided {@link ProcessContext}.
  */
 @Register(classes = Processes.class, framework = Processes.FRAMEWORK_PROCESSES)
 public class Processes {
@@ -496,6 +510,10 @@ public class Processes {
 
     /**
      * Adds the given link to the given process.
+     * <p>
+     * When running inside a process the preferred way to add a link is using
+     * {@link ProcessContext#addLink(ProcessLink)}. This method is only made public so that outside helper classes
+     * can contribute to the process.
      *
      * @param processId the process to update
      * @param link      the link to add
@@ -507,6 +525,10 @@ public class Processes {
 
     /**
      * Adds the given reference to the given process.
+     * <p>
+     * When running inside a process the preferred way to add a reference is using
+     * {@link ProcessContext#addReference(String)}. This method is only made public so that outside helper classes
+     * can contribute to the process.
      *
      * @param processId the process to update
      * @param reference the reference to attach
@@ -522,12 +544,15 @@ public class Processes {
 
     /**
      * Adds the given output to the given process.
+     * <p>
+     * When running inside a process the preferred way to add an output is using
+     * {@link ProcessContext#addOutput(ProcessOutput)}. This method is only made public so that outside helper classes
+     * can contribute to the process.
      *
      * @param processId the process to update
      * @param output    the output to add
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-
     public boolean addOutput(String processId, ProcessOutput output) {
         return modify(processId,
                       process -> process.getState() != ProcessState.TERMINATED,
@@ -536,13 +561,16 @@ public class Processes {
 
     /**
      * Adds a file to the given process.
+     * <p>
+     * When running inside a process the preferred way to add a file is using
+     * {@link ProcessContext#addFile(String, File)}. This method is only made public so that outside helper classes
+     * can contribute to the process.
      *
      * @param processId the process to update
      * @param filename  the filename to use
      * @param data      the data to persist
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-
     public boolean addFile(String processId, String filename, File data) {
         Process process = fetchProcess(processId).orElse(null);
         if (process == null) {
@@ -561,10 +589,18 @@ public class Processes {
     /**
      * Stores the log entry for the given process.
      * <p>
+     * When running inside a process the preferred way of logging a message is using
+     * {@link ProcessContext#log(ProcessLog)}. This method is only made public so that outside helper classes
+     * can contribute to the process.
+     * <p>
      * Note that this will be done asynchronously to permit bulk inserts.
      *
      * @param processId the process to store the entry for
      * @param logEntry  the entry to persist
+     * @see ProcessContext#log(ProcessLog)
+     * @see ProcessContext#log(String)
+     * @see ProcessContext#logLimited(Object)
+     * @see ProcessContext#smartLogLimited(Supplier)
      */
     public void log(String processId, ProcessLog logEntry) {
         try {
