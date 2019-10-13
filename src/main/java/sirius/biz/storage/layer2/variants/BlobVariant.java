@@ -10,7 +10,6 @@ package sirius.biz.storage.layer2.variants;
 
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.Blob;
-import sirius.web.http.WebContext;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -44,7 +43,9 @@ public interface BlobVariant {
     String getPhysicalObjectKey();
 
     /**
+     * Returns the timestamp of the last conversion attempt.
      *
+     * @return the timestamp when a conversion was last attempted
      */
     LocalDateTime getLastConversionAttempt();
 
@@ -62,7 +63,17 @@ public interface BlobVariant {
      */
     Optional<FileHandle> download();
 
+    /**
+     * Determines if currently a conversion is in progress.
+     *
+     * @return <tt>true</tt> if a node is currently trying to perform the requested conversion
+     */
     boolean isQueuedForConversion();
 
+    /**
+     * The number of conversion attempts which have already been attempted.
+     *
+     * @return the number of conversion attempts
+     */
     int getNumAttempts();
 }
