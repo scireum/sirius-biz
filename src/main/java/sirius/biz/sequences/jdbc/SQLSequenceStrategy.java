@@ -54,13 +54,10 @@ public class SQLSequenceStrategy implements SequenceStrategy {
             return createSequence(sequence);
         }
 
-        int numRowsChanged = oma.getDatabase(Mixing.DEFAULT_REALM)
-                                .createQuery("UPDATE sequencecounter"
-                                             + "     SET nextValue = nextValue + 1"
-                                             + "     WHERE name = ${name}"
-                                             + "     AND nextValue = ${value}")
-                                .set("name", sequence)
-                                .set("value", result.getNextValue())
+        int numRowsChanged = oma.updateStatement(SequenceCounter.class)
+                                .inc(SequenceCounter.NEXT_VALUE)
+                                .where(SequenceCounter.NAME, sequence)
+                                .where(SequenceCounter.NEXT_VALUE, result.getNextValue())
                                 .executeUpdate();
         if (numRowsChanged == 1) {
             // Nobody else changed the counter, so we can savely return the determined value...
