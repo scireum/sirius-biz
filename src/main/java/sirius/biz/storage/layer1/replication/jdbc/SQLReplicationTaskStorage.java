@@ -35,6 +35,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Register(framework = SQLReplicationTaskStorage.FRAMEWORK_JDBC_REPLICATION)
 public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
 
+    /**
+     * Contains the name of the framework which has to be enabled to support the coordination of the
+     * replication layer via JDBC entities.
+     */
     public static final String FRAMEWORK_JDBC_REPLICATION = "biz.storage-replication-jdbc";
 
     @ConfigValue("storage.layer1.replication.batchSize")
