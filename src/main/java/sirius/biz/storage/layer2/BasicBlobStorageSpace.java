@@ -691,10 +691,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         String physicalKey = resolvePhysicalKey(blobKey, variant, true);
         if (physicalKey != null) {
             getPhysicalSpace().deliver(response, physicalKey);
-        } else if (conversionEnabled) {
-            deliverAsync(blobKey, variant, response);
         } else {
-            delegateConversion(blobKey, variant, response);
+            deliverAsync(blobKey, variant, response);
         }
     }
 
@@ -1009,11 +1007,15 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         tasks.executor(EXECUTOR_STORAGE_CONVERSION_DELIVERY)
              .dropOnOverload(() -> response.error(HttpResponseStatus.TOO_MANY_REQUESTS))
              .fork(() -> {
-                 String physicalKey = resolvePhysicalKey(blobKey, variant, false);
-                 if (physicalKey != null) {
-                     getPhysicalSpace().deliver(response, physicalKey);
+                 if (conversionEnabled) {
+                     String physicalKey = resolvePhysicalKey(blobKey, variant, false);
+                     if (physicalKey != null) {
+                         getPhysicalSpace().deliver(response, physicalKey);
+                     } else {
+                         response.error(HttpResponseStatus.NOT_FOUND);
+                     }
                  } else {
-                     response.error(HttpResponseStatus.NOT_FOUND);
+                     delegateConversion(blobKey, variant, response);
                  }
              });
     }
