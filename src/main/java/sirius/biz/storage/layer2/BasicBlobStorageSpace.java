@@ -90,6 +90,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     private static final String CONFIG_KEY_BASE_URL = "baseUrl";
 
+    /**
+     * Contains the name of the executor in which requests are moved which might be blocked while waiting for
+     * a conversion to happen. We do not want to jam our main executor of the web server for this, therefore
+     * a separater one is used.
+     */
+    private static final String EXECUTOR_STORAGE_CONVERSION_DELIVERY = "storage-conversion-delivery";
+
     @Part
     protected static ObjectStorage objectStorage;
 
@@ -108,10 +115,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Part
     protected static Tasks tasks;
 
-    @ConfigValue("storage.conversion.enabled")
+    @ConfigValue("storage.layer2.conversion.enabled")
     protected static boolean conversionEnabled;
 
-    @ConfigValue("storage.conversion.hosts")
+    @ConfigValue("storage.layer2.conversion.hosts")
     protected static List<String> conversionHosts;
 
     protected static Cache<String, Directory> directoryByIdCache =
@@ -999,7 +1006,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param response the response to populate
      */
     private void deliverAsync(String blobKey, String variant, Response response) {
-        tasks.executor("storage-conversion-delivery")
+        tasks.executor(EXECUTOR_STORAGE_CONVERSION_DELIVERY)
              .dropOnOverload(() -> response.error(HttpResponseStatus.TOO_MANY_REQUESTS))
              .fork(() -> {
                  String physicalKey = resolvePhysicalKey(blobKey, variant, false);
