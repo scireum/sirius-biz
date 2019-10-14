@@ -13,6 +13,7 @@ import sirius.biz.locks.LockInfo;
 import sirius.biz.locks.LockManager;
 import sirius.biz.locks.Locks;
 import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Context;
@@ -97,24 +98,15 @@ public class SQLLockManager extends BasicLockManager {
 
     @Override
     public void unlock(String lock, boolean force) {
-        try {
-            awaitReadiness();
+        awaitReadiness();
 
-            if (force) {
-                oma.getDatabase(Mixing.DEFAULT_REALM)
-                   .createQuery("DELETE FROM managedlock WHERE name = ${name}")
-                   .set("name", lock)
-                   .executeUpdate();
-            } else {
-                oma.getDatabase(Mixing.DEFAULT_REALM)
-                   .createQuery("DELETE FROM managedlock WHERE name = ${name} AND owner = ${owner}")
-                   .set("name", lock)
-                   .set("owner", CallContext.getNodeName())
-                   .executeUpdate();
-            }
-        } catch (SQLException e) {
-            Exceptions.handle(Locks.LOG, e);
+        SmartQuery<ManagedLock> deleteStatement = oma.select(ManagedLock.class).eq(ManagedLock.NAME, lock);
+
+        if (!force) {
+            deleteStatement.eq(ManagedLock.OWNER, CallContext.getNodeName());
         }
+
+        deleteStatement.truncate();
     }
 
     @Override
