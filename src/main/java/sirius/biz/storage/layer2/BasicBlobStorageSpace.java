@@ -8,30 +8,72 @@
 
 package sirius.biz.storage.layer2;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.locks.Locks;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
+import sirius.biz.storage.layer2.variants.BlobVariant;
+import sirius.biz.storage.layer2.variants.ConversionEngine;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.biz.storage.util.WatchableInputStream;
 import sirius.db.KeyGenerator;
+import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
+import sirius.kernel.commons.Callback;
+import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Processor;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Wait;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
+import sirius.kernel.settings.Extension;
+import sirius.web.http.Response;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 
 /**
  * Represents a base implementation for a layer 2 storage space which manages {@link Blob blobs} and
  * {@link Directory directories}.
+ *
+ * @param <B> the effective subclass of {@link Blob} used by a concrete subclass
+ * @param <D> the effective subclass of {@link Directory} used by a concrete subclass
+ * @param <B> the effective subclass of {@link BlobVariant} used by a concrete subclass
  */
-public abstract class BasicBlobStorageSpace<B extends Blob, D extends Directory> implements BlobStorageSpace {
+public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D extends Directory & OptimisticCreate, V extends BlobVariant>
+        implements BlobStorageSpace {
+
+    /**
+     * Contains the name of the config key used to determine if a space is browsable.
+     */
+    private static final String CONFIG_KEY_BROWSABLE = "browsable";
+
+    /**
+     * Contains the name of the config key used to determine if a space is readonly.
+     */
+    private static final String CONFIG_KEY_READONLY = "readonly";
+
+    /**
+     * Contains the name of the config key used to determine the base url to use when generating
+     * delivery URLs for this space.
+     */
+    private static final String CONFIG_KEY_BASE_URL = "baseUrl";
 
     @Part
     protected static ObjectStorage objectStorage;
@@ -48,22 +90,26 @@ public abstract class BasicBlobStorageSpace<B extends Blob, D extends Directory>
     protected static Cache<String, Directory> directoryByIdCache =
             CacheManager.createCoherentCache("storage-directories");
 
+    protected final Extension config;
     protected String spaceName;
     protected boolean browsable;
     protected boolean readonly;
-    private ObjectStorageSpace objectStorageSpace;
-
-    protected BasicBlobStorageSpace(String spaceName, boolean browsable, boolean readonly) {
-        this.spaceName = spaceName;
-        this.browsable = browsable;
-        this.readonly = readonly;
-    }
+    protected String baseUrl;
+    protected ObjectStorageSpace objectStorageSpace;
 
     /**
-     * Returns the associated layer 1 space which actually stores the data.
+     * Creates a new instance by loading all settings from the given config section.
      *
-     * @return the associated physical storage space
+     * @param spaceName the name of this space
+     * @param config    the configuration to read the settings from
      */
+    protected BasicBlobStorageSpace(String spaceName, Extension config) {
+        this.spaceName = spaceName;
+        this.config = config;
+        this.browsable = config.get(CONFIG_KEY_BROWSABLE).asBoolean();
+        this.readonly = config.get(CONFIG_KEY_READONLY).asBoolean();
+        this.baseUrl = config.get(CONFIG_KEY_BASE_URL).getString();
+    }
     public ObjectStorageSpace getPhysicalSpace() {
         if (objectStorageSpace == null) {
             objectStorageSpace = objectStorage.getSpace(spaceName);
