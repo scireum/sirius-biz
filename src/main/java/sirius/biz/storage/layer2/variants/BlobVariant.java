@@ -64,7 +64,7 @@ public interface BlobVariant {
     Optional<FileHandle> download();
 
     /**
-     * Determines if currently a conversion is in progress.
+     * Determines if a conversion is currently in progress.
      *
      * @return <tt>true</tt> if a node is currently trying to perform the requested conversion
      */
