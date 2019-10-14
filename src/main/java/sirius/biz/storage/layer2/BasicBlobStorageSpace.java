@@ -108,7 +108,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Part
     protected static Tasks tasks;
 
-    @ConfigValue("storage.conversion.enbaled")
+    @ConfigValue("storage.conversion.enabled")
     protected static boolean conversionEnabled;
 
     @ConfigValue("storage.conversion.hosts")
