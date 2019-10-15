@@ -698,6 +698,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     /**
      * Resolves the physical key for the given blob and variant.
+     * <p>
+     * The physical key is the identifier of the layer 1 object which will be delivered to the user. Depending on
+     * the requested variant, this is either {@link Blob#getPhysicalObjectKey()} (when {@link URLBuilder#VARIANT_RAW}
+     * is used) or the {@link BlobVariant#getPhysicalObjectKey()} of the requested variant.
      *
      * @param blobKey     the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
