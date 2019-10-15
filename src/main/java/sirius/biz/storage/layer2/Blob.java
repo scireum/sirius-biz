@@ -57,7 +57,7 @@ public interface Blob {
      *
      * @return the layer 1 object key which contains the current data of this blob
      */
-    String getPhysicalObjectId();
+    String getPhysicalObjectKey();
 
     /**
      * Returns the filename of the blob.

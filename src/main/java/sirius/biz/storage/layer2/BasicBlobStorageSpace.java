@@ -534,11 +534,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Note that the {@link FileHandle} must be closed once the data has been processed to ensure proper cleanup.
      */
     public Optional<FileHandle> download(Blob blob) {
-        if (Strings.isEmpty(blob.getPhysicalObjectId())) {
+        if (Strings.isEmpty(blob.getPhysicalObjectKey())) {
             return Optional.empty();
         }
 
-        return getPhysicalSpace().download(blob.getPhysicalObjectId());
+        return getPhysicalSpace().download(blob.getPhysicalObjectKey());
     }
 
     /**
@@ -743,7 +743,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         if (URLBuilder.VARIANT_RAW.equals(variantName)) {
-            return blob.getPhysicalObjectId();
+            return blob.getPhysicalObjectKey();
         }
 
         if (!conversionEngine.isKnownVariant(variantName)) {
