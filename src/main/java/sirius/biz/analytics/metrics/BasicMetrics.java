@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Base class which handles all the database independent boilerplate.
@@ -31,6 +32,27 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
      * For global metrics we fill both fields with the value to store and retrieve them.
      */
     private static final String GLOBAL = "global";
+
+    /**
+     * Specifies the maximal number of values returned by
+     * {@link #queryDailyMetrics(String, String, String, LocalDate, LocalDate)} or
+     * {@link #queryDailyMetrics(BaseEntity, String, LocalDate, LocalDate)}.
+     */
+    public static final int MAX_DAILY_METRICS = 400;
+
+    /**
+     * Specifies the maximal number of values returned by
+     * {@link #queryMonthlyMetrics(String, String, String, LocalDate, LocalDate)} or
+     * {@link #queryMonthlyMetrics(BaseEntity, String, LocalDate, LocalDate)}.
+     */
+    public static final int MAX_MONTHLY_METRICS = 100;
+
+    /**
+     * Specifies the maximal number of values returned by
+     * {@link #queryYearlyMetrics(String, String, String, LocalDate, LocalDate)} or
+     * {@link #queryYearlyMetrics(BaseEntity, String, LocalDate, LocalDate)}.
+     */
+    public static final int MAX_YEARLY_METRICS = 100;
 
     /**
      * Returns the entity type used to store facts.
@@ -338,7 +360,8 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
                                             LocalDate to) {
         List<Integer> result = new ArrayList<>();
         LocalDate date = from;
-        while (!date.isAfter(to)) {
+        AtomicInteger limit = new AtomicInteger(MAX_YEARLY_METRICS);
+        while (!date.isAfter(to) && limit.decrementAndGet() > 0) {
             result.add(queryMetric(getYearlyMetricType(), targetType, targetId, name, date.getYear(), null, null));
             date = date.plusYears(1);
         }
@@ -364,7 +387,8 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
                                              LocalDate to) {
         List<Integer> result = new ArrayList<>();
         LocalDate date = from;
-        while (!date.isAfter(to)) {
+        AtomicInteger limit = new AtomicInteger(MAX_MONTHLY_METRICS);
+        while (!date.isAfter(to) && limit.decrementAndGet() > 0) {
             result.add(queryMetric(getMonthlyMetricType(),
                                    targetType,
                                    targetId,
@@ -396,7 +420,8 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
                                            LocalDate to) {
         List<Integer> result = new ArrayList<>();
         LocalDate date = from;
-        while (!date.isAfter(to)) {
+        AtomicInteger limit = new AtomicInteger(MAX_DAILY_METRICS);
+        while (!date.isAfter(to) && limit.decrementAndGet() > 0) {
             result.add(queryMetric(getDailyMetricType(),
                                    targetType,
                                    targetId,
