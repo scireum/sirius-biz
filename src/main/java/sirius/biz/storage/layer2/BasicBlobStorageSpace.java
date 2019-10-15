@@ -193,8 +193,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param <R>             the type of the data object to find or create
      * @return the entity which was either found by <tt>lookup</tt> or created via the <tt>factory</tt>
      */
-    protected <R> R findOrCreateWithOptimisticLock(Producer<R> lookup,
-                                                   Processor<R, Boolean> viabilityTest,
+    protected <R extends OptimisticCreate> R findOrCreateWithOptimisticLock(Producer<R> lookup,
                                                    Producer<R> factory,
                                                    Processor<R, Boolean> correctnessTest,
                                                    Callback<R> commit,
@@ -203,7 +202,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         int attempts = NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS;
         try {
             while (attempts-- > 0) {
-                R result = tryFindOrCreate(lookup, viabilityTest, factory, correctnessTest, commit, rollback);
+                R result = tryFindOrCreate(lookup,  factory, correctnessTest, commit, rollback);
                 if (result != null) {
                     return result;
                 }
@@ -219,15 +218,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
     }
 
-    private <R> R tryFindOrCreate(Producer<R> lookup,
-                                  Processor<R, Boolean> viabilityTest,
+    private <R extends OptimisticCreate> R tryFindOrCreate(Producer<R> lookup,
                                   Producer<R> factory,
                                   Processor<R, Boolean> correctnessTest,
                                   Callback<R> commit,
                                   Callback<R> rollback) throws Exception {
         R result = lookup.create();
         if (result != null) {
-            if (viabilityTest.apply(result)) {
+            if (result.isCommitted()) {
                 return result;
             }
         } else {
@@ -246,7 +244,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Override
     public Directory getRoot(String tenantId) {
         return findOrCreateWithOptimisticLock(() -> findRoot(tenantId),
-                                              OptimisticCreate::isCommitted,
                                               () -> createRoot(tenantId),
                                               this::isSingularRoot,
                                               this::commitDirectory,
@@ -316,7 +313,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         return findOrCreateWithOptimisticLock(() -> findAnyAttachedBlobByName(referencingEntity, filename),
-                                              OptimisticCreate::isCommitted,
                                               () -> createAttachedBlobByName(referencingEntity, filename),
                                               blob -> isAttachedBlobUnique(referencingEntity, filename, blob),
                                               this::commitBlob,
@@ -395,7 +391,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     public Directory findOrCreateChildDirectory(D parent, String childName) {
         return findOrCreateWithOptimisticLock(() -> findAnyChildDirectory(parent, childName),
-                                              OptimisticCreate::isCommitted,
                                               () -> createChildDirectory(parent, childName),
                                               childDirectory -> isChildDirectoryUnique(parent,
                                                                                        childName,
@@ -457,7 +452,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     public Blob findOrCreateChildBlob(D parent, String childName) {
         return findOrCreateWithOptimisticLock(() -> findAnyChildBlob(parent, childName),
-                                              OptimisticCreate::isCommitted,
                                               () -> createChildBlob(parent, childName),
                                               childBlob -> isChildBlobUnique(parent, childName, childBlob),
                                               this::commitBlob,
