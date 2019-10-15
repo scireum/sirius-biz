@@ -387,7 +387,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected abstract void rollbackBlob(B blob);
 
     /**
-     * Tries to find or create child directory with the given name.
+     * Tries to find or create the child directory with the given name.
      *
      * @param parent    the parent directory to search in
      * @param childName the name of the directory
@@ -449,7 +449,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected abstract boolean isChildDirectoryUnique(D parent, String childName, D childDirectory);
 
     /**
-     * Tries to find or create child blob with the given name.
+     * Tries to find or create the child blob with the given name.
      *
      * @param parent    the parent directory to search in
      * @param childName the name of the blob
