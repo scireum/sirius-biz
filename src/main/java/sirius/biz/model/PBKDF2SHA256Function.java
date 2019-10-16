@@ -8,8 +8,8 @@
 
 package sirius.biz.model;
 
+import com.google.common.base.Charsets;
 import com.google.common.io.BaseEncoding;
-import org.apache.commons.io.Charsets;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;

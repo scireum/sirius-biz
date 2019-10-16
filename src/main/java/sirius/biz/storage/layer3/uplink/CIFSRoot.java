@@ -8,7 +8,11 @@
 
 package sirius.biz.storage.layer3.uplink;
 
-import jcifs.smb.NtlmPasswordAuthentication;
+import jcifs.CIFSContext;
+import jcifs.CIFSException;
+import jcifs.config.BaseConfiguration;
+import jcifs.context.BaseContext;
+import jcifs.smb.NtlmPasswordAuthenticator;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 import sirius.biz.storage.layer3.FileSearch;
@@ -51,11 +55,21 @@ public class CIFSRoot extends ConfigBasedUplink {
                     if (Strings.isEmpty(domain)) {
                         throw new IllegalArgumentException("A user has been specified but no domain was given!");
                     }
-                    return new CIFSRoot(config,
-                                        new SmbFile(url, new NtlmPasswordAuthentication(domain, user, password)));
+                    CIFSContext context =
+                            new BaseContext(new BaseConfiguration(true)).withCredentials(new NtlmPasswordAuthenticator(
+                                    domain,
+                                    user,
+                                    password));
+                    return new CIFSRoot(config, context, new SmbFile(url, context));
                 } else {
-                    return new CIFSRoot(config, new SmbFile(url));
+                    CIFSContext context = new BaseContext(new BaseConfiguration(true));
+                    return new CIFSRoot(config, context, new SmbFile(url, context));
                 }
+            } catch (CIFSException e) {
+                throw new IllegalArgumentException(Strings.apply(
+                        "An error occured when talking to the CIFS file system: %s - %s",
+                        url,
+                        e.getMessage()));
             } catch (MalformedURLException e) {
                 throw new IllegalArgumentException(Strings.apply("An invalid url (%s) was given: %s",
                                                                  url,
@@ -86,9 +100,11 @@ public class CIFSRoot extends ConfigBasedUplink {
     private static final Comparator<SmbFile> SORT_BY_NAME = Comparator.comparing(file -> file.getName().toLowerCase());
 
     protected SmbFile smbRoot;
+    protected CIFSContext context;
 
-    protected CIFSRoot(Extension config, SmbFile smbRoot) {
+    protected CIFSRoot(Extension config, CIFSContext context, SmbFile smbRoot) {
         super(config);
+        this.context = context;
         this.smbRoot = smbRoot;
     }
 

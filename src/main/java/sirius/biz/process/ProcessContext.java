@@ -33,8 +33,8 @@ import java.util.function.Supplier;
  * Declares the client API of a process.
  * <p>
  * {@link Processes} will instantiate and provide an instace of this to caller while executing a process. Also it will
- * install this using {@link sirius.kernel.async.TaskContext#setAdapter(TaskContextAdapter)} so that framework
- * methods will also use the processes framework.
+ * install this using {@link sirius.kernel.async.TaskContext#setAdapter(TaskContextAdapter)} so that calls to
+ * {@link sirius.kernel.async.TaskContext} will be delegated to the processes framework.
  */
 public interface ProcessContext extends TaskContextAdapter {
 
@@ -183,6 +183,13 @@ public interface ProcessContext extends TaskContextAdapter {
      * @param link the link to add
      */
     void addLink(ProcessLink link);
+
+    /**
+     * Adds the given reference to the the process.
+     *
+     * @param reference the reference to attach
+     */
+    void addReference(String reference);
 
     /**
      * Adds an output to the process.

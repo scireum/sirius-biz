@@ -215,6 +215,8 @@ public interface Metrics {
 
     /**
      * Queries all yearly metric values for the given target, name and period.
+     * <p>
+     * Note that this will only return up to {@link BasicMetrics#MAX_YEARLY_METRICS} values.
      *
      * @param target the object to fetch the metrics for
      * @param name   the name of the metric
@@ -226,6 +228,8 @@ public interface Metrics {
 
     /**
      * Queries all yearly metric values for the given global metric and period.
+     * <p>
+     * Note that this will only return up to {@link BasicMetrics#MAX_YEARLY_METRICS} values.
      *
      * @param name the name of the metric
      * @param from the start of the period
@@ -236,6 +240,8 @@ public interface Metrics {
 
     /**
      * Queries all monthly metric values for the given target, name and period.
+     * <p>
+     * Note that this will only return up to {@link BasicMetrics#MAX_MONTHLY_METRICS} values.
      *
      * @param targetType the type of the object to fetch the metrics for
      * @param targetId   the id of the object to fetch the metrics for
@@ -248,6 +254,8 @@ public interface Metrics {
 
     /**
      * Queries all monthly metric values for the given target, name and period.
+     * <p>
+     * Note that this will only return up to {@link BasicMetrics#MAX_MONTHLY_METRICS} values.
      *
      * @param target the object to fetch the metrics for
      * @param name   the name of the metric
@@ -259,6 +267,8 @@ public interface Metrics {
 
     /**
      * Queries all monthly metric values for the given global metric and period.
+     * <p>
+     * Note that this will only return up to {@link BasicMetrics#MAX_MONTHLY_METRICS} values.
      *
      * @param name the name of the metric
      * @param from the start of the period
@@ -269,6 +279,8 @@ public interface Metrics {
 
     /**
      * Queries all daily metric values for the given target, name and period.
+     * <p>
+     * Note that this will only return up to {@link BasicMetrics#MAX_DAILY_METRICS} values.
      *
      * @param targetType the type of the object to fetch the metrics for
      * @param targetId   the id of the object to fetch the metrics for
@@ -281,6 +293,8 @@ public interface Metrics {
 
     /**
      * Queries all daily metric values for the given target, name and period.
+     * <p>
+     * Note that this will only return up to {@link BasicMetrics#MAX_DAILY_METRICS} values.
      *
      * @param target the object to fetch the metrics for
      * @param name   the name of the metric
@@ -292,6 +306,8 @@ public interface Metrics {
 
     /**
      * Queries all daily metric values for the given global metric and period.
+     * <p>
+     * Note that this will only return up to {@link BasicMetrics#MAX_DAILY_METRICS} values.
      *
      * @param name the name of the metric
      * @param from the start of the period
