@@ -9,6 +9,7 @@
 package sirius.biz.analytics.events;
 
 import sirius.db.mixing.Composite;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
@@ -25,49 +26,58 @@ public class WebData extends Composite {
     /**
      * Stores the requested URL.
      */
+    public static final Mapping URL = Mapping.named("url");
     @NullAllowed
     private String url;
 
     /**
      * Stores the User-Agent.
      */
+    public static final Mapping USER_AGENT = Mapping.named("userAgent");
     @NullAllowed
     private String userAgent;
 
     /**
      * Determines if the User-Agent was an iOS device.
      */
+    public static final Mapping IOS = Mapping.named("ios");
     private boolean ios;
 
     /**
      * Determines if the User-Agent was an Android device.
      */
+    public static final Mapping ANDROID = Mapping.named("android");
     private boolean android;
 
     /**
      * Determines if the User-Agent was a mobile device.
      */
+    public static final Mapping MOBILE = Mapping.named("mobile");
     private boolean mobile;
 
     /**
      * Determines if the User-Agent was a mobile phone.
      */
+    public static final Mapping PHONE = Mapping.named("phone");
     private boolean phone;
 
     /**
      * Determines if the User-Agent was a tablet phone.
      */
+    public static final Mapping TABLET = Mapping.named("tablet");
     private boolean tablet;
 
     /**
      * Determines if the User-Agent was a desktop computer.
      */
+    public static final Mapping DESKTOP = Mapping.named("desktop");
     private boolean desktop;
 
     /**
      * Stores the response time (which is actually the TTFB - the time the server took to generate the first byte of
      * the response. This way, we really measure the server performance and not the up- or downstream bandwidth).
      */
+    public static final Mapping RESPONSE_TIME = Mapping.named("responseTime");
     @Length(4)
     @NullAllowed
     private Long responseTime;

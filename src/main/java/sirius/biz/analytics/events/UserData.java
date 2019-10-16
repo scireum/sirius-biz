@@ -9,6 +9,7 @@
 package sirius.biz.analytics.events;
 
 import sirius.db.mixing.Composite;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
@@ -25,6 +26,7 @@ public class UserData extends Composite {
     /**
      * Stores the ID of the current user.
      */
+    public static final Mapping USER_ID = Mapping.named("userId");
     @Length(26)
     @NullAllowed
     private String userId;
@@ -32,6 +34,7 @@ public class UserData extends Composite {
     /**
      * Stores the ID of the current tenant.
      */
+    public static final Mapping TENANT_ID = Mapping.named("tenantId");
     @Length(26)
     @NullAllowed
     private String tenantId;
@@ -39,6 +42,7 @@ public class UserData extends Composite {
     /**
      * Stores the ID of the current scope.
      */
+    public static final Mapping SCOPE_ID = Mapping.named("scopeId");
     @NullAllowed
     private String scopeId;
 
