@@ -17,7 +17,7 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>13.17</sirius.kernel>
+        <sirius.kernel>13.18</sirius.kernel>
         <sirius.web>24.0</sirius.web>
         <sirius.db>9.0</sirius.db>
     </properties>
