@@ -155,7 +155,7 @@ public class VersionedFiles {
     private StoredObject generateNewFile(VersionedFile file, String uniqueIdentifier, String code) {
         String fullPath = uniqueIdentifier + file.getTimestamp();
 
-        if (storage.findByPath(file.getTenant().getValue(), VERSIONED_FILES, fullPath).isPresent()) {
+        if (storage.findByPath(file.getTenant().fetchValue(), VERSIONED_FILES, fullPath).isPresent()) {
             throw Exceptions.createHandled()
                             .withNLSKey("VersionedFiles.versionExistsConflict")
                             .set("date", NLS.toUserString(file.getTimestamp()))
@@ -163,7 +163,7 @@ public class VersionedFiles {
                             .handle();
         }
 
-        StoredObject object = storage.createTemporaryObject(file.getTenant().getValue(),
+        StoredObject object = storage.createTemporaryObject(file.getTenant().fetchValue(),
                                                             VERSIONED_FILES,
                                                             file.getStoredFile().getReference(),
                                                             fullPath);

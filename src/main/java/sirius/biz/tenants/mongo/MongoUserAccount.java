@@ -52,8 +52,8 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
         addContent(getUserAccountData().getLogin().getUsername());
         addContent(getUserAccountData().getEmail());
 
-        addContent(getTenant().getValue().getTenantData().getName());
-        addContent(getTenant().getValue().getTenantData().getAccountNumber());
+        addContent(getTenant().fetchValue().getTenantData().getName());
+        addContent(getTenant().fetchValue().getTenantData().getAccountNumber());
     }
 
     @Override

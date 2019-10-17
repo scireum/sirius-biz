@@ -335,7 +335,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                 .causedByCurrentUser()
                 .forUser(userAccount.getUniqueName(), userAccount.getUserAccountData().getLogin().getUsername())
                 .forTenant(String.valueOf(userAccount.getTenant().getId()),
-                           userAccount.getTenant().getValue().getTenantData().getName())
+                           userAccount.getTenant().fetchValue().getTenantData().getName())
                 .log();
     }
 
@@ -361,8 +361,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             auditLog.negative("AuditLog.resetPasswordRejected")
                     .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                     .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forTenant(account.getTenant().getValue().getIdAsString(),
-                               account.getTenant().getValue().getTenantData().getName())
+                    .forTenant(account.getTenant().fetchValue().getIdAsString(),
+                               account.getTenant().fetchValue().getTenantData().getName())
                     .log();
             throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
         }
@@ -375,8 +375,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         auditLog.neutral("AuditLog.resetPassword")
                 .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                 .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                .forTenant(account.getTenant().getValue().getIdAsString(),
-                           account.getTenant().getValue().getTenantData().getName())
+                .forTenant(account.getTenant().fetchValue().getIdAsString(),
+                           account.getTenant().fetchValue().getTenantData().getName())
                 .log();
 
         if (Strings.isFilled(account.getUserAccountData().getEmail())) {
@@ -584,7 +584,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                 .causedByCurrentUser()
                 .forUser(user.getUniqueName(), user.getUserAccountData().getLogin().getUsername())
                 .forTenant(String.valueOf(user.getTenant().getId()),
-                           user.getTenant().getValue().getTenantData().getName())
+                           user.getTenant().fetchValue().getTenantData().getName())
                 .log();
 
         ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
