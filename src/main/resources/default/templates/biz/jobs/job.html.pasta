@@ -24,10 +24,19 @@
         </div>
     </w:pageHeader>
 
-    <i:if test="isFilled(job.getDescription())">
+    <i:if test="isFilled(job.getHTMLDescription())">
         <div class="well">
-            @job.getDescription()
+                <i:raw>
+                    @job.getHTMLDescription()
+                </i:raw>
         </div>
+        <i:else>
+            <i:if test="isFilled(job.getDescription())">
+                <div class="well">
+                    @job.getDescription()
+                </div>
+            </i:if>
+        </i:else>
     </i:if>
 
     <w:editForm url="@apply('/job/%s', job.getName())">
