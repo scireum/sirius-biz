@@ -61,10 +61,6 @@ class PrefixSearchableEntitySpec extends BaseSpecification {
         PrefixSearchableTestEntity e = new PrefixSearchableTestEntity()
         e.setTest("Some Test")
         mango.update(e)
-        and:
-        print mango.select(PrefixSearchableTestEntity.class).
-                      where(QueryBuilder.FILTERS.prefix(PrefixSearchableEntity.SEARCH_PREFIXES, "som")).
-                      explain()
         then:
         mango.select(PrefixSearchableTestEntity.class).
                 where(QueryBuilder.FILTERS.prefix(PrefixSearchableEntity.SEARCH_PREFIXES, "som")).first().isPresent()

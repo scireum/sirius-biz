@@ -66,14 +66,22 @@ public class SQLMetrics extends BasicMetrics<SQLEntity> {
                                 Integer year,
                                 Integer month,
                                 Integer day) {
-        oma.select(table)
-           .eq(Fact.TARGET_TYPE, targetType)
-           .eq(Fact.TARGET_ID, targetId)
-           .eq(Fact.NAME, name)
-           .eqIgnoreNull(YearlyMetric.YEAR, year)
-           .eqIgnoreNull(MonthlyMetric.MONTH, month)
-           .eqIgnoreNull(DailyMetric.DAY, day)
-           .truncate();
+        try {
+            oma.deleteStatement(table)
+               .where(Fact.TARGET_TYPE, targetType)
+               .where(Fact.TARGET_ID, targetId)
+               .where(Fact.NAME, name)
+               .whereIgnoreNull(YearlyMetric.YEAR, year)
+               .whereIgnoreNull(MonthlyMetric.MONTH, month)
+               .whereIgnoreNull(DailyMetric.DAY, day)
+               .executeUpdate();
+        } catch (SQLException e) {
+            throw Exceptions.handle()
+                            .to(Mixing.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Failed to delete a metric in %s: %s (%s)", table)
+                            .handle();
+        }
     }
 
     @Override
