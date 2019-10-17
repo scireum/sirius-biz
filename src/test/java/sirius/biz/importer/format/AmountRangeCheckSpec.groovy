@@ -105,4 +105,13 @@ class AmountRangeCheckSpec extends Specification {
         noExceptionThrown()
     }
 
+    def "empty values are ignored"() {
+        when:
+        new AmountRangeCheck(NumberFormat.NO_DECIMAL_PLACES).withLowerLimitInclusive(Amount.ONE).
+                withUpperLimitExclusive(Amount.ONE_HUNDRED).
+                perform(Value.of(Amount.NOTHING))
+        then:
+        noExceptionThrown()
+    }
+
 }
