@@ -70,6 +70,12 @@ public abstract class BasicJobFactory implements JobFactory {
         return NLS.getIfExists(getClass().getSimpleName() + ".detailDescription", null).orElse(null);
     }
 
+    @Nullable
+    @Override
+    public String getHTMLDescription() {
+        return null;
+    }
+
     @Override
     public List<JobInfo> getJobInfos() {
         JobInfoCollector collector = new JobInfoCollector();
