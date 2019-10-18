@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  * specified directly, but another config section in {@link #CONFIG_KEY_CONVERTERS} is used to determine the effective
  * implementation (addressing the appropriate {@link ConverterFactory} along with default settings).
  * <p>
- * Using this approach we can provide some standard converters and standard variants which cen be fully customized
+ * Using this approach we can provide some standard converters and standard variants which can be fully customized
  * in applications by either overwriting the variants or the converters.
  */
 @Register(classes = ConversionEngine.class)
