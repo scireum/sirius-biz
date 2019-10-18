@@ -86,7 +86,7 @@ public abstract class Event extends SQLEntity {
     }
 
     /**
-     * Ses a custom node on which this event was recorded.
+     * Sets a custom node on which this event was recorded.
      * <p>
      * In most cases this method shouldn't be called manually as the event will initialize this field with
      * the name of the current node.
