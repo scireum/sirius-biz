@@ -4,6 +4,7 @@ import sirius.biz.storage.Storage;
 import sirius.biz.storage.StoredObject;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.jdbc.SQLTenant;
+import sirius.biz.tenants.jdbc.SQLTenants;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -33,6 +34,9 @@ public class VersionedFiles {
 
     @Part
     private static Storage storage;
+
+    @Part
+    private SQLTenants tenants;
 
     /**
      * Name of the used bucked.
@@ -155,7 +159,8 @@ public class VersionedFiles {
     private StoredObject generateNewFile(VersionedFile file, String uniqueIdentifier, String code) {
         String fullPath = uniqueIdentifier + file.getTimestamp();
 
-        if (storage.findByPath(file.getTenant().fetchValue(), VERSIONED_FILES, fullPath).isPresent()) {
+        if (storage.findByPath(tenants.fetchCachedRequiredTenant(file.getTenant()), VERSIONED_FILES, fullPath)
+                   .isPresent()) {
             throw Exceptions.createHandled()
                             .withNLSKey("VersionedFiles.versionExistsConflict")
                             .set("date", NLS.toUserString(file.getTimestamp()))
@@ -163,7 +168,7 @@ public class VersionedFiles {
                             .handle();
         }
 
-        StoredObject object = storage.createTemporaryObject(file.getTenant().fetchValue(),
+        StoredObject object = storage.createTemporaryObject(tenants.fetchCachedRequiredTenant(file.getTenant()),
                                                             VERSIONED_FILES,
                                                             file.getStoredFile().getReference(),
                                                             fullPath);

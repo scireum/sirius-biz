@@ -18,6 +18,7 @@ import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mongo.Mango;
 import sirius.kernel.di.std.Framework;
+import sirius.kernel.di.std.Part;
 import sirius.web.controller.Message;
 
 import java.util.Optional;
@@ -45,6 +46,9 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
     public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal = new JournalData(this);
 
+    @Part
+    private static MongoTenants tenants;
+
     @BeforeSave
     protected void enhanceSearchField() {
         addContent(getUserAccountData().getPerson().getFirstname());
@@ -52,8 +56,10 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
         addContent(getUserAccountData().getLogin().getUsername());
         addContent(getUserAccountData().getEmail());
 
-        addContent(getTenant().fetchValue().getTenantData().getName());
-        addContent(getTenant().fetchValue().getTenantData().getAccountNumber());
+        tenants.fetchCachedTenant(getTenant()).ifPresent(tenant -> {
+            addContent(tenant.getTenantData().getName());
+            addContent(tenant.getTenantData().getAccountNumber());
+        });
     }
 
     @Override
