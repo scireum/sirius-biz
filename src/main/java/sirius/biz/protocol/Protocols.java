@@ -12,7 +12,9 @@ import sirius.biz.elastic.AutoBatchLoop;
 import sirius.db.es.Elastic;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.CallContext;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.ExceptionHandler;
@@ -62,6 +64,9 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
 
     @Part
     private AutoBatchLoop autoBatch;
+
+    @ConfigValue("protocols.maxLogMessageLength")
+    private int maxMessageLength;
 
     private volatile AtomicLong disabledUntil;
 
@@ -136,7 +141,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             LoggedMessage msg = new LoggedMessage();
             msg.setCategory(message.getReceiver().getName());
             msg.setLevel(message.getLogLevel().toString());
-            msg.setMessage(message.getMessage());
+            msg.setMessage(Strings.limit(message.getMessage(),maxMessageLength, false));
             msg.setNode(CallContext.getNodeName());
             msg.setUser(UserContext.getCurrentUser().getProtocolUsername());
 
