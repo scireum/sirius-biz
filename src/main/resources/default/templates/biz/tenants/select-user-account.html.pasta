@@ -46,8 +46,8 @@
                     </i:if>
                 </td>
                 <td>
-                    @selectableUser.getTenant().getValue().as(sirius.biz.tenants.Tenant.class).getTenantData().getName()<br>
-                    @selectableUser.getTenant().getValue().as(sirius.biz.tenants.Tenant.class).getTenantData().getAccountNumber()
+                    @selectableUser.getTenant().fetchValue().as(sirius.biz.tenants.Tenant.class).getTenantData().getName()<br>
+                    @selectableUser.getTenant().fetchValue().as(sirius.biz.tenants.Tenant.class).getTenantData().getAccountNumber()
                 </td>
                 <i:extensions target="select-user-account" page="users" account="selectableUser"
                               point="last-column"/>

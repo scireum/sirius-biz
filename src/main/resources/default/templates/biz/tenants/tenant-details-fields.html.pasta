@@ -72,7 +72,7 @@
                                         serviceUri="/tenants/autocomplete">
                 <i:if test="tenant.getParent().isFilled()">
                     <option value="@tenant.getParent().getId()" selected="selected">
-                        @tenant.getParent().getValue()
+                        @tenant.getParent().fetchValue()
                     </option>
                 </i:if>
             </w:autocompleteSingleSelect>

@@ -354,7 +354,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
                     .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                     .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                     .forTenant(account.getTenant().getIdAsString(),
-                               account.getTenant().getValue().getTenantData().getName())
+                               account.getTenant().fetchValue().getTenantData().getName())
                     .log();
 
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
