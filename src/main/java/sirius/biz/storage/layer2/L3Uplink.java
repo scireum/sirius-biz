@@ -211,7 +211,7 @@ public class L3Uplink implements VFSRoot {
         }
     }
 
-    private VirtualFile wrapDirectory(VirtualFile parent, Directory directory) {
+    private MutableVirtualFile wrapDirectory(VirtualFile parent, Directory directory) {
         MutableVirtualFile file = new MutableVirtualFile(parent, directory.getName());
         file.attach(Directory.class, directory);
         attachHandlers(file);
@@ -221,11 +221,11 @@ public class L3Uplink implements VFSRoot {
 
     /**
      * Maps the requested child names (which will be top-level directories) to
-     * {@link BlobStorage#CONFIG_KEY_LAYER2_BROWSABLE browsable} storage spaces.
+     * {@link BasicBlobStorageSpace#CONFIG_KEY_BROWSABLE browsable} storage spaces.
      *
      * @param parent the directory to resolve the child in
      * @param name   the name of the child to resolve
-     * @return a virtaul file representing the storage space with the given name or an empty optional if none was found
+     * @return a virtual file representing the storage space with the given name or an empty optional if none was found
      */
     @Override
     public Optional<VirtualFile> findChild(VirtualFile parent, String name) {
@@ -242,7 +242,7 @@ public class L3Uplink implements VFSRoot {
     }
 
     /**
-     * Lists all {@link BlobStorage#CONFIG_KEY_LAYER2_BROWSABLE browsable} storage spaces.
+     * Lists all {@link BasicBlobStorageSpace#CONFIG_KEY_BROWSABLE browsable} storage spaces.
      *
      * @param parent the directory to enumerate
      * @param search the search criteria and result collector to use
