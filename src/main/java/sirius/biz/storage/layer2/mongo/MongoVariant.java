@@ -17,6 +17,7 @@ import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Framework;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -26,6 +27,7 @@ import java.util.Optional;
  * <p>
  * Note that all non trivial methods delegate to the associated {@link MongoBlobStorage}.
  */
+@Framework(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
 public class MongoVariant extends MongoEntity implements BlobVariant {
 
     /**
