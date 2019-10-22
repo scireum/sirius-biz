@@ -149,8 +149,6 @@ public interface Blob {
 
     /**
      * Provides new content for this blob.
-     * <p>
-     * Note that this will create a new physical object and might keep the original one as a {@link BlobRevision}.
      *
      * @param filename the new filename to use (if given)
      * @param file     the file providing the new data to use
@@ -159,8 +157,6 @@ public interface Blob {
 
     /**
      * Provides new content for this blob.
-     * <p>
-     * Note that this will create a new physical object and might keep the original one as a {@link BlobRevision}.
      * <p>
      * Also note that if a file is used to provide the new contents of this blob, use
      * {@link #updateContent(String, File)} as this is likely way more efficient.
@@ -207,16 +203,18 @@ public interface Blob {
      *
      * @return a list of all known variants
      */
-    List<BlobVariant> getVariants();
+    List<? extends BlobVariant> fetchVariants();
 
     /**
-     * Lists all known revisions of this blob.
+     * Tries to find the variant with the given name.
      * <p>
-     * A revision is a backup copy of previously provided data of this blob.
+     * This will check if a variant with the given name exists and return it. If no such varian exists,
+     * an empty optional is returned.
      *
-     * @return a list of all known revisions
+     * @param name the name of the variant to lookup
+     * @return the variant with the given name or an empty optional if none was found
      */
-    List<BlobRevision> getRevisions();
+    Optional<BlobVariant> findVariant(String name);
 
     /**
      * Provides a builder which can be used to create a delivery or download link.
