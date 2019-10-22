@@ -135,58 +135,6 @@ public interface BlobStorageSpace {
     void deleteReferencedBlobs(String referencingEntity, String referenceDesignator, @Nullable String blobKeyToSkip);
 
     /**
-     * Returns the total number of directories in this space.
-     *
-     * @param tenantId if non-null, only directories of the given tenant are counted
-     * @return the total number of directories in this space
-     */
-    long getNumberOfDirectories(@Nullable String tenantId);
-
-    /**
-     * Returns the total number of visible (browsable) blobs in this space.
-     *
-     * @param tenantId if non-null, only blobs of the given tenant are counted
-     * @return the total number of visible blobs in this space
-     */
-    long getNumberOfVisibleBlobs(@Nullable String tenantId);
-
-    /**
-     * Returns the total size of all visible (browsable) blobs in this space.
-     *
-     * @param tenantId if non-null, only blobs of the given tenant are counted
-     * @return the total size in bytes
-     */
-    long getSizeOfVisibleBlobs(@Nullable String tenantId);
-
-    /**
-     * Returns the total number of referenced (non-browsable) blobs in this space.
-     *
-     * @return the total number of referenced blobs in this space
-     */
-    long getNumberOfReferencedBlobs();
-
-    /**
-     * Returns the total size of all referenced blobs in this space.
-     *
-     * @return the total size in bytes
-     */
-    long getSizeOfReferencedBlobs();
-
-    /**
-     * Returns the total number of blobs in this space.
-     *
-     * @return the total number of blobs in this space
-     */
-    long getNumberOfBlobs();
-
-    /**
-     * Returns the total size of all blobs in this space.
-     *
-     * @return the total size in bytes
-     */
-    long getSizeOfBlobs();
-
-    /**
      * Determines if this space is browsable (available as virtual file system in layer 3).
      *
      * @return <tt>true</tt> if this space is available as file system in layer 3, <tt>false</tt> otherwise
