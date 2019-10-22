@@ -166,4 +166,11 @@ public interface BlobStorageSpace {
      * @param variant  the variant to deliver. Use {@link URLBuilder#VARIANT_RAW} to deliver the blob itself
      */
     void deliver(@Nonnull String blobKey, @Nonnull String variant, @Nonnull Response response);
+
+    /**
+     * Performes some housekeeping and maintenance tasks.
+     * <p>
+     * This shouldn't be invoked manually as it is triggered via the {@link StorageCleanupTask}.
+     */
+    void runCleanup();
 }

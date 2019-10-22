@@ -76,7 +76,7 @@ public class SQLDirectory extends SQLEntity implements Directory, OptimisticCrea
     public static final Mapping PARENT = Mapping.named("parent");
     @NullAllowed
     private final SQLEntityRef<SQLDirectory> parent =
-            SQLEntityRef.on(SQLDirectory.class, BaseEntityRef.OnDelete.REJECT);
+            SQLEntityRef.on(SQLDirectory.class, BaseEntityRef.OnDelete.IGNORE);
 
     /**
      * Stores if a directory has been fully initialized.

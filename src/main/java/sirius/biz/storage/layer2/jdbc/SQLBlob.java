@@ -134,7 +134,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     public static final Mapping PARENT = Mapping.named("parent");
     @NullAllowed
     private final SQLEntityRef<SQLDirectory> parent =
-            SQLEntityRef.on(SQLDirectory.class, BaseEntityRef.OnDelete.REJECT);
+            SQLEntityRef.on(SQLDirectory.class, BaseEntityRef.OnDelete.IGNORE);
 
     /**
      * Stores if the blob was (is still) marked as temporary.

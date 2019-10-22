@@ -621,4 +621,47 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         variant.setPhysicalObjectKey(physicalKey);
         oma.update(variant);
     }
+
+    @Override
+    public void runCleanup() {
+        deleteTemporaryBlobs();
+        deleteOldBlobs();
+    }
+
+    private void deleteOldBlobs() {
+        if (retentionDays <= 0) {
+            return;
+        }
+
+        try {
+            oma.select(SQLBlob.class)
+               .eq(SQLBlob.SPACE_NAME, spaceName)
+               .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED, LocalDateTime.now().minusDays(retentionDays)))
+               .limit(256)
+               .delete();
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Layer 2/SQL: Failed to delete old blobs in %s: %s (%s)", spaceName)
+                      .handle();
+        }
+    }
+
+    protected void deleteTemporaryBlobs() {
+        try {
+            oma.select(SQLBlob.class)
+               .eq(SQLBlob.SPACE_NAME, spaceName)
+               .eq(SQLBlob.TEMPORARY, true)
+               .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED, LocalDateTime.now().minusHours(4)))
+               .limit(256)
+               .delete();
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Layer 2/SQL: Failed to delete temporary blobs in %s: %s (%s)", spaceName)
+                      .handle();
+        }
+    }
 }

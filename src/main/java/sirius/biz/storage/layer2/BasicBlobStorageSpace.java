@@ -93,7 +93,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static final String CONFIG_KEY_BASE_URL = "baseUrl";
 
     /**
-     * Determines if normalized blob and directory names are used.
+     * Contains the name of the config key used to determine if normalized blob and directory names are used.
      * <p>
      * Setting this to true makes the file system effectively case insensitive. Where as using false
      * makes it case sensitive.
@@ -101,11 +101,18 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static final String CONFIG_KEY_USE_NORMALIZED_NAMES = "useNormalizedNames";
 
     /**
-     * Returns a short description of the storage space.
+     * Contains the name of the config key used to determine a short description of the storage space.
      * <p>
      * Note that the result will be {@link sirius.kernel.nls.NLS#smartGet(String) smart translated}.
      */
     private static final String CONFIG_KEY_DESCRIPTION = "description";
+
+    /**
+     * Contains the name of the config key used to determine the maximal retention time in days.
+     * <p>
+     * If this value is non-zero, blobs older than the number of days well be deleted automatically.
+     */
+    private static final String CONFIG_KEY_RETENTION_DAYS = "retentionDays";
 
     /**
      * Contains the name of the executor in which requests are moved which might be blocked while waiting for
@@ -154,6 +161,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected boolean readonly;
     protected String baseUrl;
     protected boolean useNormalizedNames;
+    protected int retentionDays;
     protected ObjectStorageSpace objectStorageSpace;
 
     /**
@@ -170,6 +178,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         this.baseUrl = config.get(CONFIG_KEY_BASE_URL).getString();
         this.useNormalizedNames = config.get(CONFIG_KEY_USE_NORMALIZED_NAMES).asBoolean();
         this.description = config.get(CONFIG_KEY_DESCRIPTION).getString();
+        this.retentionDays = config.get(CONFIG_KEY_RETENTION_DAYS).asInt(0);
     }
 
     @Override
