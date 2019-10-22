@@ -15,9 +15,6 @@ import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
 import sirius.biz.web.BizController;
 import sirius.db.jdbc.OMA;
-import sirius.db.jdbc.SQLQuery;
-import sirius.db.mixing.EntityDescriptor;
-import sirius.db.mixing.Mixing;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -64,51 +61,15 @@ public class SQLTenantUserManager extends TenantUserManager<Long, SQLTenant, SQL
     protected void recordLogin(UserInfo user, boolean external) {
         try {
             SQLUserAccount account = getUserObject(user);
-            EntityDescriptor ed = mixing.getDescriptor(getUserClass());
 
-            String numberOfLoginsField = ed.getProperty(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                                                     .inner(LoginData.NUMBER_OF_LOGINS))
-                                           .getPropertyName();
-            String lastLoginField = ed.getProperty(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                                                .inner(LoginData.LAST_LOGIN))
-                                      .getPropertyName();
-
-            if (external) {
-                String lastExternalLoginField =
-                        ed.getProperty(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                                    .inner(LoginData.LAST_EXTERNAL_LOGIN))
-                          .getPropertyName();
-                SQLQuery qry = oma.getDatabase(Mixing.DEFAULT_REALM)
-                                  .createQuery("UPDATE "
-                                               + ed.getRelationName()
-                                               + " SET "
-                                               + numberOfLoginsField
-                                               + " = "
-                                               + numberOfLoginsField
-                                               + " + 1, "
-                                               + lastExternalLoginField
-                                               + " = ${lastExternalLogin}, "
-                                               + lastLoginField
-                                               + " = ${lastLogin} WHERE id = ${id}");
-                qry.set("lastExternalLogin", LocalDateTime.now());
-                qry.set("lastLogin", LocalDateTime.now());
-                qry.set("id", account.getId());
-                qry.executeUpdate();
-            } else {
-                SQLQuery qry = oma.getDatabase(Mixing.DEFAULT_REALM)
-                                  .createQuery("UPDATE "
-                                               + ed.getRelationName()
-                                               + " SET "
-                                               + numberOfLoginsField
-                                               + " = "
-                                               + numberOfLoginsField
-                                               + " + 1, "
-                                               + lastLoginField
-                                               + " = ${lastLogin} WHERE id = ${id}");
-                qry.set("lastLogin", LocalDateTime.now());
-                qry.set("id", account.getId());
-                qry.executeUpdate();
-            }
+            oma.updateStatement(SQLUserAccount.class)
+               .inc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.NUMBER_OF_LOGINS))
+               .setIf(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.LAST_EXTERNAL_LOGIN),
+                      LocalDateTime.now(),
+                      external)
+               .setToNow(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.LAST_LOGIN))
+               .where(SQLUserAccount.ID, account.getId())
+               .executeUpdate();
         } catch (Exception e) {
             Exceptions.handle(BizController.LOG, e);
         }

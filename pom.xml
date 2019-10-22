@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.scireum</groupId>
         <artifactId>sirius-parent</artifactId>
-        <version>6.2</version>
+        <version>7.0.1</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
     <version>DEVELOPMENT-SNAPSHOT</version>
@@ -17,9 +17,9 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>13.17</sirius.kernel>
-        <sirius.web>24.0-rc26</sirius.web>
-        <sirius.db>9.0-rc2</sirius.db>
+        <sirius.kernel>13.18</sirius.kernel>
+        <sirius.web>24.0.1</sirius.web>
+        <sirius.db>9.0</sirius.db>
     </properties>
 
     <repositories>
@@ -59,7 +59,7 @@
         <dependency>
             <groupId>ru.yandex.clickhouse</groupId>
             <artifactId>clickhouse-jdbc</artifactId>
-            <version>0.2</version>
+            <version>0.1.40</version>
         </dependency>
 
         <dependency>

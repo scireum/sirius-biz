@@ -15,6 +15,8 @@ import sirius.kernel.nls.NLS;
 
 /**
  * Enforces a given range for values in the associated field.
+ * <p>
+ * Note that this check will ignore empty amounts. To prohibit these, use a {@link RequiredCheck}.
  */
 public class AmountRangeCheck implements ValueCheck {
 
@@ -88,6 +90,10 @@ public class AmountRangeCheck implements ValueCheck {
     @Override
     public void perform(Value value) {
         Amount amount = value.getAmount();
+        if (amount.isEmpty()) {
+            return;
+        }
+
         if (min.isFilled()) {
             if (includeMin) {
                 if (amount.isLessThan(min)) {
