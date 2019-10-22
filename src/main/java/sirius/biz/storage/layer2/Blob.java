@@ -37,6 +37,20 @@ public interface Blob {
     BlobStorageSpace getStorageSpace();
 
     /**
+     * Returns the name of the {@link #getStorageSpace() storage space}.
+     *
+     * @return the name of the stroage space in which this directory resides.
+     */
+    String getSpaceName();
+
+    /**
+     * Returns the ID of the tenant for which this directory has been created.
+     *
+     * @return the id of the tenant which owns this directory
+     */
+    String getTenantId();
+
+    /**
      * Returns the parent directory if this blob is associated to one.
      *
      * @return the parent directory or <tt>null</tt> if this blob isn't stored in a browsable location
