@@ -15,6 +15,7 @@ import sirius.db.mixing.annotations.Engine;
 import sirius.db.mixing.annotations.Realm;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.async.CallContext;
+import sirius.kernel.commons.Strings;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -67,25 +68,32 @@ public abstract class Event extends SQLEntity {
             eventTimestamp = LocalDateTime.now();
         }
         eventDate = eventTimestamp.toLocalDate();
-        node = CallContext.getNodeName();
+
+        if (Strings.isEmpty(node)) {
+            node = CallContext.getNodeName();
+        }
     }
 
     /**
-     * Sets the eventTimestamp.
+     * Sets a custom event timestamp.
      * <p>
-     * You DO NOT need to set this, if the timestamp should be now.
+     * In most cases this method shouldn't be called manually as the event will initialize this field with <tt>now</tt>.
      *
-     * @param eventTimestamp the {@link LocalDateTime} the evnt occured.
+     * @param eventTimestamp the {@link LocalDateTime} the event occured.
      */
-    public void setEventTimestamp(LocalDateTime eventTimestamp) {
+    public void setCustomEventTimestamp(LocalDateTime eventTimestamp) {
         this.eventTimestamp = eventTimestamp;
     }
 
-    public void setEventDate(LocalDate eventDate) {
-        this.eventDate = eventDate;
-    }
-
-    public void setNode(String node) {
+    /**
+     * Sets a custom node on which this event was recorded.
+     * <p>
+     * In most cases this method shouldn't be called manually as the event will initialize this field with
+     * the name of the current node.
+     *
+     * @param node the node name to use
+     */
+    public void setCustomNode(String node) {
         this.node = node;
     }
 

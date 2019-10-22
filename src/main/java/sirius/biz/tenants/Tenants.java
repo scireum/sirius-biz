@@ -114,7 +114,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      */
     @Nonnull
     public Optional<T> getCurrentTenant() {
-        return getCurrentUser().flatMap(u -> Optional.ofNullable(u.getTenant().getValue()));
+        return getCurrentUser().flatMap(u -> Optional.ofNullable(u.getTenant().fetchValue()));
     }
 
     /**
@@ -284,7 +284,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
         }
 
         if (tenantRef.isValueLoaded()) {
-            return Optional.of(tenantRef.getValue());
+            return Optional.of(tenantRef.fetchValue());
         }
 
         return fetchCachedTenant(String.valueOf(tenantRef.getId()));
@@ -375,7 +375,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
         }
 
         if (userRef.isValueLoaded()) {
-            return Optional.of(userRef.getValue());
+            return Optional.of(userRef.fetchValue());
         }
 
         return fetchCachedUserAccount(userRef.getIdAsString());

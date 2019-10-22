@@ -36,6 +36,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Register(framework = MongoReplicationTaskStorage.FRAMEWORK_MONGO_REPLICATION)
 public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
 
+    /**
+     * Contains the name of the framework which has to be enabled to support the coordination of the
+     * replication layer via MongoDB entities.
+     */
     public static final String FRAMEWORK_MONGO_REPLICATION = "biz.storage-replication-mongo";
 
     @ConfigValue("storage.layer1.replication.batchSize")

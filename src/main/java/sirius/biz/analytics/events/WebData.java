@@ -9,10 +9,13 @@
 package sirius.biz.analytics.events;
 
 import sirius.db.mixing.Composite;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.async.CallContext;
+import sirius.kernel.commons.Strings;
+import sirius.web.http.UserAgent;
 import sirius.web.http.WebContext;
 
 /**
@@ -23,49 +26,58 @@ public class WebData extends Composite {
     /**
      * Stores the requested URL.
      */
+    public static final Mapping URL = Mapping.named("url");
     @NullAllowed
     private String url;
 
     /**
      * Stores the User-Agent.
      */
+    public static final Mapping USER_AGENT = Mapping.named("userAgent");
     @NullAllowed
     private String userAgent;
 
     /**
      * Determines if the User-Agent was an iOS device.
      */
+    public static final Mapping IOS = Mapping.named("ios");
     private boolean ios;
 
     /**
      * Determines if the User-Agent was an Android device.
      */
+    public static final Mapping ANDROID = Mapping.named("android");
     private boolean android;
 
     /**
      * Determines if the User-Agent was a mobile device.
      */
+    public static final Mapping MOBILE = Mapping.named("mobile");
     private boolean mobile;
 
     /**
      * Determines if the User-Agent was a mobile phone.
      */
+    public static final Mapping PHONE = Mapping.named("phone");
     private boolean phone;
 
     /**
      * Determines if the User-Agent was a tablet phone.
      */
+    public static final Mapping TABLET = Mapping.named("tablet");
     private boolean tablet;
 
     /**
      * Determines if the User-Agent was a desktop computer.
      */
+    public static final Mapping DESKTOP = Mapping.named("desktop");
     private boolean desktop;
 
     /**
      * Stores the response time (which is actually the TTFB - the time the server took to generate the first byte of
      * the response. This way, we really measure the server performance and not the up- or downstream bandwidth).
      */
+    public static final Mapping RESPONSE_TIME = Mapping.named("responseTime");
     @Length(4)
     @NullAllowed
     private Long responseTime;
@@ -74,18 +86,62 @@ public class WebData extends Composite {
     protected void fill() {
         WebContext ctx = CallContext.getCurrent().get(WebContext.class);
         if (ctx.isValid()) {
-            url = ctx.getRequestedURL();
-            userAgent = ctx.getUserAgent().getUserAgentString();
-            android = ctx.getUserAgent().isAndroid();
-            ios = ctx.getUserAgent().isIOS();
-            mobile = ctx.getUserAgent().isMobile();
-            phone = ctx.getUserAgent().isPhone();
-            tablet = ctx.getUserAgent().isTablet();
-            desktop = ctx.getUserAgent().isDesktop();
-            if (ctx.getTTFBMillis() > 0) {
+            if (Strings.isEmpty(url)) {
+                url = ctx.getRequestedURL();
+            }
+            if (Strings.isEmpty(userAgent)) {
+                persistUserAgent(ctx.getUserAgent());
+            }
+            if (ctx.getTTFBMillis() > 0 && responseTime == null) {
                 responseTime = ctx.getTTFBMillis();
             }
         }
+    }
+
+    protected void persistUserAgent(UserAgent userAgent) {
+        this.userAgent = userAgent.getUserAgentString();
+        this.android = userAgent.isAndroid();
+        this.ios = userAgent.isIOS();
+        this.mobile = userAgent.isMobile();
+        this.phone = userAgent.isPhone();
+        this.tablet = userAgent.isTablet();
+        this.desktop = userAgent.isDesktop();
+    }
+
+    /**
+     * Specifies a custom URL to record.
+     * <p>
+     * In most cases this method shouldn't be called manually as the event will initialize this field with
+     * the currently requested URL (as indicated by the {@link WebContext}).
+     *
+     * @param url the url to store
+     */
+    public void setCustomUrl(String url) {
+        this.url = url;
+    }
+
+    /**
+     * Specifies a custom user agent to record.
+     * <p>
+     * In most cases this method shouldn't be called manually as the event will initialize this field with
+     * the current {@link UserAgent} (as indicated by the {@link WebContext}).
+     *
+     * @param userAgent the user agent to store
+     */
+    public void setCustomUserAgent(UserAgent userAgent) {
+        persistUserAgent(userAgent);
+    }
+
+    /**
+     * Specifies a custom response time to record.
+     * <p>
+     * In most cases this method shouldn't be called manually as the event will initialize this field with
+     * the current <b>TTFB</b> (time to first byte) (as indicated by the {@link WebContext}).
+     *
+     * @param responseTime the response time to store
+     */
+    public void setCustomResponseTime(long responseTime) {
+        this.responseTime = responseTime;
     }
 
     public String getUrl() {
@@ -122,77 +178,5 @@ public class WebData extends Composite {
 
     public long getResponseTime() {
         return responseTime;
-    }
-
-    /**
-     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
-     *
-     * @param url the url
-     */
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    /**
-     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
-     *
-     * @param userAgent the userAgent
-     */
-    public void setUserAgent(String userAgent) {
-        this.userAgent = userAgent;
-    }
-
-    /**
-     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
-     *
-     * @param ios whether is IOS
-     */
-    public void setIos(boolean ios) {
-        this.ios = ios;
-    }
-
-    /**
-     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
-     *
-     * @param android whether is android
-     */
-    public void setAndroid(boolean android) {
-        this.android = android;
-    }
-
-    /**
-     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
-     *
-     * @param mobile whether is mobile
-     */
-    public void setMobile(boolean mobile) {
-        this.mobile = mobile;
-    }
-
-    /**
-     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
-     *
-     * @param phone whether is a phone
-     */
-    public void setPhone(boolean phone) {
-        this.phone = phone;
-    }
-
-    /**
-     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
-     *
-     * @param tablet whether is a tablet
-     */
-    public void setTablet(boolean tablet) {
-        this.tablet = tablet;
-    }
-
-    /**
-     * In most cases, you DO NOT need to set this, because it is read from the WebContext.
-     *
-     * @param desktop whether is desktop
-     */
-    public void setDesktop(boolean desktop) {
-        this.desktop = desktop;
     }
 }

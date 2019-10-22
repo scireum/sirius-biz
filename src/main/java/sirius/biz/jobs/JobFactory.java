@@ -57,9 +57,20 @@ public interface JobFactory extends Named, Priorized {
     String getDescription();
 
     /**
+     * Returns a short description of the job which may contain HTML markup.
+     * <p>
+     * If present, this will replace {@link #getDescription()} when rendering the details
+     * page.
+     *
+     * @return the description for this job which might contain HTML markup
+     */
+    @Nullable
+    String getHTMLDescription();
+
+    /**
      * Returns a detailed description of this job.
      * <p>
-     * This description is shown when the job is being (or about to be) executed and might be more elaborated.
+     * This description is shown in the documentation page of the job and might be more elaborated.
      *
      * @return the detailed description for this job
      */

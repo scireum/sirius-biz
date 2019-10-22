@@ -8,6 +8,7 @@
 
 package sirius.biz.analytics.events;
 
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.kernel.commons.Strings;
 
@@ -37,19 +38,22 @@ public class PageImpressionEvent extends Event {
      * Contains a generic or shortened URL which can be used to aggregate on.
      * <p>
      * If, for example a web shop would record views of items with urls like "/item/0815" and "/item/0816", these
-     * would end up in {@link WebData#url}. However, to sum up the total view of items one could use "/item" as
+     * would end up in {@link WebData#URL}. However, to sum up the total view of items one could use "/item" as
      * <b>aggregationUri</b>.
      */
+    public static final Mapping AGGREGATION_URI = Mapping.named("aggregationUri");
     private String aggregationUri;
 
     /**
      * Contains the current user, tenant and scope if available.
      */
+    public static final Mapping USER_DATA = Mapping.named("userData");
     private final UserData userData = new UserData();
 
     /**
      * Contains metadata about the HTTP request (user-agent, url).
      */
+    public static final Mapping WEB_DATA = Mapping.named("webData");
     private final WebData webData = new WebData();
 
     @BeforeSave
