@@ -39,6 +39,7 @@ import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.OutputStream;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -84,9 +85,6 @@ public class Processes {
 
     @Part
     private AutoBatchLoop autoBatch;
-
-    @Part
-    private ProcessFileStorage fileStorage;
 
     @Part
     private Locks locks;
@@ -577,13 +575,28 @@ public class Processes {
             return false;
         }
 
-        ProcessFile file = getStorage().upload(process, filename, data);
-        return modify(processId, proc -> true, proc -> proc.getFiles().add(file));
+        process.getFiles().findOrCreateAttachedBlobByName(filename).updateContent(filename, data);
+        return true;
     }
 
-    //TODO maybe use Storage
-    public ProcessFileStorage getStorage() {
-        return fileStorage;
+    /**
+     * Adds a file to the given process by providing an {@link OutputStream}.
+     * <p>
+     * When running inside a process the preferred way to add a file is using
+     * {@link ProcessContext#addFile(String)}. This method is only made public so that outside helper classes
+     * can contribute to the process.
+     *
+     * @param processId the process to update
+     * @param filename  the filename to use
+     * @return the output stream which can be used to provide content for the file to add
+     */
+    public OutputStream addFile(String processId, String filename) {
+        Process process = fetchProcess(processId).orElse(null);
+        if (process == null) {
+            throw new IllegalStateException(Strings.apply("The requested process (%s) isn't available.", processId));
+        }
+
+        return process.getFiles().findOrCreateAttachedBlobByName(filename).createOutputStream(filename);
     }
 
     /**
