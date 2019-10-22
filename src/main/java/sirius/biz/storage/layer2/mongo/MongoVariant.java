@@ -46,6 +46,7 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
      * Note that this remains empty until the conversion has been completed.
      */
     public static final Mapping PHYSICAL_OBJECT_KEY = Mapping.named("physicalObjectKey");
+    @NullAllowed
     private String physicalObjectKey;
 
     /**
