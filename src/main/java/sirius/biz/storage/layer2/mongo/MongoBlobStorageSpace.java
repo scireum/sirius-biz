@@ -105,11 +105,18 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     @Override
     protected void commitDirectory(MongoDirectory directory) {
         directory.setCommitted(true);
-        mango.update(directory);
+
+        // Use a direct update as there is no need to trigger a change log or to update the last
+        // modified timestamps.
+        mongo.update()
+             .set(MongoDirectory.COMMITTED, true)
+             .where(MongoDirectory.ID, directory.getId())
+             .executeFor(MongoDirectory.class);
     }
 
     @Override
     protected void rollbackDirectory(MongoDirectory directory) {
+        // This is an uncommitted directory - no need to trigger any delete handlers...
         mongo.delete().where(MongoDirectory.ID, directory.getId()).singleFrom(MongoDirectory.class);
     }
 
@@ -243,12 +250,14 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     @Override
     protected void updateBlobName(MongoBlob blob, String newName) {
         blob.setFilename(newName);
+        // Trigger a conventional update to ensure that last modified get updated and a changelog is triggered
         mango.update(blob);
     }
 
     @Override
     protected void updateBlobParent(MongoBlob blob, MongoDirectory newParent) {
         blob.getParentRef().setValue(newParent);
+        // Trigger a conventional update to ensure that last modified get updated and a changelog is triggered
         mango.update(blob);
     }
 
@@ -262,12 +271,14 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     @Override
     protected void updateDirectoryParent(MongoDirectory directory, MongoDirectory newParent) {
         directory.getParentRef().setValue(newParent);
+        // Trigger a conventional update to ensure that last modified get updated and a changelog is triggered
         mango.update(directory);
     }
 
     @Override
     protected void updateDirectoryName(MongoDirectory directory, String newName) {
         directory.setDirectoryName(newName);
+        // Trigger a conventional update to ensure that last modified get updated and a changelog is triggered
         mango.update(directory);
     }
 
@@ -434,12 +445,16 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     @Override
     protected void commitBlob(MongoBlob blob) {
         blob.setCommitted(true);
-        mango.update(blob);
+
+        // Use a direct update as there is no need to trigger a change log or to update the last
+        // modified timestamps.
+        mongo.update().set(MongoBlob.COMMITTED, true).where(MongoBlob.ID, blob.getId()).executeFor(MongoBlob.class);
     }
 
     @Override
     protected void rollbackBlob(MongoBlob blob) {
-        mango.delete(blob);
+        // This is an uncommitted blob - no need to trigger any delete handlers...
+        mongo.delete().where(MongoBlob.ID, blob.getId()).singleFrom(MongoBlob.class);
     }
 
     @Override
@@ -528,7 +543,8 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                  .eq(MongoVariant.BLOB, blob)
                  .eq(MongoVariant.VARIANT_NAME, variantName)
                  .exists()) {
-            mango.delete(variant);
+            // This is a new and unused variant, no need to trigger any delete handlers...
+            mongo.delete().where(MongoVariant.ID, variant.getId()).singleFrom(MongoVariant.class);
             return true;
         }
 
