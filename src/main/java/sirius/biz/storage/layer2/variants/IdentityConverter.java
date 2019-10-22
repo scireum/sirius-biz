@@ -25,7 +25,7 @@ public class IdentityConverter implements Converter {
     /**
      * The factory used to create new instances of the converter.
      * <p>
-     * Due to the simplicity of this class, no configuration is reuqired at all.
+     * Due to the simplicity of this class, no configuration is required at all.
      */
     @Register
     public static class Factory implements ConverterFactory {
