@@ -29,6 +29,16 @@ public interface BlobStorageSpace {
     String getName();
 
     /**
+     * Returns a short description of what use case of this storage space.
+     * <p>
+     * Most probably this only needs to return a non-empty value if {@link #isBrowsable()} return true.
+     *
+     * @return a short description of the storage space.
+     */
+    @Nullable
+    String getDescription();
+
+    /**
      * Returns the associated layer 1 space which actually stores the data.
      *
      * @return the associated physical storage space

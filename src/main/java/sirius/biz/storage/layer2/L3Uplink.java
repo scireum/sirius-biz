@@ -249,11 +249,12 @@ public class L3Uplink implements VFSRoot {
      */
     @Override
     public void enumerate(VirtualFile parent, FileSearch search) {
-        storage.getSpaces()
-               .filter(BlobStorageSpace::isBrowsable)
-               .map(space -> space.getRoot(tenants.getRequiredTenant().getIdAsString()))
-               .map(directory -> wrapDirectory(parent, directory))
-               .forEach(search::processResult);
+        storage.getSpaces().filter(BlobStorageSpace::isBrowsable).map(space -> {
+            Directory directory = space.getRoot(tenants.getRequiredTenant().getIdAsString());
+            MutableVirtualFile wrappedDirectory = wrapDirectory(parent, directory);
+            wrappedDirectory.withDescription(space.getDescription());
+            return wrappedDirectory;
+        }).forEach(search::processResult);
     }
 
     @Override
