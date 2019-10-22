@@ -49,6 +49,7 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
      */
     public static final Mapping PHYSICAL_OBJECT_KEY = Mapping.named("physicalObjectKey");
     @Length(64)
+    @NullAllowed
     private String physicalObjectKey;
 
     /**
