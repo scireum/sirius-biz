@@ -787,7 +787,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         try {
             getPhysicalSpace().upload(nextPhysicalId, file);
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, file.length(), filename);
-            previousPhysicalId.ifPresent(getPhysicalSpace()::delete);
+            if (previousPhysicalId.isPresent()) {
+                blob.fetchVariants().forEach(BlobVariant::delete);
+                getPhysicalSpace().delete(previousPhysicalId.get());
+            }
         } catch (Exception e) {
             try {
                 getPhysicalSpace().delete(nextPhysicalId);
@@ -834,7 +837,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         try {
             getPhysicalSpace().upload(nextPhysicalId, data, contentLength);
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, contentLength, filename);
-            previousPhysicalId.ifPresent(getPhysicalSpace()::delete);
+            if (previousPhysicalId.isPresent()) {
+                blob.fetchVariants().forEach(BlobVariant::delete);
+                getPhysicalSpace().delete(previousPhysicalId.get());
+            }
         } catch (Exception e) {
             try {
                 getPhysicalSpace().delete(nextPhysicalId);

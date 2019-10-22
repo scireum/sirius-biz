@@ -13,9 +13,11 @@ import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.types.BaseEntityRef;
+import sirius.kernel.commons.Strings;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -49,6 +51,18 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
     @Length(50)
     @NullAllowed
     private String node;
+
+    @AfterDelete
+    protected void onDelete() {
+        if (Strings.isFilled(physicalObjectKey)) {
+            blob.fetchValue().getStorageSpace().getPhysicalSpace().delete(physicalObjectKey);
+        }
+    }
+
+    @Override
+    public void delete() {
+        oma.delete(this);
+    }
 
     @Override
     public Optional<FileHandle> download() {

@@ -76,4 +76,9 @@ public interface BlobVariant {
      * @return the number of conversion attempts
      */
     int getNumAttempts();
+
+    /**
+     * Deletes this variant.
+     */
+    void delete();
 }
