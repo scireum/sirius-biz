@@ -11,6 +11,7 @@ package sirius.biz.storage.layer2.jdbc;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.BlobStorage;
 import sirius.biz.storage.layer2.Directory;
+import sirius.biz.storage.layer2.OptimisticCreate;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
@@ -34,7 +35,7 @@ import java.util.function.Function;
  * Note that all non trivial methods delegate to the associated {@link SQLBlobStorageSpace}.
  */
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
-public class SQLDirectory extends SQLEntity implements Directory {
+public class SQLDirectory extends SQLEntity implements Directory, OptimisticCreate {
 
     /**
      * Contains the tenant which owns this directory.
@@ -76,6 +77,21 @@ public class SQLDirectory extends SQLEntity implements Directory {
     @NullAllowed
     private final SQLEntityRef<SQLDirectory> parent =
             SQLEntityRef.on(SQLDirectory.class, BaseEntityRef.OnDelete.REJECT);
+
+    /**
+     * Stores if a directory has been fully initialized.
+     * <p>
+     * This is used by the optimistic locking algorithms to ensure that directory names remain unique
+     * without requiring any locks.
+     */
+    public static final Mapping COMMITTED = Mapping.named("committed");
+    private boolean committed;
+
+    /**
+     * Stores if the directory was marked as deleted.
+     */
+    public static final Mapping DELETED = Mapping.named("deleted");
+    private boolean deleted;
 
     @Part
     private static BlobStorage layer2;
@@ -129,8 +145,13 @@ public class SQLDirectory extends SQLEntity implements Directory {
     }
 
     @Override
+    public boolean hasChildNamed(String name) {
+        return getStorageSpace().hasExistingChild(this, name);
+    }
+
+    @Override
     public Optional<? extends Directory> findChildDirectory(String name) {
-        return getStorageSpace().findChildDirectory(this, name);
+        return getStorageSpace().findExistingChildDirectory(this, name);
     }
 
     @Override
@@ -140,7 +161,7 @@ public class SQLDirectory extends SQLEntity implements Directory {
 
     @Override
     public Optional<? extends Blob> findChildBlob(String name) {
-        return getStorageSpace().findChildBlob(this, name);
+        return getStorageSpace().findExistingChildBlob(this, name);
     }
 
     @Override
@@ -178,6 +199,7 @@ public class SQLDirectory extends SQLEntity implements Directory {
         getStorageSpace().deleteDirectory(this);
     }
 
+    @Override
     public String getTenantId() {
         return tenantId;
     }
@@ -186,6 +208,7 @@ public class SQLDirectory extends SQLEntity implements Directory {
         this.tenantId = tenantId;
     }
 
+    @Override
     public String getSpaceName() {
         return spaceName;
     }
@@ -200,5 +223,22 @@ public class SQLDirectory extends SQLEntity implements Directory {
 
     public void setDirectoryName(String directoryName) {
         this.directoryName = directoryName;
+    }
+
+    @Override
+    public boolean isCommitted() {
+        return committed;
+    }
+
+    public void setCommitted(boolean committed) {
+        this.committed = committed;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 }
