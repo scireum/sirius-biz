@@ -174,7 +174,7 @@ public class URLBuilder {
      * if no file was found in the storage engine
      */
     public Optional<String> buildURL() {
-        if (Strings.isEmpty(blobKey) || (blob != null && Strings.isEmpty(blob.getPhysicalObjectId()))) {
+        if (Strings.isEmpty(blobKey) || (blob != null && Strings.isEmpty(blob.getPhysicalObjectKey()))) {
             return Optional.empty();
         }
 
@@ -262,7 +262,7 @@ public class URLBuilder {
 
     private String determinePhysicalKey() {
         if (blob != null && Strings.areEqual(variant, URLBuilder.VARIANT_RAW)) {
-            return blob.getPhysicalObjectId();
+            return blob.getPhysicalObjectKey();
         }
 
         return ((BasicBlobStorageSpace<?, ?, ?>) space).resolvePhysicalKey(blobKey, variant, true);
