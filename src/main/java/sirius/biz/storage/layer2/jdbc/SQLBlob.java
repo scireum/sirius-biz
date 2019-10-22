@@ -78,10 +78,10 @@ public class SQLBlob extends SQLEntity implements Blob {
      * Note that this will change once the blob is updated and that is also might be <tt>null</tt> if no data is
      * present.
      */
-    public static final Mapping PHYSICAL_OBJECT_ID = Mapping.named("physicalObjectId");
+    public static final Mapping PHYSICAL_OBJECT_KEY = Mapping.named("physicalObjectKey");
     @NullAllowed
     @Length(64)
-    private String physicalObjectId;
+    private String physicalObjectKey;
 
     /**
      * Contains the filename if one was provided.
@@ -344,8 +344,8 @@ public class SQLBlob extends SQLEntity implements Blob {
     }
 
     @Override
-    public String getPhysicalObjectId() {
-        return physicalObjectId;
+    public String getPhysicalObjectKey() {
+        return physicalObjectKey;
     }
 
     @Nullable
