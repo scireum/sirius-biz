@@ -12,6 +12,7 @@ import sirius.biz.storage.util.StorageUtils;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.annotations.AfterDelete;
+import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
@@ -25,8 +26,13 @@ import java.util.Optional;
  */
 public class BlobContainer extends Composite {
 
+    @Transient
     private final String spaceName;
+
+    @Transient
     private final BaseEntity<?> owner;
+
+    @Transient
     private BlobStorageSpace space;
 
     @Part
