@@ -168,7 +168,7 @@ public interface BlobStorageSpace {
     void deliver(@Nonnull String blobKey, @Nonnull String variant, @Nonnull Response response);
 
     /**
-     * Performes some housekeeping and maintenance tasks.
+     * Performs some housekeeping and maintenance tasks.
      * <p>
      * This shouldn't be invoked manually as it is triggered via the {@link StorageCleanupTask}.
      */

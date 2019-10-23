@@ -18,6 +18,7 @@ import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Framework;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -27,6 +28,7 @@ import java.util.Optional;
  *  * <p>
  *  * Note that all non trivial methods delegate to the associated {@link SQLBlobStorageSpace}.
  */
+@Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class SQLVariant extends SQLEntity implements BlobVariant {
 
     /**
