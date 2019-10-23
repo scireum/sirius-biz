@@ -12,12 +12,12 @@ the same cloud or different ones. Via the delivery method provided by [ObjectSto
 we have a fault tolerant way to sending the object data out as response to a HTTP request.
 
 Note that the intention is to only store an object once. So once the contents of an object changes,
-its key should also change. This is not enforced by the API or the replication system in any way. But
+its key should also change. This is not enforced by the API or the replication system in any way, but
 it permits to provide a very efficient caching strategy when serving the contents via HTTP, as the max-age
 can be set to a very large number. Using the [layer 2](../layer2/) which separates virtual blob keys
 (used to access the metadata) and the **physicalObjectKeys** which resemble the object keys here, this
-write once policy is supported by default.
+'write once' policy is supported by default.
 
-This layer is most probable not accessed by external code directly, however, the config section
+This layer is most probably not accessed by external code directly, however, the config section
 in [component-biz.conf](../../../../../resources/component-biz.conf) provides a good overview of the
 required and recommended settings.

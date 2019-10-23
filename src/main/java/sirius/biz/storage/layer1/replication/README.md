@@ -1,7 +1,7 @@
 # Layer 1 - Replication
 
 Provides the mechanics to schedule and execute the replication tasks required to keep
-two [ObjectStorageSpace](../ObjectStorageSpace.java) in sync (by replicating one to another).
+two [ObjectStorageSpaces](../ObjectStorageSpace.java) in sync (by replicating one to another).
 
 Note that this system normally runs by itself as soon as it is enabled in the configuration.
 As the replication tasks need to be stored in a database, one can either enable the framework
