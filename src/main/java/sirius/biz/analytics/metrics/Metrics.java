@@ -188,7 +188,7 @@ public interface Metrics {
     void updateDailyMetric(BaseEntity<?> target, String name, LocalDate date, int value);
 
     /**
-     * Creates or updates a daily monthly metric.
+     * Creates or updates a daily metric.
      *
      * @param name  the name of the metric
      * @param year  the year of the metric
@@ -199,7 +199,7 @@ public interface Metrics {
     void updateGlobalDailyMetric(String name, int year, int month, int day, int value);
 
     /**
-     * Creates or updates a daily monthly metric.
+     * Creates or updates a daily metric.
      *
      * @param name  the name of the metric
      * @param date  the date to determine the year, month and day of the metric
