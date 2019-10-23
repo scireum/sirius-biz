@@ -7,7 +7,7 @@ the [FSStorageEngine](FSStorageEngine.java) however, we can also emulate this AP
 the local file system.
 
 Additionally this layer provides a [replication engine](replication/), which will copy all objects in one space 
-(which is a **bucket** in S3 terminology) into another - again both can be either stored locally,
+(which is a **bucket** in S3 terminology) into another - again both can either be stored locally,
 reside in the same cloud or different ones. Via the delivery method provided by [ObjectStorageSpace](ObjectStorageSpace.java)
 we have a fault tolerant way of sending the object data out as response to a HTTP request.
 
