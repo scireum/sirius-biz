@@ -12,7 +12,7 @@ These are either [Metrics](../metrics/) or [Jobs](../../jobs/).
 
 To create a new type of events to be recorded, a subclass of [Event](Event.java)
 has to be created. Used composites like [WebData](WebData.java) or [UserData](UserData.java)
-or create your own to store commonly used data.
+or create your own to store commonly used data (which will most probably be auto-filled by the save handlers).
 
 Note that the buffer utilization, which is named *events_buffer_usage* can be monitored via
 the system metrics reporter (http://localhost:9000/system/state or http://localhost:9000/system/metrics).
