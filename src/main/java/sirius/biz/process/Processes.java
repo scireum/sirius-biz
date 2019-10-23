@@ -626,7 +626,14 @@ public class Processes {
             logEntry.setSortKey(System.currentTimeMillis());
             logEntry.getProcess().setId(processId);
             logEntry.getDescriptor().beforeSave(logEntry);
-            autoBatch.insertAsync(logEntry);
+
+            // Use the auto batch to perform bulk inserts if possible
+            if (!autoBatch.insertAsync(logEntry)) {
+                // but fallback to regular inserts if the auto batch loop is overloaded due to peak
+                // conditions This should automatically slow down the caller and let the auto batch loop
+                // recover in parallel...
+                elastic.override(logEntry);
+            }
         } catch (Exception e) {
             Exceptions.handle()
                       .withSystemErrorMessage("Failed to record a ProcessLog: %s - %s (%s)", logEntry)
