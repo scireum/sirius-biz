@@ -79,7 +79,6 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
      * Stores the node name on which the last conversion was attempted.
      */
     public static final Mapping NODE = Mapping.named("node");
-    @NullAllowed
     private String node;
 
     @AfterDelete

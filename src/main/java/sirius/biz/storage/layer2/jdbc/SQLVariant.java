@@ -83,7 +83,6 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
      */
     public static final Mapping NODE = Mapping.named("node");
     @Length(50)
-    @NullAllowed
     private String node;
 
     @AfterDelete
