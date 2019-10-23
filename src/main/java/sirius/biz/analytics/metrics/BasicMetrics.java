@@ -186,9 +186,25 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
     }
 
     @Override
+    public void updateGlobalYearlyMetric(String name, LocalDate date, int value) {
+        updateYearlyMetric(GLOBAL, GLOBAL, name, date.getYear(), value);
+    }
+
+    @Override
     public void updateYearlyMetric(BaseEntity<?> target, String name, int year, int value) {
         if (!target.isNew()) {
             updateYearlyMetric(Mixing.getNameForType(target.getClass()), target.getIdAsString(), name, year, value);
+        }
+    }
+
+    @Override
+    public void updateYearlyMetric(BaseEntity<?> target, String name, LocalDate date, int value) {
+        if (!target.isNew()) {
+            updateYearlyMetric(Mixing.getNameForType(target.getClass()),
+                               target.getIdAsString(),
+                               name,
+                               date.getYear(),
+                               value);
         }
     }
 
@@ -223,6 +239,11 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
     }
 
     @Override
+    public void updateGlobalMonthlyMetric(String name, LocalDate date, int value) {
+        updateMonthlyMetric(GLOBAL, GLOBAL, name, date.getYear(), date.getMonthValue(), value);
+    }
+
+    @Override
     public void updateMonthlyMetric(BaseEntity<?> target, String name, int year, int month, int value) {
         if (!target.isNew()) {
             updateMonthlyMetric(Mixing.getNameForType(target.getClass()),
@@ -230,6 +251,18 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
                                 name,
                                 year,
                                 month,
+                                value);
+        }
+    }
+
+    @Override
+    public void updateMonthlyMetric(BaseEntity<?> target, String name, LocalDate date, int value) {
+        if (!target.isNew()) {
+            updateMonthlyMetric(Mixing.getNameForType(target.getClass()),
+                                target.getIdAsString(),
+                                name,
+                                date.getYear(),
+                                date.getMonthValue(),
                                 value);
         }
     }
@@ -271,6 +304,11 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
     }
 
     @Override
+    public void updateGlobalDailyMetric(String name, LocalDate date, int value) {
+        updateDailyMetric(GLOBAL, GLOBAL, name, date.getYear(), date.getMonthValue(), date.getDayOfMonth(), value);
+    }
+
+    @Override
     public void updateDailyMetric(BaseEntity<?> target, String name, int year, int month, int day, int value) {
         if (!target.isNew()) {
             updateDailyMetric(Mixing.getNameForType(target.getClass()),
@@ -279,6 +317,19 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
                               year,
                               month,
                               day,
+                              value);
+        }
+    }
+
+    @Override
+    public void updateDailyMetric(BaseEntity<?> target, String name, LocalDate date, int value) {
+        if (!target.isNew()) {
+            updateDailyMetric(Mixing.getNameForType(target.getClass()),
+                              target.getIdAsString(),
+                              name,
+                              date.getYear(),
+                              date.getMonthValue(),
+                              date.getDayOfMonth(),
                               value);
         }
     }
