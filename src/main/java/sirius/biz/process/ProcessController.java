@@ -8,7 +8,6 @@
 
 package sirius.biz.process;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.logs.ProcessLogHandler;
 import sirius.biz.process.logs.ProcessLogState;
@@ -313,28 +312,6 @@ public class ProcessController extends BizController {
         }
 
         processDetails(ctx, processId);
-    }
-
-    /**
-     * Serves a file attached to a process
-     *
-     * @param ctx       the current request
-     * @param processId the process to which the file belongs
-     * @param fileId    the id of the process file to serve
-     */
-    @Routed("/ps/:1/file/:2")
-    @LoginRequired
-    public void downloadProcessFile(WebContext ctx, String processId, String fileId) {
-        Process process = findAccessibleProcess(processId);
-
-        for (ProcessFile file : process.getFiles()) {
-            if (Strings.areEqual(file.getFileId(), fileId)) {
-                processes.getStorage().serve(ctx, process, file);
-                return;
-            }
-        }
-
-        ctx.respondWith().error(HttpResponseStatus.NOT_FOUND);
     }
 
     /**

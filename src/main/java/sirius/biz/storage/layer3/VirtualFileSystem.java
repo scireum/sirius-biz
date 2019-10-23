@@ -54,7 +54,7 @@ public class VirtualFileSystem {
 
         @Override
         public void enumerate(@Nonnull VirtualFile parent, FileSearch search) {
-            rootProviders.forEach(vfsRoot -> vfsRoot.enumerate(root(), search.forkChild()));
+            rootProviders.forEach(vfsRoot -> vfsRoot.enumerate(root(), search));
         }
     }
 

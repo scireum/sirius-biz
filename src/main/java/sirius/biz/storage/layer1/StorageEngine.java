@@ -59,7 +59,6 @@ public interface StorageEngine {
      * @param response       the response to populate
      * @param space          the bucket of the object to deliver
      * @param objectKey      the id of the object to deliver
-     * @param fileExtension  the file extension e.g. to setup a matching <tt>Content-Type</tt>
      * @param failureHandler a handler which cann be invoked if the download cannot be performed.
      *                       This will be supplied with the HTTP error code.
      * @throws IOException in case of an IO error
@@ -67,7 +66,6 @@ public interface StorageEngine {
     void deliver(Response response,
                  String space,
                  String objectKey,
-                 String fileExtension,
                  @Nullable Consumer<Integer> failureHandler) throws IOException;
 
     /**

@@ -20,11 +20,12 @@
             </w:navbox>
         </i:if>
 
-        <i:if test="!process.getFiles().isEmpty()">
+        <i:local name="files" value="process.getFiles().findAttachedBlobs()" />
+        <i:if test="!files.isEmpty()">
             <w:navbox labelKey="Process.files">
-                <i:for type="sirius.biz.process.ProcessFile" var="file" items="process.getFiles()">
+                <i:for type="sirius.biz.storage.layer2.Blob" var="file" items="files">
                     <li>
-                        <a href="/ps/@process.getId()/file/@file.getFileId()" class="link" target="_blank">
+                        <a href="@file.url().buildURL()" class="link" target="_blank">
                             <i class="fa fa-file"></i>
                             @file.getFilename()
                             <small class="muted">(@formatSize(file.getSize()))</small>

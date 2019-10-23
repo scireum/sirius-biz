@@ -112,15 +112,13 @@ public class ObjectStorageSpace {
      *
      * @param response      the response to populate
      * @param objectId      the id of the object to deliver
-     * @param fileExtension the file extension e.g. to setup a matching <tt>Content-Type</tt>
      */
-    public void deliver(Response response, String objectId, String fileExtension) {
+    public void deliver(Response response, String objectId) {
         try {
             engine.deliver(response,
                            name,
                            objectId,
-                           fileExtension,
-                           status -> handleHttpError(response, objectId, fileExtension, status));
+                           status -> handleHttpError(response, objectId, status));
         } catch (IOException e) {
             throw Exceptions.handle()
                             .error(e)
@@ -133,7 +131,7 @@ public class ObjectStorageSpace {
         }
     }
 
-    private void handleHttpError(Response response, String objectId, @Nullable String fileExtension, int status) {
+    private void handleHttpError(Response response, String objectId, int status) {
         ObjectStorageSpace replicationSpace = replicationManager.getReplicationSpace(name).orElse(null);
         if (replicationSpace == null) {
             response.error(HttpResponseStatus.valueOf(status));
@@ -142,7 +140,7 @@ public class ObjectStorageSpace {
         }
 
         try {
-            replicationSpace.engine.deliver(response, name, objectId, fileExtension, nextStatus -> {
+            replicationSpace.engine.deliver(response, name, objectId, nextStatus -> {
                 response.error(HttpResponseStatus.valueOf(nextStatus));
             });
         } catch (IOException e) {

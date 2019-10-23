@@ -10,9 +10,11 @@ package sirius.biz.storage.layer3;
 
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Value;
 
-import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -28,6 +30,7 @@ public class FileSearch {
 
     private boolean onlyDirectories;
     private String prefixFilter;
+    private Set<String> fileExtensionFilters;
     private Limit limit = Limit.UNLIMITED;
     private Function<VirtualFile, Boolean> resultProcessor;
 
@@ -70,40 +73,63 @@ public class FileSearch {
      * @return the search itself for fluent method calls
      */
     public FileSearch withPrefixFilter(String prefixFilter) {
-        this.prefixFilter = Value.of(prefixFilter).toLowerCase();
+        if (Strings.isEmpty(prefixFilter) || Strings.isEmpty(prefixFilter.trim())) {
+            this.prefixFilter = null;
+        } else {
+            this.prefixFilter = prefixFilter.trim().toLowerCase();
+        }
         return this;
     }
 
     /**
-     * Determines if a prefix filter is present.
+     * Adds a file extension to filter on.
+     * <p>
+     * Once added, only files with the given extension will be accepted. Note that this method can be invoked multiple
+     * time to accept several different file extensions.
+     * <p>
+     * Note that this filter doesn't apply to directories.
      *
-     * @return <tt>true</tt> if a filter is present, <tt>false</tt> otherwise
+     * @param fileExtension the file extension to accept.
+     * @return the search itself for fluent method calls
      */
-    public boolean hasPrefixFiler() {
-        return Strings.isFilled(prefixFilter);
+    public FileSearch withFileExtension(String fileExtension) {
+        if (Strings.isEmpty(fileExtension) || Strings.isEmpty(fileExtension.trim())) {
+            return this;
+        }
+        if (fileExtensionFilters == null) {
+            fileExtensionFilters = new HashSet<>();
+        }
+
+        this.fileExtensionFilters.add(fileExtension.trim().toLowerCase());
+
+        return this;
     }
 
     /**
      * Returns the prefix filter.
+     * <p>
+     * The prefix filter is guaranteed to be in lowercase.
      *
      * @return the prefix filter which has been set
      */
-    @Nullable
-    public String getPrefixFilter() {
-        return prefixFilter;
+    public Optional<String> getPrefixFilter() {
+        return Optional.ofNullable(prefixFilter);
     }
 
     /**
-     * Disables the prefix filter.
+     * Provides the set of accepted file extensions for files.
      * <p>
-     * This can be used if the filter has been extracted and externally applied to support a more efficient
-     * implementation.
+     * If the set isn't empty, only files with one of the given file extensions will be accepted. Note that
+     * the file extensions are guaranteed to be lowercase and will <b>not</b> start with a ".".
+     * <p>
+     * Note that directories will always be accepted independently of this set.
      *
-     * @return the search itself for fluent method calls
+     * @return the set of accepted file extensions.
      */
-    public FileSearch disablePrefixFilter() {
-        this.prefixFilter = null;
-        return this;
+    public Set<String> getFileExtensionFilters() {
+        return fileExtensionFilters == null ?
+               Collections.emptySet() :
+               Collections.unmodifiableSet(fileExtensionFilters);
     }
 
     /**
@@ -126,19 +152,6 @@ public class FileSearch {
     }
 
     /**
-     * Disables the directory filter.
-     * <p>
-     * This can be used if the filter has been extracted and externally applied to support a more efficient
-     * implementation.
-     *
-     * @return the search itself for fluent method calls
-     */
-    public FileSearch disableOnlyDirectories() {
-        this.onlyDirectories = false;
-        return this;
-    }
-
-    /**
      * Applies a limit which is used once all other filters have been fulfilled.
      *
      * @param limit the limit to apply
@@ -155,34 +168,15 @@ public class FileSearch {
     }
 
     /**
-     * Determines if a limit is present.
-     *
-     * @return <tt>true</tt> if a limit is present, <tt>false</tt> otherwise
-     */
-    public boolean hasLimit() {
-        return limit.getRemainingItems() != null;
-    }
-
-    /**
-     * Obtains the limit which has been set.
-     *
-     * @return the limit or {@link Limit#UNLIMITED} if no limit has been specified
-     */
-    public Limit getLimit() {
-        return limit;
-    }
-
-    /**
-     * Disables the limit.
+     * Determines if there is an upper limit of the maximal number of remaining items.
      * <p>
-     * This can be used if the limit has been extracted and externally applied to support a more efficient
-     * implementation.
+     * This can be used to optimize queries performed by the <tt>Layer 2</tt>.
      *
-     * @return the search itself for fluent method calls
+     * @return the maximal numbers of items to supply into {@link #processResult(VirtualFile)}
+     * (assuming that the filters will match). Returns an empty optional if there is no upper limit.
      */
-    public FileSearch disableLimit() {
-        this.limit = Limit.UNLIMITED;
-        return this;
+    public Optional<Integer> getMaxRemainingItems() {
+        return Optional.ofNullable(limit.getRemainingItems());
     }
 
     /**
@@ -192,31 +186,35 @@ public class FileSearch {
      * @return <tt>true</tt> if more results can be processed <tt>false</tt> if the enumeration should be aborted
      */
     public boolean processResult(VirtualFile file) {
-        if (!onlyDirectories || file.isDirectory()) {
-            if (Strings.isEmpty(prefixFilter) || file.name().toLowerCase().startsWith(prefixFilter)) {
-                if (limit.nextRow()) {
-                    return resultProcessor.apply(file);
-                }
+        if (matchesFiltering(file)) {
+            if (limit.nextRow()) {
+                return resultProcessor.apply(file);
             }
         }
 
         return limit.shouldContinue();
     }
 
-    /**
-     * Creates a sub-filter which can be used to pass this search into multiple <tt>ChildProviders</tt>.
-     *
-     * @return a sub search which has the same filters but only a partial part of the limit as this is enforced by
-     * the central instance
-     */
-    public FileSearch forkChild() {
-        FileSearch result = new FileSearch(this::processResult);
-        result.onlyDirectories = onlyDirectories;
-        result.prefixFilter = prefixFilter;
-        if (limit.getRemainingItems() != null) {
-            result.limit = new Limit(0, limit.getRemainingItems());
+    private boolean matchesFiltering(VirtualFile file) {
+        if (onlyDirectories && !file.isDirectory()) {
+            return false;
         }
 
-        return result;
+        if (Strings.isFilled(prefixFilter) && !file.name().toLowerCase().startsWith(prefixFilter)) {
+            return false;
+        }
+
+        // We only apply the extension filter on files not on directory so that one can still browse
+        // through a directory structure when lookin for a file of a specific type.
+        if (fileExtensionFilters != null && !file.isDirectory()) {
+            String fileExtension = file.fileExtension();
+            if (Strings.isEmpty(fileExtension)) {
+                return false;
+            }
+
+            return fileExtensionFilters.contains(fileExtension.toLowerCase());
+        }
+
+        return true;
     }
 }

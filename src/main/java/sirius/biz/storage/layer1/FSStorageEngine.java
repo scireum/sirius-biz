@@ -19,7 +19,6 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 import sirius.web.http.Response;
-import sirius.web.http.WebContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -119,18 +118,14 @@ public class FSStorageEngine implements StorageEngine, Named {
     }
 
     @Override
-    public void storePhysicalObject(String space, String objectKey, File file)
-            throws IOException {
+    public void storePhysicalObject(String space, String objectKey, File file) throws IOException {
         try (FileInputStream inputStream = new FileInputStream(file)) {
             storePhysicalObject(space, objectKey, inputStream, file.length());
         }
     }
 
     @Override
-    public void storePhysicalObject(String space,
-                                    String objectKey,
-                                    InputStream data,
-                                    long size) throws IOException {
+    public void storePhysicalObject(String space, String objectKey, InputStream data, long size) throws IOException {
         File file = getFile(space, objectKey);
         try (FileOutputStream out = new FileOutputStream(file)) {
             ByteStreams.copy(data, out);
@@ -149,13 +144,9 @@ public class FSStorageEngine implements StorageEngine, Named {
         }
     }
 
-
     @Override
-    public void deliver(Response response,
-                        String space,
-                        String objectKey,
-                        String fileExtension,
-                        Consumer<Integer> failureHandler) throws IOException {
+    public void deliver(Response response, String space, String objectKey, Consumer<Integer> failureHandler)
+            throws IOException {
         File file = getFile(space, objectKey);
 
         if (file.isHidden() || !file.exists() || !file.isFile()) {

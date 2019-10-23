@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer2;
 
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.kernel.health.HandledException;
 import sirius.web.http.Response;
 
@@ -36,6 +37,20 @@ public interface Blob {
     BlobStorageSpace getStorageSpace();
 
     /**
+     * Returns the name of the {@link #getStorageSpace() storage space}.
+     *
+     * @return the name of the stroage space in which this directory resides.
+     */
+    String getSpaceName();
+
+    /**
+     * Returns the ID of the tenant for which this directory has been created.
+     *
+     * @return the id of the tenant which owns this directory
+     */
+    String getTenantId();
+
+    /**
      * Returns the parent directory if this blob is associated to one.
      *
      * @return the parent directory or <tt>null</tt> if this blob isn't stored in a browsable location
@@ -56,7 +71,7 @@ public interface Blob {
      *
      * @return the layer 1 object key which contains the current data of this blob
      */
-    String getPhysicalObjectId();
+    String getPhysicalObjectKey();
 
     /**
      * Returns the filename of the blob.
@@ -110,22 +125,6 @@ public interface Blob {
     boolean isTemporary();
 
     /**
-     * Determines if this file is hidden.
-     *
-     * @return <tt>true</tt> if the file is hidden, <tt>false</tt> otherwise
-     * @see #hide()
-     */
-    boolean isHidden();
-
-    /**
-     * Marks the blob as hidden.
-     * <p>
-     * This can be used to temporarily make blobs invisible to the user while still being able to access
-     * the data.
-     */
-    void hide();
-
-    /**
      * Deletes the blob.
      */
     void delete();
@@ -150,8 +149,6 @@ public interface Blob {
 
     /**
      * Provides new content for this blob.
-     * <p>
-     * Note that this will create a new physical object and might keep the original one as a {@link BlobRevision}.
      *
      * @param filename the new filename to use (if given)
      * @param file     the file providing the new data to use
@@ -160,8 +157,6 @@ public interface Blob {
 
     /**
      * Provides new content for this blob.
-     * <p>
-     * Note that this will create a new physical object and might keep the original one as a {@link BlobRevision}.
      * <p>
      * Also note that if a file is used to provide the new contents of this blob, use
      * {@link #updateContent(String, File)} as this is likely way more efficient.
@@ -208,14 +203,23 @@ public interface Blob {
      *
      * @return a list of all known variants
      */
-    List<BlobVariant> getVariants();
+    List<? extends BlobVariant> fetchVariants();
 
     /**
-     * Lists all known revisions of this blob.
+     * Tries to find the variant with the given name.
      * <p>
-     * A revision is a backup copy of previously provided data of this blob.
+     * This will check if a variant with the given name exists and return it. If no such variant exists,
+     * an empty optional is returned.
      *
-     * @return a list of all known revisions
+     * @param name the name of the variant to lookup
+     * @return the variant with the given name or an empty optional if none was found
      */
-    List<BlobRevision> getRevisions();
+    Optional<BlobVariant> findVariant(String name);
+
+    /**
+     * Provides a builder which can be used to create a delivery or download link.
+     *
+     * @return a builder to create a download or delivery URL
+     */
+    URLBuilder url();
 }
