@@ -8,7 +8,6 @@
 
 package sirius.biz.storage.layer2;
 
-import sirius.kernel.commons.Limit;
 import sirius.kernel.health.HandledException;
 
 import javax.annotation.Nullable;
@@ -21,9 +20,23 @@ public interface Directory {
     /**
      * Returns the storage space which is in charge of managing this object.
      *
-     * @return the storage space in which this object is stored
+     * @return the storage space in which this directory is stored
      */
     BlobStorageSpace getStorageSpace();
+
+    /**
+     * Returns the name of the {@link #getStorageSpace() storage space}.
+     *
+     * @return the name of the stroage space in which this directory resides.
+     */
+    String getSpaceName();
+
+    /**
+     * Returns the ID of the tenant for which this directory has been created.
+     *
+     * @return the id of the tenant which owns this directory
+     */
+    String getTenantId();
 
     /**
      * Returns the parent directory if this directory.
@@ -53,6 +66,14 @@ public interface Directory {
      * @return the path (including the name itself)
      */
     String getPath();
+
+    /**
+     * Determines if there is a child with the given name.
+     *
+     * @param name the name to check
+     * @return <tt>true</tt> if either a directory or a blob with the given name exists as child
+     */
+    boolean hasChildNamed(String name);
 
     /**
      * Tries to find the sub directory with the given name.

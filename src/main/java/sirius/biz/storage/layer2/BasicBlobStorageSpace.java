@@ -31,6 +31,7 @@ import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
+import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.http.Response;
 
@@ -44,6 +45,7 @@ import java.io.OutputStream;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
@@ -91,6 +93,28 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static final String CONFIG_KEY_BASE_URL = "baseUrl";
 
     /**
+     * Contains the name of the config key used to determine if normalized blob and directory names are used.
+     * <p>
+     * Setting this to true makes the file system effectively case insensitive. Where as using false
+     * makes it case sensitive.
+     */
+    private static final String CONFIG_KEY_USE_NORMALIZED_NAMES = "useNormalizedNames";
+
+    /**
+     * Contains the name of the config key used to determine a short description of the storage space.
+     * <p>
+     * Note that the result will be {@link sirius.kernel.nls.NLS#smartGet(String) smart translated}.
+     */
+    private static final String CONFIG_KEY_DESCRIPTION = "description";
+
+    /**
+     * Contains the name of the config key used to determine the maximal retention time in days.
+     * <p>
+     * If this value is non-zero, blobs older than the number of days well be deleted automatically.
+     */
+    private static final String CONFIG_KEY_RETENTION_DAYS = "retentionDays";
+
+    /**
      * Contains the name of the executor in which requests are moved which might be blocked while waiting for
      * a conversion to happen. We do not want to jam our main executor of the web server for this, therefore
      * a separater one is used.
@@ -131,10 +155,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             CacheManager.createCoherentCache("storage-physical-keys");
 
     protected final Extension config;
+    protected final String description;
     protected String spaceName;
     protected boolean browsable;
     protected boolean readonly;
     protected String baseUrl;
+    protected boolean useNormalizedNames;
+    protected int retentionDays;
     protected ObjectStorageSpace objectStorageSpace;
 
     /**
@@ -149,11 +176,20 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         this.browsable = config.get(CONFIG_KEY_BROWSABLE).asBoolean();
         this.readonly = config.get(CONFIG_KEY_READONLY).asBoolean();
         this.baseUrl = config.get(CONFIG_KEY_BASE_URL).getString();
+        this.useNormalizedNames = config.get(CONFIG_KEY_USE_NORMALIZED_NAMES).asBoolean();
+        this.description = config.get(CONFIG_KEY_DESCRIPTION).getString();
+        this.retentionDays = config.get(CONFIG_KEY_RETENTION_DAYS).asInt(0);
     }
 
     @Override
     public String getName() {
         return spaceName;
+    }
+
+    @Nullable
+    @Override
+    public String getDescription() {
+        return NLS.smartGet(description);
     }
 
     @Override
@@ -184,7 +220,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      *
      * @param lookup          provides the callback which performs the lookup to determine if the desired data
      *                        object already exists
-     * @param viabilityTest   provides a check to determine if the found data object is already usable
      * @param factory         creates a new data object if none was found
      * @param correctnessTest determines if the invariant holds after the data object was created
      * @param commit          marks the data object as usable for others (it will now pass the <tt>viabilityTest</tt>)
@@ -194,15 +229,15 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @return the entity which was either found by <tt>lookup</tt> or created via the <tt>factory</tt>
      */
     protected <R extends OptimisticCreate> R findOrCreateWithOptimisticLock(Producer<R> lookup,
-                                                   Producer<R> factory,
-                                                   Processor<R, Boolean> correctnessTest,
-                                                   Callback<R> commit,
-                                                   Callback<R> rollback,
-                                                   Function<Exception, HandledException> errorHandler) {
+                                                                            Producer<R> factory,
+                                                                            Processor<R, Boolean> correctnessTest,
+                                                                            Callback<R> commit,
+                                                                            Callback<R> rollback,
+                                                                            Function<Exception, HandledException> errorHandler) {
         int attempts = NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS;
         try {
             while (attempts-- > 0) {
-                R result = tryFindOrCreate(lookup,  factory, correctnessTest, commit, rollback);
+                R result = tryFindOrCreate(lookup, factory, correctnessTest, commit, rollback);
                 if (result != null) {
                     return result;
                 }
@@ -219,10 +254,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     private <R extends OptimisticCreate> R tryFindOrCreate(Producer<R> lookup,
-                                  Producer<R> factory,
-                                  Processor<R, Boolean> correctnessTest,
-                                  Callback<R> commit,
-                                  Callback<R> rollback) throws Exception {
+                                                           Producer<R> factory,
+                                                           Processor<R, Boolean> correctnessTest,
+                                                           Callback<R> commit,
+                                                           Callback<R> rollback) throws Exception {
         R result = lookup.create();
         if (result != null) {
             if (result.isCommitted()) {
@@ -251,7 +286,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                               error -> Exceptions.handle()
                                                                  .to(StorageUtils.LOG)
                                                                  .withSystemErrorMessage(
-                                                                         "Layer 2: Failed to create the root directory for space '%s' and tenant '%s%'.",
+                                                                         "Layer 2: Failed to create the root directory for space '%s' and tenant '%s'.",
                                                                          spaceName,
                                                                          tenantId)
                                                                  .handle());
@@ -521,6 +556,188 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected abstract D lookupDirectoryById(String idAsString);
 
     /**
+     * Determines the effective path of a given directory.
+     *
+     * @param directory the directory to determine the path for
+     * @return the path to the given directory
+     */
+    @Nonnull
+    public String determineDirectoryPath(@Nonnull D directory) {
+        Directory parent = directory.getParent();
+        if (parent == null) {
+            return "/" + directory.getName();
+        }
+
+        return parent.getPath() + "/" + directory.getName();
+    }
+
+    /**
+     * Determines the effective path of a given blob.
+     *
+     * @param blob the blob to determine the path for
+     * @return the path to the given blob
+     */
+    @Nonnull
+    public String determineBlobPath(@Nonnull B blob) {
+        Directory parent = blob.getParent();
+        if (parent == null) {
+            if (Strings.isFilled(blob.getFilename())) {
+                return blob.getFilename();
+            } else {
+                return blob.getBlobKey();
+            }
+        }
+
+        return parent.getPath() + "/" + blob.getFilename();
+    }
+
+    /**
+     * Moves the given directory into the given parent.
+     *
+     * @param directory the directory to move
+     * @param newParent the new parent to move the directory into
+     */
+    public void moveDirectory(@Nonnull D directory, D newParent) {
+        if (newParent == null || !Strings.areEqual(directory.getTenantId(), newParent.getTenantId())) {
+            handleTenantMismatch(directory, newParent);
+            return;
+        }
+
+        if (!Strings.areEqual(directory.getSpaceName(), newParent.getSpaceName())) {
+            throw Exceptions.createHandled().withNLSKey("BasicBlobStorageSpace.cannotMoveAcrossSpaces").handle();
+        }
+
+        if (newParent.hasChildNamed(directory.getName())) {
+            throw Exceptions.createHandled().withNLSKey("BasicBlobStorageSpace.cannotMoveDuplicateName").handle();
+        }
+
+        detectAndPreventCircularReference(directory, newParent);
+
+        updateDirectoryParent(directory, newParent);
+
+        directoryByIdCache.remove(directory.getIdAsString());
+    }
+
+    /**
+     * Detects a circular reference before moving a directory to a new home.
+     *
+     * @param directory the directory to move
+     * @param newParent the new parent to move the directory into
+     * @throws HandledException if a circular reference was detected
+     */
+    private void detectAndPreventCircularReference(@Nonnull D directory, D newParent) {
+        Directory check = newParent;
+        while (check != null && !Objects.equals(directory, check)) {
+            check = check.getParent();
+        }
+
+        if (check != null) {
+            throw Exceptions.createHandled().withNLSKey("BasicBlobStorageSpace.cannotMoveIntoLoop").handle();
+        }
+    }
+
+    private void handleTenantMismatch(Object objectToModify, D newParent) {
+        throw Exceptions.handle()
+                        .to(StorageUtils.LOG)
+                        .withSystemErrorMessage("Layer2: Invalid parent (%s) for %s was given!",
+                                                newParent,
+                                                objectToModify)
+                        .handle();
+    }
+
+    /**
+     * Effectively updates the parent of the given directory.
+     * <p>
+     * This is invoked after all checks have been passed.
+     *
+     * @param directory the directory to move
+     * @param newParent the new parent to move the directory into
+     */
+    protected abstract void updateDirectoryParent(D directory, D newParent);
+
+    /**
+     * Renames the directory to the new name.
+     *
+     * @param directory the directory to rename
+     * @param newName   the new name to use
+     */
+    public void renameDirectory(D directory, String newName) {
+        Directory parent = directory.getParent();
+        if (parent == null) {
+            throw Exceptions.createHandled().withNLSKey("BasicBlobStorageSpace.cannotRenameRoot").handle();
+        }
+        if (parent.hasChildNamed(newName)) {
+            throw Exceptions.createHandled().withNLSKey("BasicBlobStorageSpace.cannotRenameDuplicateName").handle();
+        }
+
+        updateDirectoryName(directory, newName);
+        directoryByIdCache.remove(directory.getIdAsString());
+    }
+
+    /**
+     * Effectively updates the directory name after all checks have been passed.
+     *
+     * @param directory the directory to rename
+     * @param newName   the new name to use
+     */
+    protected abstract void updateDirectoryName(D directory, String newName);
+
+    /**
+     * Moves the given blob into the given parent.
+     *
+     * @param blob      the blob to move
+     * @param newParent the new parent to move the directory into
+     */
+    public void move(B blob, @Nullable D newParent) {
+        if (newParent == null || !Strings.areEqual(blob.getTenantId(), newParent.getTenantId())) {
+            handleTenantMismatch(blob, newParent);
+        }
+
+        if (!Strings.areEqual(blob.getSpaceName(), newParent.getSpaceName())) {
+            throw Exceptions.createHandled().withNLSKey("BasicBlobStorageSpace.cannotMoveAcrossSpaces").handle();
+        }
+
+        if (newParent.hasChildNamed(blob.getFilename())) {
+            throw Exceptions.createHandled().withNLSKey("BasicBlobStorageSpace.cannotMoveDuplicateName").handle();
+        }
+
+        updateBlobParent(blob, newParent);
+    }
+
+    /**
+     * Effectively updates the parent of the given blob.
+     * <p>
+     * This is invoked after all checks have been passed.
+     *
+     * @param blob      the blob to move
+     * @param newParent the new parent to move the directory into
+     */
+    protected abstract void updateBlobParent(B blob, D newParent);
+
+    /**
+     * Renames the blob to the new name.
+     *
+     * @param blob    the blob to rename
+     * @param newName the new name to use
+     */
+    public void rename(B blob, String newName) {
+        if (blob.getParent().hasChildNamed(newName)) {
+            throw Exceptions.createHandled().withNLSKey("BasicBlobStorageSpace.cannotRenameDuplicateName").handle();
+        }
+
+        updateBlobName(blob, newName);
+        blobKeyToFilenameCache.remove(blob.getBlobKey());
+    }
+
+    /**
+     * Effectively updates the blob name after all checks have been passed.
+     *
+     * @param blob    the blob to rename
+     * @param newName the new name to use
+     */
+    protected abstract void updateBlobName(B blob, String newName);
+
+    /**
      * Performs a download / fetch of the given blob to make its data locally accessible.
      *
      * @param blob the blob to fetch the data for
@@ -579,7 +796,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         try {
             getPhysicalSpace().upload(nextPhysicalId, file);
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, file.length(), filename);
-            previousPhysicalId.ifPresent(getPhysicalSpace()::delete);
+            if (previousPhysicalId.isPresent()) {
+                blob.fetchVariants().forEach(BlobVariant::delete);
+                getPhysicalSpace().delete(previousPhysicalId.get());
+            }
         } catch (Exception e) {
             try {
                 getPhysicalSpace().delete(nextPhysicalId);
@@ -626,7 +846,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         try {
             getPhysicalSpace().upload(nextPhysicalId, data, contentLength);
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, contentLength, filename);
-            previousPhysicalId.ifPresent(getPhysicalSpace()::delete);
+            if (previousPhysicalId.isPresent()) {
+                blob.fetchVariants().forEach(BlobVariant::delete);
+                getPhysicalSpace().delete(previousPhysicalId.get());
+            }
         } catch (Exception e) {
             try {
                 getPhysicalSpace().delete(nextPhysicalId);

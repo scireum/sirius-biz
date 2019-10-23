@@ -29,6 +29,16 @@ public interface BlobStorageSpace {
     String getName();
 
     /**
+     * Returns a short description of what use case of this storage space.
+     * <p>
+     * Most probably this only needs to return a non-empty value if {@link #isBrowsable()} return true.
+     *
+     * @return a short description of the storage space.
+     */
+    @Nullable
+    String getDescription();
+
+    /**
      * Returns the associated layer 1 space which actually stores the data.
      *
      * @return the associated physical storage space
@@ -125,58 +135,6 @@ public interface BlobStorageSpace {
     void deleteReferencedBlobs(String referencingEntity, String referenceDesignator, @Nullable String blobKeyToSkip);
 
     /**
-     * Returns the total number of directories in this space.
-     *
-     * @param tenantId if non-null, only directories of the given tenant are counted
-     * @return the total number of directories in this space
-     */
-    long getNumberOfDirectories(@Nullable String tenantId);
-
-    /**
-     * Returns the total number of visible (browsable) blobs in this space.
-     *
-     * @param tenantId if non-null, only blobs of the given tenant are counted
-     * @return the total number of visible blobs in this space
-     */
-    long getNumberOfVisibleBlobs(@Nullable String tenantId);
-
-    /**
-     * Returns the total size of all visible (browsable) blobs in this space.
-     *
-     * @param tenantId if non-null, only blobs of the given tenant are counted
-     * @return the total size in bytes
-     */
-    long getSizeOfVisibleBlobs(@Nullable String tenantId);
-
-    /**
-     * Returns the total number of referenced (non-browsable) blobs in this space.
-     *
-     * @return the total number of referenced blobs in this space
-     */
-    long getNumberOfReferencedBlobs();
-
-    /**
-     * Returns the total size of all referenced blobs in this space.
-     *
-     * @return the total size in bytes
-     */
-    long getSizeOfReferencedBlobs();
-
-    /**
-     * Returns the total number of blobs in this space.
-     *
-     * @return the total number of blobs in this space
-     */
-    long getNumberOfBlobs();
-
-    /**
-     * Returns the total size of all blobs in this space.
-     *
-     * @return the total size in bytes
-     */
-    long getSizeOfBlobs();
-
-    /**
      * Determines if this space is browsable (available as virtual file system in layer 3).
      *
      * @return <tt>true</tt> if this space is available as file system in layer 3, <tt>false</tt> otherwise
@@ -208,4 +166,11 @@ public interface BlobStorageSpace {
      * @param variant  the variant to deliver. Use {@link URLBuilder#VARIANT_RAW} to deliver the blob itself
      */
     void deliver(@Nonnull String blobKey, @Nonnull String variant, @Nonnull Response response);
+
+    /**
+     * Performs some housekeeping and maintenance tasks.
+     * <p>
+     * This shouldn't be invoked manually as it is triggered via the {@link StorageCleanupTask}.
+     */
+    void runCleanup();
 }
