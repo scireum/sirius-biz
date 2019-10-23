@@ -12,12 +12,12 @@ import sirius.biz.jobs.JobCategory;
 import sirius.biz.process.PersistencePeriod;
 
 /**
- * Provides a base factory for very simple batch reports, which do not need to wrap the execution in a {@link BatchJob}
- * but rather execute in a single method.
+ * Provides a base factory for very simple batch reports.
  * <p>
- * This factory is based on {@link SimpleBatchProcessJobFactory}
+ * This is intended for reports which do not need to wrap the execution in a {@link BatchJob}
+ * (as {@link ReportBatchProcessFactory} does).
  */
-public abstract class SimpleReportBatchJobFactory extends SimpleBatchProcessJobFactory {
+public abstract class SimpleReportBatchProcessFactory extends SimpleBatchProcessJobFactory {
 
     @Override
     public String getCategory() {
