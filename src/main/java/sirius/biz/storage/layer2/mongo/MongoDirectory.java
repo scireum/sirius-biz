@@ -12,11 +12,8 @@ import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.BlobStorage;
 import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.OptimisticCreate;
-import sirius.biz.storage.layer2.jdbc.SQLBlobStorageSpace;
-import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
-import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
@@ -73,8 +70,7 @@ public class MongoDirectory extends MongoEntity implements Directory, Optimistic
      */
     public static final Mapping PARENT = Mapping.named("parent");
     @NullAllowed
-    private final MongoRef<MongoDirectory> parent =
-            MongoRef.on(MongoDirectory.class, BaseEntityRef.OnDelete.IGNORE);
+    private final MongoRef<MongoDirectory> parent = MongoRef.on(MongoDirectory.class, BaseEntityRef.OnDelete.IGNORE);
 
     /**
      * Stores if a directory has been fully initialized.

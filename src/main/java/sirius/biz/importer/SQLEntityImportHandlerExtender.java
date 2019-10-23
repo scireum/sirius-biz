@@ -11,6 +11,7 @@ package sirius.biz.importer;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.batch.FindQuery;
 import sirius.db.mixing.EntityDescriptor;
+import sirius.kernel.commons.Explain;
 
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
@@ -24,6 +25,8 @@ import java.util.function.Supplier;
  *
  * @param <E> the type of entities being processed by the import handler to be extended
  */
+@SuppressWarnings("squid:S1610")
+@Explain("We want to keep this as abstract base class to be able to add base methods in the future")
 public abstract class SQLEntityImportHandlerExtender<E extends SQLEntity> implements EntityImportHandlerExtender {
 
     /**

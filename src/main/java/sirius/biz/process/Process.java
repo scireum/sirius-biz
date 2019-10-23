@@ -13,11 +13,9 @@ import sirius.biz.elastic.SearchableEntity;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.storage.layer2.BlobContainer;
-import sirius.biz.storage.layer2.HasBlobs;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.ComplexDelete;
 import sirius.db.mixing.annotations.NullAllowed;
@@ -29,8 +27,6 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
-import sirius.kernel.health.Exceptions;
-import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 
 import java.time.Duration;
@@ -67,7 +63,6 @@ public class Process extends SearchableEntity {
      * which are attached to processes.
      */
     private static final String SPACE_NAME_PROCESSES = "processes";
-
 
     /**
      * Contains the title or short description of the process.

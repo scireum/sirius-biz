@@ -19,7 +19,6 @@ import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -105,7 +104,7 @@ public class RemoveDeletedEntitiesLoop extends BackgroundLoop {
         return numDirectories;
     }
 
-    private void propagateDelete(MongoDirectory dir) throws SQLException {
+    private void propagateDelete(MongoDirectory dir) {
         mongo.update()
              .set(MongoDirectory.DELETED, true)
              .where(MongoDirectory.PARENT, dir.getId())
