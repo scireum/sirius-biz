@@ -148,7 +148,7 @@ public class URLBuilder {
      * @return the builder itself for fluent method calls
      */
     public URLBuilder suppressCaching() {
-        this.reusable = true;
+        this.suppressCache = true;
         return this;
     }
 
