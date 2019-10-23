@@ -23,3 +23,5 @@ The framework uses **Elasticsearch** as underlying database as it highly depends
 and efficient search capabilities.
 
 To use the **Processes facility** the framework **biz.processes** has to be enabled. 
+
+An administration UI is provided via http://localhost:9000/ps.
