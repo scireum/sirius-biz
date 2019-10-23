@@ -1,6 +1,6 @@
 # Layer 2 - Blob Storage
 
-This is the **layer 3** of the [Storage Famrwork](../). It provides a unified interface for all parts of the system
+This is the **layer 3** of the [Storage Framework](../). It provides a unified interface for all parts of the system
 which either provide or consume files or file systems. Having a built-in **FTP** and **SSH** server it supports external
 applications access via familiar protocols like **FTP, FTPS, SFTP, SCP**. Also it can mount external file systems via
 **FTP, FTPS, SFTP, SCP** and **CIFS** to make external files available to internal sub systems.

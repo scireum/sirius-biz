@@ -1,6 +1,6 @@
 # Layer 2 - Blob Storage
 
-This is the **layer 2** of the [Storage Famrwork](../). It permits to store [blobs](Blob.java) and
+This is the **layer 2** of the [Storage Framework](../). It permits to store [blobs](Blob.java) and
 even [directories](Directory.java). The metadata is either stored in a **JDBC datasource** or **MongoDB**.
 The actual binary data is stored by the [layer 1](../layer1/).
 
