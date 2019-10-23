@@ -2,12 +2,12 @@
 
 This is the lowest layer of the [Storage Framework](../) which provides an API which permits to store objects (chunks of binary data).
 
-Using an API like this enables to framework to store the objects in an **Amazon S3** compatible store. Using
+Using an API like this enables the framework to store the objects in an **Amazon S3** compatible store. Using
 the [FSStorageEngine](FSStorageEngine.java) however, we can also emulate this API and place the objects in
 the local file system.
 
 Additionally this layer provides a [replication engine](replication/), which will copy all objects in one space 
-(which is a **bucket** in S3 terminology) into another - again both can be either stores locally,
+(which is a **bucket** in S3 terminology) into another - again both can be either stored locally,
 the same cloud or different ones. Via the delivery method provided by [ObjectStorageSpace](ObjectStorageSpace.java)
 we have a fault tolerant way to sending the object data out as response to a HTTP request.
 

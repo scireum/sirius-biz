@@ -1,11 +1,11 @@
 # Storage Facility
 
-This framework is responsible for storing managing and retrieving binary data. As it covers quite
+This framework is responsible for storing, managing and retrieving binary data. As it covers quite
 a range of functionality it is split into three layers which build on top of each other.
 
 ## Layer 1 - Object Store
 
-The lowest layer provides an API which permits to store objects (chunks of binary data).
+The lowest layer provides an API to store objects (chunks of binary data).
 The main entry point is [ObjectStorage](layer1/ObjectStorage.java) which provides access to the configured
 storage spaces. A space can be compared to **buckets** in the Amazon S3 terminology.
 
@@ -28,8 +28,8 @@ More details can be found in the [Layer 2 documentation](layer2/).
 ## Layer 3 - Virtual File System
 
 The virtual file system (VFS) provides a unified interface for all parts of the system which either provide or
-consume files or file systems. Having a built-in **FTP** and **SSH** server it supports external applications
-access via familiar protocols like **FTP, FTPS, SFTP, SCP**. Also it can mount external file systems via
+consume files or file systems. Having a built-in **FTP** and **SSH** server, it supports external applications
+access via familiar protocols such as **FTP, FTPS, SFTP, SCP**. Besides it can mount external file systems via
 **FTP, FTPS, SFTP, SCP** and **CIFS** to make external files available to internal sub systems.
 
 Being a virtual file system, neither folders nor files have to exists anywhere physically. A [VFSRoot](layer3/VFSRoot.java)
@@ -51,4 +51,4 @@ in most cases shoudln't be accessed externally.
 
 The [s3](s3/) package provides a facility to manage and access **Amazon S3** compatible object stores. In
 most cases it is advisable to either use the **layer 1** or **layer 2** as these provide additional functionalities
-like replication, API emulation in the local file system or an efficient way of storing metadata.
+such as replication, API emulation in the local file system or an efficient way of storing metadata.
