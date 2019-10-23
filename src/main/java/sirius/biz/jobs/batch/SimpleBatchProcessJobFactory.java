@@ -20,7 +20,7 @@ import sirius.biz.process.ProcessContext;
  * Note that this must only be used for very simple jobs with few or no parameters as no state must be stored in the
  * factory itself.
  * <p>
- * For more complext jobs which need to keep their parameters in fields and which also might want to split their
+ * For more complex jobs which need to keep their parameters in fields and which also might want to split their
  * logic into several methods, subclass {@link BatchProcessJobFactory} (or its pre-defined sublcasses) and provide
  * a custom {@link BatchJob}.
  */
