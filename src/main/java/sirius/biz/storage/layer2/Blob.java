@@ -208,7 +208,7 @@ public interface Blob {
     /**
      * Tries to find the variant with the given name.
      * <p>
-     * This will check if a variant with the given name exists and return it. If no such varian exists,
+     * This will check if a variant with the given name exists and return it. If no such variant exists,
      * an empty optional is returned.
      *
      * @param name the name of the variant to lookup
