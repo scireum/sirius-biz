@@ -14,4 +14,4 @@ to browse or resolve files. To provide own directories and files, a [VFSRoot](VF
 Note that the individual servers (FTP, SSH) provide quite a range of config values. The defaults along
 with the documentation for them can be found in [component-biz.conf](../../../../../resources/component-biz.conf).
 
-A management UI  is provided via http://localhost:9000/fs.
+A management UI is provided via http://localhost:9000/fs.
