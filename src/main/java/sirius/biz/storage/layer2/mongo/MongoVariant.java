@@ -6,17 +6,16 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage.layer2.jdbc;
+package sirius.biz.storage.layer2.mongo;
 
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.variants.BlobVariant;
-import sirius.db.jdbc.SQLEntity;
-import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
-import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.types.BaseEntityRef;
+import sirius.db.mongo.MongoEntity;
+import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 
@@ -24,24 +23,23 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
- * Stores the metadata of a {@link BlobVariant} in the underlying JDBC database.
- *  * <p>
- *  * Note that all non trivial methods delegate to the associated {@link SQLBlobStorageSpace}.
+ * Stores the metadata of a {@link BlobVariant} in the underlying MongoDB.
+ * <p>
+ * Note that all non trivial methods delegate to the associated {@link MongoBlobStorage}.
  */
-@Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
-public class SQLVariant extends SQLEntity implements BlobVariant {
+@Framework(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
+public class MongoVariant extends MongoEntity implements BlobVariant {
 
     /**
      * References the raw blob from which this variant was derived.
      */
     public static final Mapping BLOB = Mapping.named("blob");
-    private final SQLEntityRef<SQLBlob> blob = SQLEntityRef.on(SQLBlob.class, BaseEntityRef.OnDelete.CASCADE);
+    private final MongoRef<MongoBlob> blob = MongoRef.on(MongoBlob.class, BaseEntityRef.OnDelete.CASCADE);
 
     /**
      * Contains the name / type of this variant.
      */
     public static final Mapping VARIANT_NAME = Mapping.named("variantName");
-    @Length(64)
     private String variantName;
 
     /**
@@ -50,7 +48,6 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
      * Note that this remains empty until the conversion has been completed.
      */
     public static final Mapping PHYSICAL_OBJECT_KEY = Mapping.named("physicalObjectKey");
-    @Length(64)
     @NullAllowed
     private String physicalObjectKey;
 
@@ -82,7 +79,6 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
      * Stores the node name on which the last conversion was attempted.
      */
     public static final Mapping NODE = Mapping.named("node");
-    @Length(50)
     private String node;
 
     @AfterDelete
@@ -94,7 +90,7 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
 
     @Override
     public void delete() {
-        oma.delete(this);
+        mango.delete(this);
     }
 
     @Override
@@ -147,7 +143,7 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
         this.node = node;
     }
 
-    public SQLEntityRef<SQLBlob> getBlob() {
+    public MongoRef<MongoBlob> getBlob() {
         return blob;
     }
 
