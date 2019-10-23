@@ -267,7 +267,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      * @return the uri to the job config page
      */
     public String getDeleteLink(String tenantId) {
-        return new LinkBuilder("/job/delete-tenant").append("simulate", true).append("tenant", tenantId).toString();
+        return new LinkBuilder("/job/delete-tenant").append("tenant", tenantId).toString();
     }
 
     /**
