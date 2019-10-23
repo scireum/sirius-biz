@@ -186,7 +186,7 @@ public class URLBuilder {
     }
 
     protected boolean isPhysicalKeyReadilyAvailable() {
-        // If either the raw file is requested and the blob object is available, we can easily determine the effective
+        // If the raw file is requested and the blob object is available, we can easily determine the effective
         // physical key to serve.
         return Strings.areEqual(variant, URLBuilder.VARIANT_RAW) && blob != null;
     }
