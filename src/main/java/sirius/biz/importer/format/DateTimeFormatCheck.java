@@ -13,8 +13,10 @@ import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 
 /**
  * Determines if the given values matches a date format.
@@ -31,7 +33,7 @@ public class DateTimeFormatCheck implements ValueCheck {
      */
     public DateTimeFormatCheck(@Nonnull String format) {
         this.format = format;
-        this.formatter = DateTimeFormatter.ofPattern(format);
+        this.formatter = DateTimeFormatter.ofPattern(format).withResolverStyle(ResolverStyle.STRICT);
     }
 
     @Override
@@ -42,7 +44,7 @@ public class DateTimeFormatCheck implements ValueCheck {
 
         String stringValue = value.asString();
         try {
-            formatter.parse(stringValue);
+            LocalDate.parse(stringValue, formatter);
         } catch (DateTimeParseException e) {
             throw new IllegalArgumentException(NLS.fmtr("DateTimeFormatCheck.errorMsg")
                                                   .set("value", stringValue)
