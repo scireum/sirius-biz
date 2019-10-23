@@ -16,10 +16,10 @@ An example would be a web service which is invoked every once in a while and whi
 administrator if an error happens or which needs to log some data.
 
 Note that once a **process context** is setup, it is also installed as **TaskContext**. Therefore other
-frameworks (down to classes in sirius kernnel) can interact with the process (e.g. stop processing once
+frameworks (down to classes in [sirius kernel](https://github.com/scireum/sirius-kernel)) can interact with the process (e.g. stop processing once
 the process is aborted).
 
 The framework uses **Elasticsearch** as underlying database as it highly depends on its flexible storage
-and effeicient search capabilities.
+and efficient search capabilities.
 
 To use the **Processes facility** the framework **biz.processes** has to be enabled. 
