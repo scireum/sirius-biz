@@ -9,7 +9,7 @@ the local file system.
 Additionally this layer provides a [replication engine](replication/), which will copy all objects in one space 
 (which is a **bucket** in S3 terminology) into another - again both can be either stored locally,
 reside in the same cloud or different ones. Via the delivery method provided by [ObjectStorageSpace](ObjectStorageSpace.java)
-we have a fault tolerant way to sending the object data out as response to a HTTP request.
+we have a fault tolerant way of sending the object data out as response to a HTTP request.
 
 Note that the intention is to only store an object once. So once the contents of an object changes,
 its key should also change. This is not enforced by the API or the replication system in any way, but
