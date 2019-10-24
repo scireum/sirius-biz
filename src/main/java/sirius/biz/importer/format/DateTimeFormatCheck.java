@@ -21,7 +21,7 @@ import java.time.format.ResolverStyle;
 /**
  * Determines if the given values matches a date format.
  * <p>
- * The formating notation used is the notation described in {@link DateTimeFormatter}.
+ * The formatting notation used is the notation described in {@link DateTimeFormatter}.
  * <p>
  * <i>Hint</i>: Use 'u' instead of 'y' for years.
  */
@@ -33,7 +33,7 @@ public class DateTimeFormatCheck implements ValueCheck {
     /**
      * Creates a new check using the given date format.
      * <p>
-     * The formating noation used is the notation decribed in {@link DateTimeFormatter}.
+     * The formatting notation used is the notation described in {@link DateTimeFormatter}.
      * <p>
      * <i>Hint</i>: Use 'u' instead of 'y' for years.
      * <p>
