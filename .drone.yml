@@ -13,7 +13,7 @@ platform:
   arch: amd64
 
 clone:
-  depth: 1
+  depth: 100
 
 steps:
   - name: compile
