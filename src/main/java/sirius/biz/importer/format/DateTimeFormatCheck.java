@@ -20,6 +20,10 @@ import java.time.format.ResolverStyle;
 
 /**
  * Determines if the given values matches a date format.
+ * <p>
+ * The formating notation used is the notation described in {@link DateTimeFormatter}.
+ * <p>
+ * <i>Hint</i>: Use 'u' instead of 'y' for years.
  */
 public class DateTimeFormatCheck implements ValueCheck {
 
@@ -28,10 +32,20 @@ public class DateTimeFormatCheck implements ValueCheck {
 
     /**
      * Creates a new check using the given date format.
+     * <p>
+     * The formating noation used is the notation decribed in {@link DateTimeFormatter}.
+     * <p>
+     * <i>Hint</i>: Use 'u' instead of 'y' for years.
      *
-     * @param format the {@link DateTimeFormatter} which will be used to check the value
+     * @param format the String describing the formats of the dates
      */
     public DateTimeFormatCheck(@Nonnull String format) {
+        if (format.contains("y")) {
+            // We want to use the 'strict' resolver, so dates like 30.02.2019 are marked invalid and not resolved to a
+            // valid date. But when using the strict resolver, one needs to give the era (BC or AD) when using 'y' or
+            // it does not become a valid date. To avoid this 'u' needs to be used.
+            throw new IllegalArgumentException("Use 'u' instead of 'y' for years in format string.");
+        }
         this.format = format;
         this.formatter = DateTimeFormatter.ofPattern(format).withResolverStyle(ResolverStyle.STRICT);
     }
