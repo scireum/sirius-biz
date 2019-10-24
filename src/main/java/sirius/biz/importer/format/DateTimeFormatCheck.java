@@ -36,14 +36,16 @@ public class DateTimeFormatCheck implements ValueCheck {
      * The formating noation used is the notation decribed in {@link DateTimeFormatter}.
      * <p>
      * <i>Hint</i>: Use 'u' instead of 'y' for years.
+     * <p>
+     * <i>Reason</i>: We want to use the 'strict' resolver, so dates like 30.02.2019 are marked invalid and not resolved to a
+     * valid date. But when using the strict resolver, one needs to give the era (BC or AD) when using 'y' or it does
+     * not become a valid date. To avoid this 'u' needs to be used.
      *
      * @param format the String describing the formats of the dates
+     * @throws IllegalArgumentException when 'y' is used for year
      */
     public DateTimeFormatCheck(@Nonnull String format) {
         if (format.contains("y")) {
-            // We want to use the 'strict' resolver, so dates like 30.02.2019 are marked invalid and not resolved to a
-            // valid date. But when using the strict resolver, one needs to give the era (BC or AD) when using 'y' or
-            // it does not become a valid date. To avoid this 'u' needs to be used.
             throw new IllegalArgumentException("Use 'u' instead of 'y' for years in format string.");
         }
         this.format = format;
