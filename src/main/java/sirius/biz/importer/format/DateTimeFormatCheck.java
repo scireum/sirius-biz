@@ -29,7 +29,7 @@ public class DateTimeFormatCheck implements ValueCheck {
     /**
      * Creates a new check using the given date format.
      *
-     * @param format the {@link org.joda.time.format.DateTimeFormat} which will be used to check the value
+     * @param format the {@link DateTimeFormatter} which will be used to check the value
      */
     public DateTimeFormatCheck(@Nonnull String format) {
         this.format = format;
