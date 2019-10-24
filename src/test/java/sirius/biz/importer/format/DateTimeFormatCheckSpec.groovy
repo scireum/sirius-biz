@@ -42,4 +42,24 @@ class DateTimeFormatCheckSpec extends Specification {
         then:
         thrown(IllegalArgumentException)
     }
+
+    def "dates not matching the provided format are correctly marked as invalid"() {
+        when:
+        new DateTimeFormatCheck("ddMMuuuu").perform(Value.of(date))
+        then:
+        thrown IllegalArgumentException
+        where:
+        date << [1092019, "1092019", "TEST", "01.09.2019"]
+    }
+
+    def "dates matching the provided format are correctly marked as valid"() {
+        expect:
+        new DateTimeFormatCheck(format).perform(Value.of(date))
+        where:
+        format       | date
+        "ddMMuuuu"   | 11092019
+        "ddMMuuuu"   | "01092019"
+        "ddMMuuuu"   | "11092019"
+        "dd.MM.uuuu" | "01.09.2019"
+    }
 }
