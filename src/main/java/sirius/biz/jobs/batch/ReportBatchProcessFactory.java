@@ -13,6 +13,8 @@ import sirius.biz.jobs.JobCategory;
 
 /**
  * Provides a base implementation for batch jobs which are executed by the {@link ReportBatchProcessTaskExecutor}.
+ * <p>
+ * Note that for simple batch reports {@link SimpleReportBatchProcessFactory} can be used.
  */
 public abstract class ReportBatchProcessFactory extends BatchProcessJobFactory {
 
@@ -43,6 +45,4 @@ public abstract class ReportBatchProcessFactory extends BatchProcessJobFactory {
     public String getIcon() {
         return "fa-line-chart";
     }
-
-
 }

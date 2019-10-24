@@ -16,6 +16,7 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,7 +70,7 @@ public class BlobContainer extends Composite {
      * @return the blob with the given name wrapped as optional or an empty optional if no matching blob was found
      */
     public Optional<? extends Blob> findAttachedBlobByName(String filename) {
-        if (owner.isNew()) {
+        if (owner.isNew() || objectStorage == null) {
             return Optional.empty();
         }
         return getSpace().findAttachedBlobByName(owner.getUniqueName(), filename);
@@ -88,7 +89,14 @@ public class BlobContainer extends Composite {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage(
-                                    "Cannot create an attached object for a non-persistent entity of type %s",
+                                    "Layer 2: Cannot create an attached object for a non-persistent entity of type %s",
+                                    owner.getClass().getName())
+                            .handle();
+        }
+        if (objectStorage == null) {
+            throw Exceptions.handle() .to(StorageUtils.LOG)
+                            .withSystemErrorMessage(
+                                    "Layer 2: No metadata storage framework has been enabled.",
                                     owner.getClass().getName())
                             .handle();
         }
@@ -101,12 +109,15 @@ public class BlobContainer extends Composite {
      * @return the list of all attached blobs
      */
     public List<? extends Blob> findAttachedBlobs() {
+        if (objectStorage == null) {
+            return Collections.emptyList();
+        }
         return getSpace().findAttachedBlobs(owner.getUniqueName());
     }
 
     @AfterDelete
     protected void onDelete() {
-        if (!owner.isNew()) {
+        if (!owner.isNew() && objectStorage != null) {
             getSpace().deleteAttachedBlobs(owner.getUniqueName());
         }
     }

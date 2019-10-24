@@ -58,15 +58,23 @@ public class AutoBatchLoop extends BackgroundLoop {
      * Collects and bulk-inserts the entity in a separate thread.
      * <p>
      * Note that in a heavily overloaded system, the entity might be dropped in favor of not crashing the system.
-     * Therefore this must not be used for critical data.
+     * Therefore this must not be used for critical data or the return value of this call has to be observed
+     * carefully.
      *
      * @param entity the entity to bulk-insert into Elasticsearch
+     * @return <tt>true</tt> if the entity was successfully queued, <tt>false</tt> otherwise
      */
-    public void insertAsync(ElasticEntity entity) {
-        if (entity != null && queuedEntities.get() < MAX_QUEUED_ENTITIES) {
+    public boolean insertAsync(ElasticEntity entity) {
+        if (entity == null) {
+            return true;
+        }
+        if (queuedEntities.get() < MAX_QUEUED_ENTITIES) {
             entities.add(entity);
             queuedEntities.incrementAndGet();
+            return true;
         }
+
+        return false;
     }
 
     @Nullable
