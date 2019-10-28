@@ -325,6 +325,6 @@ public class BlobDispatcher implements WebDispatcher {
             response.named(filename);
         }
 
-        storageSpace.deliver(blobKey, variant, response);
+        storageSpace.deliver(blobKey, variant != null ? variant : URLBuilder.VARIANT_RAW, response);
     }
 }

@@ -15,6 +15,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+/**
+ * Provides the metadata for a directory within a {@link BlobStorageSpace}.
+ */
 public interface Directory {
 
     /**

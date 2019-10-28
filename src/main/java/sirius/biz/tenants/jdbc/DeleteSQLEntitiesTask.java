@@ -12,7 +12,6 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.deletion.DeleteEntitiesTask;
 import sirius.biz.tenants.deletion.DeleteTenantJobFactory;
-import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;

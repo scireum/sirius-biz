@@ -16,7 +16,6 @@ import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;

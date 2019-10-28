@@ -12,10 +12,13 @@ import sirius.biz.jobs.JobConfigData;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
+import sirius.kernel.commons.Explain;
 
 /**
  * Stores a set of job parameters for a tenant.
  */
+@SuppressWarnings("squid:S1214")
+@Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
 public interface JobPreset extends TenantAware {
 
     /**

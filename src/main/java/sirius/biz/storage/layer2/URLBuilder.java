@@ -160,7 +160,7 @@ public class URLBuilder {
      * @return the builder itself for fluent method calls
      */
     public URLBuilder suppressCaching() {
-        this.reusable = true;
+        this.suppressCache = true;
         return this;
     }
 
@@ -190,12 +190,17 @@ public class URLBuilder {
             return Optional.empty();
         }
 
-        if (!eternallyValid && !suppressCache && !reusable && (Strings.areEqual(variant, URLBuilder.VARIANT_RAW)
-                                                               || blob != null)) {
+        if (!eternallyValid && !suppressCache && !reusable && isPhysicalKeyReadilyAvailable()) {
             return Optional.ofNullable(createPhysicalDeliveryURL());
         } else {
             return Optional.ofNullable(createVirtualDeliveryURL());
         }
+    }
+
+    protected boolean isPhysicalKeyReadilyAvailable() {
+        // If the raw file is requested and the blob object is available, we can easily determine the effective
+        // physical key to serve.
+        return Strings.areEqual(variant, URLBuilder.VARIANT_RAW) && blob != null;
     }
 
     private String createPhysicalDeliveryURL() {
