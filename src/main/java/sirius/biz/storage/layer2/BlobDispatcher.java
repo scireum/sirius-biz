@@ -44,7 +44,7 @@ public class BlobDispatcher implements WebDispatcher {
      * As this dispatcher is most probably active in every system we do not want to "block" a common name
      * like "storage" or the like. However, we have to pick a name after all. Therefore we went with a rather short
      * acronym from the mainframe area (DASD stood/stands/will always stand for Direct Attached Storage Device) and
-     * is nowerdays simply called a harddisk. Yes, it doesn't match the purpose of the URI but its short, not a common
+     * is nowerdays simply called a hard disk. Yes, it doesn't match the purpose of the URI but its short, not a common
      * term and <b>fun</b>.
      */
     public static final String URI_PREFIX = "/dasd";
