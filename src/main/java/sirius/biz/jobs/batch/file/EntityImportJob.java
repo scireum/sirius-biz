@@ -70,20 +70,37 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     @Override
     protected void handleRow(int index, Context context) {
         Watch watch = Watch.start();
-        E entity = findAndLoad(context);
-        try {
-            if (mode == ImportMode.NEW_ONLY && !entity.isNew() || (mode == ImportMode.UPDATE_ONLY && entity.isNew())) {
-                process.addTiming(NLS.get("EntityImportJob.rowIgnored"), watch.elapsedMillis());
-                return;
+            E entity = findAndLoad(context);
+            try {
+                if (shouldSkip(entity)) {
+                    process.addTiming(NLS.get("EntityImportJob.rowIgnored"), watch.elapsedMillis());
+                    return;
+                }
+
+                fillAndVerify(entity);
+                if (mode == ImportMode.CHECK_ONLY) {
+                    entity.getDescriptor().beforeSave(entity);
+                } else {
+                    importer.createOrUpdateInBatch(entity);
+                }
+
+                if (entity.isNew()) {
+                    process.addTiming(NLS.get("EntityImportJob.entityCreated"), watch.elapsedMillis());
+                } else {
+                    process.addTiming(NLS.get("EntityImportJob.entityUpdated"), watch.elapsedMillis());
+                }
+            } catch (HandledException e) {
+                throw Exceptions.createHandled()
+                                .withNLSKey("EntityImportJob.cannotHandleEntity")
+                                .set("entity", entity.toString())
+                                .set("message", e.getMessage())
+                                .handle();
             }
-            importer.createOrUpdateInBatch(fillAndVerify(entity));
-        } catch (HandledException e) {
-            throw Exceptions.createHandled()
-                            .withNLSKey("EntityImportJob.cannotHandleEntity")
-                            .set("entity", entity.toString())
-                            .set("message", e.getMessage())
-                            .handle();
-        }
+    }
+
+    private boolean shouldSkip(E entity) {
+        return mode == ImportMode.NEW_ONLY && !entity.isNew() || (mode == ImportMode.UPDATE_ONLY
+                                                                  && entity.isNew());
     }
 
     /**
