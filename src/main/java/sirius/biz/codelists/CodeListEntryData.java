@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists;
 
+import sirius.biz.importer.AutoImport;
 import sirius.biz.protocol.TraceData;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
@@ -43,12 +44,14 @@ public class CodeListEntryData extends Composite {
     @Trim
     @Length(50)
     @Unique(within = "codeList")
+    @AutoImport
     private String code;
 
     /**
      * Contains the priority of the entry used for sorting
      */
     public static final Mapping PRIORITY = Mapping.named("priority");
+    @AutoImport
     private int priority = Priorized.DEFAULT_PRIORITY;
 
     /**
@@ -58,6 +61,7 @@ public class CodeListEntryData extends Composite {
     @Trim
     @Length(512)
     @NullAllowed
+    @AutoImport
     private String value;
 
     /**
@@ -66,6 +70,7 @@ public class CodeListEntryData extends Composite {
     public static final Mapping ADDITIONAL_VALUE = Mapping.named("additionalValue");
     @Length(512)
     @NullAllowed
+    @AutoImport
     private String additionalValue;
 
     /**
@@ -74,6 +79,7 @@ public class CodeListEntryData extends Composite {
     public static final Mapping DESCRIPTION = Mapping.named("description");
     @Length(1024)
     @NullAllowed
+    @AutoImport
     private String description;
 
     @Part

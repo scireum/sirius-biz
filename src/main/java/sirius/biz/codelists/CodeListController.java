@@ -14,6 +14,7 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
+import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
@@ -25,8 +26,8 @@ import sirius.web.security.Permission;
  * <p>
  * Some specific behaviour which depends on the underlying database has to be implemented by a concrete subclass.
  *
- * @param <I>  the type of database IDs used by the concrete implementation
- * @param <L>  the effective entity type used to represent code lists
+ * @param <I> the type of database IDs used by the concrete implementation
+ * @param <L> the effective entity type used to represent code lists
  * @param <E> the effective entity type used to represent code list entries
  */
 public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L>>
@@ -188,5 +189,25 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
         }
 
         renderCodeList(ctx, cl);
+    }
+
+    /**
+     * Autocompletion for codelists.
+     *
+     * @param ctx the current request
+     */
+    @LoginRequired
+    @Routed("/code-lists/autocomplete")
+    public void codeListsAutocomplete(final WebContext ctx) {
+        AutocompleteHelper.handle(ctx, (query, result) -> {
+            BasePageHelper<L, ?, ?, ?> ph = getListsAsPage();
+            ph.withContext(ctx);
+
+            ph.asPage().getItems().forEach(codeList -> {
+                result.accept(new AutocompleteHelper.Completion(codeList.getIdAsString(),
+                                                                codeList.getCodeListData().getCode(),
+                                                                codeList.getCodeListData().getCode()));
+            });
+        });
     }
 }
