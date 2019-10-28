@@ -34,6 +34,7 @@ import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.http.Response;
+import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -77,14 +78,16 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static final int VARIANT_MAX_CONVERSION_ATTEMPTS = 3;
 
     /**
-     * Contains the name of the config key used to determine if a space is browsable.
+     * Contains the name of the config key used to determine which permission is required to browse / read blobs in
+     * the space.
      */
-    private static final String CONFIG_KEY_BROWSABLE = "browsable";
+    private static final String CONFIG_KEY_PERMISSION_READ = "readPermission";
 
     /**
-     * Contains the name of the config key used to determine if a space is readonly.
+     * Contains the name of the config key used to determine which permission is required to write blobs
+     * in the space.
      */
-    private static final String CONFIG_KEY_READONLY = "readonly";
+    private static final String CONFIG_KEY_PERMISSION_WRITE = "writePermission";
 
     /**
      * Contains the name of the config key used to determine the base url to use when generating
@@ -157,8 +160,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected final Extension config;
     protected final String description;
     protected String spaceName;
-    protected boolean browsable;
-    protected boolean readonly;
+    protected String readPermission;
+    protected String writePermission;
     protected String baseUrl;
     protected boolean useNormalizedNames;
     protected int retentionDays;
@@ -173,8 +176,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected BasicBlobStorageSpace(String spaceName, Extension config) {
         this.spaceName = spaceName;
         this.config = config;
-        this.browsable = config.get(CONFIG_KEY_BROWSABLE).asBoolean();
-        this.readonly = config.get(CONFIG_KEY_READONLY).asBoolean();
+        this.readPermission = config.get(CONFIG_KEY_PERMISSION_READ).asString();
+        this.writePermission = config.get(CONFIG_KEY_PERMISSION_WRITE).asString();
         this.baseUrl = config.get(CONFIG_KEY_BASE_URL).getString();
         this.useNormalizedNames = config.get(CONFIG_KEY_USE_NORMALIZED_NAMES).asBoolean();
         this.description = config.get(CONFIG_KEY_DESCRIPTION).getString();
@@ -202,12 +205,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     @Override
     public boolean isBrowsable() {
-        return browsable;
+        return UserContext.getCurrentUser().hasPermission(readPermission);
     }
 
     @Override
     public boolean isReadonly() {
-        return readonly;
+        return !UserContext.getCurrentUser().hasPermission(writePermission);
     }
 
     /**

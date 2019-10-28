@@ -59,7 +59,7 @@ public interface BlobStorageSpace {
      *
      * @param tenantId the tenant to determine the directory for
      * @return the root directory for the given tenant
-     * @throws sirius.kernel.health.HandledException if the space isn't {@link BlobStorage#CONFIG_KEY_LAYER2_BROWSABLE}
+     * @throws sirius.kernel.health.HandledException if the space isn't {@link #isBrowsable() browsable}
      */
     Directory getRoot(String tenantId);
 
