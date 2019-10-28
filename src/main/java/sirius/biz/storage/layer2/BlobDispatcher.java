@@ -48,7 +48,11 @@ public class BlobDispatcher implements WebDispatcher {
      * term and <b>fun</b>.
      */
     public static final String URI_PREFIX = "/dasd";
-    private static final int URI_PREFIX_LENGTH = URI_PREFIX.length();
+
+    /**
+     * Contains the prefix length ("/dasd" + "/") to cut from an incoming URI
+     */
+    private static final int URI_PREFIX_LENGTH = URI_PREFIX.length() + 1;
 
     /**
      * Marks the request as "physical" access (direct layer 1 access).
