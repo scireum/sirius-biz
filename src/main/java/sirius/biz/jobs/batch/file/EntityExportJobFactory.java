@@ -27,6 +27,8 @@ import java.util.function.Consumer;
 /**
  * Provides a base implementation for batch jobs which export entities into line based files using a
  * {@link EntityExportJob}.
+ *
+ * @param <E> the type of entities being exported
  */
 public abstract class EntityExportJobFactory<E extends BaseEntity<?>> extends LineBasedExportJobFactory {
 

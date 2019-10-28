@@ -9,6 +9,7 @@
 package sirius.biz.importer.format;
 
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
@@ -491,13 +492,13 @@ public class ImportDictionary {
      * @return <tt>true</tt> if at least one problem was detected, <tt>false</tt> otherwise
      */
     public boolean detectRecordProblems(Function<String, Value> record, BiConsumer<String, String> problemConsumer) {
-        AtomicBoolean problemDetected = new AtomicBoolean(false);
-        fields.values().forEach(field -> {
+        Monoflop problemDetected = Monoflop.create();
+        for (FieldDefinition field : fields.values()) {
             String fieldName = field.getName();
             try {
                 field.verify(record.apply(fieldName));
             } catch (IllegalArgumentException | HandledException e) {
-                problemDetected.set(true);
+                problemDetected.toggle();
                 problemConsumer.accept(fieldName,
                                        NLS.fmtr("ImportDictionary.fieldError")
                                           .set(PARAM_FIELD, fieldName)
@@ -505,7 +506,7 @@ public class ImportDictionary {
                                           .set(PARAM_MESSAGE, e.getMessage())
                                           .format());
             } catch (Exception e) {
-                problemDetected.set(true);
+                problemDetected.toggle();
                 problemConsumer.accept(fieldName,
                                        NLS.fmtr("ImportDictionary.severeFieldError")
                                           .set(PARAM_FIELD, fieldName)
@@ -513,9 +514,9 @@ public class ImportDictionary {
                                           .set(PARAM_MESSAGE, Exceptions.handle(Log.BACKGROUND, e).getMessage())
                                           .format());
             }
-        });
+        }
 
-        return problemDetected.get();
+        return problemDetected.isToggled();
     }
 
     /**

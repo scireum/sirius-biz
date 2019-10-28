@@ -188,7 +188,7 @@ public class StorageUtils {
         File bufferFile = File.createTempFile("local-file-buffer", null);
         WatchableOutputStream out = new WatchableOutputStream(new FileOutputStream(bufferFile));
         out.getCompletionFuture().onFailure(error -> {
-            bufferFile.delete();
+            Files.delete(bufferFile);
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .error(error)

@@ -14,16 +14,10 @@ import sirius.biz.storage.layer2.BlobStorage;
 import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.OptimisticCreate;
 import sirius.biz.storage.layer2.URLBuilder;
-import sirius.biz.storage.layer2.jdbc.SQLBlobStorage;
-import sirius.biz.storage.layer2.jdbc.SQLBlobStorageSpace;
-import sirius.biz.storage.layer2.jdbc.SQLDirectory;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.db.KeyGenerator;
-import sirius.db.jdbc.SQLEntity;
-import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
-import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Unique;
@@ -129,8 +123,7 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
      */
     public static final Mapping PARENT = Mapping.named("parent");
     @NullAllowed
-    private final MongoRef<MongoDirectory> parent =
-            MongoRef.on(MongoDirectory.class, BaseEntityRef.OnDelete.IGNORE);
+    private final MongoRef<MongoDirectory> parent = MongoRef.on(MongoDirectory.class, BaseEntityRef.OnDelete.IGNORE);
 
     /**
      * Stores if the blob was (is still) marked as temporary.
