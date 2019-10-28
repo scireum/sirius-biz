@@ -101,6 +101,18 @@ public class URLBuilder {
      */
     public URLBuilder asDownload(String filename) {
         this.filename = filename;
+        this.forceDownload = true;
+
+        return this;
+    }
+
+    /**
+     * Make the URL a downlod url using the filename of the blob.
+     *
+     * @return the builder itself for fluent method calls
+     */
+    public URLBuilder asDownload() {
+        this.forceDownload = true;
 
         return this;
     }
