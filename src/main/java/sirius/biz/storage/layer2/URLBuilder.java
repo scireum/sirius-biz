@@ -214,6 +214,8 @@ public class URLBuilder {
         }
 
         result.append("/");
+        result.append(space.getName());
+        result.append("/");
         result.append(computeAccessToken(physicalKey));
         result.append("/");
         if (forceDownload) {
@@ -241,6 +243,8 @@ public class URLBuilder {
         if (forceDownload) {
             result.append(BlobDispatcher.FLAG_DOWNLOAD);
         }
+        result.append("/");
+        result.append(space.getName());
         result.append("/");
         result.append(computeAccessToken(blobKey + "-" + variant));
         result.append("/");
