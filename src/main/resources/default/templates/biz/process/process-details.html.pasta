@@ -20,7 +20,7 @@
             </w:navbox>
         </i:if>
 
-        <i:local name="files" value="process.getFiles().findAttachedBlobs()" />
+        <i:local name="files" value="process.getFiles().findAttachedBlobs()"/>
         <i:if test="!files.isEmpty()">
             <w:navbox labelKey="Process.files">
                 <i:for type="sirius.biz.storage.layer2.Blob" var="file" items="files">
@@ -73,7 +73,8 @@
                             <pre class="plain" style="white-space: pre-wrap">@log.getMessage()</pre>
                         </div>
                         <div>
-                            <i:for type="sirius.biz.process.logs.ProcessLogAction" var="action" items="log.getActions()">
+                            <i:for type="sirius.biz.process.logs.ProcessLogAction" var="action"
+                                   items="log.getActions()">
                                 <a href="@action.getUri()?returnUrl=@urlEncode(apply('/ps/%s', process.getId()))"
                                    class="link link-inline"><i class="fa @action.getIcon()"></i> @action.getLabel()</a>
                             </i:for>
