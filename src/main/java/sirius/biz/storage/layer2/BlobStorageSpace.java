@@ -64,6 +64,44 @@ public interface BlobStorageSpace {
     Directory getRoot(String tenantId);
 
     /**
+     * Resolves the given path into a blob.
+     *
+     * @param tenantId the tenant which owns the directory structure to search in
+     * @param path     the path to resolve (may start with a "/" but not with the space name itself).
+     * @return the blob wrapped as optional or an empty optional if no matching blob was found
+     */
+    Optional<? extends Blob> findByPath(String tenantId, String path);
+
+    /**
+     * Uses the current tenant and the given path to resolve this into an existing blob.
+     *
+     * @param path the path to resolve (may start with a "/" but not with the space name itself).
+     * @return the blob wrapped as optional or an empty optional if no matching blob was found
+     */
+    Optional<? extends Blob> findByPath(String path);
+
+    /**
+     * Resolves or creates the blob with the given path.
+     * <p>
+     * Note that all intermediate directories will be auto-created.
+     *
+     * @param tenantId the tenant which owns the directory structure to search in
+     * @param path     the path to resolve (may start with a "/" but not with the space name itself).
+     * @return the found or newly created blob
+     */
+    Blob findOrCreateByPath(String tenantId, String path);
+
+    /**
+     * Uses the current tenant and the given path to resolve or create an appropriate blob.
+     * <p>
+     * Note that all intermediate directories will be auto-created.
+     *
+     * @param path the path to resolve (may start with a "/" but not with the space name itself).
+     * @return the found or newly created blob
+     */
+    Blob findOrCreateByPath(String path);
+
+    /**
      * Creates a new temporary blob to be used in a {@link BlobHardRef}.
      * <p>
      * Such objects will be automatically deleted if the referencing entity is

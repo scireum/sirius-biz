@@ -295,6 +295,61 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                                                  .handle());
     }
 
+    @Override
+    public Optional<? extends Blob> findByPath(String tenantId, String path) {
+        if (Strings.isEmpty(path)) {
+            return Optional.empty();
+        }
+        String[] parts = ensureRelativePath(path).split("/");
+        Directory currentDirectory = getRoot(tenantId);
+        int index = 0;
+        while (currentDirectory != null && index < parts.length - 1) {
+            currentDirectory = currentDirectory.findChildDirectory(parts[index]).orElse(null);
+            index++;
+        }
+
+        if (currentDirectory != null) {
+            return currentDirectory.findChildBlob(parts[index]);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    protected String ensureRelativePath(String path) {
+        if (path.startsWith("/")) {
+            return path.substring(1);
+        }
+
+        return path;
+    }
+
+    @Override
+    public Optional<? extends Blob> findByPath(String path) {
+        return findByPath(UserContext.getCurrentUser().getTenantId(), path);
+    }
+
+    @Override
+    public Blob findOrCreateByPath(String tenantId, String path) {
+        if (Strings.isEmpty(path)) {
+            throw new IllegalArgumentException("An empty path was provided!");
+        }
+
+        String[] parts = ensureRelativePath(path).split("/");
+        Directory currentDirectory = getRoot(tenantId);
+        int index = 0;
+        while (index < parts.length - 1) {
+            currentDirectory = currentDirectory.findOrCreateChildDirectory(parts[index]);
+            index++;
+        }
+
+        return currentDirectory.findOrCreateChildBlob(parts[index]);
+    }
+
+    @Override
+    public Blob findOrCreateByPath(String path) {
+        return findOrCreateByPath(UserContext.getCurrentUser().getTenantId(), path);
+    }
+
     /**
      * Tries to find the root directory for the given tenant.
      * <p>
