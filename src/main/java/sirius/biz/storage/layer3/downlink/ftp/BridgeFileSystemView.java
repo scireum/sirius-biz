@@ -6,21 +6,18 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.vfs.ftp;
+package sirius.biz.storage.layer3.downlink.ftp;
 
 import org.apache.ftpserver.ftplet.FileSystemView;
 import org.apache.ftpserver.ftplet.FtpException;
 import org.apache.ftpserver.ftplet.FtpFile;
-import sirius.biz.vfs.VFSRoot;
-import sirius.biz.vfs.VirtualFile;
+import sirius.biz.storage.layer3.VirtualFile;
+import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.di.std.Parts;
-
-import java.util.Collection;
-import java.util.function.Consumer;
+import sirius.kernel.di.std.Part;
 
 /**
- * Providesa a bridge between the {@link sirius.biz.vfs.VirtualFileSystem} and the FTP server.
+ * Provides a bridge between the {@link VirtualFileSystem} and the FTP server.
  */
 class BridgeFileSystemView implements FileSystemView {
 
@@ -28,18 +25,12 @@ class BridgeFileSystemView implements FileSystemView {
     private VirtualFile root;
     private VirtualFile cwd;
 
-    @Parts(VFSRoot.class)
-    private static Collection<VFSRoot> roots;
+    @Part
+    private static VirtualFileSystem vfs;
 
     BridgeFileSystemView() {
-        root = VirtualFile.createRootNode().withChildren(this::computeRoots);
+        root = vfs.root();
         cwd = root;
-    }
-
-    private void computeRoots(VirtualFile parent, Consumer<VirtualFile> fileCollector) {
-        for (VFSRoot childRoot : roots) {
-            childRoot.collectRootFolders(parent, fileCollector);
-        }
     }
 
     @Override
@@ -99,10 +90,10 @@ class BridgeFileSystemView implements FileSystemView {
         }
 
         if ("..".equals(pathElement)) {
-            if (current.getParent() == null) {
+            if (current.parent() == null) {
                 return root;
             } else {
-                return current.getParent();
+                return current.parent();
             }
         }
 
