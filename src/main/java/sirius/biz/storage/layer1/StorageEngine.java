@@ -63,10 +63,8 @@ public interface StorageEngine {
      *                       This will be supplied with the HTTP error code.
      * @throws IOException in case of an IO error
      */
-    void deliver(Response response,
-                 String space,
-                 String objectKey,
-                 @Nullable Consumer<Integer> failureHandler) throws IOException;
+    void deliver(Response response, String space, String objectKey, @Nullable Consumer<Integer> failureHandler)
+            throws IOException;
 
     /**
      * Downloads an provides the contents of the requested object.
