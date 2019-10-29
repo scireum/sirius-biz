@@ -54,8 +54,9 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
     protected static final TenantParameter TENANT_PARAMETER =
             new TenantParameter("tenant", "$Model.tenant").markRequired();
 
-    protected static final BooleanParameter SIMULATION_PARAMETER =
-            new BooleanParameter("simulate", "$DeleteTenantJobFactory.simulate");
+    protected static final BooleanParameter TAKE_ACTION_PARAMETER =
+            new BooleanParameter("takeAction", "$DeleteTenantJobFactory.takeAction").withDescription(
+                    "$DeleteTenantJobFactory.takeAction.help");
 
     @Part
     private Tenants<?, ?, ?> tenants;
@@ -69,26 +70,26 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
     @Override
     protected String createProcessTitle(Map<String, String> context) {
         String name = TENANT_PARAMETER.require(context).getTenantData().getName();
-        if (SIMULATION_PARAMETER.require(context)) {
-            return NLS.fmtr("DeleteTenantJobFactory.title.simulate").set("name", name).format();
-        } else {
+        if (TAKE_ACTION_PARAMETER.require(context)) {
             return NLS.fmtr("DeleteTenantJobFactory.title").set("name", name).format();
+        } else {
+            return NLS.fmtr("DeleteTenantJobFactory.title.simulate").set("name", name).format();
         }
     }
 
     @Override
     protected void execute(ProcessContext process) throws Exception {
         Tenant<?> tenant = process.require(TENANT_PARAMETER);
-        boolean simulate = process.require(DeleteTenantJobFactory.SIMULATION_PARAMETER);
+        boolean takeAction = process.require(DeleteTenantJobFactory.TAKE_ACTION_PARAMETER);
 
-        if (simulate) {
+        if (!takeAction) {
             process.log(ProcessLog.info().withNLSKey("DeleteTenantJobFactory.simulateInfo"));
         }
 
         for (DeleteTenantTask task : deletionTasks) {
             try {
-                task.beforeExecution(process, tenant, simulate);
-                if (!simulate) {
+                task.beforeExecution(process, tenant, takeAction);
+                if (takeAction) {
                     task.execute(process, tenant);
                 }
             } catch (Exception e) {
@@ -99,19 +100,17 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
                                                  "An error occurred while executing the deletion task %s: %s (%s)",
                                                  task.getClass().getName())
                                          .handle());
-                if (!simulate) {
+                if (takeAction) {
                     process.log(ProcessLog.warn().withNLSKey("DeleteTenantJobFactory.aborting"));
                     return;
                 }
             }
         }
 
-        if (!simulate) {
+        if (takeAction) {
             process.log(ProcessLog.info().withNLSKey("DeleteTenantJobFactory.deletingMainEntity"));
             mixing.getDescriptor(tenant.getClass()).getMapper().delete((BaseEntity<?>) tenant);
-        }
-
-        if (simulate) {
+        } else {
             process.log(ProcessLog.info().withNLSKey("DeleteTenantJobFactory.simulateInfo"));
         }
     }
@@ -119,7 +118,7 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
         parameterCollector.accept(TENANT_PARAMETER);
-        parameterCollector.accept(SIMULATION_PARAMETER);
+        parameterCollector.accept(TAKE_ACTION_PARAMETER);
     }
 
     @Override
