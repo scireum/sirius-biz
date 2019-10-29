@@ -221,7 +221,7 @@ public class L3Uplink implements VFSRoot {
 
     /**
      * Maps the requested child names (which will be top-level directories) to
-     * {@link BasicBlobStorageSpace#CONFIG_KEY_BROWSABLE browsable} storage spaces.
+     * {@link BasicBlobStorageSpace#isBrowsable() browsable} storage spaces.
      *
      * @param parent the directory to resolve the child in
      * @param name   the name of the child to resolve
@@ -242,7 +242,7 @@ public class L3Uplink implements VFSRoot {
     }
 
     /**
-     * Lists all {@link BasicBlobStorageSpace#CONFIG_KEY_BROWSABLE browsable} storage spaces.
+     * Lists all {@link BasicBlobStorageSpace#isBrowsable() browsable} storage spaces.
      *
      * @param parent the directory to enumerate
      * @param search the search criteria and result collector to use
