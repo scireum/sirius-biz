@@ -171,7 +171,7 @@ class ImporterSpec extends BaseSpecification {
             importer.createOrUpdateInBatch(tenant)
         }
         and:
-        importer.close()
+        importer.getContext().getBatchContext().tryCommit()
         then:
         tenantCount + 200 == oma.select(SQLTenant.class).count()
     }
@@ -188,7 +188,7 @@ class ImporterSpec extends BaseSpecification {
             SQLTenant tenant = importer.load(SQLTenant.class, context)
             importer.createOrUpdateInBatch(tenant)
         }
-        importer.close()
+        importer.getContext().getBatchContext().tryCommit()
         when:
         oma.select(SQLTenant.class).
                 where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).contains(basicTenantName).build()).
@@ -196,7 +196,7 @@ class ImporterSpec extends BaseSpecification {
                     tenant.getTenantData().setName(tenant.getTenantData().getName() + "AFTERUPDATE")
                     importer.createOrUpdateInBatch(tenant)
                 }
-        importer.close()
+        importer.getContext().getBatchContext().tryCommit()
         then:
         oma.select(SQLTenant.class).
                 where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).contains("AFTERUPDATE").build()).
@@ -213,7 +213,7 @@ class ImporterSpec extends BaseSpecification {
             SQLTenant tenant = importer.load(SQLTenant.class, context)
             importer.createOrUpdateInBatch(tenant)
         }
-        importer.close()
+        importer.getContext().getBatchContext().tryCommit()
         and:
         oma.select(SQLTenant.class).
                 where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
@@ -246,7 +246,7 @@ class ImporterSpec extends BaseSpecification {
             Tenant tenant = importer.load(SQLTenant.class, context)
             importer.createOrUpdateInBatch(tenant)
         }
-        importer.close()
+        importer.getContext().getBatchContext().tryCommit()
         and:
         oma.select(SQLTenant.class).
                 where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
@@ -261,7 +261,7 @@ class ImporterSpec extends BaseSpecification {
                     importer.deleteInBatch(entity)
                 }
         and:
-        importer.close()
+        importer.getContext().getBatchContext().tryCommit()
         then:
         oma.select(SQLTenant.class).
                 where(OMA.FILTERS.like(SQLTenant.TENANT_DATA.inner(TenantData.NAME)).
