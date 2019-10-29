@@ -8,6 +8,8 @@
 
 package sirius.biz.storage.layer3.downlink.ssh;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.apache.sshd.common.file.FileSystemFactory;
 import org.apache.sshd.common.io.IoSession;
 import org.apache.sshd.common.session.Session;
@@ -61,6 +63,8 @@ public class SSHServer implements Startable, Stoppable, Killable {
         }
 
         try {
+            disableLogging();
+
             server = SshServer.setUpDefaultServer();
             server.setPort(port);
             server.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(new File(hostKeyFile).toPath()));
@@ -76,6 +80,11 @@ public class SSHServer implements Startable, Stoppable, Killable {
         } catch (IOException e) {
             StorageUtils.LOG.WARN("Layer 3/SSH: Failed to start the SSH server: %s", e.getMessage());
         }
+    }
+
+    private void disableLogging() {
+        // Some parts of the scp/sftp sub systems are too chatty...
+        Logger.getLogger("sirius.biz.storage.layer3.downlink.ssh.BridgeSession").setLevel(Level.WARN);
     }
 
     protected void installSCPCommandFactory() {
@@ -106,7 +115,9 @@ public class SSHServer implements Startable, Stoppable, Killable {
             return false;
         }
 
-        StorageUtils.LOG.FINE("Layer 3/FTP: Trying to authenticate user: " + username);
+        if (StorageUtils.LOG.isFINE()) {
+            StorageUtils.LOG.FINE("Layer 3/FTP: Trying to authenticate user: " + username);
+        }
 
         UserInfo authUser = UserContext.get().getUserManager().findUserByCredentials(null, username, password);
         ((BridgeSession) session).setUser(authUser);

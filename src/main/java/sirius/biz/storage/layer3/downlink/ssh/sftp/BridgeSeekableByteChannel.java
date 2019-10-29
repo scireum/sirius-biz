@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer3.downlink.ssh.sftp;
 
 import sirius.biz.storage.layer3.VirtualFile;
+import sirius.kernel.health.Exceptions;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,6 +18,13 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * Provides a simple implementation of the seekable channel.
+ * <p>
+ * This implementation doesn't actually support seeking, as this is not supported by the
+ * {@link sirius.biz.storage.layer3.VirtualFileSystem}. Nevertheless, as long as all reads are sequential and don't
+ * skip any data, we fullfill all calls.
+ */
 class BridgeSeekableByteChannel implements SeekableByteChannel {
 
     private VirtualFile virtualFile;
@@ -34,13 +42,10 @@ class BridgeSeekableByteChannel implements SeekableByteChannel {
             in = virtualFile.createInputStream();
         }
 
-//        int remaining = dst.remaining();
         int read = in.read(dst.array(), dst.arrayOffset() + dst.position(), dst.remaining());
         if (read > 0) {
             position.addAndGet(read);
         }
-
-//        System.out.println(remaining + "/" + read);
 
         return read;
     }
@@ -69,12 +74,6 @@ class BridgeSeekableByteChannel implements SeekableByteChannel {
             throw new UnsupportedOperationException();
         }
 
-        if (newPosition == position.get()) {
-            return this;
-        }
-
-//        if ()
-
         return this;
     }
 
@@ -99,14 +98,14 @@ class BridgeSeekableByteChannel implements SeekableByteChannel {
             try {
                 in.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                Exceptions.ignore(e);
             }
         }
         if (out != null) {
             try {
                 out.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                Exceptions.ignore(e);
             }
         }
     }

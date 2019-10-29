@@ -25,6 +25,11 @@ import java.nio.file.WatchService;
 import java.util.Iterator;
 import java.util.Objects;
 
+/**
+ * Provides a path implementation which carries along the underlying {@link VirtualFile}.
+ * <p>
+ * Note that many methods throw an {@link UnsupportedOperationException} as they are (most probably) unused.
+ */
 public class BridgePath implements Path {
 
     @Part
@@ -33,10 +38,21 @@ public class BridgePath implements Path {
     private VirtualFile virtualFile;
     private BridgeFileSystem fs;
 
+    /**
+     * Creates a new instance wrapping the given virtual file.
+     *
+     * @param virtualFile the file to wrap
+     */
     public BridgePath(VirtualFile virtualFile) {
         this.virtualFile = virtualFile;
     }
 
+    /**
+     * Creates a new instance which wraps the virtual file and carries along the associated file system.
+     *
+     * @param virtualFile the file to wrap
+     * @param fs          the associated file system
+     */
     public BridgePath(VirtualFile virtualFile, BridgeFileSystem fs) {
         this.virtualFile = virtualFile;
         this.fs = fs;
@@ -147,7 +163,13 @@ public class BridgePath implements Path {
 
     @Override
     public Path relativize(Path other) {
-        throw new UnsupportedOperationException("relativize");
+        String thisPath = toString() + "/";
+        String otherPath = other.toString();
+        if (otherPath.startsWith(thisPath)) {
+            return new StringPath(otherPath.substring(thisPath.length()));
+        }
+
+        return other;
     }
 
     @Override

@@ -24,6 +24,12 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
 
+/**
+ * Provides a minimal implementation of a {@link FileSystem} in order to bridge between the <b>SFTP server</b> and
+ * our {@link VirtualFileSystem}.
+ * <p>
+ * Note that many methods throw an {@link UnsupportedOperationException} as they are (most probably) unused.
+ */
 public class BridgeFileSystem extends FileSystem {
 
     @Part
@@ -38,7 +44,7 @@ public class BridgeFileSystem extends FileSystem {
 
     @Override
     public void close() throws IOException {
-
+        // Nothing to release...
     }
 
     @Override
@@ -58,12 +64,12 @@ public class BridgeFileSystem extends FileSystem {
 
     @Override
     public Iterable<Path> getRootDirectories() {
-        return null;
+        throw new UnsupportedOperationException("getRootDirectories");
     }
 
     @Override
     public Iterable<FileStore> getFileStores() {
-        return null;
+        throw new UnsupportedOperationException("getFileStores");
     }
 
     @Override
@@ -82,16 +88,16 @@ public class BridgeFileSystem extends FileSystem {
 
     @Override
     public PathMatcher getPathMatcher(String syntaxAndPattern) {
-        return null;
+        throw new UnsupportedOperationException("getPathMatcher");
     }
 
     @Override
     public UserPrincipalLookupService getUserPrincipalLookupService() {
-        return null;
+        throw new UnsupportedOperationException("getUserPrincipalLookupService");
     }
 
     @Override
     public WatchService newWatchService() throws IOException {
-        return null;
+        throw new UnsupportedOperationException("newWatchService");
     }
 }

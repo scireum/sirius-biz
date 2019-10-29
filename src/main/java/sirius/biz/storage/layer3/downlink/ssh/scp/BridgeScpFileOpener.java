@@ -16,6 +16,7 @@ import org.apache.sshd.common.session.Session;
 import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
+import sirius.biz.storage.layer3.downlink.ssh.BridgeBasicFileAttributes;
 import sirius.biz.storage.layer3.downlink.ssh.BridgeDirectoryStream;
 import sirius.biz.storage.layer3.downlink.ssh.BridgeFileSystem;
 import sirius.biz.storage.layer3.downlink.ssh.BridgePath;
@@ -33,11 +34,16 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-public class BridgeScpFileOpener implements ScpFileOpener {
+/**
+ * Provide some mappings between the <i>interesting</i> SCP implementation and out {@link VirtualFileSystem}.
+ * <p>
+ * Note that some methods are unimplemented and will throw an {@link UnsupportedOperationException}. These methods
+ * were never invoked during testing and therefore left out.
+ */
+class BridgeScpFileOpener implements ScpFileOpener {
 
     @Part
     private static VirtualFileSystem vfs;
@@ -57,14 +63,15 @@ public class BridgeScpFileOpener implements ScpFileOpener {
     }
 
     @Override
-    public Iterable<String> getMatchingFilesToSend(Session session, String basedir, String pattern) {
-        VirtualFile baseDirAsFile = vfs.tryResolve(basedir).orElse(null);
+    public Iterable<Path> getMatchingFilesToSend(Session session, Path basedir, String pattern) throws IOException {
+        VirtualFile baseDirAsFile = vfs.tryResolve(basedir.toAbsolutePath().toString()).orElse(null);
         if (baseDirAsFile == null) {
             return Collections.emptyList();
         }
 
-        List<String> result = new ArrayList<>();
-        baseDirAsFile.children(FileSearch.iterateAll(child -> result.add(child.name())).withPrefixFilter(pattern));
+        List<Path> result = new ArrayList<>();
+        baseDirAsFile.children(FileSearch.iterateAll(child -> result.add(new BridgePath(child)))
+                                         .withPrefixFilter(pattern));
 
         return result;
     }
@@ -96,21 +103,7 @@ public class BridgeScpFileOpener implements ScpFileOpener {
     public Set<PosixFilePermission> getLocalFilePermissions(Session session, Path path, LinkOption... options)
             throws IOException {
         VirtualFile virtualFile = ((BridgePath) path).getVirtualFile();
-
-        Set<PosixFilePermission> perms = EnumSet.noneOf(PosixFilePermission.class);
-        if (virtualFile.isReadable()) {
-            perms.add(PosixFilePermission.OWNER_READ);
-            perms.add(PosixFilePermission.GROUP_READ);
-            perms.add(PosixFilePermission.OTHERS_READ);
-        }
-
-        if (virtualFile.isWriteable()) {
-            perms.add(PosixFilePermission.OWNER_WRITE);
-            perms.add(PosixFilePermission.GROUP_WRITE);
-            perms.add(PosixFilePermission.OTHERS_WRITE);
-        }
-
-        return perms;
+        return new BridgeBasicFileAttributes(virtualFile).permissions();
     }
 
     @Override

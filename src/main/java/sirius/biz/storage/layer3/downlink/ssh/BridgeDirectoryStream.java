@@ -18,13 +18,22 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * Provides an interface between NIO and the <tt>FileSystem</tt> API torwards {@link VirtualFile#children(FileSearch)}.
+ */
 public class BridgeDirectoryStream implements DirectoryStream<Path> {
 
     private VirtualFile virtualFile;
     private BridgeFileSystem fs;
 
-    public BridgeDirectoryStream(VirtualFile virtualFile, BridgeFileSystem fs) {
-        this.virtualFile = virtualFile;
+    /**
+     * Generates a wrapper for the given directory and file system.
+     *
+     * @param directory the directory to wrap
+     * @param fs        the file system to pass along
+     */
+    public BridgeDirectoryStream(VirtualFile directory, BridgeFileSystem fs) {
+        this.virtualFile = directory;
         this.fs = fs;
     }
 

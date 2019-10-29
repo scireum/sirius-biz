@@ -12,6 +12,7 @@ import org.apache.sshd.common.scp.ScpSourceStreamResolver;
 import org.apache.sshd.common.scp.ScpTimestamp;
 import org.apache.sshd.common.session.Session;
 import sirius.biz.storage.layer3.VirtualFile;
+import sirius.biz.storage.layer3.downlink.ssh.BridgeBasicFileAttributes;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,10 +20,13 @@ import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.Set;
 
+/**
+ * Provides a resolver implementation which provides an <tt>InputStream</tt> for a {@link VirtualFile}.
+ */
 class BridgeScpSourceStreamResolver implements ScpSourceStreamResolver {
+
     private final Path path;
     private final VirtualFile virtualFile;
 
@@ -43,20 +47,7 @@ class BridgeScpSourceStreamResolver implements ScpSourceStreamResolver {
 
     @Override
     public Collection<PosixFilePermission> getPermissions() throws IOException {
-        Set<PosixFilePermission> perms = EnumSet.noneOf(PosixFilePermission.class);
-        if (virtualFile.isReadable()) {
-            perms.add(PosixFilePermission.OWNER_READ);
-            perms.add(PosixFilePermission.GROUP_READ);
-            perms.add(PosixFilePermission.OTHERS_READ);
-        }
-
-        if (virtualFile.isWriteable()) {
-            perms.add(PosixFilePermission.OWNER_WRITE);
-            perms.add(PosixFilePermission.GROUP_WRITE);
-            perms.add(PosixFilePermission.OTHERS_WRITE);
-        }
-
-        return perms;
+        return new BridgeBasicFileAttributes(virtualFile).permissions();
     }
 
     @Override

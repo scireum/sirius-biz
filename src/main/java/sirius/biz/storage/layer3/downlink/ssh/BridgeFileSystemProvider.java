@@ -9,6 +9,8 @@
 package sirius.biz.storage.layer3.downlink.ssh;
 
 import sirius.biz.storage.layer3.VirtualFile;
+import sirius.biz.storage.layer3.VirtualFileSystem;
+import sirius.kernel.commons.Strings;
 
 import java.io.IOException;
 import java.net.URI;
@@ -29,72 +31,79 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Provides a minimal implementation of a {@link FileSystemProvider} in order to bridge between the <b>SFTP server</b> and
+ * our {@link VirtualFileSystem}.
+ * <p>
+ * Note that many methods throw an {@link UnsupportedOperationException} as they are (most probably) unused.
+ */
 class BridgeFileSystemProvider extends FileSystemProvider {
+
     @Override
     public String getScheme() {
-        return null;
+        throw new UnsupportedOperationException("getScheme");
     }
 
     @Override
     public FileSystem newFileSystem(URI uri, Map<String, ?> env) throws IOException {
-        return null;
+        throw new UnsupportedOperationException("newFileSystem");
     }
 
     @Override
     public FileSystem getFileSystem(URI uri) {
-        return null;
+        throw new UnsupportedOperationException("getFileSystem");
     }
 
     @Override
     public Path getPath(URI uri) {
-        return null;
+        throw new UnsupportedOperationException("getPath");
     }
 
     @Override
     public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs)
             throws IOException {
-        return null;
+        throw new UnsupportedOperationException("newByteChannel");
     }
 
     @Override
     public DirectoryStream<Path> newDirectoryStream(Path dir, DirectoryStream.Filter<? super Path> filter)
             throws IOException {
-        return null;
+        throw new UnsupportedOperationException("newDirectoryStream");
     }
 
     @Override
     public void createDirectory(Path dir, FileAttribute<?>... attrs) throws IOException {
-
+        throw new UnsupportedOperationException("createDirectory");
     }
 
     @Override
     public void delete(Path path) throws IOException {
-       ((BridgePath) path).getVirtualFile().delete();
+        ((BridgePath) path).getVirtualFile().delete();
     }
 
     @Override
     public void copy(Path source, Path target, CopyOption... options) throws IOException {
-
+        throw new UnsupportedOperationException("copy");
     }
 
     @Override
     public void move(Path source, Path target, CopyOption... options) throws IOException {
-
+        throw new UnsupportedOperationException("move");
     }
 
     @Override
     public boolean isSameFile(Path path, Path path2) throws IOException {
-        return false;
+        throw new UnsupportedOperationException("isSameFile");
     }
 
     @Override
     public boolean isHidden(Path path) throws IOException {
-        return false;
+        throw new UnsupportedOperationException("isHidden");
     }
 
     @Override
     public FileStore getFileStore(Path path) throws IOException {
-        return null;
+        throw new UnsupportedOperationException("getFileStore");
     }
 
     @Override
@@ -103,12 +112,12 @@ class BridgeFileSystemProvider extends FileSystemProvider {
         for (AccessMode mode : modes) {
             if (mode == AccessMode.READ) {
                 if (!(file.exists() && (file.isDirectory() || file.isReadable()))) {
-                    //TODO
+                    throw new IOException(Strings.apply("Read for '%s' denied", path.toString()));
                 }
             }
             if (mode == AccessMode.WRITE) {
-                if (!(file.exists() && file.isReadable())) {
-                    //TODO
+                if (!(file.exists() && file.isWriteable())) {
+                    throw new IOException(Strings.apply("Write for '%s' denied", path.toString()));
                 }
             }
         }
@@ -116,7 +125,7 @@ class BridgeFileSystemProvider extends FileSystemProvider {
 
     @Override
     public <V extends FileAttributeView> V getFileAttributeView(Path path, Class<V> type, LinkOption... options) {
-        return null;
+        throw new UnsupportedOperationException("getFileAttributeView");
     }
 
     @SuppressWarnings("unchecked")
@@ -145,6 +154,6 @@ class BridgeFileSystemProvider extends FileSystemProvider {
 
     @Override
     public void setAttribute(Path path, String attribute, Object value, LinkOption... options) throws IOException {
-
+        throw new UnsupportedOperationException("setAttribute");
     }
 }

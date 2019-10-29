@@ -10,7 +10,6 @@ package sirius.biz.storage.layer3.downlink.ssh;
 
 import sirius.biz.storage.layer3.VirtualFile;
 
-import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.GroupPrincipal;
 import java.nio.file.attribute.PosixFileAttributes;
@@ -20,10 +19,18 @@ import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-class BridgeBasicFileAttributes implements BasicFileAttributes, PosixFileAttributes {
+/**
+ * Supports extracting attributes from a given {@link VirtualFile}.
+ */
+public class BridgeBasicFileAttributes implements PosixFileAttributes {
     private VirtualFile virtualFile;
 
-    protected BridgeBasicFileAttributes(VirtualFile virtualFile) {
+    /**
+     * Creates a new wrapper which provides extracts the attributes of the given file.
+     *
+     * @param virtualFile the file to extract the attributes from
+     */
+    public BridgeBasicFileAttributes(VirtualFile virtualFile) {
         this.virtualFile = virtualFile;
     }
 
@@ -34,13 +41,11 @@ class BridgeBasicFileAttributes implements BasicFileAttributes, PosixFileAttribu
 
     @Override
     public FileTime lastAccessTime() {
-        //TODO
         return lastModifiedTime();
     }
 
     @Override
     public FileTime creationTime() {
-        //TODO
         return lastModifiedTime();
     }
 

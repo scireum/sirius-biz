@@ -12,6 +12,7 @@ import org.apache.sshd.common.scp.ScpTargetStreamResolver;
 import org.apache.sshd.common.scp.ScpTimestamp;
 import org.apache.sshd.common.session.Session;
 import sirius.biz.storage.layer3.VirtualFile;
+import sirius.kernel.commons.Strings;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -20,7 +21,11 @@ import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Set;
 
+/**
+ * Provides a resolver implementation which provides an <tt>OutputStream</tt> for a {@link VirtualFile}.
+ */
 class BridgeScpTargetStreamResolver implements ScpTargetStreamResolver {
+
     private final Path path;
     private final VirtualFile virtualFile;
 
@@ -35,7 +40,11 @@ class BridgeScpTargetStreamResolver implements ScpTargetStreamResolver {
                                             long length,
                                             Set<PosixFilePermission> perms,
                                             OpenOption... options) throws IOException {
-        return virtualFile.createOutputStream();
+        return virtualFile.findChild(name)
+                          .orElseThrow(() -> new IOException(Strings.apply("Cannot resolve %s in %s",
+                                                                           name,
+                                                                           virtualFile.path())))
+                          .createOutputStream();
     }
 
     @Override
@@ -48,6 +57,6 @@ class BridgeScpTargetStreamResolver implements ScpTargetStreamResolver {
                                         boolean preserve,
                                         Set<PosixFilePermission> perms,
                                         ScpTimestamp time) throws IOException {
-
+        // Nothing to do here...
     }
 }

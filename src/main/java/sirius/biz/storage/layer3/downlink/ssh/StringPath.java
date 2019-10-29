@@ -19,10 +19,19 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Iterator;
 
+/**
+ * Provides a minimal implementation of {@link Path} which only relies on a string.
+ * <p>
+ * Note that many methods throw an {@link UnsupportedOperationException} as they are (most probably) unused.
+ */
 public class StringPath implements Path {
 
     private String value;
 
+    /**
+     * Creates a new path wrapping the given value.
+     * @param value the string to wrap.
+     */
     public StringPath(String value) {
         this.value = value;
     }
