@@ -186,7 +186,6 @@ class BridgeFile implements FtpFile {
             return file.createOutputStream();
         }
 
-        //TODO check(?)
         return parent.resolve(childName).createOutputStream();
     }
 
