@@ -819,7 +819,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                  .orElseThrow(() -> Exceptions.handle()
                                                               .to(StorageUtils.LOG)
                                                               .withSystemErrorMessage(
-                                                                      "Layer 2/SQL: Cannot obtain an InputStream for %s (%s)",
+                                                                      "Layer 2: Cannot obtain an InputStream for %s (%s)",
                                                                       blob.getBlobKey(),
                                                                       blob.getFilename())
                                                               .handle());
@@ -929,7 +929,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                             .to(StorageUtils.LOG)
                             .error(e)
                             .withSystemErrorMessage(
-                                    "Layer 2/SQL: Cannot create a local buffer to provide an output stream for %s (%s) in %s: %s (%s)",
+                                    "Layer 2: Cannot create a local buffer to provide an output stream for %s (%s) in %s: %s (%s)",
                                     blob.getBlobKey(),
                                     blob.getFilename(),
                                     spaceName)
