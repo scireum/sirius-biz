@@ -28,6 +28,9 @@
                               url="@apply('/code-list/%s', codeList.getIdAsString())"
                               active="page == 'entries'"/>
             </w:navbox>
+
+            <w:jobs target="codeList"/>
+
             <a href="/code-lists" class="btn btn-block">@i18n("NLS.back")</a>
         </div>
     </i:if>
