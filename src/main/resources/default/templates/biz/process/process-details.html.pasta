@@ -24,10 +24,10 @@
         <i:if test="!files.isEmpty()">
             <w:navbox labelKey="Process.files">
                 <i:for type="sirius.biz.storage.layer2.Blob" var="file" items="files">
-                    <i:local name="url" value="file.url().asDownload().buildURL().orElse(null)"/>
-                    <i:if test="url != null">
+                    <i:local name="url" value="file.url().asDownload().buildURL()"/>
+                    <i:if test="url.isPresent()">
                         <li>
-                            <a href="@url" class="link" target="_blank">
+                            <a href="@url.get()" class="link" target="_blank">
                                 <i class="fa fa-file"></i>
                                 @file.getFilename()
                                 <small class="muted">(@formatSize(file.getSize()))</small>
