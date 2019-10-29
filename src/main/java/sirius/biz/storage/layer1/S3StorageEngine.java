@@ -128,4 +128,11 @@ public class S3StorageEngine implements StorageEngine, Named {
             return null;
         }
     }
+
+    @Nullable
+    @Override
+    public InputStream getAsStream(String space, String objectKey) throws IOException {
+        ObjectStore store = stores.get(space);
+        return store.getClient().getObject(bucketName(store, space).getName(), objectKey).getObjectContent();
+    }
 }

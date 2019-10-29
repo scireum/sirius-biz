@@ -11,6 +11,7 @@ package sirius.biz.storage.layer1;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.web.http.Response;
@@ -86,11 +87,14 @@ public class ObjectStorageSpace {
     /**
      * Downloads and provides the contents of the requested object.
      *
-     * @param objectId the physical storage key (a key is always only used once)
+     * @param objectId the physical storage key
      * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist
      */
     public Optional<FileHandle> download(String objectId) {
         try {
+            if (Strings.isEmpty(objectId)) {
+                return Optional.empty();
+            }
             return Optional.ofNullable(engine.getData(name, objectId));
         } catch (IOException e) {
             throw Exceptions.handle()
@@ -99,6 +103,30 @@ public class ObjectStorageSpace {
                             .withSystemErrorMessage("Layer 1: An error occurred when downloading %s (%s): %s (%s)",
                                                     objectId,
                                                     name)
+                            .handle();
+        }
+    }
+
+    /**
+     * Provides direct access to the contents of the requested object.
+     *
+     * @param objectId the physical storage key
+     * @return the contents a input stream
+     */
+    public Optional<InputStream> getInputStream(String objectId) {
+        try {
+            if (Strings.isEmpty(objectId)) {
+                return Optional.empty();
+            }
+            return Optional.ofNullable(engine.getAsStream(name, objectId));
+        } catch (IOException e) {
+            throw Exceptions.handle()
+                            .error(e)
+                            .to(StorageUtils.LOG)
+                            .withSystemErrorMessage(
+                                    "Layer 1: An error occurred when obtaining an input stream for %s (%s): %s (%s)",
+                                    objectId,
+                                    name)
                             .handle();
         }
     }

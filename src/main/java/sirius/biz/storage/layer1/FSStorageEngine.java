@@ -171,4 +171,19 @@ public class FSStorageEngine implements StorageEngine, Named {
 
         return null;
     }
+
+    @Override
+    @Nullable
+    public InputStream getAsStream(String space, String objectKey) throws IOException {
+        if (Strings.isEmpty(objectKey)) {
+            return null;
+        }
+
+        File file = getFile(space, objectKey);
+        if (file.exists()) {
+            return new FileInputStream(file);
+        }
+
+        return null;
+    }
 }
