@@ -18,8 +18,11 @@ import org.apache.ftpserver.ssl.SslConfigurationFactory;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.Startable;
+import sirius.kernel.Stoppable;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
+import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 
@@ -31,8 +34,8 @@ import java.util.TreeMap;
 /**
  * Provides a bridge between the {@link sirius.biz.storage.layer3.VirtualFileSystem} and the Apache FTP server.
  */
-@Register(classes = FTPBridge.class)
-public class FTPBridge {
+@Register(classes = {Startable.class, Stoppable.class})
+public class FTPServer implements Startable, Stoppable {
 
     private FtpServer ftpServer;
 
@@ -63,10 +66,13 @@ public class FTPBridge {
     @ConfigValue("storage.layer3.downlink.ftp.forceSSL")
     private boolean forceSSL;
 
-    /**
-     * Initializes and starts the server.
-     */
-    public void createAndStartServer() {
+    @Override
+    public int getPriority() {
+        return Priorized.DEFAULT_PRIORITY + 100;
+    }
+
+    @Override
+    public void started() {
         if (ftpPort <= 0) {
             return;
         }
@@ -76,10 +82,8 @@ public class FTPBridge {
         startFTPServer();
     }
 
-    /**
-     * Stops the server.
-     */
-    public void stop() {
+    @Override
+    public void stopped() {
         if (ftpServer != null) {
             try {
                 ftpServer.stop();
