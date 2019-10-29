@@ -27,4 +27,9 @@ public class MongoCodeList extends MongoTenantAware implements CodeList {
     public CodeListData getCodeListData() {
         return codeListData;
     }
+
+    @Override
+    public String toString() {
+        return codeListData.getCode();
+    }
 }
