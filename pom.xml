@@ -18,8 +18,8 @@
 
     <properties>
         <sirius.kernel>13.18</sirius.kernel>
-        <sirius.web>24.0.1</sirius.web>
-        <sirius.db>9.0</sirius.db>
+        <sirius.web>24.2</sirius.web>
+        <sirius.db>9.0.1</sirius.db>
     </properties>
 
     <repositories>
@@ -115,6 +115,11 @@
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
             <version>1.11.646</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.10</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>

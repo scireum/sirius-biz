@@ -28,7 +28,12 @@ public enum ImportMode {
     /**
      * Only creates new entities.
      */
-    NEW_ONLY;
+    NEW_ONLY,
+
+    /**
+     * Only verifies if the entities could be persisted.
+     */
+    CHECK_ONLY;
 
     @Override
     public String toString() {
