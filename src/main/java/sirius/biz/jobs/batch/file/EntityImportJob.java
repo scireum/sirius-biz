@@ -13,6 +13,7 @@ import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer3.FileParameter;
+import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
@@ -65,6 +66,14 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
         this.mode = process.getParameter(importModeParameter).orElse(ImportMode.NEW_AND_UPDATES);
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);
+    }
+
+    @Override
+    protected void backupInputFile(VirtualFile input) {
+        // No need to create a backup copy if we only run a check...
+        if (mode != ImportMode.CHECK_ONLY) {
+            super.backupInputFile(input);
+        }
     }
 
     @Override
