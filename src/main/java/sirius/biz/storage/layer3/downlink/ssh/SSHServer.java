@@ -12,7 +12,6 @@ import org.apache.sshd.common.file.FileSystemFactory;
 import org.apache.sshd.common.io.IoSession;
 import org.apache.sshd.common.session.Session;
 import org.apache.sshd.server.SshServer;
-import org.apache.sshd.server.auth.password.PasswordAuthenticator;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
 import org.apache.sshd.server.session.ServerSession;
 import org.apache.sshd.server.session.ServerSessionImpl;
@@ -23,6 +22,8 @@ import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.Killable;
 import sirius.kernel.Startable;
 import sirius.kernel.Stoppable;
+import sirius.kernel.di.std.ConfigValue;
+import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.MaintenanceInfo;
 import sirius.web.security.UserContext;
@@ -33,65 +34,97 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.util.Collections;
 
+/**
+ * Provides an built-in SSH server which provides access to the {@link sirius.biz.storage.layer3.VirtualFile} via
+ * <b>SCP</b> and <b>SFTP</b>.
+ */
 @Register
 public class SSHServer implements Startable, Stoppable, Killable {
+
+    @ConfigValue("storage.layer3.downlink.ssh.port")
+    private int port;
+
+    @ConfigValue("storage.layer3.downlink.ssh.hostKeyFile")
+    private String hostKeyFile;
 
     private SshServer server;
 
     @Override
     public int getPriority() {
-        return 500;
+        return Priorized.DEFAULT_PRIORITY + 200;
     }
 
     @Override
     public void started() {
-        server = SshServer.setUpDefaultServer();
-//        sshd.setShellFactory();
-        server.setPort(2222);
-        server.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(new File("hostkey.ser").toPath()));
+        if (port <= 0) {
+            return;
+        }
+
+        try {
+            server = SshServer.setUpDefaultServer();
+            server.setPort(port);
+            server.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(new File(hostKeyFile).toPath()));
+
+            installSCPCommandFactory();
+            installSessionFactory();
+            installPasswordAuthenticator();
+            installFileSystemFactory();
+            installSFTPSubsystem();
+
+            server.start();
+            StorageUtils.LOG.WARN("Layer 3/SSH: Successfully started the SSH server on port %s", port);
+        } catch (IOException e) {
+            StorageUtils.LOG.WARN("Layer 3/SSH: Failed to start the SSH server: %s", e.getMessage());
+        }
+    }
+
+    protected void installSCPCommandFactory() {
         server.setCommandFactory(new BridgeScpCommandFactory());
+    }
+
+    protected void installSessionFactory() {
         server.setSessionFactory(new SessionFactory(server) {
             @Override
             protected ServerSessionImpl doCreateSession(IoSession ioSession) throws Exception {
                 return new BridgeSession(getFactoryManager(), ioSession);
             }
         });
-        server.setPasswordAuthenticator(new PasswordAuthenticator() {
-            @Override
-            public boolean authenticate(String username, String password, ServerSession session) {
-                if (StorageUtils.LOG.isFINE()) {
-                    StorageUtils.LOG.FINE("Layer 3/SSH: Incoming auth-request: " + session);
-                }
+    }
 
-                boolean locked = UserContext.getCurrentScope()
-                                            .tryAs(MaintenanceInfo.class)
-                                            .map(MaintenanceInfo::isLocked)
-                                            .orElse(false);
-                if (locked) {
-                    return false;
-                }
+    protected void installPasswordAuthenticator() {
+        server.setPasswordAuthenticator(this::authenticate);
+    }
 
-                StorageUtils.LOG.FINE("Layer 3/FTP: Trying to authenticate user: " + username);
+    private boolean authenticate(String username, String password, ServerSession session) {
+        if (StorageUtils.LOG.isFINE()) {
+            StorageUtils.LOG.FINE("Layer 3/SSH: Incoming auth-request: " + session);
+        }
 
-                UserInfo authUser = UserContext.get().getUserManager().findUserByCredentials(null, username, password);
-                ((BridgeSession) session).setUser(authUser);
+        boolean locked =
+                UserContext.getCurrentScope().tryAs(MaintenanceInfo.class).map(MaintenanceInfo::isLocked).orElse(false);
+        if (locked) {
+            return false;
+        }
 
-                return authUser != null;
-            }
-        });
+        StorageUtils.LOG.FINE("Layer 3/FTP: Trying to authenticate user: " + username);
 
+        UserInfo authUser = UserContext.get().getUserManager().findUserByCredentials(null, username, password);
+        ((BridgeSession) session).setUser(authUser);
+
+        return authUser != null;
+    }
+
+    protected void installFileSystemFactory() {
         server.setFileSystemFactory(new FileSystemFactory() {
             @Override
             public FileSystem createFileSystem(Session session) throws IOException {
                 return new BridgeFileSystem();
             }
         });
+    }
+
+    protected void installSFTPSubsystem() {
         server.setSubsystemFactories(Collections.singletonList(new BridgeSftpSubsystemFactory()));
-        try {
-            server.start();
-        } catch (IOException e) {
-            StorageUtils.LOG.WARN("Layer 3/SSH: Failed to start the SSH server: %s", e.getMessage());
-        }
     }
 
     @Override
