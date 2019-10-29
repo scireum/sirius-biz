@@ -67,7 +67,7 @@ public interface BlobStorageSpace {
      * Resolves the given path into a blob.
      *
      * @param tenantId the tenant which owns the directory structure to search in
-     * @param path     the path to resolve (may start with a "/" but not with the space name itself).
+     * @param path     the path to resolve (may start with a "/" but not with the space name itself)
      * @return the blob wrapped as optional or an empty optional if no matching blob was found
      */
     Optional<? extends Blob> findByPath(String tenantId, String path);
@@ -75,7 +75,7 @@ public interface BlobStorageSpace {
     /**
      * Uses the current tenant and the given path to resolve this into an existing blob.
      *
-     * @param path the path to resolve (may start with a "/" but not with the space name itself).
+     * @param path the path to resolve (may start with a "/" but not with the space name itself)
      * @return the blob wrapped as optional or an empty optional if no matching blob was found
      */
     Optional<? extends Blob> findByPath(String path);
@@ -86,7 +86,7 @@ public interface BlobStorageSpace {
      * Note that all intermediate directories will be auto-created.
      *
      * @param tenantId the tenant which owns the directory structure to search in
-     * @param path     the path to resolve (may start with a "/" but not with the space name itself).
+     * @param path     the path to resolve (may start with a "/" but not with the space name itself)
      * @return the found or newly created blob
      */
     Blob findOrCreateByPath(String tenantId, String path);
@@ -96,7 +96,7 @@ public interface BlobStorageSpace {
      * <p>
      * Note that all intermediate directories will be auto-created.
      *
-     * @param path the path to resolve (may start with a "/" but not with the space name itself).
+     * @param path the path to resolve (may start with a "/" but not with the space name itself)
      * @return the found or newly created blob
      */
     Blob findOrCreateByPath(String path);
