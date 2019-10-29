@@ -15,9 +15,9 @@ import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.layer1.replication.ReplicationTaskExecutor;
 import sirius.biz.storage.layer1.replication.ReplicationTaskStorage;
 import sirius.biz.storage.util.StorageUtils;
-import sirius.db.jdbc.Database;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
+import sirius.db.jdbc.UpdateStatement;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -35,6 +35,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Register(framework = SQLReplicationTaskStorage.FRAMEWORK_JDBC_REPLICATION)
 public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
 
+    /**
+     * Contains the name of the framework which has to be enabled to support the coordination of the
+     * replication layer via JDBC entities.
+     */
     public static final String FRAMEWORK_JDBC_REPLICATION = "biz.storage-replication-jdbc";
 
     @ConfigValue("storage.layer1.replication.batchSize")
@@ -102,7 +106,6 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
 
     @Override
     public int emitBatches() {
-        Database database = oma.getDatabase(mixing.getDescriptor(SQLReplicationTask.class).getRealm());
         AtomicInteger numberOfBatches = new AtomicInteger(maxBatches);
         AtomicInteger scheduledTasks = new AtomicInteger(0);
         emitter.computeBatches(SQLReplicationTask.class,
@@ -112,7 +115,7 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
                                    distributedTasks.submitFIFOTask(ReplicationTaskExecutor.class, batch);
                                    scheduledTasks.addAndGet(batchSize);
 
-                                   markTasksAsScheduled(database, batch);
+                                   markTasksAsScheduled(batch);
 
                                    return numberOfBatches.decrementAndGet() > 0;
                                });
@@ -120,19 +123,18 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
         return scheduledTasks.get();
     }
 
-    private void markTasksAsScheduled(Database database, JSONObject batch) {
+    private void markTasksAsScheduled(JSONObject batch) {
         try {
-            database.createQuery("UPDATE sqlreplicationtask"
-                                 + " SET scheduled = ${scheduled}"
-                                 + " WHERE id >= ${lowerBound}"
-                                 + "    AND id <= ${upperBound}"
-                                 + "    AND failed = 0"
-                                 + "    AND earliestExecution < ${executionLimit}")
-                    .set("scheduled", LocalDateTime.now())
-                    .set("executionLimit", LocalDateTime.now())
-                    .set("lowerBound", batch.getLongValue(SQLEntityBatchEmitter.START_ID))
-                    .set("upperBound", batch.getLongValue(SQLEntityBatchEmitter.END_ID))
-                    .executeUpdate();
+            oma.updateStatement(SQLReplicationTask.class)
+               .setToNow(SQLReplicationTask.SCHEDULED)
+               .where(SQLReplicationTask.EARLIEST_EXECUTION, UpdateStatement.Operator.LT, LocalDateTime.now())
+               .where(SQLReplicationTask.ID,
+                      UpdateStatement.Operator.GT_EQ,
+                      batch.getLongValue(SQLEntityBatchEmitter.START_ID))
+               .where(SQLReplicationTask.ID,
+                      UpdateStatement.Operator.LT_EQ,
+                      batch.getLongValue(SQLEntityBatchEmitter.END_ID))
+               .executeUpdate();
         } catch (SQLException e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)

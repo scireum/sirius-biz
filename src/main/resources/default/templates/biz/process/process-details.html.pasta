@@ -20,16 +20,20 @@
             </w:navbox>
         </i:if>
 
-        <i:if test="!process.getFiles().isEmpty()">
+        <i:local name="files" value="process.getFiles().findAttachedBlobs()"/>
+        <i:if test="!files.isEmpty()">
             <w:navbox labelKey="Process.files">
-                <i:for type="sirius.biz.process.ProcessFile" var="file" items="process.getFiles()">
-                    <li>
-                        <a href="/ps/@process.getId()/file/@file.getFileId()" class="link" target="_blank">
-                            <i class="fa fa-file"></i>
-                            @file.getFilename()
-                            <small class="muted">(@formatSize(file.getSize()))</small>
-                        </a>
-                    </li>
+                <i:for type="sirius.biz.storage.layer2.Blob" var="file" items="files">
+                    <i:local name="url" value="file.url().asDownload().buildURL()"/>
+                    <i:if test="url.isPresent()">
+                        <li>
+                            <a href="@url.get()" class="link" target="_blank">
+                                <i class="fa fa-file"></i>
+                                @file.getFilename()
+                                <small class="muted">(@formatSize(file.getSize()))</small>
+                            </a>
+                        </li>
+                    </i:if>
                 </i:for>
             </w:navbox>
         </i:if>
@@ -72,7 +76,8 @@
                             <pre class="plain" style="white-space: pre-wrap">@log.getMessage()</pre>
                         </div>
                         <div>
-                            <i:for type="sirius.biz.process.logs.ProcessLogAction" var="action" items="log.getActions()">
+                            <i:for type="sirius.biz.process.logs.ProcessLogAction" var="action"
+                                   items="log.getActions()">
                                 <a href="@action.getUri()?returnUrl=@urlEncode(apply('/ps/%s', process.getId()))"
                                    class="link link-inline"><i class="fa @action.getIcon()"></i> @action.getLabel()</a>
                             </i:for>

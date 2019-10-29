@@ -56,6 +56,9 @@ public class Cells {
         if (value instanceof String) {
             return new Cell((String) value);
         }
+        if (value instanceof Enum) {
+            return new Cell(Strings.toString((value)));
+        }
 
         if (value instanceof JSONObject) {
             return new Cell((JSONObject) value);

@@ -8,35 +8,28 @@
 
 package sirius.biz.storage.layer2.jdbc;
 
-import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
-import sirius.biz.storage.layer2.BlobRevision;
-import sirius.biz.storage.layer2.BlobVariant;
 import sirius.biz.storage.layer2.Directory;
+import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.util.StorageUtils;
-import sirius.biz.storage.util.WatchableInputStream;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SmartQuery;
+import sirius.db.jdbc.UpdateStatement;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
-import sirius.kernel.commons.Files;
-import sirius.kernel.commons.Limit;
+import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.settings.Extension;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -45,7 +38,12 @@ import java.util.function.Function;
  * Provides a storage facility which stores blobs and directories as {@link SQLBlob} and {@link SQLDirectory} in a
  * JDBC datasource.
  */
-public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirectory> {
+public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirectory, SQLVariant> {
+
+    /**
+     * Determines the number of attempts when updating the contents of a blob.
+     */
+    private static final int UPDATE_BLOB_RETRIES = 3;
 
     @Part
     private static OMA oma;
@@ -53,8 +51,8 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     @Part
     private static Mixing mixing;
 
-    protected SQLBlobStorageSpace(String name, boolean browsable, boolean readonly) {
-        super(name, browsable, readonly);
+    protected SQLBlobStorageSpace(String spaceName, Extension config) {
+        super(spaceName, config);
     }
 
     @Override
@@ -67,17 +65,28 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                   .eq(SQLBlob.SPACE_NAME, spaceName)
                   .eq(SQLBlob.BLOB_KEY, key)
                   .eq(SQLBlob.DELETED, false)
+                  .eq(SQLBlob.COMMITTED, true)
                   .first();
     }
 
     @Override
     protected SQLDirectory findRoot(String tenantId) {
         return oma.select(SQLDirectory.class)
-                  .fields(SQLDirectory.ID)
                   .eq(SQLDirectory.SPACE_NAME, spaceName)
                   .eq(SQLDirectory.TENANT_ID, tenantId)
+                  .eq(SQLDirectory.DELETED, false)
                   .eq(SQLDirectory.PARENT, null)
                   .queryFirst();
+    }
+
+    @Override
+    protected boolean isSingularRoot(SQLDirectory directory) {
+        return oma.select(SQLDirectory.class)
+                  .eq(SQLDirectory.SPACE_NAME, directory.getSpaceName())
+                  .eq(SQLDirectory.TENANT_ID, directory.getTenantId())
+                  .eq(SQLDirectory.DELETED, false)
+                  .eq(SQLDirectory.PARENT, null)
+                  .count() == 1;
     }
 
     @Override
@@ -90,6 +99,27 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
+    protected void commitDirectory(SQLDirectory directory) {
+        directory.setCommitted(true);
+        oma.update(directory);
+    }
+
+    @Override
+    protected void rollbackDirectory(SQLDirectory directory) {
+        try {
+            oma.deleteStatement(SQLDirectory.class).where(SQLDirectory.ID, directory.getId()).executeUpdate();
+        } catch (SQLException e) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .withSystemErrorMessage("Layer2/SQL: Failed to rollback directory %s (%s) in %s: %s (%s)",
+                                                    directory.getName(),
+                                                    directory.getId(),
+                                                    spaceName)
+                            .handle();
+        }
+    }
+
+    @Override
     protected SQLDirectory lookupDirectoryById(String idAsString) {
         return oma.find(SQLDirectory.class, idAsString).orElse(null);
     }
@@ -99,6 +129,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         SQLBlob result = new SQLBlob();
         result.setSpaceName(spaceName);
         result.setTemporary(true);
+        result.setCommitted(true);
         oma.update(result);
 
         return result;
@@ -112,37 +143,24 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
 
         return oma.select(SQLBlob.class)
                   .eq(SQLBlob.SPACE_NAME, spaceName)
-                  .eq(SQLBlob.FILENAME, filename)
+                  .eq(effectiveFilenameMapping(), effectiveFilename(filename))
                   .eq(SQLBlob.REFERENCE, referencingEntity)
                   .eq(SQLBlob.REFERENCE_DESIGNATOR, null)
                   .eq(SQLBlob.DELETED, false)
+                  .eq(SQLBlob.COMMITTED, true)
                   .first();
     }
 
-    @Override
-    public Blob findOrCreateAttachedBlobByName(String referencingEntity, String filename) {
-        if (Strings.isEmpty(referencingEntity)) {
-            throw new IllegalArgumentException("referencingEntity must not be empty");
+    private String effectiveFilename(String filename) {
+        if (useNormalizedNames && filename != null) {
+            return filename.toLowerCase();
         }
 
-        Optional<? extends Blob> existingObject = oma.select(SQLBlob.class)
-                                                     .eq(SQLBlob.SPACE_NAME, spaceName)
-                                                     .eq(SQLBlob.FILENAME, filename)
-                                                     .eq(SQLBlob.REFERENCE, referencingEntity)
-                                                     .eq(SQLBlob.REFERENCE_DESIGNATOR, null)
-                                                     .eq(SQLBlob.DELETED, false)
-                                                     .first();
-        if (existingObject.isPresent()) {
-            return existingObject.get();
-        }
+        return filename;
+    }
 
-        SQLBlob result = new SQLBlob();
-        result.setSpaceName(spaceName);
-        result.setFilename(filename);
-        result.setReference(referencingEntity);
-        oma.update(result);
-
-        return result;
+    private Mapping effectiveFilenameMapping() {
+        return useNormalizedNames ? SQLBlob.NORMALIZED_FILENAME : SQLBlob.FILENAME;
     }
 
     @Override
@@ -155,6 +173,8 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                   .eq(SQLBlob.SPACE_NAME, spaceName)
                   .eq(SQLBlob.REFERENCE, referencingEntity)
                   .eq(SQLBlob.REFERENCE_DESIGNATOR, null)
+                  .eq(SQLBlob.COMMITTED, true)
+                  .eq(SQLBlob.DELETED, false)
                   .orderAsc(SQLBlob.FILENAME)
                   .queryList();
     }
@@ -164,12 +184,22 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         if (Strings.isEmpty(referencingEntity)) {
             return;
         }
-
-        oma.select(SQLBlob.class)
-           .eq(SQLBlob.SPACE_NAME, spaceName)
-           .eq(SQLBlob.REFERENCE, referencingEntity)
-           .eq(SQLBlob.REFERENCE_DESIGNATOR, null)
-           .delete();
+        try {
+            oma.updateStatement(SQLBlob.class)
+               .set(SQLBlob.DELETED, true)
+               .where(SQLBlob.SPACE_NAME, spaceName)
+               .where(SQLBlob.REFERENCE, referencingEntity)
+               .where(SQLBlob.REFERENCE_DESIGNATOR, null)
+               .executeUpdate();
+        } catch (SQLException e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage(
+                              "Layer 2/SQL: An error occured, when marking the objects referenced to '%s' as deleted: %s (%s)",
+                              referencingEntity)
+                      .handle();
+        }
     }
 
     @Override
@@ -183,16 +213,28 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         if (Strings.isEmpty(referenceDesignator)) {
             return;
         }
+        try {
+            UpdateStatement updateStatement = oma.updateStatement(SQLBlob.class)
+                                                 .set(SQLBlob.DELETED, true)
+                                                 .where(SQLBlob.SPACE_NAME, spaceName)
+                                                 .where(SQLBlob.REFERENCE, referencingEntity)
+                                                 .where(SQLBlob.REFERENCE_DESIGNATOR, referenceDesignator);
 
-        SmartQuery<SQLBlob> qry = oma.select(SQLBlob.class)
-                                     .eq(SQLBlob.SPACE_NAME, spaceName)
-                                     .eq(SQLBlob.REFERENCE, referencingEntity)
-                                     .eq(SQLBlob.REFERENCE_DESIGNATOR, referenceDesignator);
-        if (Strings.isFilled(excludedBlobKey)) {
-            qry.ne(SQLBlob.BLOB_KEY, excludedBlobKey);
+            if (Strings.isFilled(excludedBlobKey)) {
+                updateStatement.where(SQLBlob.BLOB_KEY, UpdateStatement.Operator.NE, excludedBlobKey);
+            }
+
+            updateStatement.executeUpdate();
+        } catch (SQLException e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage(
+                              "Layer 2/SQL: An error occured, when marking the objects referenced to '%s' via '%s' as deleted: %s (%s)",
+                              referencingEntity,
+                              referenceDesignator)
+                      .handle();
         }
-
-        qry.delete();
     }
 
     @Override
@@ -210,18 +252,13 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         }
 
         try {
-            oma.getDatabase(Mixing.DEFAULT_REALM)
-               .createQuery("UPDATE sqlblob"
-                            + " SET reference=${reference}, referenceDesignator=${designator}, temporary=${temporary}"
-                            + " WHERE spaceName=${spaceName}"
-                            + "   AND blobKey=${blobKey}"
-                            + "   AND temporary=${isTemporary}")
-               .set("reference", referencingEntity)
-               .set("designator", referenceDesignator)
-               .set("temporary", false)
-               .set("spaceName", spaceName)
-               .set("blobKey", objectKey)
-               .set("isTemporary", true)
+            oma.updateStatement(SQLBlob.class)
+               .set(SQLBlob.REFERENCE, referencingEntity)
+               .set(SQLBlob.REFERENCE_DESIGNATOR, referenceDesignator)
+               .set(SQLBlob.TEMPORARY, false)
+               .where(SQLBlob.SPACE_NAME, spaceName)
+               .where(SQLBlob.BLOB_KEY, objectKey)
+               .where(SQLBlob.TEMPORARY, true)
                .executeUpdate();
         } catch (SQLException e) {
             Exceptions.handle()
@@ -234,197 +271,11 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         }
     }
 
-    @Override
-    public long getNumberOfDirectories(@Nullable String tenantId) {
-        try {
-            return oma.getSecondaryDatabase(mixing.getDescriptor(SQLDirectory.class).getRealm())
-                      .createQuery("SELECT count(*) as numDirectories"
-                                   + " FROM sqldirectory"
-                                   + " WHERE spaceName = ${spaceName}"
-                                   + " [AND tenantId = ${tenantId}]")
-                      .set("spaceName", spaceName)
-                      .set("tenantId", tenantId)
-                      .queryFirst()
-                      .getValue("numDirectories")
-                      .asLong(0);
-        } catch (SQLException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 2/SQL: Cannot count the number of directories of %s: %s (%s)",
-                                                    spaceName)
-                            .handle();
-        }
-    }
-
-    @Override
-    public long getNumberOfVisibleBlobs(@Nullable String tenantId) {
-        try {
-            return oma.getSecondaryDatabase(mixing.getDescriptor(SQLBlob.class).getRealm())
-                      .createQuery("SELECT count(*) as numObjects"
-                                   + " FROM sqlblob"
-                                   + " WHERE spaceName = ${spaceName}"
-                                   + " [AND tenantId = ${tenantId}]"
-                                   + " AND parent IS NOT NULL")
-                      .set("spaceName", spaceName)
-                      .set("tenantId", tenantId)
-                      .queryFirst()
-                      .getValue("numObjects")
-                      .asLong(0);
-        } catch (SQLException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 2/SQL: Cannot count all visible blobs of %s: %s (%s)",
-                                                    spaceName)
-                            .handle();
-        }
-    }
-
-    @Override
-    public long getSizeOfVisibleBlobs(@Nullable String tenantId) {
-        try {
-            return oma.getSecondaryDatabase(mixing.getDescriptor(SQLBlob.class).getRealm())
-                      .createQuery("SELECT sum(size) as totalSize"
-                                   + " FROM sqlblob"
-                                   + " WHERE spaceName = ${spaceName}"
-                                   + " [AND tenantId = ${tenantId}]"
-                                   + " AND parent IS NOT NULL")
-                      .set("spaceName", spaceName)
-                      .set("tenantId", tenantId)
-                      .queryFirst()
-                      .getValue("totalSize")
-                      .asLong(0);
-        } catch (SQLException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage(
-                                    "Layer 2/SQL: Cannot determine the size of all visible blobs of %s: %s (%s)",
-                                    spaceName)
-                            .handle();
-        }
-    }
-
-    @Override
-    public long getNumberOfReferencedBlobs() {
-        try {
-            return oma.getSecondaryDatabase(mixing.getDescriptor(SQLBlob.class).getRealm())
-                      .createQuery("SELECT count(*) as numObjects"
-                                   + " FROM sqlblob"
-                                   + " WHERE spaceName = ${spaceName}"
-                                   + " AND reference IS NOT NULL")
-                      .set("spaceName", spaceName)
-                      .queryFirst()
-                      .getValue("numObjects")
-                      .asLong(0);
-        } catch (SQLException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 2/SQL: Cannot count all referenced blobs of %s: %s (%s)",
-                                                    spaceName)
-                            .handle();
-        }
-    }
-
-    @Override
-    public long getSizeOfReferencedBlobs() {
-        try {
-            return oma.getSecondaryDatabase(mixing.getDescriptor(SQLBlob.class).getRealm())
-                      .createQuery("SELECT sum(size) as totalSize"
-                                   + " FROM sqlblob"
-                                   + " WHERE spaceName = ${spaceName}"
-                                   + " AND reference IS NOT NULL")
-                      .set("spaceName", spaceName)
-                      .queryFirst()
-                      .getValue("totalSize")
-                      .asLong(0);
-        } catch (SQLException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage(
-                                    "Layer 2/SQL: Cannot determine the size of all referenced blobs of %s: %s (%s)",
-                                    spaceName)
-                            .handle();
-        }
-    }
-
-    @Override
-    public long getNumberOfBlobs() {
-        try {
-            return oma.getSecondaryDatabase(mixing.getDescriptor(SQLBlob.class).getRealm())
-                      .createQuery("SELECT count(*) as numObjects"
-                                   + " FROM sqlblob"
-                                   + " WHERE spaceName = ${spaceName}")
-                      .set("spaceName", spaceName)
-                      .queryFirst()
-                      .getValue("numObjects")
-                      .asLong(0);
-        } catch (SQLException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 2/SQL: Cannot count all blobs of %s: %s (%s)", spaceName)
-                            .handle();
-        }
-    }
-
-    @Override
-    public long getSizeOfBlobs() {
-        try {
-            return oma.getSecondaryDatabase(mixing.getDescriptor(SQLBlob.class).getRealm())
-                      .createQuery("SELECT sum(size) as totalSize"
-                                   + " FROM sqlblob"
-                                   + " WHERE spaceName = ${spaceName}")
-                      .set("spaceName", spaceName)
-                      .queryFirst()
-                      .getValue("totalSize")
-                      .asLong(0);
-        } catch (SQLException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 2/SQL: Cannot determine the size of all blobs of %s: %s (%s)",
-                                                    spaceName)
-                            .handle();
-        }
-    }
-
-    protected void hide(SQLBlob blob) {
-        try {
-            oma.getDatabase(Mixing.DEFAULT_REALM)
-               .createQuery("UPDATE sqlblob"
-                            + " SET hidden=${hidden}"
-                            + " WHERE spaceName=${spaceName}"
-                            + "   AND blobKey=${blobKey}")
-               .set("hidden", true)
-               .set("spaceName", spaceName)
-               .set("blobKey", blob.getBlobKey())
-               .executeUpdate();
-        } catch (SQLException e) {
-            Exceptions.handle()
-                      .to(StorageUtils.LOG)
-                      .error(e)
-                      .withSystemErrorMessage(
-                              "Layer 2/SQL: An error occured, when marking the blob '%s' as hidden: %s (%s)",
-                              blob.getBlobKey())
-                      .handle();
-        }
-    }
-
     protected void delete(SQLBlob blob) {
-        //TODO oma API
         try {
-            oma.getDatabase(Mixing.DEFAULT_REALM)
-               .createQuery("UPDATE sqlmanagedobject"
-                            + " SET deleted=${deleted}"
-                            + " WHERE spaceName=${spaceName}"
-                            + "   AND blobKey=${blobKey}")
-               .set("deleted", true)
-               .set("spaceName", spaceName)
-               .set("blobKey", blob.getBlobKey())
+            oma.updateStatement(SQLBlob.class)
+               .set(SQLBlob.DELETED, true)
+               .where(SQLBlob.ID, blob.getId())
                .executeUpdate();
         } catch (SQLException e) {
             Exceptions.handle()
@@ -437,126 +288,45 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         }
     }
 
-    protected boolean move(SQLBlob object, @Nullable SQLDirectory newParent) {
-        //TODO handle null properly
-        throw new UnsupportedOperationException();
-//        Objects.requireNonNull(newParent);
-//        if (!Strings.areEqual(name, (SQLManagedDirectory)newParent).getSpaceName()) {
-//
-//        }
+    @Override
+    protected void updateBlobName(SQLBlob blob, String newName) {
+        blob.setFilename(newName);
+        oma.update(blob);
     }
 
-    protected boolean rename(SQLBlob object, String newName) {
-        throw new UnsupportedOperationException();
+    @Override
+    protected void updateBlobParent(SQLBlob blob, SQLDirectory newParent) {
+        blob.getParentRef().setValue(newParent);
+        oma.update(blob);
     }
 
     protected void deleteDirectory(SQLDirectory directory) {
-        throw new UnsupportedOperationException();
+        try {
+            oma.updateStatement(SQLDirectory.class)
+               .set(SQLDirectory.DELETED, true)
+               .where(SQLDirectory.ID, directory.getId())
+               .executeUpdate();
+        } catch (SQLException e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage(
+                              "Layer 2/SQL: An error occured, when marking the directory '%s' as deleted: %s (%s)",
+                              directory.getId())
+                      .handle();
+        }
     }
 
-    protected void moveDirectory(SQLDirectory directory, SQLDirectory newParent) {
-        //TODO assert same space
-        SQLDirectory check = newParent;
-        while (check != null && !Objects.equals(directory, check)) {
-            check = fetchDirectoryParent(check);
-        }
-
-        if (check != null) {
-            //TODO loop
-            throw new IllegalArgumentException("Nenene");
-        }
-
-        directory = oma.tryRefresh(directory);
+    @Override
+    protected void updateDirectoryParent(SQLDirectory directory, SQLDirectory newParent) {
         directory.getParentRef().setValue(newParent);
         oma.update(directory);
-        directoryByIdCache.remove(directory.getIdAsString());
     }
 
-    protected void renameDirectory(SQLDirectory directory, String newName) {
-        directory = oma.tryRefresh(directory);
+    @Override
+    protected void updateDirectoryName(SQLDirectory directory, String newName) {
         directory.setDirectoryName(newName);
         oma.update(directory);
-        directoryByIdCache.remove(directory.getIdAsString());
-    }
-
-    protected void updateContent(SQLBlob blob, String filename, File file) {
-        String nextPhysicalId = keyGenerator.generateId();
-        try {
-            getPhysicalSpace().upload(nextPhysicalId, file);
-            blob = oma.refreshOrFail(blob);
-            blob.setSize(file.length());
-            if (Strings.isFilled(filename)) {
-                blob.setFilename(filename);
-            }
-
-            blob.setLastModified(LocalDateTime.now());
-            blob.setPhysicalObjectId(nextPhysicalId);
-            oma.update(blob);
-            nextPhysicalId = null;
-        } catch (Exception e) {
-            try {
-                getPhysicalSpace().delete(nextPhysicalId);
-            } catch (Exception ex) {
-                Exceptions.ignore(ex);
-            }
-
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 2/SQL: Cannot update the contents of %s: %s (%s)",
-                                                    blob.getBlobKey())
-                            .handle();
-        }
-    }
-
-    protected void updateContent(SQLBlob blob, String filename, InputStream data, long contentLength) {
-        String nextPhysicalId = keyGenerator.generateId();
-        try {
-            getPhysicalSpace().upload(nextPhysicalId, data, contentLength);
-            blob = oma.refreshOrFail(blob);
-            blob.setSize(contentLength);
-            if (Strings.isFilled(filename)) {
-                blob.setFilename(filename);
-            }
-            blob.setLastModified(LocalDateTime.now());
-            blob.setPhysicalObjectId(nextPhysicalId);
-            oma.update(blob);
-            nextPhysicalId = null;
-        } catch (Exception e) {
-            try {
-                getPhysicalSpace().delete(nextPhysicalId);
-            } catch (Exception ex) {
-                Exceptions.ignore(ex);
-            }
-
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 2/SQL: Cannot update the contents of %s: %s (%s)",
-                                                    blob.getBlobKey())
-                            .handle();
-        }
-    }
-
-    protected OutputStream createOutputStream(SQLBlob blob, String filename) {
-        try {
-            return utils.createLocalBuffer(file -> {
-                try {
-                    updateContent(blob, filename, file);
-                } finally {
-                    Files.delete(file);
-                }
-            });
-        } catch (IOException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage(
-                                    "Layer 2/SQL: Cannot create a local buffer to provide an output stream for %s (%s): %s (%s)",
-                                    blob.getId(),
-                                    blob.getFilename())
-                            .handle();
-        }
     }
 
     protected SQLDirectory fetchDirectoryParent(SQLDirectory directory) {
@@ -567,177 +337,331 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         return (SQLDirectory) fetchDirectoryById(blob.getParentRef().getIdAsString());
     }
 
-    protected String determineDirectoryPath(SQLDirectory directory) {
-        if (directory.getParentRef().isEmpty()) {
-            return spaceName;
+    @Nonnull
+    @Override
+    protected Optional<String> updateBlob(@Nonnull SQLBlob blob,
+                                          @Nonnull String nextPhysicalId,
+                                          long size,
+                                          @Nullable String filename) throws Exception {
+        int retries = UPDATE_BLOB_RETRIES;
+        while (retries-- > 0) {
+            UpdateStatement updateStatement = oma.updateStatement(SQLBlob.class)
+                                                 .set(SQLBlob.PHYSICAL_OBJECT_KEY, nextPhysicalId)
+                                                 .set(SQLBlob.SIZE, size)
+                                                 .setToNow(SQLBlob.LAST_MODIFIED);
+            if (Strings.isFilled(filename)) {
+                filename = filename.trim();
+                updateStatement.set(SQLBlob.FILENAME, filename)
+                               .set(SQLBlob.NORMALIZED_FILENAME, filename.toLowerCase())
+                               .set(SQLBlob.FILE_EXTENSION,
+                                    Strings.splitAtLast(filename.toLowerCase(), ".").getSecond());
+            }
+
+            int numUpdated = updateStatement.where(SQLBlob.ID, blob.getId())
+                                            .where(SQLBlob.PHYSICAL_OBJECT_KEY, blob.getPhysicalObjectKey())
+                                            .executeUpdate();
+            if (numUpdated == 1) {
+                return Optional.ofNullable(blob.getPhysicalObjectKey());
+            } else if (retries > 0) {
+                blob = oma.refreshOrFail(blob);
+            }
         }
 
-        return determineDirectoryPath(fetchDirectoryParent(directory)) + "/" + directory.getDirectoryName();
+        throw new IllegalStateException(Strings.apply("Cannot update the contents after %s retries.",
+                                                      UPDATE_BLOB_RETRIES));
     }
 
-    protected String determineBlobPath(SQLBlob blob) {
-        if (blob.getParentRef().isEmpty()) {
-            return spaceName;
+    protected boolean hasExistingChild(SQLDirectory parent, String childName) {
+        if (childDirectoryQuery(parent, childName).exists()) {
+            return true;
         }
 
-        return determineDirectoryPath(fetchBlobParent(blob)) + "/" + blob.getFilename();
+        return childBlobQuery(parent, childName).exists();
     }
 
-    protected Optional<? extends Directory> findChildDirectory(SQLDirectory parent, String childName) {
+    private SmartQuery<SQLDirectory> childDirectoryQuery(SQLDirectory parent, String childName) {
         return oma.select(SQLDirectory.class)
                   .eq(SQLDirectory.SPACE_NAME, spaceName)
                   .eq(SQLDirectory.PARENT, parent)
-                  .eq(SQLDirectory.DIRECTORY_NAME, childName)
-                  .first();
+                  .eq(effectiveDirectoryNameMapping(), effectiveFilename(childName))
+                  .eq(SQLDirectory.COMMITTED, true)
+                  .eq(SQLDirectory.DELETED, false);
     }
 
-    protected Directory findOrCreateChildDirectory(SQLDirectory parent, String childName) {
-        int retries = 3;
-        while (retries-- > 0) {
-            Optional<? extends Directory> directory = findChildDirectory(parent, childName);
-            if (directory.isPresent()) {
-                return directory.get();
-            }
-
-            SQLDirectory newDirectory = new SQLDirectory();
-            newDirectory.setSpaceName(spaceName);
-            newDirectory.getParentRef().setValue(parent);
-            newDirectory.setTenantId(parent.getTenantId());
-            newDirectory.setDirectoryName(childName);
-            oma.update(newDirectory);
-
-            if (oma.select(SQLDirectory.class)
-                   .eq(SQLDirectory.SPACE_NAME, spaceName)
-                   .eq(SQLDirectory.PARENT, parent)
-                   .eq(SQLDirectory.DIRECTORY_NAME, childName)
-                   .count() > 1) {
-                oma.delete(newDirectory);
-            } else {
-                return newDirectory;
-            }
-            Wait.randomMillis(100, 600);
-        }
-
-        throw Exceptions.handle()
-                        .to(StorageUtils.LOG)
-                        .withSystemErrorMessage(
-                                "Layer 2/SQL: Failed to create a child directory with name %s for parent directory %s (%s)",
-                                childName,
-                                parent.getDirectoryName(),
-                                parent.getIdAsString())
-                        .handle();
+    private Mapping effectiveDirectoryNameMapping() {
+        return useNormalizedNames ? SQLDirectory.NORMALIZED_DIRECTORY_NAME : SQLDirectory.DIRECTORY_NAME;
     }
 
-    protected Optional<? extends Blob> findChildBlob(SQLDirectory parent, String childName) {
-        return oma.select(SQLBlob.class)
-                  .eq(SQLBlob.SPACE_NAME, spaceName)
-                  .eq(SQLBlob.PARENT, parent)
-                  .eq(SQLBlob.FILENAME, childName)
-                  .ne(SQLBlob.DELETED, true)
-                  .ne(SQLBlob.HIDDEN, true)
-                  .first();
+    protected Optional<SQLDirectory> findExistingChildDirectory(SQLDirectory parent, String childName) {
+        return childDirectoryQuery(parent, childName).first();
     }
 
-    protected Blob findOrCreateChildBlob(SQLDirectory parent, String childName) {
-        int retries = 3;
+    @Override
+    protected SQLDirectory findAnyChildDirectory(SQLDirectory parent, String childName) {
+        return oma.select(SQLDirectory.class)
+                  .eq(SQLDirectory.SPACE_NAME, spaceName)
+                  .eq(SQLDirectory.PARENT, parent)
+                  .eq(effectiveDirectoryNameMapping(), effectiveFilename(childName))
+                  .eq(SQLDirectory.DELETED, false)
+                  .queryFirst();
+    }
 
-        while (retries-- > 0) {
-            Optional<? extends Blob> blob = findChildBlob(parent, childName);
-            if (blob.isPresent()) {
-                return blob.get();
-            }
+    @Override
+    protected SQLDirectory createChildDirectory(SQLDirectory parent, String childName) {
+        SQLDirectory newDirectory = new SQLDirectory();
+        newDirectory.setSpaceName(spaceName);
+        newDirectory.getParentRef().setValue(parent);
+        newDirectory.setTenantId(parent.getTenantId());
+        newDirectory.setDirectoryName(childName);
+        newDirectory.setCommitted(false);
+        oma.update(newDirectory);
 
-            SQLBlob newBlob = new SQLBlob();
-            newBlob.setSpaceName(spaceName);
-            newBlob.getParentRef().setValue(parent);
-            newBlob.setTenantId(parent.getTenantId());
-            newBlob.setFilename(childName);
-            oma.update(newBlob);
+        return newDirectory;
+    }
 
-            if (oma.select(SQLBlob.class)
-                   .eq(SQLBlob.SPACE_NAME, spaceName)
-                   .eq(SQLBlob.PARENT, parent)
-                   .eq(SQLBlob.FILENAME, childName)
-                   .ne(SQLBlob.DELETED, true)
-                   .ne(SQLBlob.HIDDEN, true)
-                   .count() > 1) {
-                oma.delete(newBlob);
-            } else {
-                return newBlob;
-            }
-            Wait.randomMillis(100, 600);
-        }
-
-        throw Exceptions.handle()
-                        .to(StorageUtils.LOG)
-                        .withSystemErrorMessage(
-                                "Layer 2/SQL: Failed to create a child blob with name %s for parent directory %s (%s)",
-                                childName,
-                                parent.getDirectoryName(),
-                                parent.getIdAsString())
-                        .handle();
+    @Override
+    protected boolean isChildDirectoryUnique(SQLDirectory parent, String childName, SQLDirectory childDirectory) {
+        return oma.select(SQLDirectory.class)
+                  .eq(SQLDirectory.SPACE_NAME, spaceName)
+                  .eq(SQLDirectory.PARENT, parent)
+                  .eq(effectiveDirectoryNameMapping(), effectiveFilename(childName))
+                  .eq(SQLDirectory.DELETED, false)
+                  .count() == 1;
     }
 
     protected void listChildDirectories(SQLDirectory parent,
                                         String prefixFilter,
-                                        Limit limit,
+                                        int maxResults,
                                         Function<? super Directory, Boolean> childProcessor) {
-        //TODO limit
-        //TODO filtering
         oma.select(SQLDirectory.class)
            .eq(SQLDirectory.SPACE_NAME, spaceName)
            .eq(SQLDirectory.PARENT, parent)
-           .iterate(child -> childProcessor.apply(child));
+           .eq(SQLDirectory.COMMITTED, true)
+           .eq(SQLDirectory.DELETED, false)
+           .where(OMA.FILTERS.like(SQLDirectory.NORMALIZED_DIRECTORY_NAME)
+                             .startsWith(prefixFilter)
+                             .ignoreEmpty()
+                             .build())
+           .limit(maxResults)
+           .iterate(childProcessor::apply);
+    }
+
+    protected Optional<SQLBlob> findExistingChildBlob(SQLDirectory parent, String childName) {
+        return childBlobQuery(parent, childName).first();
+    }
+
+    private SmartQuery<SQLBlob> childBlobQuery(SQLDirectory parent, String childName) {
+        return oma.select(SQLBlob.class)
+                  .eq(SQLBlob.SPACE_NAME, spaceName)
+                  .eq(SQLBlob.PARENT, parent)
+                  .eq(effectiveFilenameMapping(), effectiveFilename(childName))
+                  .eq(SQLBlob.COMMITTED, true)
+                  .eq(SQLBlob.DELETED, false);
+    }
+
+    @Override
+    protected SQLBlob findAnyChildBlob(SQLDirectory parent, String childName) {
+        return oma.select(SQLBlob.class)
+                  .eq(SQLBlob.SPACE_NAME, spaceName)
+                  .eq(SQLBlob.PARENT, parent)
+                  .eq(effectiveFilenameMapping(), effectiveFilename(childName))
+                  .eq(SQLBlob.DELETED, false)
+                  .queryFirst();
+    }
+
+    @Override
+    protected SQLBlob createChildBlob(SQLDirectory parent, String childName) {
+        SQLBlob newBlob = new SQLBlob();
+        newBlob.setSpaceName(spaceName);
+        newBlob.getParentRef().setValue(parent);
+        newBlob.setTenantId(parent.getTenantId());
+        newBlob.setFilename(childName);
+        newBlob.setCommitted(false);
+        oma.update(newBlob);
+
+        return newBlob;
+    }
+
+    @Override
+    protected boolean isChildBlobUnique(SQLDirectory parent, String childName, SQLBlob childBlob) {
+        return oma.select(SQLBlob.class)
+                  .eq(SQLBlob.SPACE_NAME, spaceName)
+                  .eq(SQLBlob.PARENT, parent)
+                  .eq(effectiveFilenameMapping(), effectiveFilename(childName))
+                  .eq(SQLBlob.DELETED, false)
+                  .count() == 1;
+    }
+
+    @Override
+    protected void commitBlob(SQLBlob blob) {
+        blob.setCommitted(true);
+        oma.update(blob);
+    }
+
+    @Override
+    protected void rollbackBlob(SQLBlob blob) {
+        oma.delete(blob);
+    }
+
+    @Override
+    protected SQLBlob findAnyAttachedBlobByName(String referencingEntity, String filename) {
+        return oma.select(SQLBlob.class)
+                  .eq(SQLBlob.SPACE_NAME, spaceName)
+                  .eq(effectiveFilenameMapping(), effectiveFilename(filename))
+                  .eq(SQLBlob.REFERENCE, referencingEntity)
+                  .eq(SQLBlob.REFERENCE_DESIGNATOR, null)
+                  .eq(SQLBlob.DELETED, false)
+                  .queryFirst();
+    }
+
+    @Override
+    protected SQLBlob createAttachedBlobByName(String referencingEntity, String filename) {
+        SQLBlob result = new SQLBlob();
+        result.setSpaceName(spaceName);
+        result.setFilename(filename);
+        result.setReference(referencingEntity);
+        result.setCommitted(false);
+        oma.update(result);
+
+        return result;
+    }
+
+    @Override
+    protected boolean isAttachedBlobUnique(String referencingEntity, String filename, SQLBlob blob) {
+        return oma.select(SQLBlob.class)
+                  .eq(SQLBlob.SPACE_NAME, spaceName)
+                  .eq(effectiveFilenameMapping(), effectiveFilename(filename))
+                  .eq(SQLBlob.REFERENCE, referencingEntity)
+                  .eq(SQLBlob.REFERENCE_DESIGNATOR, null)
+                  .eq(SQLBlob.DELETED, false)
+                  .count() == 1;
     }
 
     protected void listChildBlobs(SQLDirectory parent,
                                   String prefixFilter,
                                   Set<String> fileTypes,
-                                  Limit limit,
+                                  int maxResults,
                                   Function<? super Blob, Boolean> childProcessor) {
-        //TODO limit
-        //TODO filtering
         oma.select(SQLBlob.class)
            .eq(SQLBlob.SPACE_NAME, spaceName)
            .eq(SQLBlob.PARENT, parent)
-           .iterate(child -> childProcessor.apply(child));
+           .eq(SQLBlob.DELETED, false)
+           .where(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME).startsWith(prefixFilter).ignoreEmpty().build())
+           .where(OMA.FILTERS.containsOne(SQLBlob.FILE_EXTENSION, fileTypes.toArray()).build())
+           .limit(maxResults)
+           .iterate(childProcessor::apply);
     }
 
-    protected List<BlobVariant> fetchVariants(SQLBlob blob) {
-        //TODO
-        return Collections.emptyList();
+    protected List<? extends BlobVariant> fetchVariants(SQLBlob blob) {
+        return oma.select(SQLVariant.class)
+                  .eq(SQLVariant.BLOB, blob)
+                  .ne(SQLVariant.PHYSICAL_OBJECT_KEY, null)
+                  .orderAsc(SQLVariant.VARIANT_NAME)
+                  .queryList();
     }
 
-    protected List<BlobRevision> fetchRevisions(SQLBlob blob) {
-        //TODO
-        return Collections.emptyList();
+    @Override
+    protected SQLVariant findVariant(SQLBlob blob, String variantName) {
+        return oma.select(SQLVariant.class)
+                  .eq(SQLVariant.BLOB, blob)
+                  .ne(SQLVariant.PHYSICAL_OBJECT_KEY, null)
+                  .eq(SQLVariant.VARIANT_NAME, variantName)
+                  .queryFirst();
     }
 
-    public InputStream createInputStream(SQLBlob blob) {
-        FileHandle fileHandle = blob.download().filter(FileHandle::exists).orElse(null);
-        if (fileHandle == null) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .withSystemErrorMessage("Layer 2/SQL: Cannot obtain a file handle for %s (%s)",
-                                                    blob.getId(),
-                                                    blob.getFilename())
-                            .handle();
+    @Override
+    protected SQLVariant createVariant(SQLBlob blob, String variantName) {
+        SQLVariant variant = new SQLVariant();
+        variant.getBlob().setValue(blob);
+        variant.setVariantName(variantName);
+        variant.setQueuedForConversion(true);
+        variant.setNode(CallContext.getNodeName());
+        variant.setLastConversionAttempt(LocalDateTime.now());
+        variant.setNumAttempts(1);
+        oma.update(variant);
+        return variant;
+    }
+
+    @Override
+    protected boolean detectAndRemoveDuplicateVariant(SQLVariant variant, SQLBlob blob, String variantName) {
+        if (oma.select(SQLVariant.class)
+               .ne(SQLVariant.ID, variant.getId())
+               .eq(SQLVariant.BLOB, blob)
+               .eq(SQLVariant.VARIANT_NAME, variantName)
+               .exists()) {
+            oma.delete(variant);
+            return true;
         }
 
-        WatchableInputStream result = null;
+        return false;
+    }
+
+    @Override
+    protected boolean markConversionAttempt(SQLVariant variant) throws Exception {
+        return oma.updateStatement(SQLVariant.class)
+                  .set(SQLVariant.QUEUED_FOR_CONVERSION, true)
+                  .set(SQLVariant.NODE, CallContext.getNodeName())
+                  .setToNow(SQLVariant.LAST_CONVERSION_ATTEMPT)
+                  .inc(SQLVariant.NUM_ATTEMPTS)
+                  .where(SQLVariant.ID, variant.getId())
+                  .where(SQLVariant.NUM_ATTEMPTS, variant.getNumAttempts())
+                  .executeUpdate() == 1;
+    }
+
+    @Override
+    protected void markConversionFailure(SQLVariant variant) {
+        variant.setQueuedForConversion(false);
+        oma.update(variant);
+    }
+
+    @Override
+    protected void markConversionSuccess(SQLVariant variant, String physicalKey, long size) {
+        variant.setQueuedForConversion(false);
+        variant.setSize(size);
+        variant.setPhysicalObjectKey(physicalKey);
+        oma.update(variant);
+    }
+
+    @Override
+    public void runCleanup() {
+        deleteTemporaryBlobs();
+        deleteOldBlobs();
+    }
+
+    private void deleteOldBlobs() {
+        if (retentionDays <= 0) {
+            return;
+        }
+
         try {
-            result = new WatchableInputStream(fileHandle.getInputStream());
-            result.getCompletionFuture().onSuccess(() -> fileHandle.close()).onFailure(e -> fileHandle.close());
-        } catch (FileNotFoundException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 2/SQL: Cannot obtain a file handle for %s (%s): %s (%s)",
-                                                    blob.getId(),
-                                                    blob.getFilename())
-                            .handle();
+            oma.select(SQLBlob.class)
+               .eq(SQLBlob.SPACE_NAME, spaceName)
+               .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED, LocalDateTime.now().minusDays(retentionDays)))
+               .limit(256)
+               .delete();
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Layer 2/SQL: Failed to delete old blobs in %s: %s (%s)", spaceName)
+                      .handle();
         }
+    }
 
-        return result;
+    protected void deleteTemporaryBlobs() {
+        try {
+            oma.select(SQLBlob.class)
+               .eq(SQLBlob.SPACE_NAME, spaceName)
+               .eq(SQLBlob.TEMPORARY, true)
+               .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED, LocalDateTime.now().minusHours(4)))
+               .limit(256)
+               .delete();
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Layer 2/SQL: Failed to delete temporary blobs in %s: %s (%s)", spaceName)
+                      .handle();
+        }
     }
 }

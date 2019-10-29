@@ -8,6 +8,10 @@
 
 package sirius.biz.storage.layer2;
 
+import sirius.biz.storage.layer1.ObjectStorageSpace;
+import sirius.web.http.Response;
+
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +20,30 @@ import java.util.Optional;
  * Represents a layer 2 storage space which manages {@link Blob blobs} and {@link Directory directories}.
  */
 public interface BlobStorageSpace {
+
+    /**
+     * Returns the name of this blog storage space.
+     *
+     * @return the name of this space
+     */
+    String getName();
+
+    /**
+     * Returns a short description of what use case of this storage space.
+     * <p>
+     * Most probably this only needs to return a non-empty value if {@link #isBrowsable()} return true.
+     *
+     * @return a short description of the storage space.
+     */
+    @Nullable
+    String getDescription();
+
+    /**
+     * Returns the associated layer 1 space which actually stores the data.
+     *
+     * @return the associated physical storage space
+     */
+    ObjectStorageSpace getPhysicalSpace();
 
     /**
      * Tries to find the blob with the given key.
@@ -31,15 +59,54 @@ public interface BlobStorageSpace {
      *
      * @param tenantId the tenant to determine the directory for
      * @return the root directory for the given tenant
-     * @throws sirius.kernel.health.HandledException if the space isn't {@link BlobStorage#CONFIG_KEY_LAYER2_BROWSABLE}
+     * @throws sirius.kernel.health.HandledException if the space isn't {@link #isBrowsable() browsable}
      */
     Directory getRoot(String tenantId);
+
+    /**
+     * Resolves the given path into a blob.
+     *
+     * @param tenantId the tenant which owns the directory structure to search in
+     * @param path     the path to resolve (may start with a "/" but not with the space name itself)
+     * @return the blob wrapped as optional or an empty optional if no matching blob was found
+     */
+    Optional<? extends Blob> findByPath(String tenantId, String path);
+
+    /**
+     * Uses the current tenant and the given path to resolve this into an existing blob.
+     *
+     * @param path the path to resolve (may start with a "/" but not with the space name itself)
+     * @return the blob wrapped as optional or an empty optional if no matching blob was found
+     */
+    Optional<? extends Blob> findByPath(String path);
+
+    /**
+     * Resolves or creates the blob with the given path.
+     * <p>
+     * Note that all intermediate directories will be auto-created.
+     *
+     * @param tenantId the tenant which owns the directory structure to search in
+     * @param path     the path to resolve (may start with a "/" but not with the space name itself)
+     * @return the found or newly created blob
+     */
+    Blob findOrCreateByPath(String tenantId, String path);
+
+    /**
+     * Uses the current tenant and the given path to resolve or create an appropriate blob.
+     * <p>
+     * Note that all intermediate directories will be auto-created.
+     *
+     * @param path the path to resolve (may start with a "/" but not with the space name itself)
+     * @return the found or newly created blob
+     */
+    Blob findOrCreateByPath(String path);
 
     /**
      * Creates a new temporary blob to be used in a {@link BlobHardRef}.
      * <p>
      * Such objects will be automatically deleted if the referencing entity is
-     * deleted. It is made permanent as soon as the referencing entity is saved.
+     * deleted. It is made permanent as soon as the referencing entity is saved, otherwise it will be deleted
+     * automatically.
      *
      * @return the newly created temporary blob. To make this blob permanent, it has to be stored in a
      * {@link BlobHardRef} and the referencing entity has to be persisted.
@@ -106,58 +173,6 @@ public interface BlobStorageSpace {
     void deleteReferencedBlobs(String referencingEntity, String referenceDesignator, @Nullable String blobKeyToSkip);
 
     /**
-     * Returns the total number of directories in this space.
-     *
-     * @param tenantId if non-null, only directories of the given tenant are counted
-     * @return the total number of directories in this space
-     */
-    long getNumberOfDirectories(@Nullable String tenantId);
-
-    /**
-     * Returns the total number of visible (browsable) blobs in this space.
-     *
-     * @param tenantId if non-null, only blobs of the given tenant are counted
-     * @return the total number of visible blobs in this space
-     */
-    long getNumberOfVisibleBlobs(@Nullable String tenantId);
-
-    /**
-     * Returns the total size of all visible (browsable) blobs in this space.
-     *
-     * @param tenantId if non-null, only blobs of the given tenant are counted
-     * @return the total size in bytes
-     */
-    long getSizeOfVisibleBlobs(@Nullable String tenantId);
-
-    /**
-     * Returns the total number of referenced (non-browsable) blobs in this space.
-     *
-     * @return the total number of referenced blobs in this space
-     */
-    long getNumberOfReferencedBlobs();
-
-    /**
-     * Returns the total size of all referenced blobs in this space.
-     *
-     * @return the total size in bytes
-     */
-    long getSizeOfReferencedBlobs();
-
-    /**
-     * Returns the total number of blobs in this space.
-     *
-     * @return the total number of blobs in this space
-     */
-    long getNumberOfBlobs();
-
-    /**
-     * Returns the total size of all blobs in this space.
-     *
-     * @return the total size in bytes
-     */
-    long getSizeOfBlobs();
-
-    /**
      * Determines if this space is browsable (available as virtual file system in layer 3).
      *
      * @return <tt>true</tt> if this space is available as file system in layer 3, <tt>false</tt> otherwise
@@ -172,4 +187,28 @@ public interface BlobStorageSpace {
      * @return <tt>true</tt> if this space is readonly, <tt>false</tt> otherwise
      */
     boolean isReadonly();
+
+    /**
+     * Resolves the filename of the given blob.
+     *
+     * @param blobKey the blob to lookup the filename for
+     * @return the filename if present or an empty optional if non was found
+     */
+    Optional<String> resolveFilename(@Nonnull String blobKey);
+
+    /**
+     * Delivers the requested blob to the given HTTP response.
+     *
+     * @param response the response to populate
+     * @param blobKey  the {@link Blob#getBlobKey()} of the {@link Blob} to deliver
+     * @param variant  the variant to deliver. Use {@link URLBuilder#VARIANT_RAW} to deliver the blob itself
+     */
+    void deliver(@Nonnull String blobKey, @Nonnull String variant, @Nonnull Response response);
+
+    /**
+     * Performs some housekeeping and maintenance tasks.
+     * <p>
+     * This shouldn't be invoked manually as it is triggered via the {@link StorageCleanupTask}.
+     */
+    void runCleanup();
 }

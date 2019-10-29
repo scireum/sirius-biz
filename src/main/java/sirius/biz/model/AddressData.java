@@ -110,7 +110,7 @@ public class AddressData extends Composite {
      */
     public AddressData(Requirements requirements, @Nullable String fieldLabel) {
         this.requirements = requirements;
-        this.fieldLabel = Strings.isEmpty(fieldLabel) ? NLS.get("Model.address") : fieldLabel;
+        this.fieldLabel = fieldLabel;
     }
 
     @BeforeSave
@@ -161,6 +161,9 @@ public class AddressData extends Composite {
     protected String determineFieldLabel() {
         if (Strings.isFilled(temporaryFieldLabel)) {
             return temporaryFieldLabel;
+        }
+        if (Strings.isEmpty(fieldLabel)) {
+            fieldLabel = NLS.get("Model.address");
         }
         return fieldLabel;
     }
@@ -214,8 +217,7 @@ public class AddressData extends Composite {
         }
 
         return Strings.areEqual(street, ((AddressData) obj).street)
-               && Strings.areEqual(zip,
-                                   ((AddressData) obj).zip)
+               && Strings.areEqual(zip, ((AddressData) obj).zip)
                && Strings.areEqual(city, ((AddressData) obj).city);
     }
 

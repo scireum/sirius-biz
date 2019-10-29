@@ -27,7 +27,7 @@ public abstract class ReportJobFactory extends InteractiveJobFactory {
 
     @Override
     public String getIcon() {
-        return "fa-file-image-o";
+        return "fa-line-chart";
     }
 
     @Override

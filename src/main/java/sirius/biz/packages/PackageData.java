@@ -12,6 +12,7 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.StringList;
@@ -55,7 +56,7 @@ public class PackageData extends Composite {
      */
     public static final Mapping UPGRADES = Mapping.named("upgrades");
     @NullAllowed
-    @Length(4096)
+    @Lob
     private final StringList upgrades = new StringList();
 
     /**
@@ -63,7 +64,7 @@ public class PackageData extends Composite {
      */
     public static final Mapping ADDITIONAL_PERMISSIONS = Mapping.named("additionalPermissions");
     @NullAllowed
-    @Length(4096)
+    @Lob
     private final StringList additionalPermissions = new StringList();
 
     /**
@@ -71,7 +72,7 @@ public class PackageData extends Composite {
      */
     public static final Mapping REVOKED_PERMISSIONS = Mapping.named("revokedPermissions");
     @NullAllowed
-    @Length(4096)
+    @Lob
     private final StringList revokedPermissions = new StringList();
 
     @Transient

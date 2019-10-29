@@ -9,6 +9,7 @@
 package sirius.biz.importer.format;
 
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -236,13 +238,17 @@ public class ImportDictionary {
      * Verifies the given header row against the specified <tt>mapping function</tt>.
      *
      * @param header                   the row which contains the column headings
-     * @param problemConsumer          the consumer to be supplied with all errors being detected
+     * @param problemConsumer          the consumer to be supplied with all errors being detected. The consumer will
+     *                                 be supplied with an error message as string and a flag which indicates if the
+     *                                 error is fatal (<tt>true</tt>) or rather a warning (<tt>false</tt>). An example
+     *                                 of a fatal error would be an unknown column where a column which can be resolved
+     *                                 into a proper column by using an alias will be a warning.
      * @param failForAdditionalColumns <tt>true</tt> to fail if there are "too many" column, <tt>false</tt> to
      *                                 simply ignore those
      * @return <tt>true</tt> if at least one problem was detected, <tt>false</tt> otherwise
      */
     public boolean detectHeaderProblems(Values header,
-                                        Consumer<String> problemConsumer,
+                                        BiConsumer<String, Boolean> problemConsumer,
                                         boolean failForAdditionalColumns) {
         if (mappingFunction == null) {
             throw new IllegalStateException("Cannot verify headings as the mapping function hasn't been specified yet.");
@@ -250,11 +256,8 @@ public class ImportDictionary {
 
         AtomicBoolean problemDetected = new AtomicBoolean(false);
 
-        Values headerFields = Values.of(header.asList()
-                                              .stream()
-                                              .map(String::valueOf)
-                                              .map(field -> resolve(field).orElse(field))
-                                              .collect(Collectors.toList()));
+        Values headerFields =
+                Values.of(header.asList().stream().map(String::valueOf).map(String::trim).collect(Collectors.toList()));
 
         Values mappingValues = Values.of(mappingFunction);
         AtomicInteger mappingIndex = new AtomicInteger(0);
@@ -263,6 +266,9 @@ public class ImportDictionary {
         while (mappingIndex.get() < mappingValues.length()) {
             String expectedField = mappingValues.at(mappingIndex.get()).asString();
             String headerField = headerFields.at(headerIndex.get()).asString();
+            if (!Strings.areEqual(expectedField, headerField)) {
+                headerField = detectAliasedColumn(problemConsumer, mappingIndex, expectedField, headerField);
+            }
 
             if (Strings.isEmpty(expectedField) || Strings.areEqual(headerField, expectedField)) {
                 // We have a match, advance both indices...
@@ -270,18 +276,17 @@ public class ImportDictionary {
                 headerIndex.incrementAndGet();
             } else {
                 problemDetected.set(true);
-
                 if (Strings.isEmpty(headerField)) {
                     // We're out of header columns - report missing column...
                     problemConsumer.accept(NLS.fmtr("ImportDictionary.missingColumn")
                                               .set(PARAM_INDEX, headerIndex.get() + 1)
                                               .set(PARAM_EXPECTED, expectedField)
-                                              .format());
+                                              .format(), true);
                     mappingIndex.incrementAndGet();
                 } else {
                     // Try to diagnose why the headers don't match...
                     diagnoseHeaderProblem(header,
-                                          problemConsumer,
+                                          problem -> problemConsumer.accept(problem, true),
                                           headerFields,
                                           mappingValues,
                                           mappingIndex,
@@ -298,11 +303,46 @@ public class ImportDictionary {
                 problemConsumer.accept(NLS.fmtr("ImportDictionary.superfluousColumn")
                                           .set(PARAM_INDEX, superfluousIndex + 1)
                                           .set(PARAM_COLUMN, header.at(superfluousIndex))
-                                          .format());
+                                          .format(), true);
             }
         }
 
         return problemDetected.get();
+    }
+
+    /**
+     * Uses the known aliases to resolve a column header conflict.
+     * <p>
+     * If an invalid header column is detected, this will try the resolve the effective column. If the column can be
+     * resolved a warning is emitted and the effective name is returned so that all successive checks will be passed.
+     * Otherwise the original header value is returned.
+     *
+     * @param problemConsumer     the consumer to be supplied with an appropriate warning
+     * @param mappingIndex        the index within the mapping list which will be used to report the appropriate
+     *                            position of the error
+     * @param expectedField       the expected column name
+     * @param originalHeaderField the given header name to resolve
+     * @return either the resolved header name or the <tt>originalHeaderField</tt> if no alias matches
+     * @see #resolve(String)
+     */
+    protected String detectAliasedColumn(BiConsumer<String, Boolean> problemConsumer,
+                                         AtomicInteger mappingIndex,
+                                         String expectedField,
+                                         String originalHeaderField) {
+        // Unknown column, check if we can apply an alias...
+        String effectiveHeaderField = resolve(extractLabel(originalHeaderField)).orElse(null);
+        if (Strings.areEqual(effectiveHeaderField, expectedField)) {
+            // Yes, warn, but go...
+            problemConsumer.accept(NLS.fmtr("ImportDictionary.wrongColumn")
+                                      .set(PARAM_INDEX, mappingIndex.get() + 1)
+                                      .set(PARAM_COLUMN, originalHeaderField)
+                                      .set(PARAM_EXPECTED, expectedField)
+                                      .format(), false);
+
+            return effectiveHeaderField;
+        }
+
+        return originalHeaderField;
     }
 
     /**
@@ -447,42 +487,47 @@ public class ImportDictionary {
      * Verifies that the given record fulfills the check given for each field.
      *
      * @param record          the accessor function to the record to verify
-     * @param problemConsumer the consumer to be supplied with all detected problems
+     * @param problemConsumer the consumer to be supplied with all detected problems (the first argument being the name
+     *                        of the field and the second being a describing error message)
      * @return <tt>true</tt> if at least one problem was detected, <tt>false</tt> otherwise
      */
-    public boolean detectRecordProblems(Function<String, Value> record, Consumer<String> problemConsumer) {
-        AtomicBoolean problemDetected = new AtomicBoolean(false);
-        fields.values().forEach(field -> {
+    public boolean detectRecordProblems(Function<String, Value> record, BiConsumer<String, String> problemConsumer) {
+        Monoflop problemDetected = Monoflop.create();
+        for (FieldDefinition field : fields.values()) {
+            String fieldName = field.getName();
             try {
-                field.verify(record.apply(field.getName()));
+                field.verify(record.apply(fieldName));
             } catch (IllegalArgumentException | HandledException e) {
-                problemDetected.set(true);
-                problemConsumer.accept(NLS.fmtr("ImportDictionary.fieldError")
-                                          .set(PARAM_FIELD, field.getName())
+                problemDetected.toggle();
+                problemConsumer.accept(fieldName,
+                                       NLS.fmtr("ImportDictionary.fieldError")
+                                          .set(PARAM_FIELD, fieldName)
                                           .set(PARAM_LABEL, field.getLabel())
                                           .set(PARAM_MESSAGE, e.getMessage())
                                           .format());
             } catch (Exception e) {
-                problemDetected.set(true);
-                problemConsumer.accept(NLS.fmtr("ImportDictionary.severeFieldError")
-                                          .set(PARAM_FIELD, field.getName())
+                problemDetected.toggle();
+                problemConsumer.accept(fieldName,
+                                       NLS.fmtr("ImportDictionary.severeFieldError")
+                                          .set(PARAM_FIELD, fieldName)
                                           .set(PARAM_LABEL, field.getLabel())
                                           .set(PARAM_MESSAGE, Exceptions.handle(Log.BACKGROUND, e).getMessage())
                                           .format());
             }
-        });
+        }
 
-        return problemDetected.get();
+        return problemDetected.isToggled();
     }
 
     /**
      * Verifies that the given record fulfills the check given for each field.
      *
      * @param record          the record to verify
-     * @param problemConsumer the consumer to be supplied with all detected problems
+     * @param problemConsumer the consumer to be supplied with all detected problems (the first argument being the name
+     *                        of the field and the second being a describing error message)
      * @return <tt>true</tt> if at least one problem was detected, <tt>false</tt> otherwise
      */
-    public boolean detectRecordProblems(Context record, Consumer<String> problemConsumer) {
+    public boolean detectRecordProblems(Context record, BiConsumer<String, String> problemConsumer) {
         return detectRecordProblems(record::getValue, problemConsumer);
     }
 

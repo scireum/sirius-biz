@@ -10,11 +10,9 @@ package sirius.biz.jobs.batch.file;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
 import sirius.biz.jobs.batch.ImportJob;
-import sirius.biz.jobs.params.VirtualObjectParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.Storage;
-import sirius.biz.storage.VirtualObject;
 import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Files;

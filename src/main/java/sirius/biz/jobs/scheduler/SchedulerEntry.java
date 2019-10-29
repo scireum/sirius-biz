@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.scheduler;
 
+import sirius.biz.jobs.JobConfigData;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Explain;

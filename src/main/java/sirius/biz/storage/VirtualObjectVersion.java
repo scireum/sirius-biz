@@ -97,8 +97,8 @@ public class VirtualObjectVersion extends SQLEntity {
     @AfterDelete
     protected void removeVersionFromCaches() {
         if (this.getVirtualObject().isFilled()) {
-            versionManager.clearCacheForVirtualObject(this.getVirtualObject().getValue());
-            storage.clearCacheForVirtualObject(this.getVirtualObject().getValue());
+            versionManager.clearCacheForVirtualObject(this.getVirtualObject().fetchValue());
+            storage.clearCacheForVirtualObject(this.getVirtualObject().fetchValue());
         }
     }
 

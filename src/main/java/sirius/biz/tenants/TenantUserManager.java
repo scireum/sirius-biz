@@ -395,7 +395,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         U account = optionalAccount.get();
 
         userAccountCache.put(account.getUniqueName(), account);
-        tenantsCache.put(account.getTenant().getValue().getIdAsString(), account.getTenant().getValue());
+        tenantsCache.put(account.getTenant().fetchValue().getIdAsString(), account.getTenant().fetchValue());
         rolesCache.remove(account.getUniqueName());
         configCache.remove(account.getUniqueName());
 
@@ -468,7 +468,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             return defaultUser;
         }
 
-        T tenant = account.getTenant().getValue();
+        T tenant = account.getTenant().fetchValue();
 
         if (tenant != null && !tenant.getTenantData().matchesIPRange(ctx)) {
             return createUserWithLimitedRoles(info, tenant.getTenantData().getRolesToKeepAsSet());
@@ -512,7 +512,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                 return null;
             }
             userAccountCache.put(account.getUniqueName(), account);
-            tenantsCache.put(account.getTenant().getValue().getIdAsString(), account.getTenant().getValue());
+            tenantsCache.put(account.getTenant().fetchValue().getIdAsString(), account.getTenant().fetchValue());
             rolesCache.remove(account.getUniqueName());
             configCache.remove(account.getUniqueName());
 
@@ -547,7 +547,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return UserInfo.Builder.createUser(account.getUniqueName())
                                .withUsername(account.getUserAccountData().getLogin().getUsername())
                                .withTenantId(String.valueOf(account.getTenant().getId()))
-                               .withTenantName(account.getTenant().getValue().getTenantData().getName())
+                               .withTenantName(account.getTenant().fetchValue().getTenantData().getName())
                                .withLang(computeLang(null, account.getUniqueName()))
                                .withPermissions(roles)
                                .withSettingsSupplier(ui -> getUserSettings(getScopeSettings(), ui))
@@ -573,7 +573,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                                                                                                .getLogin()
                                                                                                .getLastExternalLogin(),
                                                                                         account.getTenant()
-                                                                                               .getValue()
+                                                                                               .fetchValue()
                                                                                                .getTenantData()
                                                                                                .getExternalLoginIntervalDays())) {
             completeAuditLogForUser(auditLog.negative("AuditLog.externalLoginRequired"), account);
@@ -600,7 +600,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         auditLog.negative("AuditLog.loginRejected")
                 .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                 .forTenant(String.valueOf(account.getTenant().getId()),
-                           account.getTenant().getValue().getTenantData().getName())
+                           account.getTenant().fetchValue().getTenantData().getName())
                 .log();
 
         return null;
@@ -644,7 +644,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         builder.causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                .forTenant(String.valueOf(account.getTenant().getId()),
-                          account.getTenant().getValue().getTenantData().getName())
+                          account.getTenant().fetchValue().getTenantData().getName())
                .log();
     }
 
@@ -717,20 +717,20 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     protected UserSettings getUserSettings(UserSettings scopeSettings, UserInfo userInfo) {
         U user = userInfo.getUserObject(getUserClass());
         if (user.getUserAccountData().getPermissions().getConfig() == null) {
-            if (user.getTenant().getValue().getTenantData().getConfig() == null) {
+            if (user.getTenant().fetchValue().getTenantData().getConfig() == null) {
                 return scopeSettings;
             }
 
             return configCache.get(user.getTenant().getUniqueObjectName(), i -> {
                 Config cfg = scopeSettings.getConfig();
-                cfg = user.getTenant().getValue().getTenantData().getConfig().withFallback(cfg);
+                cfg = user.getTenant().fetchValue().getTenantData().getConfig().withFallback(cfg);
                 return Tuple.create(new UserSettings(cfg), user.getTenant().getUniqueObjectName());
             }).getFirst();
         }
 
         return configCache.get(user.getUniqueName(), i -> {
             Config cfg = scopeSettings.getConfig();
-            cfg = user.getTenant().getValue().getTenantData().getConfig().withFallback(cfg);
+            cfg = user.getTenant().fetchValue().getTenantData().getConfig().withFallback(cfg);
             cfg = user.getUserAccountData().getPermissions().getConfig().withFallback(cfg);
             return Tuple.create(new UserSettings(cfg), user.getTenant().getUniqueObjectName());
         }).getFirst();
@@ -771,7 +771,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         }
 
         LoginData loginData = user.getUserAccountData().getLogin();
-        TenantData tenantData = user.getTenant().getValue().getTenantData();
+        TenantData tenantData = user.getTenant().fetchValue().getTenantData();
 
         if (loginData.isAccountLocked()) {
             return false;
@@ -849,7 +849,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         }
 
         Set<String> roles = computeRoles(user,
-                                         user.getTenant().getValue(),
+                                         user.getTenant().fetchValue(),
                                          Strings.areEqual(systemTenant, String.valueOf(user.getTenant().getId())));
 
         rolesCache.put(accountUniqueName, Tuple.create(roles, user.getTenant().getUniqueObjectName()));
@@ -926,7 +926,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             return NLS.getDefaultLanguage();
         }
         return Strings.firstFilled(userAccount.getUserAccountData().getLang(),
-                                   userAccount.getTenant().getValue().getTenantData().getLang(),
+                                   userAccount.getTenant().fetchValue().getTenantData().getLang(),
                                    NLS.getDefaultLanguage());
     }
 }

@@ -6,10 +6,10 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage.layer2;
+package sirius.biz.storage.layer2.variants;
 
 import sirius.biz.storage.layer1.FileHandle;
-import sirius.web.http.WebContext;
+import sirius.biz.storage.layer2.Blob;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -33,21 +33,21 @@ public interface BlobVariant {
      *
      * @return the variant designator
      */
-    String getVariantString();
+    String getVariantName();
 
     /**
      * Contains the physical key used by the {@link sirius.biz.storage.layer1.ObjectStorageSpace} to store the data.
      *
      * @return the layer 1 object key which contains the data of this revision
      */
-    String getPhysicalObjectId();
+    String getPhysicalObjectKey();
 
     /**
-     * Returns the timestamp when the revision was created.
+     * Returns the timestamp of the last conversion attempt.
      *
-     * @return the creation timestamp of this revision
+     * @return the timestamp when a conversion was last attempted
      */
-    LocalDateTime getCreatedTimestamp();
+    LocalDateTime getLastConversionAttempt();
 
     /**
      * Returns the size of the revision in bytes.
@@ -64,16 +64,21 @@ public interface BlobVariant {
     Optional<FileHandle> download();
 
     /**
-     * Delivers the data of this blob into the given request.
+     * Determines if a conversion is currently in progress.
      *
-     * @param ctx the request to send a respond to
+     * @return <tt>true</tt> if a node is currently trying to perform the requested conversion
      */
-    void deliver(WebContext ctx);
+    boolean isQueuedForConversion();
 
     /**
-     * Delivers the data of this blob as a download into the given request.
+     * The number of conversion attempts which have already been attempted.
      *
-     * @param ctx the request to send a respond to
+     * @return the number of conversion attempts
      */
-    void deliverAsDownload(WebContext ctx);
+    int getNumAttempts();
+
+    /**
+     * Deletes this variant.
+     */
+    void delete();
 }
