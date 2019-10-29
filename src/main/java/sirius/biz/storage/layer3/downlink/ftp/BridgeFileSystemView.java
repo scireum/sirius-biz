@@ -17,7 +17,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 
 /**
- * Providesa a bridge between the {@link sirius.biz.vfs.VirtualFileSystem} and the FTP server.
+ * Providesa a bridge between the {@link VirtualFileSystem} and the FTP server.
  */
 class BridgeFileSystemView implements FileSystemView {
 
