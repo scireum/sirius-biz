@@ -24,3 +24,5 @@ on a daily basis for the current month so that these aggregations are also avail
 Additionally global metrics can be computed by subclassing [DailyGlobalMetricComputer](DailyGlobalMetricComputer.java)
 or [MonthlyGlobalMetricComputer](MonthlyGlobalMetricComputer.java). 
 
+Note that these schedulers are managed by the scheduling system found in the [scheduler](../scheduler/) package.
+

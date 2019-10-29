@@ -1,8 +1,8 @@
 <i:arg type="sirius.biz.jobs.params.EntityDescriptorParameter" name="param"/>
 <i:arg type="Map" name="context"/>
 
-<w:singleSelect span="@param.getSpan()"
-                smallSpan="@param.getSmallSpan()"
+<w:singleSelect span="12"
+                smallSpan="12"
                 name="@param.getName()"
                 label="@param.getLabel()"
                 help="@param.getDescription()"

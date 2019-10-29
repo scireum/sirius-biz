@@ -231,11 +231,12 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public LocalDateTime lastModifiedDate() {
         try {
-            return lastModifiedSupplier == null ?
-                   null :
-                   Instant.ofEpochMilli(lastModifiedSupplier.apply(this))
-                          .atZone(ZoneId.systemDefault())
-                          .toLocalDateTime();
+            long lastModified = lastModified();
+            if (lastModified == 0) {
+                return null;
+            } else {
+                return Instant.ofEpochMilli(lastModified).atZone(ZoneId.systemDefault()).toLocalDateTime();
+            }
         } catch (Exception e) {
             throw handleErrorInCallback(e, "lastModifiedSupplier");
         }

@@ -176,7 +176,7 @@ public class UserAccountData extends Composite implements MessageProvider {
     }
 
     protected Tenant<?> getTenant() {
-        return ((UserAccount<?, ?>) userObject).getTenant().getValue();
+        return ((UserAccount<?, ?>) userObject).getTenant().fetchValue();
     }
 
     @Override

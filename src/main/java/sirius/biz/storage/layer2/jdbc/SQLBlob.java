@@ -10,10 +10,11 @@ package sirius.biz.storage.layer2.jdbc;
 
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.Blob;
-import sirius.biz.storage.layer2.BlobRevision;
 import sirius.biz.storage.layer2.BlobStorage;
-import sirius.biz.storage.layer2.BlobVariant;
 import sirius.biz.storage.layer2.Directory;
+import sirius.biz.storage.layer2.OptimisticCreate;
+import sirius.biz.storage.layer2.URLBuilder;
+import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.db.KeyGenerator;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
@@ -43,64 +44,136 @@ import java.util.Optional;
  * Note that all non trivial methods delegate to the associated {@link SQLBlobStorageSpace}.
  */
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
-public class SQLBlob extends SQLEntity implements Blob {
+public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Transient
     private SQLBlobStorageSpace space;
 
+    /**
+     * Contains the name of the space this blob resides in.
+     */
     public static final Mapping SPACE_NAME = Mapping.named("spaceName");
     @Length(64)
     private String spaceName;
 
+    /**
+     * Contains the tenant id (if known) for which this blob was stored.
+     */
     public static final Mapping TENANT_ID = Mapping.named("tenantId");
     @Length(64)
     @NullAllowed
     private String tenantId;
 
+    /**
+     * Contains the official blob key which is used to identify this blob.
+     */
     public static final Mapping BLOB_KEY = Mapping.named("blobKey");
     @Unique
     @Length(64)
     private String blobKey;
 
-    public static final Mapping PHYSICAL_OBJECT_ID = Mapping.named("physicalObjectId");
+    /**
+     * Contains the actual Layer 1 storage object key which stores the current data of this blob.
+     * <p>
+     * Note that this will change once the blob is updated and that is also might be <tt>null</tt> if no data is
+     * present.
+     */
+    public static final Mapping PHYSICAL_OBJECT_KEY = Mapping.named("physicalObjectKey");
     @NullAllowed
     @Length(64)
-    private String physicalObjectId;
+    private String physicalObjectKey;
 
+    /**
+     * Contains the filename if one was provided.
+     */
     public static final Mapping FILENAME = Mapping.named("filename");
     @NullAllowed
     @Length(255)
     private String filename;
 
+    /**
+     * Contains the filename in lowercase (if one was provided).
+     */
+    public static final Mapping NORMALIZED_FILENAME = Mapping.named("normalizedFilename");
+    @NullAllowed
+    @Length(255)
+    private String normalizedFilename;
+
+    /**
+     * Contains the file extension if a filename was provided.
+     * <p>
+     * For a <tt>test.pdf</tt> this would store "pdf" - which is the lowercased file extension without the ".".
+     */
+    public static final Mapping FILE_EXTENSION = Mapping.named("fileExtension");
+    @NullAllowed
+    @Length(255)
+    private String fileExtension;
+
+    /**
+     * Contains an {@link sirius.db.mixing.Mixing#getUniqueName(Class, Object) unique object name} of an entity
+     * for which this blob was stored.
+     */
     public static final Mapping REFERENCE = Mapping.named("reference");
     @NullAllowed
     @Length(64)
     private String reference;
 
+    /**
+     * Contains the reference designator which is most probably the field name for which this blob was stored.
+     */
     public static final Mapping REFERENCE_DESIGNATOR = Mapping.named("referenceDesignator");
     @NullAllowed
     @Length(50)
     private String referenceDesignator;
 
+    /**
+     * Contains the directory in which this blob resides.
+     * <p>
+     * Note that manually uploaded blobs (e.g. referenced by an entity field) have no parent.
+     */
     public static final Mapping PARENT = Mapping.named("parent");
     @NullAllowed
     private final SQLEntityRef<SQLDirectory> parent =
-            SQLEntityRef.on(SQLDirectory.class, BaseEntityRef.OnDelete.REJECT);
+            SQLEntityRef.on(SQLDirectory.class, BaseEntityRef.OnDelete.IGNORE);
 
-    public static final Mapping HIDDEN = Mapping.named("hidden");
-    private boolean hidden;
-
-    public static final Mapping DELETED = Mapping.named("deleted");
-    private boolean deleted;
-
+    /**
+     * Stores if the blob was (is still) marked as temporary.
+     */
     public static final Mapping TEMPORARY = Mapping.named("temporary");
     private boolean temporary;
 
+    /**
+     * Contains the size (in bytes) of the blob data.
+     */
     public static final Mapping SIZE = Mapping.named("size");
     private long size = 0;
 
+    /**
+     * Stores the last modification timestamp.
+     */
     public static final Mapping LAST_MODIFIED = Mapping.named("lastModified");
     private LocalDateTime lastModified = LocalDateTime.now();
+
+    /**
+     * Stores if a blob has been fully initialized.
+     * <p>
+     * This is used by the optimistic locking algorithms to ensure that blob names remain unique
+     * without requiring any locks.
+     */
+    public static final Mapping COMMITTED = Mapping.named("committed");
+    private boolean committed;
+
+    /**
+     * Stores if the blob was marked as deleted.
+     */
+    public static final Mapping DELETED = Mapping.named("deleted");
+    private boolean deleted;
+
+    /**
+     * Stores if the blob was marked as hidden.
+     */
+    public static final Mapping HIDDEN = Mapping.named("hidden");
+    private boolean hidden;
 
     @Part
     private static BlobStorage layer2;
@@ -112,6 +185,18 @@ public class SQLBlob extends SQLEntity implements Blob {
     protected void beforeSave() {
         if (Strings.isEmpty(blobKey)) {
             blobKey = keyGen.generateId();
+        }
+
+        if (Strings.isFilled(filename)) {
+            this.filename = filename.trim();
+            if (Strings.isFilled(filename)) {
+                this.normalizedFilename = filename.toLowerCase();
+                this.fileExtension = Strings.splitAtLast(normalizedFilename, ".").getSecond();
+            } else {
+                this.filename = null;
+                this.normalizedFilename = null;
+                this.fileExtension = null;
+            }
         }
     }
 
@@ -146,12 +231,7 @@ public class SQLBlob extends SQLEntity implements Blob {
 
     @Override
     public void deliver(Response response) {
-        getStorageSpace().deliver(this, response);
-    }
-
-    @Override
-    public void hide() {
-        getStorageSpace().hide(this);
+        getStorageSpace().deliver(getBlobKey(), URLBuilder.VARIANT_RAW, response);
     }
 
     @Override
@@ -190,20 +270,26 @@ public class SQLBlob extends SQLEntity implements Blob {
     }
 
     @Override
+    public URLBuilder url() {
+        return new URLBuilder(getStorageSpace(), this);
+    }
+
+    @Override
+    public List<? extends BlobVariant> fetchVariants() {
+        return getStorageSpace().fetchVariants(this);
+    }
+
+    @Override
+    public Optional<BlobVariant> findVariant(String name) {
+        return Optional.ofNullable(getStorageSpace().findVariant(this, name));
+    }
+
+    @Override
     public boolean isTemporary() {
         return temporary;
     }
 
     @Override
-    public List<BlobVariant> getVariants() {
-        return getStorageSpace().fetchVariants(this);
-    }
-
-    @Override
-    public List<BlobRevision> getRevisions() {
-        return getStorageSpace().fetchRevisions(this);
-    }
-
     public String getSpaceName() {
         return spaceName;
     }
@@ -220,8 +306,8 @@ public class SQLBlob extends SQLEntity implements Blob {
         this.space = space;
     }
 
-    public void setPhysicalObjectId(String physicalObjectId) {
-        this.physicalObjectId = physicalObjectId;
+    public void setPhysicalObjectKey(String physicalObjectKey) {
+        this.physicalObjectKey = physicalObjectKey;
     }
 
     public void setFilename(String filename) {
@@ -244,10 +330,6 @@ public class SQLBlob extends SQLEntity implements Blob {
         this.referenceDesignator = referenceDesignator;
     }
 
-    public void setHidden(boolean hidden) {
-        this.hidden = hidden;
-    }
-
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
     }
@@ -264,6 +346,7 @@ public class SQLBlob extends SQLEntity implements Blob {
         this.lastModified = lastModified;
     }
 
+    @Override
     public String getTenantId() {
         return tenantId;
     }
@@ -278,8 +361,8 @@ public class SQLBlob extends SQLEntity implements Blob {
     }
 
     @Override
-    public String getPhysicalObjectId() {
-        return physicalObjectId;
+    public String getPhysicalObjectKey() {
+        return physicalObjectKey;
     }
 
     @Nullable
@@ -299,7 +382,23 @@ public class SQLBlob extends SQLEntity implements Blob {
     }
 
     @Override
+    public boolean isCommitted() {
+        return committed;
+    }
+
+    public void setCommitted(boolean committed) {
+        this.committed = committed;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
     public boolean isHidden() {
         return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
     }
 }

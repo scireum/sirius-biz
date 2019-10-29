@@ -8,7 +8,7 @@
 
 package sirius.biz.jobs.scheduler.mongo;
 
-import sirius.biz.jobs.scheduler.JobConfigData;
+import sirius.biz.jobs.JobConfigData;
 import sirius.biz.jobs.scheduler.SchedulerController;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.MongoPageHelper;

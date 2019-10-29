@@ -12,7 +12,6 @@ import sirius.biz.jdbc.BizEntity;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.SQLEntityRef;
-import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.di.std.Part;
 
 /**

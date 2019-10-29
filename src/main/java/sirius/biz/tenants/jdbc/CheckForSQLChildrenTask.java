@@ -11,8 +11,6 @@ package sirius.biz.tenants.jdbc;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.deletion.DeleteTenantTask;
-import sirius.biz.tenants.jdbc.SQLTenant;
-import sirius.biz.tenants.jdbc.SQLTenants;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;

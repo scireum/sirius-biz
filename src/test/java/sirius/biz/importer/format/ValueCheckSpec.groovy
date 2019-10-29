@@ -14,26 +14,6 @@ import spock.lang.Specification
 
 class ValueCheckSpec extends Specification {
 
-    def "dates not matching the provided format are correctly marked as invalid"() {
-        when:
-        new DateTimeFormatCheck("ddMMyyyy").perform(Value.of(date))
-        then:
-        thrown IllegalArgumentException
-        where:
-        date << [1092019, "1092019", "TEST", "01.09.2019"]
-    }
-
-    def "dates matching the provided format are correctly marked as valid"() {
-        expect:
-        new DateTimeFormatCheck(format).perform(Value.of(date))
-        where:
-        format       | date
-        "ddMMyyyy"   | 11092019
-        "ddMMyyyy"   | "01092019"
-        "ddMMyyyy"   | "11092019"
-        "dd.MM.yyyy" | "01.09.2019"
-    }
-
     def "amount scale check correctly marks non numeric values as invalid"() {
         when:
         AmountScaleCheck scaleCheck = new AmountScaleCheck(5, 2)

@@ -77,4 +77,12 @@ public class BlobSoftRef extends BlobHardRef {
     public boolean isSupportsURL() {
         return supportsURL;
     }
+
+    @Override
+    public URLBuilder url() {
+        if (isURL()) {
+            return new ExternalURLBuilder(key);
+        }
+        return super.url();
+    }
 }

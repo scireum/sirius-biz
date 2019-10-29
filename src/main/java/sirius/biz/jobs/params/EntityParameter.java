@@ -78,7 +78,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
             return getDescriptor().getLabel();
         }
 
-        return label;
+        return super.getLabel();
     }
 
     /**

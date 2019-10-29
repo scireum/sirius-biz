@@ -15,7 +15,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.web.http.Response;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -110,15 +109,12 @@ public class ObjectStorageSpace {
      * If replication is active and delivery from the primary storage fails a delivery from the backup space is
      * attempted automatically (for 5XX HTTP errors).
      *
-     * @param response      the response to populate
-     * @param objectId      the id of the object to deliver
+     * @param response the response to populate
+     * @param objectId the id of the object to deliver
      */
     public void deliver(Response response, String objectId) {
         try {
-            engine.deliver(response,
-                           name,
-                           objectId,
-                           status -> handleHttpError(response, objectId, status));
+            engine.deliver(response, name, objectId, status -> handleHttpError(response, objectId, status));
         } catch (IOException e) {
             throw Exceptions.handle()
                             .error(e)

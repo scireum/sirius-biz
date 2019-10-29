@@ -8,10 +8,14 @@
 
 package sirius.biz.storage.layer2;
 
-import sirius.biz.storage.util.DerivedSpaceInfo;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.settings.Extension;
 
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -22,46 +26,33 @@ import java.util.stream.Stream;
  */
 public abstract class BlobStorage {
 
-    /**
-     * Contains the name of the config key used by {@link #browsable} to determine if a space is browsable.
-     *
-     * @see #browsable
-     */
-    public static final String CONFIG_KEY_LAYER2_BROWSABLE = "browsable";
-
-    /**
-     * Contains the name of the config key used by {@link #readonly} to determine if a space is readonly.
-     *
-     * @see #readonly
-     */
-    public static final String CONFIG_KEY_LAYER2_READONLY = "readonly";
-
     @Part
     protected StorageUtils util;
 
-    /**
-     * Determines if the space is browsable.
-     * <p>
-     * A browsable space has a root directory per tenant and can be viewed and used like a regular file system
-     * via the {@link L3Uplink uplink}.
-     */
-    protected DerivedSpaceInfo<Boolean> browsable = new DerivedSpaceInfo<>(CONFIG_KEY_LAYER2_BROWSABLE,
-                                                                           StorageUtils.ConfigScope.LAYER2,
-                                                                           extension -> extension.get(
-                                                                                   CONFIG_KEY_LAYER2_BROWSABLE)
-                                                                                                 .asBoolean());
+    private Map<String, BlobStorageSpace> spaceMap;
+
+    protected Map<String, BlobStorageSpace> getSpaceMap() {
+        if (spaceMap == null) {
+            initializeSpaceMap();
+        }
+
+        return spaceMap;
+    }
+
+    private void initializeSpaceMap() {
+        spaceMap = util.getStorageSpaces(StorageUtils.ConfigScope.LAYER2)
+                       .stream()
+                       .map(this::createSpace)
+                       .collect(Collectors.toMap(BlobStorageSpace::getName, Function.identity()));
+    }
 
     /**
-     * Determines if the space is mounted as readonly.
-     * <p>
-     * A {@link #browsable} space can me mounted readonly which will suppress all mutating calls via the Layer 3
-     * {@link L3Uplink uplink}.
+     * Creates the storage spaceusing the given config.
+     *
+     * @param config the settings to use when creating the space
+     * @return a wrapper which is used to access the objects stored in the storage space
      */
-    protected DerivedSpaceInfo<Boolean> readonly = new DerivedSpaceInfo<>(CONFIG_KEY_LAYER2_READONLY,
-                                                                          StorageUtils.ConfigScope.LAYER2,
-                                                                          extension -> extension.get(
-                                                                                  CONFIG_KEY_LAYER2_READONLY)
-                                                                                                .asBoolean());
+    protected abstract BlobStorageSpace createSpace(Extension config);
 
     /**
      * Determines if the storage space with the given name is known.
@@ -70,7 +61,7 @@ public abstract class BlobStorage {
      * @return <tt>true</tt> if the space is known, <tt>false</tt> otherwise
      */
     public boolean isKnown(String space) {
-        return browsable.contains(space);
+        return getSpaceMap().containsKey(space);
     }
 
     /**
@@ -80,7 +71,18 @@ public abstract class BlobStorage {
      * @return a wrapper which is used to access the objects stored in the storage space
      * @throws sirius.kernel.health.HandledException if an unknown storage space is requested.
      */
-    public abstract BlobStorageSpace getSpace(String name);
+    public BlobStorageSpace getSpace(String name) {
+        BlobStorageSpace result = getSpaceMap().get(name);
+        if (result == null) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .withSystemErrorMessage("Layer2: Cannot find a configuration for space '%s'"
+                                                    + ". Please verify the system configuration.", name)
+                            .handle();
+        }
+
+        return result;
+    }
 
     /**
      * Enumerates all known storage spaces.
@@ -88,9 +90,6 @@ public abstract class BlobStorage {
      * @return a stream which enumerates all configured blob storage spaces
      */
     public Stream<BlobStorageSpace> getSpaces() {
-        return util.getStorageSpaces(StorageUtils.ConfigScope.LAYER2)
-                   .stream()
-                   .map(ext -> ext.getId())
-                   .map(this::getSpace);
+        return getSpaceMap().values().stream();
     }
 }

@@ -8,7 +8,6 @@
 
 package sirius.biz.storage.layer2;
 
-import sirius.biz.storage.VirtualObject;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -157,4 +156,16 @@ public class BlobHardRef {
         return space;
     }
 
+    /**
+     * Provides a builder which can be used to create a delivery or download link.
+     *
+     * @return a builder to create a download or delivery URL
+     */
+    public URLBuilder url() {
+        if (blob != null) {
+            return new URLBuilder(storage.getSpace(space), blob);
+        }
+
+        return new URLBuilder(storage.getSpace(space), key);
+    }
 }

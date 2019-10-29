@@ -9,10 +9,13 @@
 package sirius.biz.storage.s3;
 
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.S3ClientOptions;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.util.AwsHostNameUtils;
 import sirius.kernel.Sirius;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
@@ -131,7 +134,7 @@ public class ObjectStores {
             throw Exceptions.handle().to(LOG).withSystemErrorMessage("Unknown object store: %s", name).handle();
         }
 
-        AmazonS3Client newClient = createClient(name, extension);
+        AmazonS3 newClient = createClient(name, extension);
         result = new ObjectStore(this, name, newClient, extension.get(KEY_BUCKET_SUFFIX).asString());
 
         stores.put(name, result);
@@ -139,26 +142,30 @@ public class ObjectStores {
         return result;
     }
 
-    protected AmazonS3Client createClient(String name, Settings extension) {
-        AWSCredentials credentials = new BasicAWSCredentials(extension.get(KEY_ACCESS_KEY).asString(),
-                                                             extension.get(KEY_SECRET_KEY).asString());
+    protected AmazonS3 createClient(String name, Settings extension) {
         ClientConfiguration config = new ClientConfiguration().withSocketTimeout(LONG_SOCKET_TIMEOUT);
         if (!extension.get(KEY_SIGNER).isEmptyString()) {
             config.withSignerOverride(extension.get(KEY_SIGNER).asString());
         }
 
-        AmazonS3Client newClient = new AmazonS3Client(credentials, config);
-        if (extension.get(KEY_PATH_STYLE_ACCESS).asBoolean()) {
-            newClient.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build());
-        }
+        AmazonS3ClientBuilder clientBuilder = AmazonS3ClientBuilder.standard()
+                                                                   .withPathStyleAccessEnabled(extension.get(
+                                                                           KEY_PATH_STYLE_ACCESS).asBoolean())
+                                                                   .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(
+                                                                           extension.get(KEY_ACCESS_KEY).asString(),
+                                                                           extension.get(KEY_SECRET_KEY).asString())))
+                                                                   .withClientConfiguration(config);
 
         try {
             URL endpoint = new URL(extension.get(KEY_END_POINT).asString());
-            if (PROTOCOL_HTTPS.equalsIgnoreCase(endpoint.getProtocol())) {
-                newClient.setEndpoint(mapEndpoint(name, endpoint, DEFAULT_PORT_HTTPS));
-            } else {
-                newClient.setEndpoint(mapEndpoint(name, endpoint, DEFAULT_PORT_HTTP));
-            }
+            int defaultPort =
+                    PROTOCOL_HTTPS.equalsIgnoreCase(endpoint.getProtocol()) ? DEFAULT_PORT_HTTPS : DEFAULT_PORT_HTTP;
+            clientBuilder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(mapEndpoint(name,
+                                                                                                           endpoint,
+                                                                                                           defaultPort),
+                                                                                               AwsHostNameUtils.parseRegion(
+                                                                                                       endpoint.getHost(),
+                                                                                                       AmazonS3Client.S3_SERVICE_NAME)));
         } catch (MalformedURLException e) {
             throw Exceptions.handle()
                             .error(e)
@@ -169,7 +176,7 @@ public class ObjectStores {
                             .handle();
         }
 
-        return newClient;
+        return clientBuilder.build();
     }
 
     private String mapEndpoint(String name, URL endpoint, int defaultPort) throws MalformedURLException {
