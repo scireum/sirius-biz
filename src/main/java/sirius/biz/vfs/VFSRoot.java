@@ -15,7 +15,10 @@ import java.util.function.Consumer;
  * <p>
  * This can contribute one of more top-level files for the VFS. Implementing classes must wear a {@link
  * sirius.kernel.di.std.Register} to become visible to the injector and the VFS framework.
+ *
+ * @deprecated Replaced by {@link sirius.biz.storage.layer3.VFSRoot}
  */
+@Deprecated
 public interface VFSRoot {
 
     /**

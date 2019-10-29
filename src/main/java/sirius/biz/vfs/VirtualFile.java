@@ -22,12 +22,15 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Represents a file or directory in the {@link VirtualFileSystem}.
+ * Represents a file or directory in the VirtualFileSystem.
  * <p>
  * The way this file can be modified, can be controlled by providing the appropriate callbacks. If no appropriate
  * handler is given, the operation is blocked for that file. Therefore, by default, a file is unmodifyable unless
  * some handlers are provided.
+ *
+ * @deprecated Replaced by {@link sirius.biz.storage.layer3.VirtualFile}
  */
+@Deprecated
 public class VirtualFile {
 
     private String name;

@@ -6,12 +6,14 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.vfs.ftp;
+package sirius.biz.storage.layer3.downlink.ftp;
 
 import com.google.common.io.ByteStreams;
 import org.apache.ftpserver.ftplet.FtpFile;
-import sirius.biz.vfs.VirtualFile;
-import sirius.biz.vfs.VirtualFileSystem;
+import sirius.biz.storage.layer3.FileSearch;
+import sirius.biz.storage.layer3.VirtualFile;
+import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.health.Exceptions;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -42,15 +44,15 @@ class BridgeFile implements FtpFile {
     @Override
     public String getAbsolutePath() {
         if (file != null) {
-            return file.getPath();
+            return file.path();
         }
-        return parent.getPath() + "/" + childName;
+        return parent.path() + "/" + childName;
     }
 
     @Override
     public String getName() {
         if (file != null) {
-            return file.getName();
+            return file.name();
         } else {
             return childName;
         }
@@ -108,7 +110,7 @@ class BridgeFile implements FtpFile {
 
     @Override
     public long getLastModified() {
-        return file != null ? file.getLastModified() : 0;
+        return file != null ? file.lastModified() : 0;
     }
 
     @Override
@@ -118,7 +120,7 @@ class BridgeFile implements FtpFile {
 
     @Override
     public long getSize() {
-        return isFile() ? file.getSize() : 0;
+        return isFile() ? file.size() : 0;
     }
 
     @Override
@@ -131,14 +133,14 @@ class BridgeFile implements FtpFile {
         if (file != null) {
             return file.isDirectory();
         } else {
-            return parent.createChildDirectory(childName);
+            return parent.resolve(childName).tryCreateAsDirectory();
         }
     }
 
     @Override
     public boolean delete() {
         if (file != null) {
-            return file.delete();
+            return file.tryDelete();
         }
 
         return true;
@@ -158,7 +160,12 @@ class BridgeFile implements FtpFile {
             }
             return this.delete();
         } catch (IOException e) {
-            VirtualFileSystem.LOG.WARN(e);
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Layer3/FTP: Cannot move file %s to %s - %s (%s)",
+                                              getAbsolutePath(),
+                                              destination.getAbsolutePath());
             return false;
         }
     }
@@ -167,7 +174,7 @@ class BridgeFile implements FtpFile {
     public List<? extends FtpFile> listFiles() {
         List<FtpFile> result = new ArrayList<>();
         if (file != null) {
-            file.enumerateChildren(child -> result.add(new BridgeFile(child)));
+            file.children(FileSearch.iterateAll(child -> result.add(new BridgeFile(child))));
         }
 
         return result;
@@ -179,7 +186,7 @@ class BridgeFile implements FtpFile {
             return file.createOutputStream();
         }
 
-        return parent.createChildFile(childName);
+        return parent.resolve(childName).createOutputStream();
     }
 
     @Override

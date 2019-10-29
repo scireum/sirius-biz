@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.vfs.ftp;
+package sirius.biz.storage.layer3.downlink.ftp;
 
 import org.apache.ftpserver.DataConnectionConfigurationFactory;
 import org.apache.ftpserver.FtpServer;
@@ -17,9 +17,12 @@ import org.apache.ftpserver.listener.ListenerFactory;
 import org.apache.ftpserver.ssl.SslConfigurationFactory;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import sirius.biz.vfs.VirtualFileSystem;
+import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.Startable;
+import sirius.kernel.Stoppable;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
+import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 
@@ -29,44 +32,47 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Provides a bridge between the {@link VirtualFileSystem} and the Apache FTP server.
+ * Provides a bridge between the {@link sirius.biz.storage.layer3.VirtualFileSystem} and the Apache FTP server.
  */
-@Register(classes = FTPBridge.class)
-public class FTPBridge {
+@Register(classes = {Startable.class, Stoppable.class})
+public class FTPServer implements Startable, Stoppable {
 
     private FtpServer ftpServer;
 
-    @ConfigValue("vfs.ftp.port")
+    @ConfigValue("storage.layer3.downlink.ftp.port")
     private int ftpPort;
 
-    @ConfigValue("vfs.ftp.passivePorts")
+    @ConfigValue("storage.layer3.downlink.ftp.passivePorts")
     private String passivePorts;
 
-    @ConfigValue("vfs.ftp.bindAddress")
+    @ConfigValue("storage.layer3.downlink.ftp.bindAddress")
     private String bindAddress;
 
-    @ConfigValue("vfs.ftp.passiveExternalAddress")
+    @ConfigValue("storage.layer3.downlink.ftp.passiveExternalAddress")
     private String passiveExternalAddress;
 
-    @ConfigValue("vfs.ftp.idleTimeout")
+    @ConfigValue("storage.layer3.downlink.ftp.idleTimeout")
     private Duration idleTimeout;
 
-    @ConfigValue("vfs.ftp.keystore")
+    @ConfigValue("storage.layer3.downlink.ftp.keystore")
     private String keystore;
 
-    @ConfigValue("vfs.ftp.keystorePassword")
+    @ConfigValue("storage.layer3.downlink.ftp.keystorePassword")
     private String keystorePassword;
 
-    @ConfigValue("vfs.ftp.keyAlias")
+    @ConfigValue("storage.layer3.downlink.ftp.keyAlias")
     private String keyAlias;
 
-    @ConfigValue("vfs.ftp.forceSSL")
+    @ConfigValue("storage.layer3.downlink.ftp.forceSSL")
     private boolean forceSSL;
 
-    /**
-     * Initializes and starts the server.
-     */
-    public void createAndStartServer() {
+    @Override
+    public int getPriority() {
+        return Priorized.DEFAULT_PRIORITY + 100;
+    }
+
+    @Override
+    public void started() {
         if (ftpPort <= 0) {
             return;
         }
@@ -76,18 +82,16 @@ public class FTPBridge {
         startFTPServer();
     }
 
-    /**
-     * Stops the server.
-     */
-    public void stop() {
+    @Override
+    public void stopped() {
         if (ftpServer != null) {
             try {
                 ftpServer.stop();
             } catch (Exception e) {
                 Exceptions.handle()
-                          .to(VirtualFileSystem.LOG)
+                          .to(StorageUtils.LOG)
                           .error(e)
-                          .withSystemErrorMessage("Failed to stop FTP server on port %s (%s): %s (%s)",
+                          .withSystemErrorMessage("Layer3/FTP: Failed to stop FTP server on port %s (%s): %s (%s)",
                                                   ftpPort,
                                                   bindAddress)
                           .handle();
@@ -98,12 +102,12 @@ public class FTPBridge {
     private void startFTPServer() {
         try {
             ftpServer.start();
-            VirtualFileSystem.LOG.INFO("Started FTP server on port %s (%s)", ftpPort, bindAddress);
+            StorageUtils.LOG.INFO("Layer3/FTP: Started FTP server on port %s (%s)", ftpPort, bindAddress);
         } catch (FtpException e) {
             Exceptions.handle()
-                      .to(VirtualFileSystem.LOG)
+                      .to(StorageUtils.LOG)
                       .error(e)
-                      .withSystemErrorMessage("Failed to start FTP server on port %s (%s): %s (%s)",
+                      .withSystemErrorMessage("Layer3/FTP: Failed to start FTP server on port %s (%s): %s (%s)",
                                               ftpPort,
                                               bindAddress)
                       .handle();

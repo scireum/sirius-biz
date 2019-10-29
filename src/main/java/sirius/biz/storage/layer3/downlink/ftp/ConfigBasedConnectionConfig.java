@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.vfs.ftp;
+package sirius.biz.storage.layer3.downlink.ftp;
 
 import org.apache.ftpserver.ConnectionConfig;
 import sirius.kernel.di.std.ConfigValue;
@@ -16,13 +16,13 @@ import sirius.kernel.di.std.ConfigValue;
  */
 class ConfigBasedConnectionConfig implements ConnectionConfig {
 
-    @ConfigValue("vfs.ftp.maxLoginFailures")
+    @ConfigValue("storage.layer3.downlink.ftp.maxLoginFailures")
     private static int maxLoginFailures;
 
-    @ConfigValue("vfs.ftp.maxClients")
+    @ConfigValue("storage.layer3.downlink.ftp.maxClients")
     private static int maxClients;
 
-    @ConfigValue("vfs.ftp.maxThreads")
+    @ConfigValue("storage.layer3.downlink.ftp.maxThreads")
     private static int maxThreads;
 
     @Override
