@@ -168,6 +168,24 @@ public class Processes {
     }
 
     /**
+     * Marks an existing an terminated process as active again.
+     * <p>
+     * This is used for downstream processing (e.g. writing outputs into a file) after a process has
+     * {@link ProcessState#TERMINATED}. Essentially, all this does is verifying the preconditions and setting the
+     * state back to {@link ProcessState#RUNNING}.
+     *
+     * @param processId the id of the process to restart
+     * @param reason    the reason to log
+     * @throws sirius.kernel.health.HandledException in case the process isn't currently terminated or doesn't exist at all
+     */
+    public void restartProcess(String processId, String reason) {
+        modify(processId,
+               process -> process.getState() == ProcessState.TERMINATED,
+               process -> process.setState(ProcessState.RUNNING));
+        log(processId, ProcessLog.info().withNLSKey("Processes.restarted").withContext("reason", reason));
+    }
+
+    /**
      * Executes the given task in the standby process of the given type, for the currently active tenant.
      * <p>
      * If no matching standby process exists, one will be created.
