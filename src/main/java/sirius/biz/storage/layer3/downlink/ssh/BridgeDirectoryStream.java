@@ -24,23 +24,23 @@ import java.util.List;
 public class BridgeDirectoryStream implements DirectoryStream<Path> {
 
     private VirtualFile virtualFile;
-    private BridgeFileSystem fs;
+    private BridgeFileSystem fileSystem;
 
     /**
      * Generates a wrapper for the given directory and file system.
      *
      * @param directory the directory to wrap
-     * @param fs        the file system to pass along
+     * @param fileSystem the file system to pass along
      */
-    public BridgeDirectoryStream(VirtualFile directory, BridgeFileSystem fs) {
+    public BridgeDirectoryStream(VirtualFile directory, BridgeFileSystem fileSystem) {
         this.virtualFile = directory;
-        this.fs = fs;
+        this.fileSystem = fileSystem;
     }
 
     @Override
     public Iterator<Path> iterator() {
         List<Path> result = new ArrayList<>();
-        virtualFile.children(FileSearch.iterateAll(child -> result.add(new BridgePath(child, fs))));
+        virtualFile.children(FileSearch.iterateAll(child -> result.add(new BridgePath(child, fileSystem))));
 
         return result.iterator();
     }

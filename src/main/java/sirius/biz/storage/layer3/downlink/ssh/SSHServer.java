@@ -37,7 +37,7 @@ import java.nio.file.FileSystem;
 import java.util.Collections;
 
 /**
- * Provides an built-in SSH server which provides access to the {@link sirius.biz.storage.layer3.VirtualFile} via
+ * Provides a built-in SSH server which provides access to the {@link sirius.biz.storage.layer3.VirtualFile} via
  * <b>SCP</b> and <b>SFTP</b>.
  */
 @Register

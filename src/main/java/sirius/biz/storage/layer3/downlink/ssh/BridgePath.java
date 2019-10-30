@@ -36,7 +36,7 @@ public class BridgePath implements Path {
     private static VirtualFileSystem vfs;
 
     private VirtualFile virtualFile;
-    private BridgeFileSystem fs;
+    private BridgeFileSystem fileSystem;
 
     /**
      * Creates a new instance wrapping the given virtual file.
@@ -51,16 +51,16 @@ public class BridgePath implements Path {
      * Creates a new instance which wraps the virtual file and carries along the associated file system.
      *
      * @param virtualFile the file to wrap
-     * @param fs          the associated file system
+     * @param fileSystem the associated file system
      */
-    public BridgePath(VirtualFile virtualFile, BridgeFileSystem fs) {
+    public BridgePath(VirtualFile virtualFile, BridgeFileSystem fileSystem) {
         this.virtualFile = virtualFile;
-        this.fs = fs;
+        this.fileSystem = fileSystem;
     }
 
     @Override
     public FileSystem getFileSystem() {
-        return fs;
+        return fileSystem;
     }
 
     @Override
@@ -84,7 +84,7 @@ public class BridgePath implements Path {
             return null;
         }
 
-        return new BridgePath(virtualFile.parent(), fs);
+        return new BridgePath(virtualFile.parent(), fileSystem);
     }
 
     @Override
@@ -145,10 +145,10 @@ public class BridgePath implements Path {
         }
 
         if (Strings.isFilled(other) && other.startsWith("/")) {
-            return new BridgePath(vfs.resolve(other), fs);
+            return new BridgePath(vfs.resolve(other), fileSystem);
         }
 
-        return new BridgePath(virtualFile.resolve(other), fs);
+        return new BridgePath(virtualFile.resolve(other), fileSystem);
     }
 
     @Override
@@ -227,13 +227,13 @@ public class BridgePath implements Path {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
+    public boolean equals(Object other) {
+        if (other == this) {
             return true;
         }
 
-        if (obj instanceof BridgePath) {
-            return Objects.equals(virtualFile, ((BridgePath) obj).virtualFile);
+        if (other instanceof BridgePath) {
+            return Objects.equals(virtualFile, ((BridgePath) other).virtualFile);
         }
 
         return false;

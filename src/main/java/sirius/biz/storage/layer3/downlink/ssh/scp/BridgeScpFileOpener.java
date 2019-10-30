@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Provide some mappings between the <i>interesting</i> SCP implementation and out {@link VirtualFileSystem}.
+ * Provide some mappings between the <i>interesting</i> SCP implementation and our {@link VirtualFileSystem}.
  * <p>
  * Note that some methods are unimplemented and will throw an {@link UnsupportedOperationException}. These methods
  * were never invoked during testing and therefore left out.

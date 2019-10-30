@@ -26,7 +26,7 @@ public class BridgeBasicFileAttributes implements PosixFileAttributes {
     private VirtualFile virtualFile;
 
     /**
-     * Creates a new wrapper which provides extracts the attributes of the given file.
+     * Creates a new wrapper which extracts the attributes of the given file.
      *
      * @param virtualFile the file to extract the attributes from
      */
