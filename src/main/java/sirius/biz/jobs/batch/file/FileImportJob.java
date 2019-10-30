@@ -52,14 +52,27 @@ public abstract class FileImportJob extends ImportJob {
         VirtualFile file = process.require(fileParameter);
 
         if (canHandleFileExtension(file.fileExtension())) {
+            backupInputFile(file);
             try (InputStream in = file.createInputStream()) {
                 executeForStream(file.name(), in);
             }
         } else if (FILE_EXTENSION_ZIP.equalsIgnoreCase(file.fileExtension())) {
+            backupInputFile(file);
             executeForZIP(file);
         } else {
             throw Exceptions.createHandled().withNLSKey("FileImportJob.fileNotSupported").handle();
         }
+    }
+
+    /**
+     * Creates a backup of the file being imported by attaching it to the process.
+     * <p>
+     * This can be suppressed by overwriting this method.
+     *
+     * @param input the input file to backup
+     */
+    protected void backupInputFile(VirtualFile input) {
+        attachFile(input);
     }
 
     private void executeForZIP(VirtualFile file) throws Exception {
