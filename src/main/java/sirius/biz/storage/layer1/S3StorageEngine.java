@@ -109,10 +109,8 @@ public class S3StorageEngine implements StorageEngine, Named {
     }
 
     @Override
-    public void deliver(Response response,
-                        String space,
-                        String objectKey,
-                        Consumer<Integer> failureHandler) throws IOException {
+    public void deliver(Response response, String space, String objectKey, Consumer<Integer> failureHandler)
+            throws IOException {
         ObjectStore store = stores.get(space);
         response.tunnel(store.objectUrl(bucketName(store, space), objectKey), failureHandler);
     }
@@ -127,5 +125,12 @@ public class S3StorageEngine implements StorageEngine, Named {
             Exceptions.ignore(e);
             return null;
         }
+    }
+
+    @Nullable
+    @Override
+    public InputStream getAsStream(String space, String objectKey) throws IOException {
+        ObjectStore store = stores.get(space);
+        return store.getClient().getObject(bucketName(store, space).getName(), objectKey).getObjectContent();
     }
 }

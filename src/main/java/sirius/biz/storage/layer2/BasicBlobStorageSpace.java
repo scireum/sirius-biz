@@ -16,7 +16,6 @@ import sirius.biz.storage.layer1.ObjectStorageSpace;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.layer2.variants.ConversionEngine;
 import sirius.biz.storage.util.StorageUtils;
-import sirius.biz.storage.util.WatchableInputStream;
 import sirius.db.KeyGenerator;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
@@ -39,7 +38,6 @@ import sirius.web.security.UserContext;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -811,35 +809,20 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Donloads the contents of the given blob and provides access via an {@link InputStream}.
+     * Provides read access via an {@link InputStream}.
      *
      * @param blob the blob to fetch the data for
      * @return an input stream to read and process the contents of the blob
      */
     public InputStream createInputStream(Blob blob) {
-        FileHandle fileHandle = blob.download().filter(FileHandle::exists).orElse(null);
-        if (fileHandle == null) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .withSystemErrorMessage("Layer 2/SQL: Cannot obtain a file handle for %s (%s)",
-                                                    blob.getBlobKey(),
-                                                    blob.getFilename())
-                            .handle();
-        }
-
-        try {
-            WatchableInputStream result = new WatchableInputStream(fileHandle.getInputStream());
-            result.getCompletionFuture().onSuccess(fileHandle::close).onFailure(e -> fileHandle.close());
-            return result;
-        } catch (FileNotFoundException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 2/SQL: Cannot obtain a file handle for %s (%s): %s (%s)",
-                                                    blob.getBlobKey(),
-                                                    blob.getFilename())
-                            .handle();
-        }
+        return getPhysicalSpace().getInputStream(blob.getPhysicalObjectKey())
+                                 .orElseThrow(() -> Exceptions.handle()
+                                                              .to(StorageUtils.LOG)
+                                                              .withSystemErrorMessage(
+                                                                      "Layer 2: Cannot obtain an InputStream for %s (%s)",
+                                                                      blob.getBlobKey(),
+                                                                      blob.getFilename())
+                                                              .handle());
     }
 
     /**
@@ -946,7 +929,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                             .to(StorageUtils.LOG)
                             .error(e)
                             .withSystemErrorMessage(
-                                    "Layer 2/SQL: Cannot create a local buffer to provide an output stream for %s (%s) in %s: %s (%s)",
+                                    "Layer 2: Cannot create a local buffer to provide an output stream for %s (%s) in %s: %s (%s)",
                                     blob.getBlobKey(),
                                     blob.getFilename(),
                                     spaceName)

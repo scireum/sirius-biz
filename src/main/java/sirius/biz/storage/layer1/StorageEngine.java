@@ -63,10 +63,8 @@ public interface StorageEngine {
      *                       This will be supplied with the HTTP error code.
      * @throws IOException in case of an IO error
      */
-    void deliver(Response response,
-                 String space,
-                 String objectKey,
-                 @Nullable Consumer<Integer> failureHandler) throws IOException;
+    void deliver(Response response, String space, String objectKey, @Nullable Consumer<Integer> failureHandler)
+            throws IOException;
 
     /**
      * Downloads an provides the contents of the requested object.
@@ -78,4 +76,15 @@ public interface StorageEngine {
      */
     @Nullable
     FileHandle getData(String space, String objectKey) throws IOException;
+
+    /**
+     * Provides the contents of the requrest object as input stream.
+     *
+     * @param space     the bucket of the object
+     * @param objectKey the id of the object
+     * @return an input stream which provides the contents of the object
+     * @throws IOException in case of an IO error
+     */
+    @Nullable
+    InputStream getAsStream(String space, String objectKey) throws IOException;
 }
