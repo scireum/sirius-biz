@@ -277,11 +277,14 @@ public class Processes {
             // Maybe another node recently created a matching standby process. Wait a reasonable amount of time so that the change
             // becomes visible in elasticsearch/caches. As standby processes are rarely created it is legitimate to hold the lock
             // while waiting.
-            Wait.millis(1200);
+            int attempts = 4;
+            while(attempts-- > 0) {
+                Process process = fetchStandbyProcess(type, tenantId);
+                if (process != null) {
+                    return process;
+                }
 
-            Process process = fetchStandbyProcess(type, tenantId);
-            if (process != null) {
-                return process;
+                Wait.millis(300);
             }
 
             return createStandbyProcessInLock(type, title, tenantId, tenantName);
@@ -693,12 +696,15 @@ public class Processes {
      * @param processId the process to check
      */
     private void awaitProcess(String processId) {
-        if (!fetchProcess(processId).isPresent()) {
-            Wait.millis(1200);
-            if (!fetchProcess(processId).isPresent()) {
-                throw new IllegalStateException("Unknown process id: " + processId);
+        int attempts = 4;
+        while (attempts-- > 0) {
+            if (fetchProcess(processId).isPresent()) {
+                return;
             }
+            Wait.millis(300);
         }
+
+        throw new IllegalStateException("Unknown process id: " + processId);
     }
 
     /**
