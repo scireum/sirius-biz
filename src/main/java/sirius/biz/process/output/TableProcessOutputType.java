@@ -42,7 +42,7 @@ public class TableProcessOutputType implements ProcessOutputType {
     public static final String TYPE = "table";
 
     /**
-     * Contains the pipe separated list of column names stored in {@link ProcessOutput#context}.
+     * Contains the pipe separated list of column names stored in the {@link ProcessOutput#getContext() context}.
      */
     public static final String CONTEXT_KEY_COLUMNS = "_columns";
 
@@ -63,6 +63,17 @@ public class TableProcessOutputType implements ProcessOutputType {
         return "fa-table";
     }
 
+    public List<String> determineColumns(ProcessOutput output) {
+        return Arrays.asList(output.getContext().get(CONTEXT_KEY_COLUMNS).orElse("").split("\\|"));
+    }
+
+    public List<String> determineLabels(ProcessOutput output, List<String> columns) {
+        return columns.stream()
+                      .map(col -> output.getContext().get(col).orElse(col))
+                      .map(NLS::smartGet)
+                      .collect(Collectors.toList());
+    }
+
     @Override
     public void render(WebContext ctx, Process process, ProcessOutput output) {
         ElasticQuery<ProcessLog> query = elastic.select(ProcessLog.class)
@@ -80,11 +91,7 @@ public class TableProcessOutputType implements ProcessOutputType {
         ph.addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
         ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
-        List<String> columns = Arrays.asList(output.getContext().get(CONTEXT_KEY_COLUMNS).orElse("").split("\\|"));
-        List<String> labels = columns.stream()
-                                     .map(col -> output.getContext().get(col).orElse(col))
-                                     .map(NLS::smartGet)
-                                     .collect(Collectors.toList());
+        List<String> columns = determineColumns(output);
 
         ctx.respondWith()
            .template("/templates/biz/process/process-output-table.html.pasta",
@@ -93,6 +100,6 @@ public class TableProcessOutputType implements ProcessOutputType {
                      ph.asPage(),
                      output.getName(),
                      columns,
-                     labels);
+                     determineLabels(output, columns));
     }
 }
