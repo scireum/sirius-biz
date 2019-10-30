@@ -38,7 +38,7 @@ public class ExportXLSX implements LineBasedExport {
     }
 
     @Override
-    public void addRow(List<Object> row) throws IOException {
+    public void addRow(List<?> row) throws IOException {
         export.addRowAsList(row);
     }
 
