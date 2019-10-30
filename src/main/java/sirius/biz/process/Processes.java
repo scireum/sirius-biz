@@ -278,7 +278,7 @@ public class Processes {
             // becomes visible in elasticsearch/caches. As standby processes are rarely created it is legitimate to hold the lock
             // while waiting.
             int attempts = 4;
-            while(attempts-- > 0) {
+            while (attempts-- > 0) {
                 Process process = fetchStandbyProcess(type, tenantId);
                 if (process != null) {
                     return process;
