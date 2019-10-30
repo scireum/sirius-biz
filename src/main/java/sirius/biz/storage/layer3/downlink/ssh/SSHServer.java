@@ -120,7 +120,7 @@ public class SSHServer implements Startable, Stoppable, Killable {
         }
 
         UserInfo authUser = UserContext.get().getUserManager().findUserByCredentials(null, username, password);
-        ((BridgeSession) session).setUser(authUser);
+        ((BridgeSession) session).attachUser(authUser);
 
         return authUser != null;
     }

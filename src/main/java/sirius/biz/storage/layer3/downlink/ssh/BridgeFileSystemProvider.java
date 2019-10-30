@@ -138,6 +138,8 @@ class BridgeFileSystemProvider extends FileSystemProvider {
     @Override
     public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
         Map<String, Object> result = new HashMap<>();
+
+        // These are reverse engineered constants which seem to simply match the method names...
         BridgeBasicFileAttributes attrs = readAttributes(path, BridgeBasicFileAttributes.class);
         result.put("lastModifiedTime", attrs.lastModifiedTime());
         result.put("lastAccessTime", attrs.lastAccessTime());

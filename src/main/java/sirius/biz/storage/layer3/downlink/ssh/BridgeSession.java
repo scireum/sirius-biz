@@ -13,19 +13,32 @@ import org.apache.sshd.server.ServerFactoryManager;
 import org.apache.sshd.server.session.ServerSessionImpl;
 import sirius.web.security.UserInfo;
 
+/**
+ * Extends the server session by dragging our user along.
+ */
 public class BridgeSession extends ServerSessionImpl {
 
-    private UserInfo user;
+    private UserInfo user = UserInfo.NOBODY;
 
     protected BridgeSession(ServerFactoryManager factoryManager, IoSession ioSession) throws Exception {
         super(factoryManager, ioSession);
     }
 
+    /**
+     * The user which has been attached to the session.
+     *
+     * @return the user attached to this session
+     */
     public UserInfo getUser() {
         return user;
     }
 
-    public void setUser(UserInfo user) {
+    /**
+     * Attaches the given user to the session.
+     *
+     * @param user the user to attach
+     */
+    public void attachUser(UserInfo user) {
         this.user = user;
     }
 }

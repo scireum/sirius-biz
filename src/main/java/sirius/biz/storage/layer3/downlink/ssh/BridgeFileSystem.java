@@ -33,7 +33,7 @@ import java.util.TreeSet;
 public class BridgeFileSystem extends FileSystem {
 
     @Part
-    private static VirtualFileSystem vfs;
+    private static VirtualFileSystem virtualFileSystem;
 
     private BridgeFileSystemProvider provider = new BridgeFileSystemProvider();
 
@@ -80,10 +80,15 @@ public class BridgeFileSystem extends FileSystem {
     @Override
     public Path getPath(String first, String... more) {
         if (Strings.isEmpty(first)) {
-            return new BridgePath(vfs.root(), this);
+            return new BridgePath(virtualFileSystem.root(), this);
         }
 
-        return null;
+        // We only seem to have to handle the root access - we throw the following exception if our
+        // assumption is falsified...
+        throw new IllegalArgumentException(Strings.apply(
+                "A non root directory was requested in BridgeFileSystem.getPath: %s - %s",
+                first,
+                Strings.join(",", more)));
     }
 
     @Override
