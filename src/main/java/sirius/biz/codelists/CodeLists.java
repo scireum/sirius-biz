@@ -234,7 +234,15 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
         }
     }
 
-    private L findOrCreateCodelist(@Nonnull String codeList) {
+    /**
+     * Finds a {@link CodeList} that matches the given name and belongs to the current tenant.
+     * <p>
+     *
+     * @param codeList The code of the {@link CodeList}
+     * @return An optional of the matching {@link CodeList}, or null if there is no
+     * codeList with the given name
+     */
+    public Optional<L> findCodelist(@Nonnull String codeList) {
         if (Strings.isEmpty(codeList)) {
             throw new IllegalArgumentException("codeList must not be empty");
         }
@@ -245,10 +253,18 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
                                 .eq(CodeList.CODE_LIST_DATA.inner(CodeListData.CODE), codeList)
                                 .queryFirst();
 
-        if (cl == null) {
+        return Optional.ofNullable(cl);
+    }
+
+    private L findOrCreateCodelist(@Nonnull String codeList) {
+        Optional<L> optionalCodeList = findCodelist(codeList);
+
+        Tenant<?> currentTenant = getCurrentTenant(codeList).orElseThrow(this::warnAboutMissingTenant);
+
+        if (!optionalCodeList.isPresent()) {
             Extension ext = getCodeListConfig(codeList);
 
-            cl = createCodeList(currentTenant, codeList);
+            L cl = createCodeList(currentTenant, codeList);
             if (ext != null && !ext.isDefault()) {
                 cl.getCodeListData().setName(ext.get(CONFIG_KEY_NAME).asString());
                 cl.getCodeListData().setDescription(ext.get(CONFIG_KEY_DESCRIPTION).asString());
@@ -256,9 +272,11 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
             }
 
             cl.getMapper().update(cl);
+
+            return cl;
         }
 
-        return cl;
+        return optionalCodeList.get();
     }
 
     private L createCodeList(@Nonnull Tenant<?> tenant, String codeList) {

@@ -12,6 +12,7 @@ import sirius.biz.codelists.CodeListController;
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.EntityImportJob;
 import sirius.biz.jobs.batch.file.EntityImportJobFactory;
+import sirius.biz.jobs.params.CodeListParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.jdbc.SQLTenants;
@@ -34,7 +35,7 @@ public class SQLCodeListEntryImportJobFactory extends EntityImportJobFactory {
     /**
      * Contains the sql code list to import the code list entries into.
      */
-    private SQLCodeListParameter codeListParameter = new SQLCodeListParameter("codeList");
+    private CodeListParameter<Long, SQLCodeList> codeListParameter = new CodeListParameter<>("codeList", "$CodeList");
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {

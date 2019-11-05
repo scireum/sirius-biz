@@ -9,17 +9,27 @@
 package sirius.biz.jobs.params;
 
 import sirius.biz.codelists.CodeList;
+import sirius.biz.codelists.CodeListData;
+import sirius.biz.codelists.CodeLists;
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.commons.Value;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
+
+import java.util.Optional;
 
 /**
  * Permits to select a {@link CodeList} as parameter.
  *
  * @param <I> the type of the ID used by subclasses.
- * @param <L> the type of selectable by this parameter.
+ * @param <V> the type of selectable by this parameter.
  */
-public abstract class CodeListParameter<I, L extends BaseEntity<I> & CodeList>
-        extends EntityParameter<L, CodeListParameter<I, L>> {
+public class CodeListParameter<I, V extends BaseEntity<I> & CodeList> extends Parameter<V, CodeListParameter<I, V>> {
+
+    public static final String CODE_LISTS_AUTOCOMPLETE = "/code-lists/autocomplete";
+
+    @Part
+    private static CodeLists<?, ?, ?> codeLists;
 
     /**
      * Creates a new parameter with the given name and label.
@@ -27,17 +37,40 @@ public abstract class CodeListParameter<I, L extends BaseEntity<I> & CodeList>
      * @param name  the name of the parameter
      * @param label the label of the parameter, which will be {@link NLS#smartGet(String) auto translated}
      */
-    protected CodeListParameter(String name, String label) {
+    public CodeListParameter(String name, String label) {
         super(name, label);
     }
 
     /**
-     * Creates a new parameter with the given name.
+     * Returns the name of the template used to render the parameter in the UI.
      *
-     * @param name the name of the parameter
+     * @return the name or path of the template used to render the parameter
      */
-    protected CodeListParameter(String name) {
-        super(name);
+    @Override
+    public String getTemplateName() {
+        return "/templates/biz/jobs/params/codelist-autocomplete.html.pasta";
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected String checkAndTransformValue(Value input) {
+        Optional<V> optionalCodeList = resolveFromString(input);
+
+        if (optionalCodeList.isPresent()) {
+            return ((V)optionalCodeList.get()).getCodeListData().getCode();
+        }
+
+        return null;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected Optional<V> resolveFromString(Value input) {
+        if (input.isEmptyString()) {
+            return Optional.empty();
+        }
+
+        return (Optional<V>) codeLists.findCodelist(input.getString());
     }
 
     /**
@@ -45,8 +78,7 @@ public abstract class CodeListParameter<I, L extends BaseEntity<I> & CodeList>
      *
      * @return the autocomplete URL used to provide suggestions for user input
      */
-    @Override
     public String getAutocompleteUri() {
-        return "/code-lists/autocomplete/";
+        return CODE_LISTS_AUTOCOMPLETE;
     }
 }

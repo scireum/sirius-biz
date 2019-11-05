@@ -204,7 +204,7 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
             pageHelper.withContext(webContext);
 
             pageHelper.asPage().getItems().forEach(codeList -> {
-                result.accept(new AutocompleteHelper.Completion(codeList.getIdAsString(),
+                result.accept(new AutocompleteHelper.Completion(codeList.getCodeListData().getCode(),
                                                                 codeList.getCodeListData().getCode(),
                                                                 codeList.getCodeListData().getCode()));
             });

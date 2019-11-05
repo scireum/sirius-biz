@@ -12,6 +12,7 @@ import sirius.biz.codelists.CodeListController;
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.EntityImportJob;
 import sirius.biz.jobs.batch.file.EntityImportJobFactory;
+import sirius.biz.jobs.params.CodeListParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.mongo.MongoTenants;
@@ -34,7 +35,8 @@ public class MongoCodeListEntryImportJobFactory extends EntityImportJobFactory {
     /**
      * Contains the mongo code list to import the code list entries into.
      */
-    private MongoCodeListParameter codeListParameter = new MongoCodeListParameter("codeList");
+    private CodeListParameter<String, MongoCodeList> codeListParameter =
+            new CodeListParameter<>("codeList", "$CodeList");
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
