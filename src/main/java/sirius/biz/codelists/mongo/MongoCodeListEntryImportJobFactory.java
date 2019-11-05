@@ -9,6 +9,9 @@
 package sirius.biz.codelists.mongo;
 
 import sirius.biz.codelists.CodeListController;
+import sirius.biz.codelists.CodeListEntryData;
+import sirius.biz.importer.format.FieldDefinition;
+import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.EntityImportJob;
 import sirius.biz.jobs.batch.file.EntityImportJobFactory;
@@ -19,6 +22,7 @@ import sirius.biz.tenants.mongo.MongoTenants;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.nls.NLS;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
