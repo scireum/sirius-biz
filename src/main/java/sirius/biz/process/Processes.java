@@ -168,7 +168,7 @@ public class Processes {
     }
 
     /**
-     * Marks an existing an terminated process as active again.
+     * Marks an existing and terminated process as active again.
      * <p>
      * This is used for downstream processing (e.g. writing outputs into a file) after a process has
      * {@link ProcessState#TERMINATED}. Essentially, all this does is verifying the preconditions and setting the
