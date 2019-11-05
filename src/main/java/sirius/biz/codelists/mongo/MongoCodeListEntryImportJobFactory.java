@@ -102,4 +102,13 @@ public class MongoCodeListEntryImportJobFactory extends EntityImportJobFactory {
     protected void computePresetFor(Object targetObject, Map<String, Object> preset) {
         preset.put(codeListParameter.getName(), ((MongoCodeList) targetObject).getId());
     }
+
+    @Override
+    protected void enhanceDictionary(ImportDictionary dictionary) {
+        super.enhanceDictionary(dictionary);
+        FieldDefinition code = new FieldDefinition(MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE).toString(), FieldDefinition.typeString(null));
+        code.addAlias("$Model.code");
+        code.withLabel(NLS.get("Model.code"));
+        dictionary.addField(code);
+    }
 }
