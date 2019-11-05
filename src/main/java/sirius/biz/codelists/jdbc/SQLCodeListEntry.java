@@ -12,6 +12,7 @@ import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListEntryData;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
+import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.di.std.Framework;
 
@@ -20,6 +21,7 @@ import sirius.kernel.di.std.Framework;
  */
 @Framework(SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
 @TranslationSource(CodeListEntry.class)
+@Index(name = "lookup", columns = {"codeList", "codeListEntryData_code"}, unique = true)
 public class SQLCodeListEntry extends SQLEntity implements CodeListEntry<Long, SQLCodeList> {
 
     private final SQLEntityRef<SQLCodeList> codeList =
