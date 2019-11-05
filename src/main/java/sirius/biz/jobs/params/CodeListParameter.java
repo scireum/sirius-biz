@@ -64,13 +64,4 @@ public class CodeListParameter<I, V extends BaseEntity<I> & CodeList> extends Pa
 
         return (Optional<V>) codeLists.findCodelist(input.getString());
     }
-
-    /**
-     * Returns the autocompletion URL used to determine suggestions for inputs provided by the user.
-     *
-     * @return the autocomplete URL used to provide suggestions for user input
-     */
-    public String getAutocompleteUri() {
-        return CODE_LISTS_AUTOCOMPLETE;
-    }
 }

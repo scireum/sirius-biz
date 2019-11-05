@@ -62,12 +62,6 @@ public class MongoCodeListEntryImportHandler extends MongoEntityImportHandler<Mo
      */
     @Override
     public Optional<MongoCodeListEntry> tryFind(Context data) {
-        if (data.containsKey(MongoCodeListEntry.ID.getName())) {
-            return mango.select(MongoCodeListEntry.class)
-                        .eq(MongoCodeListEntry.ID, data.getValue(MongoUserAccount.ID.getName()).asString())
-                        .one();
-        }
-
         if (data.containsKey(MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE).getName())
             && data.containsKey(MongoCodeListEntry.CODE_LIST.getName())) {
             return mango.select(MongoCodeListEntry.class)

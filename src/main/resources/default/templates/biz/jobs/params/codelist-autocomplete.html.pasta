@@ -8,7 +8,7 @@
                             help="@param.getDescription()"
                             required="@param.isRequired()"
                             optional="@!param.isRequired()"
-                            serviceUri="@param.getAutocompleteUri()">
+                            serviceUri="/code-lists/autocomplete">
 
     <i:local name="current" value="param.get(context).orElse(null).as(sirius.biz.codelists.CodeList.class)"/>
     <i:if test="current != null">

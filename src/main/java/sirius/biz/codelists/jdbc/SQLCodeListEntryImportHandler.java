@@ -59,9 +59,6 @@ public class SQLCodeListEntryImportHandler extends SQLEntityImportHandler<SQLCod
 
     @Override
     protected void collectFindQueries(BiConsumer<Predicate<SQLCodeListEntry>, Supplier<FindQuery<SQLCodeListEntry>>> queryConsumer) {
-        queryConsumer.accept(sqlCodeListEntry -> !sqlCodeListEntry.isNew(),
-                             () -> context.getBatchContext().findQuery(SQLCodeListEntry.class, SQLCodeListEntry.ID));
-
         queryConsumer.accept(sqlCodeListEntry -> Strings.isFilled(sqlCodeListEntry.getCodeListEntryData().getCode())
                                                  && sqlCodeListEntry.getCodeList().isFilled(),
                              () -> context.getBatchContext()

@@ -261,22 +261,21 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
 
         Tenant<?> currentTenant = getCurrentTenant(codeList).orElseThrow(this::warnAboutMissingTenant);
 
-        if (!optionalCodeList.isPresent()) {
-            Extension ext = getCodeListConfig(codeList);
+        if (optionalCodeList.isPresent()) {
+            return optionalCodeList.get();
+        }
+        Extension ext = getCodeListConfig(codeList);
 
-            L cl = createCodeList(currentTenant, codeList);
-            if (ext != null && !ext.isDefault()) {
-                cl.getCodeListData().setName(ext.get(CONFIG_KEY_NAME).asString());
-                cl.getCodeListData().setDescription(ext.get(CONFIG_KEY_DESCRIPTION).asString());
-                cl.getCodeListData().setAutofill(ext.get(CONFIG_KEY_AUTOFILL).asBoolean());
-            }
-
-            cl.getMapper().update(cl);
-
-            return cl;
+        L cl = createCodeList(currentTenant, codeList);
+        if (ext != null && !ext.isDefault()) {
+            cl.getCodeListData().setName(ext.get(CONFIG_KEY_NAME).asString());
+            cl.getCodeListData().setDescription(ext.get(CONFIG_KEY_DESCRIPTION).asString());
+            cl.getCodeListData().setAutofill(ext.get(CONFIG_KEY_AUTOFILL).asBoolean());
         }
 
-        return optionalCodeList.get();
+        cl.getMapper().update(cl);
+
+        return cl;
     }
 
     private L createCodeList(@Nonnull Tenant<?> tenant, String codeList) {
