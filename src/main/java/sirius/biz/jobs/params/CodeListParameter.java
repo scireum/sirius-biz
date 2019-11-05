@@ -9,7 +9,6 @@
 package sirius.biz.jobs.params;
 
 import sirius.biz.codelists.CodeList;
-import sirius.biz.codelists.CodeListData;
 import sirius.biz.codelists.CodeLists;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Value;
@@ -52,15 +51,8 @@ public class CodeListParameter<I, V extends BaseEntity<I> & CodeList> extends Pa
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     protected String checkAndTransformValue(Value input) {
-        Optional<V> optionalCodeList = resolveFromString(input);
-
-        if (optionalCodeList.isPresent()) {
-            return ((V)optionalCodeList.get()).getCodeListData().getCode();
-        }
-
-        return null;
+        return resolveFromString(input).map(codeList -> codeList.getCodeListData().getCode()).orElse(null);
     }
 
     @Override
