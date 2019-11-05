@@ -75,7 +75,7 @@ class BridgeFile implements FtpFile {
 
     @Override
     public boolean doesExist() {
-        return file != null;
+        return file != null && file.exists();
     }
 
     @Override
@@ -130,7 +130,7 @@ class BridgeFile implements FtpFile {
 
     @Override
     public boolean mkdir() {
-        if (file != null) {
+        if (doesExist()) {
             return file.isDirectory();
         } else {
             return parent.resolve(childName).tryCreateAsDirectory();
@@ -139,7 +139,7 @@ class BridgeFile implements FtpFile {
 
     @Override
     public boolean delete() {
-        if (file != null) {
+        if (doesExist()) {
             return file.tryDelete();
         }
 
@@ -149,7 +149,7 @@ class BridgeFile implements FtpFile {
     @Override
     public boolean move(FtpFile destination) {
         try {
-            if (file == null) {
+            if (!doesExist()) {
                 return false;
             }
 
@@ -173,7 +173,7 @@ class BridgeFile implements FtpFile {
     @Override
     public List<? extends FtpFile> listFiles() {
         List<FtpFile> result = new ArrayList<>();
-        if (file != null) {
+        if (doesExist()) {
             file.children(FileSearch.iterateAll(child -> result.add(new BridgeFile(child))));
         }
 
@@ -182,7 +182,7 @@ class BridgeFile implements FtpFile {
 
     @Override
     public OutputStream createOutputStream(long offset) throws IOException {
-        if (file != null) {
+        if (doesExist()) {
             return file.createOutputStream();
         }
 
@@ -191,7 +191,7 @@ class BridgeFile implements FtpFile {
 
     @Override
     public InputStream createInputStream(long offset) throws IOException {
-        if (file != null) {
+        if (doesExist()) {
             return file.createInputStream();
         }
 
