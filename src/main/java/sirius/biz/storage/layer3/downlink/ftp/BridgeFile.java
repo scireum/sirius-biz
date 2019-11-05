@@ -34,7 +34,6 @@ class BridgeFile implements FtpFile {
 
     BridgeFile(VirtualFile file) {
         this.file = file;
-        this.parent = file.parent();
     }
 
     BridgeFile(VirtualFile parent, String childName) {
