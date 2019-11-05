@@ -24,9 +24,14 @@ public abstract class ExportBatchProcessFactory extends BatchProcessJobFactory {
      */
     public static class ExportBatchProcessTaskExecutor extends BatchProcessTaskExecutor {
 
+        /**
+         * Contains the queue name being used by export jobs.
+         */
+        public static final String QUEUE_NAME = "export-jobs";
+
         @Override
         public String queueName() {
-            return "export-jobs";
+            return QUEUE_NAME;
         }
     }
 

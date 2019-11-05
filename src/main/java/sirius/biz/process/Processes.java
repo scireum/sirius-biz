@@ -168,6 +168,24 @@ public class Processes {
     }
 
     /**
+     * Marks an existing and terminated process as active again.
+     * <p>
+     * This is used for downstream processing (e.g. writing outputs into a file) after a process has
+     * {@link ProcessState#TERMINATED}. Essentially, all this does is verifying the preconditions and setting the
+     * state back to {@link ProcessState#RUNNING}.
+     *
+     * @param processId the id of the process to restart
+     * @param reason    the reason to log
+     * @throws sirius.kernel.health.HandledException in case the process isn't currently terminated or doesn't exist at all
+     */
+    public void restartProcess(String processId, String reason) {
+        modify(processId,
+               process -> process.getState() == ProcessState.TERMINATED,
+               process -> process.setState(ProcessState.RUNNING));
+        log(processId, ProcessLog.info().withNLSKey("Processes.restarted").withContext("reason", reason));
+    }
+
+    /**
      * Executes the given task in the standby process of the given type, for the currently active tenant.
      * <p>
      * If no matching standby process exists, one will be created.
@@ -277,11 +295,14 @@ public class Processes {
             // Maybe another node recently created a matching standby process. Wait a reasonable amount of time so that the change
             // becomes visible in elasticsearch/caches. As standby processes are rarely created it is legitimate to hold the lock
             // while waiting.
-            Wait.millis(1200);
+            int attempts = 4;
+            while (attempts-- > 0) {
+                Process process = fetchStandbyProcess(type, tenantId);
+                if (process != null) {
+                    return process;
+                }
 
-            Process process = fetchStandbyProcess(type, tenantId);
-            if (process != null) {
-                return process;
+                Wait.millis(300);
             }
 
             return createStandbyProcessInLock(type, title, tenantId, tenantName);
@@ -693,12 +714,15 @@ public class Processes {
      * @param processId the process to check
      */
     private void awaitProcess(String processId) {
-        if (!fetchProcess(processId).isPresent()) {
-            Wait.millis(1200);
-            if (!fetchProcess(processId).isPresent()) {
-                throw new IllegalStateException("Unknown process id: " + processId);
+        int attempts = 4;
+        while (attempts-- > 0) {
+            if (fetchProcess(processId).isPresent()) {
+                return;
             }
+            Wait.millis(300);
         }
+
+        throw new IllegalStateException("Unknown process id: " + processId);
     }
 
     /**

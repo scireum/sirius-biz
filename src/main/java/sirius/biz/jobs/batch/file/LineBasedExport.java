@@ -23,7 +23,7 @@ public interface LineBasedExport extends Closeable {
      * @param row the list of fields to add
      * @throws IOException in case of an IO error in the underlying storage
      */
-    void addRow(List<Object> row) throws IOException;
+    void addRow(List<?> row) throws IOException;
 
     /**
      * Adds the array of fields as new row.
