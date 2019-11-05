@@ -75,7 +75,15 @@ public class SQLCodeListEntryImportJobFactory extends EntityImportJobFactory {
         @Override
         protected SQLCodeListEntry findAndLoad(Context ctx) {
             ctx.put(SQLCodeListEntry.CODE_LIST.toString(), codeList.getId());
-            return super.findAndLoad(ctx);
+
+            SQLCodeListEntry entry = super.findAndLoad(ctx);
+            if (entry.isNew()) {
+                entry.getCodeListEntryData()
+                     .setCode(ctx.get(SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE).toString())
+                                 .toString());
+            }
+
+            return entry;
         }
 
         @Override

@@ -76,7 +76,15 @@ public class MongoCodeListEntryImportJobFactory extends EntityImportJobFactory {
         @Override
         protected MongoCodeListEntry findAndLoad(Context ctx) {
             ctx.put(MongoCodeListEntry.CODE_LIST.toString(), codeList.getId());
-            return super.findAndLoad(ctx);
+
+            MongoCodeListEntry entry = super.findAndLoad(ctx);
+            if (entry.isNew()) {
+                entry.getCodeListEntryData()
+                     .setCode(ctx.get(MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE).toString())
+                                 .toString());
+            }
+
+            return entry;
         }
 
         @Override
