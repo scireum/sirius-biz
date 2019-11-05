@@ -39,7 +39,7 @@ public class SQLCodeListEntryImportJobFactory extends EntityImportJobFactory {
     /**
      * Contains the sql code list to import the code list entries into.
      */
-    private CodeListParameter<Long, SQLCodeList> codeListParameter = new CodeListParameter<>("codeList", "$CodeList");
+    private CodeListParameter codeListParameter = new CodeListParameter("codeList", "$CodeList");
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
@@ -62,6 +62,7 @@ public class SQLCodeListEntryImportJobFactory extends EntityImportJobFactory {
          *
          * @param process the process context itself
          */
+        @SuppressWarnings("unchecked")
         private SQLCodeListEntryImportJob(ProcessContext process) {
             super(fileParameter,
                   ignoreEmptyParameter,
@@ -69,7 +70,7 @@ public class SQLCodeListEntryImportJobFactory extends EntityImportJobFactory {
                   SQLCodeListEntry.class,
                   getDictionary(),
                   process);
-            codeList = process.require(codeListParameter);
+            codeList = (SQLCodeList) process.require(codeListParameter);
         }
 
         @Override

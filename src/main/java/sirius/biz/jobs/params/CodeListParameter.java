@@ -10,7 +10,6 @@ package sirius.biz.jobs.params;
 
 import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeLists;
-import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
@@ -19,13 +18,8 @@ import java.util.Optional;
 
 /**
  * Permits to select a {@link CodeList} as parameter.
- *
- * @param <I> the type of the ID used by subclasses.
- * @param <V> the type of selectable by this parameter.
  */
-public class CodeListParameter<I, V extends BaseEntity<I> & CodeList> extends Parameter<V, CodeListParameter<I, V>> {
-
-    public static final String CODE_LISTS_AUTOCOMPLETE = "/code-lists/autocomplete";
+public class CodeListParameter extends Parameter {
 
     @Part
     private static CodeLists<?, ?, ?> codeLists;
@@ -57,11 +51,11 @@ public class CodeListParameter<I, V extends BaseEntity<I> & CodeList> extends Pa
 
     @Override
     @SuppressWarnings("unchecked")
-    protected Optional<V> resolveFromString(Value input) {
+    protected Optional<CodeList> resolveFromString(Value input) {
         if (input.isEmptyString()) {
             return Optional.empty();
         }
 
-        return (Optional<V>) codeLists.findCodelist(input.getString());
+        return (Optional<CodeList>) codeLists.findCodelist(input.getString());
     }
 }

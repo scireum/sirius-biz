@@ -39,8 +39,7 @@ public class MongoCodeListEntryImportJobFactory extends EntityImportJobFactory {
     /**
      * Contains the mongo code list to import the code list entries into.
      */
-    private CodeListParameter<String, MongoCodeList> codeListParameter =
-            new CodeListParameter<>("codeList", "$CodeList");
+    private CodeListParameter codeListParameter = new CodeListParameter("codeList", "$CodeList");
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
@@ -63,6 +62,7 @@ public class MongoCodeListEntryImportJobFactory extends EntityImportJobFactory {
          *
          * @param process the process context itself
          */
+        @SuppressWarnings("unchecked")
         private MongoCodeListEntryImportJob(ProcessContext process) {
             super(fileParameter,
                   ignoreEmptyParameter,
@@ -70,7 +70,7 @@ public class MongoCodeListEntryImportJobFactory extends EntityImportJobFactory {
                   MongoCodeListEntry.class,
                   getDictionary(),
                   process);
-            codeList = process.require(codeListParameter);
+            codeList = (MongoCodeList) process.require(codeListParameter);
         }
 
         @Override
