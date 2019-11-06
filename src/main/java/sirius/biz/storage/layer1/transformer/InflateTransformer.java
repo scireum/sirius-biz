@@ -17,7 +17,7 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
 /**
- * Uncompresses data which has previously beed compressed by a {@link DeflateTransformer}.
+ * Uncompresses data which has previously been compressed by a {@link DeflateTransformer}.
  */
 public class InflateTransformer implements ByteBlockTransformer {
 

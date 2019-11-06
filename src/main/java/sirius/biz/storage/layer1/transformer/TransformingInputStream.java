@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Wraps a {@link InputStream} annd applies a {@link ByteBlockTransformer} while shovelling data.
+ * Wraps an {@link InputStream} and applies a {@link ByteBlockTransformer} while shoveling data.
  */
 public class TransformingInputStream extends InputStream {
 

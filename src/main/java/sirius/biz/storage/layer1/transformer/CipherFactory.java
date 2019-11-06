@@ -15,8 +15,8 @@ import sirius.kernel.settings.Extension;
  * Represents a named factory which can use a given Layer 1 configuration and create a {@link CipherProvider}.
  * <p>
  * We need this kind of double indirection as a {@link CipherTransformer} which will use the created ciphers
- * can only be used once per operation. Still we want to keep the secret key etc. around, which is wrapped
- * in a {@link CipherProvider}. To permit several ways of encrpting data, this factory pattern is used
+ * and can only be used once per operation. Still we want to keep the secret key etc. around, which is wrapped
+ * in a {@link CipherProvider}. To permit several ways of encrypting data, this factory pattern is used
  * to create and initialize the appropriate provider.
  */
 public interface CipherFactory extends Named {
