@@ -28,7 +28,7 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
     protected static final Mapping[] MAPPING_ARRAY = new Mapping[0];
 
     @Part
-    protected Mango mango;
+    protected static Mango mango;
 
     protected Mapping[] mappingsToLoad;
 

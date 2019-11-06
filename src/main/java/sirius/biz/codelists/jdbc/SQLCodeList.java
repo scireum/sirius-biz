@@ -29,4 +29,9 @@ public class SQLCodeList extends SQLTenantAware implements CodeList {
     public CodeListData getCodeListData() {
         return codeListData;
     }
+
+    @Override
+    public String toString() {
+        return codeListData.getCode();
+    }
 }
