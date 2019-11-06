@@ -42,25 +42,53 @@ public class ObjectStorage {
     @Part
     private GlobalContext globalContext;
 
+    @Part
+    private ReplicationManager replicationManager;
+
     @ConfigValue("storage.layer1.spaces.default.engine")
     private String defaultEngine;
 
-    private DerivedSpaceInfo<StorageEngine> engines = new DerivedSpaceInfo<>(CONFIG_KEY_LAYER1_ENGINE,
-                                                                             StorageUtils.ConfigScope.LAYER1,
-                                                                             this::resolveStorageEngine);
+    private Map<String, ObjectStorageSpace> spaceMap;
 
-    private StorageEngine resolveStorageEngine(Extension extension) {
-        StorageEngine result =
-                globalContext.getPart(extension.getString(CONFIG_KEY_LAYER1_ENGINE), StorageEngine.class);
-        if (result != null) {
-            return result;
+    protected Map<String, ObjectStorageSpace> getSpaceMap() {
+        if (spaceMap == null) {
+            spaceMap = initializeSpaceMap();
         }
 
-        StorageUtils.LOG.WARN("Layer 1: An invalid storage engine (%s) was given for space '%s' - defaulting to '%s'",
-                              extension.getString(CONFIG_KEY_LAYER1_ENGINE),
+        return spaceMap;
+    }
+
+    private Map<String, ObjectStorageSpace> initializeSpaceMap() {
+        Map<String, ObjectStorageSpace> result = utils.getStorageSpaces(StorageUtils.ConfigScope.LAYER1)
+                                                      .stream()
+                                                      .map(this::createSpace)
+                                                      .filter(Objects::nonNull)
+                                                      .collect(Collectors.toMap(ObjectStorageSpace::getName,
+                                                                                Function.identity()));
+
+        replicationManager.initializeReplication(result);
+
+        return result;
+    }
+
+    private ObjectStorageSpace createSpace(Extension extension) {
+        try {
+            ObjectStoraceSpaceFactory factory =
+                    globalContext.findPart(extension.get(CONFIG_KEY_LAYER1_ENGINE).asString(),
+                                           ObjectStoraceSpaceFactory.class);
+
+            return factory.create(extension.getId(), extension);
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .error(e)
+                      .to(StorageUtils.LOG)
+                      .withSystemErrorMessage(
+                              "Layer 1: Failed to create the object storage space '%s' of type '%s': %s (%s)",
                               extension.getId(),
-                              defaultEngine);
-        return globalContext.getPart(defaultEngine, StorageEngine.class);
+                              extension.getString(CONFIG_KEY_LAYER1_ENGINE))
+                      .handle();
+            return null;
+        }
     }
 
     /**
@@ -70,7 +98,7 @@ public class ObjectStorage {
      * @return <tt>true</tt> if the space is known, <tt>false</tt> otherwise
      */
     public boolean isKnown(String space) {
-        return engines.contains(space);
+        return getSpaceMap().containsKey(space);
     }
 
     /**
@@ -81,6 +109,15 @@ public class ObjectStorage {
      * @throws sirius.kernel.health.HandledException if an unknown storage space is requested.
      */
     public ObjectStorageSpace getSpace(String name) {
-        return new ObjectStorageSpace(name, engines.get(name));
+        ObjectStorageSpace result = getSpaceMap().get(name);
+        if (result == null) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .withSystemErrorMessage("Layer1: Cannot find a configuration for space '%s'"
+                                                    + ". Please verify the system configuration.", name)
+                            .handle();
+        }
+
+        return result;
     }
 }
