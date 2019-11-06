@@ -8,13 +8,19 @@
 
 package sirius.biz.storage.layer1;
 
-import sirius.biz.storage.util.DerivedSpaceInfo;
+import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
+
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Provides the public API to the Layer 1 of the storage framework.
@@ -35,6 +41,15 @@ public class ObjectStorage {
      * Contains the config attribute which determines which storage engine to use for a space.
      */
     public static final String CONFIG_KEY_LAYER1_ENGINE = "engine";
+    /**
+     * Contains the config attribute which determines which {@link ObjectStoraceSpaceFactory} to use for a space.
+     */
+    public static final String CONFIG_KEY_LAYER1_COMPRESSION = "compression";
+    /**
+     * Contains the config attribute which determines which {@link sirius.biz.storage.layer1.transformer.CipherFactory}
+     * to use for a space.
+     */
+    public static final String CONFIG_KEY_LAYER1_CIPHER = "cipher";
 
     @Part
     private StorageUtils utils;
