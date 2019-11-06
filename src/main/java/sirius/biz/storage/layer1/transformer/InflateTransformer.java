@@ -25,7 +25,7 @@ public class InflateTransformer implements ByteBlockTransformer {
 
     /**
      * This is a shared buffer which is only used to transfer data from the inflater into the effective output buffer.
-     * Being oly used within a method call, we can keep a reusable instance around instead of re-creating one
+     * Being only used within a method call, we can keep a reusable instance around instead of re-creating one
      * each time.
      */
     private byte[] inflateBuffer = new byte[TransformingInputStream.DEFAULT_BUFFER_SIZE];

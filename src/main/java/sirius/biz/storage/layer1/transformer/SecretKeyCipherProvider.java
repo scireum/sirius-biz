@@ -23,7 +23,7 @@ public class SecretKeyCipherProvider implements CipherProvider {
     private String algorithm;
 
     /**
-     * Creates a new instance for the given key an algorithm.
+     * Creates a new instance of an algorithm for the given key.
      *
      * @param secretKey the key to use
      * @param algorithm the algorithm to use
