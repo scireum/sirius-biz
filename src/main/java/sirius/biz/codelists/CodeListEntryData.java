@@ -44,6 +44,7 @@ public class CodeListEntryData extends Composite {
     @Trim
     @Length(50)
     @Unique(within = "codeList")
+    @AutoImport
     private String code;
 
     /**

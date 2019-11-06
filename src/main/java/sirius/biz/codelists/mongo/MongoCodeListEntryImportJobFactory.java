@@ -10,9 +10,6 @@ package sirius.biz.codelists.mongo;
 
 import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeListController;
-import sirius.biz.codelists.CodeListEntryData;
-import sirius.biz.importer.format.FieldDefinition;
-import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.EntityImportJob;
 import sirius.biz.jobs.batch.file.EntityImportJobFactory;
@@ -23,7 +20,6 @@ import sirius.biz.tenants.mongo.MongoTenants;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.nls.NLS;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
@@ -76,15 +72,7 @@ public class MongoCodeListEntryImportJobFactory extends EntityImportJobFactory {
         @Override
         protected MongoCodeListEntry findAndLoad(Context ctx) {
             ctx.put(MongoCodeListEntry.CODE_LIST.toString(), ((MongoCodeList) codeList).getId());
-
-            MongoCodeListEntry entry = super.findAndLoad(ctx);
-            if (entry.isNew()) {
-                entry.getCodeListEntryData()
-                     .setCode(ctx.get(MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE).toString())
-                                 .toString());
-            }
-
-            return entry;
+            return super.findAndLoad(ctx);
         }
 
         @Override
@@ -113,16 +101,5 @@ public class MongoCodeListEntryImportJobFactory extends EntityImportJobFactory {
     @Override
     protected void computePresetFor(Object targetObject, Map<String, Object> preset) {
         preset.put(codeListParameter.getName(), ((MongoCodeList) targetObject).getId());
-    }
-
-    @Override
-    protected void enhanceDictionary(ImportDictionary dictionary) {
-        super.enhanceDictionary(dictionary);
-        FieldDefinition code =
-                new FieldDefinition(MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE).toString(),
-                                    FieldDefinition.typeString(null));
-        code.addAlias("$Model.code");
-        code.withLabel(NLS.get("Model.code"));
-        dictionary.addField(code);
     }
 }
