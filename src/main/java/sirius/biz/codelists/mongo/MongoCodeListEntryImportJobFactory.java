@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists.mongo;
 
+import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListEntryData;
 import sirius.biz.importer.format.FieldDefinition;
@@ -55,14 +56,13 @@ public class MongoCodeListEntryImportJobFactory extends EntityImportJobFactory {
 
     protected class MongoCodeListEntryImportJob extends EntityImportJob<MongoCodeListEntry> {
 
-        private MongoCodeList codeList;
+        private CodeList codeList;
 
         /**
          * Creates a new job for the given factory, name and process.
          *
          * @param process the process context itself
          */
-        @SuppressWarnings("unchecked")
         private MongoCodeListEntryImportJob(ProcessContext process) {
             super(fileParameter,
                   ignoreEmptyParameter,
@@ -70,12 +70,12 @@ public class MongoCodeListEntryImportJobFactory extends EntityImportJobFactory {
                   MongoCodeListEntry.class,
                   getDictionary(),
                   process);
-            codeList = (MongoCodeList) process.require(codeListParameter);
+            codeList = process.require(codeListParameter);
         }
 
         @Override
         protected MongoCodeListEntry findAndLoad(Context ctx) {
-            ctx.put(MongoCodeListEntry.CODE_LIST.toString(), codeList.getId());
+            ctx.put(MongoCodeListEntry.CODE_LIST.toString(), ((MongoCodeList) codeList).getId());
 
             MongoCodeListEntry entry = super.findAndLoad(ctx);
             if (entry.isNew()) {
@@ -89,7 +89,7 @@ public class MongoCodeListEntryImportJobFactory extends EntityImportJobFactory {
 
         @Override
         protected MongoCodeListEntry fillAndVerify(MongoCodeListEntry entity) {
-            setOrVerify(entity, entity.getCodeList(), codeList);
+            setOrVerify(entity, entity.getCodeList(), (MongoCodeList) codeList);
             return super.fillAndVerify(entity);
         }
     }

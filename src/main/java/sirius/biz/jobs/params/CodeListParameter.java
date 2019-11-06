@@ -19,7 +19,7 @@ import java.util.Optional;
 /**
  * Permits to select a {@link CodeList} as parameter.
  */
-public class CodeListParameter extends Parameter {
+public class CodeListParameter extends Parameter<CodeList, CodeListParameter> {
 
     @Part
     private static CodeLists<?, ?, ?> codeLists;

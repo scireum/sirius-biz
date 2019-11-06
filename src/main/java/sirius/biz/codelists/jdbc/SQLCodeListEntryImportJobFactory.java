@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists.jdbc;
 
+import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListEntryData;
 import sirius.biz.importer.format.FieldDefinition;
@@ -55,14 +56,13 @@ public class SQLCodeListEntryImportJobFactory extends EntityImportJobFactory {
 
     protected class SQLCodeListEntryImportJob extends EntityImportJob<SQLCodeListEntry> {
 
-        private SQLCodeList codeList;
+        private CodeList codeList;
 
         /**
          * Creates a new job for the given factory, name and process.
          *
          * @param process the process context itself
          */
-        @SuppressWarnings("unchecked")
         private SQLCodeListEntryImportJob(ProcessContext process) {
             super(fileParameter,
                   ignoreEmptyParameter,
@@ -70,12 +70,12 @@ public class SQLCodeListEntryImportJobFactory extends EntityImportJobFactory {
                   SQLCodeListEntry.class,
                   getDictionary(),
                   process);
-            codeList = (SQLCodeList) process.require(codeListParameter);
+            codeList = process.require(codeListParameter);
         }
 
         @Override
         protected SQLCodeListEntry findAndLoad(Context ctx) {
-            ctx.put(SQLCodeListEntry.CODE_LIST.toString(), codeList.getId());
+            ctx.put(SQLCodeListEntry.CODE_LIST.toString(), ((SQLCodeList) codeList).getId());
 
             SQLCodeListEntry entry = super.findAndLoad(ctx);
             if (entry.isNew()) {
@@ -89,7 +89,7 @@ public class SQLCodeListEntryImportJobFactory extends EntityImportJobFactory {
 
         @Override
         protected SQLCodeListEntry fillAndVerify(SQLCodeListEntry entity) {
-            setOrVerify(entity, entity.getCodeList(), codeList);
+            setOrVerify(entity, entity.getCodeList(), (SQLCodeList) codeList);
             return super.fillAndVerify(entity);
         }
     }
