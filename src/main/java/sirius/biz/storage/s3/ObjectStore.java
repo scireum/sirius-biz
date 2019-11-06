@@ -67,7 +67,7 @@ public class ObjectStore {
     private static final String EXECUTOR_S3 = "s3";
 
     /**
-     * When performing a multipart upload i {@link #upload(BucketName, String, InputStream)} we keep
+     * When performing a multipart upload in {@link #upload(BucketName, String, InputStream)} we keep
      * a local aggregation buffer around to collect a large enough chunk to be uploaded to S3. This specifies the
      * initial size of this buffer.
      */
@@ -579,7 +579,7 @@ public class ObjectStore {
     /**
      * Synchronously uploads the given input stream as an object.
      * <p>
-     * If the total content-length if known in advance use {@link #upload(BucketName, String, InputStream, long)} which
+     * If the total content-length is known in advance use {@link #upload(BucketName, String, InputStream, long)} which
      * migth use a more efficient API. If a file is to be uploaded use {@link #upload(BucketName, String, File)} which
      * can upload chunks in parallel.
      *

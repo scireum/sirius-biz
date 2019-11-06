@@ -57,14 +57,14 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
         this.store = resolveObjectStore(extension);
     }
 
-    private ObjectStore resolveObjectStore(Extension ext) {
-        String storeName = ext.getString(CONFIG_KEY_LAYER1_STORE);
+    private ObjectStore resolveObjectStore(Extension extension) {
+        String storeName = extension.getString(CONFIG_KEY_LAYER1_STORE);
 
         if (!objectStores.isConfigured(storeName)) {
             StorageUtils.LOG.WARN(
                     "Layer 1/S3: Unknown or unconfigured object store '%s' used by space '%s'. Using system default.",
                     storeName,
-                    ext.getId());
+                    extension.getId());
             return objectStores.store();
         }
 

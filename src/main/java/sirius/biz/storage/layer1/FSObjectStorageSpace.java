@@ -61,17 +61,17 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
         this.baseDir = resolveEffectiveBaseDir(extension);
     }
 
-    private File resolveEffectiveBaseDir(Extension ext) {
-        String path = ext.getString(CONFIG_KEY_LAYER1_PATH);
+    private File resolveEffectiveBaseDir(Extension extension) {
+        String path = extension.getString(CONFIG_KEY_LAYER1_PATH);
         if (Strings.isEmpty(path)) {
-            path = ext.getString(CONFIG_KEY_LAYER1_BASE_DIR) + File.separator + ext.getId();
+            path = extension.getString(CONFIG_KEY_LAYER1_BASE_DIR) + File.separator + extension.getId();
         }
 
         File root = new File(path);
         if (!root.exists()) {
             try {
                 StorageUtils.LOG.INFO("Layer 1/fs: Base directory of space '%s' ('%s') does not exist. Creating...",
-                                      ext.getId(),
+                                      extension.getId(),
                                       root);
                 root.mkdirs();
             } catch (Exception e) {
@@ -81,7 +81,7 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
                                 .withSystemErrorMessage(
                                         "Layer 1/fs: Unable to resolve the base directory of space '%s' ('%s')"
                                         + " into a directory: %s (%s)!",
-                                        ext.getId(),
+                                        extension.getId(),
                                         root)
                                 .handle();
             }
@@ -92,7 +92,7 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
                                 .withSystemErrorMessage(
                                         "Layer 1/fs: Unable to resolve the base directory of space '%s' ('%s')"
                                         + " into a directory: File exists but isn't a directory!",
-                                        ext.getId(),
+                                        extension.getId(),
                                         root)
                                 .handle();
             }
