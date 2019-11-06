@@ -15,6 +15,7 @@ import sirius.kernel.commons.Explain;
 import sirius.kernel.health.Exceptions;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -67,7 +68,17 @@ public interface TenantAware {
     /**
      * Fills the tenant with the given one.
      *
-     * @param tenant the tnenat to set for this entity
+     * @param tenant the tennat to set for this entity
      */
     void withTenant(Tenant<?> tenant);
+
+    /**
+     * Fetches the tenant from cache or throws an exception if no tenant is present.
+     */
+    Tenant<?> fetchCachedRequiredTenant();
+
+    /**
+     * Fetches the tenant from cache wrapped in a Optional
+     */
+    Optional<? extends Tenant> fetchCachedTenant();
 }

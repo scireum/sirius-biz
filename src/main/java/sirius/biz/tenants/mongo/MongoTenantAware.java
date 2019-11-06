@@ -14,6 +14,8 @@ import sirius.biz.web.TenantAware;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.di.std.Part;
 
+import java.util.Optional;
+
 /**
  * Base class which marks subclasses as aware of their tenant they belong to.
  */
@@ -45,5 +47,15 @@ public abstract class MongoTenantAware extends MongoBizEntity implements TenantA
     @Override
     public void withTenant(Tenant<?> tenant) {
         getTenant().setValue((MongoTenant) tenant);
+    }
+
+    @Override
+    public MongoTenant fetchCachedRequiredTenant() {
+        return tenants.fetchCachedRequiredTenant(tenant);
+    }
+
+    @Override
+    public Optional<MongoTenant> fetchCachedTenant() {
+        return tenants.fetchCachedTenant(tenant);
     }
 }
