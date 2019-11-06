@@ -68,17 +68,21 @@ public interface TenantAware {
     /**
      * Fills the tenant with the given one.
      *
-     * @param tenant the tennat to set for this entity
+     * @param tenant the tenant to set for this entity
      */
     void withTenant(Tenant<?> tenant);
 
     /**
      * Fetches the tenant from cache or throws an exception if no tenant is present.
+     *
+     * @return the tenant which this object belongs to
      */
     Tenant<?> fetchCachedRequiredTenant();
 
     /**
-     * Fetches the tenant from cache wrapped in a Optional
+     * Fetches the tenant from cache wrapped in a Optional.
+     *
+     * @return the optional tenant which this object belongs to
      */
     Optional<? extends Tenant> fetchCachedTenant();
 }
