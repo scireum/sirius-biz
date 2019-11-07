@@ -426,7 +426,7 @@ public abstract class ObjectStorageSpace {
      * @param response       the response to populate
      * @param objectKey      the id of the object to deliver
      * @param transformer    the transform to apply when delivering data
-     * @param failureHandler a handler which cann be invoked if the download cannot be performed.
+     * @param failureHandler a handler which can be invoked if the download cannot be performed.
      *                       This will be supplied with the HTTP error code.
      * @throws IOException in case of an IO error
      */
