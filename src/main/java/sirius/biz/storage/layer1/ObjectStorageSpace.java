@@ -473,7 +473,7 @@ public abstract class ObjectStorageSpace {
     }
 
     /**
-     * Returns the configuratin block which was used to setup this space.
+     * Returns the configuration block which was used to setup this space.
      *
      * @return the settings of this space
      */
