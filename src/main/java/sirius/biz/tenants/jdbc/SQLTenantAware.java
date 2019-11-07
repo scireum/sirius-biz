@@ -14,6 +14,8 @@ import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.kernel.di.std.Part;
 
+import java.util.Optional;
+
 /**
  * Base class which marks subclasses as aware of their tenant they belong to.
  */
@@ -45,5 +47,15 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
     @Override
     public void withTenant(Tenant<?> tenant) {
         getTenant().setValue((SQLTenant) tenant);
+    }
+
+    @Override
+    public SQLTenant fetchCachedRequiredTenant() {
+        return tenants.fetchCachedRequiredTenant(tenant);
+    }
+
+    @Override
+    public Optional<SQLTenant> fetchCachedTenant() {
+        return tenants.fetchCachedTenant(tenant);
     }
 }
