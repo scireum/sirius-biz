@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer1.transformer;
 
 import com.google.common.base.Charsets;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.settings.Extension;
 
@@ -46,6 +47,12 @@ public class AES256CipherFactory implements CipherFactory {
     @Override
     public CipherProvider create(Extension spaceConfiguration) throws Exception {
         String passphrase = spaceConfiguration.require(CONFIG_KEY_PASSPHRASE).asString();
+
+        if (Strings.isEmpty(passphrase)) {
+            throw new IllegalArgumentException(
+                    "'passphrase' must not be empty when performing AES encryption/decryption!");
+        }
+
         SecretKeyFactory factory = SecretKeyFactory.getInstance(KEY_DERIVATION_FUNCTION);
         KeySpec spec =
                 new PBEKeySpec(passphrase.toCharArray(), SALT.getBytes(Charsets.UTF_8), NUM_ITERATIONS, KEY_LENGTH);
