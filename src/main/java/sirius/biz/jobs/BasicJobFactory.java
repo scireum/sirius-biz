@@ -262,7 +262,7 @@ public abstract class BasicJobFactory implements JobFactory {
         for (Parameter<?, ?> parameter : getParameters()) {
             try {
                 Value contextValue = parameterProvider.apply(parameter.getName());
-                if (enforceRequiredParameters && !contextValue.isFilled() && parameter.isRequired()) {
+                if (enforceRequiredParameters && contextValue.isEmptyString() && parameter.isRequired()) {
                     errorConsumer.accept(Exceptions.createHandled()
                                                    .withNLSKey("Parameter.required")
                                                    .set("name", parameter.getLabel())
