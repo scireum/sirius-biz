@@ -248,6 +248,11 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         return tryFind(data).orElseGet(() -> createOrUpdateNow(load(data, newEntity())));
     }
 
+    @Override
+    public E findInCacheOrLoadAndCreate(Context data) {
+        return tryFindInCache(data).orElseGet(() -> createOrUpdateNow(load(data, newEntity())));
+    }
+
     /**
      * Creates a new entity of the handled entity type.
      *
