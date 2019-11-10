@@ -19,7 +19,6 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.ValueHolder;
 
@@ -115,13 +114,13 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     @SuppressWarnings("unchecked")
     protected void collectFindQueries(BiConsumer<Predicate<E>, Supplier<FindQuery<E>>> queryConsumer) {
         if (TenantAware.class.isAssignableFrom(descriptor.getType())) {
-            queryConsumer.accept(entity -> Strings.isFilled(entity.getIdAsString()),
+            queryConsumer.accept(entity -> !entity.isNew(),
                                  () -> context.getBatchContext()
                                               .findQuery((Class<E>) descriptor.getType(),
                                                          SQLEntity.ID,
                                                          TenantAware.TENANT));
         } else {
-            queryConsumer.accept(entity -> Strings.isFilled(entity.getIdAsString()),
+            queryConsumer.accept(entity -> !entity.isNew(),
                                  () -> context.getBatchContext()
                                               .findQuery((Class<E>) descriptor.getType(), SQLEntity.ID));
         }
