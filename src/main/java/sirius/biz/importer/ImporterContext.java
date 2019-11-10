@@ -38,6 +38,13 @@ public class ImporterContext {
     private Map<Class<?>, ImportHandler<?>> handlers = new HashMap<>();
     private Cache<Tuple<Class<?>, String>, Object> localCache = CacheBuilder.newBuilder().maximumSize(256).build();
 
+    private List<Runnable> postCommitCallbacks = new ArrayList<>();
+
+    /**
+     * Specifies the maximal number of post commit callbacks to keep arond before a {@link #commit()} is forced.
+     */
+    private static final int MAX_POST_COMMIT_CALLBACKS = 256;
+
     /**
      * Creates a new context for the given importer.
      *
@@ -109,8 +116,56 @@ public class ImporterContext {
      *                     {@link java.io.Closeable} to be supported by the IDEs sanity checks.
      */
     protected void close() throws IOException {
+        try {
+            commit();
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .to(Importer.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("An error occurred while commiting an ImporterContext: %s (%s)")
+                      .handle();
+        }
+
         if (batchContext != null) {
             batchContext.close();
+        }
+    }
+
+    /**
+     * Adds a callback which is kept around until {@link #commit()} is called.
+     * <p>
+     * This will either happen when <b>commit</b> is called manually or when {@link #close()} is called.
+     * <p>
+     * Also, if there are more than {@link #MAX_POST_COMMIT_CALLBACKS} pending, this will invoke
+     * {@link #commit()} directly.
+     *
+     * @param task the task to execute once all batched tasks have been executed.
+     */
+    public void addPostCommitCallback(Runnable task) {
+        postCommitCallbacks.add(task);
+        if (postCommitCallbacks.size() > MAX_POST_COMMIT_CALLBACKS) {
+            commit();
+        }
+    }
+
+    /**
+     * Commits all open batch tasks of all {@link ImportHelper helpers} and {@link ImportHandler handlers}.
+     * <p>
+     * In most cases there is no need to call this method manually as all systems try to flush / commit data
+     * when necessary or when the context is closed.
+     */
+    public void commit() {
+        if (postCommitCallbacks.isEmpty()) {
+            handlers.values().forEach(ImportHandler::commit);
+            helpers.values().forEach(ImportHelper::commit);
+        } else {
+            while (!postCommitCallbacks.isEmpty()) {
+                handlers.values().forEach(ImportHandler::commit);
+                helpers.values().forEach(ImportHelper::commit);
+                List<Runnable> executableCallbacks = new ArrayList<>(postCommitCallbacks);
+                postCommitCallbacks.clear();
+                executableCallbacks.forEach(Runnable::run);
+            }
         }
     }
 
