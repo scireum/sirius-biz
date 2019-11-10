@@ -163,14 +163,23 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
 
     @Override
     public Optional<E> tryFind(Context data) {
-        for (Tuple<Predicate<E>, Supplier<FindQuery<E>>> predicateAndQuery : findQueries) {
-            Optional<E> result = tryFindByExample(load(data, mappingsToLoadForFind), predicateAndQuery);
-            if (result.isPresent()) {
-                return result;
-            }
-        }
+        E example = loadForFind(data);
+        return tryFindByExample(example);
+    }
 
-        return Optional.empty();
+    /**
+     * Loads all {@link #mappingsToLoadForFind} and performs cleanup so that all fields are performed to by used as
+     * filters for the {@link #findQueries}.
+     * <p>
+     * Some fields are normalized within {@link sirius.db.mixing.annotations.BeforeSave} handlers. This method
+     * can be overwritten the perform the same operations to that the values properly match within the
+     * find queries.
+     *
+     * @param data the data used to describe the entity to find
+     * @return the example entity which has been populated from the given <tt>data</tt>
+     */
+    protected E loadForFind(Context data) {
+        return load(data, mappingsToLoadForFind);
     }
 
     /**
@@ -190,7 +199,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
         return Optional.empty();
     }
 
-    private Optional<E> tryFindByExample(E example, Tuple<Predicate<E>, Supplier<FindQuery<E>>> predicateAndQuery) {
+    protected Optional<E> tryFindByExample(E example, Tuple<Predicate<E>, Supplier<FindQuery<E>>> predicateAndQuery) {
         if (!predicateAndQuery.getFirst().test(example)) {
             return Optional.empty();
         }
