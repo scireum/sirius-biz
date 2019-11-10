@@ -175,7 +175,10 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @return <tt>true</tt> if the load was handled, <tt>false</tt> if a regular load via
      * {@link Property#parseValueFromImport(Object, Value)} should be attempted.
      */
-    protected abstract boolean parseComplexProperty(E entity, Property property, Value value, Context data);
+    protected boolean parseComplexProperty(E entity, Property property, Value value, Context data) {
+        // No extra logic is performed by default.
+        return false;
+    }
 
     /**
      * Ensures that if the entity itself is tenant aware and the property being loaded also, that the tenants match.
