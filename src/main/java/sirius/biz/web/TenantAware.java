@@ -66,6 +66,14 @@ public interface TenantAware {
     void fillWithCurrentTenant();
 
     /**
+     * Installs the currently present tenant (in the {@link sirius.web.security.UserContext}) into this entity.
+     * <p>
+     * However, if there is already a tenant present in the entity, it is asserted, that the tenant remains
+     * the same.
+     */
+    void setOrVerifyCurrentTenant();
+
+    /**
      * Fills the tenant with the given one.
      *
      * @param tenant the tenant to set for this entity

@@ -111,6 +111,11 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      */
     protected E load(Context data, E entity, Mapping... mappings) {
         Arrays.stream(mappings).forEach(mapping -> loadMapping(entity, mapping, data));
+
+        if (entity instanceof TenantAware) {
+            ((TenantAware) entity).setOrVerifyCurrentTenant();
+        }
+
         return entity;
     }
 
