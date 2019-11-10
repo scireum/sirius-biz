@@ -8,7 +8,6 @@
 
 package sirius.biz.importer;
 
-import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.batch.DeleteQuery;
@@ -149,16 +148,6 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     @Override
     public E load(Context data, E entity) {
         return load(data, entity, mappingsToLoad);
-    }
-
-    @Override
-    protected E load(Context data, E entity, Mapping... mappings) {
-        E e = super.load(data, entity, mappings);
-        if (e instanceof SQLTenantAware) {
-            ((SQLTenantAware) e).fillWithCurrentTenant();
-        }
-
-        return e;
     }
 
     @Override
