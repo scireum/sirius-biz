@@ -25,7 +25,7 @@ import sirius.kernel.di.std.Framework;
 public class SQLCodeListEntry extends SQLEntity implements CodeListEntry<Long, SQLCodeList> {
 
     private final SQLEntityRef<SQLCodeList> codeList =
-            SQLEntityRef.on(SQLCodeList.class, SQLEntityRef.OnDelete.CASCADE);
+            SQLEntityRef.writeOnceOn(SQLCodeList.class, SQLEntityRef.OnDelete.CASCADE);
 
     private final CodeListEntryData codeListEntryData = new CodeListEntryData(this);
 
