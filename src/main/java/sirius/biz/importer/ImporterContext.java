@@ -20,6 +20,7 @@ import sirius.kernel.health.Exceptions;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,8 @@ public class ImporterContext {
     private static List<ImportHandlerFactory> factories;
 
     private Map<Class<?>, ImportHandler<?>> handlers = new HashMap<>();
+    private Map<Class<?>, ImportHelper> helpers = new HashMap<>();
+
     private Cache<Tuple<Class<?>, String>, Object> localCache = CacheBuilder.newBuilder().maximumSize(256).build();
 
     private List<Runnable> postCommitCallbacks = new ArrayList<>();
@@ -86,6 +89,32 @@ public class ImporterContext {
         } else {
             throw Exceptions.handle()
                             .withSystemErrorMessage("Cannot find an import handler for type: %s", baseType)
+                            .handle();
+        }
+    }
+
+    /**
+     * Fetches or creates the {@link ImportHelper} of the given type.
+     * <p>
+     * These helpers are instantiated and kept around for each {@link Importer} and {@link ImporterContext} and can
+     * therefore provide helper methods and carry along some state.
+     *
+     * @param type the type of helper to find
+     * @param <H>  the generic helper type to find
+     * @return the helper of the requested type
+     * @throws sirius.kernel.health.HandledException if no appropriate helper is available
+     */
+    @SuppressWarnings("unchecked")
+    public <H extends ImportHelper> H findHelper(Class<H> type) {
+        return (H) helpers.computeIfAbsent(type, this::instantiateHelper);
+    }
+
+    private ImportHelper instantiateHelper(Class<?> aClass) {
+        try {
+            return (ImportHelper) aClass.getConstructor(ImporterContext.class).newInstance(this);
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .withSystemErrorMessage("Cannot find or create the import helper of type: %s", aClass)
                             .handle();
         }
     }
