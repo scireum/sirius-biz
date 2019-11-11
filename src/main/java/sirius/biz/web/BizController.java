@@ -132,29 +132,30 @@ public class BizController extends BasicController {
     }
 
     /**
-     * Enusures or establishes a parent child relation.
+     * Properly creates or maintains a reference to an entity with {@link BaseEntityRef#writeOnce write-once semantic}.
      * <p>
-     * For new entities (child), the given reference is initialized with the given entity. For existing entities
-     * it is verified, that the given reference points to the given entity.
+     * For new entities (owner), the given reference is initialized with the given target. For existing entities
+     * it is verified, that the given reference points to the given target.
+     * This method can also maintain references without a {@link BaseEntityRef#writeOnce write-once semantic},
+     * but you should check if a {@link BaseEntityRef#writeOnce write-once semantic} may be usable in your reference.
      *
-     * @param child        the entity which contains the reference
-     * @param ref          the reference which is either to be filled or verified that it points to <tt>parentEntity</tt>
-     * @param parentEntity the entity the reference must point to
-     * @param <E>          the generic type the the parent being referenced
-     * @param <I>          the type of the id column of E
+     * @param owner  the entity which contains the reference
+     * @param ref    the reference which is either to be filled or verified that it points to <tt>target</tt>
+     * @param target the target the reference must point to
+     * @param <E>    the generic type the the parent being referenced
+     * @param <I>    the type of the id column of E
      * @throws sirius.kernel.health.HandledException if the entities do no match
+     * @see BaseEntityRef#writeOnce
      */
-    protected <I, E extends BaseEntity<I>> void setOrVerifyParent(BaseEntity<?> child,
-                                                                  BaseEntityRef<I, E> ref,
-                                                                  E parentEntity) {
-        if (!Objects.equals(ref.getId(), parentEntity.getId())) {
-            if (child.isNew()) {
-                ref.setValue(parentEntity);
+    protected <I, E extends BaseEntity<I>> void setOrVerify(BaseEntity<?> owner, BaseEntityRef<I, E> ref, E target) {
+        if (!Objects.equals(ref.getId(), target.getId())) {
+            if (owner.isNew()) {
+                ref.setValue(target);
             } else {
                 throw Exceptions.createHandled()
                                 .withNLSKey("BizController.invalidReference")
-                                .set("child", child.getUniqueName())
-                                .set("parent", parentEntity.getUniqueName())
+                                .set("owner", owner.getUniqueName())
+                                .set("target", target.getUniqueName())
                                 .set("actual", ref.getUniqueObjectName())
                                 .handle();
             }
