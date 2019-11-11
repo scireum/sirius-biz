@@ -9,7 +9,7 @@
         <version>7.0.1</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
-    <version>DEVELOPMENT-SNAPSHOT</version>
+    <version>testJDKBug</version>
     <packaging>jar</packaging>
 
     <name>SIRIUS biz</name>
