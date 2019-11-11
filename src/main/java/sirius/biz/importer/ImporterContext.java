@@ -74,7 +74,6 @@ public class ImporterContext {
         return (ImportHandler<E>) handlers.computeIfAbsent(type, aType -> lookupHandler(aType, aType));
     }
 
-    @SuppressWarnings("unchecked")
     private ImportHandler<?> lookupHandler(Class<?> type, Class<?> baseType) {
         for (ImportHandlerFactory factory : factories) {
             if (factory.accepts(type)) {
