@@ -19,7 +19,7 @@ public abstract class ImportHelper {
     /**
      * Contains the context for which this helper was created.
      */
-    protected ImportContext context;
+    protected ImporterContext context;
 
     /**
      * Creates a new instance for the given context.
@@ -28,7 +28,7 @@ public abstract class ImportHelper {
      *
      * @param context the context for which this helper was created
      */
-    protected ImportHelper(ImportContext context) {
+    protected ImportHelper(ImporterContext context) {
         this.context = context;
     }
 
