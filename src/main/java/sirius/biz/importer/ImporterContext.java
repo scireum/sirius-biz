@@ -44,7 +44,7 @@ public class ImporterContext {
     private List<Runnable> postCommitCallbacks = new ArrayList<>();
 
     /**
-     * Specifies the maximal number of post commit callbacks to keep arond before a {@link #commit()} is forced.
+     * Specifies the maximum number of post commit callbacks to keep around before a {@link #commit()} is forced.
      */
     private static final int MAX_POST_COMMIT_CALLBACKS = 256;
 

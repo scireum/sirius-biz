@@ -161,7 +161,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      * filters for the {@link #findQueries}.
      * <p>
      * Some fields are normalized within {@link sirius.db.mixing.annotations.BeforeSave} handlers. This method
-     * can be overwritten the perform the same operations to that the values properly match within the
+     * can be overwritten to perform the same operations so that the values properly match within the
      * find queries.
      *
      * @param data the data used to describe the entity to find

@@ -425,7 +425,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
             return null;
         }
 
-        // Entitiy references are quite common, therefore we provide a default behaviour here,
+        // Entity references are quite common, therefore we provide a default behaviour here,
         // but this shouldn't be done for every kind of property or use case as that's what
         // EntityImportHandlerExtender(s) are for
         if (property instanceof BaseEntityRefProperty) {
