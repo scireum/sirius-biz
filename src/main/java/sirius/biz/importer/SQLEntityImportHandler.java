@@ -157,8 +157,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     }
 
     /**
-     * Loads all {@link #mappingsToLoadForFind} and performs cleanup so that all fields are performed to by used as
-     * filters for the {@link #findQueries}.
+     * Loads all {@link #mappingsToLoadForFind} and may perform some cleanups if necessarry.
      * <p>
      * Some fields are normalized within {@link sirius.db.mixing.annotations.BeforeSave} handlers. This method
      * can be overwritten to perform the same operations so that the values properly match within the
