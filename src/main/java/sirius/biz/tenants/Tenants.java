@@ -203,12 +203,15 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      *
      * @param tenantAware {@link TenantAware} entity to be asserted
      */
+    @SuppressWarnings("squid:S1612")
+    @Explain("Using a method reference here leads to a BootstrapMethod error due to a JDK bug "
+             + "see https://bugs.openjdk.java.net/browse/JDK-8058112 (seems to be also present in OracleJDK)")
     public void assertTenantOrParentTenant(TenantAware tenantAware) {
         if (tenantAware == null) {
             return;
         }
 
-        String currentTenantId = getCurrentTenant().map(Tenant::getIdAsString).orElse(null);
+        String currentTenantId = getCurrentTenant().map(tenant -> tenant.getIdAsString()).orElse(null);
         if (!Strings.areEqual(tenantAware.getTenantAsString(), currentTenantId)
             && !Objects.equals(tenantAware.getTenantAsString(),
                                getCurrentTenant().map(Tenant::getParent)
