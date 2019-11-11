@@ -16,6 +16,7 @@ import sirius.db.mixing.query.Query;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.transformers.Composable;
@@ -187,8 +188,11 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      *
      * @param tenantId the id to be checked
      */
+    @SuppressWarnings("squid:S1612")
+    @Explain("Using a method reference here leads to a BootstrapMethod error due to a JDK bug " 
+             + "see https://bugs.openjdk.java.net/browse/JDK-8058112 (seems to be also present in OracleJDK)")
     public void assertTenant(@Nullable String tenantId) {
-        String currentTenantId = getCurrentTenant().map(Tenant::getIdAsString).orElse(null);
+        String currentTenantId = getCurrentTenant().map(tenant -> tenant.getIdAsString()).orElse(null);
         if (Strings.isFilled(tenantId) && !Strings.areEqual(tenantId, currentTenantId)) {
             throw Exceptions.createHandled().withNLSKey("Tenants.invalidTenant").handle();
         }
@@ -199,12 +203,15 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      *
      * @param tenantAware {@link TenantAware} entity to be asserted
      */
+    @SuppressWarnings("squid:S1612")
+    @Explain("Using a method reference here leads to a BootstrapMethod error due to a JDK bug "
+             + "see https://bugs.openjdk.java.net/browse/JDK-8058112 (seems to be also present in OracleJDK)")
     public void assertTenantOrParentTenant(TenantAware tenantAware) {
         if (tenantAware == null) {
             return;
         }
 
-        String currentTenantId = getCurrentTenant().map(Tenant::getIdAsString).orElse(null);
+        String currentTenantId = getCurrentTenant().map(tenant -> tenant.getIdAsString()).orElse(null);
         if (!Strings.areEqual(tenantAware.getTenantAsString(), currentTenantId)
             && !Objects.equals(tenantAware.getTenantAsString(),
                                getCurrentTenant().map(Tenant::getParent)
