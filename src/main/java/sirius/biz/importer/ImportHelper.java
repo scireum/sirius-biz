@@ -9,7 +9,7 @@
 package sirius.biz.importer;
 
 /**
- * Sublasses can be created and instantiated via {@link ImporterContext#findHelper(Class)}.
+ * Subclasses can be created and instantiated via {@link ImporterContext#findHelper(Class)}.
  * <p>
  * As these helpers are instantiated per {@link Importer} / {@link ImporterContext} they can carry around state
  * and supply helper methods.
