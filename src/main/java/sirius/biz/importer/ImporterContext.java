@@ -85,7 +85,7 @@ public class ImporterContext {
         if (type.getSuperclass() != null && !type.getSuperclass().equals(type)) {
             return lookupHandler(type.getSuperclass(), baseType);
         } else {
-            throw Exceptions.createHandled()
+            throw Exceptions.handle()
                             .withSystemErrorMessage("Cannot find an import handler for type: %s", baseType)
                             .handle();
         }
