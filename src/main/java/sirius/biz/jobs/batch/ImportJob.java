@@ -39,24 +39,34 @@ public abstract class ImportJob extends BatchJob {
     }
 
     /**
-     * Enusures or establishes a parent child relation.
+     * Properly creates or maintains a reference to an entity with {@link BaseEntityRef#hasWriteOnceSemantics()} write-once semantic}.
      * <p>
-     * For new entities (owner), the given reference is initialized with the given entity. For existing entities
-     * it is verified, that the given reference points to the given entity.
+     * For new entities (owner), the given reference is initialized with the given target. For existing entities
+     * it is verified, that the given reference points to the given target.
+     * <p>
+     * This method can also maintain references without a {@link BaseEntityRef#hasWriteOnceSemantics write-once semantic},
+     * but this might indicate an inconsistent or invalid usage pattern and one should strongly consider using a reference
+     * with {@link BaseEntityRef#hasWriteOnceSemantics write-once semantics}.
      *
      * @param owner  the entity which contains the reference
-     * @param ref    the reference which is either filled or verified that it points to <tt>entity</tt>
-     * @param entity the entity the reference must point to
-     * @param <E>    the generic type the the entity being referenced
-     * @param <I> the type of the id column used by E
+     * @param ref    the reference which is either to be filled or verified that it points to <tt>target</tt>
+     * @param target the target the reference must point to
+     * @param <E>    the generic type the the parent being referenced
+     * @param <I>    the type of the id column of E
      * @throws sirius.kernel.health.HandledException if the entities do no match
+     * @see BaseEntityRef#hasWriteOnceSemantics
      */
-    protected <I, E extends BaseEntity<I>> void setOrVerify(BaseEntity<?> owner, BaseEntityRef<I, E> ref, E entity) {
-        if (!Objects.equals(ref.getId(), entity.getId())) {
+    protected <I, E extends BaseEntity<I>> void setOrVerify(BaseEntity<?> owner, BaseEntityRef<I, E> ref, E target) {
+        if (!Objects.equals(ref.getId(), target.getId())) {
             if (owner.isNew()) {
-                ref.setValue(entity);
+                ref.setValue(target);
             } else {
-                throw Exceptions.createHandled().withNLSKey("ImportJob.invalidReference").handle();
+                throw Exceptions.createHandled()
+                                .withNLSKey("ImportJob.invalidReference")
+                                .set("owner", owner.getUniqueName())
+                                .set("target", target.getUniqueName())
+                                .set("actual", ref.getUniqueObjectName())
+                                .handle();
             }
         }
     }
