@@ -71,11 +71,6 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
     }
 
     @Override
-    protected boolean parseComplexProperty(SQLUserAccount entity, Property property, Value value, Context data) {
-        return false;
-    }
-
-    @Override
     protected void collectDefaultExportableMappings(BiConsumer<Integer, Mapping> collector) {
         collector.accept(100, SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.USERNAME));
         collector.accept(110, SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL));

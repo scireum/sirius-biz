@@ -43,6 +43,7 @@ import sirius.web.security.UserContext;
 import sirius.web.util.LinkBuilder;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -102,17 +103,10 @@ public class BizController extends BasicController {
      *
      * @param tenantAware the entity to check
      * @throws sirius.kernel.health.HandledException if the tenants do no match
+     * @see Tenants#assertTenant(TenantAware)
      */
     protected void assertTenant(TenantAware tenantAware) {
-        if (tenantAware == null) {
-            return;
-        }
-
-        if (!UserContext.getCurrentUser().isLoggedIn() && tenantAware.getTenantAsString() != null) {
-            throw invalidTenantException();
-        }
-
-        assertTenant(tenantAware.getTenantAsString());
+        tenants.assertTenant(tenantAware);
     }
 
     /**
@@ -120,24 +114,21 @@ public class BizController extends BasicController {
      *
      * @param tenantId the id to check
      * @throws sirius.kernel.health.HandledException if the tenants do no match
+     * @see Tenants#assertTenant(String)
      */
-    protected void assertTenant(@Nonnull String tenantId) {
-        if (!Objects.equals(UserContext.getCurrentUser().getTenantId(), tenantId)) {
-            throw invalidTenantException();
-        }
-    }
-
-    protected HandledException invalidTenantException() {
-        return Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
+    protected void assertTenant(@Nullable String tenantId) {
+        tenants.assertTenant(tenantId);
     }
 
     /**
-     * Properly creates or maintains a reference to an entity with {@link BaseEntityRef#writeOnce write-once semantic}.
+     * Properly creates or maintains a reference to an entity with {@link BaseEntityRef#hasWriteOnceSemantics()} write-once semantic}.
      * <p>
      * For new entities (owner), the given reference is initialized with the given target. For existing entities
      * it is verified, that the given reference points to the given target.
-     * This method can also maintain references without a {@link BaseEntityRef#writeOnce write-once semantic},
-     * but you should check if a {@link BaseEntityRef#writeOnce write-once semantic} may be usable in your reference.
+     * <p>
+     * This method can also maintain references without a {@link BaseEntityRef#hasWriteOnceSemantics write-once semantic},
+     * but this might indicate an inconsistent or invalid usage pattern and one should strongly consider using a reference
+     * with {@link BaseEntityRef#hasWriteOnceSemantics write-once semantics}.
      *
      * @param owner  the entity which contains the reference
      * @param ref    the reference which is either to be filled or verified that it points to <tt>target</tt>
@@ -145,7 +136,7 @@ public class BizController extends BasicController {
      * @param <E>    the generic type the the parent being referenced
      * @param <I>    the type of the id column of E
      * @throws sirius.kernel.health.HandledException if the entities do no match
-     * @see BaseEntityRef#writeOnce
+     * @see BaseEntityRef#hasWriteOnceSemantics
      */
     protected <I, E extends BaseEntity<I>> void setOrVerify(BaseEntity<?> owner, BaseEntityRef<I, E> ref, E target) {
         if (!Objects.equals(ref.getId(), target.getId())) {
@@ -480,6 +471,7 @@ public class BizController extends BasicController {
     protected <E extends BaseEntity<?>> E findForTenant(Class<E> type, String id) {
         E result = find(type, id);
         if (result instanceof TenantAware) {
+            ((TenantAware) result).setOrVerifyCurrentTenant();
             if (result.isNew()) {
                 ((TenantAware) result).fillWithCurrentTenant();
             } else {

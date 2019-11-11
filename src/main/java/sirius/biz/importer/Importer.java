@@ -268,6 +268,21 @@ public class Importer implements Closeable {
     }
 
     /**
+     * Fetches or creates the {@link ImportHelper} of the given type.
+     * <p>
+     * These helpers are instantiated and kept around for each {@link Importer} and {@link ImporterContext} and can
+     * therefore provide helper methods and carry along some state.
+     *
+     * @param type the type of helper to find
+     * @param <H>  the generic helper type to find
+     * @return the helper of the requested type
+     * @throws sirius.kernel.health.HandledException if no appropriate helper is available
+     */
+    public <H extends ImportHelper> H findHelper(Class<H> type) {
+        return context.findHelper(type);
+    }
+
+    /**
      * Provides access to the underlying importer context.
      *
      * @return the context used by this importer

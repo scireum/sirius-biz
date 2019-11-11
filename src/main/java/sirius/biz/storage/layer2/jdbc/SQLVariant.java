@@ -35,7 +35,7 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
      * References the raw blob from which this variant was derived.
      */
     public static final Mapping BLOB = Mapping.named("blob");
-    private final SQLEntityRef<SQLBlob> blob = SQLEntityRef.on(SQLBlob.class, BaseEntityRef.OnDelete.CASCADE);
+    private final SQLEntityRef<SQLBlob> blob = SQLEntityRef.writeOnceOn(SQLBlob.class, BaseEntityRef.OnDelete.CASCADE);
 
     /**
      * Contains the name / type of this variant.

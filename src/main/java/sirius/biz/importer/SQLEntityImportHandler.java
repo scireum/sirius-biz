@@ -8,7 +8,6 @@
 
 package sirius.biz.importer;
 
-import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.batch.DeleteQuery;
@@ -19,7 +18,6 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.ValueHolder;
 
@@ -115,13 +113,13 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     @SuppressWarnings("unchecked")
     protected void collectFindQueries(BiConsumer<Predicate<E>, Supplier<FindQuery<E>>> queryConsumer) {
         if (TenantAware.class.isAssignableFrom(descriptor.getType())) {
-            queryConsumer.accept(entity -> Strings.isFilled(entity.getIdAsString()),
+            queryConsumer.accept(entity -> !entity.isNew(),
                                  () -> context.getBatchContext()
                                               .findQuery((Class<E>) descriptor.getType(),
                                                          SQLEntity.ID,
                                                          TenantAware.TENANT));
         } else {
-            queryConsumer.accept(entity -> Strings.isFilled(entity.getIdAsString()),
+            queryConsumer.accept(entity -> !entity.isNew(),
                                  () -> context.getBatchContext()
                                               .findQuery((Class<E>) descriptor.getType(), SQLEntity.ID));
         }
@@ -153,25 +151,23 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     }
 
     @Override
-    protected E load(Context data, E entity, Mapping... mappings) {
-        E e = super.load(data, entity, mappings);
-        if (e instanceof SQLTenantAware) {
-            ((SQLTenantAware) e).fillWithCurrentTenant();
-        }
-
-        return e;
+    public Optional<E> tryFind(Context data) {
+        E example = loadForFind(data);
+        return tryFindByExample(example);
     }
 
-    @Override
-    public Optional<E> tryFind(Context data) {
-        for (Tuple<Predicate<E>, Supplier<FindQuery<E>>> predicateAndQuery : findQueries) {
-            Optional<E> result = tryFindByExample(load(data, mappingsToLoadForFind), predicateAndQuery);
-            if (result.isPresent()) {
-                return result;
-            }
-        }
-
-        return Optional.empty();
+    /**
+     * Loads all {@link #mappingsToLoadForFind} and may perform some cleanups if necessarry.
+     * <p>
+     * Some fields are normalized within {@link sirius.db.mixing.annotations.BeforeSave} handlers. This method
+     * can be overwritten to perform the same operations so that the values properly match within the
+     * find queries.
+     *
+     * @param data the data used to describe the entity to find
+     * @return the example entity which has been populated from the given <tt>data</tt>
+     */
+    protected E loadForFind(Context data) {
+        return load(data, mappingsToLoadForFind);
     }
 
     /**
@@ -191,7 +187,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
         return Optional.empty();
     }
 
-    private Optional<E> tryFindByExample(E example, Tuple<Predicate<E>, Supplier<FindQuery<E>>> predicateAndQuery) {
+    protected Optional<E> tryFindByExample(E example, Tuple<Predicate<E>, Supplier<FindQuery<E>>> predicateAndQuery) {
         if (!predicateAndQuery.getFirst().test(example)) {
             return Optional.empty();
         }

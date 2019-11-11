@@ -27,7 +27,7 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
     /**
      * Contains the tenant the entity belongs to.
      */
-    private final SQLEntityRef<SQLTenant> tenant = SQLEntityRef.on(SQLTenant.class, SQLEntityRef.OnDelete.REJECT);
+    private final SQLEntityRef<SQLTenant> tenant = SQLEntityRef.writeOnceOn(SQLTenant.class, SQLEntityRef.OnDelete.REJECT);
 
     @Override
     public SQLEntityRef<SQLTenant> getTenant() {
@@ -42,6 +42,15 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
     @Override
     public void fillWithCurrentTenant() {
         getTenant().setValue(tenants.getRequiredTenant());
+    }
+
+    @Override
+    public void setOrVerifyCurrentTenant() {
+        if (getTenant().isEmpty()) {
+            fillWithCurrentTenant();
+        } else {
+            tenants.assertTenant(this);
+        }
     }
 
     @Override

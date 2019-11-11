@@ -12,6 +12,7 @@ import com.google.common.base.Charsets
 import com.google.common.io.ByteStreams
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
+import spock.lang.Ignore
 
 import java.nio.file.Files
 
@@ -27,6 +28,7 @@ class ObjectStorageSpec extends BaseSpecification {
         return result
     }
 
+    @Ignore
     def "storing and fetching data works as expected"(int length, String space) {
         given:
         def testData = generateRandomData(length)

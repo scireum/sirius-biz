@@ -86,11 +86,6 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
     }
 
     @Override
-    protected boolean parseComplexProperty(MongoUserAccount entity, Property property, Value value, Context data) {
-        return false;
-    }
-
-    @Override
     protected void collectDefaultExportableMappings(BiConsumer<Integer, Mapping> collector) {
         collector.accept(100,
                          MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.USERNAME));
