@@ -437,8 +437,8 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
             };
         }
 
-        // As state above, string lists are quite common, therefor another default is provided here but great
-        // care should be taken that this method doesn't evlove into a god method / god class...
+        // As stated above, string lists are quite common, therefore another default is provided here but great
+        // care should be taken, so this method doesn't evolve into a god method / god class...
         if (property instanceof StringListProperty) {
             return entity -> Strings.join((List<?>) property.getValue(entity), ",");
         }
