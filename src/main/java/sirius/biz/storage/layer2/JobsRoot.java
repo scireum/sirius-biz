@@ -35,8 +35,7 @@ public class JobsRoot implements VFSRoot {
 
     @Part
     private VirtualFileSystem vfs;
-
-
+        
     private static final String JOBS_LABEL = "jobs";
 
     private List<JobFactory> jobsWithFileParameters = null;
