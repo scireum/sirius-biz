@@ -43,6 +43,7 @@ import sirius.web.security.UserContext;
 import sirius.web.util.LinkBuilder;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -102,17 +103,10 @@ public class BizController extends BasicController {
      *
      * @param tenantAware the entity to check
      * @throws sirius.kernel.health.HandledException if the tenants do no match
+     * @see Tenants#assertTenant(TenantAware)
      */
     protected void assertTenant(TenantAware tenantAware) {
-        if (tenantAware == null) {
-            return;
-        }
-
-        if (!UserContext.getCurrentUser().isLoggedIn() && tenantAware.getTenantAsString() != null) {
-            throw invalidTenantException();
-        }
-
-        assertTenant(tenantAware.getTenantAsString());
+        tenants.assertTenant(tenantAware);
     }
 
     /**
@@ -120,15 +114,10 @@ public class BizController extends BasicController {
      *
      * @param tenantId the id to check
      * @throws sirius.kernel.health.HandledException if the tenants do no match
+     * @see Tenants#assertTenant(String)
      */
-    protected void assertTenant(@Nonnull String tenantId) {
-        if (!Objects.equals(UserContext.getCurrentUser().getTenantId(), tenantId)) {
-            throw invalidTenantException();
-        }
-    }
-
-    private HandledException invalidTenantException() {
-        return Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
+    protected void assertTenant(@Nullable String tenantId) {
+        tenants.assertTenant(tenantId);
     }
 
     /**
@@ -426,6 +415,7 @@ public class BizController extends BasicController {
     protected <E extends BaseEntity<?>> E findForTenant(Class<E> type, String id) {
         E result = find(type, id);
         if (result instanceof TenantAware) {
+            ((TenantAware) result).setOrVerifyCurrentTenant();
             if (result.isNew()) {
                 ((TenantAware) result).fillWithCurrentTenant();
             } else {
