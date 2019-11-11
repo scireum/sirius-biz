@@ -127,29 +127,37 @@ public class BizController extends BasicController {
         }
     }
 
-    private HandledException invalidTenantException() {
+    protected HandledException invalidTenantException() {
         return Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
     }
 
     /**
-     * Enusures or establishes a parent child relation.
+     * Properly creates or maintains a reference to an entity with {@link BaseEntityRef#writeOnce write-once semantic}.
      * <p>
-     * For new entities (owner), the given reference is initialized with the given entity. For existing entities
-     * it is verified, that the given reference points to the given entity.
+     * For new entities (owner), the given reference is initialized with the given target. For existing entities
+     * it is verified, that the given reference points to the given target.
+     * This method can also maintain references without a {@link BaseEntityRef#writeOnce write-once semantic},
+     * but you should check if a {@link BaseEntityRef#writeOnce write-once semantic} may be usable in your reference.
      *
      * @param owner  the entity which contains the reference
-     * @param ref    the reference which is either filled or verified that it points to <tt>entity</tt>
-     * @param entity the entity the reference must point to
-     * @param <E>    the generic type the the entity being referenced
+     * @param ref    the reference which is either to be filled or verified that it points to <tt>target</tt>
+     * @param target the target the reference must point to
+     * @param <E>    the generic type the the parent being referenced
      * @param <I>    the type of the id column of E
      * @throws sirius.kernel.health.HandledException if the entities do no match
+     * @see BaseEntityRef#writeOnce
      */
-    protected <I, E extends BaseEntity<I>> void setOrVerify(BaseEntity<?> owner, BaseEntityRef<I, E> ref, E entity) {
-        if (!Objects.equals(ref.getId(), entity.getId())) {
+    protected <I, E extends BaseEntity<I>> void setOrVerify(BaseEntity<?> owner, BaseEntityRef<I, E> ref, E target) {
+        if (!Objects.equals(ref.getId(), target.getId())) {
             if (owner.isNew()) {
-                ref.setValue(entity);
+                ref.setValue(target);
             } else {
-                throw Exceptions.createHandled().withNLSKey("BizController.invalidReference").handle();
+                throw Exceptions.createHandled()
+                                .withNLSKey("BizController.invalidReference")
+                                .set("owner", owner.getUniqueName())
+                                .set("target", target.getUniqueName())
+                                .set("actual", ref.getUniqueObjectName())
+                                .handle();
             }
         }
     }
@@ -163,8 +171,20 @@ public class BizController extends BasicController {
     protected void assertNotNew(BaseEntity<?> obj) {
         assertNotNull(obj);
         if (obj.isNew()) {
-            throw Exceptions.createHandled().withNLSKey("BizController.mustNotBeNew").handle();
+            throw entityNotNewException(obj.getClass());
         }
+    }
+
+    /**
+     * Provides a simple {@link HandledException} to throw if a new entity was found when not allowed.
+     * <p>
+     * This exception is not logged.
+     *
+     * @param type the type of entity that was not found
+     * @return a HandledException which can be thrown
+     */
+    protected <E extends BaseEntity<?>> HandledException entityNotNewException(Class<E> type) {
+        return Exceptions.createHandled().withNLSKey("BizController.mustNotBeNew").set("type", type).handle();
     }
 
     /**
@@ -389,9 +409,30 @@ public class BizController extends BasicController {
         }
         Optional<E> result = mixing.getDescriptor(type).getMapper().find(type, id);
         if (!result.isPresent()) {
-            throw Exceptions.createHandled().withNLSKey("BizController.unknownObject").set("id", id).handle();
+            throw entityNotFoundException(type, id);
         }
         return result.get();
+    }
+
+    /**
+     * Provides a simple {@link HandledException} to throw if entity is not found.
+     * <p>
+     * If the entity is new, {@link #entityNotNewException(Class)} is provided.
+     *
+     * @param type the type of entity that was not found
+     * @param id   the id of the entity that was not found
+     * @return a HandledException which can be thrown
+     */
+    protected <E extends BaseEntity<?>> HandledException entityNotFoundException(@Nonnull Class<E> type,
+                                                                                 @Nonnull String id) {
+        if (BaseEntity.NEW.equals(id)) {
+            return entityNotNewException(type);
+        }
+        return Exceptions.createHandled()
+                         .withNLSKey("BizController.unknownObject")
+                         .set("type", type.getSimpleName())
+                         .set("id", id)
+                         .handle();
     }
 
     /**
@@ -412,11 +453,24 @@ public class BizController extends BasicController {
     }
 
     /**
+     * Tries to find an existing entity with the given id, or fails otherwise.
+     *
+     * @param type the type of the entity to find
+     * @param id   the id of the entity to find
+     * @param <E>  the generic type of the entity class
+     * @return the requested entity wrapped
+     * @throws HandledException if no entity with the given id was found or if the id was <tt>new</tt>
+     */
+    protected <E extends BaseEntity<?>> E findExisting(Class<E> type, String id) {
+        return tryFind(type, id).orElseThrow(() -> entityNotFoundException(type, id));
+    }
+
+    /**
      * Tries to find an entity for the given id, which belongs to the current tenant.
      * <p>
      * This behaves just like {@link #find(Class, String)} but once an existing entity was found, which also extends
      * {@link TenantAware}, it is ensured (using {@link #assertTenant(TenantAware)} that it belongs to the current
-     * tenant.
+     * tenant. If the entity is new, the tenant is filled with the current tenant.
      *
      * @param type the type of the entity to find
      * @param id   the id of the entity to find
@@ -455,6 +509,27 @@ public class BizController extends BasicController {
             }
             return e;
         });
+    }
+
+    /**
+     * Tries to find an entity for the given id, which belongs to the current tenant or fails otherwise.
+     * <p>
+     * This behaves just like {@link #findExisting(Class, String)} but once an existing entity was found, which also extends
+     * {@link TenantAware}, it is ensured (using {@link #assertTenant(TenantAware)} that it belongs to the current
+     * tenant.
+     *
+     * @param type the type of the entity to find
+     * @param id   the id of the entity to find
+     * @param <E>  the generic type of the entity class
+     * @return the requested entity, which belongs to the current tenant
+     * @throws HandledException if no entity with the given id was found or if the id was <tt>new</tt>
+     */
+    protected <E extends BaseEntity<?>> E findExistingForTenant(Class<E> type, String id) {
+        E result = findExisting(type, id);
+        if (result instanceof TenantAware) {
+            assertTenant((TenantAware) result);
+        }
+        return result;
     }
 
     /**
