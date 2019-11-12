@@ -170,7 +170,7 @@ public class JobsRoot implements VFSRoot {
 
     @Override
     public int getPriority() {
-        return 0;
+        return DEFAULT_PRIORITY;
     }
 
     private VirtualFile createDirectory(VirtualFile parent, String name) {
