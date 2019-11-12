@@ -299,6 +299,9 @@ class ProcessEnvironment implements ProcessContext {
         return new TableOutputBuilder(name, label);
     }
 
+    /**
+     * Builder pattern to add columns to a {@link TableOutput}
+     */
     public class TableOutputBuilder {
         private String name;
         private String label;
