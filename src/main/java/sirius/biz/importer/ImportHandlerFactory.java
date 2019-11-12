@@ -49,7 +49,7 @@ public interface ImportHandlerFactory extends Priorized {
     boolean accepts(Class<?> type);
 
     /**
-     * Creates a new import handler for the given type, importer and context.
+     * Creates a new import handler for the given type and context.
      *
      * @param type    the type of entities to import
      * @param context the context of this import

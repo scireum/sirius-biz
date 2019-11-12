@@ -21,7 +21,7 @@ import javax.annotation.Nonnull;
  */
 @Register(classes = JobFactory.class, framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
 @Permission(UserAccountController.PERMISSION_MANAGE_USER_ACCOUNTS)
-public class MongoUserAccountExportHandler extends EntityExportJobFactory<MongoUserAccount> {
+public class MongoUserAccountExportJobFactory extends EntityExportJobFactory<MongoUserAccount> {
 
     @Override
     protected Class<MongoUserAccount> getExportType() {

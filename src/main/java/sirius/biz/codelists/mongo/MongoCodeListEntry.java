@@ -28,7 +28,8 @@ import sirius.kernel.di.std.Framework;
         unique = true)
 public class MongoCodeListEntry extends MongoEntity implements CodeListEntry<String, MongoCodeList> {
 
-    private final MongoRef<MongoCodeList> codeList = MongoRef.on(MongoCodeList.class, MongoRef.OnDelete.CASCADE);
+    private final MongoRef<MongoCodeList> codeList =
+            MongoRef.writeOnceOn(MongoCodeList.class, MongoRef.OnDelete.CASCADE);
     private final CodeListEntryData codeListEntryData = new CodeListEntryData(this);
 
     @Override

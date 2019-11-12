@@ -27,6 +27,7 @@ import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -167,20 +168,33 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
 
     /**
      * Checks if the tenant aware entity belongs to the current tenant.
+     * <p>
+     * If <tt>null</tt> is passed in, not checks will be performed.
      *
      * @param tenantAware {@link TenantAware} entity to be asserted
      */
-    @SuppressWarnings("squid:S1612")
-    @Explain(
-            "Calling a method reference with generics causes a known bug in JDK. See JDK-8191655 and https://stackoverflow.com/a/47471284/9758089")
-    public void assertTenant(TenantAware tenantAware) {
+    public void assertTenant(@Nullable TenantAware tenantAware) {
         if (tenantAware == null) {
             return;
         }
 
-        if (!Objects.equals(tenantAware.getTenantAsString(),
-                            getCurrentTenant().map(tenant -> tenant.getIdAsString()).orElse(null))) {
-            throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
+        assertTenant(tenantAware.getTenantAsString());
+    }
+
+    /**
+     * Checks if the given id belongs to the current tenant.
+     * <p>
+     * If an empty string is passed in, not checks will be performed.
+     *
+     * @param tenantId the id to be checked
+     */
+    @SuppressWarnings("squid:S1612")
+    @Explain("Using a method reference here leads to a BootstrapMethod error due to a JDK bug " 
+             + "see https://bugs.openjdk.java.net/browse/JDK-8058112 (seems to be also present in OracleJDK)")
+    public void assertTenant(@Nullable String tenantId) {
+        String currentTenantId = getCurrentTenant().map(tenant -> tenant.getIdAsString()).orElse(null);
+        if (Strings.isFilled(tenantId) && !Strings.areEqual(tenantId, currentTenantId)) {
+            throw Exceptions.createHandled().withNLSKey("Tenants.invalidTenant").handle();
         }
     }
 
@@ -190,22 +204,22 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @param tenantAware {@link TenantAware} entity to be asserted
      */
     @SuppressWarnings("squid:S1612")
-    @Explain(
-            "Calling a method reference with generics causes a known bug in JDK. See JDK-8191655 and https://stackoverflow.com/a/47471284/9758089")
+    @Explain("Using a method reference here leads to a BootstrapMethod error due to a JDK bug "
+             + "see https://bugs.openjdk.java.net/browse/JDK-8058112 (seems to be also present in OracleJDK)")
     public void assertTenantOrParentTenant(TenantAware tenantAware) {
         if (tenantAware == null) {
             return;
         }
 
-        if (!Objects.equals(tenantAware.getTenantAsString(),
-                            getCurrentTenant().map(tenant -> tenant.getIdAsString()).orElse(null)) && !Objects.equals(
-                tenantAware.getTenantAsString(),
-                getCurrentTenant().map(tenant -> tenant.getParent())
-                                  .filter(BaseEntityRef::isFilled)
-                                  .map(BaseEntityRef::getId)
-                                  .map(String::valueOf)
-                                  .orElse(null))) {
-            throw Exceptions.createHandled().withNLSKey("BizController.invalidTenant").handle();
+        String currentTenantId = getCurrentTenant().map(tenant -> tenant.getIdAsString()).orElse(null);
+        if (!Strings.areEqual(tenantAware.getTenantAsString(), currentTenantId)
+            && !Objects.equals(tenantAware.getTenantAsString(),
+                               getCurrentTenant().map(Tenant::getParent)
+                                                 .filter(BaseEntityRef::isFilled)
+                                                 .map(BaseEntityRef::getId)
+                                                 .map(String::valueOf)
+                                                 .orElse(null))) {
+            throw Exceptions.createHandled().withNLSKey("Tenants.invalidTenant").handle();
         }
     }
 

@@ -34,7 +34,7 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
      * References the raw blob from which this variant was derived.
      */
     public static final Mapping BLOB = Mapping.named("blob");
-    private final MongoRef<MongoBlob> blob = MongoRef.on(MongoBlob.class, BaseEntityRef.OnDelete.CASCADE);
+    private final MongoRef<MongoBlob> blob = MongoRef.writeOnceOn(MongoBlob.class, BaseEntityRef.OnDelete.CASCADE);
 
     /**
      * Contains the name / type of this variant.

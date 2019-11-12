@@ -94,6 +94,15 @@ public interface ImportHandler<E extends BaseEntity<?>> {
     E findOrLoadAndCreate(Context data);
 
     /**
+     * Tries to find an entity using the supplied <tt>data</tt> and the underlying cache - creates, loads and
+     * persists a new entity if no match was found.
+     *
+     * @param data the data used to describe the entity to find
+     * @return the matching cached entity or a newly created and persisted one if no match was found
+     */
+    E findInCacheOrLoadAndCreate(Context data);
+
+    /**
      * Either persists or updates the given entity.
      *
      * @param entity the entity to update or persist.

@@ -404,9 +404,10 @@ public class StorageController extends BizController {
     }
 
     private StoredObject findObjectByKey(String bucket, String objectKey) {
-        return storage.findByKey((SQLTenant)tenants.getRequiredTenant(), bucket, objectKey)
+        return storage.findByKey((SQLTenant) tenants.getRequiredTenant(), bucket, objectKey)
                       .orElseThrow(() -> Exceptions.createHandled()
                                                    .withNLSKey("BizController.unknownObject")
+                                                   .set("type", StoredObject.class)
                                                    .set("id", objectKey)
                                                    .handle());
     }
