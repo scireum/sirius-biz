@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Implements an {@link VFSRoot} to trigger jobs with an ftp file upload.
+ * Provides a {@link VFSRoot} to trigger jobs with an FTP file upload.
  */
 @Register
 public class JobsRoot implements VFSRoot {
@@ -34,8 +34,8 @@ public class JobsRoot implements VFSRoot {
     private Jobs jobs;
 
     @Part
-    private VirtualFileSystem vfs;
-        
+    private VirtualFileSystem virtualFileSystem;
+
     private static final String JOBS_LABEL = "jobs";
 
     private List<JobFactory> jobsWithFileParameters = null;
@@ -174,29 +174,29 @@ public class JobsRoot implements VFSRoot {
     }
 
     private VirtualFile createDirectory(VirtualFile parent, String name) {
-        MutableVirtualFile file = new MutableVirtualFile(parent, name);
+        MutableVirtualFile directory = new MutableVirtualFile(parent, name);
 
-        file.withCanCreateChildren(ignored -> true);
-        file.withCanProvideInputStream(ignored -> false);
-        file.withCanProvideOutputStream(ignored -> false);
-        file.withDirectoryFlagSupplier(ignored -> true);
-        file.withExistsFlagSupplier(ignored -> true);
-        file.withCanRenameHandler(ignored -> false);
-        file.withCanDeleteHandler(ignored -> false);
-        file.withCanMoveHandler(ignored -> false);
-        file.withDeleteHandler(ignored -> false);
-        file.withCanCreateDirectoryHandler(ignored -> false);
+        directory.withCanCreateChildren(ignored -> true);
+        directory.withCanProvideInputStream(ignored -> false);
+        directory.withCanProvideOutputStream(ignored -> false);
+        directory.withDirectoryFlagSupplier(ignored -> true);
+        directory.withExistsFlagSupplier(ignored -> true);
+        directory.withCanRenameHandler(ignored -> false);
+        directory.withCanDeleteHandler(ignored -> false);
+        directory.withCanMoveHandler(ignored -> false);
+        directory.withDeleteHandler(ignored -> false);
+        directory.withCanCreateDirectoryHandler(ignored -> false);
 
-        file.withChildren(this);
+        directory.withChildren(this);
 
-        return file;
+        return directory;
     }
 
     private VirtualFile createPlaceholder(VirtualFile parent, String name) {
-        MutableVirtualFile file = new MutableVirtualFile(parent, name);
-        file.withCanProvideOutputStream(ignored -> true);
-        file.withDirectoryFlagSupplier(ignored -> false);
-        file.withOutputStreamSupplier(ignored -> {
+        MutableVirtualFile placeholder = new MutableVirtualFile(parent, name);
+        placeholder.withCanProvideOutputStream(ignored -> true);
+        placeholder.withDirectoryFlagSupplier(ignored -> false);
+        placeholder.withOutputStreamSupplier(ignored -> {
             VirtualFile storedFile = createFile(name);
             JobPreset jobPreset = getPreset(parent);
             OutputStream out = storedFile.createOutputStream();
@@ -204,7 +204,18 @@ public class JobsRoot implements VFSRoot {
             return overrideOutputStream(out, jobPreset, storedFile);
         });
 
-        return file;
+        return placeholder;
+    }
+
+    private VirtualFile createFile(String name) {
+        VirtualFile work = virtualFileSystem.resolve("/work");
+
+        return work.findChild(name)
+                .orElseThrow(() -> Exceptions.handle()
+                        .withSystemErrorMessage(
+                                "FTP Job Trigger: The virtual file with name %s could not be created",
+                                name)
+                        .handle());
     }
 
     private OutputStream overrideOutputStream(OutputStream streamToOverride, JobPreset jobPreset, VirtualFile file) {
@@ -252,18 +263,38 @@ public class JobsRoot implements VFSRoot {
         });
     }
 
-    private VirtualFile createFile(String name) {
-        VirtualFile work = vfs.resolve("/work");
-
-        return work.findChild(name)
-                .orElseThrow(() -> Exceptions.handle()
-                        .withSystemErrorMessage(
-                                "FTP Job Trigger: The virtual file with name %s could not be created",
-                                name)
-                        .handle());
-    }
-
+    /**
+     * Categorizes a {@link VirtualFile} into a specific file level depending on its path from the root directory.
+     */
     private enum FileLevel {
-        ROOT, SPACE, JOB, PRESET, FILE, UNKNOWN
+        /**
+         * The root file level is used for a {@link VirtualFile directory} without a parent.
+         */
+        ROOT,
+
+        /**
+         * Used only for {@link VirtualFile directories} with a parent directory of the {@link FileLevel#ROOT} level.
+         */
+        SPACE,
+
+        /**
+         * Used only for {@link VirtualFile directories} with a parent directory of the {@link FileLevel#SPACE} level.
+         */
+        JOB,
+
+        /**
+         * Used only for {@link VirtualFile directories} with a parent directory of the {@link FileLevel#JOB} level.
+         */
+        PRESET,
+
+        /**
+         * Used only for {@link VirtualFile files} with a parent directory of the {@link FileLevel#PRESET} level.
+         */
+        FILE,
+
+        /**
+         * Used if no other file level could be determined.
+         */
+        UNKNOWN
     }
 }
