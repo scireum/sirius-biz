@@ -218,6 +218,15 @@ public interface ProcessContext extends TaskContextAdapter {
     TableOutput addTable(String name, String label, List<Tuple<String, String>> columns);
 
     /**
+     * Adds a table output to the process.
+     *
+     * @param name    the name of the output
+     * @param label   the label of the output which will be {@link sirius.kernel.nls.NLS#smartGet(String) auto translated}
+     * @return a builder {@link sirius.biz.process.ProcessEnvironment.TableOutputBuilder} to add columns to the table
+     */
+    ProcessEnvironment.TableOutputBuilder addTable(String name, String label);
+
+    /**
      * Adds an additional log output to the process.
      * <p>
      * Use {@link ProcessLog#into(String)} to add log entries to this output.
