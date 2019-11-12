@@ -362,7 +362,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
                 result.withTotalItems((int) baseQuery.count());
             }
         } else {
-            result.withTotalItems(result.getEnd());
+            result.withTotalItems(items.size());
         }
     }
 
