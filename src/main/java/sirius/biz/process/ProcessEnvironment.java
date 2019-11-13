@@ -98,7 +98,7 @@ class ProcessEnvironment implements ProcessContext {
             loadPreviousTimings();
         }
 
-        return timings;
+        return Collections.unmodifiableMap(timings);
     }
 
     private void loadPreviousTimings() {
@@ -292,5 +292,10 @@ class ProcessEnvironment implements ProcessContext {
     @Override
     public OutputStream addFile(String filename) throws IOException {
         return processes.addFile(processId, filename);
+    }
+
+    @Override
+    public TableOutput.ColumnBuilder addTable(String name, String label) {
+        return new TableOutput.ColumnBuilder(this, name, label);
     }
 }
