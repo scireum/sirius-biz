@@ -107,11 +107,32 @@ public interface BlobStorageSpace {
      * Such objects will be automatically deleted if the referencing entity is
      * deleted. It is made permanent as soon as the referencing entity is saved, otherwise it will be deleted
      * automatically.
+     * <p>
+     * Note that there is almost no use-case to directory call this method (outside of {@link BlobHardRef}.
      *
      * @return the newly created temporary blob. To make this blob permanent, it has to be stored in a
      * {@link BlobHardRef} and the referencing entity has to be persisted.
      */
     Blob createTemporaryBlob();
+
+    /**
+     * Creates a new temporary blob.
+     * <p>
+     * Note that this blob will be automatically deleted if it isn't marked as permanent using
+     * {@link #markAsUsed(Blob)}.
+     * <p>
+     * Note that calling this method should be a rare edge-case as normally blobs are either attached to
+     * entities using {@link BlobSoftRef}, {@link BlobHardRef}, {@link BlobContainer} or the directory API
+     * (most probably via the Level 3 VFS API). One such case is the {@link sirius.biz.jobs.JobsRoot} which places
+     * temporary files in the <b>tmp</b> space - these files are not listed in the VFS UI but can be resolved if
+     * the exact path is given (see {@link sirius.biz.storage.layer3.TmpRoot}).
+     *
+     * @param tenantId the tenant id to associate this blob with
+     * @return the newly created temporary blob which is associated with the given tenant.
+     * @see #markAsUsed(Blob)
+     * @see sirius.biz.storage.layer3.TmpRoot
+     */
+    Blob createTemporaryBlob(String tenantId);
 
     /**
      * Fetches a blob attached to an entity via a {@link BlobContainer}.
@@ -158,6 +179,16 @@ public interface BlobStorageSpace {
      * @see BlobHardRefProperty#onAfterDelete(Object)
      */
     void markAsUsed(String referencingEntity, String referenceDesignator, String blobKey);
+
+    /**
+     * Manually marks a blob as used.
+     * <p>
+     * This will mark blobs created with {@link #createTemporaryBlob(String)} as permanent.
+     *
+     * @param blob the blob to mark as used. Note that the entity itself is not necessarily updated.
+     * @see sirius.biz.storage.layer3.TmpRoot
+     */
+    void markAsUsed(Blob blob);
 
     /**
      * Used by {@link BlobHardRef}  to delete all referenced blobs (most probably 1) for the given referencing entity

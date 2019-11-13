@@ -137,6 +137,18 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
+    public Blob createTemporaryBlob(String tenantId) {
+        MongoBlob result = new MongoBlob();
+        result.setSpaceName(spaceName);
+        result.setTenantId(tenantId);
+        result.setTemporary(true);
+        result.setCommitted(true);
+        mango.update(result);
+
+        return result;
+    }
+
+    @Override
     public Optional<? extends Blob> findAttachedBlobByName(String referencingEntity, String filename) {
         if (Strings.isEmpty(referencingEntity)) {
             return Optional.empty();
@@ -239,6 +251,20 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .set(MongoBlob.TEMPORARY, false)
              .where(MongoBlob.SPACE_NAME, spaceName)
              .where(MongoBlob.BLOB_KEY, objectKey)
+             .where(MongoBlob.TEMPORARY, true)
+             .executeFor(MongoBlob.class);
+    }
+
+    @Override
+    public void markAsUsed(Blob blob) {
+        if (blob == null) {
+            return;
+        }
+
+        mongo.update()
+             .set(MongoBlob.TEMPORARY, false)
+             .where(MongoBlob.SPACE_NAME, spaceName)
+             .where(MongoBlob.ID, ((MongoBlob) blob).getId())
              .where(MongoBlob.TEMPORARY, true)
              .executeFor(MongoBlob.class);
     }

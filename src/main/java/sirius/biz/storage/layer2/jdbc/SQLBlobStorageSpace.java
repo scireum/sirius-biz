@@ -136,6 +136,18 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
+    public Blob createTemporaryBlob(String tenantId) {
+        SQLBlob result = new SQLBlob();
+        result.setSpaceName(spaceName);
+        result.setTenantId(tenantId);
+        result.setTemporary(true);
+        result.setCommitted(true);
+        oma.update(result);
+
+        return result;
+    }
+
+    @Override
     public Optional<? extends Blob> findAttachedBlobByName(String referencingEntity, String filename) {
         if (Strings.isEmpty(referencingEntity)) {
             return Optional.empty();
@@ -267,6 +279,30 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                       .withSystemErrorMessage(
                               "Layer 2/SQL: An error occured, when marking the object '%s' as used: %s (%s)",
                               objectKey)
+                      .handle();
+        }
+    }
+
+    @Override
+    public void markAsUsed(Blob blob) {
+        try {
+            if (blob == null) {
+                return;
+            }
+
+            oma.updateStatement(SQLBlob.class)
+               .set(SQLBlob.TEMPORARY, false)
+               .where(SQLBlob.SPACE_NAME, spaceName)
+               .where(SQLBlob.ID, ((SQLBlob) blob).getId())
+               .where(SQLBlob.TEMPORARY, true)
+               .executeUpdate();
+        } catch (SQLException e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage(
+                              "Layer 2/SQL: An error occured, when marking the object '%s' as used: %s (%s)",
+                              blob.getBlobKey())
                       .handle();
         }
     }
