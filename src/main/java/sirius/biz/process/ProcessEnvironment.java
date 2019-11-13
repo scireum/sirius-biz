@@ -98,7 +98,7 @@ class ProcessEnvironment implements ProcessContext {
             loadPreviousTimings();
         }
 
-        return Collections.unmodifiableMap(timings);
+        return timings;
     }
 
     private void loadPreviousTimings() {
