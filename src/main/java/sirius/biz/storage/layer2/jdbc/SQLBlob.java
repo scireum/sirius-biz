@@ -261,7 +261,12 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Override
     public OutputStream createOutputStream(@Nullable String filename) {
-        return getStorageSpace().createOutputStream(this, filename);
+        return getStorageSpace().createOutputStream(this, filename, null);
+    }
+
+    @Override
+    public OutputStream createOutputStream(Runnable completedCallback, @Nullable String filename) {
+        return getStorageSpace().createOutputStream(this, filename, completedCallback);
     }
 
     @Override

@@ -911,15 +911,19 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Creates a local buffer and provides an {@link OutputStream} which can be used to update the contents of the given blob.
      *
-     * @param blob     the blob to update
-     * @param filename the new filename to use
+     * @param blob              the blob to update
+     * @param filename          the new filename to use
+     * @param completedCallback the callback to invoke once the output stream is closed and the blob has been updated
      * @return an output stream which will be stored in the given blob once the stream is closed
      */
-    public OutputStream createOutputStream(B blob, @Nullable String filename) {
+    public OutputStream createOutputStream(B blob, @Nullable String filename, @Nullable Runnable completedCallback) {
         try {
             return utils.createLocalBuffer(file -> {
                 try {
                     updateContent(blob, filename, file);
+                    if (completedCallback != null) {
+                        completedCallback.run();
+                    }
                 } finally {
                     Files.delete(file);
                 }
