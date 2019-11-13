@@ -72,10 +72,9 @@ public class VirtualFileSystem {
     }
 
     private VirtualFile makeRoot() {
-        return new MutableVirtualFile().withCanCreateChildren(MutableVirtualFile.CONSTANT_FALSE)
-                                       .withChildren(new RootProvider())
-                                       .withExistsFlagSupplier(MutableVirtualFile.CONSTANT_TRUE)
-                                       .withDirectoryFlagSupplier(MutableVirtualFile.CONSTANT_TRUE);
+        return new MutableVirtualFile().markAsExistingDirectory()
+                                       .withCanCreateChildren(MutableVirtualFile.CONSTANT_FALSE)
+                                       .withChildren(new RootProvider());
     }
 
     /**
