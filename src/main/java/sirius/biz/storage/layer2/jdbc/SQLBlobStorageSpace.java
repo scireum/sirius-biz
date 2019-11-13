@@ -19,6 +19,7 @@ import sirius.db.jdbc.UpdateStatement;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.async.CallContext;
+import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -389,8 +390,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                 filename = filename.trim();
                 updateStatement.set(SQLBlob.FILENAME, filename)
                                .set(SQLBlob.NORMALIZED_FILENAME, filename.toLowerCase())
-                               .set(SQLBlob.FILE_EXTENSION,
-                                    Strings.splitAtLast(filename.toLowerCase(), ".").getSecond());
+                               .set(SQLBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
             }
 
             int numUpdated = updateStatement.where(SQLBlob.ID, blob.getId())

@@ -21,6 +21,7 @@ import sirius.db.mongo.MongoQuery;
 import sirius.db.mongo.QueryBuilder;
 import sirius.db.mongo.Updater;
 import sirius.kernel.async.CallContext;
+import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -332,7 +333,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                 filename = filename.trim();
                 updater.set(MongoBlob.FILENAME, filename)
                        .set(MongoBlob.NORMALIZED_FILENAME, filename.toLowerCase())
-                       .set(MongoBlob.FILE_EXTENSION, Strings.splitAtLast(filename.toLowerCase(), ".").getSecond());
+                       .set(MongoBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
             }
 
             long numUpdated = updater.where(MongoBlob.ID, blob.getId())
