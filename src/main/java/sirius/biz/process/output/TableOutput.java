@@ -156,4 +156,49 @@ public class TableOutput {
     public RowBuilder addRow() {
         return new RowBuilder();
     }
+
+    /**
+     * Builder pattern to add columns to a {@link TableOutput}
+     */
+    public static class ColumnBuilder {
+        private String name;
+        private String label;
+        private ProcessContext process;
+        private List<Tuple<String, String>> columns;
+
+        /**
+         * Creates a new ColumnBuilder to store the artefacts necessary to generate a new {@link TableOutput}
+         *
+         * @param process the process context where the table will be created
+         * @param name  the name of the table
+         * @param label the label of the table
+         */
+        public ColumnBuilder(ProcessContext process, String name, String label) {
+            this.name = name;
+            this.label = label;
+            this.process = process;
+            this.columns = new ArrayList<>();
+        }
+
+        /**
+         * Adds a column to the table.
+         *
+         * @param name  the name of the column
+         * @param label the label of the column to be displayed
+         * @return the builder itself for fluent method calls
+         */
+        public ColumnBuilder withColumn(String name, String label) {
+            columns.add(Tuple.create(name, label));
+            return this;
+        }
+
+        /**
+         * Builds the final TableOutput.
+         *
+         * @return the {@link TableOutput} with all columns
+         */
+        public TableOutput build() {
+            return process.addTable(name, label, Collections.unmodifiableList(columns));
+        }
+    }
 }

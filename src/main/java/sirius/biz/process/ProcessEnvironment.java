@@ -32,7 +32,6 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -296,43 +295,7 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
-    public TableOutputBuilder addTable(String name, String label) {
-        return new TableOutputBuilder(name, label);
-    }
-
-    /**
-     * Builder pattern to add columns to a {@link TableOutput}
-     */
-    public class TableOutputBuilder {
-        private String name;
-        private String label;
-        private List<Tuple<String, String>> columns;
-
-        private TableOutputBuilder(String name, String label) {
-            this.name = name;
-            this.label = label;
-            this.columns = new ArrayList<>();
-        }
-
-        /**
-         * Adds a column to the table.
-         *
-         * @param name  the name of the column
-         * @param label the label of the column to be displayed
-         * @return the builder itself for fluent method calls
-         */
-        public TableOutputBuilder withColumn(String name, String label) {
-            columns.add(Tuple.create(name, label));
-            return this;
-        }
-
-        /**
-         * Builds the final TableOutput.
-         *
-         * @return the {@link TableOutput} with all columns
-         */
-        public TableOutput build() {
-            return addTable(name, label, Collections.unmodifiableList(columns));
-        }
+    public TableOutput.ColumnBuilder addTable(String name, String label) {
+        return new TableOutput.ColumnBuilder(this, name, label);
     }
 }

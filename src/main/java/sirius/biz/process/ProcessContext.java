@@ -222,9 +222,9 @@ public interface ProcessContext extends TaskContextAdapter {
      *
      * @param name    the name of the output
      * @param label   the label of the output which will be {@link sirius.kernel.nls.NLS#smartGet(String) auto translated}
-     * @return a builder {@link sirius.biz.process.ProcessEnvironment.TableOutputBuilder} to add columns to the table
+     * @return a builder {@link sirius.biz.process.output.TableOutput.ColumnBuilder} to add columns to the table
      */
-    ProcessEnvironment.TableOutputBuilder addTable(String name, String label);
+    TableOutput.ColumnBuilder addTable(String name, String label);
 
     /**
      * Adds an additional log output to the process.
