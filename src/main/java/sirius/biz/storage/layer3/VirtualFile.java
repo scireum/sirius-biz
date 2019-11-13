@@ -55,6 +55,9 @@ import java.util.function.Predicate;
  */
 public abstract class VirtualFile extends Composable implements Comparable<VirtualFile> {
 
+    private static final String HANDLER_OUTPUT_STREAM_SUPPLIER = "outputStreamSupplier";
+    private static final String HANDLER_CONSUME_FILE_HANDLER = "consumeFileHandler";
+
     protected String name;
     protected String description;
     protected VirtualFile parent;
@@ -725,7 +728,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return Optional.ofNullable(outputStreamSupplier.apply(this));
             }
         } catch (Exception e) {
-            throw handleErrorInCallback(e, "outputStreamSupplier");
+            throw handleErrorInCallback(e, HANDLER_OUTPUT_STREAM_SUPPLIER);
         }
 
         if (consumeFileHandler != null) {
@@ -734,7 +737,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                     try {
                         consumeFileHandler.accept(this, data);
                     } catch (Exception e) {
-                        throw handleErrorInCallback(e, "consumeFileHandler");
+                        throw handleErrorInCallback(e, HANDLER_CONSUME_FILE_HANDLER);
                     }
                 }));
             } catch (Exception e) {
@@ -754,7 +757,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                     try (FileInputStream in = new FileInputStream(data)) {
                         consumeStreamHandler.accept(this, Tuple.create(in, data.length()));
                     } catch (Exception e) {
-                        throw handleErrorInCallback(e, "consumeFileHandler");
+                        throw handleErrorInCallback(e, HANDLER_CONSUME_FILE_HANDLER);
                     }
                 }));
             } catch (Exception e) {
@@ -778,10 +781,11 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @throws HandledException if no output stream could be created
      */
     public OutputStream createOutputStream() {
-        return tryCreateOutputStream().orElseThrow(() -> Exceptions.createHandled()
-                                                                   .withNLSKey("VirtualFile.cannotWrite")
-                                                                   .set("file", path())
-                                                                   .handle());
+        return tryCreateOutputStream().orElseThrow(this::createNotWritableError);
+    }
+
+    protected HandledException createNotWritableError() {
+        return Exceptions.createHandled().withNLSKey("VirtualFile.cannotWrite").set("file", path()).handle();
     }
 
     /**
@@ -792,7 +796,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if a stream can be consumed, <tt>false</tt> otherwise
      */
     public boolean canConsumeStream() {
-        if (internalCanCreateOutputStream()) {
+        if (internalCanConsumeStream()) {
             return true;
         }
 
@@ -823,7 +827,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 consumeStreamHandler.accept(this, Tuple.create(inputStream, length));
                 return true;
             } catch (Exception e) {
-                throw handleErrorInCallback(e, "consumeFileHandler");
+                throw handleErrorInCallback(e, HANDLER_CONSUME_FILE_HANDLER);
             }
         }
 
@@ -832,7 +836,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 ByteStreams.copy(inputStream, out);
                 return true;
             } catch (Exception e) {
-                throw handleErrorInCallback(e, "outputStreamSupplier");
+                throw handleErrorInCallback(e, HANDLER_OUTPUT_STREAM_SUPPLIER);
             }
         }
 
@@ -841,7 +845,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 try {
                     consumeFileHandler.accept(this, bufferedData);
                 } catch (Exception e) {
-                    throw handleErrorInCallback(e, "consumeFileHandler");
+                    throw handleErrorInCallback(e, HANDLER_CONSUME_FILE_HANDLER);
                 }
             })) {
                 ByteStreams.copy(inputStream, out);
@@ -872,7 +876,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public void consumeStream(InputStream inputStream, long length) {
         if (!tryConsumeStream(inputStream, length)) {
-            throw Exceptions.createHandled().withNLSKey("VirtualFile.cannotWrite").set("file", path()).handle();
+            throw createNotWritableError();
         }
     }
 
@@ -910,7 +914,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             try {
                 consumeFileHandler.accept(this, data);
             } catch (Exception e) {
-                throw handleErrorInCallback(e, "consumeFileHandler");
+                throw handleErrorInCallback(e, HANDLER_CONSUME_FILE_HANDLER);
             }
         }
 
@@ -919,7 +923,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 consumeStreamHandler.accept(this, Tuple.create(in, data.length()));
                 return true;
             } catch (Exception e) {
-                throw handleErrorInCallback(e, "consumeFileHandler");
+                throw handleErrorInCallback(e, HANDLER_CONSUME_FILE_HANDLER);
             }
         }
 
@@ -928,7 +932,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 ByteStreams.copy(in, out);
                 return true;
             } catch (Exception e) {
-                throw handleErrorInCallback(e, "outputStreamSupplier");
+                throw handleErrorInCallback(e, HANDLER_OUTPUT_STREAM_SUPPLIER);
             }
         }
 
@@ -943,7 +947,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public void consumeFile(File data) {
         if (!tryConsumeFile(data)) {
-            throw Exceptions.createHandled().withNLSKey("VirtualFile.cannotWrite").set("file", path()).handle();
+            throw createNotWritableError();
         }
     }
 
@@ -1029,10 +1033,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             return true;
         }
 
-        if (other instanceof VirtualFile) {
-            if (Objects.equals(((VirtualFile) other).parent, parent)) {
-                return Objects.equals(name, ((VirtualFile) other).name);
-            }
+        if ((other instanceof VirtualFile) && (Objects.equals(((VirtualFile) other).parent, parent))) {
+            return Objects.equals(name, ((VirtualFile) other).name);
         }
 
         return false;
