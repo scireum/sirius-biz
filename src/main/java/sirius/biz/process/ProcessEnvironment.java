@@ -103,15 +103,16 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     private void loadPreviousTimings() {
-        processes.fetchProcess(processId)
-                 .ifPresent(process -> process.getPerformanceCounters().data().keySet().forEach(key -> {
-                     int counter = process.getPerformanceCounters().get(key).orElse(0);
-                     int timing = process.getTimings().get(key).orElse(0);
+        processes.fetchProcess(processId).ifPresent(process -> {
+            process.getPerformanceCounters().data().keySet().forEach(key -> {
+                int counter = process.getPerformanceCounters().get(key).orElse(0);
+                int timing = process.getTimings().get(key).orElse(0);
 
-                     Average average = new Average();
-                     average.addValues(counter, (double) counter * timing);
-                     timings.put(key, average);
-                 }));
+                Average average = new Average();
+                average.addValues(counter, (double) counter * timing);
+                timings.put(key, average);
+            });
+        });
     }
 
     @Override
