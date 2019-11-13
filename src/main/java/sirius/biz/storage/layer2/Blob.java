@@ -44,9 +44,9 @@ public interface Blob {
     String getSpaceName();
 
     /**
-     * Returns the ID of the tenant for which this directory has been created.
+     * Returns the ID of the tenant for which this blob has been created.
      *
-     * @return the id of the tenant which owns this directory
+     * @return the id of the tenant which owns this blob
      */
     String getTenantId();
 
