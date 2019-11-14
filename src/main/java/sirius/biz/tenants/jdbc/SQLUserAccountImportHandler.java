@@ -40,7 +40,7 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
     public static class SQLUserAccountImportHandlerFactory implements ImportHandlerFactory {
 
         @Override
-        public boolean accepts(Class<?> type) {
+        public boolean accepts(Class<?> type, ImporterContext context) {
             return type == SQLUserAccount.class;
         }
 

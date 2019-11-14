@@ -34,7 +34,7 @@ public class MongoCodeListEntryImportHandler extends MongoEntityImportHandler<Mo
     public static class MongoCodeListImportHandlerFactory implements ImportHandlerFactory {
 
         @Override
-        public boolean accepts(Class<?> type) {
+        public boolean accepts(Class<?> type, ImporterContext context) {
             return type == MongoCodeListEntry.class;
         }
 
