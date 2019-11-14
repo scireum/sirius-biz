@@ -826,16 +826,14 @@ public class Processes {
         }
 
         UserInfo user = UserContext.getCurrentUser();
-        if (!user.hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES)) {
-            if (!Objects.equals(user.getTenantId(), process.get().getTenantId())) {
-                return Optional.empty();
-            }
+        if (!Objects.equals(user.getTenantId(), process.get().getTenantId())
+            && !user.hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES)) {
+            return Optional.empty();
         }
 
-        if (!Strings.areEqual(user.getUserId(), process.get().getUserId())) {
-            if (!user.hasPermission(ProcessController.PERMISSION_MANAGE_PROCESSES)) {
-                return Optional.empty();
-            }
+        if (!Strings.areEqual(user.getUserId(), process.get().getUserId())
+            && !user.hasPermission(ProcessController.PERMISSION_MANAGE_PROCESSES)) {
+            return Optional.empty();
         }
 
         if (!user.hasPermission(process.get().getRequiredPermission())) {
