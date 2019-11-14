@@ -401,6 +401,7 @@ public class Processes {
                 return true;
             } catch (OptimisticLockException e) {
                 Wait.randomMillis(250, 500);
+                process = elastic.find(Process.class, processId).orElse(null);
             }
         }
 
