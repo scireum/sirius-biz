@@ -30,9 +30,11 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.NLS;
 import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.OutputStream;
 import java.util.Optional;
 
@@ -74,6 +76,12 @@ public class JobsRoot extends SingularVFSRoot {
     @Override
     protected String getName() {
         return PATH_JOBS;
+    }
+
+    @Nullable
+    @Override
+    protected String getDescription() {
+        return NLS.get("JobsRoot.description");
     }
 
     @Override
