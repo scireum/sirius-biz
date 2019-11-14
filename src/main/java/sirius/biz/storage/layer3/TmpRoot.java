@@ -27,7 +27,7 @@ import java.util.Optional;
  * <p>
  * This will resolve paths like <tt>/tmp/BLOB-KEY/FILENAME</tt>. Note that the filename as well as the tenant which
  * tries to access the file must match. Most probably these blobs are created using
- * {@link sirius.biz.storage.layer2.BlobStorageSpace#createTemporaryBlob(String)} and the persisted once completely
+ * {@link sirius.biz.storage.layer2.BlobStorageSpace#createTemporaryBlob(String)} and then persisted once completely
  * written using {@link sirius.biz.storage.layer2.BlobStorageSpace#markAsUsed(Blob)}.
  * <p>
  * Note that these blobs will be deleted after a given period (usually 10 days).

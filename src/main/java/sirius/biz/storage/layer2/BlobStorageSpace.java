@@ -108,7 +108,7 @@ public interface BlobStorageSpace {
      * deleted. It is made permanent as soon as the referencing entity is saved, otherwise it will be deleted
      * automatically.
      * <p>
-     * Note that there is almost no use-case to directory call this method (outside of {@link BlobHardRef}.
+     * Note that there is almost no use-case to directly call this method (outside of {@link BlobHardRef}.
      *
      * @return the newly created temporary blob. To make this blob permanent, it has to be stored in a
      * {@link BlobHardRef} and the referencing entity has to be persisted.

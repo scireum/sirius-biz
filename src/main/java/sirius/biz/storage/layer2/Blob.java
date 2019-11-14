@@ -186,7 +186,7 @@ public interface Blob {
     /**
      * Creates a output stream which can be used to update the contents of this blob.
      * <p>
-     * Stores the once the stream is closed just like {@link #createOutputStream(String)} but permits to add a callback
+     * Stores the contents once the stream is closed just like {@link #createOutputStream(String)} but permits to add a callback
      * which is invoked once the blob has been updated.
      *
      * @param completeCallback a handler which is invoked once the stream is closed and the underlying blob has been
