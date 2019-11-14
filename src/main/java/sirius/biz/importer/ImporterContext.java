@@ -79,7 +79,7 @@ public class ImporterContext {
 
     private ImportHandler<?> lookupHandler(Class<?> type, Class<?> baseType) {
         for (ImportHandlerFactory factory : factories) {
-            if (factory.accepts(type)) {
+            if (factory.accepts(type, this)) {
                 return factory.create(type, this);
             }
         }
