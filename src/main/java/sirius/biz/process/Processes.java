@@ -384,12 +384,11 @@ public class Processes {
             process = elastic.find(Process.class, processId).orElse(null);
         }
 
-        if (process == null) {
-            return false;
-        }
-
         int retries = 5;
         while (retries-- > 0) {
+            if (process == null) {
+                return false;
+            }
             if (!checker.test(process)) {
                 return false;
             }
