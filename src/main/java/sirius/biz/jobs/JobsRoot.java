@@ -48,7 +48,7 @@ import java.util.Optional;
  * the same time without any conflicts - this wouldn't be true when we'd use the <tt>work</tt> folder - which is
  * normally the preferred folder to upload the input data for jobs.
  */
-@Register(classes = VFSRoot.class)
+@Register(classes = VFSRoot.class, framework = Jobs.FRAMEWORK_JOBS)
 public class JobsRoot extends SingularVFSRoot {
 
     /**
