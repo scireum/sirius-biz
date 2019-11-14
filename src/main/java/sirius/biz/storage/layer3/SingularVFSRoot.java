@@ -40,6 +40,7 @@ public abstract class SingularVFSRoot implements VFSRoot {
      */
     @Nullable
     protected String getDescription() {
+        // Default implementation which provides no description...
         return null;
     }
 
