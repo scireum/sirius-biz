@@ -384,12 +384,11 @@ public class Processes {
             process = elastic.find(Process.class, processId).orElse(null);
         }
 
-        if (process == null) {
-            return false;
-        }
-
         int retries = 5;
         while (retries-- > 0) {
+            if (process == null) {
+                return false;
+            }
             if (!checker.test(process)) {
                 return false;
             }
@@ -401,6 +400,7 @@ public class Processes {
                 return true;
             } catch (OptimisticLockException e) {
                 Wait.randomMillis(250, 500);
+                process = elastic.find(Process.class, processId).orElse(null);
             }
         }
 
@@ -826,16 +826,14 @@ public class Processes {
         }
 
         UserInfo user = UserContext.getCurrentUser();
-        if (!user.hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES)) {
-            if (!Objects.equals(user.getTenantId(), process.get().getTenantId())) {
-                return Optional.empty();
-            }
+        if (!Objects.equals(user.getTenantId(), process.get().getTenantId())
+            && !user.hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES)) {
+            return Optional.empty();
         }
 
-        if (!Strings.areEqual(user.getUserId(), process.get().getUserId())) {
-            if (!user.hasPermission(ProcessController.PERMISSION_MANAGE_PROCESSES)) {
-                return Optional.empty();
-            }
+        if (!Strings.areEqual(user.getUserId(), process.get().getUserId())
+            && !user.hasPermission(ProcessController.PERMISSION_MANAGE_PROCESSES)) {
+            return Optional.empty();
         }
 
         if (!user.hasPermission(process.get().getRequiredPermission())) {
