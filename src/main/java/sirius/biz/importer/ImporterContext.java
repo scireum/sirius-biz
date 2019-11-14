@@ -61,9 +61,10 @@ public class ImporterContext {
      * Resolves which {@link ImportHandler} to use for a given type.
      * <p>
      * Basically we iterate over all known {@link ImportHandlerFactory factories} (sorted by their priority ascending)
-     * and use the first which returns <tt>true</tt> when invoking {@link ImportHandlerFactory#accepts(Class)} with the
-     * given <tt>type</tt>. This factory is used to create a new handler which is then kept in a local lookup table
-     * so that it is re-used for all subsequent calls for this context and the given <tt>type</tt>.
+     * and use the first which returns <tt>true</tt> when invoking
+     * {@link ImportHandlerFactory#accepts(Class, ImporterContext)}  with the given <tt>type</tt>. This factory is used
+     * to create a new handler which is then kept in a local lookup table so that it is re-used for all subsequent
+     * calls for this context and the given <tt>type</tt>.
      * <p>
      * If no factory matches, we repeat the search using the superclass.
      *
