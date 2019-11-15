@@ -21,6 +21,7 @@ import sirius.db.mongo.MongoQuery;
 import sirius.db.mongo.QueryBuilder;
 import sirius.db.mongo.Updater;
 import sirius.kernel.async.CallContext;
+import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -137,6 +138,18 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
+    public Blob createTemporaryBlob(String tenantId) {
+        MongoBlob result = new MongoBlob();
+        result.setSpaceName(spaceName);
+        result.setTenantId(tenantId);
+        result.setTemporary(true);
+        result.setCommitted(true);
+        mango.update(result);
+
+        return result;
+    }
+
+    @Override
     public Optional<? extends Blob> findAttachedBlobByName(String referencingEntity, String filename) {
         if (Strings.isEmpty(referencingEntity)) {
             return Optional.empty();
@@ -243,6 +256,20 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .executeFor(MongoBlob.class);
     }
 
+    @Override
+    public void markAsUsed(Blob blob) {
+        if (blob == null) {
+            return;
+        }
+
+        mongo.update()
+             .set(MongoBlob.TEMPORARY, false)
+             .where(MongoBlob.SPACE_NAME, spaceName)
+             .where(MongoBlob.ID, ((MongoBlob) blob).getId())
+             .where(MongoBlob.TEMPORARY, true)
+             .executeFor(MongoBlob.class);
+    }
+
     protected void delete(MongoBlob blob) {
         mongo.update().set(MongoBlob.DELETED, true).where(MongoBlob.ID, blob.getId()).executeFor(MongoBlob.class);
     }
@@ -306,7 +333,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                 filename = filename.trim();
                 updater.set(MongoBlob.FILENAME, filename)
                        .set(MongoBlob.NORMALIZED_FILENAME, filename.toLowerCase())
-                       .set(MongoBlob.FILE_EXTENSION, Strings.splitAtLast(filename.toLowerCase(), ".").getSecond());
+                       .set(MongoBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
             }
 
             long numUpdated = updater.where(MongoBlob.ID, blob.getId())

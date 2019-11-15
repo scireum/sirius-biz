@@ -19,6 +19,7 @@ import sirius.db.jdbc.UpdateStatement;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.async.CallContext;
+import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -128,6 +129,18 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     public Blob createTemporaryBlob() {
         SQLBlob result = new SQLBlob();
         result.setSpaceName(spaceName);
+        result.setTemporary(true);
+        result.setCommitted(true);
+        oma.update(result);
+
+        return result;
+    }
+
+    @Override
+    public Blob createTemporaryBlob(String tenantId) {
+        SQLBlob result = new SQLBlob();
+        result.setSpaceName(spaceName);
+        result.setTenantId(tenantId);
         result.setTemporary(true);
         result.setCommitted(true);
         oma.update(result);
@@ -271,6 +284,30 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         }
     }
 
+    @Override
+    public void markAsUsed(Blob blob) {
+        try {
+            if (blob == null) {
+                return;
+            }
+
+            oma.updateStatement(SQLBlob.class)
+               .set(SQLBlob.TEMPORARY, false)
+               .where(SQLBlob.SPACE_NAME, spaceName)
+               .where(SQLBlob.ID, ((SQLBlob) blob).getId())
+               .where(SQLBlob.TEMPORARY, true)
+               .executeUpdate();
+        } catch (SQLException e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage(
+                              "Layer 2/SQL: An error occured, when marking the object '%s' as used: %s (%s)",
+                              blob.getBlobKey())
+                      .handle();
+        }
+    }
+
     protected void delete(SQLBlob blob) {
         try {
             oma.updateStatement(SQLBlob.class)
@@ -353,8 +390,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                 filename = filename.trim();
                 updateStatement.set(SQLBlob.FILENAME, filename)
                                .set(SQLBlob.NORMALIZED_FILENAME, filename.toLowerCase())
-                               .set(SQLBlob.FILE_EXTENSION,
-                                    Strings.splitAtLast(filename.toLowerCase(), ".").getSecond());
+                               .set(SQLBlob.FILE_EXTENSION, Files.getFileExtension(filename.toLowerCase()));
             }
 
             int numUpdated = updateStatement.where(SQLBlob.ID, blob.getId())

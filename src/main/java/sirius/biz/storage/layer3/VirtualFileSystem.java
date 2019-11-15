@@ -72,10 +72,9 @@ public class VirtualFileSystem {
     }
 
     private VirtualFile makeRoot() {
-        return new MutableVirtualFile().withCanCreateChildren(MutableVirtualFile.CONSTANT_FALSE)
-                                       .withChildren(new RootProvider())
-                                       .withExistsFlagSupplier(MutableVirtualFile.CONSTANT_TRUE)
-                                       .withDirectoryFlagSupplier(MutableVirtualFile.CONSTANT_TRUE);
+        return new MutableVirtualFile().markAsExistingDirectory()
+                                       .withCanCreateChildren(MutableVirtualFile.CONSTANT_FALSE)
+                                       .withChildren(new RootProvider());
     }
 
     /**
@@ -112,5 +111,19 @@ public class VirtualFileSystem {
                                                             .withNLSKey("VirtualFileSystem.invalidPath")
                                                             .set("path", path)
                                                             .handle());
+    }
+
+    /**
+     * Builds a path from the given parts.
+     * <p>
+     * Builds a path like <tt>/foo/bar/baz</tt> for <tt>[foo, bar, baz]</tt>.
+     *
+     * @param parts the individual folder / file names to concatenate to a path
+     * @return the absolute path built from the given parts
+     */
+    public String makePath(String... parts) {
+        // Note that this is currently a very simple implementation but might be enhanced with additional
+        // checks or cleanups...
+        return "/" + Strings.join("/", parts);
     }
 }

@@ -44,9 +44,9 @@ public interface Blob {
     String getSpaceName();
 
     /**
-     * Returns the ID of the tenant for which this directory has been created.
+     * Returns the ID of the tenant for which this blob has been created.
      *
-     * @return the id of the tenant which owns this directory
+     * @return the id of the tenant which owns this blob
      */
     String getTenantId();
 
@@ -182,6 +182,21 @@ public interface Blob {
      * @see #updateContent(String, InputStream, long)
      */
     OutputStream createOutputStream(@Nullable String filename);
+
+    /**
+     * Creates a output stream which can be used to update the contents of this blob.
+     * <p>
+     * Stores the contents once the stream is closed just like {@link #createOutputStream(String)} but permits to add a callback
+     * which is invoked once the blob has been updated.
+     *
+     * @param completeCallback a handler which is invoked once the stream is closed and the underlying blob has been
+     *                         updated
+     * @param filename         the new filename to use (if given)
+     * @return an output stream which can be used to update the contents of this blob
+     * @see #updateContent(String, File)
+     * @see #updateContent(String, InputStream, long)
+     */
+    OutputStream createOutputStream(Runnable completeCallback, @Nullable String filename);
 
     /**
      * Creates an input stream which can be used to read the contents of this blob.
