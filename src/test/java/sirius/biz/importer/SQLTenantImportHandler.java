@@ -30,7 +30,7 @@ public class SQLTenantImportHandler extends SQLEntityImportHandler<SQLTenant> {
     public static class SQLTenantImportHandlerFactory implements ImportHandlerFactory {
 
         @Override
-        public boolean accepts(Class<?> type) {
+        public boolean accepts(Class<?> type, ImporterContext context) {
             return type == SQLTenant.class;
         }
 

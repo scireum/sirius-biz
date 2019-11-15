@@ -41,7 +41,7 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
     public static class MongoUserAccountImportHandlerFactory implements ImportHandlerFactory {
 
         @Override
-        public boolean accepts(Class<?> type) {
+        public boolean accepts(Class<?> type, ImporterContext context) {
             return type == MongoUserAccount.class;
         }
 

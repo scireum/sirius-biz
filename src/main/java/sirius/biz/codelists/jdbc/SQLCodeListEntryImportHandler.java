@@ -37,7 +37,7 @@ public class SQLCodeListEntryImportHandler extends SQLEntityImportHandler<SQLCod
     public static class SQLCodeListImportHandlerFactory implements ImportHandlerFactory {
 
         @Override
-        public boolean accepts(Class<?> type) {
+        public boolean accepts(Class<?> type, ImporterContext context) {
             return type == SQLCodeListEntry.class;
         }
 
