@@ -213,12 +213,11 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
 
         String currentTenantId = getCurrentTenant().map(tenant -> tenant.getIdAsString()).orElse(null);
         if (!Strings.areEqual(tenantAware.getTenantAsString(), currentTenantId)
-            && !Objects.equals(tenantAware.getTenantAsString(),
-                               getCurrentTenant().map(Tenant::getParent)
-                                                 .filter(BaseEntityRef::isFilled)
-                                                 .map(BaseEntityRef::getId)
-                                                 .map(String::valueOf)
-                                                 .orElse(null))) {
+                && !Objects.equals(tenantAware.getTenantAsString(),
+                getCurrentTenant().map(tenant -> tenant.getParent())
+                        .filter(BaseEntityRef::isFilled)
+                        .map(entityRef -> entityRef.getIdAsString())
+                        .orElse(null))) {
             throw Exceptions.createHandled().withNLSKey("Tenants.invalidTenant").handle();
         }
     }
