@@ -278,7 +278,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         generateNewPassword(userAccount);
         UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
 
-        accounts(ctx);
+        ctx.respondWith().redirectToGet("/user-accounts");
     }
 
     /**
@@ -326,7 +326,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
         }
 
-        accounts(ctx);
+        ctx.respondWith().redirectToGet("/user-accounts");
     }
 
     private void generateNewPassword(U userAccount) {
@@ -443,7 +443,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             user.getMapper().update(user);
         });
 
-        accounts(ctx);
+        ctx.respondWith().redirectToGet("/user-accounts");
     }
 
     /**
@@ -462,7 +462,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             user.getMapper().update(user);
         });
 
-        accounts(ctx);
+        ctx.respondWith().redirectToGet("/user-accounts");
     }
 
     /**
@@ -483,7 +483,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         });
 
         deleteEntity(ctx, account);
-        accounts(ctx);
+        ctx.respondWith().redirectToGet("/user-accounts");
     }
 
     /**
