@@ -74,11 +74,11 @@ public interface ProcessContext extends TaskContextAdapter {
     void addDebugTiming(String counter, long millis);
 
     /**
-     * Increents the given performance counter by one.
+     * Increments the given performance counter by one.
      *
      * @param counter the counter to increment
      */
-    void addCounter(String counter);
+    void incCounter(String counter);
 
     /**
      * Handles the given exception.

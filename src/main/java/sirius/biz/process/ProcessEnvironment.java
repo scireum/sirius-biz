@@ -93,7 +93,7 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
-    public void addCounter(String counter) {
+    public void incCounter(String counter) {
         addTiming(counter, -1L);
     }
 

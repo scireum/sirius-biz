@@ -82,7 +82,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
         E entity = findAndLoad(context);
         try {
             if (shouldSkip(entity)) {
-                process.addCounter(NLS.get("EntityImportJob.rowIgnored"));
+                process.incCounter(NLS.get("EntityImportJob.rowIgnored"));
                 return;
             }
 
