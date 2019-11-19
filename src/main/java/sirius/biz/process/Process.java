@@ -25,7 +25,6 @@ import sirius.db.mixing.types.StringIntMap;
 import sirius.db.mixing.types.StringList;
 import sirius.db.mixing.types.StringMap;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
@@ -33,8 +32,7 @@ import sirius.kernel.nls.NLS;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Collection;
 
 /**
  * Represents recordings of a background process.
@@ -404,19 +402,39 @@ public class Process extends SearchableEntity {
      *
      * @return the list of performance counters recorded for this process
      */
-    public List<Tuple<String, String>> getCounterList() {
-        return getPerformanceCounters().data()
-                                       .keySet()
-                                       .stream()
-                                       .map(this::formatPerformanceCounter)
-                                       .collect(Collectors.toList());
+    public Collection<String> getCounterList() {
+        return getPerformanceCounters().data().keySet();
     }
 
-    private Tuple<String, String> formatPerformanceCounter(String key) {
-        int counter = performanceCounters.get(key).orElse(0);
-        int timing = timings.get(key).orElse(0);
+    /**
+     * Returns the counter label.
+     *
+     * @param name the counter to fetch the label for
+     * @return either the translated label (if a matching property exists) or the counter name itself
+     */
+    public String getCounterLabel(String name) {
+        return NLS.getIfExists(name, null).orElse(name);
+    }
 
-        return Tuple.create(NLS.getIfExists(key, null).orElse(key), Strings.apply("%s ms (%s)", timing, counter));
+    /**
+     * Returns the counter value for the given counter name.
+     *
+     * @param name the counter to read
+     * @return the count value of the given counter
+     */
+    public String getCounterValue(String name) {
+        return String.valueOf(performanceCounters.get(name).orElse(0));
+    }
+
+    /**
+     * Returns the average duration in milliseconds for the given counter
+     *
+     * @param name the counter to read
+     * @return the averags duration in millis (readily formatted as string) or an empty string is the average
+     * is zero or less
+     */
+    public String getCounterTiming(String name) {
+        return timings.get(name).filter(value -> value > 0).map(value -> Strings.apply("%s ms", value)).orElse("");
     }
 
     /**
