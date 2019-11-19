@@ -74,6 +74,13 @@ public interface ProcessContext extends TaskContextAdapter {
     void addDebugTiming(String counter, long millis);
 
     /**
+     * Increments the given performance counter by one.
+     *
+     * @param counter the counter to increment
+     */
+    void incCounter(String counter);
+
+    /**
      * Handles the given exception.
      * <p>
      * This will invoke {@link Exceptions#handle()} and log the result.
@@ -220,8 +227,8 @@ public interface ProcessContext extends TaskContextAdapter {
     /**
      * Adds a table output to the process.
      *
-     * @param name    the name of the output
-     * @param label   the label of the output which will be {@link sirius.kernel.nls.NLS#smartGet(String) auto translated}
+     * @param name  the name of the output
+     * @param label the label of the output which will be {@link sirius.kernel.nls.NLS#smartGet(String) auto translated}
      * @return a builder {@link sirius.biz.process.output.TableOutput.ColumnBuilder} to add columns to the table
      */
     TableOutput.ColumnBuilder addTable(String name, String label);

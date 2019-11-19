@@ -43,9 +43,13 @@
         <w:heading labelKey="Process.counters"/>
         <div class="well">
             <div class="row">
-                <i:for type="Tuple" var="counter" items="process.getCounterList()">
+                <i:for type="String" var="counter" items="process.getCounterList()">
                     <div class="col-md-4">
-                        <w:metric name="@counter.getFirst()" value="@counter.getSecond()" size="mini" color="blue"/>
+                        <w:metric name="@process.getCounterLabel(counter)"
+                                  value="@process.getCounterValue(counter)"
+                                  help="@process.getCounterTiming(counter)"
+                                  size="mini"
+                                  color="blue"/>
                     </div>
                 </i:for>
             </div>

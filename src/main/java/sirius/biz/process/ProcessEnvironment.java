@@ -92,6 +92,11 @@ class ProcessEnvironment implements ProcessContext {
         }
     }
 
+    @Override
+    public void incCounter(String counter) {
+        addTiming(counter, -1L);
+    }
+
     protected Map<String, Average> getTimings() {
         if (timings == null) {
             timings = new HashMap<>();
