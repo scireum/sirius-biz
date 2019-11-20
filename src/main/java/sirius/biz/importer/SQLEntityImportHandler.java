@@ -147,7 +147,8 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
 
     @Override
     public E load(Context data, E entity) {
-        return load(data, entity, mappingsToLoad);
+        E partialLoadedEntity = load(data, entity, mappingsToLoad);
+        return load(data, partialLoadedEntity, mappingsToLoadForFind);
     }
 
     @Override
