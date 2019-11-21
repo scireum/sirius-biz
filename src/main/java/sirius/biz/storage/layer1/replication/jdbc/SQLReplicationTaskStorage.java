@@ -16,8 +16,8 @@ import sirius.biz.storage.layer1.replication.ReplicationTaskExecutor;
 import sirius.biz.storage.layer1.replication.ReplicationTaskStorage;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.Operator;
 import sirius.db.jdbc.SmartQuery;
-import sirius.db.jdbc.UpdateStatement;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -127,13 +127,9 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
         try {
             oma.updateStatement(SQLReplicationTask.class)
                .setToNow(SQLReplicationTask.SCHEDULED)
-               .where(SQLReplicationTask.EARLIEST_EXECUTION, UpdateStatement.Operator.LT, LocalDateTime.now())
-               .where(SQLReplicationTask.ID,
-                      UpdateStatement.Operator.GT_EQ,
-                      batch.getLongValue(SQLEntityBatchEmitter.START_ID))
-               .where(SQLReplicationTask.ID,
-                      UpdateStatement.Operator.LT_EQ,
-                      batch.getLongValue(SQLEntityBatchEmitter.END_ID))
+               .where(SQLReplicationTask.EARLIEST_EXECUTION, Operator.LT, LocalDateTime.now())
+               .where(SQLReplicationTask.ID, Operator.GT_EQ, batch.getLongValue(SQLEntityBatchEmitter.START_ID))
+               .where(SQLReplicationTask.ID, Operator.LT_EQ, batch.getLongValue(SQLEntityBatchEmitter.END_ID))
                .executeUpdate();
         } catch (SQLException e) {
             Exceptions.handle()
