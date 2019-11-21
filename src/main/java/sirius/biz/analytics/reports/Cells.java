@@ -285,7 +285,7 @@ public class Cells {
             return "";
         }
 
-        if (JSON.isValid(cellValue)) {
+        if (JSON.isValidObject(cellValue)) {
             try {
                 JSONObject data = JSON.parseObject(cellValue);
                 return renderJSON(data);
@@ -308,7 +308,7 @@ public class Cells {
             return "";
         }
 
-        if (JSON.isValid(cellValue)) {
+        if (JSON.isValidObject(cellValue)) {
             try {
                 JSONObject data = JSON.parseObject(cellValue);
                 return renderRaw(data);
