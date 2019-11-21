@@ -35,6 +35,11 @@ public class ListCellFormat implements CellFormat {
         return sb.toString();
     }
 
+    @Override
+    public String rawValue(JSONObject data) {
+        return data.getJSONArray((KEY_VALUES)).toString();
+    }
+
     @Nonnull
     @Override
     public String getName() {
