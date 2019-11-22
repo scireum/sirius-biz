@@ -229,7 +229,7 @@ public class L3Uplink implements VFSRoot {
      */
     @Override
     public Optional<VirtualFile> findChild(VirtualFile parent, String name) {
-        if (!storage.isKnown(name)) {
+        if (storage == null || !storage.isKnown(name)) {
             return Optional.empty();
         }
 
@@ -249,6 +249,10 @@ public class L3Uplink implements VFSRoot {
      */
     @Override
     public void enumerate(VirtualFile parent, FileSearch search) {
+        if (storage == null) {
+            return;
+        }
+
         storage.getSpaces().filter(BlobStorageSpace::isBrowsable).map(space -> {
             Directory directory = space.getRoot(tenants.getRequiredTenant().getIdAsString());
             MutableVirtualFile wrappedDirectory = wrapDirectory(parent, directory);
