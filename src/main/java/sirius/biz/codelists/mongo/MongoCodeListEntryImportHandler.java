@@ -75,8 +75,4 @@ public class MongoCodeListEntryImportHandler extends MongoEntityImportHandler<Mo
         return Optional.empty();
     }
 
-    @Override
-    protected boolean parseComplexProperty(MongoCodeListEntry entity, Property property, Value value, Context data) {
-        return false;
-    }
 }
