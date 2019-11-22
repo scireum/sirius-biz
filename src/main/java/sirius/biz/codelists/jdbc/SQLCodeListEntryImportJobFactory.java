@@ -40,9 +40,9 @@ public class SQLCodeListEntryImportJobFactory extends EntityImportJobFactory {
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+        parameterCollector.accept(codeListParameter);
         super.collectParameters(parameterCollector);
 
-        parameterCollector.accept(codeListParameter);
     }
 
     @Override

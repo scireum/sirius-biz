@@ -40,9 +40,8 @@ public class MongoCodeListEntryImportJobFactory extends EntityImportJobFactory {
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
-        super.collectParameters(parameterCollector);
-
         parameterCollector.accept(codeListParameter);
+        super.collectParameters(parameterCollector);
     }
 
     @Override
