@@ -9,6 +9,7 @@
 package sirius.biz.process;
 
 import com.alibaba.fastjson.JSONObject;
+import sirius.biz.analytics.reports.Cells;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.jobs.batch.ExportBatchProcessFactory;
 import sirius.biz.jobs.batch.file.ExportCSV;
@@ -71,6 +72,9 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
 
     @Part
     private Elastic elastic;
+
+    @Part
+    private Cells cells;
 
     @Part
     private TableProcessOutputType tableProcessOutputType;
@@ -209,8 +213,9 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
 
     private void writeTableRow(List<String> columns, LineBasedExport export, ProcessLog logEntry) {
         try {
-            List<Object> row =
-                    columns.stream().map(column -> logEntry.getContext().get(column)).collect(Collectors.toList());
+            List<Object> row = columns.stream()
+                                      .map(column -> cells.rawValue(logEntry.getContext().get(column).orElse(null)))
+                                      .collect(Collectors.toList());
             export.addRow(row);
         } catch (IOException e) {
             throw Exceptions.handle()

@@ -30,6 +30,11 @@ public class CSSCellFormat implements CellFormat {
                 data.getString(KEY_VALUE)) + "</div>";
     }
 
+    @Override
+    public String rawValue(JSONObject data) {
+        return data.getString(KEY_VALUE);
+    }
+
     @Nonnull
     @Override
     public String getName() {

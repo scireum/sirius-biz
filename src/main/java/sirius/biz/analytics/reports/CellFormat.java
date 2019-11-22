@@ -23,4 +23,12 @@ public interface CellFormat extends Named {
      * @return a HTML string which represents the rendered result
      */
     String format(JSONObject data);
+
+    /**
+     * The raw value of a cell as String.
+     *
+     * @param data the cell described as JSON
+     * @return a String containing the format-less value
+     */
+    String rawValue(JSONObject data);
 }

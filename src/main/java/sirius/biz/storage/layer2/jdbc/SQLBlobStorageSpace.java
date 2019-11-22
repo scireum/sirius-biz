@@ -14,6 +14,7 @@ import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
+import sirius.db.jdbc.Operator;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.jdbc.UpdateStatement;
 import sirius.db.mixing.Mapping;
@@ -234,7 +235,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                                  .where(SQLBlob.REFERENCE_DESIGNATOR, referenceDesignator);
 
             if (Strings.isFilled(excludedBlobKey)) {
-                updateStatement.where(SQLBlob.BLOB_KEY, UpdateStatement.Operator.NE, excludedBlobKey);
+                updateStatement.where(SQLBlob.BLOB_KEY, Operator.NE, excludedBlobKey);
             }
 
             updateStatement.executeUpdate();
