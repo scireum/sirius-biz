@@ -66,9 +66,4 @@ public class SQLCodeListEntryImportHandler extends SQLEntityImportHandler<SQLCod
                                                      SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE),
                                                      SQLCodeListEntry.CODE_LIST));
     }
-
-    @Override
-    protected boolean parseComplexProperty(SQLCodeListEntry entity, Property property, Value value, Context data) {
-        return false;
-    }
 }

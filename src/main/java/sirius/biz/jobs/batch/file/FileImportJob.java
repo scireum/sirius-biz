@@ -17,9 +17,11 @@ import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -51,7 +53,7 @@ public abstract class FileImportJob extends ImportJob {
     public void execute() throws Exception {
         VirtualFile file = process.require(fileParameter);
 
-        if (canHandleFileExtension(file.fileExtension())) {
+        if (canHandleFileExtension(Value.of(file.fileExtension()).toLowerCase())) {
             backupInputFile(file);
             try (InputStream in = file.createInputStream()) {
                 executeForStream(file.name(), in);
@@ -123,8 +125,8 @@ public abstract class FileImportJob extends ImportJob {
     /**
      * Determines if the given file extension can be handled by the import job.
      *
-     * @param fileExtension the file extension to check
+     * @param fileExtension the file extension to check (this is guaranteed to be lowercase).
      * @return <tt>true</tt> if it can be handled, <tt>false</tt> otherwise
      */
-    protected abstract boolean canHandleFileExtension(String fileExtension);
+    protected abstract boolean canHandleFileExtension(@Nullable String fileExtension);
 }
