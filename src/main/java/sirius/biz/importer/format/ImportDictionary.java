@@ -8,6 +8,7 @@
 
 package sirius.biz.importer.format;
 
+import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
@@ -601,5 +602,23 @@ public class ImportDictionary {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Emits all fields and their aliases as a report.
+     *
+     * @param collector the info collector to emit the report to
+     */
+    public void emitJobInfos(JobInfoCollector collector) {
+        collector.addTranslatedHeading("ImportDictionary.fields");
+        collector.addReport((report, cells) -> {
+            report.addColumn("name", NLS.get("FieldDefinition.name"));
+            report.addColumn("type", NLS.get("FieldDefinition.type"));
+            report.addColumn("remarks", NLS.get("FieldDefinition.remarks"));
+
+            for (FieldDefinition field : getFields()) {
+                report.addCells(cells.of(field.getLabel()), cells.of(field.getType()), cells.list(field.getRemarks()));
+            }
+        });
     }
 }

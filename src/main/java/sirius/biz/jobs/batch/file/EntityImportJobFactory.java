@@ -10,6 +10,7 @@ package sirius.biz.jobs.batch.file;
 
 import sirius.biz.importer.Importer;
 import sirius.biz.importer.format.ImportDictionary;
+import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
@@ -71,6 +72,13 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     @SuppressWarnings("squid:S1186")
     @Explain("Do nothing by default since we only need this for imports which contain more than one Entity")
     protected void enhanceDictionary(ImportDictionary dictionary) {
+    }
+
+    @Override
+    protected void collectJobInfos(JobInfoCollector collector) {
+        super.collectJobInfos(collector);
+        collector.addTranslatedWell("EntityImportJobFactory.automaticMappings");
+        getDictionary().emitJobInfos(collector);
     }
 
     @Override
