@@ -117,6 +117,15 @@ public class FieldDefinition {
     }
 
     /**
+     * Helper to create a type description for a string list field.
+     *
+     * @return a description to be shown to the user
+     */
+    public static String typeStringList() {
+        return NLS.get("FieldDefinition.typeStringList");
+    }
+
+    /**
      * Helper to create a type description for a boolean field.
      *
      * @return a description to be shown to the user
@@ -142,6 +151,24 @@ public class FieldDefinition {
      */
     public static String typeDate() {
         return NLS.get("FieldDefinition.typeDate");
+    }
+
+    /**
+     * Helper to create a type description for a date+time field.
+     *
+     * @return a description to be shown to the user
+     */
+    public static String typeDateTime() {
+        return NLS.get("FieldDefinition.typeDateTime");
+    }
+
+    /**
+     * Helper to create a type description for a time field.
+     *
+     * @return a description to be shown to the user
+     */
+    public static String typeTime() {
+        return NLS.get("FieldDefinition.typeTime");
     }
 
     /**
