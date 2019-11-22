@@ -46,6 +46,6 @@ public abstract class LineBasedImportJob extends FileImportJob implements RowPro
             return false;
         }
 
-        return Value.of(fileExtension.toLowerCase()).in("xls", "xlsx", "csv");
+        return Value.of(fileExtension).in("xls", "xlsx", "csv");
     }
 }
