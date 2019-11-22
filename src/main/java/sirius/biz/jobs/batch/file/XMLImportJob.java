@@ -38,7 +38,7 @@ public abstract class XMLImportJob extends FileImportJob {
 
     @Override
     protected boolean canHandleFileExtension(String fileExtension) {
-        return "xml".equals(fileExtension);
+        return "xml".equalsIgnoreCase(fileExtension);
     }
 
     /**
