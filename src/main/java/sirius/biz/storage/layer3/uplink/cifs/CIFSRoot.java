@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage.layer3.uplink;
+package sirius.biz.storage.layer3.uplink.cifs;
 
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbException;
@@ -14,6 +14,8 @@ import jcifs.smb.SmbFile;
 import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
+import sirius.biz.storage.layer3.uplink.ConfigBasedUplink;
+import sirius.biz.storage.layer3.uplink.ConfigBasedUplinkFactory;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
