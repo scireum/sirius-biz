@@ -2,6 +2,7 @@ package sirius.biz.storage.versions;
 
 import sirius.biz.storage.Storage;
 import sirius.biz.storage.StoredObject;
+import sirius.biz.storage.layer2.jdbc.SQLBlobStorage;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.jdbc.SQLTenant;
 import sirius.biz.tenants.jdbc.SQLTenants;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 /**
  * Small helper class to access and create {@link VersionedFile versioned files}.
  */
-@Register(classes = VersionedFiles.class, framework = Storage.FRAMEWORK_STORAGE)
+@Register(classes = VersionedFiles.class, framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class VersionedFiles {
 
     @Part

@@ -1,7 +1,7 @@
 package sirius.biz.storage.versions;
 
-import sirius.biz.storage.Storage;
 import sirius.biz.storage.StoredObjectRef;
+import sirius.biz.storage.layer2.jdbc.SQLBlobStorage;
 import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 /**
  * Entity holding meta information about a versioned file.
  */
-@Framework(Storage.FRAMEWORK_STORAGE)
+@Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class VersionedFile extends SQLTenantAware {
 
     /**
