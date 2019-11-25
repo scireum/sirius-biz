@@ -54,10 +54,13 @@ public class VFSController extends BizController {
 
         if (!file.isDirectory()) {
             file.deliverDownloadTo(ctx);
+        } else {
+            ctx.respondWith()
+               .template("/templates/biz/storage/list.html.pasta",
+                         file,
+                         file.pathList(),
+                         computeChildrenAsPage(ctx, file));
         }
-
-        ctx.respondWith()
-           .template("/templates/biz/storage/list.html.pasta", file, file.pathList(), computeChildrenAsPage(ctx, file));
     }
 
     private VirtualFile resolveToExistingFile(String path) {
