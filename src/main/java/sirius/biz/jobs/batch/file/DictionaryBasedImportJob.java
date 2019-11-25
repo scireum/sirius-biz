@@ -80,6 +80,7 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
                     handleRow(index, context);
                 }
             } catch (HandledException e) {
+                process.incCounter(NLS.get("LineBasedJob.erroneousRow"));
                 process.handle(Exceptions.createHandled()
                                          .to(Log.BACKGROUND)
                                          .withNLSKey("LineBasedJob.errorInRow")
@@ -87,6 +88,7 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
                                          .set("message", e.getMessage())
                                          .handle());
             } catch (Exception e) {
+                process.incCounter(NLS.get("LineBasedJob.erroneousRow"));
                 process.handle(Exceptions.handle()
                                          .to(Log.BACKGROUND)
                                          .error(e)

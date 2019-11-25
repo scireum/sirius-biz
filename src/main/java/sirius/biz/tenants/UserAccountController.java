@@ -27,6 +27,7 @@ import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Message;
+import sirius.web.controller.Page;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.mails.Mails;
@@ -87,6 +88,15 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
 
     @Part
     private Packages packages;
+
+    /**
+     * We provide a custom field for the tenant helper.
+     * <p>
+     * In contrast to <{@link #tenants}, this will have the generic arguments applied and is therefore
+     * fully aware of the exact classes to use.
+     */
+    @Part
+    private Tenants<I, T, U> matchingTenants;
 
     /**
      * Shows a list of all available users of the current tenant.
@@ -268,7 +278,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         generateNewPassword(userAccount);
         UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
 
-        accounts(ctx);
+        ctx.respondWith().redirectToGet("/user-accounts");
     }
 
     /**
@@ -316,7 +326,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
         }
 
-        accounts(ctx);
+        ctx.respondWith().redirectToGet("/user-accounts");
     }
 
     private void generateNewPassword(U userAccount) {
@@ -335,7 +345,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                 .causedByCurrentUser()
                 .forUser(userAccount.getUniqueName(), userAccount.getUserAccountData().getLogin().getUsername())
                 .forTenant(String.valueOf(userAccount.getTenant().getId()),
-                           userAccount.getTenant().getValue().getTenantData().getName())
+                           matchingTenants.fetchCachedRequiredTenant(userAccount.getTenant()).getTenantData().getName())
                 .log();
     }
 
@@ -361,8 +371,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             auditLog.negative("AuditLog.resetPasswordRejected")
                     .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                     .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forTenant(account.getTenant().getValue().getIdAsString(),
-                               account.getTenant().getValue().getTenantData().getName())
+                    .forTenant(account.getTenant().getIdAsString(),
+                               matchingTenants.fetchCachedRequiredTenant(account.getTenant()).getTenantData().getName())
                     .log();
             throw Exceptions.createHandled().withNLSKey("LoginData.accountIsLocked").handle();
         }
@@ -375,8 +385,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         auditLog.neutral("AuditLog.resetPassword")
                 .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                 .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                .forTenant(account.getTenant().getValue().getIdAsString(),
-                           account.getTenant().getValue().getTenantData().getName())
+                .forTenant(account.getTenant().getIdAsString(),
+                           matchingTenants.fetchCachedRequiredTenant(account.getTenant()).getTenantData().getName())
                 .log();
 
         if (Strings.isFilled(account.getUserAccountData().getEmail())) {
@@ -402,7 +412,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         }
     }
 
-    @SuppressWarnings({"unchecked", "RedundantCast"})
+    @SuppressWarnings("unchecked")
     @Explain("The redundant cast is required as otherwise the Java compiler gets confused.")
     protected List<U> findUserAccountsWithEmail(String email) {
         return (List<U>) (Object) mixing.getDescriptor(getUserClass())
@@ -433,7 +443,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             user.getMapper().update(user);
         });
 
-        accounts(ctx);
+        ctx.respondWith().redirectToGet("/user-accounts");
     }
 
     /**
@@ -452,7 +462,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             user.getMapper().update(user);
         });
 
-        accounts(ctx);
+        ctx.respondWith().redirectToGet("/user-accounts");
     }
 
     /**
@@ -473,7 +483,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         });
 
         deleteEntity(ctx, account);
-        accounts(ctx);
+        ctx.respondWith().redirectToGet("/user-accounts");
     }
 
     /**
@@ -521,8 +531,18 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         BasePageHelper<U, ?, ?, ?> ph = getSelectableUsersAsPage();
         ph.withContext(ctx);
 
+        Page<U> selectableUsers = ph.asPage();
+        fillTenantsFromCache(selectableUsers);
+
         ctx.respondWith()
-           .template("/templates/biz/tenants/select-user-account.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
+           .template("/templates/biz/tenants/select-user-account.html.pasta", selectableUsers, isCurrentlySpying(ctx));
+    }
+
+    private void fillTenantsFromCache(Page<U> selectableUsers) {
+        selectableUsers.getItems()
+                       .forEach(user -> user.getTenant()
+                                            .setValue(matchingTenants.fetchCachedTenant(user.getTenant())
+                                                                     .orElse(null)));
     }
 
     private boolean isCurrentlySpying(WebContext ctx) {
@@ -583,8 +603,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                 .hideFromUser()
                 .causedByCurrentUser()
                 .forUser(user.getUniqueName(), user.getUserAccountData().getLogin().getUsername())
-                .forTenant(String.valueOf(user.getTenant().getId()),
-                           user.getTenant().getValue().getTenantData().getName())
+                .forTenant(user.getTenant().getIdAsString(),
+                           matchingTenants.fetchCachedRequiredTenant(user.getTenant()).getTenantData().getName())
                 .log();
 
         ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,

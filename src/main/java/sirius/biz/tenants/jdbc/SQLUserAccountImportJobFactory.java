@@ -14,7 +14,6 @@ import sirius.biz.jobs.batch.file.EntityImportJobFactory;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.mixing.BaseEntity;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
@@ -34,7 +33,8 @@ public class SQLUserAccountImportJobFactory extends EntityImportJobFactory {
                                                    importModeParameter,
                                                    SQLUserAccount.class,
                                                    getDictionary(),
-                                                   process) {};
+                                                   process) {
+        };
     }
 
     @Override

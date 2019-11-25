@@ -11,20 +11,29 @@ package sirius.biz.storage.s3;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.event.ProgressEvent;
 import com.amazonaws.event.ProgressEventType;
-import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.InitiateMultipartUploadRequest;
+import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PartETag;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.transfer.PersistableTransfer;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.amazonaws.services.s3.transfer.internal.S3ProgressListener;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.Operation;
@@ -37,12 +46,15 @@ import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -54,9 +66,30 @@ public class ObjectStore {
 
     private static final String EXECUTOR_S3 = "s3";
 
+    /**
+     * When performing a multipart upload in {@link #upload(BucketName, String, InputStream)} we keep
+     * a local aggregation buffer around to collect a large enough chunk to be uploaded to S3. This specifies the
+     * initial size of this buffer.
+     */
+    private static final int INITIAL_LOCAL_AGGREGATION_BUFFER_SIZE = 32 * 1024;
+
+    /**
+     * Specifies the maximal size of the local aggregation buffer (as described in
+     * {@link #INITIAL_LOCAL_AGGREGATION_BUFFER_SIZE}) before a chunk is uploaded to S3. Note that a single multipart
+     * upload can at most consist of 10.000 parts - therefore this size limits the maximal total object size.
+     */
+    private static final int MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE = 8 * 1024 * 1024;
+
+    /**
+     * When reading from an input stream into the local aggregation buffer (as described in
+     * {@link #INITIAL_LOCAL_AGGREGATION_BUFFER_SIZE}), this specifies the size of the byte array used to shovel
+     * chunks of data from the input stream into the aggregation buffer.
+     */
+    private static final int LOCAL_TRANSFER_BUFFER_SIZE = 8192;
+
     protected final ObjectStores stores;
     protected final String name;
-    protected final AmazonS3Client client;
+    protected final AmazonS3 client;
     protected final TransferManager transferManager;
     protected final String bucketSuffix;
 
@@ -103,7 +136,7 @@ public class ObjectStore {
         }
     }
 
-    protected ObjectStore(ObjectStores stores, String name, AmazonS3Client client, String bucketSuffix) {
+    protected ObjectStore(ObjectStores stores, String name, AmazonS3 client, String bucketSuffix) {
         this.stores = stores;
         this.name = name;
         this.client = client;
@@ -124,7 +157,7 @@ public class ObjectStore {
      *
      * @return the client used to talk to the S3 store
      */
-    public AmazonS3Client getClient() {
+    public AmazonS3 getClient() {
         return client;
     }
 
@@ -288,7 +321,7 @@ public class ObjectStore {
 
     private boolean checkExistence(BucketName bucket) {
         try {
-            return client.doesBucketExist(bucket.getName());
+            return client.doesBucketExistV2(bucket.getName());
         } catch (SdkClientException e) {
             Exceptions.handle()
                       .to(ObjectStores.LOG)
@@ -541,5 +574,84 @@ public class ObjectStore {
                                     objectId)
                             .handle();
         }
+    }
+
+    /**
+     * Synchronously uploads the given input stream as an object.
+     * <p>
+     * If the total content-length is known in advance use {@link #upload(BucketName, String, InputStream, long)} which
+     * migth use a more efficient API. If a file is to be uploaded use {@link #upload(BucketName, String, File)} which
+     * can upload chunks in parallel.
+     *
+     * @param bucket      the bucket to upload the file to
+     * @param objectId    the object id to use
+     * @param inputStream the data to upload
+     */
+    public void upload(BucketName bucket, String objectId, InputStream inputStream) {
+        InitiateMultipartUploadResult multipartUpload =
+                getClient().initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket.getName(), objectId));
+        try {
+            List<PartETag> etags = uploadInChunks(bucket, objectId, inputStream, multipartUpload.getUploadId());
+
+            getClient().completeMultipartUpload(new CompleteMultipartUploadRequest(bucket.getName(),
+                                                                                   objectId,
+                                                                                   multipartUpload.getUploadId(),
+                                                                                   etags));
+        } catch (Exception e) {
+            getClient().abortMultipartUpload(new AbortMultipartUploadRequest(bucket.getName(),
+                                                                             objectId,
+                                                                             multipartUpload.getUploadId()));
+            throw Exceptions.handle()
+                            .to(ObjectStores.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Failed to perform a multipart upload for %s (%s): %s (%s)",
+                                                    objectId,
+                                                    bucket.getName())
+                            .handle();
+        }
+    }
+
+    @Nonnull
+    protected List<PartETag> uploadInChunks(BucketName bucket,
+                                            String objectId,
+                                            InputStream inputStream,
+                                            String multipartUploadId) throws IOException {
+        List<PartETag> etags = new ArrayList<>();
+
+        ByteBuf localAggregationBuffer = Unpooled.buffer(INITIAL_LOCAL_AGGREGATION_BUFFER_SIZE);
+        try {
+            byte[] transferBuffer = new byte[LOCAL_TRANSFER_BUFFER_SIZE];
+            int bytesRead = inputStream.read(transferBuffer);
+            while (bytesRead > 0) {
+                localAggregationBuffer.writeBytes(transferBuffer, 0, bytesRead);
+                if (localAggregationBuffer.readableBytes() > MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE) {
+                    etags.add(uploadChunk(bucket, objectId, multipartUploadId, localAggregationBuffer));
+                    localAggregationBuffer.clear();
+                }
+                
+                bytesRead = inputStream.read(transferBuffer);
+            }
+
+            if (localAggregationBuffer.isReadable()) {
+                etags.add(uploadChunk(bucket, objectId, multipartUploadId, localAggregationBuffer));
+            }
+        } finally {
+            localAggregationBuffer.release();
+        }
+
+        return etags;
+    }
+
+    protected PartETag uploadChunk(BucketName bucket,
+                                   String objectId,
+                                   String multipartUploadId,
+                                   ByteBuf localAggregationBuffer) {
+        UploadPartRequest request = new UploadPartRequest().withBucketName(bucket.getName())
+                                                           .withKey(objectId)
+                                                           .withUploadId(multipartUploadId)
+                                                           .withPartSize(localAggregationBuffer.readableBytes())
+                                                           .withInputStream(new ByteBufInputStream(
+                                                                   localAggregationBuffer));
+        return getClient().uploadPart(request).getPartETag();
     }
 }

@@ -52,6 +52,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     protected List<QueryField> searchFields = Collections.emptyList();
     protected List<Tuple<Facet, BiConsumer<Facet, Q>>> facets = new ArrayList<>();
     protected int pageSize = DEFAULT_PAGE_SIZE;
+    protected boolean fetchTotalCount = false;
 
     protected BasePageHelper(Q query) {
         this.baseQuery = query;
@@ -79,6 +80,19 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     @SuppressWarnings("unchecked")
     public B withSearchFields(QueryField... searchFields) {
         this.searchFields = Arrays.asList(searchFields);
+        return (B) this;
+    }
+
+    /**
+     * Adds a flag, that the total count should also be fetched for the given query.
+     * <p>
+     * The count is available via {@link Page#getTotal()} after creating the {@link Page}.
+     *
+     * @return the helper itself for fluent method calls
+     */
+    @SuppressWarnings("unchecked")
+    public B withTotalCount() {
+        this.fetchTotalCount = true;
         return (B) this;
     }
 
@@ -344,6 +358,11 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
         if (items.size() > pageSize) {
             result.withHasMore(true);
             items.remove(items.size() - 1);
+            if (fetchTotalCount) {
+                result.withTotalItems((int) baseQuery.count());
+            }
+        } else {
+            result.withTotalItems(items.size());
         }
     }
 

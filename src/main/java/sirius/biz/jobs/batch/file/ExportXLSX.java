@@ -34,11 +34,11 @@ public class ExportXLSX implements LineBasedExport {
     }
 
     protected ExcelExport createExcelExport() {
-        return ExcelExport.asXSLX();
+        return ExcelExport.asStreamingXLSX();
     }
 
     @Override
-    public void addRow(List<Object> row) throws IOException {
+    public void addRow(List<?> row) throws IOException {
         export.addRowAsList(row);
     }
 

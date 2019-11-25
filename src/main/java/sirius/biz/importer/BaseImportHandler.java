@@ -19,6 +19,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.properties.BaseEntityRefProperty;
+import sirius.db.mixing.properties.StringListProperty;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.ComparableTuple;
 import sirius.kernel.commons.Context;
@@ -111,6 +112,11 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      */
     protected E load(Context data, E entity, Mapping... mappings) {
         Arrays.stream(mappings).forEach(mapping -> loadMapping(entity, mapping, data));
+
+        if (entity instanceof TenantAware) {
+            ((TenantAware) entity).setOrVerifyCurrentTenant();
+        }
+
         return entity;
     }
 
@@ -170,7 +176,10 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @return <tt>true</tt> if the load was handled, <tt>false</tt> if a regular load via
      * {@link Property#parseValueFromImport(Object, Value)} should be attempted.
      */
-    protected abstract boolean parseComplexProperty(E entity, Property property, Value value, Context data);
+    protected boolean parseComplexProperty(E entity, Property property, Value value, Context data) {
+        // No extra logic is performed by default.
+        return false;
+    }
 
     /**
      * Ensures that if the entity itself is tenant aware and the property being loaded also, that the tenants match.
@@ -238,6 +247,11 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     @Override
     public E findOrLoadAndCreate(Context data) {
         return tryFind(data).orElseGet(() -> createOrUpdateNow(load(data, newEntity())));
+    }
+
+    @Override
+    public E findInCacheOrLoadAndCreate(Context data) {
+        return tryFindInCache(data).orElseGet(() -> createOrUpdateNow(load(data, newEntity())));
     }
 
     /**
@@ -411,6 +425,9 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
             return null;
         }
 
+        // Entity references are quite common, therefore we provide a default behaviour here,
+        // but this shouldn't be done for every kind of property or use case as that's what
+        // EntityImportHandlerExtender(s) are for
         if (property instanceof BaseEntityRefProperty) {
             ImportHandler<?> referencedImportHandler =
                     context.findHandler(((BaseEntityRefProperty<?, ?, ?>) property).getReferencedType());
@@ -418,6 +435,12 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
                 Object referencedId = property.getValue(entity);
                 return referencedImportHandler.renderExportRepresentation(referencedId);
             };
+        }
+
+        // As stated above, string lists are quite common, therefore another default is provided here but great
+        // care should be taken, so this method doesn't evolve into a god method / god class...
+        if (property instanceof StringListProperty) {
+            return entity -> Strings.join((List<?>) property.getValue(entity), ",");
         }
 
         return property::getValue;

@@ -4,7 +4,7 @@
 <i:switch test="@point">
     <i:block name="settings">
         <w:menuSection framework="biz.storage">
-            <w:menuItem titleKey="StorageController.buckets" url="/storage"
+            <w:menuItem titleKey="VFSController.root" url="/fs"
                         permission="permission-manage-files"/>
         </w:menuSection>
 

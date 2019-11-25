@@ -16,11 +16,8 @@ import sirius.biz.process.output.LogsProcessOutputType;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableOutput;
 import sirius.biz.process.output.TableProcessOutputType;
-import sirius.biz.storage.util.WatchableOutputStream;
 import sirius.db.mixing.types.StringMap;
-import sirius.kernel.async.CompletionHandler;
 import sirius.kernel.async.Tasks;
-import sirius.kernel.commons.Files;
 import sirius.kernel.commons.RateLimit;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
@@ -31,10 +28,8 @@ import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
@@ -95,6 +90,11 @@ class ProcessEnvironment implements ProcessContext {
         if (isDebugging()) {
             addTiming(counter, millis);
         }
+    }
+
+    @Override
+    public void incCounter(String counter) {
+        addTiming(counter, -1L);
     }
 
     protected Map<String, Average> getTimings() {
@@ -253,6 +253,11 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
+    public void addReference(String reference) {
+        processes.addReference(processId, reference);
+    }
+
+    @Override
     public void addOutput(ProcessOutput output) {
         processes.addOutput(processId, output);
     }
@@ -291,29 +296,11 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public OutputStream addFile(String filename) throws IOException {
-        File tmpFile = File.createTempFile("process", null);
-        WatchableOutputStream watchableOutputStream = new WatchableOutputStream(new FileOutputStream(tmpFile));
-        watchableOutputStream.getCompletionFuture().onComplete(new CompletionHandler<Object>() {
-            @Override
-            public void onSuccess(@Nullable Object value) throws Exception {
-                try {
-                    addFile(filename, tmpFile);
-                    Files.delete(tmpFile);
-                } catch (Exception e) {
-                    handle(e);
-                }
-            }
+        return processes.addFile(processId, filename);
+    }
 
-            @Override
-            public void onFailure(@Nonnull Throwable throwable) throws Exception {
-                try {
-                    Files.delete(tmpFile);
-                } catch (Exception e) {
-                    handle(e);
-                }
-            }
-        });
-
-        return watchableOutputStream;
+    @Override
+    public TableOutput.ColumnBuilder addTable(String name, String label) {
+        return new TableOutput.ColumnBuilder(this, name, label);
     }
 }

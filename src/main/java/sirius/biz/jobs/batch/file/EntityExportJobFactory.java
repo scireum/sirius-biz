@@ -9,7 +9,6 @@
 package sirius.biz.jobs.batch.file;
 
 import sirius.biz.importer.Importer;
-import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.biz.jobs.params.Parameter;
@@ -19,7 +18,6 @@ import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
-import sirius.kernel.nls.NLS;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -27,6 +25,8 @@ import java.util.function.Consumer;
 /**
  * Provides a base implementation for batch jobs which export entities into line based files using a
  * {@link EntityExportJob}.
+ *
+ * @param <E> the type of entities being exported
  */
 public abstract class EntityExportJobFactory<E extends BaseEntity<?>> extends LineBasedExportJobFactory {
 
@@ -96,23 +96,14 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>> extends Li
      * @param dictionary the dictionary to enhance
      */
     @SuppressWarnings("squid:S1186")
-    @Explain("Do nothing by default since we only need this for imports which contain more than one Entity")
+    @Explain("Do nothing by default since we only need this for exports which contain more than one Entity")
     protected void enhanceDictionary(ImportDictionary dictionary) {
     }
 
     @Override
     protected void collectJobInfos(JobInfoCollector collector) {
         super.collectJobInfos(collector);
-        collector.addTranslatedHeading("ImportDictionary.fields");
-        collector.addReport((report, cells) -> {
-            report.addColumn("name", NLS.get("FieldDefinition.name"));
-            report.addColumn("type", NLS.get("FieldDefinition.type"));
-            report.addColumn("remarks", NLS.get("FieldDefinition.remarks"));
-
-            for (FieldDefinition field : getDictionary().getFields()) {
-                report.addCells(cells.of(field.getLabel()), cells.of(field.getType()), cells.list(field.getRemarks()));
-            }
-        });
         collector.addTranslatedWell("EntityExportJobFactory.templateModes");
+        getDictionary().emitJobInfos(collector);
     }
 }

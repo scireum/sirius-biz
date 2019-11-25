@@ -8,16 +8,14 @@
 
 package sirius.biz.storage.layer1.replication;
 
-import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
-import sirius.biz.storage.util.DerivedSpaceInfo;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.settings.Extension;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -45,70 +43,66 @@ public class ReplicationManager {
     @Part
     private ReplicationTaskStorage taskStorage;
 
-    private DerivedSpaceInfo<String> replicationSpaces = new DerivedSpaceInfo<>(CONFIG_KEY_LAYER1_REPLICATION_SPACE,
-                                                                                StorageUtils.ConfigScope.LAYER1,
-                                                                                this::resolveReplicationSpace);
+    /**
+     * Initializes the replication relations on the given set (map) of spaces.
+     *
+     * @param spaces the spaces to check and link properly
+     */
+    public void initializeReplication(Map<String, ObjectStorageSpace> spaces) {
+        Map<String, String> reverseLookup = new HashMap<>();
+        spaces.forEach((name, space) -> {
+            String replicationSpaceName = space.getSettings().getString(CONFIG_KEY_LAYER1_REPLICATION_SPACE);
+            if (Strings.isFilled(replicationSpaceName)) {
+                space.withReplicationSpace(resolveReplicationSpace(name, replicationSpaceName, spaces, reverseLookup));
+            }
+        });
+    }
 
-    private Map<String, String> reverseLookup = new HashMap<>();
+    private ObjectStorageSpace resolveReplicationSpace(String primarySpace,
+                                                       String replicationSpace,
+                                                       Map<String, ObjectStorageSpace> spaces,
+                                                       Map<String, String> reverseLookup) {
+        ObjectStorageSpace result = spaces.get(replicationSpace);
 
-    private String resolveReplicationSpace(Extension ext) {
-        String replicationSpace = ext.getString(CONFIG_KEY_LAYER1_REPLICATION_SPACE);
-        if (Strings.isEmpty(replicationSpace)) {
-            return "";
-        }
-
-        if (Strings.areEqual(ext.getId(), replicationSpace)) {
-            StorageUtils.LOG.WARN("Layer 1: A storage space cannot replicate onto itself ('%s')!", replicationSpace);
-
-            return "";
-        }
-
-        if (!objectStorage.isKnown(replicationSpace)) {
+        if (result == null) {
             StorageUtils.LOG.WARN("Layer 1: Cannot use unknown space '%s' as replication space for '%s'!",
                                   replicationSpace,
-                                  ext.getId());
-
-            return "";
+                                  primarySpace);
+            return null;
         }
-
         if (reverseLookup.containsKey(replicationSpace)) {
             StorageUtils.LOG.WARN(
                     "Layer 1: Cannot use space '%s' as replication space for '%s' as it is already the replication space for '%s'!",
                     replicationSpace,
-                    ext.getId(),
+                    primarySpace,
                     reverseLookup.get(replicationSpace));
-
-            return "";
+            return null;
+        }
+        if (hasCycle(primarySpace, result)) {
+            StorageUtils.LOG.WARN(
+                    "Layer 1: Cannot use space '%s' as replication space for '%s' as this would create a cycle!",
+                    replicationSpace,
+                    primarySpace,
+                    reverseLookup.get(replicationSpace));
+            return null;
         }
 
-        reverseLookup.put(replicationSpace, ext.getId());
+        reverseLookup.put(replicationSpace, primarySpace);
 
-        return replicationSpace;
+        return result;
     }
 
-    /**
-     * Determines if a replication space is available for the given one.
-     *
-     * @param primarySpace the space to check
-     * @return <tt>true</tt> if a replication space is available, <tt>false</tt> otherwise
-     */
-    public boolean hasReplicationSpace(String primarySpace) {
-        return Strings.isFilled(replicationSpaces.get(primarySpace));
-    }
+    private boolean hasCycle(String primarySpace, ObjectStorageSpace replicationSpace) {
+        ObjectStorageSpace spaceToCheck = replicationSpace;
+        while (spaceToCheck != null) {
+            if (Strings.areEqual(primarySpace, spaceToCheck.getName())) {
+                return true;
+            }
 
-    /**
-     * Returns the replication space of the given primary space.
-     *
-     * @param primarySpace the space to determine the replication space for
-     * @return the replication space wrapped as optional or an empty one if there is no replication configured
-     */
-    public Optional<ObjectStorageSpace> getReplicationSpace(String primarySpace) {
-        String replicationSpace = replicationSpaces.get(primarySpace);
-        if (Strings.isEmpty(replicationSpace)) {
-            return Optional.empty();
+            spaceToCheck = spaceToCheck.getReplicationSpace();
         }
 
-        return Optional.of(objectStorage.getSpace(replicationSpace));
+        return false;
     }
 
     /**
@@ -117,9 +111,9 @@ public class ReplicationManager {
      * @param primarySpace the space of the object being deleted
      * @param objectId     the id of the object being deleted
      */
-    public void notifyAboutDelete(String primarySpace, String objectId) {
-        if (taskStorage != null && hasReplicationSpace(primarySpace)) {
-            taskStorage.notifyAboutDelete(primarySpace, objectId);
+    public void notifyAboutDelete(ObjectStorageSpace primarySpace, String objectId) {
+        if (taskStorage != null && primarySpace.hasReplicationSpace()) {
+            taskStorage.notifyAboutDelete(primarySpace.getName(), objectId);
         }
     }
 
@@ -129,9 +123,9 @@ public class ReplicationManager {
      * @param primarySpace the space of the object being modified
      * @param objectId     the id of the object being modified
      */
-    public void notifyAboutUpdate(String primarySpace, String objectId) {
-        if (taskStorage != null && hasReplicationSpace(primarySpace)) {
-            taskStorage.notifyAboutUpdate(primarySpace, objectId);
+    public void notifyAboutUpdate(ObjectStorageSpace primarySpace, String objectId) {
+        if (taskStorage != null && primarySpace.hasReplicationSpace()) {
+            taskStorage.notifyAboutUpdate(primarySpace.getName(), objectId);
         }
     }
 
@@ -150,19 +144,17 @@ public class ReplicationManager {
             throw new IllegalStateException("Cannot execute replication tasks without a storage!");
         }
 
-        ObjectStorageSpace replicationSpace = getReplicationSpace(space).orElse(null);
-        if (replicationSpace == null) {
+        ObjectStorageSpace primarySpace = objectStorage.getSpace(space);
+        if (!primarySpace.hasReplicationSpace()) {
             return;
         }
 
         if (performDelete) {
-            replicationSpace.delete(objectId);
+            primarySpace.getReplicationSpace().delete(objectId);
         } else {
-            ObjectStorageSpace primarySpace = objectStorage.getSpace(space);
-            try (FileHandle handle = primarySpace.download(objectId).orElse(null)) {
-                if (handle != null) {
-                    replicationSpace.upload(objectId, handle.getFile());
-                }
+            try (InputStream in = primarySpace.getInputStream(objectId)
+                                              .orElseThrow(() -> new IllegalStateException("No InputStream is available"))) {
+                primarySpace.getReplicationSpace().upload(objectId, in, 0L);
             }
         }
     }

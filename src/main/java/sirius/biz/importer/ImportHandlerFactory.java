@@ -42,14 +42,15 @@ public interface ImportHandlerFactory extends Priorized {
     /**
      * Determines if this factory can create an appropriate {@link ImportHandler} for the given type.
      *
-     * @param type the type to check
+     * @param type    the type to check
+     * @param context the context of this import
      * @return <tt>true</tt> if {@link #create(Class, ImporterContext)} should be called for the given type
      * in order to create a new handler,<tt>false</tt> otherwise.
      */
-    boolean accepts(Class<?> type);
+    boolean accepts(Class<?> type, ImporterContext context);
 
     /**
-     * Creates a new import handler for the given type, importer and context.
+     * Creates a new import handler for the given type and context.
      *
      * @param type    the type of entities to import
      * @param context the context of this import

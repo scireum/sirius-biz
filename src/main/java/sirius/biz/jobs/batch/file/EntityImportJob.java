@@ -13,6 +13,7 @@ import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer3.FileParameter;
+import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
@@ -68,15 +69,35 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     }
 
     @Override
+    protected void backupInputFile(VirtualFile input) {
+        // No need to create a backup copy if we only run a check...
+        if (mode != ImportMode.CHECK_ONLY) {
+            super.backupInputFile(input);
+        }
+    }
+
+    @Override
     protected void handleRow(int index, Context context) {
         Watch watch = Watch.start();
         E entity = findAndLoad(context);
         try {
-            if (mode == ImportMode.NEW_ONLY && !entity.isNew() || (mode == ImportMode.UPDATE_ONLY && entity.isNew())) {
-                process.addTiming(NLS.get("EntityImportJob.rowIgnored"), watch.elapsedMillis());
+            if (shouldSkip(entity)) {
+                process.incCounter(NLS.get("EntityImportJob.rowIgnored"));
                 return;
             }
-            importer.createOrUpdateInBatch(fillAndVerify(entity));
+
+            fillAndVerify(entity);
+            if (mode == ImportMode.CHECK_ONLY) {
+                entity.getDescriptor().beforeSave(entity);
+            } else {
+                importer.createOrUpdateInBatch(entity);
+            }
+
+            if (entity.isNew()) {
+                process.addTiming(NLS.get("EntityImportJob.entityCreated"), watch.elapsedMillis());
+            } else {
+                process.addTiming(NLS.get("EntityImportJob.entityUpdated"), watch.elapsedMillis());
+            }
         } catch (HandledException e) {
             throw Exceptions.createHandled()
                             .withNLSKey("EntityImportJob.cannotHandleEntity")
@@ -84,6 +105,10 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
                             .set("message", e.getMessage())
                             .handle();
         }
+    }
+
+    private boolean shouldSkip(E entity) {
+        return mode == ImportMode.NEW_ONLY && !entity.isNew() || (mode == ImportMode.UPDATE_ONLY && entity.isNew());
     }
 
     /**

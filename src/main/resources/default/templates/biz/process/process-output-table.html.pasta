@@ -12,7 +12,19 @@
         <w:filterbox page="rows" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
     </i:block>
 
-    <w:tableSearchHeader page="rows" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)"/>
+    <w:tableSearchHeader page="rows" baseUrl="@apply('/ps/%s/output/%s', process.getId(), name)">
+        <i:if test="process.getState() == sirius.biz.process.ProcessState.TERMINATED">
+            <w:dropdown class="btn" titleKey="ProcessController.export">
+                <i:for type="sirius.biz.jobs.batch.file.ExportFileType"
+                       var="type"
+                       items="enumValues(sirius.biz.jobs.batch.file.ExportFileType.class)">
+                    <li class="dropdown-item">
+                        <a href="@apply('/ps/%s/output/%s/export/%s', process.getId(), name, type.name())">@type</a>
+                    </li>
+                </i:for>
+            </w:dropdown>
+        </i:if>
+    </w:tableSearchHeader>
 
     <w:table data="rows" class="table-bordered">
         <thead>

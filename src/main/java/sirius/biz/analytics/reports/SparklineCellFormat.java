@@ -38,6 +38,11 @@ public class SparklineCellFormat implements CellFormat {
         return sb.toString();
     }
 
+    @Override
+    public String rawValue(JSONObject data) {
+        return data.getString(KEY_VALUE);
+    }
+
     @Nonnull
     @Override
     public String getName() {

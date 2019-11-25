@@ -14,11 +14,8 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
 import sirius.kernel.commons.Context;
-import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 
-import java.util.Optional;
 import java.util.function.BiConsumer;
 
 /**
@@ -31,7 +28,7 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
     protected static final Mapping[] MAPPING_ARRAY = new Mapping[0];
 
     @Part
-    protected Mango mango;
+    protected static Mango mango;
 
     protected Mapping[] mappingsToLoad;
 

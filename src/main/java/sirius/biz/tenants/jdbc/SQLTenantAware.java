@@ -12,8 +12,9 @@ import sirius.biz.jdbc.BizEntity;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.SQLEntityRef;
-import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.di.std.Part;
+
+import java.util.Optional;
 
 /**
  * Base class which marks subclasses as aware of their tenant they belong to.
@@ -26,7 +27,7 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
     /**
      * Contains the tenant the entity belongs to.
      */
-    private final SQLEntityRef<SQLTenant> tenant = SQLEntityRef.on(SQLTenant.class, SQLEntityRef.OnDelete.REJECT);
+    private final SQLEntityRef<SQLTenant> tenant = SQLEntityRef.writeOnceOn(SQLTenant.class, SQLEntityRef.OnDelete.REJECT);
 
     @Override
     public SQLEntityRef<SQLTenant> getTenant() {
@@ -44,7 +45,26 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
     }
 
     @Override
+    public void setOrVerifyCurrentTenant() {
+        if (getTenant().isEmpty()) {
+            fillWithCurrentTenant();
+        } else {
+            tenants.assertTenant(this);
+        }
+    }
+
+    @Override
     public void withTenant(Tenant<?> tenant) {
         getTenant().setValue((SQLTenant) tenant);
+    }
+
+    @Override
+    public SQLTenant fetchCachedRequiredTenant() {
+        return tenants.fetchCachedRequiredTenant(tenant);
+    }
+
+    @Override
+    public Optional<SQLTenant> fetchCachedTenant() {
+        return tenants.fetchCachedTenant(tenant);
     }
 }

@@ -39,6 +39,7 @@ import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.OutputStream;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -51,6 +52,20 @@ import java.util.function.Supplier;
 
 /**
  * Provides the central facility to create and use {@link Process processes}.
+ * <p>
+ * There are essentially two types of processes. "Normal" ones which run for a certain amount of time and then complete.
+ * These can be created via {@link Processes#createProcess(String, String, String, UserInfo, PersistencePeriod, Map)}
+ * and then used to execute code within them via {@link Processes#execute(String, Consumer)} or
+ * {@link Processes#partiallyExecute(String, Consumer)}. Where the latter executes some code but doesn't complete
+ * the process so that other tasks or even other nodes can perform more action within it.
+ * <p>
+ * The other type of processes are "standby" processes which are created on demand and then "run" forever.
+ * These can be used for regular background activity (like a web service interface which needs to report
+ * an error every once in a while). From time to time the system will cleanup these processes and remove old logs
+ * so that the system doesn't overload itself. A standby process can be fetched via
+ * {@link Processes#executeInStandbyProcess(String, Supplier, String, Supplier, Consumer)}.
+ * <p>
+ * Every direct interaction with the {@link Process} should be performed via the provided {@link ProcessContext}.
  */
 @Register(classes = Processes.class, framework = Processes.FRAMEWORK_PROCESSES)
 public class Processes {
@@ -70,9 +85,6 @@ public class Processes {
 
     @Part
     private AutoBatchLoop autoBatch;
-
-    @Part
-    private ProcessFileStorage fileStorage;
 
     @Part
     private Locks locks;
@@ -153,6 +165,24 @@ public class Processes {
                                               PersistencePeriod persistencePeriod,
                                               Map<String, String> context) {
         return createProcess(type, title, icon, UserContext.getCurrentUser(), persistencePeriod, context);
+    }
+
+    /**
+     * Marks an existing and terminated process as active again.
+     * <p>
+     * This is used for downstream processing (e.g. writing outputs into a file) after a process has
+     * {@link ProcessState#TERMINATED}. Essentially, all this does is verifying the preconditions and setting the
+     * state back to {@link ProcessState#RUNNING}.
+     *
+     * @param processId the id of the process to restart
+     * @param reason    the reason to log
+     * @throws sirius.kernel.health.HandledException in case the process isn't currently terminated or doesn't exist at all
+     */
+    public void restartProcess(String processId, String reason) {
+        modify(processId,
+               process -> process.getState() == ProcessState.TERMINATED,
+               process -> process.setState(ProcessState.RUNNING));
+        log(processId, ProcessLog.info().withNLSKey("Processes.restarted").withContext("reason", reason));
     }
 
     /**
@@ -265,11 +295,14 @@ public class Processes {
             // Maybe another node recently created a matching standby process. Wait a reasonable amount of time so that the change
             // becomes visible in elasticsearch/caches. As standby processes are rarely created it is legitimate to hold the lock
             // while waiting.
-            Wait.millis(1200);
+            int attempts = 4;
+            while (attempts-- > 0) {
+                Process process = fetchStandbyProcess(type, tenantId);
+                if (process != null) {
+                    return process;
+                }
 
-            Process process = fetchStandbyProcess(type, tenantId);
-            if (process != null) {
-                return process;
+                Wait.millis(300);
             }
 
             return createStandbyProcessInLock(type, title, tenantId, tenantName);
@@ -351,12 +384,11 @@ public class Processes {
             process = elastic.find(Process.class, processId).orElse(null);
         }
 
-        if (process == null) {
-            return false;
-        }
-
         int retries = 5;
         while (retries-- > 0) {
+            if (process == null) {
+                return false;
+            }
             if (!checker.test(process)) {
                 return false;
             }
@@ -368,6 +400,7 @@ public class Processes {
                 return true;
             } catch (OptimisticLockException e) {
                 Wait.randomMillis(250, 500);
+                process = elastic.find(Process.class, processId).orElse(null);
             }
         }
 
@@ -496,6 +529,10 @@ public class Processes {
 
     /**
      * Adds the given link to the given process.
+     * <p>
+     * When running inside a process the preferred way to add a link is using
+     * {@link ProcessContext#addLink(ProcessLink)}. This method is only made public so that outside helper classes
+     * can contribute to the process.
      *
      * @param processId the process to update
      * @param link      the link to add
@@ -507,6 +544,10 @@ public class Processes {
 
     /**
      * Adds the given reference to the given process.
+     * <p>
+     * When running inside a process the preferred way to add a reference is using
+     * {@link ProcessContext#addReference(String)}. This method is only made public so that outside helper classes
+     * can contribute to the process.
      *
      * @param processId the process to update
      * @param reference the reference to attach
@@ -522,12 +563,15 @@ public class Processes {
 
     /**
      * Adds the given output to the given process.
+     * <p>
+     * When running inside a process the preferred way to add an output is using
+     * {@link ProcessContext#addOutput(ProcessOutput)}. This method is only made public so that outside helper classes
+     * can contribute to the process.
      *
      * @param processId the process to update
      * @param output    the output to add
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-
     public boolean addOutput(String processId, ProcessOutput output) {
         return modify(processId,
                       process -> process.getState() != ProcessState.TERMINATED,
@@ -536,35 +580,61 @@ public class Processes {
 
     /**
      * Adds a file to the given process.
+     * <p>
+     * When running inside a process the preferred way to add a file is using
+     * {@link ProcessContext#addFile(String, File)}. This method is only made public so that outside helper classes
+     * can contribute to the process.
      *
      * @param processId the process to update
      * @param filename  the filename to use
      * @param data      the data to persist
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-
     public boolean addFile(String processId, String filename, File data) {
         Process process = fetchProcess(processId).orElse(null);
         if (process == null) {
             return false;
         }
 
-        ProcessFile file = getStorage().upload(process, filename, data);
-        return modify(processId, proc -> true, proc -> proc.getFiles().add(file));
+        process.getFiles().findOrCreateAttachedBlobByName(filename).updateContent(filename, data);
+        return true;
     }
 
-    //TODO maybe use Storage
-    public ProcessFileStorage getStorage() {
-        return fileStorage;
+    /**
+     * Adds a file to the given process by providing an {@link OutputStream}.
+     * <p>
+     * When running inside a process the preferred way to add a file is using
+     * {@link ProcessContext#addFile(String)}. This method is only made public so that outside helper classes
+     * can contribute to the process.
+     *
+     * @param processId the process to update
+     * @param filename  the filename to use
+     * @return the output stream which can be used to provide content for the file to add
+     */
+    public OutputStream addFile(String processId, String filename) {
+        Process process = fetchProcess(processId).orElse(null);
+        if (process == null) {
+            throw new IllegalStateException(Strings.apply("The requested process (%s) isn't available.", processId));
+        }
+
+        return process.getFiles().findOrCreateAttachedBlobByName(filename).createOutputStream(filename);
     }
 
     /**
      * Stores the log entry for the given process.
      * <p>
+     * When running inside a process the preferred way of logging a message is using
+     * {@link ProcessContext#log(ProcessLog)}. This method is only made public so that outside helper classes
+     * can contribute to the process.
+     * <p>
      * Note that this will be done asynchronously to permit bulk inserts.
      *
      * @param processId the process to store the entry for
      * @param logEntry  the entry to persist
+     * @see ProcessContext#log(ProcessLog)
+     * @see ProcessContext#log(String)
+     * @see ProcessContext#logLimited(Object)
+     * @see ProcessContext#smartLogLimited(Supplier)
      */
     public void log(String processId, ProcessLog logEntry) {
         try {
@@ -577,7 +647,14 @@ public class Processes {
             logEntry.setSortKey(System.currentTimeMillis());
             logEntry.getProcess().setId(processId);
             logEntry.getDescriptor().beforeSave(logEntry);
-            autoBatch.insertAsync(logEntry);
+
+            // Use the auto batch to perform bulk inserts if possible
+            if (!autoBatch.insertAsync(logEntry)) {
+                // but fallback to regular inserts if the auto batch loop is overloaded due to peak
+                // conditions This should automatically slow down the caller and let the auto batch loop
+                // recover in parallel...
+                elastic.override(logEntry);
+            }
         } catch (Exception e) {
             Exceptions.handle()
                       .withSystemErrorMessage("Failed to record a ProcessLog: %s - %s (%s)", logEntry)
@@ -637,12 +714,15 @@ public class Processes {
      * @param processId the process to check
      */
     private void awaitProcess(String processId) {
-        if (!fetchProcess(processId).isPresent()) {
-            Wait.millis(1200);
-            if (!fetchProcess(processId).isPresent()) {
-                throw new IllegalStateException("Unknown process id: " + processId);
+        int attempts = 4;
+        while (attempts-- > 0) {
+            if (fetchProcess(processId).isPresent()) {
+                return;
             }
+            Wait.millis(300);
         }
+
+        throw new IllegalStateException("Unknown process id: " + processId);
     }
 
     /**
@@ -746,16 +826,14 @@ public class Processes {
         }
 
         UserInfo user = UserContext.getCurrentUser();
-        if (!user.hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES)) {
-            if (!Objects.equals(user.getTenantId(), process.get().getTenantId())) {
-                return Optional.empty();
-            }
+        if (!Objects.equals(user.getTenantId(), process.get().getTenantId())
+            && !user.hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES)) {
+            return Optional.empty();
         }
 
-        if (!Strings.areEqual(user.getUserId(), process.get().getUserId())) {
-            if (!user.hasPermission(ProcessController.PERMISSION_MANAGE_PROCESSES)) {
-                return Optional.empty();
-            }
+        if (!Strings.areEqual(user.getUserId(), process.get().getUserId())
+            && !user.hasPermission(ProcessController.PERMISSION_MANAGE_PROCESSES)) {
+            return Optional.empty();
         }
 
         if (!user.hasPermission(process.get().getRequiredPermission())) {

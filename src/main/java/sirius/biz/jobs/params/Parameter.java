@@ -32,8 +32,6 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
     protected String label;
     protected String description;
     protected boolean required;
-    protected int span = 6;
-    protected int smallSpan = 12;
     protected Visibility visibility = Visibility.NORMAL;
 
     /**
@@ -71,21 +69,6 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      */
     public P withDescription(String description) {
         this.description = description;
-        return self();
-    }
-
-    /**
-     * Specifies the layout span (1..12) to use.
-     *
-     * @param span      the width of the parameter on desktop screens. Note that most probably 6 (half a screen) or
-     *                  12 (full width) are reasonable.
-     * @param smallSpan the width of the parameter on phone screens
-     * @return the parameter itself for fluent method calls
-     */
-    public P withSpan(int span, int smallSpan) {
-        this.span = span;
-        this.smallSpan = smallSpan;
-
         return self();
     }
 
@@ -235,24 +218,6 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      */
     public String getDescription() {
         return NLS.smartGet(description);
-    }
-
-    /**
-     * Returns the span used when rendering this parameter on desktop screens.
-     *
-     * @return the span of this parameter on desktop screens
-     */
-    public int getSpan() {
-        return span;
-    }
-
-    /**
-     * Returns the span used when rendering this parameter on mobile screens.
-     *
-     * @return the span of this parameter on mobile screens
-     */
-    public int getSmallSpan() {
-        return smallSpan;
     }
 
     /**

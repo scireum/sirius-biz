@@ -30,9 +30,10 @@ public class ExportCSV implements LineBasedExport {
         this.writer = new CSVWriter(writer);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public void addRow(List<Object> row) throws IOException {
-        writer.writeList(row);
+    public void addRow(List<?> row) throws IOException {
+        writer.writeList((List<Object>)row);
     }
 
     @Override

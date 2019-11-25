@@ -20,6 +20,7 @@ import sirius.kernel.health.Exceptions;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +37,16 @@ public class ImporterContext {
     private static List<ImportHandlerFactory> factories;
 
     private Map<Class<?>, ImportHandler<?>> handlers = new HashMap<>();
+    private Map<Class<?>, ImportHelper> helpers = new HashMap<>();
+
     private Cache<Tuple<Class<?>, String>, Object> localCache = CacheBuilder.newBuilder().maximumSize(256).build();
+
+    private List<Runnable> postCommitCallbacks = new ArrayList<>();
+
+    /**
+     * Specifies the maximum number of post commit callbacks to keep around before a {@link #commit()} is forced.
+     */
+    private static final int MAX_POST_COMMIT_CALLBACKS = 256;
 
     /**
      * Creates a new context for the given importer.
@@ -51,9 +61,10 @@ public class ImporterContext {
      * Resolves which {@link ImportHandler} to use for a given type.
      * <p>
      * Basically we iterate over all known {@link ImportHandlerFactory factories} (sorted by their priority ascending)
-     * and use the first which returns <tt>true</tt> when invoking {@link ImportHandlerFactory#accepts(Class)} with the
-     * given <tt>type</tt>. This factory is used to create a new handler which is then kept in a local lookup table
-     * so that it is re-used for all subsequent calls for this context and the given <tt>type</tt>.
+     * and use the first which returns <tt>true</tt> when invoking
+     * {@link ImportHandlerFactory#accepts(Class, ImporterContext)}  with the given <tt>type</tt>. This factory is used
+     * to create a new handler which is then kept in a local lookup table so that it is re-used for all subsequent
+     * calls for this context and the given <tt>type</tt>.
      * <p>
      * If no factory matches, we repeat the search using the superclass.
      *
@@ -67,10 +78,9 @@ public class ImporterContext {
         return (ImportHandler<E>) handlers.computeIfAbsent(type, aType -> lookupHandler(aType, aType));
     }
 
-    @SuppressWarnings("unchecked")
     private ImportHandler<?> lookupHandler(Class<?> type, Class<?> baseType) {
         for (ImportHandlerFactory factory : factories) {
-            if (factory.accepts(type)) {
+            if (factory.accepts(type, this)) {
                 return factory.create(type, this);
             }
         }
@@ -78,8 +88,34 @@ public class ImporterContext {
         if (type.getSuperclass() != null && !type.getSuperclass().equals(type)) {
             return lookupHandler(type.getSuperclass(), baseType);
         } else {
-            throw Exceptions.createHandled()
+            throw Exceptions.handle()
                             .withSystemErrorMessage("Cannot find an import handler for type: %s", baseType)
+                            .handle();
+        }
+    }
+
+    /**
+     * Fetches or creates the {@link ImportHelper} of the given type.
+     * <p>
+     * These helpers are instantiated and kept around for each {@link Importer} and {@link ImporterContext} and can
+     * therefore provide helper methods and carry along some state.
+     *
+     * @param type the type of helper to find
+     * @param <H>  the generic helper type to find
+     * @return the helper of the requested type
+     * @throws sirius.kernel.health.HandledException if no appropriate helper is available
+     */
+    @SuppressWarnings("unchecked")
+    public <H extends ImportHelper> H findHelper(Class<H> type) {
+        return (H) helpers.computeIfAbsent(type, this::instantiateHelper);
+    }
+
+    private ImportHelper instantiateHelper(Class<?> aClass) {
+        try {
+            return (ImportHelper) aClass.getConstructor(ImporterContext.class).newInstance(this);
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .withSystemErrorMessage("Cannot find or create the import helper of type: %s", aClass)
                             .handle();
         }
     }
@@ -109,8 +145,56 @@ public class ImporterContext {
      *                     {@link java.io.Closeable} to be supported by the IDEs sanity checks.
      */
     protected void close() throws IOException {
+        try {
+            commit();
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .to(Importer.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("An error occurred while commiting an ImporterContext: %s (%s)")
+                      .handle();
+        }
+
         if (batchContext != null) {
             batchContext.close();
+        }
+    }
+
+    /**
+     * Adds a callback which is kept around until {@link #commit()} is called.
+     * <p>
+     * This will either happen when <b>commit</b> is called manually or when {@link #close()} is called.
+     * <p>
+     * Also, if there are more than {@link #MAX_POST_COMMIT_CALLBACKS} pending, this will invoke
+     * {@link #commit()} directly.
+     *
+     * @param task the task to execute once all batched tasks have been executed.
+     */
+    public void addPostCommitCallback(Runnable task) {
+        postCommitCallbacks.add(task);
+        if (postCommitCallbacks.size() > MAX_POST_COMMIT_CALLBACKS) {
+            commit();
+        }
+    }
+
+    /**
+     * Commits all open batch tasks of all {@link ImportHelper helpers} and {@link ImportHandler handlers}.
+     * <p>
+     * In most cases there is no need to call this method manually as all systems try to flush / commit data
+     * when necessary or when the context is closed.
+     */
+    public void commit() {
+        if (postCommitCallbacks.isEmpty()) {
+            handlers.values().forEach(ImportHandler::commit);
+            helpers.values().forEach(ImportHelper::commit);
+        } else {
+            while (!postCommitCallbacks.isEmpty()) {
+                handlers.values().forEach(ImportHandler::commit);
+                helpers.values().forEach(ImportHelper::commit);
+                List<Runnable> executableCallbacks = new ArrayList<>(postCommitCallbacks);
+                postCommitCallbacks.clear();
+                executableCallbacks.forEach(Runnable::run);
+            }
         }
     }
 

@@ -193,21 +193,25 @@ public class L3Uplink implements VFSRoot {
 
         @Override
         public void enumerate(VirtualFile parent, FileSearch search) {
-            //TODO search + limit
             Optional<Directory> parentDirectory = parent.tryAs(Directory.class);
             if (parentDirectory.isPresent()) {
                 parentDirectory.get()
-                               .listChildDirectories(null,
-                                                     null,
+                               .listChildDirectories(search.getPrefixFilter().orElse(null),
+                                                     search.getMaxRemainingItems().orElse(0),
                                                      directory -> search.processResult(wrapDirectory(parent,
                                                                                                      directory)));
-                parentDirectory.get()
-                               .listChildBlobs(null, null, null, blob -> search.processResult(wrapBlob(parent, blob)));
+                if (!search.isOnlyDirectories()) {
+                    parentDirectory.get()
+                                   .listChildBlobs(search.getPrefixFilter().orElse(null),
+                                                   search.getFileExtensionFilters(),
+                                                   search.getMaxRemainingItems().orElse(0),
+                                                   blob -> search.processResult(wrapBlob(parent, blob)));
+                }
             }
         }
     }
 
-    private VirtualFile wrapDirectory(VirtualFile parent, Directory directory) {
+    private MutableVirtualFile wrapDirectory(VirtualFile parent, Directory directory) {
         MutableVirtualFile file = new MutableVirtualFile(parent, directory.getName());
         file.attach(Directory.class, directory);
         attachHandlers(file);
@@ -217,15 +221,15 @@ public class L3Uplink implements VFSRoot {
 
     /**
      * Maps the requested child names (which will be top-level directories) to
-     * {@link BlobStorage#CONFIG_KEY_LAYER2_BROWSABLE browsable} storage spaces.
+     * {@link BasicBlobStorageSpace#isBrowsable() browsable} storage spaces.
      *
      * @param parent the directory to resolve the child in
      * @param name   the name of the child to resolve
-     * @return a virtaul file representing the storage space with the given name or an empty optional if none was found
+     * @return a virtual file representing the storage space with the given name or an empty optional if none was found
      */
     @Override
     public Optional<VirtualFile> findChild(VirtualFile parent, String name) {
-        if (!storage.isKnown(name)) {
+        if (storage == null || !storage.isKnown(name)) {
             return Optional.empty();
         }
 
@@ -238,18 +242,23 @@ public class L3Uplink implements VFSRoot {
     }
 
     /**
-     * Lists all {@link BlobStorage#CONFIG_KEY_LAYER2_BROWSABLE browsable} storage spaces.
+     * Lists all {@link BasicBlobStorageSpace#isBrowsable() browsable} storage spaces.
      *
      * @param parent the directory to enumerate
      * @param search the search criteria and result collector to use
      */
     @Override
     public void enumerate(VirtualFile parent, FileSearch search) {
-        storage.getSpaces()
-               .filter(BlobStorageSpace::isBrowsable)
-               .map(space -> space.getRoot(tenants.getRequiredTenant().getIdAsString()))
-               .map(directory -> wrapDirectory(parent, directory))
-               .forEach(search::processResult);
+        if (storage == null) {
+            return;
+        }
+
+        storage.getSpaces().filter(BlobStorageSpace::isBrowsable).map(space -> {
+            Directory directory = space.getRoot(tenants.getRequiredTenant().getIdAsString());
+            MutableVirtualFile wrappedDirectory = wrapDirectory(parent, directory);
+            wrappedDirectory.withDescription(space.getDescription());
+            return wrappedDirectory;
+        }).forEach(search::processResult);
     }
 
     @Override

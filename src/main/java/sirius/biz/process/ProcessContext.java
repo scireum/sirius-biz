@@ -33,8 +33,8 @@ import java.util.function.Supplier;
  * Declares the client API of a process.
  * <p>
  * {@link Processes} will instantiate and provide an instace of this to caller while executing a process. Also it will
- * install this using {@link sirius.kernel.async.TaskContext#setAdapter(TaskContextAdapter)} so that framework
- * methods will also use the processes framework.
+ * install this using {@link sirius.kernel.async.TaskContext#setAdapter(TaskContextAdapter)} so that calls to
+ * {@link sirius.kernel.async.TaskContext} will be delegated to the processes framework.
  */
 public interface ProcessContext extends TaskContextAdapter {
 
@@ -72,6 +72,13 @@ public interface ProcessContext extends TaskContextAdapter {
      * @see Processes#changeDebugging(String, boolean)
      */
     void addDebugTiming(String counter, long millis);
+
+    /**
+     * Increments the given performance counter by one.
+     *
+     * @param counter the counter to increment
+     */
+    void incCounter(String counter);
 
     /**
      * Handles the given exception.
@@ -185,6 +192,13 @@ public interface ProcessContext extends TaskContextAdapter {
     void addLink(ProcessLink link);
 
     /**
+     * Adds the given reference to the the process.
+     *
+     * @param reference the reference to attach
+     */
+    void addReference(String reference);
+
+    /**
      * Adds an output to the process.
      *
      * @param output the output to add
@@ -209,6 +223,15 @@ public interface ProcessContext extends TaskContextAdapter {
      * @return a helper class used to provide rows for the created output
      */
     TableOutput addTable(String name, String label, List<Tuple<String, String>> columns);
+
+    /**
+     * Adds a table output to the process.
+     *
+     * @param name  the name of the output
+     * @param label the label of the output which will be {@link sirius.kernel.nls.NLS#smartGet(String) auto translated}
+     * @return a builder {@link sirius.biz.process.output.TableOutput.ColumnBuilder} to add columns to the table
+     */
+    TableOutput.ColumnBuilder addTable(String name, String label);
 
     /**
      * Adds an additional log output to the process.

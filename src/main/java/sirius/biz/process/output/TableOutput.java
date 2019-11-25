@@ -15,6 +15,7 @@ import sirius.biz.process.logs.ProcessLogType;
 import sirius.kernel.commons.Tuple;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -112,5 +113,92 @@ public class TableOutput {
      */
     public TableOutput addCells(List<Cell> cellList) {
         return addCellsWithType(cellList, null);
+    }
+
+    /**
+     * Builder pattern to add {@link Cell} to {@link TableOutput}
+     */
+    public class RowBuilder {
+        private List<Cell> cells;
+
+        private RowBuilder() {
+            cells = new ArrayList<>();
+        }
+
+        /**
+         * Adds a {@link Cell} to a row.
+         *
+         * @param cell the {@link Cell} to add
+         * @return the row builder itself for fluent method calls
+         */
+        public RowBuilder withCell(Cell cell) {
+            this.cells.add(cell);
+            return this;
+        }
+
+        /**
+         * Builds the new row as a collection of cells.
+         *
+         * @return the table output itself for fluent method calls
+         */
+        public TableOutput build() {
+            return addCellsWithType(Collections.unmodifiableList(cells), null);
+        }
+    }
+
+    /**
+     * Initiates a {@link RowBuilder} to receive cells.
+     * <p>
+     * Note that this may only be invoked if <tt>columns</tt> was properly populated when calling the constructor.
+     *
+     * @return the table output itself for fluent method calls
+     */
+    public RowBuilder addRow() {
+        return new RowBuilder();
+    }
+
+    /**
+     * Builder pattern to add columns to a {@link TableOutput}
+     */
+    public static class ColumnBuilder {
+        private String name;
+        private String label;
+        private ProcessContext process;
+        private List<Tuple<String, String>> columns;
+
+        /**
+         * Creates a new ColumnBuilder to store the artefacts necessary to generate a new {@link TableOutput}
+         *
+         * @param process the process context where the table will be created
+         * @param name  the name of the table
+         * @param label the label of the table
+         */
+        public ColumnBuilder(ProcessContext process, String name, String label) {
+            this.name = name;
+            this.label = label;
+            this.process = process;
+            this.columns = new ArrayList<>();
+        }
+
+        /**
+         * Adds a column to the table.
+         *
+         * @param name  the name of the column
+         * @param label the label of the column to be displayed
+         * @return the builder itself for fluent method calls
+         */
+        public ColumnBuilder withColumn(String name, String label) {
+            columns.add(Tuple.create(name, label));
+            return this;
+        }
+
+        /**
+         * Builds the final TableOutput.
+         *
+         * @return the {@link TableOutput} with all columns
+         */
+        public TableOutput build() {
+            return process.addTable(name, label, Collections.unmodifiableList(columns));
+        }
     }
 }

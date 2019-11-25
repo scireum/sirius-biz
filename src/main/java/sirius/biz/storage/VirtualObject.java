@@ -124,7 +124,7 @@ public class VirtualObject extends SQLTenantAware implements StoredObject {
     @Part
     private static KeyGenerator keyGen;
 
-    @BeforeSave
+    @BeforeSave(priority = 110)
     protected void ensureUniquenessOfPath() {
         if (Strings.isEmpty(reference) && !temporary) {
             assertUnique(PATH, getPath(), TENANT, BUCKET);

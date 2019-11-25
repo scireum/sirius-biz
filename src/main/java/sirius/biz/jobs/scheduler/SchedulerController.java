@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.scheduler;
 
+import sirius.biz.jobs.JobConfigData;
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.Jobs;
 import sirius.biz.web.BasePageHelper;
@@ -169,7 +170,9 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
                 .filter(JobFactory::canStartInBackground)
                 .forEach(factory -> result.accept(new AutocompleteHelper.Completion(factory.getName(),
                                                                                     factory.getLabel(),
-                                                                                    factory.getDescription())));
+                                                                                    factory.getLabel()
+                                                                                    + ": "
+                                                                                    + factory.getDescription())));
         });
     }
 }

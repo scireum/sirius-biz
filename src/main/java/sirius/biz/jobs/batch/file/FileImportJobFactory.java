@@ -29,7 +29,7 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
 
     @Override
     protected String createProcessTitle(Map<String, String> context) {
-        return getLabel() + ": " + fileParameter.get(context).map(VirtualFile::toString).orElse("-");
+        return getLabel() + ": " + fileParameter.get(context).map(VirtualFile::name).orElse("-");
     }
 
     @Override

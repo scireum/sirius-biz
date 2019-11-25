@@ -8,7 +8,8 @@
 
 package sirius.biz.process;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
+import com.alibaba.fastjson.JSONObject;
+import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.logs.ProcessLogHandler;
 import sirius.biz.process.logs.ProcessLogState;
@@ -66,6 +67,9 @@ public class ProcessController extends BizController {
 
     @Part
     private DelayLine delayLine;
+
+    @Part
+    private DistributedTasks distributedTasks;
 
     /**
      * Lists all processes visible to the current user.
@@ -171,6 +175,20 @@ public class ProcessController extends BizController {
         ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
         ctx.respondWith().template("/templates/biz/process/process-logs.html.pasta", process, ph.asPage());
+    }
+
+    /**
+     * Trigger the creation of an export file containing the log messages of the given process.
+     *
+     * @param ctx       the current request
+     * @param processId the process to export the output for
+     * @param type      the desired export file format
+     * @see ProcessController#exportOutput(WebContext, String, String, String)
+     */
+    @Routed("/ps/:1/logs/export/:2")
+    @LoginRequired
+    public void exportLogs(WebContext ctx, String processId, String type) {
+        exportOutput(ctx, processId, null, type);
     }
 
     /**
@@ -316,25 +334,38 @@ public class ProcessController extends BizController {
     }
 
     /**
-     * Serves a file attached to a process
+     * Trigger the creation of an export file for the selected output.
+     * <p>
+     * To compute the export, the referenced process is {@link Processes#restartProcess(String, String) restarted}
+     * and an appropriate distributed task is submitted which will then perform the export.
      *
      * @param ctx       the current request
-     * @param processId the process to which the file belongs
-     * @param fileId    the id of the process file to serve
+     * @param processId the process to export the output for
+     * @param name      the name of the output to export
+     * @param type      the desired export file format
+     * @see ExportLogsAsFileTaskExecutor
      */
-    @Routed("/ps/:1/file/:2")
+    @Routed("/ps/:1/output/:2/export/:3")
     @LoginRequired
-    public void downloadProcessFile(WebContext ctx, String processId, String fileId) {
+    public void exportOutput(WebContext ctx, String processId, String name, String type) {
+        // We need to perform this lookup to ensure that we may access the process...
         Process process = findAccessibleProcess(processId);
 
-        for (ProcessFile file : process.getFiles()) {
-            if (Strings.areEqual(file.getFileId(), fileId)) {
-                processes.getStorage().serve(ctx, process, file);
-                return;
-            }
-        }
+        processes.restartProcess(process.getId(),
+                                 Strings.isEmpty(name) ?
+                                 NLS.get("ProcessController.exportLogsReason") :
+                                 NLS.fmtr("ProcessController.exportOutputReason").set("output", name).format());
 
-        ctx.respondWith().error(HttpResponseStatus.NOT_FOUND);
+        JSONObject exportSpec = new JSONObject();
+        exportSpec.put(ExportLogsAsFileTaskExecutor.CONTEXT_PROCESS, process.getId());
+        exportSpec.put(ExportLogsAsFileTaskExecutor.CONTEXT_OUTPUT, name);
+        exportSpec.put(ExportLogsAsFileTaskExecutor.CONTEXT_FORMAT, type);
+        distributedTasks.submitPrioritizedTask(ExportLogsAsFileTaskExecutor.class,
+                                               UserContext.getCurrentUser().getTenantId(),
+                                               exportSpec);
+
+        UserContext.message(Message.info(NLS.get("ProcessController.exportStarted")));
+        ctx.respondWith().redirectToGet("/ps/" + process.getId());
     }
 
     /**

@@ -40,7 +40,7 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
     public static class SQLUserAccountImportHandlerFactory implements ImportHandlerFactory {
 
         @Override
-        public boolean accepts(Class<?> type) {
+        public boolean accepts(Class<?> type, ImporterContext context) {
             return type == SQLUserAccount.class;
         }
 
@@ -68,11 +68,6 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
                                           .findQuery(SQLUserAccount.class,
                                                      SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                      .inner(LoginData.USERNAME)));
-    }
-
-    @Override
-    protected boolean parseComplexProperty(SQLUserAccount entity, Property property, Value value, Context data) {
-        return false;
     }
 
     @Override

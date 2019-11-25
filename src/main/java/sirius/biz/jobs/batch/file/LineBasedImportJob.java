@@ -10,6 +10,8 @@ package sirius.biz.jobs.batch.file;
 
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer3.FileParameter;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.web.data.LineBasedProcessor;
 import sirius.web.data.RowProcessor;
 
@@ -40,6 +42,10 @@ public abstract class LineBasedImportJob extends FileImportJob implements RowPro
 
     @Override
     protected boolean canHandleFileExtension(String fileExtension) {
-        return "xls".equals(fileExtension) || "xlsx".equals(fileExtension) || "csv".equals(fileExtension);
+        if (Strings.isEmpty(fileExtension)) {
+            return false;
+        }
+
+        return Value.of(fileExtension).in("xls", "xlsx", "csv");
     }
 }

@@ -99,26 +99,26 @@ public class StorageUtils {
     }
 
     /**
-     * Computes an authentication hash for the given physical storage key and the offset in days (from the current).
+     * Computes an authentication hash for the given storage key and the offset in days (from the current).
      *
-     * @param physicalKey the key to authenticate
-     * @param offsetDays  the offset from the current day
+     * @param key        the key to authenticate
+     * @param offsetDays the offset from the current day
      * @return a hash valid for the given day and key
      */
-    private String computeHash(String physicalKey, int offsetDays) {
+    public String computeHash(String key, int offsetDays) {
         return Hashing.md5()
-                      .hashString(physicalKey + getTimestampOfDay(offsetDays) + getSharedSecret(), Charsets.UTF_8)
+                      .hashString(key + getTimestampOfDay(offsetDays) + getSharedSecret(), Charsets.UTF_8)
                       .toString();
     }
 
     /**
      * Computes an authentication hash which is eternally valid.
      *
-     * @param physicalKey the key to authenticate
+     * @param key the key to authenticate
      * @return a hash valid forever
      */
-    private String computeEternallyValidHash(String physicalKey) {
-        return Hashing.md5().hashString(physicalKey + getSharedSecret(), Charsets.UTF_8).toString();
+    public String computeEternallyValidHash(String key) {
+        return Hashing.md5().hashString(key + getSharedSecret(), Charsets.UTF_8).toString();
     }
 
     /**
@@ -188,7 +188,7 @@ public class StorageUtils {
         File bufferFile = File.createTempFile("local-file-buffer", null);
         WatchableOutputStream out = new WatchableOutputStream(new FileOutputStream(bufferFile));
         out.getCompletionFuture().onFailure(error -> {
-            bufferFile.delete();
+            Files.delete(bufferFile);
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .error(error)

@@ -210,7 +210,7 @@ public class TenantData extends Composite implements Journaled {
     @Autoloaded
     @AutoImport
     @NullAllowed
-    @Length(512)
+    @Lob
     private String rolesToKeep;
 
     /**

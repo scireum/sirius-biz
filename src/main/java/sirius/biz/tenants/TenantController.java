@@ -14,6 +14,7 @@ import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
 import sirius.biz.web.SaveHelper;
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.ConfigValue;
@@ -266,8 +267,10 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      * @param tenantId the id of the tenant to delete
      * @return the uri to the job config page
      */
+    @SuppressWarnings("squid:S1192")
+    @Explain("This string has a completely different semantic than the constant defined above")
     public String getDeleteLink(String tenantId) {
-        return new LinkBuilder("/job/delete-tenant").append("simulate", true).append("tenant", tenantId).toString();
+        return new LinkBuilder("/job/delete-tenant").append("tenant", tenantId).toString();
     }
 
     /**
@@ -354,7 +357,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
                     .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                     .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
                     .forTenant(account.getTenant().getIdAsString(),
-                               account.getTenant().getValue().getTenantData().getName())
+                               account.getTenant().fetchValue().getTenantData().getName())
                     .log();
 
             ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,

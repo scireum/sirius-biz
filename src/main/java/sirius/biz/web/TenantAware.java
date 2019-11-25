@@ -15,6 +15,7 @@ import sirius.kernel.commons.Explain;
 import sirius.kernel.health.Exceptions;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -65,9 +66,31 @@ public interface TenantAware {
     void fillWithCurrentTenant();
 
     /**
+     * Installs the currently present tenant (in the {@link sirius.web.security.UserContext}) into this entity.
+     * <p>
+     * However, if there is already a tenant present in the entity, it is asserted, that the tenant remains
+     * the same.
+     */
+    void setOrVerifyCurrentTenant();
+
+    /**
      * Fills the tenant with the given one.
      *
-     * @param tenant the tnenat to set for this entity
+     * @param tenant the tenant to set for this entity
      */
     void withTenant(Tenant<?> tenant);
+
+    /**
+     * Fetches the tenant from cache or throws an exception if no tenant is present.
+     *
+     * @return the tenant which this object belongs to
+     */
+    Tenant<?> fetchCachedRequiredTenant();
+
+    /**
+     * Fetches the tenant from cache wrapped in a Optional.
+     *
+     * @return the optional tenant which this object belongs to
+     */
+    Optional<? extends Tenant> fetchCachedTenant();
 }
