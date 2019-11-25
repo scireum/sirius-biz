@@ -21,9 +21,10 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Provides a simple implementation of the seekable channel.
  * <p>
- * This implementation doesn't actually support seeking, as this is not supported by the
- * {@link sirius.biz.storage.layer3.VirtualFileSystem}. Nevertheless, as long as all reads are sequential and don't
- * skip any data, we fullfill all calls.
+ * This implementation doesn't actually support much seeking, as this is not supported by the
+ * {@link sirius.biz.storage.layer3.VirtualFileSystem}. Nevertheless, as long as all writes are sequential and don't
+ * skip any data, we fullfill all calls. Also we can skip some bytes when reading as long as it is in the forward
+ * direction.
  */
 class BridgeSeekableByteChannel implements SeekableByteChannel {
 
@@ -70,8 +71,21 @@ class BridgeSeekableByteChannel implements SeekableByteChannel {
 
     @Override
     public SeekableByteChannel position(long newPosition) throws IOException {
-        if (newPosition < position.get() || out != null) {
-            throw new UnsupportedOperationException();
+        long currentPosition = position.get();
+        if (newPosition == currentPosition) {
+            return this;
+        }
+
+        if (newPosition < currentPosition || out == null) {
+            throw new IOException("Cannot skip to " + newPosition);
+        }
+
+        if (in != null) {
+            currentPosition += in.skip(newPosition - currentPosition);
+            if (currentPosition != newPosition) {
+                throw new IOException("Cannot skip forward to " + newPosition);
+            }
+            position.set(currentPosition);
         }
 
         return this;
@@ -84,7 +98,7 @@ class BridgeSeekableByteChannel implements SeekableByteChannel {
 
     @Override
     public SeekableByteChannel truncate(long size) throws IOException {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("truncate");
     }
 
     @Override
