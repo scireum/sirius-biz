@@ -54,7 +54,7 @@ public abstract class UplinkConnectorConfig<C> {
         this.maxIdle = config.get("maxIdle").asInt(DEFAULT_MAX_IDLE);
         this.maxActive = config.get("maxActive").asInt(DEFAULT_MAX_ACTIVE);
         this.connectTimeoutMillis = config.get("connectTimeoutMillis").asInt(DEFAULT_CONNECT_TIMEOUT_MILLIS);
-        this.readTimeoutMillis = config.get("connectTimeoutMillis").asInt(DEFAULT_READ_TIMEOUT_MILLIS);
+        this.readTimeoutMillis = config.get("readTimeoutMillis").asInt(DEFAULT_READ_TIMEOUT_MILLIS);
         this.idleTimeoutMillis = config.get("idleTimeoutMillis").asInt(DEFAULT_IDLE_TIMEOUT_MILLIS);
         this.maxWaitMillis = config.get("maxWaitMillis").asInt(DEFAULT_MAX_WAIT_MILLIS);
     }
