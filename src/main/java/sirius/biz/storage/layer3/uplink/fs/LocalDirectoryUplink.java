@@ -33,7 +33,7 @@ import java.util.Optional;
 /**
  * Provides an uplink which maps into a given directory in the file system.
  */
-public class LocalDirectoryRoot extends ConfigBasedUplink {
+public class LocalDirectoryUplink extends ConfigBasedUplink {
 
     /**
      * Creates a new uplink for config sections which use "fs" as type.
@@ -43,7 +43,7 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
 
         @Override
         public ConfigBasedUplink make(Extension config) {
-            return new LocalDirectoryRoot(config, new File(config.get("basePath").asString()));
+            return new LocalDirectoryUplink(config, new File(config.get("basePath").asString()));
         }
 
         @Nonnull
@@ -58,7 +58,7 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
 
     private File root;
 
-    protected LocalDirectoryRoot(Extension extension, File root) {
+    protected LocalDirectoryUplink(Extension extension, File root) {
         super(extension);
         this.root = root;
         if (!root.exists() || !root.isDirectory()) {
@@ -88,31 +88,27 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
     }
 
     private MutableVirtualFile wrapFile(VirtualFile parent, File fileToWrap) {
-        MutableVirtualFile result =
-                new MutableVirtualFile(parent, fileToWrap.getName()).withExistsFlagSupplier(this::existsFlagSupplier)
-                                                                    .withDirectoryFlagSupplier(this::isDirectoryFlagSupplier)
-                                                                    .withSizeSupplier(this::sizeSupplier)
-                                                                    .withLastModifiedSupplier(this::lastModifiedSupplier)
-                                                                    .withCanDeleteHandler(this::canDeleteHandler)
-                                                                    .withDeleteHandler(this::deleteHandler)
-                                                                    .withCanCreateChildren(this::canCreateChildrenHandler)
-                                                                    .withCanCreateDirectoryHandler(this::canCreateDirectoryHandler)
-                                                                    .withCreateDirectoryHandler(this::createDirectoryHandler)
-                                                                    .withCanProvideInputStream(this::canProvideInputStreamHandler)
-                                                                    .withInputStreamSupplier(this::inputStreamSupplier)
-                                                                    .withCanProvideOutputStream(this::canProvideOutputStreamHandler)
-                                                                    .withOutputStreamSupplier(this::outputStreamSupplier)
-                                                                    .withCanRenameHandler(this::canRenameHandler)
-                                                                    .withRenameHandler(this::renameHandler)
-                                                                    .withCanMoveHandler(this::canMoveHandler)
-                                                                    .withMoveHandler(this::moveHandler)
-                                                                    .withChildren(innerChildProvider);
+        MutableVirtualFile result = createVirtualFile(parent, fileToWrap.getName());
+
+        result.withExistsFlagSupplier(this::existsFlagSupplier)
+              .withDirectoryFlagSupplier(this::isDirectoryFlagSupplier)
+              .withSizeSupplier(this::sizeSupplier)
+              .withLastModifiedSupplier(this::lastModifiedSupplier)
+              .withDeleteHandler(this::deleteHandler)
+              .withInputStreamSupplier(this::inputStreamSupplier)
+              .withOutputStreamSupplier(this::outputStreamSupplier)
+              .withRenameHandler(this::renameHandler)
+              .withCreateDirectoryHandler(this::createDirectoryHandler)
+              .withCanMoveHandler(this::canMoveHandler)
+              .withMoveHandler(this::moveHandler);
+
         result.attach(fileToWrap);
         return result;
     }
 
     private boolean moveHandler(VirtualFile file, VirtualFile newParent) {
         try {
+            //TODO SIRI-102 ensure that target is on the same FS etc.
             File parent = newParent.tryAs(File.class).orElse(null);
             if (parent == null) {
                 return false;
@@ -130,6 +126,7 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
     }
 
     private boolean canMoveHandler(VirtualFile file) {
+        //TODO SIRI-102 ensure that target is on the same FS
         return !readonly && file.exists();
     }
 
@@ -146,18 +143,6 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
         }
     }
 
-    private boolean canRenameHandler(VirtualFile file) {
-        return !readonly && file.exists();
-    }
-
-    private boolean canProvideOutputStreamHandler(VirtualFile file) {
-        return !readonly && !file.isDirectory();
-    }
-
-    private boolean canProvideInputStreamHandler(VirtualFile file) {
-        return file.exists() && !file.isDirectory();
-    }
-
     private boolean createDirectoryHandler(VirtualFile file) {
         try {
             return file.as(File.class).mkdirs();
@@ -168,18 +153,6 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
                             .withSystemErrorMessage("Layer 3/FS: Cannot create %s as directory: %s (%s)", file)
                             .handle();
         }
-    }
-
-    private boolean canCreateDirectoryHandler(VirtualFile file) {
-        return !readonly && (!file.exists() || file.isDirectory());
-    }
-
-    private boolean canCreateChildrenHandler(VirtualFile file) {
-        return file.exists() && file.isDirectory() && !readonly;
-    }
-
-    private boolean canDeleteHandler(VirtualFile file) {
-        return !readonly && file.exists();
     }
 
     private boolean existsFlagSupplier(VirtualFile file) {
