@@ -105,15 +105,20 @@ public class FTPRoot extends ConfigBasedUplink {
     }
 
     private MutableVirtualFile wrap(VirtualFile parent, FTPFile file, String filename) {
-        MutableVirtualFile result = new MutableVirtualFile(parent, filename).withExistsFlagSupplier(this::existsFlag)
-                                                                            .withDirectoryFlagSupplier(this::isDirectoryFlag)
-                                                                            .withSizeSupplier(this::sizeSupplier)
-                                                                            .withLastModifiedSupplier(this::lastModifiedSupplier)
-                                                                            .withInputStreamSupplier(this::inputStreamSupplier)
-                                                                            .withOutputStreamSupplier(this::outputStreamSupplier)
-                                                                            .withCreateDirectoryHandler(this::createDirectoryHandler)
-                                                                            .withDeleteHandler(this::deleteHandler)
-                                                                            .withChildren(innerChildProvider);
+        MutableVirtualFile result = createVirtualFile(parent, filename);
+
+        result.withExistsFlagSupplier(this::existsFlagSupplier)
+              .withDirectoryFlagSupplier(this::isDirectoryFlagSupplier)
+              .withSizeSupplier(this::sizeSupplier)
+              .withLastModifiedSupplier(this::lastModifiedSupplier)
+              .withDeleteHandler(this::deleteHandler)
+              .withInputStreamSupplier(this::inputStreamSupplier)
+              .withOutputStreamSupplier(this::outputStreamSupplier)
+              .withRenameHandler(this::renameHandler)
+              .withCreateDirectoryHandler(this::createDirectoryHandler)
+              .withCanMoveHandler(this::canMoveHandler)
+              .withMoveHandler(this::moveHandler);
+
         result.attach(parent.as(RelativePath.class).child(filename));
         if (file != null) {
             result.attach(file);
@@ -149,7 +154,7 @@ public class FTPRoot extends ConfigBasedUplink {
         }
     }
 
-    private boolean existsFlag(VirtualFile file) {
+    private boolean existsFlagSupplier(VirtualFile file) {
         if (!file.parent().is(RelativePath.class)) {
             return true;
         }
@@ -157,7 +162,7 @@ public class FTPRoot extends ConfigBasedUplink {
         return fetchFTPFile(file).isPresent();
     }
 
-    private boolean isDirectoryFlag(VirtualFile file) {
+    private boolean isDirectoryFlagSupplier(VirtualFile file) {
         return fetchFTPFile(file).map(FTPFile::isDirectory).orElse(false);
     }
 
@@ -167,6 +172,35 @@ public class FTPRoot extends ConfigBasedUplink {
 
     private long lastModifiedSupplier(VirtualFile file) {
         return fetchFTPFile(file).map(FTPFile::getTimestamp).map(Calendar::getTimeInMillis).orElse(0L);
+    }
+
+    private boolean canMoveHandler(VirtualFile file) {
+        //TODO SIRI-102 implement properly
+        return false;
+    }
+
+    private boolean moveHandler(VirtualFile file, VirtualFile targetFile) {
+        //TODO SIRI-102 implement properly
+        return false;
+    }
+
+    private boolean renameHandler(VirtualFile file, String newName) {
+        try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
+            connector.connector()
+                     .rename(file.as(RelativePath.class).getPath(),
+                             file.parent().as(RelativePath.class).child(newName).getPath());
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Layer 3/FTP: Cannot rename '%s' to '%s' in uplink '%s': %s (%s)",
+                                                    file,
+                                                    newName,
+                                                    ftpConfig)
+                            .handle();
+        }
+
+        return false;
     }
 
     private boolean createDirectoryHandler(VirtualFile file) {
