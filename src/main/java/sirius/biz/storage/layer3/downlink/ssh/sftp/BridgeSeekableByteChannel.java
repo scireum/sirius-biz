@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * <p>
  * This implementation doesn't actually support much seeking, as this is not supported by the
  * {@link sirius.biz.storage.layer3.VirtualFileSystem}. Nevertheless, as long as all writes are sequential and don't
- * skip any data, we fullfill all calls. Also we can skip some bytes when reading as long as it is in the forward
+ * skip any data, we fulfill all calls. Also we can skip some bytes when reading as long as it is in the forward
  * direction.
  */
 class BridgeSeekableByteChannel implements SeekableByteChannel {
