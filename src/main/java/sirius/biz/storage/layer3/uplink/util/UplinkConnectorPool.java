@@ -29,6 +29,9 @@ import java.util.concurrent.TimeUnit;
 @Register(classes = UplinkConnectorPool.class)
 public class UplinkConnectorPool {
 
+    private static final int TIME_BETWEEN_EVICTION_RUNS_MILLIS = 30_000;
+    private static final int NUM_TESTS_PER_EVICTION_RUN = 4;
+
     private final Map<UplinkConnectorConfig<?>, GenericObjectPool<UplinkConnector<?>>> pools =
             new ConcurrentHashMap<>();
 
@@ -89,8 +92,8 @@ public class UplinkConnectorPool {
         uplinkConnectorFactory.linkToPool(pool);
         pool.setMaxIdle(uplinkConnectorConfig.maxIdle);
         pool.setMaxTotal(uplinkConnectorConfig.maxActive);
-        pool.setTimeBetweenEvictionRunsMillis(30_000);
-        pool.setNumTestsPerEvictionRun(4);
+        pool.setTimeBetweenEvictionRunsMillis(TIME_BETWEEN_EVICTION_RUNS_MILLIS);
+        pool.setNumTestsPerEvictionRun(NUM_TESTS_PER_EVICTION_RUN);
         pool.setTestOnBorrow(true);
         pool.setTestWhileIdle(true);
 
