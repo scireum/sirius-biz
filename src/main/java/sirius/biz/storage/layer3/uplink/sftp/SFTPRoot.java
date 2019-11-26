@@ -140,6 +140,26 @@ public class SFTPRoot extends ConfigBasedUplink {
         //TODO SIRI-102 implement properly
         return false;
     }
+
+    private boolean renameHandler(VirtualFile file, String newName) {
+        try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
+            connector.connector()
+                     .rename(file.as(RelativePath.class).getPath(),
+                             file.parent().as(RelativePath.class).child(newName).getPath());
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Layer 3/SFTP: Cannot rename '%s' to '%s' in uplink '%s': %s (%s)",
+                                                    file,
+                                                    newName,
+                                                    sftpConfig)
+                            .handle();
+        }
+
+        return false;
+    }
+
     private SftpClient.Attributes getAttributes(VirtualFile file) {
         SftpClient.Attributes dirAttributes =
                 file.tryAs(SftpClient.DirEntry.class).map(SftpClient.DirEntry::getAttributes).orElse(null);
