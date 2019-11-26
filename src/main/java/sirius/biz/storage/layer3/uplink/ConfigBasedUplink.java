@@ -20,6 +20,7 @@ import sirius.web.security.UserInfo;
 
 import javax.annotation.Nonnull;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  * Represents an uplink which has been defined in the system config.
@@ -140,4 +141,88 @@ public abstract class ConfigBasedUplink {
      * @param search the search which defines all filters and collects results
      */
     protected abstract void enumerateDirectoryChildren(VirtualFile parent, FileSearch search);
+
+    /**
+     * Creates a {@link MutableVirtualFile} with the given parameters and attaches the default handlers known to this
+     * class.
+     *
+     * @param parent   the parent file
+     * @param filename the name of the file
+     * @return a new virtual file which can be provided with additional handlers
+     */
+    protected MutableVirtualFile createVirtualFile(VirtualFile parent, String filename) {
+        return new MutableVirtualFile(parent, filename).withCanDeleteHandler(this::canDeleteHandler)
+                                                       .withCanCreateChildren(this::canCreateChildrenHandler)
+                                                       .withCanCreateDirectoryHandler(this::canCreateDirectoryHandler)
+                                                       .withCanProvideInputStream(this::canProvideInputStreamHandler)
+                                                       .withCanProvideOutputStream(this::canProvideOutputStreamHandler)
+                                                       .withCanRenameHandler(this::canRenameHandler)
+                                                       .withChildren(innerChildProvider);
+    }
+
+    /**
+     * Provides a base implementation which can be passed into
+     * {@link MutableVirtualFile#withCanProvideOutputStream(Predicate)}.
+     *
+     * @param file the file to check
+     * @return <tt>true</tt> if an output stream can be supplied, <tt>false</tt> otherwise
+     */
+    protected boolean canProvideOutputStreamHandler(VirtualFile file) {
+        return !readonly && !file.isDirectory();
+    }
+
+    /**
+     * Provides a base implementation which can be passed into
+     * {@link MutableVirtualFile#withCanProvideInputStream(Predicate)}.
+     *
+     * @param file the file to check
+     * @return <tt>true</tt> if an input stream can be supplied, <tt>false</tt> otherwise
+     */
+    protected boolean canProvideInputStreamHandler(VirtualFile file) {
+        return file.exists() && !file.isDirectory();
+    }
+
+    /**
+     * Provides a base implementation which can be passed into
+     * {@link MutableVirtualFile#withCanCreateDirectoryHandler(Predicate)}.
+     *
+     * @param file the file to check
+     * @return <tt>true</tt> if the file can be created as child directory, <tt>false</tt> otherwise
+     */
+    protected boolean canCreateDirectoryHandler(VirtualFile file) {
+        return !readonly && (!file.exists() || file.isDirectory());
+    }
+
+    /**
+     * Provides a base implementation which can be passed into
+     * {@link MutableVirtualFile#withCanCreateChildren(Predicate)}.
+     *
+     * @param file the file to check
+     * @return <tt>true</tt> if child files can be created, <tt>false</tt> otherwise
+     */
+    protected boolean canCreateChildrenHandler(VirtualFile file) {
+        return file.exists() && file.isDirectory() && !readonly;
+    }
+
+    /**
+     * Provides a base implementation which can be passed into
+     * {@link MutableVirtualFile#withCanDeleteHandler(Predicate)}.
+     *
+     * @param file the file to check
+     * @return <tt>true</tt> if the file can be deleted, <tt>false</tt> otherwise
+     */
+    protected boolean canDeleteHandler(VirtualFile file) {
+        return !readonly && file.exists();
+    }
+
+    /**
+     * Provides a base implementation which can be passed into
+     * {@link MutableVirtualFile#withCanRenameHandler(Predicate)}.
+     *
+     * @param file the file to check
+     * @return <tt>true</tt> if the file can be renamed, <tt>false</tt> otherwise
+     */
+    protected boolean canRenameHandler(VirtualFile file) {
+        return !readonly && file.exists();
+    }
 }

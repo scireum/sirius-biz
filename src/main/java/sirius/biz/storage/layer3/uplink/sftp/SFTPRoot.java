@@ -109,15 +109,20 @@ public class SFTPRoot extends ConfigBasedUplink {
     }
 
     private MutableVirtualFile wrap(VirtualFile parent, SftpClient.DirEntry file, String filename) {
-        MutableVirtualFile result = new MutableVirtualFile(parent, filename).withExistsFlagSupplier(this::existsFlag)
-                                                                            .withDirectoryFlagSupplier(this::isDirectoryFlag)
-                                                                            .withSizeSupplier(this::sizeSupplier)
-                                                                            .withLastModifiedSupplier(this::lastModifiedSupplier)
-                                                                            .withInputStreamSupplier(this::inputStreamSupplier)
-                                                                            .withOutputStreamSupplier(this::outputStreamSupplier)
-                                                                            .withCreateDirectoryHandler(this::createDirectoryHandler)
-                                                                            .withDeleteHandler(this::deleteHandler)
-                                                                            .withChildren(innerChildProvider);
+        MutableVirtualFile result = createVirtualFile(parent, filename);
+
+        result.withExistsFlagSupplier(this::existsFlagSupplier)
+              .withDirectoryFlagSupplier(this::isDirectoryFlagSupplier)
+              .withSizeSupplier(this::sizeSupplier)
+              .withLastModifiedSupplier(this::lastModifiedSupplier)
+              .withDeleteHandler(this::deleteHandler)
+              .withInputStreamSupplier(this::inputStreamSupplier)
+              .withOutputStreamSupplier(this::outputStreamSupplier)
+              .withRenameHandler(this::renameHandler)
+              .withCreateDirectoryHandler(this::createDirectoryHandler)
+              .withCanMoveHandler(this::canMoveHandler)
+              .withMoveHandler(this::moveHandler);
+
         result.attach(parent.as(RelativePath.class).child(filename));
         if (file != null) {
             result.attach(file);
@@ -168,12 +173,12 @@ public class SFTPRoot extends ConfigBasedUplink {
         }
     }
 
-    private boolean existsFlag(VirtualFile file) {
+    private boolean existsFlagSupplier(VirtualFile file) {
         SftpClient.Attributes stat = getAttributes(file);
         return stat.isDirectory() || stat.isRegularFile();
     }
 
-    private boolean isDirectoryFlag(VirtualFile file) {
+    private boolean isDirectoryFlagSupplier(VirtualFile file) {
         SftpClient.Attributes stat = getAttributes(file);
         return stat.isDirectory();
     }
