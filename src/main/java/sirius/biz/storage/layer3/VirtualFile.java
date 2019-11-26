@@ -431,7 +431,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             return true;
         }
 
-        //TODO implement move manually
+        //TODO SIRI-102 implement properly
         throw new UnsupportedOperationException("Move is currently not implemented");
     }
 
