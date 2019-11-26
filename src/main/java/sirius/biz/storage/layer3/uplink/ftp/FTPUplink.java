@@ -15,7 +15,7 @@ import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplink;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplinkFactory;
-import sirius.biz.storage.layer3.uplink.util.RelativePath;
+import sirius.biz.storage.layer3.uplink.util.RemotePath;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnector;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorPool;
 import sirius.biz.storage.util.StorageUtils;
@@ -37,7 +37,7 @@ import java.util.Optional;
 /**
  * Provides an uplink which connects to a remote FTP server.
  */
-public class FTPRoot extends ConfigBasedUplink {
+public class FTPUplink extends ConfigBasedUplink {
 
     /**
      * Creates a new uplink for config sections which use "ftp" as type.
@@ -47,7 +47,7 @@ public class FTPRoot extends ConfigBasedUplink {
 
         @Override
         public ConfigBasedUplink make(Extension config) {
-            return new FTPRoot(config);
+            return new FTPUplink(config);
         }
 
         @Nonnull
@@ -62,7 +62,7 @@ public class FTPRoot extends ConfigBasedUplink {
     @Part
     private static UplinkConnectorPool connectorPool;
 
-    private FTPRoot(Extension config) {
+    private FTPUplink(Extension config) {
         super(config);
         this.ftpConfig = new FTPUplinkConnectorConfig(config);
     }
@@ -73,7 +73,7 @@ public class FTPRoot extends ConfigBasedUplink {
             return;
         }
 
-        RelativePath relativeParent = parent.as(RelativePath.class);
+        RemotePath relativeParent = parent.as(RemotePath.class);
         try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
             for (FTPFile file : connector.connector().listFiles(relativeParent.getPath())) {
                 if (!search.processResult(wrap(parent, file, file.getName()))) {
@@ -95,7 +95,7 @@ public class FTPRoot extends ConfigBasedUplink {
     @Override
     protected MutableVirtualFile createDirectoryFile(@Nonnull VirtualFile parent) {
         MutableVirtualFile mutableVirtualFile = new MutableVirtualFile(parent, getDirectoryName());
-        mutableVirtualFile.attach(new RelativePath("/"));
+        mutableVirtualFile.attach(new RemotePath("/"));
         return mutableVirtualFile;
     }
 
@@ -119,7 +119,7 @@ public class FTPRoot extends ConfigBasedUplink {
               .withCanMoveHandler(this::canMoveHandler)
               .withMoveHandler(this::moveHandler);
 
-        result.attach(parent.as(RelativePath.class).child(filename));
+        result.attach(parent.as(RemotePath.class).child(filename));
         if (file != null) {
             result.attach(file);
         }
@@ -135,7 +135,7 @@ public class FTPRoot extends ConfigBasedUplink {
 
         try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
             FTPFile[] ftpFiles = connector.connector()
-                                          .listFiles(file.parent().as(RelativePath.class).getPath(),
+                                          .listFiles(file.parent().as(RemotePath.class).getPath(),
                                                      ftpFile -> Strings.areEqual(ftpFile.getName(), file.name()));
             if (ftpFiles.length == 1) {
                 file.attach(ftpFiles[0]);
@@ -155,7 +155,7 @@ public class FTPRoot extends ConfigBasedUplink {
     }
 
     private boolean existsFlagSupplier(VirtualFile file) {
-        if (!file.parent().is(RelativePath.class)) {
+        if (!file.parent().is(RemotePath.class)) {
             return true;
         }
 
@@ -187,8 +187,8 @@ public class FTPRoot extends ConfigBasedUplink {
     private boolean renameHandler(VirtualFile file, String newName) {
         try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
             connector.connector()
-                     .rename(file.as(RelativePath.class).getPath(),
-                             file.parent().as(RelativePath.class).child(newName).getPath());
+                     .rename(file.as(RemotePath.class).getPath(),
+                             file.parent().as(RemotePath.class).child(newName).getPath());
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
@@ -204,7 +204,7 @@ public class FTPRoot extends ConfigBasedUplink {
     }
 
     private boolean createDirectoryHandler(VirtualFile file) {
-        String relativePath = file.as(RelativePath.class).getPath();
+        String relativePath = file.as(RemotePath.class).getPath();
         try {
             try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
                 return connector.connector().makeDirectory(relativePath);
@@ -222,7 +222,7 @@ public class FTPRoot extends ConfigBasedUplink {
     }
 
     private boolean deleteHandler(VirtualFile file) {
-        String relativePath = file.as(RelativePath.class).getPath();
+        String relativePath = file.as(RemotePath.class).getPath();
         if (file.isDirectory()) {
             return removeDirectory(relativePath);
         } else {
@@ -264,7 +264,7 @@ public class FTPRoot extends ConfigBasedUplink {
 
     private InputStream inputStreamSupplier(VirtualFile file) {
         UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
-        String path = file.as(RelativePath.class).getPath();
+        String path = file.as(RemotePath.class).getPath();
         try {
             InputStream rawStream = connector.connector().retrieveFileStream(path);
             WatchableInputStream watchableInputStream = new WatchableInputStream(rawStream);
@@ -285,7 +285,7 @@ public class FTPRoot extends ConfigBasedUplink {
 
     private OutputStream outputStreamSupplier(VirtualFile file) {
         UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
-        String path = file.as(RelativePath.class).getPath();
+        String path = file.as(RemotePath.class).getPath();
         try {
             OutputStream rawStream = connector.connector().storeFileStream(path);
             WatchableOutputStream watchableOutputStream = new WatchableOutputStream(rawStream);
