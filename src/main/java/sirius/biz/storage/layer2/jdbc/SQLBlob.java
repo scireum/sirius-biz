@@ -20,6 +20,7 @@ import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
+import sirius.db.mixing.annotations.ComplexDelete;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
@@ -44,6 +45,7 @@ import java.util.Optional;
  * Note that all non trivial methods delegate to the associated {@link SQLBlobStorageSpace}.
  */
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
+@ComplexDelete(false)
 public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Transient
