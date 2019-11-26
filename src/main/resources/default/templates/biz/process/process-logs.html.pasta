@@ -7,9 +7,14 @@
     <i:block name="sidebar">
         <i:if test="@!process.getCounterList().isEmpty()">
             <w:infobox titleKey="Process.counters">
-                <i:for type="Tuple" var="timing" items="process.getCounterList()">
-                    <w:infoboxElement label="@timing.getFirst().as(String.class)"
-                                      value="@timing.getSecond()"/>
+                <i:for type="String" var="counter" items="process.getCounterList()">
+                    <w:infoboxElement label="@process.getCounterLabel(counter)">
+                        <i:local name="timing" value="process.getCounterTiming(counter)" />
+                        <b>@process.getCounterValue(counter)</b>
+                        <i:if test="isFilled(timing)">
+                            (@timing)
+                        </i:if>
+                    </w:infoboxElement>
                 </i:for>
             </w:infobox>
         </i:if>
