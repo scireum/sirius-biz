@@ -37,7 +37,7 @@ import java.util.Optional;
 /**
  * Provides an uplink which connects to a remote SFTP server.
  */
-public class SFTPRoot extends ConfigBasedUplink {
+public class SFTPUplink extends ConfigBasedUplink {
 
     /**
      * Creates a new uplink for config sections which use "ftp" as type.
@@ -47,7 +47,7 @@ public class SFTPRoot extends ConfigBasedUplink {
 
         @Override
         public ConfigBasedUplink make(Extension config) {
-            return new SFTPRoot(config);
+            return new SFTPUplink(config);
         }
 
         @Nonnull
@@ -62,7 +62,7 @@ public class SFTPRoot extends ConfigBasedUplink {
     @Part
     private static UplinkConnectorPool connectorPool;
 
-    private SFTPRoot(Extension config) {
+    private SFTPUplink(Extension config) {
         super(config);
         this.sftpConfig = new SFTPUplinkConnectorConfig(config);
     }
@@ -203,23 +203,23 @@ public class SFTPRoot extends ConfigBasedUplink {
     }
 
     private boolean existsFlagSupplier(VirtualFile file) {
-        SftpClient.Attributes stat = getAttributes(file);
-        return stat.isDirectory() || stat.isRegularFile();
+        SftpClient.Attributes attributes = getAttributes(file);
+        return attributes.isDirectory() || attributes.isRegularFile();
     }
 
     private boolean isDirectoryFlagSupplier(VirtualFile file) {
-        SftpClient.Attributes stat = getAttributes(file);
-        return stat.isDirectory();
+        SftpClient.Attributes attributes = getAttributes(file);
+        return attributes.isDirectory();
     }
 
     private long sizeSupplier(VirtualFile file) {
-        SftpClient.Attributes stat = getAttributes(file);
-        return stat.getSize();
+        SftpClient.Attributes attributes = getAttributes(file);
+        return attributes.getSize();
     }
 
     private long lastModifiedSupplier(VirtualFile file) {
-        SftpClient.Attributes stat = getAttributes(file);
-        FileTime modifyTime = stat.getModifyTime();
+        SftpClient.Attributes attributes = getAttributes(file);
+        FileTime modifyTime = attributes.getModifyTime();
         return modifyTime == null ? 0 : modifyTime.toMillis();
     }
 

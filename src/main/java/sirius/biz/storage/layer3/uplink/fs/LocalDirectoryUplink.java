@@ -33,7 +33,7 @@ import java.util.Optional;
 /**
  * Provides an uplink which maps into a given directory in the file system.
  */
-public class LocalDirectoryRoot extends ConfigBasedUplink {
+public class LocalDirectoryUplink extends ConfigBasedUplink {
 
     /**
      * Creates a new uplink for config sections which use "fs" as type.
@@ -43,7 +43,7 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
 
         @Override
         public ConfigBasedUplink make(Extension config) {
-            return new LocalDirectoryRoot(config, new File(config.get("basePath").asString()));
+            return new LocalDirectoryUplink(config, new File(config.get("basePath").asString()));
         }
 
         @Nonnull
@@ -58,7 +58,7 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
 
     private File root;
 
-    protected LocalDirectoryRoot(Extension extension, File root) {
+    protected LocalDirectoryUplink(Extension extension, File root) {
         super(extension);
         this.root = root;
         if (!root.exists() || !root.isDirectory()) {
