@@ -8,6 +8,7 @@
 
 package sirius.biz.storage;
 
+import sirius.biz.storage.layer2.jdbc.SQLBlobStorage;
 import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.db.KeyGenerator;
 import sirius.db.mixing.Mapping;
@@ -35,7 +36,7 @@ import java.time.LocalDateTime;
 @Index(name = "reference_lookup", columns = "reference")
 @Index(name = "temporary_lookup", columns = {"temporary", "trace_changedAt"})
 @Index(name = "cleanup_lookup", columns = {"bucket", "trace_changedAt"})
-@Framework(Storage.FRAMEWORK_STORAGE)
+@Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 @ComplexDelete(false)
 public class VirtualObject extends SQLTenantAware implements StoredObject {
 
