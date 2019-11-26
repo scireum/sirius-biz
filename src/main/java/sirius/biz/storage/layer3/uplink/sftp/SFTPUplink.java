@@ -16,7 +16,7 @@ import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplink;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplinkFactory;
-import sirius.biz.storage.layer3.uplink.util.RelativePath;
+import sirius.biz.storage.layer3.uplink.util.RemotePath;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnector;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorPool;
 import sirius.biz.storage.util.StorageUtils;
@@ -37,7 +37,7 @@ import java.util.Optional;
 /**
  * Provides an uplink which connects to a remote SFTP server.
  */
-public class SFTPRoot extends ConfigBasedUplink {
+public class SFTPUplink extends ConfigBasedUplink {
 
     /**
      * Creates a new uplink for config sections which use "ftp" as type.
@@ -47,7 +47,7 @@ public class SFTPRoot extends ConfigBasedUplink {
 
         @Override
         public ConfigBasedUplink make(Extension config) {
-            return new SFTPRoot(config);
+            return new SFTPUplink(config);
         }
 
         @Nonnull
@@ -62,7 +62,7 @@ public class SFTPRoot extends ConfigBasedUplink {
     @Part
     private static UplinkConnectorPool connectorPool;
 
-    private SFTPRoot(Extension config) {
+    private SFTPUplink(Extension config) {
         super(config);
         this.sftpConfig = new SFTPUplinkConnectorConfig(config);
     }
@@ -73,9 +73,9 @@ public class SFTPRoot extends ConfigBasedUplink {
             return;
         }
 
-        RelativePath relativeParent = parent.as(RelativePath.class);
+        RemotePath remoteParent = parent.as(RemotePath.class);
         try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
-            for (SftpClient.DirEntry entry : connector.connector().readDir(relativeParent.getPath())) {
+            for (SftpClient.DirEntry entry : connector.connector().readDir(remoteParent.getPath())) {
                 if (isUsable(entry) && !search.processResult(wrap(parent, entry, entry.getFilename()))) {
                     return;
                 }
@@ -99,7 +99,7 @@ public class SFTPRoot extends ConfigBasedUplink {
     @Override
     protected MutableVirtualFile createDirectoryFile(@Nonnull VirtualFile parent) {
         MutableVirtualFile mutableVirtualFile = new MutableVirtualFile(parent, getDirectoryName());
-        mutableVirtualFile.attach(new RelativePath("/"));
+        mutableVirtualFile.attach(new RemotePath("/"));
         return mutableVirtualFile;
     }
 
@@ -123,7 +123,7 @@ public class SFTPRoot extends ConfigBasedUplink {
               .withCanMoveHandler(this::canMoveHandler)
               .withMoveHandler(this::moveHandler);
 
-        result.attach(parent.as(RelativePath.class).child(filename));
+        result.attach(parent.as(RemotePath.class).child(filename));
         if (file != null) {
             result.attach(file);
         }
@@ -144,8 +144,8 @@ public class SFTPRoot extends ConfigBasedUplink {
     private boolean renameHandler(VirtualFile file, String newName) {
         try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
             connector.connector()
-                     .rename(file.as(RelativePath.class).getPath(),
-                             file.parent().as(RelativePath.class).child(newName).getPath());
+                     .rename(file.as(RemotePath.class).getPath(),
+                             file.parent().as(RemotePath.class).child(newName).getPath());
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
@@ -173,7 +173,7 @@ public class SFTPRoot extends ConfigBasedUplink {
         }
 
         try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
-            SftpClient.Attributes stat = connector.connector().stat(file.as(RelativePath.class).getPath());
+            SftpClient.Attributes stat = connector.connector().stat(file.as(RemotePath.class).getPath());
             file.attach(stat);
             return stat;
         } catch (SftpException e) {
@@ -203,28 +203,28 @@ public class SFTPRoot extends ConfigBasedUplink {
     }
 
     private boolean existsFlagSupplier(VirtualFile file) {
-        SftpClient.Attributes stat = getAttributes(file);
-        return stat.isDirectory() || stat.isRegularFile();
+        SftpClient.Attributes attributes = getAttributes(file);
+        return attributes.isDirectory() || attributes.isRegularFile();
     }
 
     private boolean isDirectoryFlagSupplier(VirtualFile file) {
-        SftpClient.Attributes stat = getAttributes(file);
-        return stat.isDirectory();
+        SftpClient.Attributes attributes = getAttributes(file);
+        return attributes.isDirectory();
     }
 
     private long sizeSupplier(VirtualFile file) {
-        SftpClient.Attributes stat = getAttributes(file);
-        return stat.getSize();
+        SftpClient.Attributes attributes = getAttributes(file);
+        return attributes.getSize();
     }
 
     private long lastModifiedSupplier(VirtualFile file) {
-        SftpClient.Attributes stat = getAttributes(file);
-        FileTime modifyTime = stat.getModifyTime();
+        SftpClient.Attributes attributes = getAttributes(file);
+        FileTime modifyTime = attributes.getModifyTime();
         return modifyTime == null ? 0 : modifyTime.toMillis();
     }
 
     private boolean createDirectoryHandler(VirtualFile file) {
-        String relativePath = file.as(RelativePath.class).getPath();
+        String relativePath = file.as(RemotePath.class).getPath();
         try {
             try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
                 connector.connector().mkdir(relativePath);
@@ -253,7 +253,7 @@ public class SFTPRoot extends ConfigBasedUplink {
     }
 
     private void deleteFileHandler(VirtualFile file) {
-        String relativePath = file.as(RelativePath.class).getPath();
+        String relativePath = file.as(RemotePath.class).getPath();
         try {
             try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
                 connector.connector().remove(relativePath);
@@ -270,7 +270,7 @@ public class SFTPRoot extends ConfigBasedUplink {
     }
 
     private void deleteDirectoryHandler(VirtualFile file) {
-        String relativePath = file.as(RelativePath.class).getPath();
+        String relativePath = file.as(RemotePath.class).getPath();
         try {
             try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
                 connector.connector().rmdir(relativePath);
@@ -288,7 +288,7 @@ public class SFTPRoot extends ConfigBasedUplink {
 
     private InputStream inputStreamSupplier(VirtualFile file) {
         UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig);
-        String path = file.as(RelativePath.class).getPath();
+        String path = file.as(RemotePath.class).getPath();
         try {
             InputStream rawStream = connector.connector().read(path);
             WatchableInputStream watchableInputStream = new WatchableInputStream(rawStream);
@@ -309,7 +309,7 @@ public class SFTPRoot extends ConfigBasedUplink {
 
     private OutputStream outputStreamSupplier(VirtualFile file) {
         UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig);
-        String path = file.as(RelativePath.class).getPath();
+        String path = file.as(RemotePath.class).getPath();
         try {
             OutputStream rawStream = connector.connector().write(path);
             WatchableOutputStream watchableOutputStream = new WatchableOutputStream(rawStream);

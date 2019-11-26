@@ -8,6 +8,7 @@
 
 package sirius.biz.storage;
 
+import sirius.biz.storage.layer2.jdbc.SQLBlobStorage;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
@@ -23,7 +24,7 @@ import java.time.LocalDate;
 /**
  * Represents a resized image version of a {@link VirtualObject}.
  */
-@Framework(Storage.FRAMEWORK_STORAGE)
+@Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class VirtualObjectVersion extends SQLEntity {
 
     /**

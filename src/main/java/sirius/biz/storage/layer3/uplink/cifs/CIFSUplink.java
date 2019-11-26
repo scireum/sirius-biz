@@ -37,7 +37,7 @@ import java.util.Optional;
 /**
  * Provides an uplink which maps into a given CIFS mount point.
  */
-public class CIFSRoot extends ConfigBasedUplink {
+public class CIFSUplink extends ConfigBasedUplink {
 
     /**
      * Creates a new uplink for config sections which use "cifs" as type.
@@ -62,10 +62,10 @@ public class CIFSRoot extends ConfigBasedUplink {
                                     domain,
                                     user,
                                     password));
-                    return new CIFSRoot(config, context, new SmbFile(url, context));
+                    return new CIFSUplink(config, context, new SmbFile(url, context));
                 } else {
                     CIFSContext context = new BaseContext(new BaseConfiguration(true));
-                    return new CIFSRoot(config, context, new SmbFile(url, context));
+                    return new CIFSUplink(config, context, new SmbFile(url, context));
                 }
             } catch (CIFSException e) {
                 throw new IllegalArgumentException(Strings.apply(
@@ -104,7 +104,7 @@ public class CIFSRoot extends ConfigBasedUplink {
     protected SmbFile smbRoot;
     protected CIFSContext context;
 
-    protected CIFSRoot(Extension config, CIFSContext context, SmbFile smbRoot) {
+    protected CIFSUplink(Extension config, CIFSContext context, SmbFile smbRoot) {
         super(config);
         this.context = context;
         this.smbRoot = smbRoot;
