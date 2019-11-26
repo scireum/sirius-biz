@@ -131,6 +131,15 @@ public class SFTPRoot extends ConfigBasedUplink {
         return result;
     }
 
+    private boolean canMoveHandler(VirtualFile file) {
+        //TODO SIRI-102 implement properly
+        return false;
+    }
+
+    private boolean moveHandler(VirtualFile file, VirtualFile targetFile) {
+        //TODO SIRI-102 implement properly
+        return false;
+    }
     private SftpClient.Attributes getAttributes(VirtualFile file) {
         SftpClient.Attributes dirAttributes =
                 file.tryAs(SftpClient.DirEntry.class).map(SftpClient.DirEntry::getAttributes).orElse(null);

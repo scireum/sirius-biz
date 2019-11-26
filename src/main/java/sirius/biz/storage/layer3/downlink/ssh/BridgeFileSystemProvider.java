@@ -88,6 +88,7 @@ class BridgeFileSystemProvider extends FileSystemProvider {
 
     @Override
     public void move(Path source, Path target, CopyOption... options) throws IOException {
+        //TODO SIRI-102 implement
         throw new UnsupportedOperationException("move");
     }
 

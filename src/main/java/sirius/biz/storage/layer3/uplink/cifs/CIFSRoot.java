@@ -159,6 +159,7 @@ public class CIFSRoot extends ConfigBasedUplink {
 
     private boolean moveHandler(VirtualFile file, VirtualFile newParent) {
         try {
+            //TODO SIRI-102 verify correctness
             SmbFile parent = newParent.tryAs(SmbFile.class).orElse(null);
             if (parent == null) {
                 return false;
@@ -176,6 +177,7 @@ public class CIFSRoot extends ConfigBasedUplink {
     }
 
     private boolean canMoveHandler(VirtualFile file) {
+        //TODO SIRI-102 ensure that target is on the same domain etc.
         return !readonly && file.exists();
     }
 

@@ -108,6 +108,7 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
 
     private boolean moveHandler(VirtualFile file, VirtualFile newParent) {
         try {
+            //TODO SIRI-102 ensure that target is on the same FS etc.
             File parent = newParent.tryAs(File.class).orElse(null);
             if (parent == null) {
                 return false;
@@ -125,6 +126,7 @@ public class LocalDirectoryRoot extends ConfigBasedUplink {
     }
 
     private boolean canMoveHandler(VirtualFile file) {
+        //TODO SIRI-102 ensure that target is on the same FS
         return !readonly && file.exists();
     }
 

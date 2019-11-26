@@ -148,6 +148,7 @@ class BridgeFile implements FtpFile {
 
     @Override
     public boolean move(FtpFile destination) {
+        //TODO SIRI-102 verify correctness / perform via VFS API!
         try {
             if (!doesExist()) {
                 return false;
