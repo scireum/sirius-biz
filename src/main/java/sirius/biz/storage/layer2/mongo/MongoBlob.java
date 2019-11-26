@@ -18,6 +18,7 @@ import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.db.KeyGenerator;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
+import sirius.db.mixing.annotations.ComplexDelete;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Unique;
@@ -43,6 +44,7 @@ import java.util.Optional;
  * Note that all non trivial methods delegate to the associated {@link MongoBlobStorageSpace}.
  */
 @Framework(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
+@ComplexDelete(false)
 public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     @Transient
