@@ -25,8 +25,8 @@ import java.util.Optional;
 
 /**
  * Stores the metadata of a {@link BlobVariant} in the underlying JDBC database.
- *  * <p>
- *  * Note that all non trivial methods delegate to the associated {@link SQLBlobStorageSpace}.
+ * <p>
+ * Note that all non trivial methods delegate to the associated {@link SQLBlobStorageSpace}.
  */
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class SQLVariant extends SQLEntity implements BlobVariant {
