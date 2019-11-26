@@ -14,7 +14,7 @@ import sirius.kernel.commons.Strings;
 /**
  * Wraps a path to be attached to a {@link MutableVirtualFile} when providing an uplink.
  */
-public class RelativePath {
+public class RemotePath {
 
     private String path;
 
@@ -23,7 +23,7 @@ public class RelativePath {
      *
      * @param path the path to wrap
      */
-    public RelativePath(String path) {
+    public RemotePath(String path) {
         this.path = path;
     }
 
@@ -33,11 +33,11 @@ public class RelativePath {
      * @param file the file or directory to represent
      * @return a path which points to the given child file in this path
      */
-    public RelativePath child(String file) {
+    public RemotePath child(String file) {
         if (Strings.isFilled(path) && path.endsWith("/")) {
-            return new RelativePath(this.path + file);
+            return new RemotePath(this.path + file);
         } else {
-            return new RelativePath(this.path + "/" + file);
+            return new RemotePath(this.path + "/" + file);
         }
     }
 
