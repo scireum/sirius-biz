@@ -88,7 +88,7 @@ public class AddressData extends Composite {
     @NullAllowed
     @Autoloaded
     @AutoImport
-    @Length(9)
+    @Length(16)
     private String zip;
 
     /**
