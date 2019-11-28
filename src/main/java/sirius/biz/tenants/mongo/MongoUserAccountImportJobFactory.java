@@ -28,13 +28,12 @@ public class MongoUserAccountImportJobFactory extends EntityImportJobFactory {
 
     @Override
     protected EntityImportJob<?> createJob(ProcessContext process) {
-        return new EntityImportJob<MongoUserAccount>(fileParameter,
-                                                     ignoreEmptyParameter,
-                                                     importModeParameter,
-                                                     MongoUserAccount.class,
-                                                     getDictionary(),
-                                                     process) {
-        };
+        return new EntityImportJob<>(fileParameter,
+                                     ignoreEmptyParameter,
+                                     importModeParameter,
+                                     MongoUserAccount.class,
+                                     getDictionary(),
+                                     process);
     }
 
     @Override

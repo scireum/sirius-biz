@@ -28,13 +28,12 @@ public class SQLUserAccountImportJobFactory extends EntityImportJobFactory {
 
     @Override
     protected EntityImportJob<?> createJob(ProcessContext process) {
-        return new EntityImportJob<SQLUserAccount>(fileParameter,
-                                                   ignoreEmptyParameter,
-                                                   importModeParameter,
-                                                   SQLUserAccount.class,
-                                                   getDictionary(),
-                                                   process) {
-        };
+        return new EntityImportJob<>(fileParameter,
+                                     ignoreEmptyParameter,
+                                     importModeParameter,
+                                     SQLUserAccount.class,
+                                     getDictionary(),
+                                     process);
     }
 
     @Override
