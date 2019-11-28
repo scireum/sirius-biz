@@ -8,15 +8,14 @@
 
 package sirius.biz.codelists.jdbc;
 
-import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeListController;
+import sirius.biz.codelists.CodeListEntry;
+import sirius.biz.importer.ImportContext;
 import sirius.biz.jobs.JobFactory;
-import sirius.biz.jobs.batch.file.EntityImportJob;
 import sirius.biz.jobs.batch.file.EntityImportJobFactory;
 import sirius.biz.jobs.params.CodeListParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
-import sirius.biz.tenants.jdbc.SQLTenants;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
@@ -28,14 +27,22 @@ import java.util.function.Consumer;
 /**
  * Provides an import job for {@link SQLCodeList code lists} stored in a JDBC database.
  */
-@Register(classes = JobFactory.class, framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
+@Register(classes = JobFactory.class, framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
 @Permission(CodeListController.PERMISSION_MANAGE_CODELISTS)
-public class SQLCodeListEntryImportJobFactory extends EntityImportJobFactory {
+public class SQLCodeListImportJobFactory extends EntityImportJobFactory {
 
-    /**
-     * Contains the sql code list to import the code list entries into.
-     */
-    private CodeListParameter codeListParameter = new CodeListParameter("codeList", "$CodeList");
+    private CodeListParameter codeListParameter = new CodeListParameter("codeList", "$CodeList").markRequired();
+
+    @Nonnull
+    @Override
+    public String getName() {
+        return "import-sql-code-list-entries";
+    }
+
+    @Override
+    protected Class<? extends BaseEntity<?>> getImportType() {
+        return SQLCodeListEntry.class;
+    }
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
@@ -44,26 +51,8 @@ public class SQLCodeListEntryImportJobFactory extends EntityImportJobFactory {
     }
 
     @Override
-    protected EntityImportJob<SQLCodeListEntry> createJob(ProcessContext process) {
-        CodeList codeList = process.require(codeListParameter);
-        return new EntityImportJob<>(fileParameter,
-                                     ignoreEmptyParameter,
-                                     importModeParameter,
-                                     SQLCodeListEntry.class,
-                                     getDictionary(),
-                                     process,
-                                     context -> context.put(SQLCodeListEntry.CODE_LIST.toString(), codeList));
-    }
-
-    @Override
-    protected Class<? extends BaseEntity<?>> getImportType() {
-        return SQLCodeListEntry.class;
-    }
-
-    @Nonnull
-    @Override
-    public String getName() {
-        return "import-sql-code-list-entries";
+    protected void transferParameters(ImportContext context, ProcessContext processContext) {
+        context.set(CodeListEntry.CODE_LIST, processContext.require(codeListParameter));
     }
 
     @Override
