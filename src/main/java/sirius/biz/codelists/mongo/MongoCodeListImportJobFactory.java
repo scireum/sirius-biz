@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 /**
  * Provides an import job for {@link MongoCodeList code lists} stored in MongoDB.
  */
-@Register(classes = JobFactory.class, framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
+@Register(classes = JobFactory.class, framework = MongoCodeLists.FRAMEWORK_CODE_LISTS_MONGO)
 @Permission(CodeListController.PERMISSION_MANAGE_CODELISTS)
 public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
 
