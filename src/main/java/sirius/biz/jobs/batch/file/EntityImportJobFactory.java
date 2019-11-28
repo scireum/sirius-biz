@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.batch.file;
 
+import sirius.biz.importer.ImportContext;
 import sirius.biz.importer.Importer;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.infos.JobInfoCollector;
@@ -40,7 +41,31 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     }
 
     @Override
-    protected abstract EntityImportJob<?> createJob(ProcessContext process);
+    @SuppressWarnings("squid:S2095")
+    @Explain("The job must to ne closed here as it is returned and managed by the caller.")
+    protected EntityImportJob<?> createJob(ProcessContext process) {
+        // We only resolve the parameters once and keep the final values around in a local context...
+        ImportContext paramterContext = new ImportContext();
+        transferParameters(paramterContext, process);
+
+        return new EntityImportJob<>(fileParameter,
+                                     ignoreEmptyParameter,
+                                     importModeParameter,
+                                     getImportType(),
+                                     getDictionary(),
+                                     process).withContextExtender(context -> context.putAll(paramterContext));
+    }
+
+    /**
+     * Permits to transfer parameters into the import context.
+     *
+     * @param context        the context to enrich. This will be transferred to the underlying {@link Importer} and
+     *                       {@link sirius.biz.importer.ImportHandler import handlers}
+     * @param processContext the process context used to resolve parameter values
+     */
+    protected void transferParameters(ImportContext context, ProcessContext processContext) {
+        // nothing to transfer by default
+    }
 
     /**
      * Creates the dictionary used by the import.
