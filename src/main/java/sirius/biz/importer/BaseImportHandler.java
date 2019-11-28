@@ -32,6 +32,8 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
+import sirius.web.security.UserContext;
+import sirius.web.security.UserInfo;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
