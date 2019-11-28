@@ -17,9 +17,7 @@ import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
 import sirius.biz.tenants.UserAccountData;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
-import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 

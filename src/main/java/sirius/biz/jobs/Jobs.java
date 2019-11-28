@@ -98,6 +98,8 @@ public class Jobs {
             stream = stream.filter(factory -> factory.getLabel().toLowerCase().contains(queryAsLowerCase));
         }
 
+        stream.sorted(Comparator.comparingInt(JobFactory::getPriority).thenComparing(JobFactory::getLabel));
+
         return stream;
     }
 
