@@ -25,6 +25,7 @@ import sirius.kernel.nls.NLS;
 import sirius.web.security.UserContext;
 
 import java.time.LocalDateTime;
+import java.util.stream.Stream;
 
 /**
  * Provides a hook which records all changed fields into the system journal which can be embedded into other entities
@@ -59,23 +60,58 @@ public class JournalData extends Composite {
         }
 
         try {
-            StringBuilder changes = new StringBuilder();
-            EntityDescriptor descriptor = owner.getDescriptor();
-            for (Property p : descriptor.getProperties()) {
-                if (!p.getAnnotation(NoJournal.class).isPresent() && descriptor.isChanged(owner, p)) {
-                    changes.append(p.getName());
-                    changes.append(": ");
-                    changes.append(NLS.toUserString(p.getValue(owner), NLS.getDefaultLanguage()));
-                    changes.append("\n");
-                }
-            }
+            String changes = buildChangeJournal();
 
             if (changes.length() > 0) {
-                addJournalEntry(owner, changes.toString());
+                addJournalEntry(owner, changes);
             }
         } catch (Exception e) {
             Exceptions.handle(e);
         }
+    }
+
+    /**
+     * Enumerates all properties being journaled.
+     * <p>
+     * These are essentially all properties which do not wear a {@link NoJournal}.
+     *
+     * @return a stream of all journaled properties
+     */
+    public Stream<Property> fetchJournaledProperties() {
+        return owner.getDescriptor()
+                    .getProperties()
+                    .stream()
+                    .filter(p -> !p.getAnnotation(NoJournal.class).isPresent());
+    }
+
+    /**
+     * Enumerates all journaled properties which are changed.
+     *
+     * @return a stream of all journaled properties which are changed
+     */
+    public Stream<Property> fetchJournaledAndChangedProperties() {
+        return fetchJournaledProperties().filter(p -> p.getDescriptor().isChanged(owner, p));
+    }
+
+    /**
+     * Reports all changed properties as a string.
+     * <p>
+     * This will output one line per changed propery like {@code old_value -&gt; new_value}.
+     *
+     * @return a string which lists all changed properties
+     */
+    public String buildChangeJournal() {
+        StringBuilder changes = new StringBuilder();
+        fetchJournaledAndChangedProperties().forEach(p -> {
+            changes.append(p.getName());
+            changes.append(": ");
+            changes.append(NLS.toUserString(owner.getPersistedValue(p), NLS.getDefaultLanguage()));
+            changes.append(" -> ");
+            changes.append(NLS.toUserString(p.getValue(owner), NLS.getDefaultLanguage()));
+            changes.append("\n");
+        });
+
+        return changes.toString();
     }
 
     /**
