@@ -44,4 +44,13 @@ public @interface Exportable {
      * {@link #priority()} will be used.
      */
     boolean defaultRepresentation() default false;
+
+    /**
+     * Controls the permissions required to be able to export the field.
+     * <p>
+     * If the current user hasn't all of the given permissions, this field will be skipped
+     *
+     * @return the list of permissions required to be able to export the annotated field
+     */
+    String[] permissions() default {};
 }

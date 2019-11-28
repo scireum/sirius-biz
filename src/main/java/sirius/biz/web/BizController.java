@@ -279,14 +279,7 @@ public class BizController extends BasicController {
 
     private boolean isAutoloaded(Property property) {
         Autoloaded autoloaded = property.getAnnotation(Autoloaded.class).orElse(null);
-        if (autoloaded == null) {
-            return false;
-        }
-        if (autoloaded.permissions().length > 0) {
-            return UserContext.getCurrentUser().hasPermissions(autoloaded.permissions());
-        } else {
-            return true;
-        }
+        return autoloaded != null && UserContext.getCurrentUser().hasPermissions(autoloaded.permissions());
     }
 
     /**

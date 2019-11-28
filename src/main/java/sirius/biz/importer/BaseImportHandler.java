@@ -32,6 +32,8 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
+import sirius.web.security.UserContext;
+import sirius.web.security.UserInfo;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -300,9 +302,13 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @return a list of all mappings which are marked as auto import
      */
     protected List<Mapping> getAutoImportMappings() {
+        UserInfo currentUser = UserContext.getCurrentUser();
         return descriptor.getProperties()
                          .stream()
-                         .filter(property -> property.getAnnotation(AutoImport.class).isPresent())
+                         .filter(property -> property.getAnnotation(AutoImport.class)
+                                                     .map(AutoImport::permissions)
+                                                     .map(currentUser::hasPermissions)
+                                                     .orElse(false))
                          .map(Property::getName)
                          .map(Mapping::named)
                          .collect(Collectors.toList());
@@ -336,19 +342,24 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      *
      * @return a list of all exportable mappings
      */
-    @SuppressWarnings("OptionalGetWithoutIsPresent")
-    @Explain("False positive - the check is done within the stream")
     protected List<Mapping> getExportableMappings() {
         List<ComparableTuple<Integer, Mapping>> priorizedList = new ArrayList<>();
+        UserInfo currentUser = UserContext.getCurrentUser();
 
         descriptor.getProperties()
                   .stream()
-                  .filter(property -> property.getAnnotation(Exportable.class).isPresent())
-                  .map(property -> ComparableTuple.create(property.getAnnotation(Exportable.class).get().priority(),
-                                                          Mapping.named(property.getName())));
+                  .filter(property -> isExportable(currentUser, property))
+                  .map(property -> ComparableTuple.create(property.getAnnotation(Exportable.class)
+                                                                  .map(Exportable::priority)
+                                                                  .orElse(0), Mapping.named(property.getName())))
+                  .forEach(priorizedList::add);
         collectDefaultExportableMappings((prio, name) -> priorizedList.add(ComparableTuple.create(prio, name)));
         collectExportableMappings((prio, name) -> priorizedList.add(ComparableTuple.create(prio, name)));
         for (EntityImportHandlerExtender extender : extenders) {
+            extender.collectDefaultExportableMappings(this,
+                                                      descriptor,
+                                                      (prio, name) -> priorizedList.add(ComparableTuple.create(prio,
+                                                                                                               name)));
             extender.collectExportableMappings(this,
                                                descriptor,
                                                (prio, name) -> priorizedList.add(ComparableTuple.create(prio, name)));
@@ -371,27 +382,36 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     @Explain("False positive - the check is done within the stream")
     public List<String> getDefaultExportMapping() {
+        UserInfo currentUser = UserContext.getCurrentUser();
         List<ComparableTuple<Integer, Mapping>> priorizedList = new ArrayList<>();
 
         descriptor.getProperties()
                   .stream()
-                  .filter(property -> property.getAnnotation(Exportable.class)
-                                              .map(Exportable::autoExport)
-                                              .orElse(false))
+                  .filter(property -> isExportable(currentUser, property))
+                  .filter(this::isAutoExport)
                   .map(property -> ComparableTuple.create(property.getAnnotation(Exportable.class).get().priority(),
-                                                          Mapping.named(property.getName())));
+                                                          Mapping.named(property.getName())))
+                  .forEach(priorizedList::add);
         collectDefaultExportableMappings((prio, name) -> priorizedList.add(ComparableTuple.create(prio, name)));
         for (EntityImportHandlerExtender extender : extenders) {
             extender.collectDefaultExportableMappings(this,
                                                       descriptor,
                                                       (prio, name) -> priorizedList.add(ComparableTuple.create(prio,
                                                                                                                name)));
-            extender.collectExportableMappings(this,
-                                               descriptor,
-                                               (prio, name) -> priorizedList.add(ComparableTuple.create(prio, name)));
         }
         Collections.sort(priorizedList);
         return priorizedList.stream().map(Tuple::getSecond).map(Mapping::toString).collect(Collectors.toList());
+    }
+
+    protected boolean isExportable(UserInfo currentUser, Property property) {
+        return property.getAnnotation(Exportable.class)
+                       .map(Exportable::permissions)
+                       .map(currentUser::hasPermissions)
+                       .orElse(false);
+    }
+
+    protected boolean isAutoExport(Property property) {
+        return property.getAnnotation(Exportable.class).map(Exportable::autoExport).orElse(false);
     }
 
     /**
