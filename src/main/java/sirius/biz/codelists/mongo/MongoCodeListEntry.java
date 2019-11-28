@@ -10,6 +10,7 @@ package sirius.biz.codelists.mongo;
 
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListEntryData;
+import sirius.biz.importer.AutoImport;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mongo.Mango;
@@ -28,6 +29,7 @@ import sirius.kernel.di.std.Framework;
         unique = true)
 public class MongoCodeListEntry extends MongoEntity implements CodeListEntry<String, MongoCodeList> {
 
+    @AutoImport
     private final MongoRef<MongoCodeList> codeList =
             MongoRef.writeOnceOn(MongoCodeList.class, MongoRef.OnDelete.CASCADE);
     private final CodeListEntryData codeListEntryData = new CodeListEntryData(this);
