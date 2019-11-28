@@ -33,7 +33,7 @@ public class SQLCodeListEntryImportHandler extends SQLEntityImportHandler<SQLCod
     /**
      * Provides the factory to instantiate this import handler.
      */
-    @Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
+    @Register(framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
     public static class SQLCodeListImportHandlerFactory implements ImportHandlerFactory {
 
         @Override
