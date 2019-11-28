@@ -12,7 +12,6 @@ import sirius.biz.web.BizController;
 import sirius.db.es.Elastic;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
-import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.annotations.AfterDelete;
@@ -183,14 +182,7 @@ public class JournalData extends Composite {
             return false;
         }
 
-        EntityDescriptor descriptor = owner.getDescriptor();
-        for (Property p : descriptor.getProperties()) {
-            if (!p.getAnnotation(NoJournal.class).isPresent() && descriptor.isChanged(owner, p)) {
-                return true;
-            }
-        }
-
-        return false;
+        return fetchJournaledAndChangedProperties().findAny().isPresent();
     }
 
     /**
