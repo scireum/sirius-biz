@@ -136,10 +136,10 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
             }
         } catch (HandledException e) {
             throw Exceptions.createHandled()
-                    .withNLSKey("EntityImportJob.cannotHandleEntity")
-                    .set("entity", entity.toString())
-                    .set("message", e.getMessage())
-                    .handle();
+                            .withNLSKey("EntityImportJob.cannotHandleEntity")
+                            .set("entity", entity.toString())
+                            .set("message", e.getMessage())
+                            .handle();
         }
     }
 
