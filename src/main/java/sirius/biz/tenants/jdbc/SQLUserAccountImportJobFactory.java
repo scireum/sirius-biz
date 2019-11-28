@@ -9,9 +9,7 @@
 package sirius.biz.tenants.jdbc;
 
 import sirius.biz.jobs.JobFactory;
-import sirius.biz.jobs.batch.file.EntityImportJob;
 import sirius.biz.jobs.batch.file.EntityImportJobFactory;
-import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.Register;
@@ -26,14 +24,10 @@ import javax.annotation.Nonnull;
 @Permission(UserAccountController.PERMISSION_MANAGE_USER_ACCOUNTS)
 public class SQLUserAccountImportJobFactory extends EntityImportJobFactory {
 
+    @Nonnull
     @Override
-    protected EntityImportJob<?> createJob(ProcessContext process) {
-        return new EntityImportJob<>(fileParameter,
-                                     ignoreEmptyParameter,
-                                     importModeParameter,
-                                     SQLUserAccount.class,
-                                     getDictionary(),
-                                     process);
+    public String getName() {
+        return "import-sql-user-accounts";
     }
 
     @Override
@@ -44,11 +38,5 @@ public class SQLUserAccountImportJobFactory extends EntityImportJobFactory {
     @Override
     protected boolean hasPresetFor(Object targetObject) {
         return targetObject == SQLUserAccount.class;
-    }
-
-    @Nonnull
-    @Override
-    public String getName() {
-        return "import-sql-user-accounts";
     }
 }
