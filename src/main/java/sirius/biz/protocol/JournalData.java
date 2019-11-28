@@ -28,11 +28,9 @@ import java.util.stream.Stream;
 
 /**
  * Provides a hook which records all changed fields into the system journal which can be embedded into other entities
- * or
- * mixins.
+ * or mixins.
  * <p>
- * To skip a field, a {@link NoJournal} annotation can be placed. To skip a record entirely, {@link
- * #setSilent(boolean)}
+ * To skip a field, a {@link NoJournal} annotation can be placed. To skip a record entirely, {@link #setSilent(boolean)}
  * can be called before the update or delete.
  */
 public class JournalData extends Composite {
