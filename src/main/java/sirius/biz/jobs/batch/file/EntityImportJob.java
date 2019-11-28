@@ -15,7 +15,6 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.tenants.Tenants;
-import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
@@ -170,14 +169,6 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      * @return the filled and verified entity
      */
     protected E fillAndVerify(E entity) {
-        if (entity instanceof TenantAware) {
-            if (entity.isNew()) {
-                ((TenantAware) entity).fillWithCurrentTenant();
-            } else {
-                rawTenants.assertTenant((TenantAware) entity);
-            }
-        }
-
         return entity;
     }
 
