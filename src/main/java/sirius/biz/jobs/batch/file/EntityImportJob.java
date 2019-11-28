@@ -126,7 +126,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
             if (mode == ImportMode.CHECK_ONLY) {
                 enforceSaveConstraints(entity);
             } else {
-                createOrUpdate(entity);
+                createOrUpdate(entity, context);
             }
 
             if (entity.isNew()) {
@@ -136,10 +136,10 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
             }
         } catch (HandledException e) {
             throw Exceptions.createHandled()
-                            .withNLSKey("EntityImportJob.cannotHandleEntity")
-                            .set("entity", entity.toString())
-                            .set("message", e.getMessage())
-                            .handle();
+                    .withNLSKey("EntityImportJob.cannotHandleEntity")
+                    .set("entity", entity.toString())
+                    .set("message", e.getMessage())
+                    .handle();
         }
     }
 
@@ -192,9 +192,10 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      * {@link sirius.biz.importer.ImporterContext#addPostCommitCallback(Runnable)} or
      * {@link sirius.biz.importer.Importer#createOrUpdateNow(BaseEntity)} needs to be used to persist data.
      *
-     * @param entity the entity to persist
+     * @param entity  the entity to persist
+     * @param context the row represented as context
      */
-    protected void createOrUpdate(E entity) {
+    protected void createOrUpdate(E entity, Context context) {
         importer.createOrUpdateInBatch(entity);
     }
 }
