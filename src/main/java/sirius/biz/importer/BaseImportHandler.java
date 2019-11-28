@@ -183,6 +183,29 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         return false;
     }
 
+    @Override
+    public void enforcePreSaveConstraints(E entity) {
+        if (entity instanceof TenantAware) {
+            ((TenantAware) entity).setOrVerifyCurrentTenant();
+        }
+    }
+
+    /**
+     * Enforces some consistency checks before a delete is performed.
+     * <p>
+     * This method should only rarely be overwritten as most checks should be either be performed during a load
+     * or within the <tt>beforeDelete</tt> checks of the entity. The main point of this method is enforcing the
+     * correct tenant before deleteing, as some import handlers might yield (readonly) entities from parent
+     * tenants.
+     *
+     * @param entity the entity to check
+     */
+    protected void enforcePreDeleteConstraints(E entity) {
+        if (entity instanceof TenantAware) {
+            ((TenantAware) entity).setOrVerifyCurrentTenant();
+        }
+    }
+
     /**
      * Ensures that if the entity itself is tenant aware and the property being loaded also, that the tenants match.
      *

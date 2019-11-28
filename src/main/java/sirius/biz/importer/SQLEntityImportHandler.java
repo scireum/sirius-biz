@@ -226,6 +226,8 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      * @return the updated or created entity or, if batch updates are active, the given entity
      */
     protected E createOrUpdate(E entity, boolean batch) {
+        enforcePreSaveConstraints(entity);
+
         if (entity.isNew()) {
             return createIfChanged(entity, batch);
         } else {
@@ -337,11 +339,15 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
 
     @Override
     public void deleteNow(E entity) {
+        enforcePreDeleteConstraints(entity);
+
         getDeleteQuery().delete(entity, true, false);
     }
 
     @Override
     public void deleteInBatch(E entity) {
+        enforcePreDeleteConstraints(entity);
+
         getDeleteQuery().delete(entity, true, true);
     }
 

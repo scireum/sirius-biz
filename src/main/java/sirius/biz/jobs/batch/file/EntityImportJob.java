@@ -124,7 +124,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
 
             fillAndVerify(entity);
             if (mode == ImportMode.CHECK_ONLY) {
-                entity.getDescriptor().beforeSave(entity);
+                enforceSaveConstraints(entity);
             } else {
                 createOrUpdate(entity);
             }
@@ -141,6 +141,16 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
                             .set("message", e.getMessage())
                             .handle();
         }
+    }
+
+    /**
+     * Enforces the save constraints manually in case of {@link ImportMode#CHECK_ONLY}.
+     *
+     * @param entity the entity to check
+     */
+    protected void enforceSaveConstraints(E entity) {
+        importer.findHandler(type).enforcePreSaveConstraints(entity);
+        entity.getDescriptor().beforeSave(entity);
     }
 
     /**

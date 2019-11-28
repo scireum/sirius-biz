@@ -70,6 +70,8 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
     @Override
     public E createOrUpdateNow(E entity) {
+        enforcePreSaveConstraints(entity);
+
         mango.update(entity);
         return entity;
     }
@@ -86,6 +88,8 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
     @Override
     public void deleteNow(E entity) {
+        enforcePreDeleteConstraints(entity);
+
         mango.delete(entity);
     }
 

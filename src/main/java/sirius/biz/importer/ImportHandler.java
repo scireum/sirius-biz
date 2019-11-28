@@ -103,6 +103,21 @@ public interface ImportHandler<E extends BaseEntity<?>> {
     E findInCacheOrLoadAndCreate(Context data);
 
     /**
+     * Permits to enforce some constraints before persisting an entity.
+     * <p>
+     * This is autoamtically invoked by {@link #createOrUpdateNow(BaseEntity)} and all other save methods. It is however
+     * made public as some jobs only verify the consistency of data without persisting anything.
+     * <p>
+     * This method should only rarely be overwritten as most checks should be either be performed during a load
+     * or within the <tt>beforeSave</tt> checks of the entity. The main point of this method is enforcing the
+     * correct tenant before persisting data, as some import handlers might yield (readonly) entities from parent
+     * tenants.
+     *
+     * @param entity the entity to verify
+     */
+    void enforcePreSaveConstraints(E entity);
+
+    /**
      * Either persists or updates the given entity.
      *
      * @param entity the entity to update or persist.
