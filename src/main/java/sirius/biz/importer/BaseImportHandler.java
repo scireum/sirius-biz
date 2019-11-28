@@ -300,9 +300,13 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @return a list of all mappings which are marked as auto import
      */
     protected List<Mapping> getAutoImportMappings() {
+        UserInfo currentUser = UserContext.getCurrentUser();
         return descriptor.getProperties()
                          .stream()
-                         .filter(property -> property.getAnnotation(AutoImport.class).isPresent())
+                         .filter(property -> property.getAnnotation(AutoImport.class)
+                                                     .map(AutoImport::permissions)
+                                                     .map(currentUser::hasPermissions)
+                                                     .orElse(false))
                          .map(Property::getName)
                          .map(Mapping::named)
                          .collect(Collectors.toList());

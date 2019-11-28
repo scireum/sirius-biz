@@ -19,4 +19,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface AutoImport {
+
+    /**
+     * Controls the permissions required to be able to import the field.
+     * <p>
+     * If the current user hasn't all of the given permissions, this field will be skipped
+     *
+     * @return the list of permissions required to be able to import the annotated field
+     */
+    String[] permissions() default {};
 }
