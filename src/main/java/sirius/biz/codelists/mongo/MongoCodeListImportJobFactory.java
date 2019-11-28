@@ -18,7 +18,6 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.mongo.MongoTenants;
 import sirius.db.mixing.BaseEntity;
-import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
@@ -46,39 +45,14 @@ public class MongoCodeListEntryImportJobFactory extends EntityImportJobFactory {
 
     @Override
     protected EntityImportJob<MongoCodeListEntry> createJob(ProcessContext process) {
-        return new MongoCodeListEntryImportJob(process);
-    }
-
-    protected class MongoCodeListEntryImportJob extends EntityImportJob<MongoCodeListEntry> {
-
-        private CodeList codeList;
-
-        /**
-         * Creates a new job for the given factory, name and process.
-         *
-         * @param process the process context itself
-         */
-        private MongoCodeListEntryImportJob(ProcessContext process) {
-            super(fileParameter,
-                  ignoreEmptyParameter,
-                  importModeParameter,
-                  MongoCodeListEntry.class,
-                  getDictionary(),
-                  process);
-            codeList = process.require(codeListParameter);
-        }
-
-        @Override
-        protected MongoCodeListEntry findAndLoad(Context ctx) {
-            ctx.put(MongoCodeListEntry.CODE_LIST.toString(), ((MongoCodeList) codeList).getId());
-            return super.findAndLoad(ctx);
-        }
-
-        @Override
-        protected MongoCodeListEntry fillAndVerify(MongoCodeListEntry entity) {
-            setOrVerify(entity, entity.getCodeList(), (MongoCodeList) codeList);
-            return super.fillAndVerify(entity);
-        }
+        CodeList codeList = process.require(codeListParameter);
+        return new EntityImportJob<>(fileParameter,
+                                     ignoreEmptyParameter,
+                                     importModeParameter,
+                                     MongoCodeListEntry.class,
+                                     getDictionary(),
+                                     process,
+                                     context -> context.put(MongoCodeListEntry.CODE_LIST.toString(), codeList));
     }
 
     @Override

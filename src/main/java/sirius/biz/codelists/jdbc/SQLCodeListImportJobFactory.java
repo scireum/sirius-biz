@@ -18,7 +18,6 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.jdbc.SQLTenants;
 import sirius.db.mixing.BaseEntity;
-import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
@@ -42,44 +41,18 @@ public class SQLCodeListEntryImportJobFactory extends EntityImportJobFactory {
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
         parameterCollector.accept(codeListParameter);
         super.collectParameters(parameterCollector);
-
     }
 
     @Override
     protected EntityImportJob<SQLCodeListEntry> createJob(ProcessContext process) {
-        return new SQLCodeListEntryImportJob(process);
-    }
-
-    protected class SQLCodeListEntryImportJob extends EntityImportJob<SQLCodeListEntry> {
-
-        private CodeList codeList;
-
-        /**
-         * Creates a new job for the given factory, name and process.
-         *
-         * @param process the process context itself
-         */
-        private SQLCodeListEntryImportJob(ProcessContext process) {
-            super(fileParameter,
-                  ignoreEmptyParameter,
-                  importModeParameter,
-                  SQLCodeListEntry.class,
-                  getDictionary(),
-                  process);
-            codeList = process.require(codeListParameter);
-        }
-
-        @Override
-        protected SQLCodeListEntry findAndLoad(Context ctx) {
-            ctx.put(SQLCodeListEntry.CODE_LIST.toString(), ((SQLCodeList) codeList).getId());
-            return super.findAndLoad(ctx);
-        }
-
-        @Override
-        protected SQLCodeListEntry fillAndVerify(SQLCodeListEntry entity) {
-            setOrVerify(entity, entity.getCodeList(), (SQLCodeList) codeList);
-            return super.fillAndVerify(entity);
-        }
+        CodeList codeList = process.require(codeListParameter);
+        return new EntityImportJob<>(fileParameter,
+                                     ignoreEmptyParameter,
+                                     importModeParameter,
+                                     SQLCodeListEntry.class,
+                                     getDictionary(),
+                                     process,
+                                     context -> context.put(SQLCodeListEntry.CODE_LIST.toString(), codeList));
     }
 
     @Override
