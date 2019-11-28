@@ -127,7 +127,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
             if (mode == ImportMode.CHECK_ONLY) {
                 entity.getDescriptor().beforeSave(entity);
             } else {
-                importer.createOrUpdateInBatch(entity);
+                createOrUpdate(entity);
             }
 
             if (entity.isNew()) {
@@ -144,12 +144,27 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
         }
     }
 
-    private boolean shouldSkip(E entity) {
+    /**
+     * Tries to resolve the context into an entity.
+     * <p>
+     * Overwrite this method do add additional parameters to the <tt>context</tt>.
+     *
+     * @param context the context containing all relevant data
+     * @return the entity which was either found in he database or create using the given data
+     */
+    protected E findAndLoad(Context context) {
+        return importer.findAndLoad(type, context);
+    }
+
+    protected boolean shouldSkip(E entity) {
         return mode == ImportMode.NEW_ONLY && !entity.isNew() || (mode == ImportMode.UPDATE_ONLY && entity.isNew());
     }
 
     /**
      * Completes the given entity and verifies the integrity of the data.
+     * <p>
+     * This method is intended to be overwritten but note that most of the consistency checks should be performed
+     * in the {@link sirius.biz.importer.ImportHandler} itself if possible.
      *
      * @param entity the entity which has be loaded previously
      * @return the filled and verified entity
@@ -167,12 +182,18 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     }
 
     /**
-     * Tries to resolve the context into an entity.
+     * Creates or updates the given entity.
+     * <p>
+     * This can be overwritten to use a custom way of persisting data. Also this can be used to perfrom
+     * post-save activities. Note however, in the default implementation a batch update is used.
+     * <p>
+     * Therefore a post-save handler would either need to be a
+     * {@link sirius.biz.importer.ImporterContext#addPostCommitCallback(Runnable)} or
+     * {@link sirius.biz.importer.Importer#createOrUpdateNow(BaseEntity)} needs to be used to persist data.
      *
-     * @param context the context containing all relevant data
-     * @return the entity which was either found in he database or create using the given data
+     * @param entity the entity to persist
      */
-    protected E findAndLoad(Context context) {
-        return importer.findAndLoad(type, context);
+    protected void createOrUpdate(E entity) {
+        importer.createOrUpdateInBatch(entity);
     }
 }
