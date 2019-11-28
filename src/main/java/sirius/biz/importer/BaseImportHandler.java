@@ -340,17 +340,16 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      *
      * @return a list of all exportable mappings
      */
-    @SuppressWarnings("OptionalGetWithoutIsPresent")
-    @Explain("False positive - the check is done within the stream")
     protected List<Mapping> getExportableMappings() {
         List<ComparableTuple<Integer, Mapping>> priorizedList = new ArrayList<>();
         UserInfo currentUser = UserContext.getCurrentUser();
-        
+
         descriptor.getProperties()
                   .stream()
                   .filter(property -> isExportable(currentUser, property))
-                  .map(property -> ComparableTuple.create(property.getAnnotation(Exportable.class).get().priority(),
-                                                          Mapping.named(property.getName())))
+                  .map(property -> ComparableTuple.create(property.getAnnotation(Exportable.class)
+                                                                  .map(Exportable::priority)
+                                                                  .orElse(0), Mapping.named(property.getName())))
                   .forEach(priorizedList::add);
         collectDefaultExportableMappings((prio, name) -> priorizedList.add(ComparableTuple.create(prio, name)));
         collectExportableMappings((prio, name) -> priorizedList.add(ComparableTuple.create(prio, name)));
