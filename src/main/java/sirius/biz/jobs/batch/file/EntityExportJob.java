@@ -70,6 +70,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     protected Class<E> type;
     protected List<Function<E, Object>> extractors;
     protected Consumer<Q> queryExtender;
+    protected Consumer<Context> contextExtender;
 
     @Part
     private static Mixing mixing;
@@ -102,6 +103,17 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);
         this.importer = new Importer(process.getTitle());
+    }
+
+    /**
+     * Specifies a context extender which can be used to transfer job parameters into the import context.
+     *
+     * @param contextExtender the extender to specify
+     * @return the import job itself for fluent method calls
+     */
+    public EntityExportJob<E,Q> withContextExtender(Consumer<Context> contextExtender) {
+        this.contextExtender = contextExtender;
+        return this;
     }
 
     /**
@@ -250,6 +262,11 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
         Watch w = Watch.start();
         try {
             Context data = dictionary.load(row, false);
+
+            if (contextExtender != null) {
+                contextExtender.accept(data);
+            }
+
             Optional<E> entity = importer.tryFind(type, data);
             if (entity.isPresent()) {
                 export.addRow(exportAsRow(row, entity.get()));

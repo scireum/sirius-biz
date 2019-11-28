@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.batch.file;
 
+import sirius.biz.importer.ImportContext;
 import sirius.biz.importer.Importer;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.infos.JobInfoCollector;
@@ -47,15 +48,36 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
         parameterCollector.accept(templateFileParameter);
     }
 
+    @SuppressWarnings("squid:S2095")
+    @Explain("The job must not be closed here as it is returned and managed by the caller.")
     @Override
     protected EntityExportJob<E, Q> createJob(ProcessContext process) {
+        // We only resolve the parameters once and keep the final values around in a local context...
+        ImportContext paramterContext = new ImportContext();
+        transferParameters(paramterContext, process);
+
         return new EntityExportJob<E, Q>(templateFileParameter,
                                          destinationParameter,
                                          fileTypeParameter,
                                          getExportType(),
                                          getDictionary(),
                                          getDefaultMapping(),
-                                         process).withQueryExtender(query -> extendSelectQuery(query, process));
+                                         process).withQueryExtender(query -> extendSelectQuery(query, process))
+                                                 .withContextExtender(context -> context.putAll(paramterContext));
+    }
+
+    /**
+     * Permits to transfer parameters into the import context.
+     * <p>
+     * This is required as an export can process partial template files by looking up the matching entities and then
+     * completing the rows.
+     *
+     * @param context        the context to enrich. This will be transferred to the underlying {@link Importer} and
+     *                       {@link sirius.biz.importer.ImportHandler import handlers}
+     * @param processContext the process context used to resolve parameter values
+     */
+    protected void transferParameters(ImportContext context, ProcessContext processContext) {
+        // nothing to transfer by default
     }
 
     /**

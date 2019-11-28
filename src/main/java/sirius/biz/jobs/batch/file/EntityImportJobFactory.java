@@ -42,7 +42,7 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
 
     @Override
     @SuppressWarnings("squid:S2095")
-    @Explain("The job must to ne closed here as it is returned and managed by the caller.")
+    @Explain("The job must not be closed here as it is returned and managed by the caller.")
     protected EntityImportJob<?> createJob(ProcessContext process) {
         // We only resolve the parameters once and keep the final values around in a local context...
         ImportContext paramterContext = new ImportContext();
