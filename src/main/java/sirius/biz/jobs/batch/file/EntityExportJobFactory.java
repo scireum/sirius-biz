@@ -15,6 +15,7 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer3.FileParameter;
 import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.query.Query;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
@@ -27,8 +28,10 @@ import java.util.function.Consumer;
  * {@link EntityExportJob}.
  *
  * @param <E> the type of entities being exported
+ * @param <Q> the query type used to select entities if all are to be exported
  */
-public abstract class EntityExportJobFactory<E extends BaseEntity<?>> extends LineBasedExportJobFactory {
+public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends Query<Q, E, ?>>
+        extends LineBasedExportJobFactory {
 
     protected final FileParameter templateFileParameter;
 
@@ -45,14 +48,24 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>> extends Li
     }
 
     @Override
-    protected EntityExportJob<E> createJob(ProcessContext process) {
-        return new EntityExportJob<>(templateFileParameter,
-                                     destinationParameter,
-                                     fileTypeParameter,
-                                     getExportType(),
-                                     getDictionary(),
-                                     getDefaultMapping(),
-                                     process);
+    protected EntityExportJob<E, Q> createJob(ProcessContext process) {
+        return new EntityExportJob<E, Q>(templateFileParameter,
+                                         destinationParameter,
+                                         fileTypeParameter,
+                                         getExportType(),
+                                         getDictionary(),
+                                         getDefaultMapping(),
+                                         process).withQueryExtender(query -> extendSelectQuery(query, process));
+    }
+
+    /**
+     * Permits to add additional constraints on the query used to select all exportable entities.
+     *
+     * @param query          the query to extend
+     * @param processContext the current process which can be used to extract parameters
+     */
+    protected void extendSelectQuery(Q query, ProcessContext processContext) {
+        // Nothing to add by default
     }
 
     /**

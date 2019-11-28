@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -57,8 +58,9 @@ import java.util.stream.Collectors;
  * </ol>
  *
  * @param <E> the type of entities being exported by this job
+ * @param <Q> the query type used to select entities if all are to be exported
  */
-public class EntityExportJob<E extends BaseEntity<?>> extends LineBasedExportJob {
+public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> extends LineBasedExportJob {
 
     protected final VirtualFile templateFile;
     protected final ImportDictionary dictionary;
@@ -67,6 +69,7 @@ public class EntityExportJob<E extends BaseEntity<?>> extends LineBasedExportJob
     protected final List<String> defaultMapping;
     protected Class<E> type;
     protected List<Function<E, Object>> extractors;
+    protected Consumer<Q> queryExtender;
 
     @Part
     private static Mixing mixing;
@@ -99,6 +102,17 @@ public class EntityExportJob<E extends BaseEntity<?>> extends LineBasedExportJob
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);
         this.importer = new Importer(process.getTitle());
+    }
+
+    /**
+     * Specifies a query extender which applies an additional filter on the "select all" query.
+     *
+     * @param queryExtender the extender to specify
+     * @return the export job itself for fluent method calls
+     */
+    public EntityExportJob<E, Q> withQueryExtender(Consumer<Q> queryExtender) {
+        this.queryExtender = queryExtender;
+        return this;
     }
 
     /**
@@ -321,11 +335,15 @@ public class EntityExportJob<E extends BaseEntity<?>> extends LineBasedExportJob
      * @return the query which yields all entities to export
      */
     @SuppressWarnings("unchecked")
-    protected Query<?, E, ?> createFullExportQuery() {
-        Query<?, E, ?> query = (Query<?, E, ?>) descriptor.getMapper().select(type);
+    protected Q createFullExportQuery() {
+        Q query = (Q) descriptor.getMapper().select(type);
 
         if (TenantAware.class.isAssignableFrom(type)) {
             query.eq(TenantAware.TENANT, tenants.getRequiredTenant());
+        }
+
+        if (queryExtender != null) {
+            queryExtender.accept(query);
         }
 
         return query;
