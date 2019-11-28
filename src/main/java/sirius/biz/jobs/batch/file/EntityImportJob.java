@@ -26,17 +26,22 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 
+import java.util.function.Consumer;
+
 /**
  * Provides a job for importing line based files (CSV, Excel) as entities.
  * <p>
- * Utilizing {@link sirius.biz.importer.ImportHandler import handlers} this can be used as is in most cases. However
- * a subclass overwriting {@link #handleRow(int, Context)} might be required to perform some mappings.
+ * Utilizing {@link sirius.biz.importer.ImportHandler import handlers} this can be used as is in most cases.
+ * <p>
+ * Note that {@link #fillAndVerify(BaseEntity)} can be overwritten to perform any pre-save activities or
+ * {@link #createOrUpdate(BaseEntity)} to use a custom way to persist data or to perform some post-save activities.
  *
  * @param <E> the type of entities being imported by this job
  */
 public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImportJob {
 
     protected final EntityDescriptor descriptor;
+    protected final Consumer<Context> contextExtender;
     protected Class<E> type;
     protected ImportMode mode;
 
@@ -55,6 +60,32 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      * @param type                 the type of entities being imported
      * @param dictionary           the import dictionary to use
      * @param process              the process context itself
+     * @param contextExtender      an extender which can transfer parameters into the context being passed into the
+     *                             {@link sirius.biz.importer.Importer}
+     */
+    public EntityImportJob(FileParameter fileParameter,
+                           BooleanParameter ignoreEmptyParameter,
+                           EnumParameter<ImportMode> importModeParameter,
+                           Class<E> type,
+                           ImportDictionary dictionary,
+                           ProcessContext process,
+                           Consumer<Context> contextExtender) {
+        super(fileParameter, ignoreEmptyParameter, dictionary, process);
+        this.contextExtender = contextExtender;
+        this.mode = process.getParameter(importModeParameter).orElse(ImportMode.NEW_AND_UPDATES);
+        this.type = type;
+        this.descriptor = mixing.getDescriptor(type);
+    }
+
+    /**
+     * Creates a new job for the given factory, name and process, which doesn't transfer any additional parameters.
+     *
+     * @param fileParameter        the parameter which is used to derive the import file from
+     * @param ignoreEmptyParameter the parameter which is used to determine if empty values should be ignored
+     * @param importModeParameter  the parameter which is used to determine the {@link ImportMode} to use
+     * @param type                 the type of entities being imported
+     * @param dictionary           the import dictionary to use
+     * @param process              the process context itself
      */
     public EntityImportJob(FileParameter fileParameter,
                            BooleanParameter ignoreEmptyParameter,
@@ -63,6 +94,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
                            ImportDictionary dictionary,
                            ProcessContext process) {
         super(fileParameter, ignoreEmptyParameter, dictionary, process);
+        this.contextExtender = null;
         this.mode = process.getParameter(importModeParameter).orElse(ImportMode.NEW_AND_UPDATES);
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);
@@ -79,6 +111,11 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     @Override
     protected void handleRow(int index, Context context) {
         Watch watch = Watch.start();
+
+        if (contextExtender != null) {
+            contextExtender.accept(context);
+        }
+
         E entity = findAndLoad(context);
         try {
             if (shouldSkip(entity)) {
