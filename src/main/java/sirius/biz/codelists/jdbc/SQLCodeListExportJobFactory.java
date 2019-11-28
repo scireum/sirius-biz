@@ -11,6 +11,7 @@ package sirius.biz.codelists.jdbc;
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.mongo.MongoCodeList;
+import sirius.biz.importer.ImportContext;
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.jobs.params.CodeListParameter;
@@ -54,6 +55,11 @@ public class SQLCodeListExportJobFactory
     @Override
     protected void extendSelectQuery(SmartQuery<SQLCodeListEntry> query, ProcessContext processContext) {
         query.eq(CodeListEntry.CODE_LIST, processContext.require(codeListParameter));
+    }
+
+    @Override
+    protected void transferParameters(ImportContext context, ProcessContext processContext) {
+        context.set(CodeListEntry.CODE_LIST, processContext.require(codeListParameter));
     }
 
     @Override

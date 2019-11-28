@@ -10,13 +10,12 @@ package sirius.biz.codelists.mongo;
 
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListEntry;
-import sirius.biz.codelists.jdbc.SQLCodeListEntry;
+import sirius.biz.importer.ImportContext;
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.jobs.params.CodeListParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
-import sirius.db.jdbc.SmartQuery;
 import sirius.db.mongo.MongoQuery;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
@@ -30,7 +29,8 @@ import java.util.function.Consumer;
  */
 @Register(classes = JobFactory.class, framework = MongoCodeLists.FRAMEWORK_CODE_LISTS_MONGO)
 @Permission(CodeListController.PERMISSION_MANAGE_CODELISTS)
-public class MongoCodeListExportJobFactory extends EntityExportJobFactory<MongoCodeListEntry, MongoQuery<MongoCodeListEntry>> {
+public class MongoCodeListExportJobFactory
+        extends EntityExportJobFactory<MongoCodeListEntry, MongoQuery<MongoCodeListEntry>> {
 
     private CodeListParameter codeListParameter = new CodeListParameter("codeList", "$CodeList").markRequired();
 
@@ -54,6 +54,11 @@ public class MongoCodeListExportJobFactory extends EntityExportJobFactory<MongoC
     @Override
     protected void extendSelectQuery(MongoQuery<MongoCodeListEntry> query, ProcessContext processContext) {
         query.eq(CodeListEntry.CODE_LIST, processContext.require(codeListParameter));
+    }
+
+    @Override
+    protected void transferParameters(ImportContext context, ProcessContext processContext) {
+        context.set(CodeListEntry.CODE_LIST, processContext.require(codeListParameter));
     }
 
     @Override
