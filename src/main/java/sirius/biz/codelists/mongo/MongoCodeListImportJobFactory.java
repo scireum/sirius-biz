@@ -16,7 +16,6 @@ import sirius.biz.jobs.batch.file.EntityImportJobFactory;
 import sirius.biz.jobs.params.CodeListParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
-import sirius.biz.tenants.mongo.MongoTenants;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
