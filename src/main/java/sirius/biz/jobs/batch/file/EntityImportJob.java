@@ -92,7 +92,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     }
 
     @Override
-    protected void handleRow(int index, Context context) {
+    protected final void handleRow(int index, Context context) {
         Watch watch = Watch.start();
 
         if (contextExtender != null) {
