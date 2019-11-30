@@ -106,9 +106,9 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
                 return;
             }
 
-            fillAndVerify(entity);
+            fillAndVerify(entity, context);
             if (mode == ImportMode.CHECK_ONLY) {
-                enforceSaveConstraints(entity);
+                enforceSaveConstraints(entity, context);
             } else {
                 createOrUpdate(entity, context);
             }
@@ -130,9 +130,10 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     /**
      * Enforces the save constraints manually in case of {@link ImportMode#CHECK_ONLY}.
      *
-     * @param entity the entity to check
+     * @param entity  the entity to check
+     * @param context the row represented as context
      */
-    protected void enforceSaveConstraints(E entity) {
+    protected void enforceSaveConstraints(E entity, Context context) {
         importer.findHandler(type).enforcePreSaveConstraints(entity);
         entity.getDescriptor().beforeSave(entity);
     }
@@ -159,10 +160,11 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      * This method is intended to be overwritten but note that most of the consistency checks should be performed
      * in the {@link sirius.biz.importer.ImportHandler} itself if possible.
      *
-     * @param entity the entity which has be loaded previously
+     * @param entity  the entity which has be loaded previously
+     * @param context the row represented as context
      * @return the filled and verified entity
      */
-    protected E fillAndVerify(E entity) {
+    protected E fillAndVerify(E entity, Context context) {
         return entity;
     }
 
