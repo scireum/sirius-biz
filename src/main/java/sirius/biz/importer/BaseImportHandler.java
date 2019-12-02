@@ -149,9 +149,6 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      */
     protected void loadProperty(E entity, Property property, Context data) {
         parseProperty(entity, property, data.getValue(property.getName()), data);
-        if (shouldEnforcePropertyConstraints(entity, property)) {
-            enforcePropertyConstraints(entity, property);
-        }
     }
 
     /**
@@ -206,65 +203,6 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         if (entity instanceof TenantAware) {
             ((TenantAware) entity).setOrVerifyCurrentTenant();
         }
-    }
-
-    /**
-     * Checks if a propery needs some constraints to be enforced.
-     * <p>
-     * This is especially useful for {@link BaseEntityRefProperty references}. If this returns <tt>true</tt>
-     * {@link #enforcePropertyConstraints(BaseEntity, Property)} for the propery is invoked.
-     *
-     * @param entity   the entity to check
-     * @param property the property to check
-     * @return <tt>true</tt> if the property/value should be checked, <tt>false</tt> otherwise
-     */
-    protected boolean shouldEnforcePropertyConstraints(E entity, Property property) {
-        if (!(property instanceof BaseEntityRefProperty)) {
-            return false;
-        }
-
-        if (entity instanceof TenantAware && Strings.areEqual(TenantAware.TENANT.getName(), property.getName())) {
-            // This is enforced manually as it is a very important check....
-            return false;
-        }
-
-        return entity.isChanged(Mapping.named(property.getName()));
-    }
-
-    /**
-     * Enforces additional constraints on a given property.
-     * <p>
-     * This can be used to check referenced fields etc. This method is intended to be overwritten by subclasses, as
-     * by default it simply checks if a referenced value is from the same tenant as the <tt>entity</tt> itself
-     * - if both are {@link TenantAware}.
-     *
-     * @param entity   the entity to check
-     * @param property the property to check
-     */
-    protected void enforcePropertyConstraints(E entity, Property property) {
-        ensureTenantMatch(entity, property);
-    }
-
-    /**
-     * Ensures that if the entity itself is tenant aware and the property being loaded also, that the tenants match.
-     *
-     * @param entity   the entity to fill
-     * @param property the property which has been loaded
-     */
-    protected void ensureTenantMatch(E entity, Property property) {
-        if (shouldEnforceTenantMatch(entity, property)) {
-            Object loadedEntity = property.getValue(entity);
-            ((TenantAware) entity).assertSameTenant(property::getLabel, (TenantAware) loadedEntity);
-        }
-    }
-
-    protected boolean shouldEnforceTenantMatch(E entity, Property property) {
-        if (!(entity instanceof TenantAware)) {
-            return false;
-        }
-
-        BaseEntityRefProperty<?, ?, ?> refProperty = (BaseEntityRefProperty<?, ?, ?>) property;
-        return TenantAware.class.isAssignableFrom(refProperty.getReferencedType());
     }
 
     @SuppressWarnings("unchecked")
