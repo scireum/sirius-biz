@@ -66,6 +66,7 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
         queryConsumer.accept(user -> Strings.isFilled(user.getUserAccountData().getLogin().getUsername()),
                              () -> context.getBatchContext()
                                           .findQuery(SQLUserAccount.class,
+                                                     SQLUserAccount.TENANT,
                                                      SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                      .inner(LoginData.USERNAME)));
     }
