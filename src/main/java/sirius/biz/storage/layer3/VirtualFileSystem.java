@@ -11,11 +11,9 @@ package sirius.biz.storage.layer3;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nonnull;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Provides the main entrypoint into the <b>Virtual File System</b>.
@@ -41,15 +39,15 @@ public class VirtualFileSystem {
     private class RootProvider implements ChildProvider {
 
         @Override
-        public Optional<VirtualFile> findChild(VirtualFile parent, String name) {
+        public VirtualFile findChild(VirtualFile parent, String name) {
             for (VFSRoot vfsRoot : rootProviders) {
-                Optional<VirtualFile> result = vfsRoot.findChild(root(), name);
-                if (result.isPresent()) {
+                VirtualFile result = vfsRoot.findChild(root(), name);
+                if (result != null) {
                     return result;
                 }
             }
 
-            return Optional.empty();
+            return null;
         }
 
         @Override
@@ -83,34 +81,18 @@ public class VirtualFileSystem {
      * Note that the resolved file may not exist (yet).
      *
      * @param path the path to resolve. It has to start with a "/".
-     * @return the resolved file or an empty optional if the path did contain invalid parts
-     */
-    public Optional<VirtualFile> tryResolve(String path) {
-        if (Strings.isEmpty(path) || Strings.areEqual(path, "/")) {
-            return Optional.of(root());
-        }
-
-        if (!path.startsWith("/")) {
-            return Optional.empty();
-        }
-
-        return root().tryResolve(path.substring(1));
-    }
-
-    /**
-     * Resolves a path into a {@link VirtualFile}.
-     * <p>
-     * Note that the resolved file may not exist (yet).
-     *
-     * @param path the path to resolve. It has to start with a "/".
      * @return the resolved file
-     * @throws sirius.kernel.health.HandledException if the path cannot be resolved into a file
      */
     public VirtualFile resolve(String path) {
-        return tryResolve(path).orElseThrow(() -> Exceptions.createHandled()
-                                                            .withNLSKey("VirtualFileSystem.invalidPath")
-                                                            .set("path", path)
-                                                            .handle());
+        if (Strings.isEmpty(path) || Strings.areEqual(path, "/")) {
+            return root();
+        }
+
+        if (path.startsWith("/")) {
+            return root().resolve(path.substring(1));
+        } else {
+            return root().resolve(path);
+        }
     }
 
     /**

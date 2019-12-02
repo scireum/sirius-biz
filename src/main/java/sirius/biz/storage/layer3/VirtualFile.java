@@ -627,15 +627,18 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * Note that the given file can be non-existent.
      *
      * @param name the name of the child to find
-     * @return the child wrapped as optional or an empty optional if the given name cannot be resolved into a file.
+     * @return the child which may be a non-existing file
      */
-    public Optional<VirtualFile> findChild(String name) {
+    public VirtualFile findChild(String name) {
         try {
             if (childProvider != null) {
-                return childProvider.findChild(this, name);
+                VirtualFile child = childProvider.findChild(this, name);
+                if (child != null) {
+                    return child;
+                }
             }
 
-            return Optional.empty();
+            return new MutableVirtualFile(this, name);
         } catch (Exception e) {
             throw handleErrorInCallback(e, "childProvider.findChild");
         }
@@ -648,17 +651,17 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return the relative path wrapped as optional or an  empty optional if the given relaive path cannot be
      * resolved into a file.
      */
-    public Optional<VirtualFile> tryResolve(String relativePath) {
+    public VirtualFile resolve(String relativePath) {
         String effectivePath = ensureRelativePath(relativePath);
 
         if (Strings.isEmpty(effectivePath)) {
-            return Optional.empty();
+            throw new IllegalArgumentException("Invalid path: " + effectivePath);
         }
 
         Tuple<String, String> nameAndRest = Strings.split(effectivePath, "/");
-        Optional<VirtualFile> child = findChild(nameAndRest.getFirst());
+        VirtualFile child = findChild(nameAndRest.getFirst());
         if (Strings.isFilled(nameAndRest.getSecond())) {
-            return child.flatMap(subChild -> subChild.tryResolve(nameAndRest.getSecond()));
+            return child.resolve(nameAndRest.getSecond());
         }
 
         return child;
@@ -670,22 +673,6 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         } else {
             return relativePath;
         }
-    }
-
-    /**
-     * Resolves the relative path within this directory.
-     *
-     * @param relativePath the path to resolve
-     * @return the relative path wrapped as optional or an  empty optional if the given relaive path cannot be
-     * resolved into a file.
-     * @throws HandledException if the given path cannot be resolved
-     */
-    public VirtualFile resolve(String relativePath) {
-        return tryResolve(relativePath).orElseThrow(() -> Exceptions.createHandled()
-                                                                    .withNLSKey("VirtualFile.cannotResolveChild")
-                                                                    .set("path", path())
-                                                                    .set("child", relativePath)
-                                                                    .handle());
     }
 
     /**

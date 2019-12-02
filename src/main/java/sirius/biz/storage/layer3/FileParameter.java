@@ -43,6 +43,6 @@ public class FileParameter extends BaseFileParameter<FileParameter> {
             return Optional.empty();
         }
 
-        return vfs.tryResolve(input.asString()).filter(file -> file.exists() && !file.isDirectory());
+        return Optional.ofNullable(vfs.resolve(input.asString())).filter(file -> file.exists() && !file.isDirectory());
     }
 }

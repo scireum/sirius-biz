@@ -11,7 +11,6 @@ package sirius.biz.storage.layer3;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.ValueHolder;
 
-import java.util.Optional;
 import java.util.function.BiConsumer;
 
 /**
@@ -33,7 +32,7 @@ public class EnumerateOnlyProvider implements ChildProvider {
     }
 
     @Override
-    public Optional<VirtualFile> findChild(VirtualFile parent, String name) {
+    public VirtualFile findChild(VirtualFile parent, String name) {
         ValueHolder<VirtualFile> result = new ValueHolder<>(null);
         enumerate(parent, FileSearch.iterateInto(file -> {
             if (Strings.areEqual(file.name(), name)) {
@@ -44,7 +43,7 @@ public class EnumerateOnlyProvider implements ChildProvider {
             }
         }));
 
-        return result.asOptional();
+        return result.get();
     }
 
     @Override

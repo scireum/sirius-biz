@@ -23,7 +23,6 @@ import sirius.kernel.settings.Extension;
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -38,12 +37,13 @@ public class ConfigBasedUplinksRoot implements VFSRoot {
     private GlobalContext ctx;
 
     @Override
-    public Optional<VirtualFile> findChild(VirtualFile parent, String name) {
+    public VirtualFile findChild(VirtualFile parent, String name) {
         return getUplinks().stream()
                            .filter(uplink -> Strings.areEqual(name, uplink.getDirectoryName()))
                            .filter(ConfigBasedUplink::checkPermission)
                            .map(uplink -> uplink.getFile(parent))
-                           .findFirst();
+                           .findFirst()
+                           .orElse(null);
     }
 
     private List<ConfigBasedUplink> getUplinks() {

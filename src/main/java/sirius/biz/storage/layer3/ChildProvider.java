@@ -8,7 +8,7 @@
 
 package sirius.biz.storage.layer3;
 
-import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * Enumerates and resolves children for a {@link VirtualFile}.
@@ -20,9 +20,11 @@ public interface ChildProvider {
      *
      * @param parent the directory to resolve the child in
      * @param name   the name of the child to resolve
-     * @return resolved file (which may or may not exist) or an empty optional if the given name cannot be resolved
+     * @return resolved file (which may or may not exist) or <tt>null</tt> which will make the framework use a
+     * plain non-exisiting and unmodifyable placeholder
      */
-    Optional<VirtualFile> findChild(VirtualFile parent, String name);
+    @Nullable
+    VirtualFile findChild(VirtualFile parent, String name);
 
     /**
      * Enumerates all children using the given search.

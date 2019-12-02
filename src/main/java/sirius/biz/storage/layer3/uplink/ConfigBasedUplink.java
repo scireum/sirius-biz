@@ -19,7 +19,7 @@ import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
 import javax.annotation.Nonnull;
-import java.util.Optional;
+import javax.annotation.Nullable;
 import java.util.function.Predicate;
 
 /**
@@ -38,7 +38,7 @@ public abstract class ConfigBasedUplink {
 
     protected ChildProvider innerChildProvider = new ChildProvider() {
         @Override
-        public Optional<VirtualFile> findChild(VirtualFile directory, String name) {
+        public VirtualFile findChild(VirtualFile directory, String name) {
             return findChildInDirectory(directory, name);
         }
 
@@ -130,9 +130,11 @@ public abstract class ConfigBasedUplink {
      *
      * @param parent the parent directory
      * @param name   the name of the child
-     * @return the resolved child (existing or not) or an empty optional if the child cannot be resolved
+     * @return the resolved child (existing or not) or <tt>null</tt> if the file cannot be resolved and a plain
+     * non existing and unmodifyable placeholder should be used.
      */
-    protected abstract Optional<VirtualFile> findChildInDirectory(VirtualFile parent, String name);
+    @Nullable
+    protected abstract VirtualFile findChildInDirectory(VirtualFile parent, String name);
 
     /**
      * Enumerates all children in the given parent matching the given search.

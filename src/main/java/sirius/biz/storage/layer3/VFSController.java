@@ -31,6 +31,7 @@ import sirius.web.util.LinkBuilder;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Provides a web based UI for the {@link VirtualFileSystem}.
@@ -98,12 +99,12 @@ public class VFSController extends BizController {
      * @param ctx         the request to handle
      * @param out         the JSON response
      * @param inputStream the contents to process
-     * @throws Exception in case of an error@
+     * @throws Exception in case of an error
      */
     @LoginRequired
     @Routed(value = "/fs/upload", preDispatchable = true, jsonCall = true)
     public void upload(WebContext ctx, JSONStructuredOutput out, InputStreamHandler inputStream) throws Exception {
-        VirtualFile parent = vfs.tryResolve(ctx.get("path").asString()).orElse(null);
+        VirtualFile parent = vfs.resolve(ctx.get("path").asString());
         parent.assertExistingDirectory();
 
         String filename = ctx.get("filename").asString(ctx.get("qqfile").asString());
@@ -151,7 +152,7 @@ public class VFSController extends BizController {
     @LoginRequired
     @Routed("/fs/delete")
     public void delete(WebContext ctx) {
-        VirtualFile file = vfs.tryResolve(ctx.get("path").asString()).orElse(null);
+        VirtualFile file = vfs.resolve(ctx.get("path").asString());
         if (file != null && ctx.isSafePOST()) {
             try {
                 if (file.exists()) {
@@ -175,7 +176,7 @@ public class VFSController extends BizController {
     @LoginRequired
     @Routed("/fs/rename")
     public void rename(WebContext ctx) {
-        VirtualFile file = vfs.tryResolve(ctx.get("path").asString()).orElse(null);
+        VirtualFile file = vfs.resolve(ctx.get("path").asString());
         if (file != null && ctx.isSafePOST()) {
             try {
                 String name = ctx.get("name").asString();
@@ -200,10 +201,10 @@ public class VFSController extends BizController {
     @LoginRequired
     @Routed("/fs/createDirectory")
     public void createDirectory(WebContext ctx) {
-        VirtualFile parent = vfs.tryResolve(ctx.get("parent").asString())
-                                .filter(VirtualFile::exists)
-                                .filter(VirtualFile::isDirectory)
-                                .orElse(null);
+        VirtualFile parent = Optional.ofNullable(vfs.resolve(ctx.get("parent").asString()))
+                                     .filter(VirtualFile::exists)
+                                     .filter(VirtualFile::isDirectory)
+                                     .orElse(null);
         if (parent != null && ctx.isSafePOST()) {
             try {
                 String name = ctx.get("name").asString();
@@ -228,7 +229,7 @@ public class VFSController extends BizController {
     @LoginRequired
     @Routed("/fs/move")
     public void move(WebContext ctx) {
-        VirtualFile file = vfs.tryResolve(ctx.get("path").asString()).orElse(null);
+        VirtualFile file = vfs.resolve(ctx.get("path").asString());
         VirtualFile newParent = vfs.resolve(ctx.get("newParent").asString());
         if (file != null) {
             try {

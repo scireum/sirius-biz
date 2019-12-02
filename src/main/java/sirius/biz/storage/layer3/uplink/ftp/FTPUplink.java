@@ -100,8 +100,8 @@ public class FTPUplink extends ConfigBasedUplink {
     }
 
     @Override
-    protected Optional<VirtualFile> findChildInDirectory(VirtualFile parent, String name) {
-        return Optional.of(wrap(parent, null, name));
+    protected VirtualFile findChildInDirectory(VirtualFile parent, String name) {
+        return wrap(parent, null, name);
     }
 
     private MutableVirtualFile wrap(VirtualFile parent, FTPFile file, String filename) {
