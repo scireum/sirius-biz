@@ -189,7 +189,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     }
 
     /**
-     * Returns the path a list of virtual files from the given root parent to this.
+     * Returns the path as a list of virtual files from the given root parent to this.
      *
      * @param rootParent one of the parent directories of <tt>this</tt>
      * @return the path (from the given root directory to this file) as list
@@ -558,10 +558,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     }
 
     /**
-     * Lists all childrens of this file.
+     * Lists all children of this file.
      * <p>
      * Note that this will load all children into a list. In case of very large directories this might be slow
-     * and memory consuming. Consider using {@link #children(FileSearch)} which supports filters an pagination.
+     * and memory consuming. Consider using {@link #children(FileSearch)} which supports filters and pagination.
      *
      * @return all child files as list
      */
