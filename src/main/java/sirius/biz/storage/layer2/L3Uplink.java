@@ -118,6 +118,7 @@ public class L3Uplink implements VFSRoot {
          * @param name            the name of the placeholder
          * @return a placeholder representing a non existent file or directory
          */
+        @Nullable
         protected VirtualFile createPlaceholder(@Nullable Directory parentDirectory, VirtualFile parent, String name) {
             if (parentDirectory != null && parentDirectory.getStorageSpace().isReadonly()) {
                 return null;
