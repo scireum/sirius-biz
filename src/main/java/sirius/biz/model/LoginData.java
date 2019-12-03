@@ -302,15 +302,16 @@ public class LoginData extends Composite {
      * @return a tuple where the first parameter determines if the password is valid
      */
     public PasswordVerificationResult checkPassword(String username, String password) {
-        for (PasswordHashFunction hashFunction : hashFunctions) {
-            String givenPasswordHash = hashFunction.computeHash(username, salt, password);
-            if (Strings.isFilled(givenPasswordHash) && Strings.areEqual(givenPasswordHash, passwordHash)) {
-                return hashFunction.isOutdated() ?
-                       PasswordVerificationResult.VALID_NEEDS_RE_HASH :
-                       PasswordVerificationResult.VALID;
+        if (Strings.isFilled(passwordHash)) {
+            for (PasswordHashFunction hashFunction : hashFunctions) {
+                String givenPasswordHash = hashFunction.computeHash(username, salt, password);
+                if (Strings.isFilled(givenPasswordHash) && Strings.areEqual(givenPasswordHash, passwordHash)) {
+                    return hashFunction.isOutdated() ?
+                           PasswordVerificationResult.VALID_NEEDS_RE_HASH :
+                           PasswordVerificationResult.VALID;
+                }
             }
         }
-
         return PasswordVerificationResult.INVALID;
     }
 
