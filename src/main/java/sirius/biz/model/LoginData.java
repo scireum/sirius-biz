@@ -179,9 +179,9 @@ public class LoginData extends Composite {
     private String cleartextPassword;
 
     /**
-     * Skips the creation of {@link #generatedPassword} on save which wis normally used to fill in {@link #passwordHash} with a generated {@link #salt}.
+     * Skips the creation of {@link #generatedPassword} on save which is normally used to fill in {@link #passwordHash} with a generated {@link #salt}.
      * <p>
-     * If set to true, this will allow for users without a valid password login to exists in the database.
+     * If set to true, this will allow for users without a valid password login to exist in the database.
      * This is useful for user objects with other means to login, like {@link #API_TOKEN} or custom auth methods.
      */
     @Transient
