@@ -16,6 +16,8 @@ import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.UserContext;
 
+import javax.annotation.Nullable;
+
 /**
  * Provides a stealth directory to store temporary files.
  * <p>
@@ -50,6 +52,7 @@ public class TmpRoot implements VFSRoot {
     private BlobStorage blobStorage;
 
     @Override
+    @Nullable
     public VirtualFile findChild(VirtualFile parent, String name) {
         if (TMP_PATH.equals(name)) {
             MutableVirtualFile result = new MutableVirtualFile(parent, name);

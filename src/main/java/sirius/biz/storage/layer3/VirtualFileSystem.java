@@ -13,6 +13,7 @@ import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 
 /**
@@ -39,6 +40,7 @@ public class VirtualFileSystem {
     private class RootProvider implements ChildProvider {
 
         @Override
+        @Nullable
         public VirtualFile findChild(VirtualFile parent, String name) {
             for (VFSRoot vfsRoot : rootProviders) {
                 VirtualFile result = vfsRoot.findChild(root(), name);
@@ -83,6 +85,7 @@ public class VirtualFileSystem {
      * @param path the path to resolve. It has to start with a "/".
      * @return the resolved file
      */
+    @Nonnull
     public VirtualFile resolve(String path) {
         if (Strings.isEmpty(path) || Strings.areEqual(path, "/")) {
             return root();

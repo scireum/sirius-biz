@@ -38,6 +38,7 @@ public abstract class ConfigBasedUplink {
 
     protected ChildProvider innerChildProvider = new ChildProvider() {
         @Override
+        @Nullable
         public VirtualFile findChild(VirtualFile directory, String name) {
             return findChildInDirectory(directory, name);
         }

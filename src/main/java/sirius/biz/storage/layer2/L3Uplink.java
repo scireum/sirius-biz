@@ -139,6 +139,7 @@ public class L3Uplink implements VFSRoot {
         }
 
         @Override
+        @Nullable
         public VirtualFile findChild(VirtualFile parent, String name) {
             Optional<Directory> parentDirectory = parent.tryAs(Directory.class);
             if (parentDirectory.isPresent()) {
@@ -232,6 +233,7 @@ public class L3Uplink implements VFSRoot {
      * @return a virtual file representing the storage space with the given name or an empty optional if none was found
      */
     @Override
+    @Nullable
     public VirtualFile findChild(VirtualFile parent, String name) {
         if (storage == null || !storage.isKnown(name)) {
             return null;

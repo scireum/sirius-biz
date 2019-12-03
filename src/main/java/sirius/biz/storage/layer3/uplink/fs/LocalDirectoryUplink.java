@@ -20,6 +20,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -67,6 +68,7 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
     }
 
     @Override
+    @Nullable
     protected VirtualFile findChildInDirectory(VirtualFile parent, String name) {
         try {
             File parentFile = parent.tryAs(File.class)

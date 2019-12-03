@@ -44,6 +44,7 @@ public abstract class SingularVFSRoot implements VFSRoot {
     }
 
     @Override
+    @Nullable
     public VirtualFile findChild(VirtualFile parent, String name) {
         if (Strings.areEqual(name, getName()) && isEnabled()) {
             return makeRoot(parent);

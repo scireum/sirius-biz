@@ -21,6 +21,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -37,6 +38,7 @@ public class ConfigBasedUplinksRoot implements VFSRoot {
     private GlobalContext ctx;
 
     @Override
+    @Nullable
     public VirtualFile findChild(VirtualFile parent, String name) {
         return getUplinks().stream()
                            .filter(uplink -> Strings.areEqual(name, uplink.getDirectoryName()))

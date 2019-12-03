@@ -27,6 +27,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
@@ -110,6 +111,7 @@ public class CIFSUplink extends ConfigBasedUplink {
     }
 
     @Override
+    @Nullable
     protected VirtualFile findChildInDirectory(VirtualFile parent, String name) {
         try {
             SmbFile parentFile = parent.tryAs(SmbFile.class)

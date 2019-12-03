@@ -28,6 +28,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -104,6 +105,7 @@ public class SFTPUplink extends ConfigBasedUplink {
     }
 
     @Override
+    @Nullable
     protected VirtualFile findChildInDirectory(VirtualFile parent, String name) {
         return wrap(parent, null, name);
     }

@@ -629,6 +629,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @param name the name of the child to find
      * @return the child which may be a non-existing file
      */
+    @Nonnull
     public VirtualFile findChild(String name) {
         try {
             if (childProvider != null) {
@@ -651,6 +652,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return the relative path wrapped as optional or an  empty optional if the given relaive path cannot be
      * resolved into a file.
      */
+    @Nonnull
     public VirtualFile resolve(String relativePath) {
         String effectivePath = ensureRelativePath(relativePath);
 
