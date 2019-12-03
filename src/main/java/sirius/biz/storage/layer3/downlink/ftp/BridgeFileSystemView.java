@@ -67,7 +67,7 @@ class BridgeFileSystemView implements FileSystemView {
             if (child != null) {
                 result = child;
             } else {
-                child = result.findChild(pathElement).orElse(null);
+                child = result.findChild(pathElement);
                 if (child != null && child.exists()) {
                     result = child;
                 } else if (i == pathElements.length - 1) {

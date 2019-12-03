@@ -12,7 +12,6 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Priorized;
 
 import javax.annotation.Nullable;
-import java.util.Optional;
 
 /**
  * Provides a base implementation for vfs roots which (at most) provide a single root directory.
@@ -45,11 +44,12 @@ public abstract class SingularVFSRoot implements VFSRoot {
     }
 
     @Override
-    public Optional<VirtualFile> findChild(VirtualFile parent, String name) {
+    @Nullable
+    public VirtualFile findChild(VirtualFile parent, String name) {
         if (Strings.areEqual(name, getName()) && isEnabled()) {
-            return Optional.of(makeRoot(parent));
+            return makeRoot(parent);
         }
-        return Optional.empty();
+        return null;
     }
 
     protected VirtualFile makeRoot(VirtualFile parent) {

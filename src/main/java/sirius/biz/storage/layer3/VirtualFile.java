@@ -34,6 +34,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -41,6 +42,9 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Represents a file or directory in the {@link VirtualFileSystem}.
@@ -168,6 +172,42 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
 
         return name();
+    }
+
+    /**
+     * Returns the relative path to the given root parent.
+     * <p>
+     * If this would be <tt>/foo/bar/baz</tt> and the given root parent is <tt>/foo</tt> then this would
+     * return <tt>bar/baz</tt>. Therefore this is the inverse of {@link #resolve(String)}.
+     *
+     * @param rootParent one of the parent directories of <tt>this</tt>
+     * @return the relative path from the given root parent to <tt>this</tt>
+     * @throws IllegalArgumentException if the given root parent isn't part of the path of <tt>this</tt>
+     */
+    public String relativePath(VirtualFile rootParent) {
+        return relativePathList(rootParent).stream().map(VirtualFile::name).collect(Collectors.joining("/"));
+    }
+
+    /**
+     * Returns the path as a list of virtual files from the given root parent to this.
+     *
+     * @param rootParent one of the parent directories of <tt>this</tt>
+     * @return the path (from the given root directory to this file) as list
+     * @throws IllegalArgumentException if the given root parent isn't part of the path of <tt>this</tt>
+     */
+    public List<VirtualFile> relativePathList(VirtualFile rootParent) {
+        List<VirtualFile> result = new ArrayList<>();
+        VirtualFile current = this;
+        while (current != null && !Objects.equals(current, rootParent)) {
+            result.add(0, current);
+            current = current.parent();
+        }
+
+        if (current == null) {
+            throw new IllegalArgumentException(Strings.apply("%s is not a parent of %s", rootParent, this));
+        }
+
+        return result;
     }
 
     /**
@@ -518,20 +558,88 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     }
 
     /**
+     * Lists all children of this file.
+     * <p>
+     * Note that this will load all children into a list. In case of very large directories this might be slow
+     * and memory consuming. Consider using {@link #children(FileSearch)} which supports filters and pagination.
+     *
+     * @return all child files as list
+     */
+    public List<VirtualFile> allChildren() {
+        List<VirtualFile> result = new ArrayList<>();
+        children(FileSearch.iterateAll(result::add));
+        return result;
+    }
+
+    /**
+     * Returns a stream which will iterate all children (and their children) of this file.
+     * <p>
+     * This will start with this file and then perform a depth first search.
+     *
+     * @param directoryFilter this filter is applied on all directories being discovered. If the predicate returns
+     *                        <tt>false</tt> the directory will neither occur in the stream, nor its children will be
+     *                        visited.
+     * @return a stream visiting this and then all children in DFS order
+     */
+    public Stream<VirtualFile> tree(Predicate<VirtualFile> directoryFilter) {
+        return StreamSupport.stream(new VirtualFileWalker(Collections.singletonList(this), directoryFilter), false);
+    }
+
+    /**
+     * Returns a stream which will iterate all children (and their children) of this file.
+     * <p>
+     * This will start with this file and then perform a depth first search.
+     *
+     * @return a stream visiting this and then all children in DFS order
+     */
+    public Stream<VirtualFile> tree() {
+        return tree(ignored -> true);
+    }
+
+    /**
+     * Returns a stream which will iterate all children (and their children) of this file.
+     * <p>
+     * This will directly start with the children of this file and then perform a depth first search.
+     *
+     * @param directoryFilter this filter is applied on all directories being discovered. If the predicate returns
+     *                        <tt>false</tt> the directory will neither occur in the stream, nor its children will be
+     *                        visited.
+     * @return a stream visiting all children in DFS order
+     */
+    public Stream<VirtualFile> subTree(Predicate<VirtualFile> directoryFilter) {
+        return StreamSupport.stream(new VirtualFileWalker(allChildren(), directoryFilter), false);
+    }
+
+    /**
+     * Returns a stream which will iterate all children (and their children) of this file.
+     * <p>
+     * This will directly start with the children of this file and then perform a depth first search.
+     *
+     * @return a stream visiting all children in DFS order
+     */
+    public Stream<VirtualFile> subTree() {
+        return subTree(ignored -> true);
+    }
+
+    /**
      * Tries to find a child with the given name.
      * <p>
      * Note that the given file can be non-existent.
      *
      * @param name the name of the child to find
-     * @return the child wrapped as optional or an empty optional if the given name cannot be resolved into a file.
+     * @return the child which may be a non-existing file
      */
-    public Optional<VirtualFile> findChild(String name) {
+    @Nonnull
+    public VirtualFile findChild(String name) {
         try {
             if (childProvider != null) {
-                return childProvider.findChild(this, name);
+                VirtualFile child = childProvider.findChild(this, name);
+                if (child != null) {
+                    return child;
+                }
             }
 
-            return Optional.empty();
+            return new MutableVirtualFile(this, name);
         } catch (Exception e) {
             throw handleErrorInCallback(e, "childProvider.findChild");
         }
@@ -544,17 +652,18 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return the relative path wrapped as optional or an  empty optional if the given relaive path cannot be
      * resolved into a file.
      */
-    public Optional<VirtualFile> tryResolve(String relativePath) {
+    @Nonnull
+    public VirtualFile resolve(String relativePath) {
         String effectivePath = ensureRelativePath(relativePath);
 
         if (Strings.isEmpty(effectivePath)) {
-            return Optional.empty();
+            throw new IllegalArgumentException("Invalid path: " + effectivePath);
         }
 
         Tuple<String, String> nameAndRest = Strings.split(effectivePath, "/");
-        Optional<VirtualFile> child = findChild(nameAndRest.getFirst());
+        VirtualFile child = findChild(nameAndRest.getFirst());
         if (Strings.isFilled(nameAndRest.getSecond())) {
-            return child.flatMap(subChild -> subChild.tryResolve(nameAndRest.getSecond()));
+            return child.resolve(nameAndRest.getSecond());
         }
 
         return child;
@@ -566,22 +675,6 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         } else {
             return relativePath;
         }
-    }
-
-    /**
-     * Resolves the relative path within this directory.
-     *
-     * @param relativePath the path to resolve
-     * @return the relative path wrapped as optional or an  empty optional if the given relaive path cannot be
-     * resolved into a file.
-     * @throws HandledException if the given path cannot be resolved
-     */
-    public VirtualFile resolve(String relativePath) {
-        return tryResolve(relativePath).orElseThrow(() -> Exceptions.createHandled()
-                                                                    .withNLSKey("VirtualFile.cannotResolveChild")
-                                                                    .set("path", path())
-                                                                    .set("child", relativePath)
-                                                                    .handle());
     }
 
     /**

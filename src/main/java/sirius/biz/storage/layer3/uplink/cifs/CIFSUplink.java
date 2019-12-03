@@ -27,12 +27,12 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Optional;
 
 /**
  * Provides an uplink which maps into a given CIFS mount point.
@@ -111,7 +111,8 @@ public class CIFSUplink extends ConfigBasedUplink {
     }
 
     @Override
-    protected Optional<VirtualFile> findChildInDirectory(VirtualFile parent, String name) {
+    @Nullable
+    protected VirtualFile findChildInDirectory(VirtualFile parent, String name) {
         try {
             SmbFile parentFile = parent.tryAs(SmbFile.class)
                                        .orElseThrow(() -> new IllegalArgumentException(Strings.apply(
@@ -119,9 +120,9 @@ public class CIFSUplink extends ConfigBasedUplink {
                                                parent)));
             SmbFile child = new SmbFile(parentFile, name);
             if (child.isDirectory()) {
-                return Optional.of(wrapSmbFile(parent, new SmbFile(parentFile, name + "/")));
+                return wrapSmbFile(parent, new SmbFile(parentFile, name + "/"));
             }
-            return Optional.of(wrapSmbFile(parent, child));
+            return wrapSmbFile(parent, child);
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)

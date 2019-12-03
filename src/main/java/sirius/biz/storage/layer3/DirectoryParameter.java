@@ -44,6 +44,6 @@ public class DirectoryParameter extends BaseFileParameter<DirectoryParameter> {
             return Optional.empty();
         }
 
-        return vfs.tryResolve(input.asString()).filter(file -> file.exists() && file.isDirectory());
+        return Optional.ofNullable(vfs.resolve(input.asString())).filter(file -> file.exists() && file.isDirectory());
     }
 }

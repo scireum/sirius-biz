@@ -118,18 +118,17 @@ public class L3Uplink implements VFSRoot {
          * @param name            the name of the placeholder
          * @return a placeholder representing a non existent file or directory
          */
-        protected Optional<VirtualFile> createPlaceholder(@Nullable Directory parentDirectory,
-                                                          VirtualFile parent,
-                                                          String name) {
+        @Nullable
+        protected VirtualFile createPlaceholder(@Nullable Directory parentDirectory, VirtualFile parent, String name) {
             if (parentDirectory != null && parentDirectory.getStorageSpace().isReadonly()) {
-                return Optional.empty();
+                return null;
             }
 
             MutableVirtualFile file = new MutableVirtualFile(parent, name);
             file.attach(new Placeholder(parent, name));
             attachHandlers(file);
 
-            return Optional.of(file);
+            return file;
         }
 
         private VirtualFile wrapBlob(VirtualFile parent, Blob blob) {
@@ -141,7 +140,8 @@ public class L3Uplink implements VFSRoot {
         }
 
         @Override
-        public Optional<VirtualFile> findChild(VirtualFile parent, String name) {
+        @Nullable
+        public VirtualFile findChild(VirtualFile parent, String name) {
             Optional<Directory> parentDirectory = parent.tryAs(Directory.class);
             if (parentDirectory.isPresent()) {
                 return findChildInDirectory(parent, parentDirectory.get(), name);
@@ -153,22 +153,28 @@ public class L3Uplink implements VFSRoot {
                 return createPlaceholder(null, parent, name);
             }
 
-            return Optional.empty();
+            return null;
         }
 
-        private Optional<VirtualFile> findChildInDirectory(VirtualFile parent, Directory parentDir, String name) {
+        private VirtualFile findChildInDirectory(VirtualFile parent, Directory parentDir, String name) {
             // If there is a file extension, this is most probably a file / blob. Therefore we first
             // try to resolve it as such and then fallback to resolving as directory...
             if (Strings.isFilled(Files.getFileExtension(name))) {
-                return priorizedLookup(() -> parentDir.findChildBlob(name).map(blob -> wrapBlob(parent, blob)),
+                return priorizedLookup(() -> parentDir.findChildBlob(name)
+                                                      .map(blob -> wrapBlob(parent, blob))
+                                                      .orElse(null),
                                        () -> parentDir.findChildDirectory(name)
-                                                      .map(directory -> wrapDirectory(parent, directory)),
+                                                      .map(directory -> wrapDirectory(parent, directory))
+                                                      .orElse(null),
                                        () -> createPlaceholder(parentDir, parent, name));
             } else {
                 //...if there is no file extension we reverse the lookup order
                 return priorizedLookup(() -> parentDir.findChildDirectory(name)
-                                                      .map(directory -> wrapDirectory(parent, directory)),
-                                       () -> parentDir.findChildBlob(name).map(blob -> wrapBlob(parent, blob)),
+                                                      .map(directory -> wrapDirectory(parent, directory))
+                                                      .orElse(null),
+                                       () -> parentDir.findChildBlob(name)
+                                                      .map(blob -> wrapBlob(parent, blob))
+                                                      .orElse(null),
                                        () -> createPlaceholder(parentDir, parent, name));
             }
         }
@@ -180,15 +186,15 @@ public class L3Uplink implements VFSRoot {
          * @return the first non empty optional produced by the lookups or an empty optional if all lokkups failed
          */
         @SafeVarargs
-        private final Optional<VirtualFile> priorizedLookup(Supplier<Optional<VirtualFile>>... lookups) {
-            for (Supplier<Optional<VirtualFile>> lookup : lookups) {
-                Optional<VirtualFile> result = lookup.get();
-                if (result.isPresent()) {
+        private final VirtualFile priorizedLookup(Supplier<VirtualFile>... lookups) {
+            for (Supplier<VirtualFile> lookup : lookups) {
+                VirtualFile result = lookup.get();
+                if (result != null) {
                     return result;
                 }
             }
 
-            return Optional.empty();
+            return null;
         }
 
         @Override
@@ -228,17 +234,18 @@ public class L3Uplink implements VFSRoot {
      * @return a virtual file representing the storage space with the given name or an empty optional if none was found
      */
     @Override
-    public Optional<VirtualFile> findChild(VirtualFile parent, String name) {
+    @Nullable
+    public VirtualFile findChild(VirtualFile parent, String name) {
         if (storage == null || !storage.isKnown(name)) {
-            return Optional.empty();
+            return null;
         }
 
         BlobStorageSpace space = storage.getSpace(name);
         if (!space.isBrowsable()) {
-            return Optional.empty();
+            return null;
         }
 
-        return Optional.of(wrapDirectory(parent, space.getRoot(tenants.getRequiredTenant().getIdAsString())));
+        return wrapDirectory(parent, space.getRoot(tenants.getRequiredTenant().getIdAsString()));
     }
 
     /**

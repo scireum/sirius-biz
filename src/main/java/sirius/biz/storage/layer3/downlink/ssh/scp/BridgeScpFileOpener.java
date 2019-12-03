@@ -33,9 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -65,14 +63,10 @@ class BridgeScpFileOpener implements ScpFileOpener {
 
     @Override
     public Iterable<Path> getMatchingFilesToSend(Session session, Path basedir, String pattern) throws IOException {
-        Optional<VirtualFile> baseDirAsFile = vfs.tryResolve(basedir.toAbsolutePath().toString());
-        if (!baseDirAsFile.isPresent()) {
-            return Collections.emptyList();
-        }
+        VirtualFile baseDirAsFile = vfs.resolve(basedir.toAbsolutePath().toString());
 
         List<Path> result = new ArrayList<>();
-        baseDirAsFile.get()
-                     .children(FileSearch.iterateAll(child -> result.add(new BridgePath(child)))
+        baseDirAsFile.children(FileSearch.iterateAll(child -> result.add(new BridgePath(child)))
                                          .withPrefixFilter(pattern));
 
         return result;

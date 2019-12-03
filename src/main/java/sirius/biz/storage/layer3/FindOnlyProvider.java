@@ -8,7 +8,7 @@
 
 package sirius.biz.storage.layer3;
 
-import java.util.Optional;
+import javax.annotation.Nullable;
 import java.util.function.BiFunction;
 
 /**
@@ -18,19 +18,21 @@ import java.util.function.BiFunction;
  */
 public class FindOnlyProvider implements ChildProvider {
 
-    private BiFunction<VirtualFile, String, Optional<VirtualFile>> resolver;
+    private BiFunction<VirtualFile, String, VirtualFile> resolver;
 
     /**
      * Creates a new provider which delegates the find call to the given resolver.
      *
-     * @param resolver the actual resolver which tries to find the requested file
+     * @param resolver the actual resolver which tries to find the requested file. Note that the resolver may return
+     *                 <tt>null</tt> to indicate that no matching file / directory exists.
      */
-    public FindOnlyProvider(BiFunction<VirtualFile, String, Optional<VirtualFile>> resolver) {
+    public FindOnlyProvider(BiFunction<VirtualFile, String, VirtualFile> resolver) {
         this.resolver = resolver;
     }
 
     @Override
-    public Optional<VirtualFile> findChild(VirtualFile parent, String name) {
+    @Nullable
+    public VirtualFile findChild(VirtualFile parent, String name) {
         return resolver.apply(parent, name);
     }
 

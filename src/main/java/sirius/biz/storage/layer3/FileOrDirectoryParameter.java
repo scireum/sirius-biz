@@ -44,6 +44,7 @@ public class FileOrDirectoryParameter extends BaseFileParameter<FileOrDirectoryP
             return Optional.empty();
         }
 
-        return vfs.tryResolve(input.asString()).filter(file -> file.exists() || file.parent().exists());
+        return Optional.ofNullable(vfs.resolve(input.asString()))
+                       .filter(file -> file.exists() || file.parent().exists());
     }
 }

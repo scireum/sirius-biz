@@ -20,6 +20,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -28,7 +29,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Optional;
 
 /**
  * Provides an uplink which maps into a given directory in the file system.
@@ -68,14 +68,15 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
     }
 
     @Override
-    protected Optional<VirtualFile> findChildInDirectory(VirtualFile parent, String name) {
+    @Nullable
+    protected VirtualFile findChildInDirectory(VirtualFile parent, String name) {
         try {
             File parentFile = parent.tryAs(File.class)
                                     .orElseThrow(() -> new IllegalArgumentException(Strings.apply(
                                             "Invalid parent: %s! Expecte a File!",
                                             parent)));
             File child = new File(parentFile, name);
-            return Optional.of(wrapFile(parent, child));
+            return wrapFile(parent, child);
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)

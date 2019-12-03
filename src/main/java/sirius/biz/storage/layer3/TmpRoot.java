@@ -16,7 +16,7 @@ import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.UserContext;
 
-import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * Provides a stealth directory to store temporary files.
@@ -52,24 +52,26 @@ public class TmpRoot implements VFSRoot {
     private BlobStorage blobStorage;
 
     @Override
-    public Optional<VirtualFile> findChild(VirtualFile parent, String name) {
+    @Nullable
+    public VirtualFile findChild(VirtualFile parent, String name) {
         if (TMP_PATH.equals(name)) {
             MutableVirtualFile result = new MutableVirtualFile(parent, name);
             result.markAsExistingDirectory();
             result.withChildren(new FindOnlyProvider(this::findTmpBlob));
 
-            return Optional.of(result);
+            return result;
         }
 
-        return Optional.empty();
+        return null;
     }
 
-    private Optional<VirtualFile> findTmpBlob(VirtualFile parent, String name) {
+    private VirtualFile findTmpBlob(VirtualFile parent, String name) {
         return blobStorage.getSpace(TMP_SPACE)
                           .findByBlobKey(name)
                           .filter(blob -> Strings.areEqual(UserContext.getCurrentUser().getTenantId(),
                                                            blob.getTenantId()))
-                          .map(blob -> wrapBlob(parent, blob));
+                          .map(blob -> wrapBlob(parent, blob))
+                          .orElse(null);
     }
 
     private VirtualFile wrapBlob(VirtualFile parent, Blob blob) {
@@ -80,17 +82,17 @@ public class TmpRoot implements VFSRoot {
         return result;
     }
 
-    private Optional<VirtualFile> unwrapBlob(VirtualFile parent, String name) {
+    private VirtualFile unwrapBlob(VirtualFile parent, String name) {
         Blob blob = parent.as(Blob.class);
         if (!Strings.areEqual(blob.getFilename(), name)) {
-            return Optional.empty();
+            return null;
         }
 
         MutableVirtualFile result = new MutableVirtualFile(parent, blob.getFilename());
         result.markAsExistingFile();
         result.withInputStreamSupplier(ignored -> blob.createInputStream());
 
-        return Optional.of(result);
+        return result;
     }
 
     @Override

@@ -12,7 +12,6 @@ import org.apache.sshd.common.scp.ScpTargetStreamResolver;
 import org.apache.sshd.common.scp.ScpTimestamp;
 import org.apache.sshd.common.session.Session;
 import sirius.biz.storage.layer3.VirtualFile;
-import sirius.kernel.commons.Strings;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -40,11 +39,7 @@ class BridgeScpTargetStreamResolver implements ScpTargetStreamResolver {
                                             long length,
                                             Set<PosixFilePermission> perms,
                                             OpenOption... options) throws IOException {
-        return virtualFile.findChild(name)
-                          .orElseThrow(() -> new IOException(Strings.apply("Cannot resolve %s in %s",
-                                                                           name,
-                                                                           virtualFile.path())))
-                          .createOutputStream();
+        return virtualFile.findChild(name).createOutputStream();
     }
 
     @Override

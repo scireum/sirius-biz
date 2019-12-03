@@ -36,7 +36,6 @@ import sirius.web.security.UserContext;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.OutputStream;
-import java.util.Optional;
 
 /**
  * Provides a {@link VFSRoot} to trigger jobs via the built-in {@link VirtualFileSystem}.
@@ -128,12 +127,12 @@ public class JobsRoot extends SingularVFSRoot {
     }
 
     @Nonnull
-    private Optional<VirtualFile> unwrapPreset(VirtualFile parent, String name) {
+    private VirtualFile unwrapPreset(VirtualFile parent, String name) {
         JobPreset preset = parent.as(JobPreset.class);
         MutableVirtualFile result = new MutableVirtualFile(parent, name);
         result.withOutputStreamSupplier(uploadFile -> uploadAndTrigger(preset, uploadFile.name()));
 
-        return Optional.of(result);
+        return result;
     }
 
     private OutputStream uploadAndTrigger(JobPreset preset, String filename) {
