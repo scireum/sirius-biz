@@ -302,14 +302,15 @@ public class LoginData extends Composite {
      * @return a tuple where the first parameter determines if the password is valid
      */
     public PasswordVerificationResult checkPassword(String username, String password) {
-        if (Strings.isFilled(passwordHash)) {
-            for (PasswordHashFunction hashFunction : hashFunctions) {
-                String givenPasswordHash = hashFunction.computeHash(username, salt, password);
-                if (Strings.isFilled(givenPasswordHash) && Strings.areEqual(givenPasswordHash, passwordHash)) {
-                    return hashFunction.isOutdated() ?
-                           PasswordVerificationResult.VALID_NEEDS_RE_HASH :
-                           PasswordVerificationResult.VALID;
-                }
+        if (!Strings.isFilled(passwordHash)) {
+            return PasswordVerificationResult.INVALID;
+        }
+        for (PasswordHashFunction hashFunction : hashFunctions) {
+            String givenPasswordHash = hashFunction.computeHash(username, salt, password);
+            if (Strings.isFilled(givenPasswordHash) && Strings.areEqual(givenPasswordHash, passwordHash)) {
+                return hashFunction.isOutdated() ?
+                       PasswordVerificationResult.VALID_NEEDS_RE_HASH :
+                       PasswordVerificationResult.VALID;
             }
         }
         return PasswordVerificationResult.INVALID;
@@ -418,6 +419,15 @@ public class LoginData extends Composite {
         return passwordHash;
     }
 
+    /**
+     * Can be used to disable auto password generation on save.
+     * <p>
+     * This only sets a flag that is not saved to database.
+     * If you want to disable it altogether for an entity containing loginData, a good option would be to implement a
+     * {@link BeforeSave beforeSaveHandler} with priority < 100 that calls this method.
+     *
+     * @see #autofill()
+     */
     public void skipPasswordCreation() {
         skipPasswordCreation = true;
     }
