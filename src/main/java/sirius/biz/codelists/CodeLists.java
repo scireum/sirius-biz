@@ -57,6 +57,8 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
     protected static final String CONFIG_KEY_DESCRIPTION = "description";
     protected static final String CONFIG_KEY_AUTOFILL = "autofill";
     protected static final String CONFIG_KEY_GLOBAL = "global";
+    protected static final String CODELIST_NLS = "codeList";
+    protected static final String CODE_NLS = "code";
     protected Cache<String, String> valueCache = CacheManager.createCoherentCache("codelists-values");
 
     protected static final Log LOG = Log.get("codelists");
@@ -183,12 +185,35 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
             throw Exceptions.handle()
                             .to(LOG)
                             .withNLSKey("CodeLists.missingEntry")
-                            .set("codeList", codeList)
-                            .set("code", code)
+                            .set(CODELIST_NLS, codeList)
+                            .set(CODE_NLS, code)
                             .handle();
         }
 
         return cle.getCodeListEntryData().getValue();
+    }
+
+    /**
+     * Checks if the given code exists inside the given code list or throws an exception if no matching entry exists
+     *
+     * @param codeListName the code list to search in
+     * @param code         the code to lookup
+     * @throws sirius.kernel.health.HandledException if no entry exists for the given code or code list
+     */
+    public void verifyValue(@Nonnull String codeListName, @Nonnull String code) {
+        Optional<L> codelist = findCodelist(codeListName);
+        if (!codelist.isPresent()) {
+            throw Exceptions.handle().to(LOG).withNLSKey("CodeLists.missingList").set(CODELIST_NLS, codeListName).handle();
+        }
+        E codelistEntry = queryEntry(codelist.get(), code).queryFirst();
+        if (codelistEntry == null) {
+            throw Exceptions.handle()
+                            .to(LOG)
+                            .withNLSKey("CodeLists.missingEntry")
+                            .set(CODELIST_NLS, codeListName)
+                            .set(CODE_NLS, code)
+                            .handle();
+        }
     }
 
     protected Query<?, E, ?> queryEntry(L list, @Nonnull String code) {
