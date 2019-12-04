@@ -196,8 +196,8 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
     /**
      * Checks if the given code exists inside the given code list or throws an exception if no matching entry exists
      *
-     * @param codeList the code list to search in
-     * @param code     the code to lookup
+     * @param codeListName the code list to search in
+     * @param code         the code to lookup
      * @throws sirius.kernel.health.HandledException if no entry exists for the given code or code list
      */
     public void verifyValue(@Nonnull String codeListName, @Nonnull String code) {
