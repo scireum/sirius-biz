@@ -157,8 +157,7 @@ public class PersonData extends Composite {
     @BeforeSave
     protected void checkSalutation() {
         if (Strings.isFilled(salutation)) {
-            // a HandledException will be thrown if the value is not contained in the codelist
-            codeLists.getRequiredValue("salutations", salutation);
+            codeLists.verifyValue("salutations", salutation);
         }
     }
 

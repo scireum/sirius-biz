@@ -191,6 +191,33 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
         return cle.getCodeListEntryData().getValue();
     }
 
+    /**
+     * Checks if the given code exists inside the given code list or throws an exception if no matching entry exists
+     *
+     * @param codeList the code list to search in
+     * @param code     the code to lookup
+     * @throws sirius.kernel.health.HandledException if no entry exists for the given code or code list
+     */
+    public void verifyValue(@Nonnull String codeList, @Nonnull String code) {
+        Optional<L> cl = findCodelist(codeList);
+        if (!cl.isPresent()) {
+            throw Exceptions.handle()
+                            .to(LOG)
+                            .withNLSKey("CodeLists.missingList")
+                            .set("codeList", codeList)
+                            .handle();
+        }
+        E cle = queryEntry(cl.get(), code).queryFirst();
+        if (cle == null) {
+            throw Exceptions.handle()
+                            .to(LOG)
+                            .withNLSKey("CodeLists.missingEntry")
+                            .set("codeList", codeList)
+                            .set("code", code)
+                            .handle();
+        }
+    }
+
     protected Query<?, E, ?> queryEntry(L list, @Nonnull String code) {
         return createEntryQuery().eq(SQLCodeListEntry.CODE_LIST, list)
                                  .eq(SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE), code);
