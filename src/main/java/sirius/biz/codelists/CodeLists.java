@@ -57,6 +57,8 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
     protected static final String CONFIG_KEY_DESCRIPTION = "description";
     protected static final String CONFIG_KEY_AUTOFILL = "autofill";
     protected static final String CONFIG_KEY_GLOBAL = "global";
+    protected static final String CODELIST_NLS = "codeList";
+    protected static final String CODE_NLS = "code";
     protected Cache<String, String> valueCache = CacheManager.createCoherentCache("codelists-values");
 
     protected static final Log LOG = Log.get("codelists");
@@ -183,8 +185,8 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
             throw Exceptions.handle()
                             .to(LOG)
                             .withNLSKey("CodeLists.missingEntry")
-                            .set("codeList", codeList)
-                            .set("code", code)
+                            .set(CODELIST_NLS, codeList)
+                            .set(CODE_NLS, code)
                             .handle();
         }
 
@@ -201,19 +203,15 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
     public void verifyValue(@Nonnull String codeList, @Nonnull String code) {
         Optional<L> cl = findCodelist(codeList);
         if (!cl.isPresent()) {
-            throw Exceptions.handle()
-                            .to(LOG)
-                            .withNLSKey("CodeLists.missingList")
-                            .set("codeList", codeList)
-                            .handle();
+            throw Exceptions.handle().to(LOG).withNLSKey("CodeLists.missingList").set(CODELIST_NLS, codeList).handle();
         }
         E cle = queryEntry(cl.get(), code).queryFirst();
         if (cle == null) {
             throw Exceptions.handle()
                             .to(LOG)
                             .withNLSKey("CodeLists.missingEntry")
-                            .set("codeList", codeList)
-                            .set("code", code)
+                            .set(CODELIST_NLS, codeList)
+                            .set(CODE_NLS, code)
                             .handle();
         }
     }
