@@ -13,6 +13,7 @@ import sirius.biz.importer.AutoImport;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
@@ -151,6 +152,14 @@ public class PersonData extends Composite {
     @Override
     public int hashCode() {
         return Objects.hash(title, salutation, firstname, lastname);
+    }
+
+    @BeforeSave
+    protected void checkSalutation() {
+        if (Strings.isFilled(salutation)) {
+            // a HandledException will be thrown by if the value is not contained in the codelist
+            codeLists.getRequiredValue("salutations", salutation);
+        }
     }
 
     /**
