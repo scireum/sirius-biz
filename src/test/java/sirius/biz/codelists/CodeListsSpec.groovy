@@ -46,4 +46,13 @@ class CodeListsSpec extends BaseSpecification {
         value == "testCode"
     }
 
+    def "tryGetValue autocreates if possible and reports correctly otherwise"() {
+        given:
+        when:
+        TenantsHelper.installTestTenant()
+        then:
+        cl.tryGetValue("test", "unknownCode").isPresent()
+        !cl.tryGetValue("hard-test", "unknownCode").isPresent()
+    }
+
 }
