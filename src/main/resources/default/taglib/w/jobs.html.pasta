@@ -1,6 +1,8 @@
 <i:arg type="Object" name="target"/>
+<i:arg type="String" name="query" default=""/>
+
 <i:if test="jobsService != null">
-    <i:local name="jobs" value="@jobsService.getMatchingInteractiveJobs(target)"/>
+    <i:local name="jobs" value="@jobsService.getMatchingInteractiveJobs(target, query)"/>
     <i:if test="!jobs.isEmpty()">
         <w:navbox labelKey="Jobs.matchingJobs">
             <i:for type="Tuple" var="linkAndJob" items="jobs">

@@ -129,7 +129,18 @@ public class Jobs {
      * @return a list of tuples containing the preset URL associated job for the given object
      */
     public List<Tuple<String, JobFactory>> getMatchingInteractiveJobs(Object target) {
-        return getAvailableJobs(null).filter(JobFactory::canStartInteractive)
+        return getMatchingInteractiveJobs(target, null);
+    }
+
+    /**
+     * Returns a jobs which can provide a preset URL for the given target object.
+     *
+     * @param target the target to generate a preset URL for
+     * @param query the search query to additionally filter by
+     * @return a list of tuples containing the preset URL associated job for the given object
+     */
+    public List<Tuple<String, JobFactory>> getMatchingInteractiveJobs(Object target, @Nullable String query) {
+        return getAvailableJobs(query).filter(JobFactory::canStartInteractive)
                                      .map(job -> Tuple.create(job.generatePresetUrl(target), job))
                                      .filter(tuple -> tuple.getFirst() != null)
                                      .collect(Collectors.toList());
