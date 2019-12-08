@@ -594,9 +594,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
             if (pwResult == LoginData.PasswordVerificationResult.VALID_NEEDS_RE_HASH) {
                 ValueHolder<UserInfo> rehashingResult = new ValueHolder<>(null);
-                UserContext.get().runAs(result, () -> {
-                    rehashingResult.set(updatePasswordHashing(result, password));
-                });
+                UserContext.get().runAs(result, () -> rehashingResult.set(updatePasswordHashing(result, password)));
 
                 return rehashingResult.get();
             }
