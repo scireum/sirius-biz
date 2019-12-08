@@ -23,6 +23,7 @@ import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
@@ -33,6 +34,7 @@ import sirius.kernel.settings.Extension;
 import sirius.web.http.WebContext;
 import sirius.web.security.GenericUserManager;
 import sirius.web.security.ScopeInfo;
+import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 import sirius.web.security.UserManager;
 import sirius.web.security.UserSettings;
@@ -591,7 +593,10 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             completeAuditLogForUser(auditLog.neutral("AuditLog.passwordLogin"), account);
 
             if (pwResult == LoginData.PasswordVerificationResult.VALID_NEEDS_RE_HASH) {
-                return updatePasswordHashing(result, password);
+                ValueHolder<UserInfo> rehashingResult = new ValueHolder<>(null);
+                UserContext.get().runAs(result, () -> rehashingResult.set(updatePasswordHashing(result, password)));
+
+                return rehashingResult.get();
             }
 
             return result;
