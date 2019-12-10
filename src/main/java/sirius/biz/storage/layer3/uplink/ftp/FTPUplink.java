@@ -208,12 +208,6 @@ public class FTPUplink extends ConfigBasedUplink {
     private boolean createDirectoryHandler(VirtualFile file) {
         String relativePath = file.as(RemotePath.class).getPath();
 
-        if (file.parent() == null) {
-            return true;
-        }
-
-        file.parent().createAsDirectory();
-
         try {
             try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
                 return connector.connector().makeDirectory(relativePath);
