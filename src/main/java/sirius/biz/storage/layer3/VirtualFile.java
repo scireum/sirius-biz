@@ -738,8 +738,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return false;
             }
 
-            if (parent() != null) {
-                parent().createAsDirectory();
+            if (parent() != null && !parent().tryCreateAsDirectory()) {
+                return false;
             }
             return createDirectoryHandler.apply(this);
         } catch (Exception e) {
