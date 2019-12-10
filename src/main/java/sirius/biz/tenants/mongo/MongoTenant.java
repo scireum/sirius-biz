@@ -45,12 +45,6 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
     private final TenantData tenantData = new TenantData(this);
 
     /**
-     * Used to record changes on fields of the user.
-     */
-    public static final Mapping JOURNAL = Mapping.named("journal");
-    private final JournalData journal = new JournalData(this);
-
-    /**
      * Contains the effectively enabled features / permissions for this tenant.
      */
     @Transient
@@ -96,7 +90,7 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
 
     @Override
     public JournalData getJournal() {
-        return journal;
+        return tenantData.getJournal();
     }
 
     @Override
