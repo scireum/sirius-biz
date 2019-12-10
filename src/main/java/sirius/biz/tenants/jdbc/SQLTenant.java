@@ -46,12 +46,6 @@ public class SQLTenant extends BizEntity implements Tenant<Long> {
     private final TenantData tenantData = new TenantData(this);
 
     /**
-     * Used to record changes on fields of the user.
-     */
-    public static final Mapping JOURNAL = Mapping.named("journal");
-    private final JournalData journal = new JournalData(this);
-
-    /**
      * Contains the effectively enabled features / permissions for this tenant.
      */
     @Transient
@@ -90,7 +84,7 @@ public class SQLTenant extends BizEntity implements Tenant<Long> {
 
     @Override
     public JournalData getJournal() {
-        return journal;
+        return tenantData.getJournal();
     }
 
     @Override
