@@ -274,7 +274,7 @@ public class FTPUplink extends ConfigBasedUplink {
             }
 
             WatchableInputStream watchableInputStream = new WatchableInputStream(rawStream);
-            watchableInputStream.getCompletionFuture().then(connector::safeClose);
+            watchableInputStream.getCompletionFuture().then(() -> completePendingCommand(connector, path, "download"));
             return watchableInputStream;
         } catch (IOException e) {
             connector.safeClose();
@@ -289,6 +289,49 @@ public class FTPUplink extends ConfigBasedUplink {
         }
     }
 
+    private void completePendingCommand(UplinkConnector<FTPClient> connector, String path, String command) {
+        try {
+            if (!connector.connector().completePendingCommand()) {
+                Exceptions.handle()
+                          .to(StorageUtils.LOG)
+                          .withSystemErrorMessage("Layer 3/FTP: Failed to complete the %s for '%s' in uplink '%s'.",
+                                                  command,
+                                                  path,
+                                                  ftpConfig)
+                          .handle();
+                disconnect(connector);
+            }
+        } catch (IOException e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Layer 3/FTP: Failed to complete the %s for '%s' in uplink '%s': %s (%s)",
+                                              command,
+                                              path,
+                                              ftpConfig)
+                      .handle();
+            disconnect(connector);
+        }
+
+        connector.safeClose();
+    }
+
+    /**
+     * Forcefully  disconnects in  case  of an  error.
+     * <p>
+     * In case we cannot complete a command (most probably retrieving an <tt>InputStream</tt> or <tt>OutputStream</tt>).
+     * This is done as the client is most probably left in an inconsistent state so that we rather reconnect.
+     *
+     * @param connector the connector to disconnect
+     */
+    private void disconnect(UplinkConnector<FTPClient> connector) {
+        try {
+            connector.connector().disconnect();
+        } catch (IOException e) {
+            Exceptions.ignore(e);
+        }
+    }
+
     private OutputStream outputStreamSupplier(VirtualFile file) {
         UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
         String path = file.as(RemotePath.class).getPath();
@@ -299,7 +342,7 @@ public class FTPUplink extends ConfigBasedUplink {
             }
 
             WatchableOutputStream watchableOutputStream = new WatchableOutputStream(rawStream);
-            watchableOutputStream.getCompletionFuture().then(connector::safeClose);
+            watchableOutputStream.getCompletionFuture().then(() -> completePendingCommand(connector, path, "upload"));
             return watchableOutputStream;
         } catch (IOException e) {
             connector.safeClose();
