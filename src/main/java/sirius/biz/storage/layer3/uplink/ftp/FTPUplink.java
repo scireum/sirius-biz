@@ -211,7 +211,7 @@ public class FTPUplink extends ConfigBasedUplink {
     }
 
     private long lastModifiedSupplier(VirtualFile file) {
-        return fetchFTPFile(file).map(FTPFile::getTimestamp).map(Calendar::getTimeInMillis).orElse(0L);
+        return Math.max(0, fetchFTPFile(file).map(FTPFile::getTimestamp).map(Calendar::getTimeInMillis).orElse(0L));
     }
 
     private boolean canMoveHandler(VirtualFile file) {
