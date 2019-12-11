@@ -10,8 +10,10 @@ package sirius.biz.storage.util;
 
 import sirius.kernel.async.Future;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Objects;
 
 /**
  * Wraps an {@link OutputStream} and provides a {@link Future completion future}.
@@ -28,7 +30,8 @@ public class WatchableOutputStream extends OutputStream {
      *
      * @param delegate the stream to wrap
      */
-    public WatchableOutputStream(OutputStream delegate) {
+    public WatchableOutputStream(@Nonnull OutputStream delegate) {
+        Objects.requireNonNull(delegate, "null pass passed into a WatchableOutputStream");
         this.delegate = delegate;
         this.completionFuture = new Future();
     }

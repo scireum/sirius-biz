@@ -10,8 +10,10 @@ package sirius.biz.storage.util;
 
 import sirius.kernel.async.Future;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 
 /**
  * Wraps an {@link InputStream} and provides a {@link Future completion future}.
@@ -28,7 +30,8 @@ public class WatchableInputStream extends InputStream {
      *
      * @param delegate the stream to wrap
      */
-    public WatchableInputStream(InputStream delegate) {
+    public WatchableInputStream(@Nonnull InputStream delegate) {
+        Objects.requireNonNull(delegate, "null pass passed into a WatchableInputStream");
         this.delegate = delegate;
         this.completionFuture = new Future();
     }
