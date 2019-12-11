@@ -269,6 +269,10 @@ public class FTPUplink extends ConfigBasedUplink {
         String path = file.as(RemotePath.class).getPath();
         try {
             InputStream rawStream = connector.connector().retrieveFileStream(path);
+            if (rawStream == null) {
+                throw new IOException("Cannot retrieve an input stream!");
+            }
+
             WatchableInputStream watchableInputStream = new WatchableInputStream(rawStream);
             watchableInputStream.getCompletionFuture().then(connector::safeClose);
             return watchableInputStream;
@@ -290,6 +294,10 @@ public class FTPUplink extends ConfigBasedUplink {
         String path = file.as(RemotePath.class).getPath();
         try {
             OutputStream rawStream = connector.connector().storeFileStream(path);
+            if (rawStream == null) {
+                throw new IOException("Cannot retrieve an output stream!");
+            }
+
             WatchableOutputStream watchableOutputStream = new WatchableOutputStream(rawStream);
             watchableOutputStream.getCompletionFuture().then(connector::safeClose);
             return watchableOutputStream;
