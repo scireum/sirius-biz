@@ -18,6 +18,8 @@ public class RemotePath {
 
     private String path;
 
+    private String whiteSpaceEncodedPath;
+
     /**
      * Generates a new wrapper for the given path.
      *
@@ -25,6 +27,7 @@ public class RemotePath {
      */
     public RemotePath(String path) {
         this.path = path;
+        this.whiteSpaceEncodedPath = path.replace(" ", "\\ ");
     }
 
     /**
@@ -39,6 +42,10 @@ public class RemotePath {
         } else {
             return new RemotePath(this.path + "/" + file);
         }
+    }
+
+    public String getWhiteSpaceEncodedPath() {
+        return whiteSpaceEncodedPath;
     }
 
     /**

@@ -76,7 +76,7 @@ public class FTPUplink extends ConfigBasedUplink {
 
         RemotePath relativeParent = parent.as(RemotePath.class);
         try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
-            for (FTPFile file : connector.connector().listFiles(relativeParent.getPath())) {
+            for (FTPFile file : connector.connector().listFiles(relativeParent.getWhiteSpaceEncodedPath())) {
                 if (!search.processResult(wrap(parent, file, file.getName()))) {
                     return;
                 }
@@ -137,7 +137,7 @@ public class FTPUplink extends ConfigBasedUplink {
 
         try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
             FTPFile[] ftpFiles = connector.connector()
-                                          .listFiles(file.parent().as(RemotePath.class).getPath(),
+                                          .listFiles(file.parent().as(RemotePath.class).getWhiteSpaceEncodedPath(),
                                                      ftpFile -> Strings.areEqual(ftpFile.getName(), file.name()));
             if (ftpFiles.length == 1) {
                 file.attach(ftpFiles[0]);
