@@ -13,18 +13,9 @@ import sirius.biz.importer.ImportHandler;
 import sirius.biz.importer.ImportHandlerFactory;
 import sirius.biz.importer.ImporterContext;
 import sirius.biz.importer.SQLEntityImportHandler;
-import sirius.biz.model.LoginData;
-import sirius.biz.model.PermissionData;
-import sirius.biz.model.PersonData;
-import sirius.biz.tenants.UserAccountData;
-import sirius.biz.tenants.jdbc.SQLTenants;
-import sirius.biz.tenants.mongo.MongoUserAccount;
 import sirius.db.jdbc.batch.FindQuery;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.Property;
-import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Register;
 
 import java.util.function.BiConsumer;
@@ -73,18 +64,12 @@ public class SQLCodeListEntryImportHandler extends SQLEntityImportHandler<SQLCod
                                                      SQLCodeListEntry.CODE_LIST));
     }
 
-
     @Override
     protected void collectDefaultExportableMappings(BiConsumer<Integer, Mapping> collector) {
-        collector.accept(100,
-                         SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.PRIORITY));
-        collector.accept(110,
-                         SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE));
-        collector.accept(120,
-                         SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE));
-        collector.accept(130,
-                         SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE));
-        collector.accept(140,
-                         SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION));
+        collector.accept(100, SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.PRIORITY));
+        collector.accept(110, SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE));
+        collector.accept(120, SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE));
+        collector.accept(130, SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE));
+        collector.accept(140, SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION));
     }
 }

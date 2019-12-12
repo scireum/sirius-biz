@@ -10,7 +10,6 @@ package sirius.biz.codelists.jdbc;
 
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListEntry;
-import sirius.biz.codelists.mongo.MongoCodeList;
 import sirius.biz.importer.ImportContext;
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
