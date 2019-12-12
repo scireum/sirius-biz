@@ -31,7 +31,7 @@ public class WatchableOutputStream extends OutputStream {
      * @param delegate the stream to wrap
      */
     public WatchableOutputStream(@Nonnull OutputStream delegate) {
-        Objects.requireNonNull(delegate, "null pass passed into a WatchableOutputStream");
+        Objects.requireNonNull(delegate, "null was passed into a WatchableOutputStream");
         this.delegate = delegate;
         this.completionFuture = new Future();
     }
