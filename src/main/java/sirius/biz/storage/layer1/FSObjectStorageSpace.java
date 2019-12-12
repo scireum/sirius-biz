@@ -119,7 +119,8 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
     }
 
     @Override
-    protected void storePhysicalObject(String objectKey, File file, ByteBlockTransformer transformer) throws IOException {
+    protected void storePhysicalObject(String objectKey, File file, ByteBlockTransformer transformer)
+            throws IOException {
         try (FileInputStream inputStream = new FileInputStream(file)) {
             storePhysicalObject(objectKey, inputStream, transformer);
         }
@@ -170,9 +171,9 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
 
     @Override
     protected void deliverPhysicalObject(Response response,
-                                      String objectKey,
-                                      ByteBlockTransformer transformer,
-                                      @Nullable Consumer<Integer> failureHandler) throws IOException {
+                                         String objectKey,
+                                         ByteBlockTransformer transformer,
+                                         @Nullable Consumer<Integer> failureHandler) throws IOException {
         File file = getFile(objectKey);
 
         if (file.isHidden() || !file.exists() || !file.isFile()) {
