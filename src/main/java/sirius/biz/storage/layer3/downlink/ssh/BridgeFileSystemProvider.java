@@ -111,15 +111,11 @@ class BridgeFileSystemProvider extends FileSystemProvider {
     public void checkAccess(Path path, AccessMode... modes) throws IOException {
         VirtualFile file = ((BridgePath) path).getVirtualFile();
         for (AccessMode mode : modes) {
-            if (mode == AccessMode.READ) {
-                if (!(file.exists() && (file.isDirectory() || file.isReadable()))) {
-                    throw new IOException(Strings.apply("Read for '%s' denied", path.toString()));
-                }
+            if (mode == AccessMode.READ && !(file.exists() && (file.isDirectory() || file.isReadable()))) {
+                throw new IOException(Strings.apply("Read for '%s' denied", path.toString()));
             }
-            if (mode == AccessMode.WRITE) {
-                if (!(file.exists() && file.isWriteable())) {
-                    throw new IOException(Strings.apply("Write for '%s' denied", path.toString()));
-                }
+            if (mode == AccessMode.WRITE && !(file.exists() && file.isWriteable())) {
+                throw new IOException(Strings.apply("Write for '%s' denied", path.toString()));
             }
         }
     }

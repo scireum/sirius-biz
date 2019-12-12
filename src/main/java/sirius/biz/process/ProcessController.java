@@ -248,10 +248,8 @@ public class ProcessController extends BizController {
             assertNotNull(log);
 
             ProcessLogHandler handler = log.getHandler().orElse(null);
-            if (handler != null) {
-                if (handler.executeAction(ctx, process, log, action, returnUrl)) {
-                    return;
-                }
+            if (handler != null && handler.executeAction(ctx, process, log, action, returnUrl)) {
+                return;
             }
 
             handleDefaultAction(ctx, log, action, returnUrl);

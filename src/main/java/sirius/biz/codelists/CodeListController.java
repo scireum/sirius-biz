@@ -125,24 +125,21 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
         L cl = findForTenant(codeLists.getListType(), codeListId);
         assertNotNew(cl);
 
-        if (ctx.ensureSafePOST()) {
-            if (ctx.get("code").isFilled()) {
-                String code = ctx.get("code").asString();
-                E cle = findOrCreateEntry(cl, code);
+        if (ctx.ensureSafePOST() && ctx.get("code").isFilled()) {
+            String code = ctx.get("code").asString();
+            E cle = findOrCreateEntry(cl, code);
 
-                cle.getCodeListEntryData().setPriority(ctx.get("priority").asInt(Priorized.DEFAULT_PRIORITY));
-                cle.getCodeListEntryData()
-                   .setValue(ctx.get("value").isEmptyString() ? null : ctx.get("value").asString());
-                cle.getCodeListEntryData()
-                   .setAdditionalValue(ctx.get("additionalValue").isEmptyString() ?
-                                       null :
-                                       ctx.get("additionalValue").asString());
-                cle.getCodeListEntryData()
-                   .setDescription(ctx.get("description").isEmptyString() ? null : ctx.get("description").asString());
+            cle.getCodeListEntryData().setPriority(ctx.get("priority").asInt(Priorized.DEFAULT_PRIORITY));
+            cle.getCodeListEntryData().setValue(ctx.get("value").isEmptyString() ? null : ctx.get("value").asString());
+            cle.getCodeListEntryData()
+               .setAdditionalValue(ctx.get("additionalValue").isEmptyString() ?
+                                   null :
+                                   ctx.get("additionalValue").asString());
+            cle.getCodeListEntryData()
+               .setDescription(ctx.get("description").isEmptyString() ? null : ctx.get("description").asString());
 
-                cle.getMapper().update(cle);
-                showSavedMessage();
-            }
+            cle.getMapper().update(cle);
+            showSavedMessage();
         }
         renderCodeList(ctx, cl);
     }

@@ -192,10 +192,8 @@ public class Locks implements MetricProvider {
      *              dangerous operation and should only be used by maintenance and management tools.
      */
     public void unlock(String lock, boolean force) {
-        if (!force) {
-            if (unlockLocally(lock)) {
-                return;
-            }
+        if (!force && unlockLocally(lock)) {
+            return;
         }
 
         localLocks.remove(lock);

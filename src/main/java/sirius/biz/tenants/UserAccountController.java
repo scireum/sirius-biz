@@ -224,10 +224,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         load(ctx, userAccount);
         if (ctx.hasParameter(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERMISSIONS)
                                                           .inner(PermissionData.CONFIG_STRING)
-                                                          .getName())) {
-            if (hasPermission(FEATURE_USER_ACCOUNT_CONFIG)) {
-                userAccount.getUserAccountData().getPermissions().getConfig();
-            }
+                                                          .getName()) && hasPermission(FEATURE_USER_ACCOUNT_CONFIG)) {
+            userAccount.getUserAccountData().getPermissions().getConfig();
         }
 
         userAccount.getMapper().update(userAccount);
