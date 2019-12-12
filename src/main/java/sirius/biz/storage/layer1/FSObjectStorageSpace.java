@@ -151,9 +151,7 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
         }
 
         File file = getFile(objectKey);
-        if (!file.delete()) {
-            throw new IOException(Strings.apply("Cannot delete: %s", file.getAbsolutePath()));
-        }
+        Files.delete(file.toPath());
     }
 
     @Override
