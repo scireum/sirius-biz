@@ -11,12 +11,15 @@ package sirius.biz.packages;
 import com.typesafe.config.Config;
 import sirius.biz.model.PermissionData;
 import sirius.kernel.Sirius;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.security.Permissions;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -35,7 +38,10 @@ public class Packages {
      * @param scope the scope
      * @return the pricePackages of the scope
      */
-    public List<String> getPackages(String scope) {
+    public List<String> getPackages(@Nullable String scope) {
+        if (Strings.isEmpty(scope)) {
+            return Collections.emptyList();
+        }
         return getScopeExtension(scope).getStringList("packages");
     }
 
@@ -50,7 +56,10 @@ public class Packages {
      * @param packageKey the package key
      * @return the translated name for the given package of the given scope
      */
-    public String getPackageName(String scope, String packageKey) {
+    public String getPackageName(@Nullable String scope, @Nullable String packageKey) {
+        if (Strings.isEmpty(scope) || Strings.isEmpty(packageKey)) {
+            return "";
+        }
         return NLS.get("Packages.package." + scope + "." + packageKey);
     }
 
@@ -60,7 +69,10 @@ public class Packages {
      * @param scope the scope
      * @return the upgrades of the scope
      */
-    public List<String> getUpgrades(String scope) {
+    public List<String> getUpgrades(@Nullable String scope) {
+        if (Strings.isEmpty(scope)) {
+            return Collections.emptyList();
+        }
         return getScopeExtension(scope).getStringList("upgrades");
     }
 
@@ -71,7 +83,10 @@ public class Packages {
      * @param upgradeKey the upgrade key
      * @return the translated name for the given upgrade of the given scope
      */
-    public String getUpgradeName(String scope, String upgradeKey) {
+    public String getUpgradeName(@Nullable String scope, @Nullable String upgradeKey) {
+        if (Strings.isEmpty(scope) || Strings.isEmpty(upgradeKey)) {
+            return "";
+        }
         return NLS.get("Packages.upgrade." + scope + "." + upgradeKey);
     }
 
