@@ -153,7 +153,7 @@ public class VFSController extends BizController {
     @Routed("/fs/delete")
     public void delete(WebContext ctx) {
         VirtualFile file = vfs.resolve(ctx.get("path").asString());
-        if (file != null && ctx.isSafePOST()) {
+        if (ctx.isSafePOST()) {
             try {
                 if (file.exists()) {
                     file.delete();
@@ -177,7 +177,7 @@ public class VFSController extends BizController {
     @Routed("/fs/rename")
     public void rename(WebContext ctx) {
         VirtualFile file = vfs.resolve(ctx.get("path").asString());
-        if (file != null && ctx.isSafePOST()) {
+        if (ctx.isSafePOST()) {
             try {
                 String name = ctx.get("name").asString();
                 if (file.exists() && Strings.isFilled(name)) {
@@ -205,7 +205,7 @@ public class VFSController extends BizController {
                                      .filter(VirtualFile::exists)
                                      .filter(VirtualFile::isDirectory)
                                      .orElse(null);
-        if (parent != null && ctx.isSafePOST()) {
+        if (ctx.isSafePOST()) {
             try {
                 String name = ctx.get("name").asString();
                 VirtualFile newDirectory = parent.resolve(name);
@@ -231,7 +231,7 @@ public class VFSController extends BizController {
     public void move(WebContext ctx) {
         VirtualFile file = vfs.resolve(ctx.get("path").asString());
         VirtualFile newParent = vfs.resolve(ctx.get("newParent").asString());
-        if (file != null) {
+        if (file.exists()) {
             try {
                 if (newParent.exists() && newParent.isDirectory()) {
                     file.fastMoveTo(newParent);
