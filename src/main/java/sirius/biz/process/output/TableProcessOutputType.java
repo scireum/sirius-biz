@@ -63,10 +63,23 @@ public class TableProcessOutputType implements ProcessOutputType {
         return "fa-table";
     }
 
+    /**
+     * Determines which columns exist in the given output.
+     *
+     * @param output the output to determine the column from
+     * @return the list of columns in the given output
+     */
     public List<String> determineColumns(ProcessOutput output) {
         return Arrays.asList(output.getContext().get(CONTEXT_KEY_COLUMNS).orElse("").split("\\|"));
     }
 
+    /**
+     * Determines the list of column labels based on the given output and column names.
+     *
+     * @param output  the output to determine the labels for
+     * @param columns the list of (technical) column names
+     * @return the list of visible column labels
+     */
     public List<String> determineLabels(ProcessOutput output, List<String> columns) {
         return columns.stream()
                       .map(col -> output.getContext().get(col).orElse(col))
