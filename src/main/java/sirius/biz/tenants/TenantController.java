@@ -213,6 +213,31 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     }
 
     /**
+     * Provides a JSON API to change the configuration of a tenant without altering other fields.
+     *
+     * @param webContext the current request
+     * @param jsonOutput the JSON response being generated
+     * @param tenantId   the id of the tenant whose config should be updated
+     */
+    @Routed(value = "/tenant/:1/config/update", jsonCall = true)
+    @Permission(PERMISSION_MANAGE_TENANTS)
+    public void updateTenantConfig(WebContext webContext, JSONStructuredOutput jsonOutput, String tenantId) {
+        T tenant = find(getTenantClass(), tenantId);
+        assertNotNew(tenant);
+        
+        String configFieldName = Tenant.TENANT_DATA.inner(TenantData.CONFIG_STRING).getName();
+        if (webContext.hasParameter(configFieldName)) {
+            // Reads configuration manually to prevent altering other fields
+            String config = webContext.getParameter(configFieldName);
+            tenant.getTenantData().setConfigString(config);
+            // parses the config to make sure it is valid
+            tenant.getTenantData().getConfig();
+        }
+        
+        tenant.getMapper().update(tenant);
+    }
+
+    /**
      * Provides an editor for setting additional and revoked permissions.
      *
      * @param ctx      the current request
