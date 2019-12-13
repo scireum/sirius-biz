@@ -179,26 +179,6 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     }
 
     /**
-     * Provides a JSON API to change the settings of a tenant, including its configuration.
-     *
-     * @param ctx      the current request
-     * @param out      the JSON response being generated
-     * @param tenantId the id of the tenant to update
-     */
-    @Routed(value = "/tenant/:1/update", jsonCall = true)
-    @Permission(PERMISSION_MANAGE_TENANTS)
-    public void tenantUpdate(WebContext ctx, JSONStructuredOutput out, String tenantId) {
-        T tenant = find(getTenantClass(), tenantId);
-        assertNotNew(tenant);
-        load(ctx, tenant);
-        if (ctx.hasParameter(Tenant.TENANT_DATA.inner(TenantData.CONFIG_STRING).getName())) {
-            // parses the config to make sure it is valid
-            tenant.getTenantData().getConfig();
-        }
-        tenant.getMapper().update(tenant);
-    }
-
-    /**
      * Provides an editor for changing the config of a tenant.
      *
      * @param ctx      the current request
