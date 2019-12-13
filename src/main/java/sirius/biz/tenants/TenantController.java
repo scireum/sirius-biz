@@ -24,6 +24,7 @@ import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Message;
+import sirius.web.controller.Page;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
@@ -106,13 +107,14 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     /**
      * Lists all tenants known to the system.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Routed("/tenants")
     @DefaultRoute
     @Permission(PERMISSION_MANAGE_TENANTS)
-    public void tenants(WebContext ctx) {
-        ctx.respondWith().template("/templates/biz/tenants/tenants.html.pasta", getTenantsAsPage(ctx).asPage(), this);
+    public void tenants(WebContext webContext) {
+        webContext.respondWith()
+                  .template("/templates/biz/tenants/tenants.html.pasta", getTenantsAsPage(webContext).asPage(), this);
     }
 
     /**
@@ -120,33 +122,33 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      *
      * @return the list of available tenants wrapped as page helper
      */
-    protected abstract BasePageHelper<T, ?, ?, ?> getTenantsAsPage(WebContext ctx);
+    protected abstract BasePageHelper<T, ?, ?, ?> getTenantsAsPage(WebContext webContext);
 
     /**
      * Provides an editor for updating a tenant.
      *
-     * @param ctx      the current request
-     * @param tenantId the id of the tenant to change
+     * @param webContext the current request
+     * @param tenantId   the id of the tenant to change
      */
     @Routed("/tenant/:1")
     @Permission(PERMISSION_MANAGE_TENANTS)
-    public void tenant(WebContext ctx, String tenantId) {
+    public void tenant(WebContext webContext, String tenantId) {
         T tenant = find(getTenantClass(), tenantId);
 
-        SaveHelper saveHelper = prepareSave(ctx).withAfterCreateURI("/tenant/${id}");
+        SaveHelper saveHelper = prepareSave(webContext).withAfterCreateURI("/tenant/${id}");
         saveHelper.withPreSaveHandler(isNew -> {
             tenant.getTenantData()
                   .getPackageData()
                   .loadPackageAndUpgrades(PACKAGE_SCOPE_TENANT,
-                                          ctx.getParameters("upgrades"),
-                                          ctx.get("package").asString());
+                                          webContext.getParameters("upgrades"),
+                                          webContext.get("package").asString());
         });
 
         boolean requestHandled = saveHelper.saveEntity(tenant);
         if (!requestHandled) {
             validate(tenant);
 
-            ctx.respondWith().template("/templates/biz/tenants/tenant-details.html.pasta", tenant, this);
+            webContext.respondWith().template("/templates/biz/tenants/tenant-details.html.pasta", tenant, this);
         }
     }
 
@@ -179,85 +181,90 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     }
 
     /**
-     * Provides a JSON API to change the settings of a tenant, including its configuration.
+     * Provides an editor for changing the config of a tenant.
      *
-     * @param ctx      the current request
-     * @param out      the JSON response being generated
-     * @param tenantId the id of the tenant to update
+     * @param webContext the current request
+     * @param tenantId   the id of the tenant to change
      */
-    @Routed(value = "/tenant/:1/update", jsonCall = true)
+    @Routed("/tenant/:1/config")
     @Permission(PERMISSION_MANAGE_TENANTS)
-    public void tenantUpdate(WebContext ctx, JSONStructuredOutput out, String tenantId) {
+    public void tenantConfig(WebContext webContext, String tenantId) {
         T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
-        load(ctx, tenant);
-        if (ctx.hasParameter(Tenant.TENANT_DATA.inner(TenantData.CONFIG_STRING).getName())) {
+        webContext.respondWith().template("/templates/biz/tenants/tenant-config.html.pasta", tenant, this);
+    }
+
+    /**
+     * Provides a JSON API to change the configuration of a tenant without altering other fields.
+     *
+     * @param webContext the current request
+     * @param jsonOutput the JSON response being generated
+     * @param tenantId   the id of the tenant whose config should be updated
+     */
+    @Routed(value = "/tenant/:1/config/update", jsonCall = true)
+    @Permission(PERMISSION_MANAGE_TENANTS)
+    public void updateTenantConfig(WebContext webContext, JSONStructuredOutput jsonOutput, String tenantId) {
+        T tenant = find(getTenantClass(), tenantId);
+        assertNotNew(tenant);
+
+        String configFieldName = Tenant.TENANT_DATA.inner(TenantData.CONFIG_STRING).getName();
+        if (webContext.hasParameter(configFieldName)) {
+            // Reads configuration manually to prevent altering other fields
+            String config = webContext.getParameter(configFieldName);
+            tenant.getTenantData().setConfigString(config);
             // parses the config to make sure it is valid
             tenant.getTenantData().getConfig();
         }
+
         tenant.getMapper().update(tenant);
     }
 
     /**
-     * Provides an editor for changing the config of a tenant.
-     *
-     * @param ctx      the current request
-     * @param tenantId the id of the tenant to change
-     */
-    @Routed("/tenant/:1/config")
-    @Permission(PERMISSION_MANAGE_TENANTS)
-    public void tenantConfig(WebContext ctx, String tenantId) {
-        T tenant = find(getTenantClass(), tenantId);
-        assertNotNew(tenant);
-        ctx.respondWith().template("/templates/biz/tenants/tenant-config.html.pasta", tenant, this);
-    }
-
-    /**
      * Provides an editor for setting additional and revoked permissions.
      *
-     * @param ctx      the current request
-     * @param tenantId the id of the tenant to change
+     * @param webContext the current request
+     * @param tenantId   the id of the tenant to change
      */
     @Routed("/tenant/:1/permissions")
     @Permission(PERMISSION_MANAGE_TENANTS)
-    public void permissions(WebContext ctx, String tenantId) {
+    public void permissions(WebContext webContext, String tenantId) {
         T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
 
-        boolean handled = prepareSave(ctx).disableAutoload().withPreSaveHandler(isNew -> {
+        boolean handled = prepareSave(webContext).disableAutoload().withPreSaveHandler(isNew -> {
             tenant.getTenantData()
                   .getPackageData()
-                  .loadRevokedAndAdditionalPermission(getPermissions(), ctx::getParameter);
+                  .loadRevokedAndAdditionalPermission(getPermissions(), webContext::getParameter);
         }).saveEntity(tenant);
 
         if (!handled) {
-            ctx.respondWith().template("/templates/biz/tenants/tenant-permissions.html.pasta", tenant, this);
+            webContext.respondWith().template("/templates/biz/tenants/tenant-permissions.html.pasta", tenant, this);
         }
     }
 
     /**
      * Provides an editor for setting additional and revoked permissions.
      *
-     * @param ctx      the current request
-     * @param tenantId the id of the tenant to change
+     * @param webContext the current request
+     * @param tenantId   the id of the tenant to change
      */
     @Routed("/tenant/:1/saml")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_TENANTS)
-    public void saml(WebContext ctx, String tenantId) {
+    public void saml(WebContext webContext, String tenantId) {
         T tenant = find(getTenantClass(), tenantId);
         assertNotNew(tenant);
 
-        boolean handled = prepareSave(ctx).disableAutoload()
-                                          .withMappings(Tenant.TENANT_DATA.inner(TenantData.SAML_REQUEST_ISSUER_NAME),
-                                                        Tenant.TENANT_DATA.inner(TenantData.SAML_ISSUER_INDEX),
-                                                        Tenant.TENANT_DATA.inner(TenantData.SAML_ISSUER_URL),
-                                                        Tenant.TENANT_DATA.inner(TenantData.SAML_ISSUER_NAME),
-                                                        Tenant.TENANT_DATA.inner(TenantData.SAML_FINGERPRINT))
-                                          .saveEntity(tenant);
+        boolean handled = prepareSave(webContext).disableAutoload()
+                                                 .withMappings(Tenant.TENANT_DATA.inner(TenantData.SAML_REQUEST_ISSUER_NAME),
+                                                               Tenant.TENANT_DATA.inner(TenantData.SAML_ISSUER_INDEX),
+                                                               Tenant.TENANT_DATA.inner(TenantData.SAML_ISSUER_URL),
+                                                               Tenant.TENANT_DATA.inner(TenantData.SAML_ISSUER_NAME),
+                                                               Tenant.TENANT_DATA.inner(TenantData.SAML_FINGERPRINT))
+                                                 .saveEntity(tenant);
 
         if (!handled) {
-            ctx.respondWith().template("/templates/biz/tenants/tenant-saml.html.pasta", tenant, this);
+            webContext.respondWith().template("/templates/biz/tenants/tenant-saml.html.pasta", tenant, this);
         }
     }
 
@@ -276,20 +283,20 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     /**
      * Lists all tenants which the current user can "become" (switch to).
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Routed("/tenants/select")
     @LoginRequired
     @Permission(TenantUserManager.PERMISSION_SELECT_TENANT)
-    public void selectTenants(WebContext ctx) {
-        BasePageHelper<T, ?, ?, ?> ph = getSelectableTenantsAsPage(ctx, determineCurrentTenant(ctx));
-        ctx.respondWith()
-           .template("/templates/biz/tenants/select-tenant.html.pasta", ph.asPage(), isCurrentlySpying(ctx));
+    public void selectTenants(WebContext webContext) {
+        Page<T> tenants = getSelectableTenantsAsPage(webContext, determineCurrentTenant(webContext)).asPage();
+        webContext.respondWith()
+                  .template("/templates/biz/tenants/select-tenant.html.pasta", tenants, isCurrentlySpying(webContext));
     }
 
-    private boolean isCurrentlySpying(WebContext ctx) {
-        return ctx.getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX)
-                  .isFilled();
+    private boolean isCurrentlySpying(WebContext webContext) {
+        return webContext.getSessionValue(UserContext.getCurrentScope().getScopeId()
+                                          + TenantUserManager.TENANT_SPY_ID_SUFFIX).isFilled();
     }
 
     /**
@@ -297,11 +304,11 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      * <p>
      * If "spying" is active, this will still return the underlying original tenant.
      *
-     * @param ctx the request to load the session data from
+     * @param webContext the request to load the session data from
      * @return the original tenant which is logged in
      */
-    public T determineCurrentTenant(WebContext ctx) {
-        String tenantId = determineOriginalTenantId(ctx);
+    public T determineCurrentTenant(WebContext webContext) {
+        String tenantId = determineOriginalTenantId(webContext);
         return mixing.getDescriptor(getTenantClass())
                      .getMapper()
                      .find(getTenantClass(), tenantId)
@@ -311,8 +318,8 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     }
 
     @SuppressWarnings("unchecked")
-    private String determineOriginalTenantId(WebContext ctx) {
-        return ((TenantUserManager<I, T, U>) UserContext.get().getUserManager()).getOriginalTenantId(ctx);
+    private String determineOriginalTenantId(WebContext webContext) {
+        return ((TenantUserManager<I, T, U>) UserContext.get().getUserManager()).getOriginalTenantId(webContext);
     }
 
     /**
@@ -333,7 +340,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      *
      * @return the list of selectable tenants wrapped as page helper
      */
-    protected abstract BasePageHelper<T, ?, ?, ?> getSelectableTenantsAsPage(WebContext ctx, T currentTenant);
+    protected abstract BasePageHelper<T, ?, ?, ?> getSelectableTenantsAsPage(WebContext webContext, T currentTenant);
 
     /**
      * Makes the current user belong to the given tenant.
@@ -343,13 +350,13 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
      * Exception to this is {@link Tenant#PERMISSION_SYSTEM_TENANT}, this will be kept if the user originally belonged to the system tenant.
      * Additionatly, the permission {@link TenantUserManager#PERMISSION_SPY_USER} is given, so the system can identify the tenant switch.
      *
-     * @param ctx the current request
-     * @param id  the id of the tenant to switch to
+     * @param webContext the current request
+     * @param tenantId   the id of the tenant to switch to
      */
     @LoginRequired
     @Routed("/tenants/select/:1")
-    public void selectTenant(final WebContext ctx, String id) {
-        if ("main".equals(id) || Strings.areEqual(determineOriginalTenantId(ctx), id)) {
+    public void selectTenant(final WebContext webContext, String tenantId) {
+        if ("main".equals(tenantId) || Strings.areEqual(determineOriginalTenantId(webContext), tenantId)) {
             String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
             UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
             auditLog.neutral("AuditLog.switchedToMainTenant")
@@ -360,18 +367,18 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
                                account.getTenant().fetchValue().getTenantData().getName())
                     .log();
 
-            ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
-                                null);
-            ctx.respondWith().redirectTemporarily(ctx.get("goto").asString(wondergemRoot));
+            webContext.setSessionValue(UserContext.getCurrentScope().getScopeId()
+                                       + TenantUserManager.TENANT_SPY_ID_SUFFIX, null);
+            webContext.respondWith().redirectTemporarily(webContext.get("goto").asString(wondergemRoot));
             return;
         }
 
         assertPermission(TenantUserManager.PERMISSION_SELECT_TENANT);
 
-        Optional<T> tenant = resolveAccessibleTenant(id, determineCurrentTenant(ctx));
+        Optional<T> tenant = resolveAccessibleTenant(tenantId, determineCurrentTenant(webContext));
         if (!tenant.isPresent()) {
             UserContext.get().addMessage(Message.error(NLS.get("TenantController.cannotBecomeTenant")));
-            selectTenants(ctx);
+            selectTenants(webContext);
             return;
         }
 
@@ -383,24 +390,24 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
                 .forTenant(effectiveTenant.getIdAsString(), effectiveTenant.getTenantData().getName())
                 .log();
 
-        ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
-                            effectiveTenant.getIdAsString());
+        webContext.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.TENANT_SPY_ID_SUFFIX,
+                                   effectiveTenant.getIdAsString());
 
-        ctx.respondWith().redirectTemporarily(ctx.get("goto").asString(wondergemRoot));
+        webContext.respondWith().redirectTemporarily(webContext.get("goto").asString(wondergemRoot));
     }
 
     /**
      * Autocompletion for Tenants.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @LoginRequired
     @Routed("/tenants/autocomplete")
-    public void tenantsAutocomplete(final WebContext ctx) {
-        AutocompleteHelper.handle(ctx, (query, result) -> {
-            BasePageHelper<T, ?, ?, ?> ph = getSelectableTenantsAsPage(ctx, determineCurrentTenant(ctx));
+    public void tenantsAutocomplete(final WebContext webContext) {
+        AutocompleteHelper.handle(webContext, (query, result) -> {
+            Page<T> tenants = getSelectableTenantsAsPage(webContext, determineCurrentTenant(webContext)).asPage();
 
-            ph.asPage().getItems().forEach(tenant -> {
+            tenants.getItems().forEach(tenant -> {
                 result.accept(new AutocompleteHelper.Completion(tenant.getIdAsString(),
                                                                 tenant.toString(),
                                                                 tenant.toString()));

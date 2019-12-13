@@ -16,7 +16,7 @@
         editor.setTheme("ace/theme/idle_fingers");
 
         $('#save').click(function() {
-            updateField('/tenant/@tenant.getIdAsString()/update',
+            updateField('/tenant/@tenant.getIdAsString()/config/update',
                 'tenantData_configString',
                 editor.getSession().getDocument().getValue());
         });
