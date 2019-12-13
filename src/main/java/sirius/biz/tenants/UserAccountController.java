@@ -211,23 +211,27 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     /**
      * Provides a JSON API to change the settings of an account, including its configuration.
      *
-     * @param ctx       the current request
-     * @param out       the JSON response being generated
-     * @param accountId the id of the account to update
+     * @param webContext the current request
+     * @param out        the JSON response being generated
+     * @param accountId  the id of the account to update
      */
-    @Routed(value = "/user-account/:1/update", jsonCall = true)
+    @Routed(value = "/user-account/:1/config/update", jsonCall = true)
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
-    public void accountUpdate(WebContext ctx, JSONStructuredOutput out, String accountId) {
+    @Permission(FEATURE_USER_ACCOUNT_CONFIG)
+    public void updateAccountConfig(WebContext webContext, JSONStructuredOutput out, String accountId) {
         U userAccount = findForTenant(getUserClass(), accountId);
         assertNotNew(userAccount);
-        load(ctx, userAccount);
-        if (ctx.hasParameter(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERMISSIONS)
-                                                          .inner(PermissionData.CONFIG_STRING)
-                                                          .getName())) {
-            if (hasPermission(FEATURE_USER_ACCOUNT_CONFIG)) {
-                userAccount.getUserAccountData().getPermissions().getConfig();
-            }
+
+        String configFieldName = UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERMISSIONS)
+                                                              .inner(PermissionData.CONFIG_STRING)
+                                                              .getName();
+        if (webContext.hasParameter(configFieldName)) {
+            // Reads configuration manually to prevent altering other fields
+            String config = webContext.getParameter(configFieldName);
+            userAccount.getUserAccountData().getPermissions().setConfigString(config);
+            // parses the config to make sure it is valid
+            userAccount.getUserAccountData().getPermissions().getConfig();
         }
 
         userAccount.getMapper().update(userAccount);
