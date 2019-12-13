@@ -15,7 +15,7 @@
         editor.setTheme("ace/theme/idle_fingers");
 
         $('#save').click(function() {
-            updateField('/user-account/@account.getIdAsString()/update',
+            updateField('/user-account/@account.getIdAsString()/config/update',
                 'userAccountData_permissions_configString',
                 editor.getSession().getDocument().getValue());
         });
