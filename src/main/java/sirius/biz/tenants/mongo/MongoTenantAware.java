@@ -53,17 +53,29 @@ public abstract class MongoTenantAware extends MongoBizEntity implements TenantA
         }
     }
 
-    @Override
+    /**
+     * Fills the tenant with the given one.
+     *
+     * @param tenant the tenant to set for this entity
+     */
     public void withTenant(Tenant<?> tenant) {
         getTenant().setValue((MongoTenant) tenant);
     }
 
-    @Override
+    /**
+     * Fetches the tenant from cache or throws an exception if no tenant is present.
+     *
+     * @return the tenant which this object belongs to
+     */
     public MongoTenant fetchCachedRequiredTenant() {
         return tenants.fetchCachedRequiredTenant(tenant);
     }
 
-    @Override
+    /**
+     * Fetches the tenant from cache wrapped in a Optional.
+     *
+     * @return the optional tenant which this object belongs to
+     */
     public Optional<MongoTenant> fetchCachedTenant() {
         return tenants.fetchCachedTenant(tenant);
     }
