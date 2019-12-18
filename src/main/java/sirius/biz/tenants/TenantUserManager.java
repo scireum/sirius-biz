@@ -408,8 +408,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return asUser(account, null, null);
     }
 
-    @SuppressWarnings({"unchecked", "RedundantCast"})
-    @Explain("The redundant cast is required as otherwise the Java compiler gets confused.")
+    @SuppressWarnings("unchecked")
     protected Optional<U> loadAccountByName(String user) {
         return (Optional<U>) (Object) mixing.getDescriptor(getUserClass())
                                             .getMapper()

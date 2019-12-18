@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists;
 
+import sirius.biz.tenants.Tenant;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Explain;
@@ -43,4 +44,11 @@ public interface CodeList extends TenantAware {
      * @return the entity ID as string or "new" if the entity {@link #isNew()}.
      */
     String getIdAsString();
+
+    /**
+     * Fills the tenant with the given one.
+     *
+     * @param tenant the tenant to set for this entity
+     */
+    void withTenant(Tenant<?> tenant);
 }
