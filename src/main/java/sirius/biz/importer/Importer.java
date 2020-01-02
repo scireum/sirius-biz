@@ -201,6 +201,9 @@ public class Importer implements Closeable {
      * <p>
      * Uses the appropriate {@link ImportHandler} to determine if the entity already exists and then either updates
      * the entity or creates a new one.
+     * <p>
+     * Note that this will execute an update per entity. Use {@link #createNowOrUpdateInBatch(BaseEntity)} or even
+     * {@link #createOrUpdateInBatch(BaseEntity)} to yield maximal performance by grouping changes into batch updates.
      *
      * @param entity the entity to update or create
      * @param <E>    the generic type of the entity
@@ -219,13 +222,37 @@ public class Importer implements Closeable {
      * <p>
      * Using a batch update will most probably yield substantial performance benefits with the downside, that the updated
      * entity cannot be returned by this method.
+     * <p>
+     * Note that {@link #createNowOrUpdateInBatch(BaseEntity)} is most probably a better choice, as it makes the entity
+     * immediatelly visible to the database and all internal consistency checks and still provides optimal performance
+     * when updating many objects.
      *
      * @param entity the entity to update or create
      * @param <E>    the generic type of the entity
+     * @see #createNowOrUpdateInBatch(BaseEntity)
+     * @see ImportHandler#createOrUpdateInBatch(BaseEntity)
      */
     @SuppressWarnings("unchecked")
     public <E extends BaseEntity<?>> void createOrUpdateInBatch(E entity) {
         context.findHandler((Class<E>) entity.getClass()).createOrUpdateInBatch(entity);
+    }
+
+    /**
+     * Creates the entity immediately or updates the given entity in the underlying database using a batch update.
+     * <p>
+     * Uses the appropriate {@link ImportHandler} to determine if the entity already exists and then either updates
+     * the entity or creates a new one.
+     * <p>
+     * Using a batch update will most probably yield substantial performance benefits with the downside, that the updated
+     * entity cannot be returned by this method.
+     *
+     * @param entity the entity to update or create
+     * @param <E>    the generic type of the entity
+     * @see ImportHandler#createNowOrUpdateInBatch(BaseEntity)
+     */
+    @SuppressWarnings("unchecked")
+    public <E extends BaseEntity<?>> void createNowOrUpdateInBatch(E entity) {
+        context.findHandler((Class<E>) entity.getClass()).createNowOrUpdateInBatch(entity);
     }
 
     @Override
