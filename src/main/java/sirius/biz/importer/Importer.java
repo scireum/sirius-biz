@@ -238,7 +238,7 @@ public class Importer implements Closeable {
     }
 
     /**
-     * Creates the entity immediatelly or updates the given entity in the underlying database using a batch update.
+     * Creates the entity immediately or updates the given entity in the underlying database using a batch update.
      * <p>
      * Uses the appropriate {@link ImportHandler} to determine if the entity already exists and then either updates
      * the entity or creates a new one.
