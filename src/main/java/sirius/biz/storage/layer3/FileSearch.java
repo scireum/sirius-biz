@@ -186,10 +186,8 @@ public class FileSearch {
      * @return <tt>true</tt> if more results can be processed <tt>false</tt> if the enumeration should be aborted
      */
     public boolean processResult(VirtualFile file) {
-        if (matchesFiltering(file)) {
-            if (limit.nextRow()) {
-                return resultProcessor.apply(file);
-            }
+        if (matchesFiltering(file) && limit.nextRow()) {
+            return resultProcessor.apply(file);
         }
 
         return limit.shouldContinue();

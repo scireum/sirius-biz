@@ -125,20 +125,18 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
             return;
         }
 
-        if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_LOCAL)) {
-            if (Strings.areEqual(event.getString(MESSAGE_NODE), CallContext.getNodeName())) {
-                if (enabled) {
-                    localOverwrite.put(name, true);
-                } else {
-                    localOverwrite.remove(name);
-                }
+        if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_LOCAL)
+            && Strings.areEqual(event.getString(MESSAGE_NODE), CallContext.getNodeName())) {
+            if (enabled) {
+                localOverwrite.put(name, true);
+            } else {
+                localOverwrite.remove(name);
             }
         }
 
-        if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_BLEED)) {
-            if (Strings.areEqual(event.getString(MESSAGE_NODE), CallContext.getNodeName())) {
-                bleeding = enabled;
-            }
+        if (Strings.areEqual(event.getString(MESSAGE_TYPE), TYPE_BLEED)
+            && Strings.areEqual(event.getString(MESSAGE_NODE), CallContext.getNodeName())) {
+            bleeding = enabled;
         }
     }
 

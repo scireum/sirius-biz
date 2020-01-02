@@ -264,12 +264,10 @@ public class UserAccountData extends Composite implements MessageProvider {
     }
 
     private void warnAboutForcedLogout(Consumer<Message> messageConsumer) {
-        if (isExternalLoginRequired()) {
-            if (isNearInterval(getLogin().getLastExternalLogin(),
-                               getTenant().getTenantData().getExternalLoginIntervalDays())) {
-                messageConsumer.accept(Message.info(NLS.get("UserAccount.forcedExternalLoginNear")));
-                return;
-            }
+        if (isExternalLoginRequired() && isNearInterval(getLogin().getLastExternalLogin(),
+                                                        getTenant().getTenantData().getExternalLoginIntervalDays())) {
+            messageConsumer.accept(Message.info(NLS.get("UserAccount.forcedExternalLoginNear")));
+            return;
         }
         if (isNearInterval(getLogin().getLastLogin(), getTenant().getTenantData().getLoginIntervalDays())) {
             messageConsumer.accept(Message.info(NLS.get("UserAccount.forcedLogoutNear")));

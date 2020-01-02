@@ -37,7 +37,7 @@ import java.util.TreeMap;
 @Register(classes = {Startable.class, Stoppable.class})
 public class FTPServer implements Startable, Stoppable {
 
-    private FtpServer ftpServer;
+    private FtpServer server;
 
     @ConfigValue("storage.layer3.downlink.ftp.port")
     private int ftpPort;
@@ -84,9 +84,9 @@ public class FTPServer implements Startable, Stoppable {
 
     @Override
     public void stopped() {
-        if (ftpServer != null) {
+        if (server != null) {
             try {
-                ftpServer.stop();
+                server.stop();
             } catch (Exception e) {
                 Exceptions.handle()
                           .to(StorageUtils.LOG)
@@ -101,7 +101,7 @@ public class FTPServer implements Startable, Stoppable {
 
     private void startFTPServer() {
         try {
-            ftpServer.start();
+            server.start();
             StorageUtils.LOG.INFO("Layer3/FTP: Started FTP server on port %s (%s)", ftpPort, bindAddress);
         } catch (FtpException e) {
             Exceptions.handle()
@@ -127,7 +127,7 @@ public class FTPServer implements Startable, Stoppable {
 
         serverFactory.addListener("default", factory.createListener());
 
-        ftpServer = serverFactory.createServer();
+        server = serverFactory.createServer();
     }
 
     private void setupNetwork(ListenerFactory factory) {

@@ -136,17 +136,15 @@ public class BlobHardRefProperty extends Property implements SQLPropertyInfo {
     @Override
     protected void onBeforeSaveChecks(Object entity) {
         BlobHardRef ref = getRef(entity);
-        if (ref.changed && ref.isFilled()) {
-            if (!ref.getBlob().isTemporary()) {
-                throw Exceptions.handle()
-                                .to(StorageUtils.LOG)
-                                .withSystemErrorMessage(
-                                        "Layer 2: Cannot use a non temporary object in a hard reference: %s for %s of %s",
-                                        ref.getBlob().getBlobKey(),
-                                        getField().getName(),
-                                        entity)
-                                .handle();
-            }
+        if (ref.changed && ref.isFilled() && !ref.getBlob().isTemporary()) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .withSystemErrorMessage(
+                                    "Layer 2: Cannot use a non temporary object in a hard reference: %s for %s of %s",
+                                    ref.getBlob().getBlobKey(),
+                                    getField().getName(),
+                                    entity)
+                            .handle();
         }
     }
 

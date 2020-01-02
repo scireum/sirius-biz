@@ -9,17 +9,13 @@
 package sirius.biz.codelists.mongo;
 
 import sirius.biz.codelists.CodeListEntryData;
-import sirius.biz.codelists.jdbc.SQLCodeListEntry;
 import sirius.biz.importer.ImportHandler;
 import sirius.biz.importer.ImportHandlerFactory;
 import sirius.biz.importer.ImporterContext;
 import sirius.biz.importer.MongoEntityImportHandler;
 import sirius.biz.tenants.mongo.MongoTenants;
-import sirius.biz.tenants.mongo.MongoUserAccount;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
-import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Register;
 
 import java.util.Optional;
@@ -80,16 +76,10 @@ public class MongoCodeListEntryImportHandler extends MongoEntityImportHandler<Mo
 
     @Override
     protected void collectDefaultExportableMappings(BiConsumer<Integer, Mapping> collector) {
-        collector.accept(100,
-                         MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.PRIORITY));
-        collector.accept(110,
-                         MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE));
-        collector.accept(120,
-                         MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE));
-        collector.accept(130,
-                         MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE));
-        collector.accept(140,
-                         MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION));
+        collector.accept(100, MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.PRIORITY));
+        collector.accept(110, MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE));
+        collector.accept(120, MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE));
+        collector.accept(130, MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE));
+        collector.accept(140, MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION));
     }
-
 }
