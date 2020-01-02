@@ -10,6 +10,7 @@ package sirius.biz.storage.layer3.uplink.ftp;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTPFileFilter;
 import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
@@ -22,6 +23,7 @@ import sirius.biz.storage.util.StorageUtils;
 import sirius.biz.storage.util.WatchableInputStream;
 import sirius.biz.storage.util.WatchableOutputStream;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -58,7 +60,10 @@ public class FTPUplink extends ConfigBasedUplink {
         }
     }
 
+    private static final String FEATURE_MLSD = "MLSD";
+
     private final FTPUplinkConnectorConfig ftpConfig;
+    private ValueHolder<Boolean> supportsMLSD;
 
     @Part
     private static UplinkConnectorPool connectorPool;
@@ -66,6 +71,28 @@ public class FTPUplink extends ConfigBasedUplink {
     private FTPUplink(Extension config) {
         super(config);
         this.ftpConfig = new FTPUplinkConnectorConfig(config);
+    }
+
+    private boolean checkForMLSD(FTPClient client) {
+        if (supportsMLSD == null) {
+            supportsMLSD = performMLSDFeatureCheck(client);
+        }
+
+        return supportsMLSD.get();
+    }
+
+    private ValueHolder<Boolean> performMLSDFeatureCheck(FTPClient client) {
+        try {
+            return ValueHolder.of(client.hasFeature(FEATURE_MLSD));
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Layer 3/FTP: Cannot determine MLSD support for uplink '%s' - %s (%s)",
+                                              ftpConfig)
+                      .handle();
+            return ValueHolder.of(false);
+        }
     }
 
     @Override
@@ -76,8 +103,8 @@ public class FTPUplink extends ConfigBasedUplink {
 
         RemotePath relativeParent = parent.as(RemotePath.class);
         try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
-            for (FTPFile file : connector.connector().listFiles(relativeParent.getPath())) {
-                if (!search.processResult(wrap(parent, file, file.getName()))) {
+            for (FTPFile file : list(connector.connector(), relativeParent, null)) {
+                if (isUsable(file) && !search.processResult(wrap(parent, file, file.getName()))) {
                     return;
                 }
             }
@@ -91,6 +118,27 @@ public class FTPUplink extends ConfigBasedUplink {
                                     ftpConfig)
                             .handle();
         }
+    }
+
+    private FTPFile[] list(FTPClient client, RemotePath relativeParent, FTPFileFilter ftpFileFilter)
+            throws IOException {
+        if (checkForMLSD(client)) {
+            if (ftpFileFilter != null) {
+                return client.mlistDir(relativeParent.getPath(), ftpFileFilter);
+            } else {
+                return client.mlistDir(relativeParent.getPath());
+            }
+        } else {
+            if (ftpFileFilter != null) {
+                return client.listFiles(relativeParent.getPath(), ftpFileFilter);
+            } else {
+                return client.listFiles(relativeParent.getPath());
+            }
+        }
+    }
+
+    private boolean isUsable(FTPFile entry) {
+        return !".".equals(entry.getName()) && !"..".equals(entry.getName());
     }
 
     @Override
@@ -136,9 +184,9 @@ public class FTPUplink extends ConfigBasedUplink {
         }
 
         try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
-            FTPFile[] ftpFiles = connector.connector()
-                                          .listFiles(file.parent().as(RemotePath.class).getPath(),
-                                                     ftpFile -> Strings.areEqual(ftpFile.getName(), file.name()));
+            FTPFile[] ftpFiles = list(connector.connector(),
+                                      file.parent().as(RemotePath.class),
+                                      ftpFile -> Strings.areEqual(ftpFile.getName(), file.name()));
             if (ftpFiles.length == 1) {
                 file.attach(ftpFiles[0]);
                 return Optional.of(ftpFiles[0]);
@@ -173,7 +221,7 @@ public class FTPUplink extends ConfigBasedUplink {
     }
 
     private long lastModifiedSupplier(VirtualFile file) {
-        return fetchFTPFile(file).map(FTPFile::getTimestamp).map(Calendar::getTimeInMillis).orElse(0L);
+        return Math.max(0, fetchFTPFile(file).map(FTPFile::getTimestamp).map(Calendar::getTimeInMillis).orElse(0L));
     }
 
     private boolean canMoveHandler(VirtualFile file) {

@@ -101,20 +101,21 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     /**
      * Shows a list of all available users of the current tenant.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Routed("/user-accounts")
     @DefaultRoute
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
-    public void accounts(WebContext ctx) {
-        BasePageHelper<U, ?, ?, ?> ph = getUsersAsPage();
-        ph.withContext(ctx);
-        ph.addBooleanFacet(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                        .inner(LoginData.ACCOUNT_LOCKED)
-                                                        .toString(), NLS.get("LoginData.accountLocked"));
+    public void accounts(WebContext webContext) {
+        Page<U> accounts = getUsersAsPage().withContext(webContext)
+                                           .addBooleanFacet(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                                         .inner(LoginData.ACCOUNT_LOCKED)
+                                                                                         .toString(),
+                                                            NLS.get("LoginData.accountLocked"))
+                                           .asPage();
 
-        ctx.respondWith().template("/templates/biz/tenants/user-accounts.html.pasta", ph.asPage(), getUserClass());
+        webContext.respondWith().template("/templates/biz/tenants/user-accounts.html.pasta", accounts, getUserClass());
     }
 
     /**
@@ -137,38 +138,40 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     /**
      * Shows an editor for the given account.
      *
-     * @param ctx       the current request
-     * @param accountId the {@link UserAccount} to edit
+     * @param webContext the current request
+     * @param accountId  the {@link UserAccount} to edit
      */
     @Routed("/user-account/:1")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
-    public void account(WebContext ctx, String accountId) {
+    public void account(WebContext webContext, String accountId) {
         U userAccount = findForTenant(getUserClass(), accountId);
 
-        boolean requestHandled = prepareSave(ctx).withAfterCreateURI("/user-account/${id}")
-                                                 .withAfterSaveURI("/user-accounts")
-                                                 .withPreSaveHandler(isNew -> {
-                                                     if (isUserLockingHimself(userAccount)) {
-                                                         throw Exceptions.createHandled()
-                                                                         .withNLSKey(
-                                                                                 "UserAccountController.cannotLockSelf")
-                                                                         .handle();
-                                                     }
+        boolean requestHandled = prepareSave(webContext).withAfterCreateURI("/user-account/${id}")
+                                                        .withAfterSaveURI("/user-accounts")
+                                                        .withPreSaveHandler(isNew -> {
+                                                            if (isUserLockingHimself(userAccount)) {
+                                                                throw Exceptions.createHandled()
+                                                                                .withNLSKey(
+                                                                                        "UserAccountController.cannotLockSelf")
+                                                                                .handle();
+                                                            }
 
-                                                     List<String> accessiblePermissions = getRoles();
-                                                     packages.loadAccessiblePermissions(ctx.getParameters("roles"),
-                                                                                        accessiblePermissions::contains,
-                                                                                        userAccount.getUserAccountData()
-                                                                                                   .getPermissions()
-                                                                                                   .getPermissions()
-                                                                                                   .modify());
-                                                 })
-                                                 .saveEntity(userAccount);
+                                                            List<String> accessiblePermissions = getRoles();
+                                                            packages.loadAccessiblePermissions(webContext.getParameters(
+                                                                    "roles"),
+                                                                                               accessiblePermissions::contains,
+                                                                                               userAccount.getUserAccountData()
+                                                                                                          .getPermissions()
+                                                                                                          .getPermissions()
+                                                                                                          .modify());
+                                                        })
+                                                        .saveEntity(userAccount);
 
         if (!requestHandled) {
             validate(userAccount);
-            ctx.respondWith().template("/templates/biz/tenants/user-account-details.html.pasta", userAccount, this);
+            webContext.respondWith()
+                      .template("/templates/biz/tenants/user-account-details.html.pasta", userAccount, this);
         }
     }
 
@@ -195,36 +198,42 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     /**
      * Shows an editor for the custom configuration of the given user.
      *
-     * @param ctx       the current request
-     * @param accountId the id of the account which config will be edited
+     * @param webContext the current request
+     * @param accountId  the id of the account which config will be edited
      */
     @Routed("/user-account/:1/config")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     @Permission(FEATURE_USER_ACCOUNT_CONFIG)
-    public void accountConfig(WebContext ctx, String accountId) {
+    public void accountConfig(WebContext webContext, String accountId) {
         U userAccount = findForTenant(getUserClass(), accountId);
         assertNotNew(userAccount);
-        ctx.respondWith().template("/templates/biz/tenants/user-account-config.html.pasta", userAccount);
+        webContext.respondWith().template("/templates/biz/tenants/user-account-config.html.pasta", userAccount);
     }
 
     /**
      * Provides a JSON API to change the settings of an account, including its configuration.
      *
-     * @param ctx       the current request
-     * @param out       the JSON response being generated
-     * @param accountId the id of the account to update
+     * @param webContext the current request
+     * @param jsonOutput the JSON response being generated
+     * @param accountId  the id of the account to update
      */
-    @Routed(value = "/user-account/:1/update", jsonCall = true)
+    @Routed(value = "/user-account/:1/config/update", jsonCall = true)
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
-    public void accountUpdate(WebContext ctx, JSONStructuredOutput out, String accountId) {
+    @Permission(FEATURE_USER_ACCOUNT_CONFIG)
+    public void updateAccountConfig(WebContext webContext, JSONStructuredOutput jsonOutput, String accountId) {
         U userAccount = findForTenant(getUserClass(), accountId);
         assertNotNew(userAccount);
-        load(ctx, userAccount);
-        if (ctx.hasParameter(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERMISSIONS)
-                                                          .inner(PermissionData.CONFIG_STRING)
-                                                          .getName()) && hasPermission(FEATURE_USER_ACCOUNT_CONFIG)) {
+
+        String configFieldName = UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERMISSIONS)
+                                                              .inner(PermissionData.CONFIG_STRING)
+                                                              .getName();
+        if (webContext.hasParameter(configFieldName)) {
+            // Reads configuration manually to prevent altering other fields
+            String config = webContext.getParameter(configFieldName);
+            userAccount.getUserAccountData().getPermissions().setConfigString(config);
+            // parses the config to make sure it is valid
             userAccount.getUserAccountData().getPermissions().getConfig();
         }
 
@@ -264,32 +273,32 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     /**
      * Generates a new password for the given account.
      *
-     * @param ctx the current request
-     * @param id  the account for which a password is to be created
+     * @param webContext the current request
+     * @param accountId  the account for which a password is to be created
      */
     @Routed("/user-account/:1/generate-password")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
-    public void generatePassword(final WebContext ctx, String id) {
-        U userAccount = findForTenant(getUserClass(), id);
+    public void generatePassword(final WebContext webContext, String accountId) {
+        U userAccount = findForTenant(getUserClass(), accountId);
 
         generateNewPassword(userAccount);
         UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
 
-        ctx.respondWith().redirectToGet("/user-accounts");
+        webContext.respondWith().redirectToGet("/user-accounts");
     }
 
     /**
      * Generates a new password for the given account and send a mail to the user.
      *
-     * @param ctx the current request
-     * @param id  the account for which a password is to be created
+     * @param webContext the current request
+     * @param accountId  the account for which a password is to be created
      */
     @Routed("/user-account/:1/generate-and-send-password")
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
-    public void generateAndSendPassword(final WebContext ctx, String id) {
-        U userAccount = findForTenant(getUserClass(), id);
+    public void generateAndSendPassword(final WebContext webContext, String accountId) {
+        U userAccount = findForTenant(getUserClass(), accountId);
 
         generateNewPassword(userAccount);
 
@@ -299,32 +308,32 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                                                 .format()));
             UserContext userContext = UserContext.get();
             userContext.runAs(userContext.getUserManager().findUserByUserId(userAccount.getUniqueName()), () -> {
-                Context context = Context.create();
+                Context mailContext = Context.create();
 
-                context.set(PARAM_PASSWORD, userAccount.getUserAccountData().getLogin().getGeneratedPassword())
-                       .set(PARAM_NAME, userAccount.getUserAccountData().getAddressableName())
-                       .set(PARAM_USERNAME, userAccount.getUserAccountData().getLogin().getUsername())
-                       .set(PARAM_URL, getBaseUrl())
-                       .set(PARAM_REASON,
-                            NLS.fmtr("UserAccountController.generatedPassword.reason")
-                               .set("product", Product.getProduct().getName())
-                               .format())
-                       .set(PARAM_ROOT, wondergemRoot);
+                mailContext.set(PARAM_PASSWORD, userAccount.getUserAccountData().getLogin().getGeneratedPassword())
+                           .set(PARAM_NAME, userAccount.getUserAccountData().getAddressableName())
+                           .set(PARAM_USERNAME, userAccount.getUserAccountData().getLogin().getUsername())
+                           .set(PARAM_URL, getBaseUrl())
+                           .set(PARAM_REASON,
+                                NLS.fmtr("UserAccountController.generatedPassword.reason")
+                                   .set("product", Product.getProduct().getName())
+                                   .format())
+                           .set(PARAM_ROOT, wondergemRoot);
 
                 mails.createEmail()
                      .to(userAccount.getUserAccountData().getEmail(), userAccount.getUserAccountData().toString())
                      .subject(NLS.fmtr("UserAccountController.generatedPassword.subject")
                                  .set("product", Product.getProduct().getName())
                                  .format())
-                     .textTemplate("/mail/useraccount/password.pasta", context)
-                     .htmlTemplate("/mail/useraccount/password.html.pasta", context)
+                     .textTemplate("/mail/useraccount/password.pasta", mailContext)
+                     .htmlTemplate("/mail/useraccount/password.html.pasta", mailContext)
                      .send();
             });
         } else {
             UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
         }
 
-        ctx.respondWith().redirectToGet("/user-accounts");
+        webContext.respondWith().redirectToGet("/user-accounts");
     }
 
     private void generateNewPassword(U userAccount) {
@@ -350,12 +359,12 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     /**
      * Provides a JSON API which re-sends the password to the account with the given email address.
      *
-     * @param ctx the current request
-     * @param out the JSON response being generated
+     * @param webContext the current request
+     * @param jsonOutput the JSON response being generated
      */
     @Routed(value = "/forgotPassword", jsonCall = true)
-    public void forgotPassword(final WebContext ctx, JSONStructuredOutput out) {
-        List<U> accounts = findUserAccountsWithEmail(ctx.get(PARAM_EMAIL).asString().toLowerCase());
+    public void forgotPassword(final WebContext webContext, JSONStructuredOutput jsonOutput) {
+        List<U> accounts = findUserAccountsWithEmail(webContext.get(PARAM_EMAIL).asString().toLowerCase());
         if (accounts.isEmpty()) {
             throw Exceptions.createHandled().withNLSKey("UserAccountController.noUserFoundForEmail").handle();
         }
@@ -392,7 +401,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                 Context context = Context.create()
                                          .set(PARAM_REASON,
                                               NLS.fmtr("UserAccountController.forgotPassword.reason")
-                                                 .set("ip", ctx.getRemoteIP().toString())
+                                                 .set("ip", webContext.getRemoteIP().toString())
                                                  .format())
                                          .set(PARAM_PASSWORD,
                                               account.getUserAccountData().getLogin().getGeneratedPassword())
@@ -424,13 +433,13 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     /**
      * Locks the given account.
      *
-     * @param ctx       the current request
-     * @param accountId the account to lock
+     * @param webContext the current request
+     * @param accountId  the account to lock
      */
     @LoginRequired
     @Routed("/user-account/:1/lock")
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
-    public void lockUser(final WebContext ctx, String accountId) {
+    public void lockUser(final WebContext webContext, String accountId) {
         Optional<U> account = tryFindForTenant(getUserClass(), accountId);
         account.ifPresent(user -> {
             if (Objects.equals(getUser().getUserObject(UserAccount.class), user)) {
@@ -441,58 +450,58 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             user.getMapper().update(user);
         });
 
-        ctx.respondWith().redirectToGet("/user-accounts");
+        webContext.respondWith().redirectToGet("/user-accounts");
     }
 
     /**
      * Unlocks the given account.
      *
-     * @param ctx       the current request
-     * @param accountId the account to unlock
+     * @param webContext the current request
+     * @param accountId  the account to unlock
      */
     @LoginRequired
     @Routed("/user-account/:1/unlock")
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
-    public void unlockUser(final WebContext ctx, String accountId) {
+    public void unlockUser(final WebContext webContext, String accountId) {
         Optional<U> account = tryFindForTenant(getUserClass(), accountId);
         account.ifPresent(user -> {
             user.getUserAccountData().getLogin().setAccountLocked(false);
             user.getMapper().update(user);
         });
 
-        ctx.respondWith().redirectToGet("/user-accounts");
+        webContext.respondWith().redirectToGet("/user-accounts");
     }
 
     /**
      * Deletes the given account.
      *
-     * @param ctx the current request
-     * @param id  the account to delete
+     * @param webContext the current request
+     * @param accountId  the account to delete
      */
     @LoginRequired
     @Routed("/user-account/:1/delete")
     @Permission(PERMISSION_DELETE_USER_ACCOUNTS)
-    public void deleteAdmin(final WebContext ctx, String id) {
-        Optional<U> account = tryFindForTenant(getUserClass(), id);
+    public void deleteAdmin(final WebContext webContext, String accountId) {
+        Optional<U> account = tryFindForTenant(getUserClass(), accountId);
         account.ifPresent(u -> {
             if (Objects.equals(getUser().getUserObject(UserAccount.class), u)) {
                 throw Exceptions.createHandled().withNLSKey("UserAccountController.cannotDeleteSelf").handle();
             }
         });
 
-        deleteEntity(ctx, account);
-        ctx.respondWith().redirectToGet("/user-accounts");
+        deleteEntity(webContext, account);
+        webContext.respondWith().redirectToGet("/user-accounts");
     }
 
     /**
      * Executes a logout for the current scope.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Routed("/logout")
-    public void logout(WebContext ctx) {
-        UserContext.get().getUserManager().logout(ctx);
-        ctx.respondWith().redirectToGet(wondergemRoot);
+    public void logout(WebContext webContext) {
+        UserContext.get().getUserManager().logout(webContext);
+        webContext.respondWith().redirectToGet(wondergemRoot);
     }
 
     /**
@@ -500,16 +509,14 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      * <p>
      * Only accepts UserAccounts which belong to the current Tenant.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @LoginRequired
     @Routed("/user-accounts/autocomplete")
-    public void usersAutocomplete(final WebContext ctx) {
-        AutocompleteHelper.handle(ctx, (query, result) -> {
-            BasePageHelper<U, ?, ?, ?> ph = getSelectableUsersAsPage();
-            ph.withContext(ctx);
-
-            ph.asPage().getItems().forEach(userAccount -> {
+    public void usersAutocomplete(final WebContext webContext) {
+        AutocompleteHelper.handle(webContext, (query, result) -> {
+            Page<U> accounts = getSelectableUsersAsPage().withContext(webContext).asPage();
+            accounts.getItems().forEach(userAccount -> {
                 result.accept(new AutocompleteHelper.Completion(userAccount.getUniqueName(),
                                                                 userAccount.toString(),
                                                                 userAccount.toString()));
@@ -520,20 +527,19 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     /**
      * Lists all users which the current user can "become" (switch to).
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Routed("/user-accounts/select")
     @LoginRequired
     @Permission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT)
-    public void selectUserAccounts(WebContext ctx) {
-        BasePageHelper<U, ?, ?, ?> ph = getSelectableUsersAsPage();
-        ph.withContext(ctx);
-
-        Page<U> selectableUsers = ph.asPage();
+    public void selectUserAccounts(WebContext webContext) {
+        Page<U> selectableUsers = getSelectableUsersAsPage().withContext(webContext).asPage();
         fillTenantsFromCache(selectableUsers);
 
-        ctx.respondWith()
-           .template("/templates/biz/tenants/select-user-account.html.pasta", selectableUsers, isCurrentlySpying(ctx));
+        webContext.respondWith()
+                  .template("/templates/biz/tenants/select-user-account.html.pasta",
+                            selectableUsers,
+                            isCurrentlySpying(webContext));
     }
 
     private void fillTenantsFromCache(Page<U> selectableUsers) {
@@ -543,9 +549,9 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                                                                      .orElse(null)));
     }
 
-    private boolean isCurrentlySpying(WebContext ctx) {
-        return ctx.getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX)
-                  .isFilled();
+    private boolean isCurrentlySpying(WebContext webContext) {
+        return webContext.getSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX)
+                         .isFilled();
     }
 
     /**
@@ -564,13 +570,13 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      * and {@link TenantUserManager#PERMISSION_SELECT_USER_ACCOUNT} (to switch back).
      * Additionatly, the permission {@link TenantUserManager#PERMISSION_SPY_USER} is given, so the system can identify the user switch.
      *
-     * @param ctx the current request
-     * @param id  the id of the user to switch to
+     * @param webContext the current request
+     * @param accountId  the id of the user to switch to
      */
     @LoginRequired
     @Routed("/user-accounts/select/:1")
-    public void selectUserAccount(final WebContext ctx, String id) {
-        if ("main".equals(id)) {
+    public void selectUserAccount(final WebContext webContext, String accountId) {
+        if ("main".equals(accountId)) {
             String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
             UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
             auditLog.neutral("AuditLog.switchedToMainUser")
@@ -579,17 +585,18 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                     .forCurrentUser()
                     .log();
 
-            ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX, null);
-            ctx.respondWith().redirectTemporarily("/user-accounts/select");
+            webContext.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
+                                       null);
+            webContext.respondWith().redirectTemporarily("/user-accounts/select");
             return;
         }
 
         assertPermission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT);
 
-        U user = mixing.getDescriptor(getUserClass()).getMapper().find(getUserClass(), id).orElse(null);
+        U user = mixing.getDescriptor(getUserClass()).getMapper().find(getUserClass(), accountId).orElse(null);
         if (user == null) {
             UserContext.get().addMessage(Message.error(NLS.get("UserAccountController.cannotBecomeUser")));
-            selectUserAccounts(ctx);
+            selectUserAccounts(webContext);
             return;
         }
 
@@ -605,8 +612,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                            matchingTenants.fetchCachedRequiredTenant(user.getTenant()).getTenantData().getName())
                 .log();
 
-        ctx.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
-                            user.getUniqueName());
-        ctx.respondWith().redirectTemporarily(ctx.get("goto").asString(wondergemRoot));
+        webContext.setSessionValue(UserContext.getCurrentScope().getScopeId() + TenantUserManager.SPY_ID_SUFFIX,
+                                   user.getUniqueName());
+        webContext.respondWith().redirectTemporarily(webContext.get("goto").asString(wondergemRoot));
     }
 }

@@ -100,24 +100,38 @@ public class BizController extends BasicController {
 
     /**
      * Ensures that the tenant of the current user matches the tenant of the given entity.
+     * <p>
+     * Note that this check is also provided by {@link Tenants#assertTenant(TenantAware)}. However,
+     * we use an implementation here which works independently of the tenants framework as some
+     * products do not use it.
      *
      * @param tenantAware the entity to check
      * @throws sirius.kernel.health.HandledException if the tenants do no match
      * @see Tenants#assertTenant(TenantAware)
      */
     protected void assertTenant(TenantAware tenantAware) {
-        tenants.assertTenant(tenantAware);
+        if (tenantAware == null) {
+            return;
+        }
+
+        assertTenant(tenantAware.getTenantAsString());
     }
 
     /**
      * Ensures that the tenant of the current user matches the given tenant id.
+     * <p>
+     * Note that this check is also provided by {@link Tenants#assertTenant(String)}. However,
+     * we use an implementation here which works independently of the tenants framework as some
+     * products do not use it.
      *
      * @param tenantId the id to check
      * @throws sirius.kernel.health.HandledException if the tenants do no match
      * @see Tenants#assertTenant(String)
      */
     protected void assertTenant(@Nullable String tenantId) {
-        tenants.assertTenant(tenantId);
+        if (Strings.isFilled(tenantId) && !Strings.areEqual(tenantId, UserContext.getCurrentUser().getTenantId())) {
+            throw Exceptions.createHandled().withNLSKey("Tenants.invalidTenant").handle();
+        }
     }
 
     /**
