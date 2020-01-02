@@ -99,6 +99,22 @@ public interface JobFactory extends Named, Priorized {
     List<Parameter<?, ?>> getParameters();
 
     /**
+     * Returns the visible parameters accepted by this job.
+     *
+     * @param context web context
+     * @return the list of parameters of this job
+     */
+    List<Parameter<?, ?>> getVisibleParameters(Map<String, String> context);
+
+    /**
+     * Returns the hidden parameters accepted by this job.
+     *
+     * @param context web context
+     * @return the list of hidden parameters of this job
+     */
+    List<Parameter<?, ?>> getInvisibleParameters(Map<String, String> context);
+
+    /**
      * Generates a URL which can be invoked to start this job while using the given object as a parameter value.
      * <p>
      * This is used by the <tt>w:jobs</tt> tag to display appropriate jobs next to a data object.

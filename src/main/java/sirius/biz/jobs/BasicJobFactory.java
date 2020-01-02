@@ -121,6 +121,16 @@ public abstract class BasicJobFactory implements JobFactory {
         return result;
     }
 
+    @Override
+    public List<Parameter<?, ?>> getVisibleParameters(Map<String, String> context) {
+        return getParameters().stream().filter(parameter -> parameter.isVisible(context)).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Parameter<?, ?>> getInvisibleParameters(Map<String, String> context) {
+        return getParameters().stream().filter(parameter -> !parameter.isVisible(context)).collect(Collectors.toList());
+    }
+
     /**
      * Collects all parameters expected by the job.
      *
