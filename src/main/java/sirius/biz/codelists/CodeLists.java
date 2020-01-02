@@ -111,7 +111,6 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
 
     /**
      * Finds a {@link CodeList} that matches the given name and belongs to the current tenant.
-     * <p>
      *
      * @param codeList The code of the {@link CodeList}
      * @return An optional of the matching {@link CodeList}, or null if there is no
@@ -364,14 +363,18 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
     }
 
     /**
-     * Checks if the given code exists inside the given code list or throws an exception if no matching entry exists
+     * Checks if the given code exists inside the given code list or throws an exception if no matching entry exists.
+     * <p>
+     * Note that if the code list cannot be resolved as no tenant is present, the check is skipped entirely. This is a
+     * safety net as these are rare circumstances (etc. during login) where a check and espically a failure does more
+     * harm than help.
      *
      * @param codeList the code list to search in
      * @param code     the code to lookup
      * @throws sirius.kernel.health.HandledException if no entry exists for the given code or code list
      */
     public void verifyValue(@Nonnull String codeList, @Nonnull String code) {
-        if (!tryGetValue(codeList, code).isPresent()) {
+        if (getCurrentTenant(codeList).isPresent() && !tryGetValue(codeList, code).isPresent()) {
             throw createMissingCodeError(codeList, code);
         }
     }
