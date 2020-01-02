@@ -65,6 +65,6 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
 
     @Override
     protected void computePresetFor(Object targetObject, Map<String, Object> preset) {
-        preset.put(codeListParameter.getName(), ((MongoCodeList) targetObject).getId());
+        preset.put(codeListParameter.getName(), ((MongoCodeList) targetObject).getCodeListData().getCode());
     }
 }
