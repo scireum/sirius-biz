@@ -15,6 +15,7 @@ import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.client.subsystem.sftp.SftpClient;
 import org.apache.sshd.client.subsystem.sftp.impl.DefaultSftpClientFactory;
 import org.apache.sshd.common.AttributeRepository;
+import org.apache.sshd.common.FactoryManager;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorConfig;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.health.Exceptions;
@@ -44,6 +45,8 @@ class SFTPUplinkConnectorConfig extends UplinkConnectorConfig<SftpClient> {
     private SshClient getClient() {
         if (sshClient == null) {
             sshClient = SshClient.setUpDefaultClient();
+            sshClient.getProperties().putIfAbsent(FactoryManager.IDLE_TIMEOUT, idleTimeoutMillis);
+            sshClient.getProperties().putIfAbsent(FactoryManager.NIO2_READ_TIMEOUT, readTimeoutMillis);
             sshClient.setHostConfigEntryResolver(new HostConfigEntryResolver() {
                 @Override
                 public HostConfigEntry resolveEffectiveHost(String host,
