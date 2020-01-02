@@ -22,6 +22,7 @@ import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
+import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
@@ -57,9 +58,8 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
     protected static final String CONFIG_KEY_DESCRIPTION = "description";
     protected static final String CONFIG_KEY_AUTOFILL = "autofill";
     protected static final String CONFIG_KEY_GLOBAL = "global";
-    protected static final String CODELIST_NLS = "codeList";
-    protected static final String CODE_NLS = "code";
-    protected Cache<String, String> valueCache = CacheManager.createCoherentCache("codelists-values");
+    protected Cache<String, ValueHolder<Tuple<String, String>>> valueCache =
+            CacheManager.createCoherentCache("codelists-values");
 
     protected static final Log LOG = Log.get("codelists");
 
@@ -104,164 +104,13 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
         return (Q) entryMapper.select(getEntryType());
     }
 
-    /**
-     * Returns the value translated from the given code list associated with the given code.
-     * <p>
-     * If no matching entry exists, the code itself will be returned.
-     *
-     * @param codeList the code list to search in
-     * @param code     the code to lookup
-     * @return the translated value associated with the code or the code itself if no value exists
-     */
-    @Nullable
-    public String getTranslatedValue(@Nonnull String codeList, @Nullable String code) {
-        return Value.of(getValue(codeList, code)).translate().getString();
-    }
-
-    /**
-     * Returns the value from the given code list associated with the given code.
-     * <p>
-     * If no matching entry exists, the code itself will be returned.
-     *
-     * @param codeList the code list to search in
-     * @param code     the code to lookup
-     * @return the value associated with the code or the code itself if no value exists
-     */
-    @Nullable
-    @SuppressWarnings("squid:S2637")
-    @Explain("code cannot be null due to Strings.isEmpty")
-    public String getValue(@Nonnull String codeList, @Nullable String code) {
-        if (Strings.isEmpty(code)) {
-            return null;
-        }
-
-        return getCurrentTenant(codeList).map(tenant -> fetchValueFromCache(tenant, codeList, code)).orElseGet(() -> {
-            warnAboutMissingTenant();
-            return code;
-        });
-    }
-
-    protected String fetchValueFromCache(Tenant<?> tenant, String codeList, String code) {
-        return valueCache.get(tenant.getIdAsString() + codeList + "|" + code,
-                              ignored -> getValues(codeList, code).getFirst());
-    }
-
-    protected HandledException warnAboutMissingTenant() {
-        return Exceptions.handle().to(LOG).withNLSKey("CodeLists.noCurrentTenant").handle();
-    }
-
-    /**
-     * Determines if the code list contains the given code.
-     *
-     * @param codeList the code list to search in
-     * @param code     the code to check
-     * @return <tt>true</tt> if the code exists, <tt>false</tt> otherwise
-     */
-    @SuppressWarnings("squid:S2637")
-    @Explain("The null check is enforced by isEmpty")
-    public boolean hasValue(@Nonnull String codeList, @Nullable String code) {
-        if (Strings.isEmpty(code)) {
-            return false;
-        }
-
-        L cl = findOrCreateCodelist(codeList);
-        return queryEntry(cl, code).exists();
-    }
-
-    /**
-     * Returns the value from the given code list associated with the given code or throws an exception if no matching
-     * entry exists.
-     *
-     * @param codeList the code list to search in
-     * @param code     the code to lookup
-     * @return the value associated with the code
-     * @throws sirius.kernel.health.HandledException if no entry exists for the given code
-     */
-    public String getRequiredValue(@Nonnull String codeList, @Nonnull String code) {
-        L cl = findOrCreateCodelist(codeList);
-        E cle = queryEntry(cl, code).queryFirst();
-
-        if (cle == null) {
-            throw Exceptions.handle()
-                            .to(LOG)
-                            .withNLSKey("CodeLists.missingEntry")
-                            .set(CODELIST_NLS, codeList)
-                            .set(CODE_NLS, code)
-                            .handle();
-        }
-
-        return cle.getCodeListEntryData().getValue();
-    }
-
-    /**
-     * Checks if the given code exists inside the given code list or throws an exception if no matching entry exists
-     *
-     * @param codeListName the code list to search in
-     * @param code         the code to lookup
-     * @throws sirius.kernel.health.HandledException if no entry exists for the given code or code list
-     */
-    public void verifyValue(@Nonnull String codeListName, @Nonnull String code) {
-        Optional<L> codelist = findCodelist(codeListName);
-        if (!codelist.isPresent()) {
-            throw Exceptions.handle().to(LOG).withNLSKey("CodeLists.missingList").set(CODELIST_NLS, codeListName).handle();
-        }
-        E codelistEntry = queryEntry(codelist.get(), code).queryFirst();
-        if (codelistEntry == null) {
-            throw Exceptions.handle()
-                            .to(LOG)
-                            .withNLSKey("CodeLists.missingEntry")
-                            .set(CODELIST_NLS, codeListName)
-                            .set(CODE_NLS, code)
-                            .handle();
-        }
-    }
-
     protected Query<?, E, ?> queryEntry(L list, @Nonnull String code) {
         return createEntryQuery().eq(SQLCodeListEntry.CODE_LIST, list)
                                  .eq(SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE), code);
     }
 
     /**
-     * Returns the value and the additionalValue associated with the given code.
-     * <p>
-     * If no matching entry exists, the code itself will be returned as value and the additional value (the second of
-     * the tuple) will be <tt>null</tt>.
-     *
-     * @param codeList the code list to search in
-     * @param code     the code to lookup
-     * @return the value and the additional value associated with the given code, wrapped as tuple
-     */
-    public Tuple<String, String> getValues(@Nonnull String codeList, @Nonnull String code) {
-        L cl = findOrCreateCodelist(codeList);
-        String effectiveCode = Strings.trim(code);
-        E cle = queryEntry(cl, effectiveCode).queryFirst();
-
-        if (cle == null) {
-            if (!cl.getCodeListData().isAutofill()) {
-                return Tuple.create(effectiveCode, null);
-            }
-            cle = createEntry(cl, effectiveCode);
-            cle.getMapper().update(cle);
-        }
-
-        return Tuple.create(cle.getCodeListEntryData().getValue(), cle.getCodeListEntryData().getAdditionalValue());
-    }
-
-    protected E createEntry(L cl, String code) {
-        try {
-            E entry = getEntryType().getDeclaredConstructor().newInstance();
-            entry.getCodeList().setValue(cl);
-            entry.getCodeListEntryData().setCode(code);
-            entry.getCodeListEntryData().setValue(code);
-            return entry;
-        } catch (Exception e) {
-            throw Exceptions.handle(LOG, e);
-        }
-    }
-
-    /**
      * Finds a {@link CodeList} that matches the given name and belongs to the current tenant.
-     * <p>
      *
      * @param codeList The code of the {@link CodeList}
      * @return An optional of the matching {@link CodeList}, or null if there is no
@@ -279,6 +128,10 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
                                 .queryFirst();
 
         return Optional.ofNullable(cl);
+    }
+
+    protected HandledException warnAboutMissingTenant() {
+        return Exceptions.handle().to(LOG).withNLSKey("CodeLists.noCurrentTenant").handle();
     }
 
     private L findOrCreateCodelist(@Nonnull String codeList) {
@@ -313,20 +166,6 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
         } catch (Exception e) {
             throw Exceptions.handle(LOG, e);
         }
-    }
-
-    /**
-     * Returns all entries of a code list.
-     *
-     * @param codeList the code list to fetch entries from
-     * @return a list of all avilable entries in the given code list, sorted by priority
-     */
-    public List<E> getEntries(@Nonnull String codeList) {
-        L cl = findOrCreateCodelist(codeList);
-        return createEntryQuery().eq(CodeListEntry.CODE_LIST, cl)
-                                 .orderAsc(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.PRIORITY))
-                                 .orderAsc(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE))
-                                 .queryList();
     }
 
     /**
@@ -375,6 +214,183 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
 
     private Extension getCodeListConfig(String codeList) {
         return Sirius.getSettings().getExtension(CONFIG_EXTENSION_CODE_LISTS, codeList);
+    }
+
+    /**
+     * Returns the value and the additionalValue associated with the given code.
+     *
+     * @param codeList the code list to search in
+     * @param code     the code to lookup
+     * @return the value and the additional value associated with the given code or the code itself and <tt>null</tt>
+     * (if {@link CodeListData#AUTO_FILL} is <tt>true</tt>) or an empty optional otherwise
+     */
+    public Optional<Tuple<String, String>> tryGetValues(@Nonnull String codeList, @Nullable String code) {
+        if (Strings.isEmpty(code)) {
+            return Optional.empty();
+        }
+        return getCurrentTenant(codeList).flatMap(tenant -> fetchValueFromCache(tenant, codeList, code));
+    }
+
+    private Optional<Tuple<String, String>> fetchValueFromCache(Tenant<?> tenant, String codeList, String code) {
+        return valueCache.get(tenant.getIdAsString() + codeList + "|" + code, ignored -> loadValues(codeList, code))
+                         .asOptional();
+    }
+
+    private ValueHolder<Tuple<String, String>> loadValues(String codeList, String code) {
+        L cl = findOrCreateCodelist(codeList);
+        String effectiveCode = Strings.trim(code);
+        E cle = queryEntry(cl, effectiveCode).queryFirst();
+
+        if (cle == null) {
+            if (!cl.getCodeListData().isAutofill()) {
+                return ValueHolder.of(null);
+            }
+            cle = createEntry(cl, effectiveCode);
+            cle.getMapper().update(cle);
+        }
+
+        return ValueHolder.of(Tuple.create(cle.getCodeListEntryData().getValue(),
+                                           cle.getCodeListEntryData().getAdditionalValue()));
+    }
+
+    /**
+     * Returns the value and the additionalValue associated with the given code.
+     * <p>
+     * If no matching entry exists, the code itself will be returned as value and the additional value (the second of
+     * the tuple) will be <tt>null</tt>.
+     *
+     * @param codeList the code list to search in
+     * @param code     the code to lookup
+     * @return the value and the additional value associated with the given code, wrapped as tuple
+     */
+    public Tuple<String, String> getValues(@Nonnull String codeList, @Nonnull String code) {
+        return tryGetValues(codeList, code).orElseGet(() -> Tuple.create(code, null));
+    }
+
+    protected E createEntry(L cl, String code) {
+        try {
+            E entry = getEntryType().getDeclaredConstructor().newInstance();
+            entry.getCodeList().setValue(cl);
+            entry.getCodeListEntryData().setCode(code);
+            entry.getCodeListEntryData().setValue(code);
+            return entry;
+        } catch (Exception e) {
+            throw Exceptions.handle(LOG, e);
+        }
+    }
+
+    /**
+     * Returns the value from the given code list associated with the given code.
+     *
+     * @param codeList the code list to search in
+     * @param code     the code to lookup
+     * @return the value associated with the code or either the code itself (if {@link CodeListData#AUTO_FILL} is
+     * <tt>true</tt>) or an empty optional otherwise
+     */
+    public Optional<String> tryGetValue(@Nonnull String codeList, @Nullable String code) {
+        if (Strings.isEmpty(code)) {
+            return Optional.empty();
+        }
+
+        return tryGetValues(codeList, code).map(Tuple::getFirst);
+    }
+
+    /**
+     * Returns the value from the given code list associated with the given code.
+     * <p>
+     * If no matching entry exists, the code itself will be returned.
+     *
+     * @param codeList the code list to search in
+     * @param code     the code to lookup
+     * @return the value associated with the code or the code itself if no value exists
+     */
+    @Nullable
+    public String getValue(@Nonnull String codeList, @Nullable String code) {
+        return tryGetValue(codeList, code).orElse(code);
+    }
+
+    /**
+     * Returns the value translated from the given code list associated with the given code.
+     * <p>
+     * If no matching entry exists, the code itself will be returned.
+     *
+     * @param codeList the code list to search in
+     * @param code     the code to lookup
+     * @return the translated value associated with the code or the code itself if no value exists
+     */
+    @Nullable
+    public String getTranslatedValue(@Nonnull String codeList, @Nullable String code) {
+        return Value.of(getValue(codeList, code)).translate().getString();
+    }
+
+    /**
+     * Determines if the code list contains the given code.
+     *
+     * @param codeList the code list to search in
+     * @param code     the code to check
+     * @return <tt>true</tt> if the code exists, <tt>false</tt> otherwise
+     */
+    @SuppressWarnings("squid:S2637")
+    @Explain("The null check is enforced by isEmpty")
+    public boolean hasValue(@Nonnull String codeList, @Nullable String code) {
+        if (Strings.isEmpty(code)) {
+            return false;
+        }
+
+        return tryGetValue(codeList, code).isPresent();
+    }
+
+    /**
+     * Returns the value from the given code list associated with the given code or throws an exception if no matching
+     * entry exists.
+     *
+     * @param codeList the code list to search in
+     * @param code     the code to lookup
+     * @return the value associated with the code
+     * @throws sirius.kernel.health.HandledException if no entry exists for the given code
+     */
+    public String getRequiredValue(@Nonnull String codeList, @Nonnull String code) {
+        return tryGetValue(codeList, code).orElseThrow(() -> createMissingCodeError(codeList, code));
+    }
+
+    protected HandledException createMissingCodeError(@Nonnull String codeList, @Nonnull String code) {
+        return Exceptions.handle()
+                         .to(LOG)
+                         .withNLSKey("CodeLists.missingEntry")
+                         .set("codeList", codeList)
+                         .set("code", code)
+                         .handle();
+    }
+
+    /**
+     * Checks if the given code exists inside the given code list or throws an exception if no matching entry exists.
+     * <p>
+     * Note that if the code list cannot be resolved as no tenant is present, the check is skipped entirely. This is a
+     * safety net as these are rare circumstances (etc. during login) where a check and espically a failure does more
+     * harm than help.
+     *
+     * @param codeList the code list to search in
+     * @param code     the code to lookup
+     * @throws sirius.kernel.health.HandledException if no entry exists for the given code or code list
+     */
+    public void verifyValue(@Nonnull String codeList, @Nonnull String code) {
+        if (getCurrentTenant(codeList).isPresent() && !tryGetValue(codeList, code).isPresent()) {
+            throw createMissingCodeError(codeList, code);
+        }
+    }
+
+    /**
+     * Returns all entries of a code list.
+     *
+     * @param codeList the code list to fetch entries from
+     * @return a list of all avilable entries in the given code list, sorted by priority
+     */
+    public List<E> getEntries(@Nonnull String codeList) {
+        L cl = findOrCreateCodelist(codeList);
+        return createEntryQuery().eq(CodeListEntry.CODE_LIST, cl)
+                                 .orderAsc(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.PRIORITY))
+                                 .orderAsc(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE))
+                                 .queryList();
     }
 
     /**
