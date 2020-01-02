@@ -62,6 +62,6 @@ public class SQLCodeListImportJobFactory extends EntityImportJobFactory {
 
     @Override
     protected void computePresetFor(Object targetObject, Map<String, Object> preset) {
-        preset.put(codeListParameter.getName(), ((SQLCodeList) targetObject).getId());
+        preset.put(codeListParameter.getName(), ((SQLCodeList) targetObject).getCodeListData().getCode());
     }
 }
