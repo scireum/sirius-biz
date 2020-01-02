@@ -32,8 +32,8 @@ import java.util.function.Consumer;
  * <p>
  * Utilizing {@link sirius.biz.importer.ImportHandler import handlers} this can be used as is in most cases.
  * <p>
- * Note that {@link #fillAndVerify(BaseEntity)} can be overwritten to perform any pre-save activities or
- * {@link #createOrUpdate(BaseEntity)} to use a custom way to persist data or to perform some post-save activities.
+ * Note that {@link #enforceSaveConstraints(BaseEntity, Context)} can be overwritten to perform any pre-save activities or
+ * {@link #createOrUpdate(BaseEntity, Context)} to use a custom way to persist data or to perform some post-save activities.
  *
  * @param <E> the type of entities being imported by this job
  */
@@ -180,8 +180,9 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      *
      * @param entity  the entity to persist
      * @param context the row represented as context
+     * @see sirius.biz.importer.Importer#createNowOrUpdateInBatch(BaseEntity)
      */
     protected void createOrUpdate(E entity, Context context) {
-        importer.createOrUpdateInBatch(entity);
+        importer.createNowOrUpdateInBatch(entity);
     }
 }
