@@ -14,6 +14,7 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
+import sirius.kernel.nls.Formatter;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
@@ -207,9 +208,18 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
             pageHelper.withContext(webContext);
 
             pageHelper.asPage().getItems().forEach(codeList -> {
-                result.accept(new AutocompleteHelper.Completion(codeList.getCodeListData().getCode(),
-                                                                codeList.getCodeListData().getCode(),
-                                                                codeList.getCodeListData().getCode()));
+                CodeListData codeListData = codeList.getCodeListData();
+                result.accept(new AutocompleteHelper.Completion(codeListData.getCode(),
+                                                                Formatter.create("${code}[ (${name})]")
+                                                                         .set(PARAM_CODE, codeListData.getCode())
+                                                                         .set("name", codeListData.getName())
+                                                                         .smartFormat(),
+                                                                Formatter.create("${code}[ (${name})] - ${description}")
+                                                                         .set(PARAM_CODE, codeListData.getCode())
+                                                                         .set("name", codeListData.getName())
+                                                                         .set(PARAM_DESCRIPTION,
+                                                                              codeListData.getDescription())
+                                                                         .smartFormat()));
             });
         });
     }
