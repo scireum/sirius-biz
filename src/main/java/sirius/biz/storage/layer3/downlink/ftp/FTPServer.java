@@ -140,6 +140,7 @@ public class FTPServer implements Startable, Stoppable {
 
         DataConnectionConfigurationFactory dataConnectionConfigurationFactory =
                 new DataConnectionConfigurationFactory();
+        dataConnectionConfigurationFactory.setIdleTime((int) idleTimeout.getSeconds());
 
         if (Strings.isFilled(passivePorts)) {
             dataConnectionConfigurationFactory.setPassivePorts(passivePorts);

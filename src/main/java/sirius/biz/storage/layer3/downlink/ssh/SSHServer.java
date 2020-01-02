@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 import org.apache.sshd.common.file.FileSystemFactory;
 import org.apache.sshd.common.io.IoSession;
 import org.apache.sshd.common.session.Session;
+import org.apache.sshd.server.ServerFactoryManager;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
 import org.apache.sshd.server.session.ServerSession;
@@ -34,6 +35,7 @@ import sirius.web.security.UserInfo;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
+import java.time.Duration;
 import java.util.Collections;
 
 /**
@@ -45,6 +47,12 @@ public class SSHServer implements Startable, Stoppable, Killable {
 
     @ConfigValue("storage.layer3.downlink.ssh.port")
     private int port;
+
+    @ConfigValue("storage.layer3.downlink.ssh.idleTimeout")
+    private Duration idleTimeout;
+
+    @ConfigValue("storage.layer3.downlink.ssh.readTimeout")
+    private Duration readTimeout;
 
     @ConfigValue("storage.layer3.downlink.ssh.hostKeyFile")
     private String hostKeyFile;
@@ -66,6 +74,8 @@ public class SSHServer implements Startable, Stoppable, Killable {
             disableLogging();
 
             server = SshServer.setUpDefaultServer();
+            server.getProperties().put(ServerFactoryManager.IDLE_TIMEOUT, idleTimeout.toMillis());
+            server.getProperties().put(ServerFactoryManager.NIO2_READ_TIMEOUT, readTimeout.toMillis());
             server.setPort(port);
             server.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(new File(hostKeyFile).toPath()));
 
