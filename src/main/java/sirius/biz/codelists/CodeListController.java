@@ -33,7 +33,16 @@ import sirius.web.security.Permission;
 public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L>>
         extends BizController {
 
+    /**
+     * Contains the name of the permission required to manage code lists.
+     */
     public static final String PERMISSION_MANAGE_CODELISTS = "permission-manage-code-lists";
+
+    private static final String PARAM_CODE = "code";
+    private static final String PARAM_PRIORITY = "priority";
+    private static final String PARAM_VALUE = "value";
+    private static final String PARAM_ADDITIONAL_VALUE = "additionalValue";
+    private static final String PARAM_DESCRIPTION = "description";
 
     @Part
     private CodeLists<I, L, E> codeLists;
@@ -125,18 +134,15 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
         L cl = findForTenant(codeLists.getListType(), codeListId);
         assertNotNew(cl);
 
-        if (ctx.ensureSafePOST() && ctx.get("code").isFilled()) {
-            String code = ctx.get("code").asString();
+        if (ctx.ensureSafePOST() && ctx.get(PARAM_CODE).isFilled()) {
+            String code = ctx.get(PARAM_CODE).asString();
             E cle = findOrCreateEntry(cl, code);
 
-            cle.getCodeListEntryData().setPriority(ctx.get("priority").asInt(Priorized.DEFAULT_PRIORITY));
-            cle.getCodeListEntryData().setValue(ctx.get("value").isEmptyString() ? null : ctx.get("value").asString());
+            cle.getCodeListEntryData().setPriority(ctx.get(PARAM_PRIORITY).asInt(Priorized.DEFAULT_PRIORITY));
+            cle.getCodeListEntryData().setValue(ctx.get(PARAM_VALUE).replaceEmptyWith(null).getString());
             cle.getCodeListEntryData()
-               .setAdditionalValue(ctx.get("additionalValue").isEmptyString() ?
-                                   null :
-                                   ctx.get("additionalValue").asString());
-            cle.getCodeListEntryData()
-               .setDescription(ctx.get("description").isEmptyString() ? null : ctx.get("description").asString());
+               .setAdditionalValue(ctx.get(PARAM_ADDITIONAL_VALUE).replaceEmptyWith(null).getString());
+            cle.getCodeListEntryData().setDescription(ctx.get(PARAM_DESCRIPTION).replaceEmptyWith(null).getString());
 
             cle.getMapper().update(cle);
             showSavedMessage();
