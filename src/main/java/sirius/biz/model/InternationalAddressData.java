@@ -11,17 +11,18 @@ package sirius.biz.model;
 import sirius.biz.codelists.CodeLists;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
-import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -30,45 +31,31 @@ import java.util.regex.PatternSyntaxException;
  */
 public class InternationalAddressData extends AddressData {
 
-    @Part
-    private static CodeLists<?, ?, ?> cls;
+    /**
+     * Contains the name of the code list which defines all valid countries for {@link #COUNTRY}.
+     * <p>
+     * In this code list the key is the value in the field (probably a country code). The <tt>value</tt> is the name
+     * of the country and the <tt>additionalValue</tt> can be a regular expression which validates ZIP codes for this
+     * country.
+     */
+    private static final String CODE_LIST_COUNTRIES = "country";
 
-    @Transient
-    private boolean verifyZip;
+    @Part
+    private static CodeLists<?, ?, ?> codeLists;
 
     /**
      * Contains the country code.
      * <p>
      * Note that a code list "country" exists which enumerates possible countries.
      */
+    @SuppressWarnings("squid:S1192")
+    @Explain("We provide a second constant here as they are semantically different.")
     public static final Mapping COUNTRY = Mapping.named("country");
     @Trim
     @NullAllowed
     @Autoloaded
     @Length(3)
     private String country;
-
-    /**
-     * Creates a new instance with the given requirement.
-     *
-     * @param requirements determines which fields are required in certain constellations
-     * @param fieldLabel   the name of the compund field which represents the address
-     */
-    public InternationalAddressData(Requirements requirements, @Nullable String fieldLabel) {
-        this(requirements, fieldLabel, false);
-    }
-
-    /**
-     * Creates a new instance with the given requirement.
-     *
-     * @param requirements determines which fields are required in certain constellations
-     * @param fieldLabel   the name of the compund field which represents the address
-     * @param verifyZip    determines if the given ZIP code should be verified using the countries code list
-     */
-    public InternationalAddressData(Requirements requirements, @Nullable String fieldLabel, boolean verifyZip) {
-        super(requirements, fieldLabel);
-        this.verifyZip = verifyZip;
-    }
 
     @Override
     public boolean areAllFieldsEmpty() {
@@ -86,24 +73,106 @@ public class InternationalAddressData extends AddressData {
         country = null;
     }
 
-    @BeforeSave
-    protected void verifyZip() {
-        if (verifyZip && Strings.isFilled(country)) {
-            String zipRegEx = cls.getValues("country", country).getSecond();
-            if (Strings.isFilled(zipRegEx)) {
-                verifyZip(zipRegEx);
-            }
+    /**
+     * Verifies that the given country is part of the underlying code list.
+     * <p>
+     * This is intended to be invoked within a {@link sirius.db.mixing.annotations.BeforeSave} handler.
+     * Note that this will skip empty values.
+     *
+     * @param fieldLabel the alternative label for the address to use
+     * @throws sirius.kernel.health.HandledException in case of an invalid country
+     */
+    public void verifyCountry(@Nullable String fieldLabel) {
+        try {
+            codeLists.verifyValue(CODE_LIST_COUNTRIES, country);
+        } catch (Exception e) {
+            throw Exceptions.createHandled()
+                            .withNLSKey("AddressData.invalidCountry")
+                            .set("name", determineFieldLabel(fieldLabel))
+                            .set("error", e.getMessage())
+                            .handle();
         }
     }
 
-    private void verifyZip(String zipRegEx) {
+    /**
+     * Validates that the given country is part of the underlying code list.
+     * <p>
+     * This is intended to be invoked within a {@link sirius.db.mixing.annotations.OnValidate} handler.
+     * Note that this will skip empty values.
+     *
+     * @param fieldLabel                the alternative label for the address to use
+     * @param validationMessageConsumer the consumer which is used to collect validation messages. This is normally
+     *                                  passed into the on validate method and can simply be forwarded here.
+     */
+    public void validateCountry(@Nullable String fieldLabel, Consumer<String> validationMessageConsumer) {
+        try {
+            codeLists.verifyValue(CODE_LIST_COUNTRIES, country);
+        } catch (Exception e) {
+            validationMessageConsumer.accept(NLS.fmtr("AddressData.invalidCountry")
+                                                .set("name", determineFieldLabel(fieldLabel))
+                                                .set("error", e.getMessage())
+                                                .format());
+        }
+    }
+
+    /**
+     * Verifies that the given ZIP is valid for the selected country.
+     * <p>
+     * This is intended to be invoked within a {@link sirius.db.mixing.annotations.BeforeSave} handler.
+     * Note that this will skip empty values.
+     *
+     * @param fieldLabel the alternative label for the address to use
+     * @throws sirius.kernel.health.HandledException in case of an invalid ZIP code
+     */
+    public void verifyZip(@Nullable String fieldLabel) {
+        if (Strings.isEmpty(country)) {
+            return;
+        }
+
+        String zipRegEx = codeLists.getValues(CODE_LIST_COUNTRIES, country).getSecond();
+        if (Strings.isEmpty(zipRegEx)) {
+            return;
+        }
+
         try {
             if (!Pattern.compile(zipRegEx).matcher(getZip()).matches()) {
                 throw Exceptions.createHandled()
                                 .withNLSKey("AddressData.badZip")
-                                .set("name", determineFieldLabel())
+                                .set("name", determineFieldLabel(fieldLabel))
                                 .set("zip", getZip())
                                 .handle();
+            }
+        } catch (PatternSyntaxException e) {
+            Exceptions.handle(e);
+        }
+    }
+
+    /**
+     * Validates that the given ZIP is valid for the given country.
+     * <p>
+     * This is intended to be invoked within a {@link sirius.db.mixing.annotations.OnValidate} handler.
+     * Note that this will skip empty values.
+     *
+     * @param fieldLabel                the alternative label for the address to use
+     * @param validationMessageConsumer the consumer which is used to collect validation messages. This is normally
+     *                                  passed into the on validate method and can simply be forwarded here.
+     */
+    public void validateZIP(@Nullable String fieldLabel, Consumer<String> validationMessageConsumer) {
+        if (Strings.isEmpty(country)) {
+            return;
+        }
+
+        String zipRegEx = codeLists.getValues(CODE_LIST_COUNTRIES, country).getSecond();
+        if (Strings.isEmpty(zipRegEx)) {
+            return;
+        }
+
+        try {
+            if (!Pattern.compile(zipRegEx).matcher(getZip()).matches()) {
+                validationMessageConsumer.accept(NLS.fmtr("AddressData.badZip")
+                                                    .set("name", determineFieldLabel(fieldLabel))
+                                                    .set("zip", getZip())
+                                                    .format());
             }
         } catch (PatternSyntaxException e) {
             Exceptions.handle(e);

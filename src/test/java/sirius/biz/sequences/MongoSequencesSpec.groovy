@@ -37,19 +37,21 @@ class MongoSequencesSpec extends SequencesSpec {
     }
 
     def "different type of entities use different sequences"() {
-        setup:
+        given: "two distinct entity types"
         SequentialMongoBizEntityA entity1 = new SequentialMongoBizEntityA()
         SequentialMongoBizEntityB entity2 = new SequentialMongoBizEntityB()
-        //reset sequnces that may have been set by other tests
+        and: "reset sequences that may have been set by other tests"
         sequences.setNextValue(entity1.getTypeName(), 1, true)
+        mango.select(SequentialMongoBizEntityA.class).delete()
         sequences.setNextValue(entity2.getTypeName(), 1, true)
-        when:
+        mango.select(SequentialMongoBizEntityB.class).delete()
+        when: "new entities are created"
         mango.update(entity1)
         mango.update(entity2)
-        then:
+        then: "different sequences are used"
         entity1.getId() == "1"
         and:
         entity2.getId() == "1"
     }
-    
+
 }
