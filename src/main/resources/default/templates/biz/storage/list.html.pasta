@@ -89,7 +89,7 @@
                         </td>
                         <td class="align-right">
                             <w:dropdown titleKey="VFSController.actions" icon="fa-gears">
-                                <i:local name="jobs" value="@jobsService.getMatchingInteractiveJobs(child)"/>
+                                <i:local name="jobs" value="@jobsService.getMatchingInteractiveJobs(call.getRequest().uri(), child)"/>
                                 <i:if test="child.canRename()">
                                     <li class="dropdown-item">
                                         <a href="javascript:renameFile('@child.path()', '@child.name()')">

@@ -21,6 +21,7 @@ import sirius.kernel.settings.Extension;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
@@ -125,23 +126,15 @@ public class Jobs {
     /**
      * Returns a jobs which can provide a preset URL for the given target object.
      *
-     * @param target the target to generate a preset URL for
+     * @param uri          a target URI for which matching jobs should be determined.
+     *                     This is most probably the URL of the page which tries to determine if there are matching jobs as
+     *                     might look like <tt>/foo/bar?param=value</tt>
+     * @param targetObject the optional target object which is being shown / processed / edited by the page
      * @return a list of tuples containing the preset URL associated job for the given object
      */
-    public List<Tuple<String, JobFactory>> getMatchingInteractiveJobs(Object target) {
-        return getMatchingInteractiveJobs(target, null);
-    }
-
-    /**
-     * Returns a jobs which can provide a preset URL for the given target object.
-     *
-     * @param target the target to generate a preset URL for
-     * @param query the search query to additionally filter by
-     * @return a list of tuples containing the preset URL associated job for the given object
-     */
-    public List<Tuple<String, JobFactory>> getMatchingInteractiveJobs(Object target, @Nullable String query) {
-        return getAvailableJobs(query).filter(JobFactory::canStartInteractive)
-                                     .map(job -> Tuple.create(job.generatePresetUrl(target), job))
+    public List<Tuple<String, JobFactory>> getMatchingInteractiveJobs(@Nonnull String uri, Object targetObject) {
+        return getAvailableJobs(null).filter(JobFactory::canStartInteractive)
+                                     .map(job -> Tuple.create(job.generatePresetUrl(uri, targetObject), job))
                                      .filter(tuple -> tuple.getFirst() != null)
                                      .collect(Collectors.toList());
     }

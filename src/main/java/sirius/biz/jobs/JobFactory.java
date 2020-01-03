@@ -16,6 +16,7 @@ import sirius.kernel.di.std.Priorized;
 import sirius.kernel.health.HandledException;
 import sirius.web.http.WebContext;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
@@ -111,13 +112,14 @@ public interface JobFactory extends Named, Priorized {
      * <p>
      * This is used by the <tt>w:jobs</tt> tag to display appropriate jobs next to a data object.
      *
-     * @param targetObject the object to use as a parameter value
+     * @param uri          the uri of the current page (which contains the <tt>w:jobs</tt> tag
+     * @param targetObject the optional target object which is being shown / processed / edited by the page
      * @return an url which starts the launch screen for this job while using the given parameter as value or
      * <tt>null</tt> to indicate that this jobs cannot be started in the ui or that the given object isn't an
      * appropriate parameter.
      */
     @Nullable
-    String generatePresetUrl(Object targetObject);
+    String generatePresetUrl(@Nonnull String uri, @Nullable Object targetObject);
 
     /**
      * Determines if this job can be started in the UI.

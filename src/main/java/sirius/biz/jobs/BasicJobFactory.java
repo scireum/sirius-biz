@@ -22,11 +22,13 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Message;
+import sirius.web.http.QueryString;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -132,15 +134,17 @@ public abstract class BasicJobFactory implements JobFactory {
      * @param parameterCollector the collector to be supplied with the expected parameters
      */
     protected abstract void collectParameters(Consumer<Parameter<?, ?>> parameterCollector);
-    
+
     @Nullable
     @Override
-    public String generatePresetUrl(Object targetObject) {
-        if (targetObject == null) {
+    public String generatePresetUrl(String uri, Object targetObject) {
+        if (uri == null) {
             return null;
         }
 
-        if (!hasPresetFor(targetObject)) {
+        QueryString queryString = new QueryString(uri);
+
+        if (!hasPresetFor(queryString, targetObject)) {
             return null;
         }
 
@@ -153,7 +157,7 @@ public abstract class BasicJobFactory implements JobFactory {
         }
 
         Map<String, Object> preset = new HashMap<>();
-        computePresetFor(targetObject, preset);
+        computePresetFor(queryString, targetObject, preset);
         StringBuilder sb = new StringBuilder("/job/");
         sb.append(getName());
         Monoflop mf = Monoflop.create();
@@ -167,25 +171,29 @@ public abstract class BasicJobFactory implements JobFactory {
     }
 
     /**
-     * Determines if this job can compute a preset of parameters for the given target.
+     * Determines if this job can compute a preset of parameters for the given query string.
      * <p>
-     * If this method is overwritten to return <tt>true</tt> {@link #computePresetFor(Object, Map)} also should be
+     * If this method is overwritten to return <tt>true</tt> {@link #computePresetFor(QueryString, Object, Map)} also should be
      * overwritten.
      *
-     * @param targetObject the target object to check
-     * @return <tt>true</tt> if the given object can be used to compute a preset of parameters from
+     * @param queryString  the query string to derive a preset from
+     * @param targetObject the optional target object which is being shown / processed / edited by the page
+     * @return <tt>true</tt> if the given query string can be used to compute a preset of parameters from
      */
-    protected boolean hasPresetFor(Object targetObject) {
+    protected boolean hasPresetFor(@Nonnull QueryString queryString, @Nullable Object targetObject) {
         return false;
     }
 
     /**
-     * Computes the parameter values from the given target object.
+     * Computes the preset parameter values from the given query string.
      *
-     * @param targetObject the object to compute the parameters from
+     * @param queryString  the query string to derive a preset from
+     * @param targetObject the optional target object which is being shown / processed / edited by the page
      * @param preset       used to be supplied with the computed parameters which are then encoded into the preset URL
      */
-    protected void computePresetFor(Object targetObject, Map<String, Object> preset) {
+    protected void computePresetFor(@Nonnull QueryString queryString,
+                                    @Nullable Object targetObject,
+                                    Map<String, Object> preset) {
         // NOOP by default
     }
 

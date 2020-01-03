@@ -18,6 +18,7 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.Register;
+import sirius.web.http.QueryString;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
@@ -59,12 +60,12 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
     }
 
     @Override
-    protected boolean hasPresetFor(Object targetObject) {
+    protected boolean hasPresetFor(QueryString queryString, Object targetObject) {
         return targetObject instanceof MongoCodeList;
     }
 
     @Override
-    protected void computePresetFor(Object targetObject, Map<String, Object> preset) {
+    protected void computePresetFor(QueryString queryString, Object targetObject, Map<String, Object> preset) {
         preset.put(codeListParameter.getName(), ((MongoCodeList) targetObject).getCodeListData().getCode());
     }
 }

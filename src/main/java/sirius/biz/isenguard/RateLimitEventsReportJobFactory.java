@@ -21,6 +21,7 @@ import sirius.db.jdbc.SmartQuery;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.nls.NLS;
+import sirius.web.http.QueryString;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 
@@ -46,15 +47,15 @@ public class RateLimitEventsReportJobFactory extends ReportJobFactory {
     private OMA oma;
 
     private static final StringParameter SCOPE_PARAMETER =
-            new StringParameter("scope", "$RateLimitingTriggeredEvent.scope").hidden();
+            new StringParameter("scope", "Scope").hidden();
 
     @Override
-    protected boolean hasPresetFor(Object targetObject) {
+    protected boolean hasPresetFor(QueryString queryString, Object targetObject) {
         return targetObject instanceof RateLimitedEntity;
     }
 
     @Override
-    protected void computePresetFor(Object targetObject, Map<String, Object> preset) {
+    protected void computePresetFor(QueryString queryString, Object targetObject, Map<String, Object> preset) {
         preset.put(SCOPE_PARAMETER.getName(), ((RateLimitedEntity) targetObject).getRateLimitScope());
     }
 

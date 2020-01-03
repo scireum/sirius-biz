@@ -13,6 +13,7 @@ import sirius.biz.jobs.batch.file.EntityImportJobFactory;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.Register;
+import sirius.web.http.QueryString;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
@@ -35,8 +36,9 @@ public class MongoUserAccountImportJobFactory extends EntityImportJobFactory {
         return MongoUserAccount.class;
     }
 
+
     @Override
-    protected boolean hasPresetFor(Object targetObject) {
-        return targetObject == MongoUserAccount.class;
+    protected boolean hasPresetFor(QueryString queryString, Object targetObject) {
+        return queryString.path().startsWith("/user-account");
     }
 }
