@@ -26,6 +26,7 @@ import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.annotations.OnValidate;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.annotations.Unique;
@@ -40,6 +41,7 @@ import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 /**
  * Represents a tenant using the system.
@@ -223,8 +225,7 @@ public class TenantData extends Composite implements Journaled {
      * Contains the address of the tenant.
      */
     public static final Mapping ADDRESS = Mapping.named("address");
-    private final InternationalAddressData address =
-            new InternationalAddressData(InternationalAddressData.Requirements.NONE, null);
+    private final InternationalAddressData address = new InternationalAddressData();
 
     /**
      * Contains the package, upgrades and additional and revoked permissions for this tenant.
@@ -290,6 +291,13 @@ public class TenantData extends Composite implements Journaled {
     protected void onDelete() {
         TenantUserManager.flushCacheForTenant((Tenant<?>) tenantObject);
         tenants.flushTenantChildrenCache();
+    }
+
+    @OnValidate
+    protected void validate(Consumer<String> validationConsumer) {
+        address.validateCountry(null, validationConsumer);
+        address.validateZIP(null, validationConsumer);
+        address.validateNonPartialAddress(null, validationConsumer);
     }
 
     /**
