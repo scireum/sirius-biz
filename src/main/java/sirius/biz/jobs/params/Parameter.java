@@ -135,10 +135,11 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      * Similar to {@link #getTemplateName()}, but this method considers the visibility
      * of the parameter and delivers an alternative template in case the parameter should be hidden.
      *
+     * @param context the context containing all parameter values
      * @return the name or path of the template used to render the parameter
      */
-    public String computeTemplateName() {
-        if (this.visibility == Visibility.HIDDEN) {
+    public String getEffectiveTemplateName(Map<String, String> context) {
+        if (!isVisible(context)) {
             return HIDDEN_TEMPLATE_NAME;
         }
         return getTemplateName();

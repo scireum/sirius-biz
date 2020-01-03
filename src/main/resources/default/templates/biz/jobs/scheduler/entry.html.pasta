@@ -89,7 +89,7 @@
         <div class="row">
             <i:for type="sirius.biz.jobs.params.Parameter" var="param"
                    items="entry.getJobConfigData().getJobFactory().getParameters()">
-                <i:dynamicInvoke template="@param.computeTemplateName()" param="@param"
+                <i:dynamicInvoke template="@param.getEffectiveTemplateName(entry.getJobConfigData().getConfigMap())" param="@param"
                                  context="@entry.getJobConfigData().getConfigMap()"/>
             </i:for>
         </div>

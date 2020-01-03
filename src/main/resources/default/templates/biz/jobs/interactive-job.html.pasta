@@ -29,14 +29,14 @@
     <div class="row">
         <i:local name="parameters"
                  value="job.getParameters()" />
-        <i:if test="!parameters.isEmpty() || !additionalMetrics.isEmpty()">
+        <i:if test="@job.hasVisibleParameters(context) || !additionalMetrics.isEmpty()">
             <div class="col-md-3">
-                <i:if test="!parameters.isEmpty()">
+                <i:if test="@job.hasVisibleParameters(context)">
                     <w:editForm url="@apply('/job/%s', job.getName())">
                         <div class="well">
                             <div class="row">
                                 <i:for type="sirius.biz.jobs.params.Parameter" var="param" items="parameters">
-                                        <i:dynamicInvoke template="@param.computeTemplateName()" param="@param" context="@context" />
+                                    <i:dynamicInvoke template="@param.getEffectiveTemplateName(context)" param="@param" context="@context" />
                                 </i:for>
                             </div>
                             <div class="row">
