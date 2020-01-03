@@ -26,7 +26,6 @@ import sirius.db.mixing.annotations.Trim;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
-import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Message;
 import sirius.web.mails.Mails;
@@ -110,28 +109,35 @@ public class UserAccountData extends Composite implements MessageProvider {
 
     @BeforeSave
     protected void verifyData() {
-        if (Strings.isFilled(email)) {
-            if (ms.isValidMailAddress(email.trim(), null)) {
-                email = email.toLowerCase();
-            } else {
-                throw Exceptions.createHandled().withNLSKey("Model.invalidEmail").set("value", email).handle();
-            }
-        }
+        userObject.ifChangedAndFilled(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
+                                                                   .inner(PersonData.SALUTATION),
+                                      getPerson()::verifySalutation);
 
+        userObject.ifChangedAndFilled(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL), () -> {
+            email = email.trim().toLowerCase();
+            ms.failForInvalidEmail(email, null);
+        });
+
+        fillAndVerifyUsername();
+    }
+
+    private void fillAndVerifyUsername() {
+        // Use email address if no explicit username is present
         if (Strings.isEmpty(getLogin().getUsername())) {
             getLogin().setUsername(getEmail());
         }
-        if (Strings.isFilled(getLogin().getUsername())) {
-            getLogin().setUsername(getLogin().getUsername().toLowerCase());
-        } else {
-            throw Exceptions.createHandled()
-                            .withNLSKey("Property.fieldNotNullable")
-                            .set("field", NLS.get("LoginData.username"))
-                            .handle();
-        }
 
-        userObject.assertUnique(UserAccount.USER_ACCOUNT_DATA.inner(LOGIN).inner(LoginData.USERNAME),
-                                getLogin().getUsername());
+        // Ensure that the username is filled and unique...
+        userObject.verifyIfChangedFailIfEmpty(UserAccount.USER_ACCOUNT_DATA.inner(LOGIN).inner(LoginData.USERNAME),
+                                              () -> {
+                                                  // Make it lowercase...
+                                                  getLogin().setUsername(getLogin().getUsername().toLowerCase());
+
+                                                  // Ensure uniqueness...
+                                                  userObject.assertUnique(UserAccount.USER_ACCOUNT_DATA.inner(LOGIN)
+                                                                                                       .inner(LoginData.USERNAME),
+                                                                          getLogin().getUsername());
+                                              });
     }
 
     @AfterSave
@@ -269,6 +275,7 @@ public class UserAccountData extends Composite implements MessageProvider {
             messageConsumer.accept(Message.info(NLS.get("UserAccount.forcedExternalLoginNear")));
             return;
         }
+
         if (isNearInterval(getLogin().getLastLogin(), getTenant().getTenantData().getLoginIntervalDays())) {
             messageConsumer.accept(Message.info(NLS.get("UserAccount.forcedLogoutNear")));
         }

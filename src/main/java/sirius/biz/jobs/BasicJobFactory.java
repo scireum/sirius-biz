@@ -123,6 +123,11 @@ public abstract class BasicJobFactory implements JobFactory {
         return result;
     }
 
+    @Override
+    public boolean hasVisibleParameters(Map<String, String> context) {
+        return getParameters().stream().anyMatch(parameter -> parameter.isVisible(context));
+    }
+
     /**
      * Collects all parameters expected by the job.
      *

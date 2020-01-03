@@ -100,6 +100,14 @@ public interface JobFactory extends Named, Priorized {
     List<Parameter<?, ?>> getParameters();
 
     /**
+     * Determines if there are visible parameters in this job.
+     *
+     * @param context web context
+     * @return <tt>true</tt> if visible parameters found, otherwise <tt>false</tt>
+     */
+    boolean hasVisibleParameters(Map<String, String> context);
+
+    /**
      * Generates a URL which can be invoked to start this job while using the given object as a parameter value.
      * <p>
      * This is used by the <tt>w:jobs</tt> tag to display appropriate jobs next to a data object.

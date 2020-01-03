@@ -10,12 +10,10 @@ package sirius.biz.model;
 
 import sirius.biz.importer.AutoImport;
 import sirius.biz.web.Autoloaded;
-import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Composite;
-import sirius.db.mixing.annotations.BeforeSave;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
-import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
@@ -24,50 +22,18 @@ import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * Provides a street address which can be embedded into other entities or mixins.
+ * <p>
+ * Note that this class doesn't perform any save checks or validations at all. Any entity which contains this composite
+ * must decide which checks have to be performed and then either call the <tt>verifyXXX</tt> method within an
+ * {@link sirius.db.mixing.annotations.BeforeSave} handler or invoke <tt>validateXXX</tt> in an
+ * {@link sirius.db.mixing.annotations.OnValidate} method. Most probably these checks should be surrounded with
+ * a {@link sirius.db.mixing.BaseEntity#isChanged(Mapping...)} check to only validate or verify new values.
  */
 public class AddressData extends Composite {
-
-    /**
-     * As there are many different requirements for what a valid address might be, these can be specified per
-     * <tt>AddressData</tt> using one of the following requirements.
-     */
-    public enum Requirements {
-        /**
-         * Each value within the address can filled or empty
-         */
-        NONE,
-
-        /**
-         * If one of the fields is filled, all others have to be filled
-         */
-        NOT_PARTIAL,
-
-        /**
-         * All fields have to be filled
-         */
-        FULL_ADDRESS,
-    }
-
-    @Transient
-    protected final Requirements requirements;
-
-    @Transient
-    protected String fieldLabel;
-
-    /**
-     * Contains a temporary field label which can be used to
-     * show messages based on the context the {@link AddressData}
-     * is handled.
-     * <p>
-     * This can be used to show a customized property for the field
-     * label when the {@link AddressData} is used in another context
-     * than is is usually used.
-     */
-    @Transient
-    protected String temporaryFieldLabel;
 
     /**
      * Contains the street and street number.
@@ -103,54 +69,71 @@ public class AddressData extends Composite {
     private String city;
 
     /**
-     * Creates a new instance with the given requirement.
+     * Verifies that all fields of the address are properly filled.
+     * <p>
+     * This is intended to be invoked within a {@link sirius.db.mixing.annotations.BeforeSave} handler.
      *
-     * @param requirements determines which fields are required in certain constellations
-     * @param fieldLabel   the name of the compund field which represents the address
+     * @param fieldLabel the alternative label for the address to use
+     * @throws sirius.kernel.health.HandledException in case of missing values
      */
-    public AddressData(Requirements requirements, @Nullable String fieldLabel) {
-        this.requirements = requirements;
-        this.fieldLabel = fieldLabel;
-    }
-
-    @BeforeSave
-    protected void onSave() {
-        if (requirements == Requirements.NONE) {
-            return;
-        }
-        boolean allEmpty = areAllFieldsEmpty();
-        boolean oneEmpty = isAnyFieldEmpty();
-        if (oneEmpty) {
-            if (requirements == Requirements.FULL_ADDRESS) {
-                throw Exceptions.createHandled()
-                                .withNLSKey("AddressData.fullAddressRequired")
-                                .set("name", determineFieldLabel())
-                                .handle();
-            }
-            if (!allEmpty && requirements == Requirements.NOT_PARTIAL) {
-                throw Exceptions.createHandled()
-                                .withNLSKey("AddressData.partialAddressRejected")
-                                .set("name", determineFieldLabel())
-                                .handle();
-            }
+    public void verifyFullAddress(@Nullable String fieldLabel) {
+        if (isAnyFieldEmpty()) {
+            throw Exceptions.createHandled()
+                            .withNLSKey("AddressData.fullAddressRequired")
+                            .set("name", determineFieldLabel(fieldLabel))
+                            .handle();
         }
     }
 
     /**
-     * Sets the temporary field label to show a customized
-     * field label for special contexts.
+     * Validates that all fields of the address are properly filled.
+     * <p>
+     * This is intended to be invoked within a {@link sirius.db.mixing.annotations.OnValidate} handler.
      *
-     * @param temporaryFieldLabel the temporary field label to set
+     * @param fieldLabel                the alternative label for the address to use
+     * @param validationMessageConsumer the consumer which is used to collect validation messages. This is normally
+     *                                  passed into the on validate method and can simply be forwarded here.
      */
-    public void setTemporaryFieldLabel(String temporaryFieldLabel) {
-        this.temporaryFieldLabel = temporaryFieldLabel;
+    public void validateFullAddress(@Nullable String fieldLabel, Consumer<String> validationMessageConsumer) {
+        if (isAnyFieldEmpty()) {
+            validationMessageConsumer.accept(NLS.fmtr("AddressData.fullAddressRequired")
+                                                .set("name", determineFieldLabel(fieldLabel))
+                                                .format());
+        }
     }
 
     /**
-     * Resets the temporary field label to use the regular field label again.
+     * Verifies that either all or no fields of the address are filled.
+     * <p>
+     * This is intended to be invoked within a {@link sirius.db.mixing.annotations.BeforeSave} handler.
+     *
+     * @param fieldLabel the alternative label for the address to use
+     * @throws sirius.kernel.health.HandledException in case of a partially filled address
      */
-    public void resetTemporaryFieldLabel() {
-        temporaryFieldLabel = null;
+    public void verifyNonPartialAddress(@Nullable String fieldLabel) {
+        if (isAnyFieldEmpty() && !areAllFieldsEmpty()) {
+            throw Exceptions.createHandled()
+                            .withNLSKey("AddressData.partialAddressRejected")
+                            .set("name", determineFieldLabel(fieldLabel))
+                            .handle();
+        }
+    }
+
+    /**
+     * Validates that either all or no fields of the address are filled.
+     * <p>
+     * This is intended to be invoked within a {@link sirius.db.mixing.annotations.OnValidate} handler.
+     *
+     * @param fieldLabel                the alternative label for the address to use
+     * @param validationMessageConsumer the consumer which is used to collect validation messages. This is normally
+     *                                  passed into the on validate method and can simply be forwarded here.
+     */
+    public void validateNonPartialAddress(@Nullable String fieldLabel, Consumer<String> validationMessageConsumer) {
+        if (isAnyFieldEmpty() && !areAllFieldsEmpty()) {
+            validationMessageConsumer.accept(NLS.fmtr("AddressData.partialAddressRejected")
+                                                .set("name", determineFieldLabel(fieldLabel))
+                                                .format());
+        }
     }
 
     /**
@@ -158,14 +141,12 @@ public class AddressData extends Composite {
      *
      * @return the field label to use to show messages
      */
-    protected String determineFieldLabel() {
-        if (Strings.isFilled(temporaryFieldLabel)) {
-            return temporaryFieldLabel;
+    protected String determineFieldLabel(String fieldLabel) {
+        if (Strings.isFilled(fieldLabel)) {
+            return fieldLabel;
         }
-        if (Strings.isEmpty(fieldLabel)) {
-            fieldLabel = NLS.get("Model.address");
-        }
-        return fieldLabel;
+
+        return NLS.get("Model.address");
     }
 
     /**

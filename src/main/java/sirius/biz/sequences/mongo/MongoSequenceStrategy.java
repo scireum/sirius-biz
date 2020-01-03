@@ -12,6 +12,7 @@ import com.mongodb.MongoWriteException;
 import com.mongodb.client.result.UpdateResult;
 import sirius.biz.sequences.SequenceStrategy;
 import sirius.biz.sequences.Sequences;
+import sirius.db.KeyGenerator;
 import sirius.db.mongo.Doc;
 import sirius.db.mongo.Mongo;
 import sirius.db.mongo.QueryBuilder;
@@ -38,6 +39,9 @@ public class MongoSequenceStrategy implements SequenceStrategy {
 
     @Part
     private Mongo mongo;
+
+    @Part
+    private KeyGenerator keyGen;
 
     @Nonnull
     @Override
@@ -76,6 +80,7 @@ public class MongoSequenceStrategy implements SequenceStrategy {
     private Long createSequence(String sequence) {
         try {
             mongo.insert()
+                 .set(MongoSequenceCounter.ID, keyGen.generateId())
                  .set(MongoSequenceCounter.NAME, sequence)
                  .set(MongoSequenceCounter.NEXT_VALUE, 2)
                  .into(MongoSequenceCounter.class);
@@ -116,6 +121,7 @@ public class MongoSequenceStrategy implements SequenceStrategy {
 
     private void createSequenceWithValue(String sequence, long nextValue) {
         mongo.insert()
+             .set(MongoSequenceCounter.ID, keyGen.generateId())
              .set(MongoSequenceCounter.NAME, sequence)
              .set(MongoSequenceCounter.NEXT_VALUE, nextValue)
              .into(MongoSequenceCounter.class);
