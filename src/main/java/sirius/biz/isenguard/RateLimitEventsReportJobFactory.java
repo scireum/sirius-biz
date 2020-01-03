@@ -47,7 +47,7 @@ public class RateLimitEventsReportJobFactory extends ReportJobFactory {
     private OMA oma;
 
     private static final StringParameter SCOPE_PARAMETER =
-            new StringParameter("scope", "$RateLimitingTriggeredEvent.scope").hidden();
+            new StringParameter("scope", "Scope").hidden();
 
     @Override
     protected boolean hasPresetFor(QueryString queryString, Object targetObject) {
