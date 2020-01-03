@@ -13,6 +13,7 @@ import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.jdbc.SmartQuery;
 import sirius.kernel.di.std.Register;
+import sirius.web.http.QueryString;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
@@ -36,7 +37,7 @@ public class SQLUserAccountExportJobFactory extends EntityExportJobFactory<SQLUs
     }
 
     @Override
-    protected boolean hasPresetFor(Object targetObject) {
-        return targetObject == SQLUserAccount.class;
+    protected boolean hasPresetFor(QueryString queryString, Object targetObject) {
+        return queryString.path().startsWith("/user-account");
     }
 }
