@@ -28,6 +28,8 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      */
     private enum Visibility {NORMAL, ONLY_WITH_VALUE, HIDDEN}
 
+    private static final String HIDDEN_TEMPLATE_NAME = "/templates/biz/jobs/params/hidden.html.pasta";
+
     protected String name;
     protected String label;
     protected String description;
@@ -126,6 +128,22 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      * @return the name or path of the template used to render the parameter
      */
     public abstract String getTemplateName();
+
+    /**
+     * Returns the name of the template used to render the parameter in the UI.
+     * <p>
+     * Similar to {@link #getTemplateName()}, but this method considers the visibility
+     * of the parameter and delivers an alternative template in case the parameter should be hidden.
+     *
+     * @param context the context containing all parameter values
+     * @return the name or path of the template used to render the parameter
+     */
+    public String getEffectiveTemplateName(Map<String, String> context) {
+        if (!isVisible(context)) {
+            return HIDDEN_TEMPLATE_NAME;
+        }
+        return getTemplateName();
+    }
 
     /**
      * Verifies the value given for this parameter
