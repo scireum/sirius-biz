@@ -15,11 +15,14 @@ import sirius.biz.importer.SQLEntityImportHandler;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.UserAccountData;
+import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.batch.FindQuery;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
+import sirius.web.security.UserContext;
 
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
@@ -95,5 +98,26 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
         collector.accept(330,
                          SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                          .inner(LoginData.LAST_PASSWORD_CHANGE));
+    }
+
+    @Override
+    protected void enforcePostLoadConstraints(SQLUserAccount entity) {
+        if (!canSkipTenantCheck(entity)) {
+            super.enforcePostLoadConstraints(entity);
+        }
+    }
+
+    @Override
+    public void enforcePreSaveConstraints(SQLUserAccount entity) {
+        if (!canSkipTenantCheck(entity)) {
+            super.enforcePreSaveConstraints(entity);
+        }
+    }
+
+    private boolean canSkipTenantCheck(SQLUserAccount entity) {
+        return entity instanceof TenantAware
+               && UserContext.getCurrentUser()
+                             .hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
+               && entity.getTenant().isFilled();
     }
 }
