@@ -79,7 +79,7 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     protected ImportDictionary getDictionary() {
         try (Importer importer = new Importer("getDictionary")) {
             ImportDictionary dictionary = importer.getImportDictionary(getImportType());
-            enhanceDictionary(dictionary);
+            enhanceDictionary(importer, dictionary);
             return dictionary;
         } catch (Exception e) {
             throw Exceptions.handle(Log.BACKGROUND, e);
@@ -96,11 +96,12 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     /**
      * Adds the possibility to enhance a dicitonary during the setup of the job
      *
+     * @param importer   the current importer which can be asked to provide a dictionary for an entity
      * @param dictionary the dictionary to enhance
      */
     @SuppressWarnings("squid:S1186")
     @Explain("Do nothing by default since we only need this for imports which contain more than one Entity")
-    protected void enhanceDictionary(ImportDictionary dictionary) {
+    protected void enhanceDictionary(Importer importer, ImportDictionary dictionary) {
     }
 
     @Override
