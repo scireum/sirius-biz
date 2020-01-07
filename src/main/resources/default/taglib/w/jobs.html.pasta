@@ -1,4 +1,4 @@
-<i:arg type="String" name="uri" default="call.getRequest().uri()"/>
+<i:arg type="String" name="uri" default="@call.getRequest().uri()"/>
 <i:arg type="Object" name="target"/>
 
 <i:if test="jobsService != null">
