@@ -353,7 +353,7 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
         return tryGetValue(codeList, code).orElseThrow(() -> createMissingCodeError(codeList, code));
     }
 
-    protected HandledException createMissingCodeError(@Nonnull String codeList, @Nonnull String code) {
+    protected HandledException createMissingCodeError(@Nonnull String codeList, String code) {
         return Exceptions.handle()
                          .to(LOG)
                          .withNLSKey("CodeLists.missingEntry")
@@ -367,14 +367,15 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
      * <p>
      * Note that if the code list cannot be resolved as no tenant is present, the check is skipped entirely. This is a
      * safety net as these are rare circumstances (etc. during login) where a check and espically a failure does more
-     * harm than help.
+     * harm than help. Also note that empty codes are simply ignored without reporting an error.
      *
      * @param codeList the code list to search in
      * @param code     the code to lookup
      * @throws sirius.kernel.health.HandledException if no entry exists for the given code or code list
      */
-    public void verifyValue(@Nonnull String codeList, @Nonnull String code) {
-        if (getCurrentTenant(codeList).isPresent() && !tryGetValue(codeList, code).isPresent()) {
+    public void verifyValue(@Nonnull String codeList, @Nullable String code) {
+        if (Strings.isFilled(code) && getCurrentTenant(codeList).isPresent() && !tryGetValue(codeList,
+                                                                                             code).isPresent()) {
             throw createMissingCodeError(codeList, code);
         }
     }
