@@ -316,7 +316,13 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
         return addSortFacet(Arrays.asList(sortOptions), null);
     }
 
-    private String getParameterValue(String name) {
+    /**
+     * Extracts the value from the given context.
+     *
+     * @param name the name of the parameter to extract
+     * @return the value stored in either {@link #webContext or #processContext}
+     */
+    protected String getParameterValue(String name) {
         if (webContext != null) {
             return webContext.get(name).getString();
         }
