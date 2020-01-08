@@ -8,6 +8,7 @@
 
 package sirius.biz.web;
 
+import sirius.biz.process.ProcessContext;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.DateRange;
 import sirius.db.mixing.Mapping;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Helper class to build a query, bind it to values given in a {@link WebContext} and create a resulting {@link Page}
@@ -47,7 +49,8 @@ import java.util.function.Consumer;
 public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constraint, Q extends Query<Q, E, C>, B extends BasePageHelper<E, C, Q, B>> {
 
     protected static final int DEFAULT_PAGE_SIZE = 25;
-    protected WebContext ctx;
+    protected WebContext webContext;
+    protected ProcessContext processContext;
     protected Q baseQuery;
     protected List<QueryField> searchFields = Collections.emptyList();
     protected List<Tuple<Facet, BiConsumer<Facet, Q>>> facets = new ArrayList<>();
@@ -61,12 +64,25 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     /**
      * Attaches a web context to the helper, to fetch filter and pagination values from.
      *
-     * @param ctx the request to attach
+     * @param webContext the request to attach
      * @return the helper itself for fluent method calls
      */
     @SuppressWarnings("unchecked")
-    public B withContext(WebContext ctx) {
-        this.ctx = ctx;
+    public B withContext(WebContext webContext) {
+        this.webContext = webContext;
+        return (B) this;
+    }
+
+    /**
+     * Attaches a process context to the helper, to fetch filter values from.
+     * This can be used intead of supplying a webContext via {@link #withContext(WebContext)}.
+     *
+     * @param processContext the context where filter values are fetched from
+     * @return the helper itself for fluent method calls
+     */
+    @SuppressWarnings("unchecked")
+    public B withProcessContext(ProcessContext processContext) {
+        this.processContext = processContext;
         return (B) this;
     }
 
@@ -128,11 +144,9 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     @SuppressWarnings("unchecked")
     public B addFacet(Facet facet, BiConsumer<Facet, Q> filter, BiConsumer<Facet, Q> itemsComputer) {
         Objects.requireNonNull(baseQuery);
-        Objects.requireNonNull(ctx);
 
-        facet.withValue(ctx.get(facet.getName()).getString());
+        facet.withValue(getParameterValue(facet.getName()));
         filter.accept(facet, baseQuery);
-
         facets.add(Tuple.create(facet, itemsComputer));
 
         return (B) this;
@@ -177,9 +191,8 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
      * @return the helper itself for fluent method calls
      */
     public B addBooleanFacet(String name, String title) {
-        Objects.requireNonNull(ctx);
-
-        Facet facet = new Facet(title, name, ctx.get(name).asString(), null);
+        String facetValue = getParameterValue(name);
+        Facet facet = new Facet(title, name, facetValue, null);
         facet.addItem("true", NLS.get("NLS.yes"), -1);
         facet.addItem("false", NLS.get("NLS.no"), -1);
 
@@ -202,9 +215,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
      * @return the helper itself for fluent method calls
      */
     public B addEnumFacet(String name, String title, Class<? extends Enum<?>> enumType) {
-        Objects.requireNonNull(ctx);
-
-        Facet facet = new Facet(title, name, ctx.get(name).asString(), null);
+        Facet facet = new Facet(title, name, getParameterValue(name), null);
         Arrays.stream(enumType.getEnumConstants()).forEach(e -> facet.addItem(e.name(), e.toString(), -1));
 
         return addFilterFacet(facet);
@@ -230,13 +241,11 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
                                @Nonnull Mapping filterField,
                                @Nonnull String title,
                                @Nullable ValueComputer<String, String> translator) {
-        Objects.requireNonNull(ctx);
-
-        String value = ctx.get(parameterName).asString();
+        String value = getParameterValue(parameterName);
 
         if (Strings.isFilled(value)) {
             Facet facet = new Facet(title, parameterName, value, translator);
-            Value labelAsValue = ctx.get(labelParameterName);
+            Value labelAsValue = webContext.get(labelParameterName);
             facet.addItem(value, labelAsValue.getString(), -1);
             addFacet(facet, (f, q) -> q.eqIgnoreNull(filterField, f.getValue()));
             if (labelAsValue.isFilled()) {
@@ -307,6 +316,16 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
         return addSortFacet(Arrays.asList(sortOptions), null);
     }
 
+    private String getParameterValue(String name) {
+        if (webContext != null) {
+            return webContext.get(name).getString();
+        }
+        if (processContext != null) {
+            return processContext.get(name).getString();
+        }
+        throw new IllegalStateException("A context needs to be provided to the page helper first!");
+    }
+
     /**
      * Specifies the number of items shown on the page that gets rendered using this pageHelper.
      *
@@ -325,10 +344,10 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
      * @return the given data wrapped as <tt>Page</tt>
      */
     public Page<E> asPage() {
-        Objects.requireNonNull(ctx);
+        Objects.requireNonNull(webContext);
         Watch w = Watch.start();
         Page<E> result = new Page<E>().withStart(1).withPageSize(pageSize);
-        result.bindToRequest(ctx);
+        result.bindToRequest(webContext);
 
         if (Strings.isFilled(result.getQuery()) && !searchFields.isEmpty()) {
             baseQuery.where(baseQuery.filters()
@@ -375,12 +394,49 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
         baseQuery.limit(pageSize + 1);
     }
 
-    protected void applyFacets(Page<E> result) {
+    /**
+     * Calls the given function on all items in the result ignoring {@link #pageSize}, as long as it returns <tt>true</tt>.
+     * <p>
+     * While this is not the purpose of this helper, this can be used to easily re-use code that is inteded for page views.
+     * For example, together with {@link #withProcessContext(ProcessContext)} this can be used to export the same page view in a process,
+     * using the same query and facet suppliers as the view that is to be exported.
+     *
+     * @param resultHandler the handle to be invoked for each item in the result
+     */
+    public void iterateTotalItems(Function<E, Boolean> resultHandler) {
+        String query = getParameterValue("query");
+        if (Strings.isFilled(query) && !searchFields.isEmpty()) {
+            baseQuery.where(baseQuery.filters().queryString(baseQuery.getDescriptor(), query, searchFields));
+        }
+
+        applyFacets(null);
+        baseQuery.iterate(resultHandler);
+    }
+
+    /**
+     * Calls the given consumer on all items in the result ignoring {@link #pageSize}.
+     * <p>
+     * While this is not the purpose of this helper, this can be used to easily re-use code that is inteded for page views.
+     * For example, together with {@link #withProcessContext(ProcessContext)} this can be used to export the same page view in a process,
+     * using the same query and facet suppliers as the view that is to be exported.
+     *
+     * @param consumer the handle to be invoked for each item in the result
+     */
+    public void iterateAllTotalItems(Consumer<E> consumer) {
+        iterateTotalItems(r -> {
+            consumer.accept(r);
+            return true;
+        });
+    }
+
+    protected void applyFacets(@Nullable Page<E> result) {
         for (Tuple<Facet, BiConsumer<Facet, Q>> f : facets) {
             if (f.getSecond() != null) {
                 f.getSecond().accept(f.getFirst(), baseQuery);
             }
-            result.addFacet(f.getFirst());
+            if (result != null) {
+                result.addFacet(f.getFirst());
+            }
         }
     }
 

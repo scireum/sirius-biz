@@ -237,7 +237,7 @@ public class ElasticPageHelper<E extends ElasticEntity>
             // If we didn't find any aggregation value we have to check if a filter for this
             // facet is active and artificially create an "0" item for this so that it can be
             // disabled...
-            String filterValue = ctx.get(facet.getName()).asString();
+            String filterValue = webContext.get(facet.getName()).asString();
             if (Strings.isFilled(filterValue)) {
                 facet.addItem(filterValue, translator.compute(filterValue), 0);
             }
