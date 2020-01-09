@@ -197,7 +197,7 @@ public class MongoPageHelper<E extends MongoEntity>
                 // If we didn't find any aggregation value we have to check if a filter for this
                 // facet is active and artificially create an "0" item for this so that it can be
                 // disabled...
-                String filterValue = getParameterValue(facet.getName());
+                String filterValue = getParameterValue(facet.getName()).getString();
                 if (Strings.isFilled(filterValue)) {
                     facet.addItem(filterValue, nonNullTranslator.compute(filterValue), 0);
                 }
