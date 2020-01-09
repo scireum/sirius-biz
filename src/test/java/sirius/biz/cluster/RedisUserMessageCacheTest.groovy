@@ -12,6 +12,7 @@ package sirius.biz.cluster
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
 import sirius.web.controller.Message
+import sirius.web.controller.MessageLevel
 import sirius.web.http.DistributedUserMessageCache
 
 class RedisUserMessageCacheTest extends BaseSpecification {
@@ -28,7 +29,7 @@ class RedisUserMessageCacheTest extends BaseSpecification {
         List<Message> result = cache.getAndRemove(key)
         result.size() == 1
         result.get(0).getMessage() == "Test error message"
-        result.get(0).getType() == Message.ERROR
+        result.get(0).getType() == MessageLevel.PROBLEM
         and:
         cache.getAndRemove(key) == null
     }
