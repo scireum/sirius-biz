@@ -38,6 +38,7 @@ import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.BasicController;
 import sirius.web.controller.Message;
+import sirius.web.controller.MessageLevel;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 import sirius.web.util.LinkBuilder;
@@ -374,7 +375,7 @@ public class BizController extends BasicController {
      */
     protected void validate(BaseEntity<?> entity) {
         UserContext userCtx = UserContext.get();
-        if (userCtx.getMessages().stream().noneMatch(msg -> Strings.areEqual(Message.ERROR, msg.getType()))) {
+        if (userCtx.getMessages().stream().noneMatch(msg -> MessageLevel.PROBLEM == msg.getType())) {
             entity.getMapper().validate(entity).stream().findFirst().ifPresent(msg -> {
                 userCtx.addMessage(Message.warn(msg));
             });
