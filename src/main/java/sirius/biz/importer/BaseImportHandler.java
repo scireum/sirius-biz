@@ -115,11 +115,20 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     protected E load(Context data, E entity, Mapping... mappings) {
         Arrays.stream(mappings).forEach(mapping -> loadMapping(entity, mapping, data));
 
+        enforcePostLoadConstraints(entity);
+
+        return entity;
+    }
+
+    /**
+     * Enforces some consistency checks after all values have been loaded.
+     *
+     * @param entity the entity to check
+     */
+    protected void enforcePostLoadConstraints(E entity) {
         if (entity instanceof TenantAware) {
             ((TenantAware) entity).setOrVerifyCurrentTenant();
         }
-
-        return entity;
     }
 
     /**

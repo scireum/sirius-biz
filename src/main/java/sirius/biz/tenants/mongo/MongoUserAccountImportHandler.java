@@ -15,11 +15,14 @@ import sirius.biz.importer.MongoEntityImportHandler;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.UserAccountData;
+import sirius.biz.web.TenantAware;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.web.security.UserContext;
 
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -112,5 +115,26 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
         collector.accept(330,
                          MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                            .inner(LoginData.LAST_PASSWORD_CHANGE));
+    }
+
+    @Override
+    protected void enforcePostLoadConstraints(MongoUserAccount entity) {
+        if (!canSkipTenantCheck(entity)) {
+            super.enforcePostLoadConstraints(entity);
+        }
+    }
+
+    @Override
+    public void enforcePreSaveConstraints(MongoUserAccount entity) {
+        if (!canSkipTenantCheck(entity)) {
+            super.enforcePreSaveConstraints(entity);
+        }
+    }
+
+    private boolean canSkipTenantCheck(MongoUserAccount entity) {
+        return entity instanceof TenantAware
+               && UserContext.getCurrentUser()
+                             .hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
+               && entity.getTenant().isFilled();
     }
 }

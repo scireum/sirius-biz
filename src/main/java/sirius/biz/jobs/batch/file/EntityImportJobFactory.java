@@ -41,13 +41,17 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     }
 
     @Override
-    @SuppressWarnings("squid:S2095")
-    @Explain("The job must not be closed here as it is returned and managed by the caller.")
-    protected EntityImportJob<?> createJob(ProcessContext process) {
+    protected DictionaryBasedImportJob createJob(ProcessContext process) {
         // We only resolve the parameters once and keep the final values around in a local context...
         ImportContext paramterContext = new ImportContext();
         transferParameters(paramterContext, process);
 
+        return createImportJob(process, paramterContext);
+    }
+
+    @SuppressWarnings("squid:S2095")
+    @Explain("The job must not be closed here as it is returned and managed by the caller.")
+    protected DictionaryBasedImportJob createImportJob(ProcessContext process, ImportContext paramterContext) {
         return new EntityImportJob<>(fileParameter,
                                      ignoreEmptyParameter,
                                      importModeParameter,
@@ -75,7 +79,7 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     protected ImportDictionary getDictionary() {
         try (Importer importer = new Importer("getDictionary")) {
             ImportDictionary dictionary = importer.getImportDictionary(getImportType());
-            enhanceDictionary(dictionary);
+            enhanceDictionary(importer, dictionary);
             return dictionary;
         } catch (Exception e) {
             throw Exceptions.handle(Log.BACKGROUND, e);
@@ -92,11 +96,12 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     /**
      * Adds the possibility to enhance a dicitonary during the setup of the job
      *
+     * @param importer   the current importer which can be asked to provide a dictionary for an entity
      * @param dictionary the dictionary to enhance
      */
     @SuppressWarnings("squid:S1186")
     @Explain("Do nothing by default since we only need this for imports which contain more than one Entity")
-    protected void enhanceDictionary(ImportDictionary dictionary) {
+    protected void enhanceDictionary(Importer importer, ImportDictionary dictionary) {
     }
 
     @Override

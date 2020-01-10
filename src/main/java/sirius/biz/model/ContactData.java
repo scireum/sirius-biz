@@ -109,7 +109,7 @@ public class ContactData extends Composite {
      */
     public void verifyPhoneNumber() {
         if (Strings.isFilled(phone) && !VALID_PHONE_NUMBER.matcher(phone).matches()) {
-            throw invalidPhoneException(NLS.get("Model.phone"), phone);
+            throw invalidPhoneException(NLS.get("ContactData.phone"), phone);
         }
     }
 
@@ -124,7 +124,7 @@ public class ContactData extends Composite {
      */
     public void validatePhoneNumber(Consumer<String> validationMessageConsumer) {
         if (Strings.isFilled(phone) && !VALID_PHONE_NUMBER.matcher(phone).matches()) {
-            validationMessageConsumer.accept(invalidPhoneException(NLS.get("Model.phone"), phone).getMessage());
+            validationMessageConsumer.accept(invalidPhoneException(NLS.get("ContactData.phone"), phone).getMessage());
         }
     }
 
@@ -138,7 +138,7 @@ public class ContactData extends Composite {
      */
     public void verifyMobileNumber() {
         if (Strings.isFilled(phone) && !VALID_PHONE_NUMBER.matcher(phone).matches()) {
-            throw invalidPhoneException(NLS.get("Model.mobile"), phone);
+            throw invalidPhoneException(NLS.get("ContactData.mobile"), phone);
         }
     }
 
@@ -153,7 +153,7 @@ public class ContactData extends Composite {
      */
     public void validateMobileNumber(Consumer<String> validationMessageConsumer) {
         if (Strings.isFilled(mobile) && !VALID_PHONE_NUMBER.matcher(mobile).matches()) {
-            validationMessageConsumer.accept(invalidPhoneException(NLS.get("Model.mobile"), mobile).getMessage());
+            validationMessageConsumer.accept(invalidPhoneException(NLS.get("ContactData.mobile"), mobile).getMessage());
         }
     }
 
@@ -167,7 +167,7 @@ public class ContactData extends Composite {
      */
     public void verifyFaxNumber() {
         if (Strings.isFilled(fax) && !VALID_PHONE_NUMBER.matcher(fax).matches()) {
-            throw invalidPhoneException(NLS.get("Model.fax"), fax);
+            throw invalidPhoneException(NLS.get("ContactData.fax"), fax);
         }
     }
 
@@ -182,7 +182,7 @@ public class ContactData extends Composite {
      */
     public void validateFaxNumber(Consumer<String> validationMessageConsumer) {
         if (Strings.isFilled(fax) && !VALID_PHONE_NUMBER.matcher(fax).matches()) {
-            validationMessageConsumer.accept(invalidPhoneException(NLS.get("Model.fax"), fax).getMessage());
+            validationMessageConsumer.accept(invalidPhoneException(NLS.get("ContactData.fax"), fax).getMessage());
         }
     }
 
