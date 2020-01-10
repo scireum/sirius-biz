@@ -33,7 +33,7 @@ public class RateLimitingTriggeredEvent extends Event {
     /**
      * Contains the effective limit which was reached.
      */
-    public static final Mapping LIMIT = Mapping.named("realm");
+    public static final Mapping LIMIT = Mapping.named("limit");
     @Length(4)
     private int limit;
 
