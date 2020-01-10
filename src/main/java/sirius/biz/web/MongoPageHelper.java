@@ -163,9 +163,8 @@ public class MongoPageHelper<E extends MongoEntity>
             Iterator<FacetItem> iter = facet.getAllItems().iterator();
             while (iter.hasNext()) {
                 FacetItem item = iter.next();
-                int numberOfHits = Strings.areEqual(item.getKey(), "true") ?
-                                   mongoFacet.getNumTrue() :
-                                   mongoFacet.getNumFalse();
+                int numberOfHits =
+                        Strings.areEqual(item.getKey(), "true") ? mongoFacet.getNumTrue() : mongoFacet.getNumFalse();
                 if (numberOfHits > 0 || item.isActive()) {
                     item.setCount(numberOfHits);
                 } else {
@@ -198,7 +197,7 @@ public class MongoPageHelper<E extends MongoEntity>
                 // If we didn't find any aggregation value we have to check if a filter for this
                 // facet is active and artificially create an "0" item for this so that it can be
                 // disabled...
-                String filterValue = ctx.get(facet.getName()).asString();
+                String filterValue = getParameterValue(facet.getName()).getString();
                 if (Strings.isFilled(filterValue)) {
                     facet.addItem(filterValue, nonNullTranslator.compute(filterValue), 0);
                 }
