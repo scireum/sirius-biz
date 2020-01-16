@@ -9,51 +9,55 @@
 package sirius.biz.jobs.params;
 
 import sirius.db.mixing.DateRange;
+import sirius.kernel.commons.Value;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Defines an extension of {@link EnumParameter} for {@link DateRange}.
  */
-public class DateRangeParameter extends EnumParameter<DateRangeParameter.DateRanges> {
+public class DateRangeParameter extends Parameter<DateRange, DateRangeParameter> {
+
+    private List<DateRange> dateRanges;
 
     /**
-     * Creates a new parameter with the given name, label and enum type.
+     * Creates a new parameter with the given name, label and any number of {@link DateRange date ranges}
      *
-     * @param name  the name of the parameter
-     * @param label the label of the parameter
+     * @param name       the name of the parameter
+     * @param label      the label of the parameter
+     * @param dateRanges to fill up the list
      */
-    public DateRangeParameter(String name, String label) {
-        super(name, label, DateRanges.class);
+    public DateRangeParameter(String name, String label, DateRange... dateRanges) {
+        super(name, label);
+        this.dateRanges = Arrays.asList(dateRanges);
     }
 
-    /**
-     * Defines a list of {@link DateRange date ranges} exposed by the {@link DateRangeParameter}
-     */
-    public enum DateRanges {
-        TODAY(DateRange.today()), THIS_WEEK(DateRange.thisWeek()), LAST_WEEK(DateRange.lastWeek()),
-        THIS_MONTH(DateRange.thisMonth()), LAST_MONTH(DateRange.lastMonth()), THIS_YEAR(DateRange.thisYear()),
-        LAST_YEAR(DateRange.lastYear()), BEFORE_LAST_YEAR(DateRange.beforeLastYear());
+    @Override
+    public String getTemplateName() {
+        return "/templates/biz/jobs/params/daterange.html.pasta";
+    }
 
-        private final DateRange dateRange;
-
-        DateRanges(DateRange range) {
-            this.dateRange = range;
+    @Override
+    protected String checkAndTransformValue(Value input) {
+        if (!resolveFromString(input).isPresent()) {
+            return null;
         }
+        return input.asString();
+    }
 
-        /**
-         * Returns the {@link DateRange} set in this enum.
-         *
-         * @return the date range
-         */
-        @Nullable
-        public DateRange toDateRange() {
-            return dateRange;
+    @Override
+    protected Optional<DateRange> resolveFromString(@Nonnull Value input) {
+        if (input.isEmptyString()) {
+            return Optional.empty();
         }
+        return dateRanges.stream().filter(dateRange -> (input.asString().equals(dateRange.getKey()))).findFirst();
+    }
 
-        @Override
-        public String toString() {
-            return dateRange.toString();
-        }
+    public List<DateRange> getValues() {
+        return Collections.unmodifiableList(dateRanges);
     }
 }
