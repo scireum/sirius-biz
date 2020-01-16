@@ -395,6 +395,18 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
     }
 
     /**
+     * Returns the {@link CodeListEntry} from the given code list associated with the given code.
+     *
+     * @param codeList the code list to search in
+     * @param code     the code to lookup
+     * @return the entry associated with the code or an empty optional otherwise
+     */
+    public Optional<E> getEntry(@Nonnull String codeList, String code) {
+        L cl = findOrCreateCodelist(codeList);
+        return queryEntry(cl, code).first();
+    }
+
+    /**
      * Completely clears the cache holding all known values.
      */
     public void clearCache() {
