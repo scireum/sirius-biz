@@ -36,6 +36,24 @@ public class DateRangeParameter extends Parameter<DateRange, DateRangeParameter>
         this.dateRanges = Arrays.asList(dateRanges);
     }
 
+    /**
+     * Creates a new parameter with the given name, label and a default list of {@link DateRange date ranges}
+     *
+     * @param name  the name of the parameter
+     * @param label the label of the parameter
+     */
+    public DateRangeParameter(String name, String label) {
+        super(name, label);
+        this.dateRanges = Arrays.asList(DateRange.today(),
+                                        DateRange.yesterday(),
+                                        DateRange.thisWeek(),
+                                        DateRange.lastWeek(),
+                                        DateRange.thisMonth(),
+                                        DateRange.lastMonth(),
+                                        DateRange.thisYear(),
+                                        DateRange.lastYear());
+    }
+
     @Override
     public String getTemplateName() {
         return "/templates/biz/jobs/params/daterange.html.pasta";
