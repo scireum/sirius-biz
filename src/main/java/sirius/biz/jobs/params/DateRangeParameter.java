@@ -54,7 +54,7 @@ public class DateRangeParameter extends Parameter<DateRange, DateRangeParameter>
         if (input.isEmptyString()) {
             return Optional.empty();
         }
-        return dateRanges.stream().filter(dateRange -> (input.asString().equals(dateRange.getKey()))).findFirst();
+        return dateRanges.stream().filter(dateRange -> input.asString().equals(dateRange.getKey())).findFirst();
     }
 
     public List<DateRange> getValues() {
