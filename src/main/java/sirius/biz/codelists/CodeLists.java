@@ -337,7 +337,7 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
             return false;
         }
 
-        return tryGetValue(codeList, code).isPresent();
+        return getEntry(codeList, code).isPresent();
     }
 
     /**
