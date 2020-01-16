@@ -1,5 +1,5 @@
-<i:arg type="sirius.biz.jobs.params.CodeListEntryParameter" name="param"/>
-<i:arg type="Map" name="context"/>
+<i:arg name="param" type="sirius.biz.jobs.params.CodeListEntryParameter"/>
+<i:arg name="context" type="Map"/>
 
 <w:singleSelect span="12"
                 smallSpan="12"
