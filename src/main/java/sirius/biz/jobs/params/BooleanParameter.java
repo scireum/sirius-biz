@@ -72,7 +72,7 @@ public class BooleanParameter extends Parameter<Boolean, BooleanParameter> {
     @Override
     public BooleanParameter markRequired() {
         throw new UnsupportedOperationException(
-                "A boolean parameter must not be marked as required as it is inherently so. Use markNullable() to make the parameter optional");
+                "A boolean parameter must not be marked as required as it is inherently so. Use markNullable() to make the parameter optional.");
     }
 
     @Override
