@@ -11,12 +11,15 @@ package sirius.biz.jobs.params;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nonnull;
 import java.util.Optional;
 
 /**
  * Provides a checkbox parameter.
  */
 public class BooleanParameter extends Parameter<Boolean, BooleanParameter> {
+
+    private boolean nullable = false;
 
     /**
      * Creates a new parameter with the given name and label.
@@ -47,18 +50,41 @@ public class BooleanParameter extends Parameter<Boolean, BooleanParameter> {
         if (isRequired() && !input.asBoolean()) {
             return null;
         }
-
+        if (nullable && !resolveFromString(input).isPresent()) {
+            return null;
+        }
         return NLS.toMachineString(input.asBoolean());
+    }
+
+    /**
+     * Marks the parameter as boolean.
+     * <p>
+     * This allows for a tri-state boolean where a job parameter can also receive
+     * {@code null} when a value is not selected instead of being defaulted to false.
+     *
+     * @return the parameter itself for fluent method calls
+     */
+    public BooleanParameter markNullable() {
+        this.nullable = true;
+        return self();
     }
 
     @Override
     public BooleanParameter markRequired() {
         throw new UnsupportedOperationException(
-                "A boolean parameter must not be marked as required as it is inherently so!");
+                "A boolean parameter must not be marked as required as it is inherently so. Use markNullable() to make the parameter optional");
     }
 
     @Override
-    protected Optional<Boolean> resolveFromString(Value input) {
+    public boolean isRequired() {
+        return !nullable;
+    }
+
+    @Override
+    protected Optional<Boolean> resolveFromString(@Nonnull Value input) {
+        if (nullable && !("true".equalsIgnoreCase(input.asString()) || "false".equalsIgnoreCase(input.asString()))) {
+            return Optional.empty();
+        }
         return Optional.of(input.asBoolean());
     }
 }
