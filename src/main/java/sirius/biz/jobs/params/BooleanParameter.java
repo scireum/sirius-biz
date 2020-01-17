@@ -82,7 +82,7 @@ public class BooleanParameter extends Parameter<Boolean, BooleanParameter> {
 
     @Override
     protected Optional<Boolean> resolveFromString(@Nonnull Value input) {
-        if (nullable && !("true".equalsIgnoreCase(input.asString()) || "false".equalsIgnoreCase(input.asString()))) {
+        if (nullable && !input.isFilled()) {
             return Optional.empty();
         }
         return Optional.of(input.asBoolean());
