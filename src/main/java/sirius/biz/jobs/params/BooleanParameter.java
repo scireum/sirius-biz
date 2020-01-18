@@ -57,7 +57,7 @@ public class BooleanParameter extends Parameter<Boolean, BooleanParameter> {
     }
 
     /**
-     * Marks the parameter as boolean.
+     * Marks the parameter as nullable.
      * <p>
      * This allows for a tri-state boolean where a job parameter can also receive
      * {@code null} when a value is not selected instead of being defaulted to false.
