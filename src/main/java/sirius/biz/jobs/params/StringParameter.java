@@ -18,6 +18,8 @@ import java.util.Optional;
  */
 public class StringParameter extends TextParameter<String, StringParameter> {
 
+    private boolean nullable = false;
+
     /**
      * Creates a new parameter with the given name and label.
      *
@@ -28,8 +30,35 @@ public class StringParameter extends TextParameter<String, StringParameter> {
         super(name, label);
     }
 
+    /**
+     * Marks the parameter as nullable.
+     * <p>
+     * When set, forces empty strings to be returned as {@code null} and makes it no longer required.
+     *
+     * @return the parameter itself for fluent method calls
+     */
+    public StringParameter markNullable() {
+        this.nullable = true;
+        this.required = false;
+        return self();
+    }
+
+    /**
+     * Marks the parameter as required and resets the nullable state if set.
+     *
+     * @return the parameter itself for fluent method calls
+     */
+    @Override
+    public StringParameter markRequired() {
+        this.nullable = false;
+        return super.markRequired();
+    }
+
     @Override
     protected String checkAndTransformValue(Value input) {
+        if (nullable && input.isEmptyString()) {
+            return null;
+        }
         return input.getString();
     }
 
