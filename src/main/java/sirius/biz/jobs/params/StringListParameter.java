@@ -5,6 +5,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nonnull;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,11 +33,11 @@ public class StringListParameter extends Parameter<String, StringListParameter> 
      * Adds an entry to the list.
      *
      * @param key   the entry key
-     * @param value the display value
+     * @param value the display value, which will be {@link NLS#smartGet(String) auto translated}
      * @return the parameter itself for fluent method calls
      */
     public StringListParameter withEntry(String key, String value) {
-        this.entries.put(key, value);
+        this.entries.put(key, NLS.smartGet(value));
         return self();
     }
 
@@ -46,7 +47,10 @@ public class StringListParameter extends Parameter<String, StringListParameter> 
      * @return list of {@link Tuple entries} with the key as first and display value as second tuple items.
      */
     public List<Tuple<String, String>> getValues() {
-        return entries.keySet().stream().map(entry -> Tuple.create(entry, entries.get(entry))).collect(Collectors.toList());
+        return entries.keySet()
+                      .stream()
+                      .map(entry -> Tuple.create(entry, entries.get(entry)))
+                      .collect(Collectors.toList());
     }
 
     @Override
@@ -63,7 +67,7 @@ public class StringListParameter extends Parameter<String, StringListParameter> 
     }
 
     @Override
-    protected Optional<String> resolveFromString(Value input) {
+    protected Optional<String> resolveFromString(@Nonnull Value input) {
         if (!entries.containsKey(input.asString())) {
             return Optional.empty();
         }
