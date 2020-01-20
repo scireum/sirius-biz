@@ -13,9 +13,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Provides a string list select parameter.
+ * Provides a single select parameter from a list of key-value pairs.
  */
-public class StringListParameter extends Parameter<String, StringListParameter> {
+public class SingleSelectParameter extends Parameter<String, SingleSelectParameter> {
 
     private Map<String, String> entries = new LinkedHashMap<>();
 
@@ -25,7 +25,7 @@ public class StringListParameter extends Parameter<String, StringListParameter> 
      * @param name  the name of the parameter
      * @param label the label of the parameter, which will be {@link NLS#smartGet(String) auto translated}
      */
-    public StringListParameter(String name, String label) {
+    public SingleSelectParameter(String name, String label) {
         super(name, label);
     }
 
@@ -36,7 +36,7 @@ public class StringListParameter extends Parameter<String, StringListParameter> 
      * @param value the display value, which will be {@link NLS#smartGet(String) auto translated}
      * @return the parameter itself for fluent method calls
      */
-    public StringListParameter withEntry(String key, String value) {
+    public SingleSelectParameter withEntry(String key, String value) {
         this.entries.put(key, NLS.smartGet(value));
         return self();
     }
