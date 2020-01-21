@@ -143,7 +143,7 @@ public class FTPUplink extends ConfigBasedUplink {
 
     @Override
     protected MutableVirtualFile createDirectoryFile(@Nonnull VirtualFile parent) {
-        MutableVirtualFile mutableVirtualFile = new MutableVirtualFile(parent, getDirectoryName());
+        MutableVirtualFile mutableVirtualFile = MutableVirtualFile.create(parent, getDirectoryName());
         mutableVirtualFile.attach(new RemotePath("/"));
         return mutableVirtualFile;
     }

@@ -8,10 +8,12 @@
 
 package sirius.biz.storage.layer3;
 
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.web.http.Response;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -40,13 +42,42 @@ public class MutableVirtualFile extends VirtualFile {
     }
 
     /**
-     * Creates a new file with the given name.
+     * Use the static factory methods to obtain a new instance.
      *
-     * @param parent the parent of the file
-     * @param name   the name of the file
+     * @see #create(VirtualFile, String)
+     * @see #safeCreate(VirtualFile, String)
      */
     protected MutableVirtualFile(@Nonnull VirtualFile parent, @Nonnull String name) {
         super(parent, name);
+    }
+
+    /**
+     * Creates a new file with the given name in the given directory.
+     *
+     * @param parent the parent of the file
+     * @param name   the name of the file
+     * @return a new instance of this class
+     * @throws IllegalArgumentException if the given name is empty or contains '/'
+     */
+    public static MutableVirtualFile create(@Nonnull VirtualFile parent, @Nonnull String name) {
+        return new MutableVirtualFile(parent, name);
+    }
+
+    /**
+     * Creates a new file with the given name in the given directory.
+     * <p>
+     * Replaces any '/' chars in the given String and if the given String is empty, <tt>null</tt> is returned.
+     *
+     * @param parent the parent of the file
+     * @param name   the name of the file
+     * @return a new instance of this class
+     */
+    @Nullable
+    public static MutableVirtualFile safeCreate(@Nonnull VirtualFile parent, @Nullable String name) {
+        if (Strings.isEmpty(name)) {
+            return null;
+        }
+        return new MutableVirtualFile(parent, name.replace('/', '_'));
     }
 
     /**

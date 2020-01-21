@@ -270,7 +270,7 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
 
     @Override
     protected MutableVirtualFile createDirectoryFile(@Nonnull VirtualFile parent) {
-        MutableVirtualFile mutableVirtualFile = new MutableVirtualFile(parent, getDirectoryName());
+        MutableVirtualFile mutableVirtualFile = MutableVirtualFile.create(parent, getDirectoryName());
         mutableVirtualFile.attach(root);
         return mutableVirtualFile;
     }

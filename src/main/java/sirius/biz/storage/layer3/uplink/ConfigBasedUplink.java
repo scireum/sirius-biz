@@ -123,7 +123,7 @@ public abstract class ConfigBasedUplink {
      * @return the virtual root directory
      */
     protected MutableVirtualFile createDirectoryFile(@Nonnull VirtualFile parent) {
-        return new MutableVirtualFile(parent, getDirectoryName());
+        return MutableVirtualFile.create(parent, getDirectoryName());
     }
 
     /**
@@ -154,13 +154,14 @@ public abstract class ConfigBasedUplink {
      * @return a new virtual file which can be provided with additional handlers
      */
     protected MutableVirtualFile createVirtualFile(VirtualFile parent, String filename) {
-        return new MutableVirtualFile(parent, filename).withCanDeleteHandler(this::canDeleteHandler)
-                                                       .withCanCreateChildren(this::canCreateChildrenHandler)
-                                                       .withCanCreateDirectoryHandler(this::canCreateDirectoryHandler)
-                                                       .withCanProvideInputStream(this::canProvideInputStreamHandler)
-                                                       .withCanProvideOutputStream(this::canProvideOutputStreamHandler)
-                                                       .withCanRenameHandler(this::canRenameHandler)
-                                                       .withChildren(innerChildProvider);
+        return MutableVirtualFile.create(parent, filename)
+                                 .withCanDeleteHandler(this::canDeleteHandler)
+                                 .withCanCreateChildren(this::canCreateChildrenHandler)
+                                 .withCanCreateDirectoryHandler(this::canCreateDirectoryHandler)
+                                 .withCanProvideInputStream(this::canProvideInputStreamHandler)
+                                 .withCanProvideOutputStream(this::canProvideOutputStreamHandler)
+                                 .withCanRenameHandler(this::canRenameHandler)
+                                 .withChildren(innerChildProvider);
     }
 
     /**
