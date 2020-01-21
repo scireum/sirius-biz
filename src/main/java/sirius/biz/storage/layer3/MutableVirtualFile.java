@@ -45,7 +45,7 @@ public class MutableVirtualFile extends VirtualFile {
      * @param parent the parent of the file
      * @param name   the name of the file
      */
-    public MutableVirtualFile(@Nonnull VirtualFile parent, @Nonnull String name) {
+    protected MutableVirtualFile(@Nonnull VirtualFile parent, @Nonnull String name) {
         super(parent, name);
     }
 
