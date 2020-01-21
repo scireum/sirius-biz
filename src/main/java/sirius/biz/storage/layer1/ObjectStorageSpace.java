@@ -32,7 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
-import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 /**
  * Provides access to a layer 1 storage space.
@@ -418,7 +418,7 @@ public abstract class ObjectStorageSpace {
      */
     protected abstract void deliverPhysicalObject(Response response,
                                                   String objectKey,
-                                                  @Nullable Consumer<Integer> failureHandler) throws IOException;
+                                                  @Nullable IntConsumer failureHandler) throws IOException;
 
     /**
      * Delivers the requested object to the given HTTP response.
@@ -433,7 +433,7 @@ public abstract class ObjectStorageSpace {
     protected abstract void deliverPhysicalObject(Response response,
                                                   String objectKey,
                                                   ByteBlockTransformer transformer,
-                                                  @Nullable Consumer<Integer> failureHandler) throws IOException;
+                                                  @Nullable IntConsumer failureHandler) throws IOException;
 
     /**
      * Deletes the physical object in the given bucket with the given id
