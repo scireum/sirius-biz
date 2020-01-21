@@ -30,6 +30,9 @@ public class StringParameter extends TextParameter<String, StringParameter> {
 
     @Override
     protected String checkAndTransformValue(Value input) {
+        if (input.isEmptyString()) {
+            return null;
+        }
         return input.getString();
     }
 
