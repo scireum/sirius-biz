@@ -369,11 +369,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
      * @param resultHandler the handler to be invoked for each item in the result
      */
     public void iterateTotalItems(Function<E, Boolean> resultHandler) {
-        String query = getParameterValue("query").getString();
-        applyQuery(query);
-
-        applyFacets(null);
-        baseQuery.iterate(resultHandler);
+        buildUnderlyingQuery().iterate(resultHandler);
     }
 
     /**
