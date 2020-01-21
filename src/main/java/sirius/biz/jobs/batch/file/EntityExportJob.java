@@ -25,6 +25,7 @@ import sirius.db.mixing.Mixing;
 import sirius.db.mixing.query.Query;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Monoflop;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Values;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
@@ -71,6 +72,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     protected List<Function<E, Object>> extractors;
     protected Consumer<Q> queryExtender;
     protected Consumer<Context> contextExtender;
+    protected String targetFileName;
 
     @Part
     private static Mixing mixing;
@@ -111,7 +113,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
      * @param contextExtender the extender to specify
      * @return the import job itself for fluent method calls
      */
-    public EntityExportJob<E,Q> withContextExtender(Consumer<Context> contextExtender) {
+    public EntityExportJob<E, Q> withContextExtender(Consumer<Context> contextExtender) {
         this.contextExtender = contextExtender;
         return this;
     }
@@ -124,6 +126,17 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
      */
     public EntityExportJob<E, Q> withQueryExtender(Consumer<Q> queryExtender) {
         this.queryExtender = queryExtender;
+        return this;
+    }
+
+    /**
+     * Specifies a custom file name for the exported entity.
+     *
+     * @param fileName the target file name to use instead of the entity descriptor's plural
+     * @return the export job itself for fluent method calls
+     */
+    public EntityExportJob<E, Q> withFileName(String fileName) {
+        this.targetFileName = fileName;
         return this;
     }
 
@@ -151,6 +164,9 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
 
     @Override
     protected String determineFilenameWithoutExtension() {
+        if (Strings.isFilled(targetFileName)) {
+            return targetFileName;
+        }
         return descriptor.getPluralLabel();
     }
 
