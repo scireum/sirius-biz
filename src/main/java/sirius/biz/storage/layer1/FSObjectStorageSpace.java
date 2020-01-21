@@ -27,7 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 /**
  * Provides a {@link ObjectStorageSpace} which operates on the local file system.
@@ -155,7 +155,7 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
     }
 
     @Override
-    protected void deliverPhysicalObject(Response response, String objectKey, Consumer<Integer> failureHandler)
+    protected void deliverPhysicalObject(Response response, String objectKey, IntConsumer failureHandler)
             throws IOException {
         File file = getFile(objectKey);
 
@@ -171,7 +171,7 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
     protected void deliverPhysicalObject(Response response,
                                          String objectKey,
                                          ByteBlockTransformer transformer,
-                                         @Nullable Consumer<Integer> failureHandler) throws IOException {
+                                         @Nullable IntConsumer failureHandler) throws IOException {
         File file = getFile(objectKey);
 
         if (file.isHidden() || !file.exists() || !file.isFile()) {

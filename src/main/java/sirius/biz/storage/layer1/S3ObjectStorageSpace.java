@@ -29,7 +29,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 /**
  * Provides a {@link ObjectStorageSpace} which stores all objects in a bucket in a S3 compatible store.
@@ -108,7 +108,7 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     }
 
     @Override
-    protected void deliverPhysicalObject(Response response, String objectKey, Consumer<Integer> failureHandler)
+    protected void deliverPhysicalObject(Response response, String objectKey, IntConsumer failureHandler)
             throws IOException {
         response.tunnel(store.objectUrl(bucketName(), objectKey), failureHandler);
     }
@@ -117,7 +117,7 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     protected void deliverPhysicalObject(Response response,
                                       String objectKey,
                                       ByteBlockTransformer transformer,
-                                      @Nullable Consumer<Integer> failureHandler) throws IOException {
+                                      @Nullable IntConsumer failureHandler) throws IOException {
         response.tunnel(store.objectUrl(bucketName(), objectKey), buffer -> {
             if (buffer.isReadable()) {
                 return transformer.apply(buffer);
