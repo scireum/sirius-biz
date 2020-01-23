@@ -115,7 +115,7 @@ public class PermissionData extends Composite {
      * <p>
      * Also note that this is a helper method for rare cases, a call to
      * {@link sirius.web.security.UserInfo#hasPermission(String)} should always be preferred (if appropriate) as this
-     * will most probably way more efficient.
+     * will most probably be way more efficient.
      *
      * @param permissionToCheck the permission expression to check as parsed by
      *                          {@link Permissions#hasPermission(String, Predicate)}
