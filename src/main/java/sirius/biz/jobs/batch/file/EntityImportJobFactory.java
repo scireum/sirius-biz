@@ -57,7 +57,8 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
                                      importModeParameter,
                                      getImportType(),
                                      getDictionary(),
-                                     process).withContextExtender(context -> context.putAll(paramterContext));
+                                     process,
+                                     getName()).withContextExtender(context -> context.putAll(parameterContext));
     }
 
     /**
