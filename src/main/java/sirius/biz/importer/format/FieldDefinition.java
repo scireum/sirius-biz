@@ -66,6 +66,16 @@ public class FieldDefinition {
     }
 
     /**
+     * Boilerplate to create a new string field without length.
+     *
+     * @param name the name of the field
+     * @return the newly created field
+     */
+    public static FieldDefinition stringField(String name) {
+        return new FieldDefinition(name, typeString(null));
+    }
+
+    /**
      * Boilerplate to create a new string field with the given <tt>maxLength</tt> which is also enforced by a
      * {@link LengthCheck}.
      *
@@ -101,6 +111,16 @@ public class FieldDefinition {
         }
 
         return NLS.fmtr("FieldDefinition.typeNumber.length").set("precision", precision).set("scale", scale).format();
+    }
+
+    /**
+     * Boilerplate to create a new numeric field without precision or scale.
+     *
+     * @param name the name of the field
+     * @return the newly created field
+     */
+    public static FieldDefinition numericField(String name) {
+        return new FieldDefinition(name, typeNumber(0, 0));
     }
 
     /**
@@ -172,7 +192,17 @@ public class FieldDefinition {
     }
 
     /**
-     * Boilerplate to create a new date field.
+     * Boilerplate to create a new date field without format.
+     *
+     * @param name   the name of the field
+     * @return the newly created field
+     */
+    public static FieldDefinition dateField(String name) {
+        return new FieldDefinition(name, typeDate());
+    }
+
+    /**
+     * Boilerplate to create a new date field with the given <tt>format</tt> which is enforced by {@link DateTimeFormatCheck}.
      *
      * @param name   the name of the field
      * @param format the date format of the field
