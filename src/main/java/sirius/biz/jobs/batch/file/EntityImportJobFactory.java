@@ -43,15 +43,15 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     @Override
     protected DictionaryBasedImportJob createJob(ProcessContext process) {
         // We only resolve the parameters once and keep the final values around in a local context...
-        ImportContext paramterContext = new ImportContext();
-        transferParameters(paramterContext, process);
+        ImportContext parameterContext = new ImportContext();
+        transferParameters(parameterContext, process);
 
-        return createImportJob(process, paramterContext);
+        return createImportJob(process, parameterContext);
     }
 
     @SuppressWarnings("squid:S2095")
     @Explain("The job must not be closed here as it is returned and managed by the caller.")
-    protected DictionaryBasedImportJob createImportJob(ProcessContext process, ImportContext paramterContext) {
+    protected DictionaryBasedImportJob createImportJob(ProcessContext process, ImportContext parameterContext) {
         return new EntityImportJob<>(fileParameter,
                                      ignoreEmptyParameter,
                                      importModeParameter,
