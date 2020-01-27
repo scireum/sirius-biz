@@ -59,7 +59,7 @@ public class MutableVirtualFile extends VirtualFile {
      * @param parent the parent of the file
      * @param name   the name of the file
      * @return a new instance of this class
-     * @throws IllegalArgumentException if the given name is empty or contains an illegal char
+     * @throws IllegalArgumentException if the given name is empty or contains an {@link #REGEX_ILLEGAL_FILE_CHARS illegal} char
      */
     public static MutableVirtualFile checkedCreate(@Nonnull VirtualFile parent, @Nonnull String name) {
         if (Strings.isEmpty(name) || Pattern.compile(REGEX_ILLEGAL_FILE_CHARS).split(name).length > 1) {
@@ -71,7 +71,7 @@ public class MutableVirtualFile extends VirtualFile {
     /**
      * Creates a new file with the given name in the given directory.
      * <p>
-     * Replaces any illegal chars in the given String and if the given String is empty, <tt>null</tt> is returned.
+     * Replaces any {@link #REGEX_ILLEGAL_FILE_CHARS illegal} chars in the given String and if the given String is empty, <tt>null</tt> is returned.
      *
      * @param parent the parent of the file
      * @param name   the name of the file
@@ -89,7 +89,7 @@ public class MutableVirtualFile extends VirtualFile {
      * Creates a new file with the given name in the given directory.
      * <p>
      * This method should only be used if you know what you are doing. In most cases use either {@link #checkedCreate(VirtualFile, String)}
-     * or {@link #safeCreate(VirtualFile, String)} to account for illegal characters.
+     * or {@link #safeCreate(VirtualFile, String)} to account for {@link #REGEX_ILLEGAL_FILE_CHARS illegal} characters.
      *
      * @param parent the parent of the file
      * @param name   the name of the file
