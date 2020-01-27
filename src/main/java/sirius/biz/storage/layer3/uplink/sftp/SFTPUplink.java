@@ -58,14 +58,16 @@ public class SFTPUplink extends ConfigBasedUplink {
         }
     }
 
-    private final SFTPUplinkConnectorConfig sftpConfig;
-
     @Part
     private static UplinkConnectorPool connectorPool;
+
+    private final SFTPUplinkConnectorConfig sftpConfig;
+    private RemotePath basePath;
 
     private SFTPUplink(Extension config) {
         super(config);
         this.sftpConfig = new SFTPUplinkConnectorConfig(config);
+        this.basePath = new RemotePath(config.get("basePath").asString("/"));
     }
 
     @Override
@@ -100,7 +102,7 @@ public class SFTPUplink extends ConfigBasedUplink {
     @Override
     protected MutableVirtualFile createDirectoryFile(@Nonnull VirtualFile parent) {
         MutableVirtualFile mutableVirtualFile = new MutableVirtualFile(parent, getDirectoryName());
-        mutableVirtualFile.attach(new RemotePath("/"));
+        mutableVirtualFile.attach(basePath);
         return mutableVirtualFile;
     }
 
