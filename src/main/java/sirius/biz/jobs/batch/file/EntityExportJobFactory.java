@@ -63,7 +63,8 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
                                          getDictionary(),
                                          getDefaultMapping(),
                                          process).withQueryExtender(query -> extendSelectQuery(query, process))
-                                                 .withContextExtender(context -> context.putAll(paramterContext));
+                                                 .withContextExtender(context -> context.putAll(paramterContext))
+                                                 .withFileName(getCustomFileName());
     }
 
     /**
@@ -78,6 +79,15 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
      */
     protected void transferParameters(ImportContext context, ProcessContext processContext) {
         // nothing to transfer by default
+    }
+
+    /**
+     * Permits to return a custom file name when exporting the entity.
+     *
+     * Otherwise the "end user friendly" plural of the entity is used as target file name
+     */
+    protected String getCustomFileName() {
+        return null;
     }
 
     /**

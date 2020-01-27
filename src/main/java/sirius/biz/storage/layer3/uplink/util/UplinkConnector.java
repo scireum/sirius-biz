@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer3.uplink.util;
 
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.async.ExecutionPoint;
 import sirius.kernel.async.Operation;
 import sirius.kernel.health.Exceptions;
 
@@ -28,6 +29,7 @@ public class UplinkConnector<C> implements Closeable {
     protected C connector;
     protected Consumer<UplinkConnector<C>> closeCallback;
     protected Operation operation;
+    protected ExecutionPoint borrowedPoint;
 
     protected UplinkConnector(C connector) {
         this.connector = connector;
@@ -59,6 +61,15 @@ public class UplinkConnector<C> implements Closeable {
                       .error(e)
                       .withSystemErrorMessage("Layer 3/Uplinks: An error occurred while closing a connector: %s (%s)")
                       .handle();
+        }
+    }
+
+    @Override
+    public String toString() {
+        if (borrowedPoint != null) {
+            return borrowedPoint.toString();
+        } else {
+            return "idle";
         }
     }
 }

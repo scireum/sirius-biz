@@ -360,36 +360,16 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     }
 
     /**
-     * Calls the given function on all items in the result ignoring {@link #pageSize}, as long as it returns <tt>true</tt>.
-     * <p>
-     * While this is not the purpose of this helper, this can be used to easily re-use code that is intended for page views.
-     * For example, together with {@link #withParameterProvider(Function)} this can be used to export the same page view in a process,
-     * using the same query and facet suppliers as the view that is to be exported.
+     * Returns the underlying query for this page helper including all given facets.
      *
-     * @param resultHandler the handler to be invoked for each item in the result
+     * @return the {@link Query} object
      */
-    public void iterateTotalItems(Function<E, Boolean> resultHandler) {
+    public Q buildUnderlyingQuery() {
         String query = getParameterValue("query").getString();
         applyQuery(query);
 
         applyFacets(null);
-        baseQuery.iterate(resultHandler);
-    }
-
-    /**
-     * Calls the given consumer on all items in the result ignoring {@link #pageSize}.
-     * <p>
-     * While this is not the purpose of this helper, this can be used to easily re-use code that is intended for page views.
-     * For example, together with {@link #withParameterProvider(Function)} this can be used to export the same page view in a process,
-     * using the same query and facet suppliers as the view that is to be exported.
-     *
-     * @param consumer the handler to be invoked for each item in the result
-     */
-    public void iterateAllTotalItems(Consumer<E> consumer) {
-        iterateTotalItems(r -> {
-            consumer.accept(r);
-            return true;
-        });
+        return baseQuery;
     }
 
     private void applyQuery(String query) {
