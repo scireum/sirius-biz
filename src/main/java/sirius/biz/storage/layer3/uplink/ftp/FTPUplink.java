@@ -64,6 +64,7 @@ public class FTPUplink extends ConfigBasedUplink {
 
     private final FTPUplinkConnectorConfig ftpConfig;
     private ValueHolder<Boolean> supportsMLSD;
+    private RemotePath basePath;
 
     @Part
     private static UplinkConnectorPool connectorPool;
@@ -71,6 +72,7 @@ public class FTPUplink extends ConfigBasedUplink {
     private FTPUplink(Extension config) {
         super(config);
         this.ftpConfig = new FTPUplinkConnectorConfig(config);
+        this.basePath = new RemotePath(config.get("basePath").asString("/"));
     }
 
     private boolean checkForMLSD(FTPClient client) {
@@ -144,7 +146,7 @@ public class FTPUplink extends ConfigBasedUplink {
     @Override
     protected MutableVirtualFile createDirectoryFile(@Nonnull VirtualFile parent) {
         MutableVirtualFile mutableVirtualFile = new MutableVirtualFile(parent, getDirectoryName());
-        mutableVirtualFile.attach(new RemotePath("/"));
+        mutableVirtualFile.attach(basePath);
         return mutableVirtualFile;
     }
 
