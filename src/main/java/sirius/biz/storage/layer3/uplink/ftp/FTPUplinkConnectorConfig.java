@@ -58,7 +58,7 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
 
     @Override
     protected boolean validate(FTPClient connector) {
-        return connector.isConnected();
+        return connector.isAvailable();
     }
 
     @Override

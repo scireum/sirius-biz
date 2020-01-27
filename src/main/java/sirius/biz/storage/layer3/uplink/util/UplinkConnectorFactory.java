@@ -12,6 +12,7 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.PooledObjectFactory;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
+import sirius.kernel.async.ExecutionPoint;
 import sirius.kernel.async.Operation;
 
 import java.time.Duration;
@@ -47,12 +48,14 @@ class UplinkConnectorFactory implements PooledObjectFactory<UplinkConnector<?>> 
     public void activateObject(PooledObject<UplinkConnector<?>> pooledObject) throws Exception {
         pooledObject.getObject().operation = new Operation(config::toString, Duration.ofHours(6));
         pooledObject.getObject().closeCallback = pool::returnObject;
+        pooledObject.getObject().borrowedPoint = ExecutionPoint.fastSnapshot();
     }
 
     @Override
     public void passivateObject(PooledObject<UplinkConnector<?>> pooledObject) throws Exception {
         pooledObject.getObject().operation.close();
         pooledObject.getObject().closeCallback = null;
+        pooledObject.getObject().borrowedPoint = null;
     }
 
     @SuppressWarnings("unchecked")
