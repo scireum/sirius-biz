@@ -102,7 +102,7 @@ public class JobsRoot extends SingularVFSRoot {
             .filter(JobFactory::canStartInBackground)
             .filter(this::isFileJob)
             .forEach(fileJobFactory -> {
-                MutableVirtualFile jobDirectory = MutableVirtualFile.create(jobsDirectory, fileJobFactory.getName());
+                MutableVirtualFile jobDirectory = MutableVirtualFile.checkedCreate(jobsDirectory, fileJobFactory.getName());
                 jobDirectory.markAsExistingDirectory();
                 jobDirectory.withChildren(new EnumerateOnlyProvider(this::listPresets));
                 jobDirectory.attach(JobFactory.class, fileJobFactory);
@@ -119,7 +119,7 @@ public class JobsRoot extends SingularVFSRoot {
         JobFactory fileJobFactory = parent.as(JobFactory.class);
         presets.fetchPresets(fileJobFactory).forEach(preset -> {
             MutableVirtualFile presetDirectory =
-                    MutableVirtualFile.create(parent, preset.getJobConfigData().getLabel());
+                    MutableVirtualFile.checkedCreate(parent, preset.getJobConfigData().getLabel());
             presetDirectory.markAsExistingDirectory();
             presetDirectory.withChildren(new FindOnlyProvider(this::unwrapPreset));
             presetDirectory.attach(JobPreset.class, preset);
@@ -130,7 +130,7 @@ public class JobsRoot extends SingularVFSRoot {
     @Nonnull
     private VirtualFile unwrapPreset(VirtualFile parent, String name) {
         JobPreset preset = parent.as(JobPreset.class);
-        MutableVirtualFile result = MutableVirtualFile.create(parent, name);
+        MutableVirtualFile result = MutableVirtualFile.checkedCreate(parent, name);
         result.withOutputStreamSupplier(uploadFile -> uploadAndTrigger(preset, uploadFile.name()));
 
         return result;

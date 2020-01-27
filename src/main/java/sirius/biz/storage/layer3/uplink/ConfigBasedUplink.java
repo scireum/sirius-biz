@@ -123,7 +123,7 @@ public abstract class ConfigBasedUplink {
      * @return the virtual root directory
      */
     protected MutableVirtualFile createDirectoryFile(@Nonnull VirtualFile parent) {
-        return MutableVirtualFile.create(parent, getDirectoryName());
+        return MutableVirtualFile.checkedCreate(parent, getDirectoryName());
     }
 
     /**
@@ -154,7 +154,7 @@ public abstract class ConfigBasedUplink {
      * @return a new virtual file which can be provided with additional handlers
      */
     protected MutableVirtualFile createVirtualFile(VirtualFile parent, String filename) {
-        return MutableVirtualFile.create(parent, filename)
+        return MutableVirtualFile.checkedCreate(parent, filename)
                                  .withCanDeleteHandler(this::canDeleteHandler)
                                  .withCanCreateChildren(this::canCreateChildrenHandler)
                                  .withCanCreateDirectoryHandler(this::canCreateDirectoryHandler)
