@@ -21,6 +21,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
  * Represents the mutable version of a {@link VirtualFile} which can be used to provide all necessarry callbacks.
@@ -36,6 +37,7 @@ public class MutableVirtualFile extends VirtualFile {
      * Provides a prediacte which is always <tt>false</tt>.
      */
     public static final Predicate<VirtualFile> CONSTANT_FALSE = ignored -> false;
+    private static final String REGEX_ILLEGAL_FILE_CHARS = "[/\\\\?%*:|\"<>]";
 
     protected MutableVirtualFile() {
         super();
@@ -60,8 +62,8 @@ public class MutableVirtualFile extends VirtualFile {
      * @throws IllegalArgumentException if the given name is empty or contains an illegal char
      */
     public static MutableVirtualFile checkedCreate(@Nonnull VirtualFile parent, @Nonnull String name) {
-        if (Strings.isEmpty(name) || name.contains("/")) {
-            throw new IllegalArgumentException("A filename must be filled and must not contain a '/'.");
+        if (Strings.isEmpty(name) || Pattern.compile(REGEX_ILLEGAL_FILE_CHARS).split(name).length > 1) {
+            throw new IllegalArgumentException("A filename must be filled and must not contain illegal charachters.");
         }
         return new MutableVirtualFile(parent, name);
     }
@@ -80,7 +82,7 @@ public class MutableVirtualFile extends VirtualFile {
         if (Strings.isEmpty(name)) {
             return null;
         }
-        return new MutableVirtualFile(parent, name.replace('/', '_'));
+        return new MutableVirtualFile(parent, name.replaceAll(REGEX_ILLEGAL_FILE_CHARS, "_"));
     }
 
     /**
