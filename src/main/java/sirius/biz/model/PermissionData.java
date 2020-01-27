@@ -22,10 +22,14 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.StringList;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
+import sirius.web.security.Permissions;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 
 /**
  * Stores a set of permissions and optinally a custom configuration for an account or tenant which can be embedded into
@@ -62,6 +66,9 @@ public class PermissionData extends Composite {
     @Transient
     private Config config;
 
+    @Transient
+    private Set<String> effectivePermissions;
+
     /**
      * Creates a new instance for the given parent.
      *
@@ -80,6 +87,43 @@ public class PermissionData extends Composite {
      */
     public StringList getPermissions() {
         return permissions;
+    }
+
+    /**
+     * Provides a helper to determine the effective set of permissions based on {@link #getPermissions()} and
+     * {@link Permissions#copyAndApplyProfiles(Collection)}.
+     * <p>
+     * Note that the result of applying all profiles is cached within this entity and will not reflect
+     * any changes to {@link #getPermissions()}.
+     *
+     * @return the effective set of permissions
+     */
+    public Set<String> getEffectivePermissions() {
+        if (effectivePermissions == null) {
+            effectivePermissions = Permissions.copyAndApplyProfiles(getPermissions().data());
+        }
+
+        return Collections.unmodifiableSet(effectivePermissions);
+    }
+
+    /**
+     * Checks if the requested permission expression is satisfied by the permissions granted in
+     * {@link #getPermissions()}.
+     * <p>
+     * Note that this uses {@link #getEffectivePermissions()} which applies all profiles to the granted permissions,
+     * which will be cached in this entity and will not reflect changes to {@link #getPermissions()}.
+     * <p>
+     * Also note that this is a helper method for rare cases, a call to
+     * {@link sirius.web.security.UserInfo#hasPermission(String)} should always be preferred (if appropriate) as this
+     * will most probably be way more efficient.
+     *
+     * @param permissionToCheck the permission expression to check as parsed by
+     *                          {@link Permissions#hasPermission(String, Predicate)}
+     * @return <tt>true</tt> if the <tt>permissionToCheck</tt> is fulfilled, <tt>false</tt> otherwise
+     */
+    public boolean hasPermission(String permissionToCheck) {
+        return Permissions.hasPermission(permissionToCheck,
+                                         permission -> getEffectivePermissions().contains(permission));
     }
 
     /**
