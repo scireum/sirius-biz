@@ -37,6 +37,12 @@ public class MutableVirtualFile extends VirtualFile {
      * Provides a prediacte which is always <tt>false</tt>.
      */
     public static final Predicate<VirtualFile> CONSTANT_FALSE = ignored -> false;
+
+    /**
+     * Regular Expressions that matches any charachter that is not allowed for creating a new file.
+     * <p>
+     * These chars are prohibited as they might be reserved by the file system as indicated here: https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words
+     */
     private static final String REGEX_ILLEGAL_FILE_CHARS = "[/\\\\?%*:|\"<>]";
 
     protected MutableVirtualFile() {
