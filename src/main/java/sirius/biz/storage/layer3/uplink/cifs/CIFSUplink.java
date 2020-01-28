@@ -151,22 +151,17 @@ public class CIFSUplink extends ConfigBasedUplink {
               .withOutputStreamSupplier(this::outputStreamSupplier)
               .withRenameHandler(this::renameHandler)
               .withCreateDirectoryHandler(this::createDirectoryHandler)
-              .withCanMoveHandler(this::canMoveHandler)
-              .withMoveHandler(this::moveHandler);
+              .withCanFastMoveHandler(this::canFastMoveHandler)
+              .withFastMoveHandler(this::fastMoveHandler);
 
         result.attach(file);
+        result.attach(this);
         return result;
     }
 
-    private boolean moveHandler(VirtualFile file, VirtualFile newParent) {
+    private boolean fastMoveHandler(VirtualFile file, VirtualFile newParent) {
         try {
-            //TODO SIRI-102 verify correctness
-            SmbFile parent = newParent.tryAs(SmbFile.class).orElse(null);
-            if (parent == null) {
-                return false;
-            }
-
-            file.as(SmbFile.class).renameTo(new SmbFile(parent, name));
+            file.as(SmbFile.class).renameTo(new SmbFile(newParent.as(SmbFile.class), name));
             return true;
         } catch (Exception e) {
             throw Exceptions.handle()
@@ -177,9 +172,9 @@ public class CIFSUplink extends ConfigBasedUplink {
         }
     }
 
-    private boolean canMoveHandler(VirtualFile file) {
-        //TODO SIRI-102 ensure that target is on the same domain etc.
-        return !readonly && file.exists();
+    private boolean canFastMoveHandler(VirtualFile file, VirtualFile newParent) {
+        return !readonly  && this.equals(file.tryAs(CIFSUplink.class).orElse(null)) && this.equals(
+                newParent.tryAs(CIFSUplink.class).orElse(null));
     }
 
     private boolean renameHandler(VirtualFile file, String name) {
