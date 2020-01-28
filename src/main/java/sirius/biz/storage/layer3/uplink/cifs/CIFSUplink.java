@@ -326,7 +326,7 @@ public class CIFSUplink extends ConfigBasedUplink {
 
     @Override
     protected MutableVirtualFile createDirectoryFile(@Nonnull VirtualFile parent) {
-        MutableVirtualFile mutableVirtualFile = new MutableVirtualFile(parent, getDirectoryName());
+        MutableVirtualFile mutableVirtualFile = MutableVirtualFile.checkedCreate(parent, getDirectoryName());
         mutableVirtualFile.attach(smbRoot);
         return mutableVirtualFile;
     }

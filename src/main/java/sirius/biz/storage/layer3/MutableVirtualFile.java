@@ -8,10 +8,12 @@
 
 package sirius.biz.storage.layer3;
 
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.web.http.Response;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,6 +21,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
  * Represents the mutable version of a {@link VirtualFile} which can be used to provide all necessarry callbacks.
@@ -35,18 +38,71 @@ public class MutableVirtualFile extends VirtualFile {
      */
     public static final Predicate<VirtualFile> CONSTANT_FALSE = ignored -> false;
 
+    /**
+     * Regular Expressions that matches any charachter that is not allowed for creating a new file.
+     * <p>
+     * These chars are prohibited as they might be reserved by the file system as indicated here: https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words
+     */
+    private static final String REGEX_ILLEGAL_FILE_CHARS = "[/\\\\?%*:|\"<>]";
+
     protected MutableVirtualFile() {
         super();
     }
 
     /**
-     * Creates a new file with the given name.
+     * Use the static factory methods to obtain a new instance.
+     *
+     * @see #checkedCreate(VirtualFile, String)
+     * @see #safeCreate(VirtualFile, String)
+     */
+    protected MutableVirtualFile(@Nonnull VirtualFile parent, @Nonnull String name) {
+        super(parent, name);
+    }
+
+    /**
+     * Creates a new file with the given name in the given directory.
      *
      * @param parent the parent of the file
      * @param name   the name of the file
+     * @return a new instance of this class
+     * @throws IllegalArgumentException if the given name is empty or contains an {@link #REGEX_ILLEGAL_FILE_CHARS illegal} char
      */
-    public MutableVirtualFile(@Nonnull VirtualFile parent, @Nonnull String name) {
-        super(parent, name);
+    public static MutableVirtualFile checkedCreate(@Nonnull VirtualFile parent, @Nonnull String name) {
+        if (Strings.isEmpty(name) || Pattern.compile(REGEX_ILLEGAL_FILE_CHARS).split(name).length > 1) {
+            throw new IllegalArgumentException("A filename must be filled and must not contain illegal charachters.");
+        }
+        return new MutableVirtualFile(parent, name);
+    }
+
+    /**
+     * Creates a new file with the given name in the given directory.
+     * <p>
+     * Replaces any {@link #REGEX_ILLEGAL_FILE_CHARS illegal} chars in the given String and if the given String is empty, <tt>null</tt> is returned.
+     *
+     * @param parent the parent of the file
+     * @param name   the name of the file
+     * @return a new instance of this class
+     */
+    @Nullable
+    public static MutableVirtualFile safeCreate(@Nonnull VirtualFile parent, @Nullable String name) {
+        if (Strings.isEmpty(name)) {
+            return null;
+        }
+        return new MutableVirtualFile(parent, name.replaceAll(REGEX_ILLEGAL_FILE_CHARS, "_"));
+    }
+
+    /**
+     * Creates a new file with the given name in the given directory.
+     * <p>
+     * This method should only be used if you know what you are doing. In most cases use either {@link #checkedCreate(VirtualFile, String)}
+     * or {@link #safeCreate(VirtualFile, String)} to account for {@link #REGEX_ILLEGAL_FILE_CHARS illegal} characters.
+     *
+     * @param parent the parent of the file
+     * @param name   the name of the file
+     * @return a new instance of this class
+     */
+    public static MutableVirtualFile unsafeCreate(@Nonnull VirtualFile parent, @Nonnull String name) {
+        return new MutableVirtualFile(parent, name);
     }
 
     /**

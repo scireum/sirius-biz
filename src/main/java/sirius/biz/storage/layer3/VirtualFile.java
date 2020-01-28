@@ -108,9 +108,6 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     protected VirtualFile(@Nonnull VirtualFile parent, @Nonnull String name) {
         this.parent = parent;
         this.name = name;
-        if (Strings.isEmpty(name) || name.contains("/")) {
-            throw new IllegalArgumentException("A filename must be filled and must not contain a '/'.");
-        }
     }
 
     /**
