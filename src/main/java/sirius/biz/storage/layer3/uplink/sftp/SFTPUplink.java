@@ -16,6 +16,7 @@ import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplink;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplinkFactory;
+import sirius.biz.storage.layer3.uplink.util.Attempt;
 import sirius.biz.storage.layer3.uplink.util.RemotePath;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnector;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorPool;
@@ -77,21 +78,33 @@ public class SFTPUplink extends ConfigBasedUplink {
         }
 
         RemotePath remoteParent = parent.as(RemotePath.class);
-        try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
-            for (SftpClient.DirEntry entry : connector.connector().readDir(remoteParent.getPath())) {
-                if (isUsable(entry) && !search.processResult(wrap(parent, entry, entry.getFilename()))) {
-                    return;
+        for (Attempt attempt : Attempt.values()) {
+            try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
+                processListing(parent, search, remoteParent, connector);
+                return;
+            } catch (Exception e) {
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/SFTP: Cannot iterate over children of '%s' in uplink '%s' - %s (%s)",
+                                            parent,
+                                            sftpConfig)
+                                    .handle();
                 }
             }
-        } catch (Exception e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage(
-                                    "Layer 3/SFTP: Cannot iterate over children of '%s' in uplink '%s' - %s (%s)",
-                                    parent,
-                                    sftpConfig)
-                            .handle();
+        }
+    }
+
+    private void processListing(@Nonnull VirtualFile parent,
+                                FileSearch search,
+                                RemotePath remoteParent,
+                                UplinkConnector<SftpClient> connector) throws IOException {
+        for (SftpClient.DirEntry entry : connector.connector().readDir(remoteParent.getPath())) {
+            if (isUsable(entry) && !search.processResult(wrap(parent, entry, entry.getFilename()))) {
+                return;
+            }
         }
     }
 
@@ -146,19 +159,25 @@ public class SFTPUplink extends ConfigBasedUplink {
     }
 
     private boolean renameHandler(VirtualFile file, String newName) {
-        try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
-            connector.connector()
-                     .rename(file.as(RemotePath.class).getPath(),
-                             file.parent().as(RemotePath.class).child(newName).getPath());
-        } catch (Exception e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 3/SFTP: Cannot rename '%s' to '%s' in uplink '%s': %s (%s)",
-                                                    file,
-                                                    newName,
-                                                    sftpConfig)
-                            .handle();
+        for (Attempt attempt : Attempt.values()) {
+            try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
+                connector.connector()
+                         .rename(file.as(RemotePath.class).getPath(),
+                                 file.parent().as(RemotePath.class).child(newName).getPath());
+                return true;
+            } catch (Exception e) {
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/SFTP: Cannot rename '%s' to '%s' in uplink '%s': %s (%s)",
+                                            file,
+                                            newName,
+                                            sftpConfig)
+                                    .handle();
+                }
+            }
         }
 
         return false;
@@ -176,34 +195,40 @@ public class SFTPUplink extends ConfigBasedUplink {
             return attributes.get();
         }
 
-        try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
-            SftpClient.Attributes stat = connector.connector().stat(file.as(RemotePath.class).getPath());
-            file.attach(stat);
-            return stat;
-        } catch (SftpException e) {
-            if (e.getStatus() == SftpConstants.SSH_FX_NO_SUCH_FILE
-                || e.getStatus() == SftpConstants.SSH_FX_PERMISSION_DENIED) {
-                return new SftpClient.Attributes();
-            }
+        for (Attempt attempt : Attempt.values()) {
+            try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
+                SftpClient.Attributes stat = connector.connector().stat(file.as(RemotePath.class).getPath());
+                file.attach(stat);
+                return stat;
+            } catch (SftpException e) {
+                if (e.getStatus() == SftpConstants.SSH_FX_NO_SUCH_FILE
+                    || e.getStatus() == SftpConstants.SSH_FX_PERMISSION_DENIED) {
+                    return new SftpClient.Attributes();
+                }
 
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage(
-                                    "Layer 3/SFTP: Cannot determine the attributes of '%s' in uplink '%s': %s (%s)",
-                                    file,
-                                    sftpConfig)
-                            .handle();
-        } catch (Exception e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage(
-                                    "Layer 3/SFTP: Cannot determine the attributes of '%s' in uplink '%s': %s (%s)",
-                                    file,
-                                    sftpConfig)
-                            .handle();
+                throw Exceptions.handle()
+                                .to(StorageUtils.LOG)
+                                .error(e)
+                                .withSystemErrorMessage(
+                                        "Layer 3/SFTP: Cannot determine the attributes of '%s' in uplink '%s': %s (%s)",
+                                        file,
+                                        sftpConfig)
+                                .handle();
+            } catch (Exception e) {
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/SFTP: Cannot determine the attributes of '%s' in uplink '%s': %s (%s)",
+                                            file,
+                                            sftpConfig)
+                                    .handle();
+                }
+            }
         }
+
+        throw new IllegalStateException();
     }
 
     private boolean existsFlagSupplier(VirtualFile file) {
@@ -229,21 +254,25 @@ public class SFTPUplink extends ConfigBasedUplink {
 
     private boolean createDirectoryHandler(VirtualFile file) {
         String relativePath = file.as(RemotePath.class).getPath();
-        try {
+        for (Attempt attempt : Attempt.values()) {
             try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
                 connector.connector().mkdir(relativePath);
                 return true;
+            } catch (Exception e) {
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/SFTP: Failed to create a directory for '%s' in uplink '%s': %s (%s)",
+                                            relativePath,
+                                            sftpConfig)
+                                    .handle();
+                }
             }
-        } catch (IOException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage(
-                                    "Layer 3/SFTP: Failed to create a directory for '%s' in uplink '%s': %s (%s)",
-                                    relativePath,
-                                    sftpConfig)
-                            .handle();
         }
+
+        return false;
     }
 
     private boolean deleteHandler(VirtualFile file) {
@@ -258,77 +287,99 @@ public class SFTPUplink extends ConfigBasedUplink {
 
     private void deleteFileHandler(VirtualFile file) {
         String relativePath = file.as(RemotePath.class).getPath();
-        try {
+        for (Attempt attempt : Attempt.values()) {
             try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
                 connector.connector().remove(relativePath);
+                return;
+            } catch (Exception e) {
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/SFTP: Failed to delete '%s' in uplink '%s': %s (%s)",
+                                            relativePath,
+                                            sftpConfig)
+                                    .handle();
+                }
             }
-        } catch (IOException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 3/SFTP: Failed to delete '%s' in uplink '%s': %s (%s)",
-                                                    relativePath,
-                                                    sftpConfig)
-                            .handle();
         }
     }
 
     private void deleteDirectoryHandler(VirtualFile file) {
         String relativePath = file.as(RemotePath.class).getPath();
-        try {
+        for (Attempt attempt : Attempt.values()) {
             try (UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig)) {
                 connector.connector().rmdir(relativePath);
+                return;
+            } catch (Exception e) {
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/SFTP: Failed to delete '%s' in uplink '%s': %s (%s)",
+                                            relativePath,
+                                            sftpConfig)
+                                    .handle();
+                }
             }
-        } catch (IOException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 3/SFTP: Failed to delete '%s' in uplink '%s': %s (%s)",
-                                                    relativePath,
-                                                    sftpConfig)
-                            .handle();
         }
     }
 
     private InputStream inputStreamSupplier(VirtualFile file) {
-        UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig);
         String path = file.as(RemotePath.class).getPath();
-        try {
-            InputStream rawStream = connector.connector().read(path);
-            WatchableInputStream watchableInputStream = new WatchableInputStream(rawStream);
-            watchableInputStream.getCompletionFuture().then(connector::safeClose);
-            return watchableInputStream;
-        } catch (IOException e) {
-            connector.safeClose();
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage(
-                                    "Layer 3/SFTP: Failed to initiate a download for '%s' in uplink '%s': %s (%s)",
-                                    path,
-                                    sftpConfig)
-                            .handle();
+        for (Attempt attempt : Attempt.values()) {
+            UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig);
+            try {
+                InputStream rawStream = connector.connector().read(path);
+                WatchableInputStream watchableInputStream = new WatchableInputStream(rawStream);
+                watchableInputStream.getCompletionFuture().then(connector::safeClose);
+
+                return watchableInputStream;
+            } catch (Exception e) {
+                connector.safeClose();
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/SFTP: Failed to initiate a download for '%s' in uplink '%s': %s (%s)",
+                                            path,
+                                            sftpConfig)
+                                    .handle();
+                }
+            }
         }
+
+        throw new IllegalStateException();
     }
 
     private OutputStream outputStreamSupplier(VirtualFile file) {
-        UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig);
         String path = file.as(RemotePath.class).getPath();
-        try {
-            OutputStream rawStream = connector.connector().write(path);
-            WatchableOutputStream watchableOutputStream = new WatchableOutputStream(rawStream);
-            watchableOutputStream.getCompletionFuture().then(connector::safeClose);
-            return watchableOutputStream;
-        } catch (IOException e) {
-            connector.safeClose();
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage(
-                                    "Layer 3/SFTP: Failed to initiate an upload for '%s' in uplink '%s': %s (%s)",
-                                    path,
-                                    sftpConfig)
-                            .handle();
+        for (Attempt attempt : Attempt.values()) {
+            UplinkConnector<SftpClient> connector = connectorPool.obtain(sftpConfig);
+            try {
+                OutputStream rawStream = connector.connector().write(path);
+                WatchableOutputStream watchableOutputStream = new WatchableOutputStream(rawStream);
+                watchableOutputStream.getCompletionFuture().then(connector::safeClose);
+
+                return watchableOutputStream;
+            } catch (IOException e) {
+                connector.safeClose();
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/SFTP: Failed to initiate an upload for '%s' in uplink '%s': %s (%s)",
+                                            path,
+                                            sftpConfig)
+                                    .handle();
+                }
+            }
         }
+
+        throw new IllegalStateException();
     }
 }
