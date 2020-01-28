@@ -45,8 +45,8 @@ class SFTPUplinkConnectorConfig extends UplinkConnectorConfig<SftpClient> {
     private SshClient getClient() {
         if (sshClient == null) {
             sshClient = SshClient.setUpDefaultClient();
-            sshClient.getProperties().put(FactoryManager.IDLE_TIMEOUT, idleTimeoutMillis);
-            sshClient.getProperties().put(FactoryManager.NIO2_READ_TIMEOUT, readTimeoutMillis);
+            sshClient.getProperties().putIfAbsent(FactoryManager.IDLE_TIMEOUT, idleTimeoutMillis);
+            sshClient.getProperties().putIfAbsent(FactoryManager.NIO2_READ_TIMEOUT, readTimeoutMillis);
             sshClient.setHostConfigEntryResolver(new HostConfigEntryResolver() {
                 @Override
                 public HostConfigEntry resolveEffectiveHost(String host,
