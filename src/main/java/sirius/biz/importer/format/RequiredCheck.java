@@ -26,11 +26,7 @@ public class RequiredCheck implements ValueCheck {
 
     @Override
     public void perform(Value value) {
-        String effectiveValue = value.asString();
-
-        if (trim) {
-            effectiveValue = effectiveValue.trim();
-        }
+        String effectiveValue = trim ? value.getString() : value.getRawString();
 
         if (Strings.isEmpty(effectiveValue)) {
             throw new IllegalArgumentException(NLS.get("RequiredCheck.errorMsg"));
