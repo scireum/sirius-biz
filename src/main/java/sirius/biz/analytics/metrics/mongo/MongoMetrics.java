@@ -10,6 +10,7 @@ package sirius.biz.analytics.metrics.mongo;
 
 import sirius.biz.analytics.metrics.BasicMetrics;
 import sirius.biz.analytics.metrics.Metrics;
+import sirius.db.KeyGenerator;
 import sirius.db.mongo.Deleter;
 import sirius.db.mongo.Inserter;
 import sirius.db.mongo.Mango;
@@ -39,6 +40,9 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
 
     @Part
     private Mongo mongo;
+
+    @Part
+    private KeyGenerator keyGenerator;
 
     @Override
     protected Class<? extends MongoEntity> getFactType() {
@@ -102,6 +106,7 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
     @Override
     protected void createFact(String targetType, String targetId, String name, int value) {
         mongo.insert()
+             .set(Fact.ID, keyGenerator.generateId())
              .set(Fact.TARGET_TYPE, targetType)
              .set(Fact.TARGET_ID, targetId)
              .set(Fact.NAME, name)
@@ -112,6 +117,7 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
     @Override
     protected void createYearlyMetric(String targetType, String targetId, String name, int value, int year) {
         mongo.insert()
+             .set(YearlyMetric.ID, keyGenerator.generateId())
              .set(YearlyMetric.TARGET_TYPE, targetType)
              .set(YearlyMetric.TARGET_ID, targetId)
              .set(YearlyMetric.NAME, name)
@@ -128,6 +134,7 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
                                        int month,
                                        int value) {
         mongo.insert()
+             .set(MonthlyMetric.ID, keyGenerator.generateId())
              .set(MonthlyMetric.TARGET_TYPE, targetType)
              .set(MonthlyMetric.TARGET_ID, targetId)
              .set(MonthlyMetric.NAME, name)
@@ -146,6 +153,7 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
                                      int day,
                                      int value) {
         mongo.insert()
+             .set(DailyMetric.ID, keyGenerator.generateId())
              .set(DailyMetric.TARGET_TYPE, targetType)
              .set(DailyMetric.TARGET_ID, targetId)
              .set(DailyMetric.NAME, name)
