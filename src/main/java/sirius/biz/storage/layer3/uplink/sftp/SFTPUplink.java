@@ -387,7 +387,7 @@ public class SFTPUplink extends ConfigBasedUplink {
                 watchableOutputStream.getCompletionFuture().then(connector::safeClose);
 
                 return watchableOutputStream;
-            } catch (IOException e) {
+            } catch (Exception e) {
                 connector.safeClose();
                 if (attempt.shouldThrow(e)) {
                     throw Exceptions.handle()
