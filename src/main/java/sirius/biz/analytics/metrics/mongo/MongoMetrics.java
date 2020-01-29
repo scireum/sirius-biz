@@ -141,7 +141,7 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
              .set(MonthlyMetric.VALUE, value)
              .set(MonthlyMetric.YEAR, year)
              .set(MonthlyMetric.MONTH, month)
-             .into(Fact.class);
+             .into(MonthlyMetric.class);
     }
 
     @Override
@@ -161,7 +161,7 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
              .set(DailyMetric.YEAR, year)
              .set(DailyMetric.MONTH, month)
              .set(DailyMetric.DAY, day)
-             .into(Fact.class);
+             .into(DailyMetric.class);
     }
 
     @Override
