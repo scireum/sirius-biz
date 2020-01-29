@@ -253,12 +253,14 @@ public class FTPUplink extends ConfigBasedUplink {
 
     private boolean fastMoveHandler(VirtualFile file, VirtualFile newParent) {
         for (Attempt attempt : Attempt.values()) {
-            try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
                 connector.connector()
                          .rename(file.as(RemotePath.class).getPath(),
                                  newParent.as(RemotePath.class).child(file.name()).getPath());
                 return true;
             } catch (Exception e) {
+                connector.forceClose();
                 if (attempt.shouldThrow(e)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
@@ -270,6 +272,8 @@ public class FTPUplink extends ConfigBasedUplink {
                                             ftpConfig)
                                     .handle();
                 }
+            } finally {
+                connector.safeClose();
             }
         }
 
