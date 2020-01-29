@@ -104,10 +104,12 @@ public class FTPUplink extends ConfigBasedUplink {
 
         RemotePath relativeParent = parent.as(RemotePath.class);
         for (Attempt attempt : Attempt.values()) {
-            try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
                 processListing(parent, search, relativeParent, connector);
                 return;
             } catch (Exception e) {
+                connector.forceClose();
                 if (attempt.shouldThrow(e)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
@@ -118,6 +120,8 @@ public class FTPUplink extends ConfigBasedUplink {
                                             ftpConfig)
                                     .handle();
                 }
+            } finally {
+                connector.safeClose();
             }
         }
     }
@@ -195,8 +199,10 @@ public class FTPUplink extends ConfigBasedUplink {
         if (result != null) {
             return Optional.of(result);
         }
+
         for (Attempt attempt : Attempt.values()) {
-            try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
                 FTPFile[] ftpFiles = list(connector.connector(),
                                           file.parent().as(RemotePath.class),
                                           ftpFile -> Strings.areEqual(ftpFile.getName(), file.name()));
@@ -207,6 +213,7 @@ public class FTPUplink extends ConfigBasedUplink {
                     return Optional.empty();
                 }
             } catch (Exception e) {
+                connector.forceClose();
                 if (attempt.shouldThrow(e)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
@@ -216,6 +223,8 @@ public class FTPUplink extends ConfigBasedUplink {
                                                             ftpConfig)
                                     .handle();
                 }
+            } finally {
+                connector.safeClose();
             }
         }
 
@@ -247,19 +256,23 @@ public class FTPUplink extends ConfigBasedUplink {
         return false;
     }
 
+
     private boolean moveHandler(VirtualFile file, VirtualFile targetFile) {
         //TODO SIRI-102 implement properly
+
         return false;
     }
 
     private boolean renameHandler(VirtualFile file, String newName) {
         for (Attempt attempt : Attempt.values()) {
-            try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
                 connector.connector()
                          .rename(file.as(RemotePath.class).getPath(),
                                  file.parent().as(RemotePath.class).child(newName).getPath());
                 return true;
             } catch (Exception e) {
+                connector.forceClose();
                 if (attempt.shouldThrow(e)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
@@ -271,17 +284,22 @@ public class FTPUplink extends ConfigBasedUplink {
                                             ftpConfig)
                                     .handle();
                 }
+            } finally {
+                connector.safeClose();
             }
         }
+
         return false;
     }
 
     private boolean createDirectoryHandler(VirtualFile file) {
         String relativePath = file.as(RemotePath.class).getPath();
         for (Attempt attempt : Attempt.values()) {
-            try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
                 return connector.connector().makeDirectory(relativePath);
             } catch (Exception e) {
+                connector.forceClose();
                 if (attempt.shouldThrow(e)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
@@ -292,6 +310,8 @@ public class FTPUplink extends ConfigBasedUplink {
                                             ftpConfig)
                                     .handle();
                 }
+            } finally {
+                connector.safeClose();
             }
         }
 
@@ -309,9 +329,11 @@ public class FTPUplink extends ConfigBasedUplink {
 
     private boolean deleteFile(String relativePath) {
         for (Attempt attempt : Attempt.values()) {
-            try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
                 return connector.connector().deleteFile(relativePath);
             } catch (Exception e) {
+                connector.forceClose();
                 if (attempt.shouldThrow(e)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
@@ -321,6 +343,8 @@ public class FTPUplink extends ConfigBasedUplink {
                                                             ftpConfig)
                                     .handle();
                 }
+            } finally {
+                connector.safeClose();
             }
         }
 
@@ -329,9 +353,11 @@ public class FTPUplink extends ConfigBasedUplink {
 
     private boolean removeDirectory(String relativePath) {
         for (Attempt attempt : Attempt.values()) {
-            try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
                 return connector.connector().removeDirectory(relativePath);
             } catch (Exception e) {
+                connector.forceClose();
                 if (attempt.shouldThrow(e)) {
                     throw Exceptions.handle()
                                     .to(StorageUtils.LOG)
@@ -341,6 +367,8 @@ public class FTPUplink extends ConfigBasedUplink {
                                                             ftpConfig)
                                     .handle();
                 }
+            } finally {
+                connector.safeClose();
             }
         }
 
@@ -362,6 +390,7 @@ public class FTPUplink extends ConfigBasedUplink {
                                     .then(() -> completePendingCommand(connector, path, "download"));
                 return watchableInputStream;
             } catch (Exception e) {
+                connector.forceClose();
                 connector.safeClose();
                 if (attempt.shouldThrow(e)) {
                     throw Exceptions.handle()
@@ -389,7 +418,7 @@ public class FTPUplink extends ConfigBasedUplink {
                                                   path,
                                                   ftpConfig)
                           .handle();
-                disconnect(connector);
+                connector.forceClose();
             }
         } catch (IOException e) {
             Exceptions.handle()
@@ -400,26 +429,10 @@ public class FTPUplink extends ConfigBasedUplink {
                                               path,
                                               ftpConfig)
                       .handle();
-            disconnect(connector);
+            connector.forceClose();
         }
 
         connector.safeClose();
-    }
-
-    /**
-     * Forcefully  disconnects in  case  of an  error.
-     * <p>
-     * In case we cannot complete a command (most probably retrieving an <tt>InputStream</tt> or <tt>OutputStream</tt>).
-     * This is done as the client is most probably left in an inconsistent state so that we rather reconnect.
-     *
-     * @param connector the connector to disconnect
-     */
-    private void disconnect(UplinkConnector<FTPClient> connector) {
-        try {
-            connector.connector().disconnect();
-        } catch (IOException e) {
-            Exceptions.ignore(e);
-        }
     }
 
     private OutputStream outputStreamSupplier(VirtualFile file) {
@@ -436,7 +449,8 @@ public class FTPUplink extends ConfigBasedUplink {
                 watchableOutputStream.getCompletionFuture()
                                      .then(() -> completePendingCommand(connector, path, "upload"));
                 return watchableOutputStream;
-            } catch (IOException e) {
+            } catch (Exception e) {
+                connector.forceClose();
                 connector.safeClose();
                 if (attempt.shouldThrow(e)) {
                     throw Exceptions.handle()
