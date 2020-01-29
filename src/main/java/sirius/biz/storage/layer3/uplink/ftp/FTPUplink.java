@@ -259,7 +259,7 @@ public class FTPUplink extends ConfigBasedUplink {
         return !readonly && this.equals(file.tryAs(FTPUplink.class).orElse(null)) && this.equals(newParent.tryAs(
                 FTPUplink.class).orElse(null));
     }
-    
+
     private boolean fastMoveHandler(VirtualFile file, VirtualFile newParent) {
         for (Attempt attempt : Attempt.values()) {
             UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
