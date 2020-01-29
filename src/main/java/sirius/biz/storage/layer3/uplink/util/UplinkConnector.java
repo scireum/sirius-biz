@@ -85,7 +85,7 @@ public class UplinkConnector<C> implements Closeable {
      * Provides a stacktrace of where the object was borrowed.
      * <p>
      * We need to hijack the <tt>toString</tt> method as this is accessible via
-     * {@link DefaultPooledObjectInfo#getPooledObjectToString()} and used by {@link UplinksCommand}.
+     * {@link DefaultPooledObjectInfo#getPooledObjectToString()} and used by {@link ListUplinkConnectorsCommand}.
      *
      * @return the point where the object was borrowed or "idle" if it currently resides in the pool
      */
@@ -106,5 +106,4 @@ public class UplinkConnector<C> implements Closeable {
     public String toSimpleString() {
         return getClass().getName() + "@" + Integer.toHexString(hashCode());
     }
-
 }
