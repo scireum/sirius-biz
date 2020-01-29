@@ -28,6 +28,7 @@ import java.util.function.Consumer;
 public class UplinkConnector<C> implements Closeable {
 
     protected C connector;
+    protected Consumer<UplinkConnector<C>> forceCloseCallback;
     protected Consumer<UplinkConnector<C>> closeCallback;
     protected Operation operation;
     protected ExecutionPoint borrowedPoint;
@@ -48,6 +49,21 @@ public class UplinkConnector<C> implements Closeable {
     @Override
     public void close() throws IOException {
         safeClose();
+    }
+
+    /**
+     * Forcefully closes the connector so that it will be destroyed once it is returnd via {@link #safeClose()} or
+     * {@link #close()}.
+     * <p>
+     * Note that one of the close methods must still be called so that the connection pool remains in a consistent
+     * state.
+     */
+    public void forceClose() {
+        try {
+            forceCloseCallback.accept(this);
+        } catch (Exception e) {
+            Exceptions.ignore(e);
+        }
     }
 
     /**

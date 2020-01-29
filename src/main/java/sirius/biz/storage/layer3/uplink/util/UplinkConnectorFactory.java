@@ -58,9 +58,11 @@ class UplinkConnectorFactory implements PooledObjectFactory<UplinkConnector<?>> 
         return validationResult;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void activateObject(PooledObject<UplinkConnector<?>> pooledObject) throws Exception {
         pooledObject.getObject().operation = new Operation(config::toString, Duration.ofHours(6));
+        pooledObject.getObject().forceCloseCallback = ((UplinkConnectorConfig<Object>) config)::safeClose;
         pooledObject.getObject().closeCallback = pool::returnObject;
         pooledObject.getObject().borrowedPoint = ExecutionPoint.fastSnapshot();
 
@@ -79,6 +81,7 @@ class UplinkConnectorFactory implements PooledObjectFactory<UplinkConnector<?>> 
 
         pooledObject.getObject().operation.close();
         pooledObject.getObject().closeCallback = null;
+        pooledObject.getObject().forceCloseCallback = null;
         pooledObject.getObject().borrowedPoint = null;
     }
 
