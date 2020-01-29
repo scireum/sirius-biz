@@ -47,6 +47,6 @@ public enum Attempt {
      * @return <tt>true</tt> if the exception should be thrown, <tt>false</tt> if it should be swallowed
      */
     public boolean shouldThrow(Exception exception) {
-        return this == RETRY || !(exception instanceof IOException);
+        return this == RETRY || !((exception instanceof IOException) || (exception.getCause() instanceof IOException));
     }
 }
