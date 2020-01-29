@@ -99,47 +99,6 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
         return updateQuery.set(Fact.VALUE, value).executeFor(type).getMatchedCount() > 0;
     }
 
-    /**
-     * Inserts the given metric assuming that it doesn't exist yet.
-     *
-     * @param type       the type of metric to insert
-     * @param targetType the target type to insert
-     * @param targetId   the id of the target for which the metric is to be insert
-     * @param name       the name of the metric to insert
-     * @param year       the year (if available) of the metric to insert
-     * @param month      the month (if available) of the metric to insert
-     * @param day        the day (if available) of the metric to insert
-     */
-    @SuppressWarnings("squid:S00107")
-    @Explain("We rather have 8 parameters here and keep the logic properly encapsulated")
-    private void insert(Class<? extends MongoEntity> type,
-                        String targetType,
-                        String targetId,
-                        String name,
-                        int value,
-                        Integer year,
-                        Integer month,
-                        Integer day) {
-
-        Inserter insertQuery = mongo.insert()
-                                    .set(Fact.TARGET_TYPE, targetType)
-                                    .set(Fact.TARGET_ID, targetId)
-                                    .set(Fact.NAME, name)
-                                    .set(Fact.VALUE, value);
-
-        if (year != null) {
-            insertQuery.set(YearlyMetric.YEAR, year);
-        }
-        if (month != null) {
-            insertQuery.set(MonthlyMetric.MONTH, month);
-        }
-        if (day != null) {
-            insertQuery.set(DailyMetric.DAY, day);
-        }
-
-        insertQuery.set(Fact.VALUE, value).into(type);
-    }
-
     @Override
     protected void createFact(String targetType, String targetId, String name, int value) {
         mongo.insert()
