@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer3.uplink.util;
 
 import sirius.biz.storage.layer3.uplink.sftp.SFTPUplink;
+import sirius.biz.storage.util.StorageUtils;
 
 import java.io.IOException;
 
@@ -47,6 +48,15 @@ public enum Attempt {
      * @return <tt>true</tt> if the exception should be thrown, <tt>false</tt> if it should be swallowed
      */
     public boolean shouldThrow(Exception exception) {
-        return this == RETRY || !((exception instanceof IOException) || (exception.getCause() instanceof IOException));
+        boolean decision =
+                this == RETRY || !((exception instanceof IOException) || (exception.getCause() instanceof IOException));
+
+        if (!decision) {
+            StorageUtils.LOG.FINE("An exception was suppressed in favor of a retry: %s (%s)",
+                                  exception.getMessage(),
+                                  exception.getClass().getName());
+        }
+
+        return decision;
     }
 }
