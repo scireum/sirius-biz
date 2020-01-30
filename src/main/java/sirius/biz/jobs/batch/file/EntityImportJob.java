@@ -59,14 +59,17 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      * @param type                 the type of entities being imported
      * @param dictionary           the import dictionary to use
      * @param process              the process context itself
+     * @param factoryName          the name of the factory which created this job
      */
     public EntityImportJob(FileParameter fileParameter,
                            BooleanParameter ignoreEmptyParameter,
                            EnumParameter<ImportMode> importModeParameter,
                            Class<E> type,
                            ImportDictionary dictionary,
-                           ProcessContext process) {
+                           ProcessContext process,
+                           String factoryName) {
         super(fileParameter, ignoreEmptyParameter, dictionary, process);
+        importer.setFactoryName(factoryName);
         this.mode = process.getParameter(importModeParameter).orElse(ImportMode.NEW_AND_UPDATES);
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);

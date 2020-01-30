@@ -30,6 +30,7 @@ public class Importer implements Closeable {
 
     protected ImporterContext context;
     protected String name;
+    protected String factoryName;
 
     /**
      * Import log which is accessible to all import jobs.
@@ -47,6 +48,22 @@ public class Importer implements Closeable {
     public Importer(String name) {
         this.name = name;
         this.context = new ImporterContext(this);
+    }
+
+    /**
+     * Returns the factory name given to this importer.
+     *
+     * @return the factory name
+     */
+    public String getFactoryName() {
+        return factoryName;
+    }
+
+    /**
+     * Sets the factory name used in context of an entity import or export job.
+     */
+    public void setFactoryName(String factoryName) {
+        this.factoryName = factoryName;
     }
 
     /**

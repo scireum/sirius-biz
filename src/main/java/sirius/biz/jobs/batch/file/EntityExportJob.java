@@ -24,6 +24,7 @@ import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.query.Query;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Values;
@@ -90,14 +91,18 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
      * @param dictionary            the export dictionary to use
      * @param defaultMapping        the default mapping (default column order) to use
      * @param process               the process context itself
+     * @param factoryName           the name of the factory which created this job
      */
+    @SuppressWarnings("squid:S00107")
+    @Explain("We rather have 8 parameters here and keep the logic properly encapsulated")
     public EntityExportJob(FileParameter templateFileParameter,
                            FileOrDirectoryParameter destinationParameter,
                            EnumParameter<ExportFileType> fileTypeParameter,
                            Class<E> type,
                            ImportDictionary dictionary,
                            List<String> defaultMapping,
-                           ProcessContext process) {
+                           ProcessContext process,
+                           String factoryName) {
         super(destinationParameter, fileTypeParameter, process);
         this.defaultMapping = new ArrayList<>(defaultMapping);
         this.templateFile = process.getParameter(templateFileParameter).orElse(null);
@@ -105,6 +110,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);
         this.importer = new Importer(process.getTitle());
+        this.importer.setFactoryName(factoryName);
     }
 
     /**
