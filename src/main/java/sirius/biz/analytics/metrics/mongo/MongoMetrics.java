@@ -10,6 +10,7 @@ package sirius.biz.analytics.metrics.mongo;
 
 import sirius.biz.analytics.metrics.BasicMetrics;
 import sirius.biz.analytics.metrics.Metrics;
+import sirius.db.KeyGenerator;
 import sirius.db.mongo.Deleter;
 import sirius.db.mongo.Inserter;
 import sirius.db.mongo.Mango;
@@ -39,6 +40,9 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
 
     @Part
     private Mongo mongo;
+
+    @Part
+    private KeyGenerator keyGenerator;
 
     @Override
     protected Class<? extends MongoEntity> getFactType() {
@@ -99,50 +103,10 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
         return updateQuery.set(Fact.VALUE, value).executeFor(type).getMatchedCount() > 0;
     }
 
-    /**
-     * Inserts the given metric assuming that it doesn't exist yet.
-     *
-     * @param type       the type of metric to insert
-     * @param targetType the target type to insert
-     * @param targetId   the id of the target for which the metric is to be insert
-     * @param name       the name of the metric to insert
-     * @param year       the year (if available) of the metric to insert
-     * @param month      the month (if available) of the metric to insert
-     * @param day        the day (if available) of the metric to insert
-     */
-    @SuppressWarnings("squid:S00107")
-    @Explain("We rather have 8 parameters here and keep the logic properly encapsulated")
-    private void insert(Class<? extends MongoEntity> type,
-                        String targetType,
-                        String targetId,
-                        String name,
-                        int value,
-                        Integer year,
-                        Integer month,
-                        Integer day) {
-
-        Inserter insertQuery = mongo.insert()
-                                    .set(Fact.TARGET_TYPE, targetType)
-                                    .set(Fact.TARGET_ID, targetId)
-                                    .set(Fact.NAME, name)
-                                    .set(Fact.VALUE, value);
-
-        if (year != null) {
-            insertQuery.set(YearlyMetric.YEAR, year);
-        }
-        if (month != null) {
-            insertQuery.set(MonthlyMetric.MONTH, month);
-        }
-        if (day != null) {
-            insertQuery.set(DailyMetric.DAY, day);
-        }
-
-        insertQuery.set(Fact.VALUE, value).into(type);
-    }
-
     @Override
     protected void createFact(String targetType, String targetId, String name, int value) {
         mongo.insert()
+             .set(Fact.ID, keyGenerator.generateId())
              .set(Fact.TARGET_TYPE, targetType)
              .set(Fact.TARGET_ID, targetId)
              .set(Fact.NAME, name)
@@ -153,6 +117,7 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
     @Override
     protected void createYearlyMetric(String targetType, String targetId, String name, int value, int year) {
         mongo.insert()
+             .set(YearlyMetric.ID, keyGenerator.generateId())
              .set(YearlyMetric.TARGET_TYPE, targetType)
              .set(YearlyMetric.TARGET_ID, targetId)
              .set(YearlyMetric.NAME, name)
@@ -169,13 +134,14 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
                                        int month,
                                        int value) {
         mongo.insert()
+             .set(MonthlyMetric.ID, keyGenerator.generateId())
              .set(MonthlyMetric.TARGET_TYPE, targetType)
              .set(MonthlyMetric.TARGET_ID, targetId)
              .set(MonthlyMetric.NAME, name)
              .set(MonthlyMetric.VALUE, value)
              .set(MonthlyMetric.YEAR, year)
              .set(MonthlyMetric.MONTH, month)
-             .into(Fact.class);
+             .into(MonthlyMetric.class);
     }
 
     @Override
@@ -187,6 +153,7 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
                                      int day,
                                      int value) {
         mongo.insert()
+             .set(DailyMetric.ID, keyGenerator.generateId())
              .set(DailyMetric.TARGET_TYPE, targetType)
              .set(DailyMetric.TARGET_ID, targetId)
              .set(DailyMetric.NAME, name)
@@ -194,7 +161,7 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
              .set(DailyMetric.YEAR, year)
              .set(DailyMetric.MONTH, month)
              .set(DailyMetric.DAY, day)
-             .into(Fact.class);
+             .into(DailyMetric.class);
     }
 
     @Override

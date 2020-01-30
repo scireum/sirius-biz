@@ -38,7 +38,7 @@ public class InternationalAddressData extends AddressData {
      * of the country and the <tt>additionalValue</tt> can be a regular expression which validates ZIP codes for this
      * country.
      */
-    private static final String CODE_LIST_COUNTRIES = "country";
+    private static final String CODE_LIST_COUNTRIES = "countries";
 
     @Part
     private static CodeLists<?, ?, ?> codeLists;

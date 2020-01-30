@@ -34,8 +34,8 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
     /**
      * References the raw blob from which this variant was derived.
      */
-    public static final Mapping BLOB = Mapping.named("blob");
-    private final SQLEntityRef<SQLBlob> blob = SQLEntityRef.writeOnceOn(SQLBlob.class, BaseEntityRef.OnDelete.CASCADE);
+    public static final Mapping SOURCE_BLOB = Mapping.named("sourceBlob");
+    private final SQLEntityRef<SQLBlob> sourceBlob = SQLEntityRef.writeOnceOn(SQLBlob.class, BaseEntityRef.OnDelete.CASCADE);
 
     /**
      * Contains the name / type of this variant.
@@ -88,7 +88,7 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
     @AfterDelete
     protected void onDelete() {
         if (Strings.isFilled(physicalObjectKey)) {
-            blob.fetchValue().getStorageSpace().getPhysicalSpace().delete(physicalObjectKey);
+            sourceBlob.fetchValue().getStorageSpace().getPhysicalSpace().delete(physicalObjectKey);
         }
     }
 
@@ -147,8 +147,8 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
         this.node = node;
     }
 
-    public SQLEntityRef<SQLBlob> getBlob() {
-        return blob;
+    public SQLEntityRef<SQLBlob> getSourceBlob() {
+        return sourceBlob;
     }
 
     public void setVariantName(String variantName) {
