@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 public class UplinkConnector<C> implements Closeable {
 
     protected C connector;
-    protected Consumer<UplinkConnector<C>> forceCloseCallback;
+    protected Consumer<C> forceCloseCallback;
     protected Consumer<UplinkConnector<C>> closeCallback;
     protected Operation operation;
     protected ExecutionPoint borrowedPoint;
@@ -60,7 +60,7 @@ public class UplinkConnector<C> implements Closeable {
      */
     public void forceClose() {
         try {
-            forceCloseCallback.accept(this);
+            forceCloseCallback.accept(connector);
         } catch (Exception e) {
             Exceptions.ignore(e);
         }
