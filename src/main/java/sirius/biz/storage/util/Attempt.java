@@ -6,18 +6,17 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage.layer3.uplink.util;
+package sirius.biz.storage.util;
 
-import sirius.biz.storage.layer3.uplink.sftp.SFTPUplink;
-import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.health.Exceptions;
 
 import java.io.IOException;
 
 /**
  * Helps to distinguishes an initial first attempt from a rety.
  * <p>
- * If is used by uplinks like {@link sirius.biz.storage.layer3.uplink.ftp.FTPUplink} or {@link SFTPUplink} to
- * permit a retry for all IO related operations. Therefore the helper method {@link #shouldThrow(Exception)}
+ * It can be used by any kind of io operation which are essentially expected to fail sometime, but which might
+ * benefit from attempting a retry. Therefore the helper method {@link #shouldThrow(Exception)}
  * can be used to determine if an <tt>IOException</tt> is swallowed if it occurs during a first attempt but
  * will be thrown during a retry.
  * <p>
@@ -48,8 +47,7 @@ public enum Attempt {
      * @return <tt>true</tt> if the exception should be thrown, <tt>false</tt> if it should be swallowed
      */
     public boolean shouldThrow(Exception exception) {
-        boolean decision =
-                this == RETRY || !((exception instanceof IOException) || (exception.getCause() instanceof IOException));
+        boolean decision = this == RETRY || !(Exceptions.getRootCause(exception) instanceof IOException);
 
         if (!decision) {
             StorageUtils.LOG.FINE("An exception was suppressed in favor of a retry: %s (%s)",

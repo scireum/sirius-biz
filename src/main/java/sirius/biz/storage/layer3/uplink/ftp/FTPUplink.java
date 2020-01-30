@@ -16,7 +16,7 @@ import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplink;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplinkFactory;
-import sirius.biz.storage.layer3.uplink.util.Attempt;
+import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.layer3.uplink.util.RemotePath;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnector;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorPool;
