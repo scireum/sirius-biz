@@ -101,6 +101,16 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
     }
 
     @Override
+    protected SQLUserAccount loadForFind(Context data) {
+        SQLUserAccount account = super.loadForFind(data);
+
+
+        load(data, account, SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL));
+        account.getUserAccountData().transferEmailToLoginIfEmpty();
+
+        return account;
+    }
+    @Override
     protected void enforcePostLoadConstraints(SQLUserAccount entity) {
         if (!canSkipTenantCheck(entity)) {
             super.enforcePostLoadConstraints(entity);
