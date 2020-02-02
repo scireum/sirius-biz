@@ -314,7 +314,8 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
                 if (Sirius.isDev() && field.getAliases().contains(alias)) {
                     Importer.LOG.WARN("%s (for %s) has a duplicate alias: %s (Check configuration?)",
                                       getClass().getName(),
-                                      newEntity().getClass().getName());
+                                      newEntity().getClass().getName(),
+                                      alias);
                 }
 
                 field.addAlias(alias);
