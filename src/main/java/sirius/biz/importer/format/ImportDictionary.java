@@ -617,7 +617,7 @@ public class ImportDictionary {
             report.addColumn("type", NLS.get("FieldDefinition.type"));
             report.addColumn("remarks", NLS.get("FieldDefinition.remarks"));
 
-            getFields().stream().sorted(Comparator.comparing(FieldDefinition::getName)).forEach(field -> {
+            getFields().stream().sorted(Comparator.comparing(FieldDefinition::getLabel)).forEach(field -> {
                 report.addCells(cells.of(field.getLabel()), cells.of(field.getType()), cells.list(field.getRemarks()));
             });
         });
