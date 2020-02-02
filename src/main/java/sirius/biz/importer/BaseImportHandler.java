@@ -299,6 +299,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
                                                         .orElse(null))
                                .filter(Objects::nonNull)
                                .map(field -> expandAliases(field, aliases))
+                               .sorted(Comparator.comparing(FieldDefinition::getLabel))
                                .forEach(dict::addField);
 
         return dict;
