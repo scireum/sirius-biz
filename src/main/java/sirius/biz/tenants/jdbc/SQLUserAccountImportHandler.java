@@ -17,9 +17,9 @@ import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.UserAccountData;
-import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.batch.FindQuery;
 import sirius.db.mixing.Mapping;
+import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.UserContext;
@@ -104,12 +104,27 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
     protected SQLUserAccount loadForFind(Context data) {
         SQLUserAccount account = super.loadForFind(data);
 
+        if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)) {
+            load(data, account, SQLUserAccount.TENANT);
+        }
 
         load(data, account, SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL));
         account.getUserAccountData().transferEmailToLoginIfEmpty();
 
         return account;
     }
+
+    @Override
+    public SQLUserAccount load(Context data, SQLUserAccount entity) {
+        SQLUserAccount result = super.load(data, entity);
+
+        if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)) {
+            load(data, result, SQLUserAccount.TENANT);
+        }
+
+        return result;
+    }
+
     @Override
     protected void enforcePostLoadConstraints(SQLUserAccount entity) {
         if (!canSkipTenantCheck(entity)) {
@@ -125,9 +140,7 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
     }
 
     private boolean canSkipTenantCheck(SQLUserAccount entity) {
-        return entity instanceof TenantAware
-               && UserContext.getCurrentUser()
-                             .hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
+        return UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
                && entity.getTenant().isFilled();
     }
 }
