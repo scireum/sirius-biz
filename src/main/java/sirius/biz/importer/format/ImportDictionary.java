@@ -21,6 +21,7 @@ import sirius.kernel.nls.NLS;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -616,9 +617,9 @@ public class ImportDictionary {
             report.addColumn("type", NLS.get("FieldDefinition.type"));
             report.addColumn("remarks", NLS.get("FieldDefinition.remarks"));
 
-            for (FieldDefinition field : getFields()) {
+            getFields().stream().sorted(Comparator.comparing(FieldDefinition::getName)).forEach(field -> {
                 report.addCells(cells.of(field.getLabel()), cells.of(field.getType()), cells.list(field.getRemarks()));
-            }
+            });
         });
     }
 }

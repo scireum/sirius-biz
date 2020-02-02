@@ -48,7 +48,6 @@ public class FieldDefinition {
     public FieldDefinition(String name, String type) {
         this.name = name;
         this.type = type;
-        addAlias(name);
     }
 
     /**

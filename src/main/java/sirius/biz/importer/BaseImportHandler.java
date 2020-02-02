@@ -305,8 +305,19 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     }
 
     protected FieldDefinition expandAliases(FieldDefinition field, Extension aliases) {
+        field.addAlias(field.getName());
+        field.addAlias(field.getLabel());
+
         if (aliases != null && aliases.getConfig().hasPath(field.getName())) {
-            aliases.getStringList(field.getName()).forEach(field::addAlias);
+            aliases.getStringList(field.getName()).forEach(alias -> {
+                if (Sirius.isDev() && field.getAliases().contains(alias)) {
+                    Importer.LOG.WARN("%s (for %s) has a duplicate alias: %s (Check configuration?)",
+                                      getClass().getName(),
+                                      newEntity().getClass().getName());
+                }
+
+                field.addAlias(alias);
+            });
         }
 
         return field;
