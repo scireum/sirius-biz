@@ -14,6 +14,7 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import sirius.kernel.async.ExecutionPoint;
 import sirius.kernel.async.Operation;
+import sirius.kernel.health.Exceptions;
 
 import java.time.Duration;
 
@@ -53,14 +54,29 @@ class UplinkConnectorFactory implements PooledObjectFactory<UplinkConnector<?>> 
 
     @Override
     public void passivateObject(PooledObject<UplinkConnector<?>> pooledObject) throws Exception {
-        pooledObject.getObject().operation.close();
+        safeCloseOperation(pooledObject);
         pooledObject.getObject().closeCallback = null;
         pooledObject.getObject().borrowedPoint = null;
+    }
+
+    protected void safeCloseOperation(PooledObject<UplinkConnector<?>> pooledObject) {
+        if (pooledObject.getObject().operation == null) {
+            return;
+        }
+
+        try {
+            pooledObject.getObject().operation.close();
+        } catch (Exception e) {
+            Exceptions.ignore(e);
+        }
+
+        pooledObject.getObject().operation = null;
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void destroyObject(PooledObject<UplinkConnector<?>> pooledObject) throws Exception {
+        safeCloseOperation(pooledObject);
         ((UplinkConnectorConfig<Object>) config).safeClose(pooledObject.getObject().connector());
     }
 }
