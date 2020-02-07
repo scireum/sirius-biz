@@ -16,6 +16,7 @@ import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplink;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplinkFactory;
+import sirius.biz.storage.layer3.uplink.util.Attempt;
 import sirius.biz.storage.layer3.uplink.util.RemotePath;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnector;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorPool;
@@ -104,21 +105,37 @@ public class FTPUplink extends ConfigBasedUplink {
         }
 
         RemotePath relativeParent = parent.as(RemotePath.class);
-        try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
-            for (FTPFile file : list(connector.connector(), relativeParent, null)) {
-                if (isUsable(file) && !search.processResult(wrap(parent, file, file.getName()))) {
-                    return;
+        for (Attempt attempt : Attempt.values()) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
+                processListing(parent, search, relativeParent, connector);
+                return;
+            } catch (Exception e) {
+                connector.forceClose();
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/FTP: Cannot iterate over children of '%s' in uplink '%s' - %s (%s)",
+                                            parent,
+                                            ftpConfig)
+                                    .handle();
                 }
+            } finally {
+                connector.safeClose();
             }
-        } catch (Exception e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage(
-                                    "Layer 3/FTP: Cannot iterate over children of '%s' in uplink '%s' - %s (%s)",
-                                    parent,
-                                    ftpConfig)
-                            .handle();
+        }
+    }
+
+    private void processListing(@Nonnull VirtualFile parent,
+                                FileSearch search,
+                                RemotePath relativeParent,
+                                UplinkConnector<FTPClient> connector) throws IOException {
+        for (FTPFile file : list(connector.connector(), relativeParent, null)) {
+            if (isUsable(file) && !search.processResult(wrap(parent, file, file.getName()))) {
+                return;
+            }
         }
     }
 
@@ -185,25 +202,35 @@ public class FTPUplink extends ConfigBasedUplink {
             return Optional.of(result);
         }
 
-        try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
-            FTPFile[] ftpFiles = list(connector.connector(),
-                                      file.parent().as(RemotePath.class),
-                                      ftpFile -> Strings.areEqual(ftpFile.getName(), file.name()));
-            if (ftpFiles.length == 1) {
-                file.attach(ftpFiles[0]);
-                return Optional.of(ftpFiles[0]);
-            } else {
-                return Optional.empty();
+        for (Attempt attempt : Attempt.values()) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
+                FTPFile[] ftpFiles = list(connector.connector(),
+                                          file.parent().as(RemotePath.class),
+                                          ftpFile -> Strings.areEqual(ftpFile.getName(), file.name()));
+                if (ftpFiles.length == 1) {
+                    file.attach(ftpFiles[0]);
+                    return Optional.of(ftpFiles[0]);
+                } else {
+                    return Optional.empty();
+                }
+            } catch (Exception e) {
+                connector.forceClose();
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage("Layer 3/FTP: Cannot resolve '%s' for uplink '%s' - %s (%s)",
+                                                            file,
+                                                            ftpConfig)
+                                    .handle();
+                }
+            } finally {
+                connector.safeClose();
             }
-        } catch (Exception e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 3/FTP: Cannot resolve '%s' for uplink '%s' - %s (%s)",
-                                                    file,
-                                                    ftpConfig)
-                            .handle();
         }
+
+        throw new IllegalStateException();
     }
 
     private boolean existsFlagSupplier(VirtualFile file) {
@@ -231,25 +258,37 @@ public class FTPUplink extends ConfigBasedUplink {
         return false;
     }
 
+
     private boolean moveHandler(VirtualFile file, VirtualFile targetFile) {
         //TODO SIRI-102 implement properly
+
         return false;
     }
 
     private boolean renameHandler(VirtualFile file, String newName) {
-        try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
-            connector.connector()
-                     .rename(file.as(RemotePath.class).getPath(),
-                             file.parent().as(RemotePath.class).child(newName).getPath());
-        } catch (Exception e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 3/FTP: Cannot rename '%s' to '%s' in uplink '%s': %s (%s)",
-                                                    file,
-                                                    newName,
-                                                    ftpConfig)
-                            .handle();
+        for (Attempt attempt : Attempt.values()) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
+                connector.connector()
+                         .rename(file.as(RemotePath.class).getPath(),
+                                 file.parent().as(RemotePath.class).child(newName).getPath());
+                return true;
+            } catch (Exception e) {
+                connector.forceClose();
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/FTP: Cannot rename '%s' to '%s' in uplink '%s': %s (%s)",
+                                            file,
+                                            newName,
+                                            ftpConfig)
+                                    .handle();
+                }
+            } finally {
+                connector.safeClose();
+            }
         }
 
         return false;
@@ -257,20 +296,28 @@ public class FTPUplink extends ConfigBasedUplink {
 
     private boolean createDirectoryHandler(VirtualFile file) {
         String relativePath = file.as(RemotePath.class).getPath();
-        try {
-            try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
+        for (Attempt attempt : Attempt.values()) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
                 return connector.connector().makeDirectory(relativePath);
+            } catch (Exception e) {
+                connector.forceClose();
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/FTP: Failed to create a directory for '%s' in uplink '%s': %s (%s)",
+                                            relativePath,
+                                            ftpConfig)
+                                    .handle();
+                }
+            } finally {
+                connector.safeClose();
             }
-        } catch (IOException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage(
-                                    "Layer 3/FTP: Failed to create a directory for '%s' in uplink '%s': %s (%s)",
-                                    relativePath,
-                                    ftpConfig)
-                            .handle();
         }
+
+        return false;
     }
 
     private boolean deleteHandler(VirtualFile file) {
@@ -283,60 +330,84 @@ public class FTPUplink extends ConfigBasedUplink {
     }
 
     private boolean deleteFile(String relativePath) {
-        try {
-            try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
+        for (Attempt attempt : Attempt.values()) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
                 return connector.connector().deleteFile(relativePath);
+            } catch (Exception e) {
+                connector.forceClose();
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage("Layer 3/FTP: Failed to delete '%s' in uplink '%s': %s (%s)",
+                                                            relativePath,
+                                                            ftpConfig)
+                                    .handle();
+                }
+            } finally {
+                connector.safeClose();
             }
-        } catch (IOException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 3/FTP: Failed to delete '%s' in uplink '%s': %s (%s)",
-                                                    relativePath,
-                                                    ftpConfig)
-                            .handle();
         }
+
+        return false;
     }
 
     private boolean removeDirectory(String relativePath) {
-        try {
-            try (UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig)) {
+        for (Attempt attempt : Attempt.values()) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
                 return connector.connector().removeDirectory(relativePath);
+            } catch (Exception e) {
+                connector.forceClose();
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage("Layer 3/FTP: Failed to delete '%s' in uplink '%s': %s (%s)",
+                                                            relativePath,
+                                                            ftpConfig)
+                                    .handle();
+                }
+            } finally {
+                connector.safeClose();
             }
-        } catch (IOException e) {
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("Layer 3/FTP: Failed to delete '%s' in uplink '%s': %s (%s)",
-                                                    relativePath,
-                                                    ftpConfig)
-                            .handle();
         }
+
+        return false;
     }
 
     private InputStream inputStreamSupplier(VirtualFile file) {
-        UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
         String path = file.as(RemotePath.class).getPath();
-        try {
-            InputStream rawStream = connector.connector().retrieveFileStream(path);
-            if (rawStream == null) {
-                throw new IOException("Cannot retrieve an input stream!");
-            }
+        for (Attempt attempt : Attempt.values()) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
+                InputStream rawStream = connector.connector().retrieveFileStream(path);
+                if (rawStream == null) {
+                    throw new IOException("Cannot retrieve an input stream!");
+                }
 
-            WatchableInputStream watchableInputStream = new WatchableInputStream(rawStream);
-            watchableInputStream.getCompletionFuture().then(() -> completePendingCommand(connector, path, "download"));
-            return watchableInputStream;
-        } catch (IOException e) {
-            connector.safeClose();
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage(
-                                    "Layer 3/FTP: Failed to initiate a download for '%s' in uplink '%s': %s (%s)",
-                                    path,
-                                    ftpConfig)
-                            .handle();
+                WatchableInputStream watchableInputStream = new WatchableInputStream(rawStream);
+                watchableInputStream.getCompletionFuture()
+                                    .then(() -> completePendingCommand(connector, path, "download"));
+                return watchableInputStream;
+            } catch (Exception e) {
+                connector.forceClose();
+                connector.safeClose();
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/FTP: Failed to initiate a download for '%s' in uplink '%s': %s (%s)",
+                                            path,
+                                            ftpConfig)
+                                    .handle();
+                }
+            }
         }
+
+        throw new IllegalStateException();
     }
 
     private void completePendingCommand(UplinkConnector<FTPClient> connector, String path, String command) {
@@ -349,7 +420,7 @@ public class FTPUplink extends ConfigBasedUplink {
                                                   path,
                                                   ftpConfig)
                           .handle();
-                disconnect(connector);
+                connector.forceClose();
             }
         } catch (IOException e) {
             Exceptions.handle()
@@ -360,50 +431,42 @@ public class FTPUplink extends ConfigBasedUplink {
                                               path,
                                               ftpConfig)
                       .handle();
-            disconnect(connector);
+            connector.forceClose();
         }
 
         connector.safeClose();
     }
 
-    /**
-     * Forcefully  disconnects in  case  of an  error.
-     * <p>
-     * In case we cannot complete a command (most probably retrieving an <tt>InputStream</tt> or <tt>OutputStream</tt>).
-     * This is done as the client is most probably left in an inconsistent state so that we rather reconnect.
-     *
-     * @param connector the connector to disconnect
-     */
-    private void disconnect(UplinkConnector<FTPClient> connector) {
-        try {
-            connector.connector().disconnect();
-        } catch (IOException e) {
-            Exceptions.ignore(e);
-        }
-    }
-
     private OutputStream outputStreamSupplier(VirtualFile file) {
-        UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
         String path = file.as(RemotePath.class).getPath();
-        try {
-            OutputStream rawStream = connector.connector().storeFileStream(path);
-            if (rawStream == null) {
-                throw new IOException("Cannot retrieve an output stream!");
-            }
+        for (Attempt attempt : Attempt.values()) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
+                OutputStream rawStream = connector.connector().storeFileStream(path);
+                if (rawStream == null) {
+                    throw new IOException("Cannot retrieve an output stream!");
+                }
 
-            WatchableOutputStream watchableOutputStream = new WatchableOutputStream(rawStream);
-            watchableOutputStream.getCompletionFuture().then(() -> completePendingCommand(connector, path, "upload"));
-            return watchableOutputStream;
-        } catch (IOException e) {
-            connector.safeClose();
-            throw Exceptions.handle()
-                            .to(StorageUtils.LOG)
-                            .error(e)
-                            .withSystemErrorMessage(
-                                    "Layer 3/FTP: Failed to initiate an upload for '%s' in uplink '%s': %s (%s)",
-                                    path,
-                                    ftpConfig)
-                            .handle();
+                WatchableOutputStream watchableOutputStream = new WatchableOutputStream(rawStream);
+                watchableOutputStream.getCompletionFuture()
+                                     .then(() -> completePendingCommand(connector, path, "upload"));
+                return watchableOutputStream;
+            } catch (Exception e) {
+                connector.forceClose();
+                connector.safeClose();
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/FTP: Failed to initiate an upload for '%s' in uplink '%s': %s (%s)",
+                                            path,
+                                            ftpConfig)
+                                    .handle();
+                }
+            }
         }
+
+        throw new IllegalStateException();
     }
 }
