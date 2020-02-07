@@ -109,7 +109,6 @@ public class FTPUplink extends ConfigBasedUplink {
             UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
             try {
                 processListing(parent, search, relativeParent, connector);
-                return;
             } catch (Exception e) {
                 connector.forceClose();
                 if (attempt.shouldThrow(e)) {
@@ -257,7 +256,6 @@ public class FTPUplink extends ConfigBasedUplink {
         //TODO SIRI-102 implement properly
         return false;
     }
-
 
     private boolean moveHandler(VirtualFile file, VirtualFile targetFile) {
         //TODO SIRI-102 implement properly

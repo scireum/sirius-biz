@@ -137,6 +137,9 @@ public class UserAccountData extends Composite implements MessageProvider {
                                               });
     }
 
+    /**
+     * If this user has no {@link LoginData#USERNAME}, fill it with {@link #EMAIL}.
+     */
     public void transferEmailToLoginIfEmpty() {
         // Use email address if no explicit username is present
         if (Strings.isEmpty(getLogin().getUsername())) {

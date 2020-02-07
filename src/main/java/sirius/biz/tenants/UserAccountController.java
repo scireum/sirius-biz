@@ -73,6 +73,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     private static final String PARAM_ROOT = "root";
     private static final String PARAM_EMAIL = "email";
     private static final String PARAM_REASON = "reason";
+    private static final String LIST_ROUTE = "/user-accounts";
 
     @Part
     protected Mails mails;
@@ -103,7 +104,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      *
      * @param webContext the current request
      */
-    @Routed("/user-accounts")
+    @Routed(LIST_ROUTE)
     @DefaultRoute
     @LoginRequired
     @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
@@ -148,7 +149,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         U userAccount = findForTenant(getUserClass(), accountId);
 
         boolean requestHandled = prepareSave(webContext).withAfterCreateURI("/user-account/${id}")
-                                                        .withAfterSaveURI("/user-accounts")
+                                                        .withAfterSaveURI(LIST_ROUTE)
                                                         .withPreSaveHandler(isNew -> {
                                                             if (isUserLockingHimself(userAccount)) {
                                                                 throw Exceptions.createHandled()
@@ -285,7 +286,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         generateNewPassword(userAccount);
         UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
 
-        webContext.respondWith().redirectToGet("/user-accounts");
+        webContext.respondWith().redirectToGet(LIST_ROUTE);
     }
 
     /**
@@ -333,7 +334,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
         }
 
-        webContext.respondWith().redirectToGet("/user-accounts");
+        webContext.respondWith().redirectToGet(LIST_ROUTE);
     }
 
     private void generateNewPassword(U userAccount) {
@@ -450,7 +451,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             user.getMapper().update(user);
         });
 
-        webContext.respondWith().redirectToGet("/user-accounts");
+        webContext.respondWith().redirectToGet(LIST_ROUTE);
     }
 
     /**
@@ -469,7 +470,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             user.getMapper().update(user);
         });
 
-        webContext.respondWith().redirectToGet("/user-accounts");
+        webContext.respondWith().redirectToGet(LIST_ROUTE);
     }
 
     /**
@@ -490,7 +491,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         });
 
         deleteEntity(webContext, account);
-        webContext.respondWith().redirectToGet("/user-accounts");
+        webContext.respondWith().redirectToGet(LIST_ROUTE);
     }
 
     /**
