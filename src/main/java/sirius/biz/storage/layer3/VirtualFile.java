@@ -39,9 +39,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -66,15 +67,15 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     protected String description;
     protected VirtualFile parent;
     protected ChildProvider childProvider;
-    protected Function<VirtualFile, Long> lastModifiedSupplier;
-    protected Function<VirtualFile, Long> sizeSupplier;
+    protected ToLongFunction<VirtualFile> lastModifiedSupplier;
+    protected ToLongFunction<VirtualFile> sizeSupplier;
     protected Predicate<VirtualFile> directoryFlagSupplier;
     protected Predicate<VirtualFile> existsFlagSupplier;
     protected Predicate<VirtualFile> canCreateChildrenHandler;
     protected Predicate<VirtualFile> canCreateDirectoryHandler;
-    protected Function<VirtualFile, Boolean> createDirectoryHandler;
+    protected Predicate<VirtualFile> createDirectoryHandler;
     protected Predicate<VirtualFile> canDeleteHandler;
-    protected Function<VirtualFile, Boolean> deleteHandler;
+    protected Predicate<VirtualFile> deleteHandler;
     protected Predicate<VirtualFile> canProvideOutputStream;
     protected Function<VirtualFile, OutputStream> outputStreamSupplier;
     protected Predicate<VirtualFile> canConsumeStream;
@@ -85,9 +86,9 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     protected Function<VirtualFile, InputStream> inputStreamSupplier;
     protected BiConsumer<VirtualFile, Response> tunnelHandler = VirtualFile::defaultTunnelHandler;
     protected Predicate<VirtualFile> canMoveHandler;
-    protected BiFunction<VirtualFile, VirtualFile, Boolean> moveHandler;
+    protected BiPredicate<VirtualFile, VirtualFile> moveHandler;
     protected Predicate<VirtualFile> canRenameHandler;
-    protected BiFunction<VirtualFile, String, Boolean> renameHandler;
+    protected BiPredicate<VirtualFile, String> renameHandler;
 
     @Part
     private static StorageUtils utils;
@@ -258,7 +259,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public long lastModified() {
         try {
-            return lastModifiedSupplier == null ? 0 : lastModifiedSupplier.apply(this);
+            return lastModifiedSupplier == null ? 0 : lastModifiedSupplier.applyAsLong(this);
         } catch (Exception e) {
             throw handleErrorInCallback(e, "lastModifiedSupplier");
         }
@@ -289,7 +290,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public long size() {
         try {
-            return sizeSupplier == null ? 0 : sizeSupplier.apply(this);
+            return sizeSupplier == null ? 0 : sizeSupplier.applyAsLong(this);
         } catch (Exception e) {
             throw handleErrorInCallback(e, "sizeSupplier");
         }
@@ -327,7 +328,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return false;
             }
 
-            return deleteHandler.apply(this);
+            return deleteHandler.test(this);
         } catch (Exception e) {
             throw handleErrorInCallback(e, "deleteHandler");
         }
@@ -377,7 +378,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return false;
             }
 
-            return renameHandler.apply(this, newName);
+            return renameHandler.test(this, newName);
         } catch (Exception e) {
             throw handleErrorInCallback(e, "renameHandler");
         }
@@ -428,7 +429,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                 return false;
             }
 
-            return moveHandler.apply(this, newParent);
+            return moveHandler.test(this, newParent);
         } catch (Exception e) {
             throw handleErrorInCallback(e, "moveHandler");
         }
@@ -738,7 +739,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             if (parent() != null && !parent().tryCreateAsDirectory()) {
                 return false;
             }
-            return createDirectoryHandler.apply(this);
+            return createDirectoryHandler.test(this);
         } catch (Exception e) {
             throw handleErrorInCallback(e, "createDirectoryHandler");
         }

@@ -34,7 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Provides a storage facility which stores blobs and directories as {@link SQLBlob} and {@link SQLDirectory} in a
@@ -469,7 +469,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     protected void listChildDirectories(SQLDirectory parent,
                                         String prefixFilter,
                                         int maxResults,
-                                        Function<? super Directory, Boolean> childProcessor) {
+                                        Predicate<? super Directory> childProcessor) {
         oma.select(SQLDirectory.class)
            .eq(SQLDirectory.SPACE_NAME, spaceName)
            .eq(SQLDirectory.PARENT, parent)
@@ -480,7 +480,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                              .ignoreEmpty()
                              .build())
            .limit(maxResults)
-           .iterate(childProcessor::apply);
+           .iterate(childProcessor::test);
     }
 
     protected Optional<SQLBlob> findExistingChildBlob(SQLDirectory parent, String childName) {
@@ -578,7 +578,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                   String prefixFilter,
                                   Set<String> fileTypes,
                                   int maxResults,
-                                  Function<? super Blob, Boolean> childProcessor) {
+                                  Predicate<? super Blob> childProcessor) {
         oma.select(SQLBlob.class)
            .eq(SQLBlob.SPACE_NAME, spaceName)
            .eq(SQLBlob.PARENT, parent)
@@ -586,7 +586,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
            .where(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME).startsWith(prefixFilter).ignoreEmpty().build())
            .where(OMA.FILTERS.containsOne(SQLBlob.FILE_EXTENSION, fileTypes.toArray()).build())
            .limit(maxResults)
-           .iterate(childProcessor::apply);
+           .iterate(childProcessor::test);
     }
 
     protected List<? extends BlobVariant> fetchVariants(SQLBlob blob) {

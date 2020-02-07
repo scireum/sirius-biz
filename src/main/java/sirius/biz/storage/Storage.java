@@ -49,6 +49,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -207,9 +208,7 @@ public class Storage {
      * @param tenant   the tenant to filter on
      * @param iterator the iterator to process the objects
      */
-    public void list(@Nullable BucketInfo bucket,
-                     @Nullable SQLTenant tenant,
-                     Function<StoredObject, Boolean> iterator) {
+    public void list(@Nullable BucketInfo bucket, @Nullable SQLTenant tenant, Predicate<StoredObject> iterator) {
         if (bucket == null || !UserContext.getCurrentUser().hasPermission(bucket.getPermission())) {
             return;
         }
@@ -218,7 +217,7 @@ public class Storage {
            .eqIgnoreNull(VirtualObject.TENANT, tenant)
            .eq(VirtualObject.BUCKET, bucket.getName())
            .orderDesc(VirtualObject.TRACE.inner(TraceData.CHANGED_AT))
-           .iterate(iterator::apply);
+           .iterate(iterator::test);
     }
 
     /**
