@@ -48,7 +48,6 @@ public class FieldDefinition {
     public FieldDefinition(String name, String type) {
         this.name = name;
         this.type = type;
-        addAlias(name);
     }
 
     /**
@@ -194,7 +193,7 @@ public class FieldDefinition {
     /**
      * Boilerplate to create a new date field without format.
      *
-     * @param name   the name of the field
+     * @param name the name of the field
      * @return the newly created field
      */
     public static FieldDefinition dateField(String name) {
@@ -224,11 +223,11 @@ public class FieldDefinition {
     /**
      * Specifies the label to use for this field.
      *
-     * @param constantLabel the label to show
+     * @param constantLabel the label to show, which will be {@link sirius.kernel.nls.NLS#smartGet(String) auto translated
      * @return the field itself for fluent method calls
      */
     public FieldDefinition withLabel(String constantLabel) {
-        this.label = () -> constantLabel;
+        this.label = () -> NLS.smartGet(constantLabel);
         return this;
     }
 

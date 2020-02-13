@@ -591,7 +591,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
 
     protected List<? extends BlobVariant> fetchVariants(SQLBlob blob) {
         return oma.select(SQLVariant.class)
-                  .eq(SQLVariant.BLOB, blob)
+                  .eq(SQLVariant.SOURCE_BLOB, blob)
                   .ne(SQLVariant.PHYSICAL_OBJECT_KEY, null)
                   .orderAsc(SQLVariant.VARIANT_NAME)
                   .queryList();
@@ -600,7 +600,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     @Override
     protected SQLVariant findVariant(SQLBlob blob, String variantName) {
         return oma.select(SQLVariant.class)
-                  .eq(SQLVariant.BLOB, blob)
+                  .eq(SQLVariant.SOURCE_BLOB, blob)
                   .ne(SQLVariant.PHYSICAL_OBJECT_KEY, null)
                   .eq(SQLVariant.VARIANT_NAME, variantName)
                   .queryFirst();
@@ -609,7 +609,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     @Override
     protected SQLVariant createVariant(SQLBlob blob, String variantName) {
         SQLVariant variant = new SQLVariant();
-        variant.getBlob().setValue(blob);
+        variant.getSourceBlob().setValue(blob);
         variant.setVariantName(variantName);
         variant.setQueuedForConversion(true);
         variant.setNode(CallContext.getNodeName());
@@ -623,7 +623,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     protected boolean detectAndRemoveDuplicateVariant(SQLVariant variant, SQLBlob blob, String variantName) {
         if (oma.select(SQLVariant.class)
                .ne(SQLVariant.ID, variant.getId())
-               .eq(SQLVariant.BLOB, blob)
+               .eq(SQLVariant.SOURCE_BLOB, blob)
                .eq(SQLVariant.VARIANT_NAME, variantName)
                .exists()) {
             oma.delete(variant);

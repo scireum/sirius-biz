@@ -122,10 +122,7 @@ public class UserAccountData extends Composite implements MessageProvider {
     }
 
     private void fillAndVerifyUsername() {
-        // Use email address if no explicit username is present
-        if (Strings.isEmpty(getLogin().getUsername())) {
-            getLogin().setUsername(getEmail());
-        }
+        transferEmailToLoginIfEmpty();
 
         // Ensure that the username is filled and unique...
         userObject.verifyIfChangedFailIfEmpty(UserAccount.USER_ACCOUNT_DATA.inner(LOGIN).inner(LoginData.USERNAME),
@@ -138,6 +135,13 @@ public class UserAccountData extends Composite implements MessageProvider {
                                                                                                        .inner(LoginData.USERNAME),
                                                                           getLogin().getUsername());
                                               });
+    }
+
+    public void transferEmailToLoginIfEmpty() {
+        // Use email address if no explicit username is present
+        if (Strings.isEmpty(getLogin().getUsername())) {
+            getLogin().setUsername(getEmail());
+        }
     }
 
     @AfterSave

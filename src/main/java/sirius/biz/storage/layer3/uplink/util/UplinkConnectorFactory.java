@@ -15,6 +15,7 @@ import org.apache.commons.pool2.impl.GenericObjectPool;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.async.ExecutionPoint;
 import sirius.kernel.async.Operation;
+import sirius.kernel.health.Exceptions;
 
 import java.time.Duration;
 
@@ -80,16 +81,31 @@ class UplinkConnectorFactory implements PooledObjectFactory<UplinkConnector<?>> 
                                   config,
                                   pooledObject.getObject().toSimpleString());
         }
-
-        pooledObject.getObject().operation.close();
+        safeCloseOperation(pooledObject);
         pooledObject.getObject().closeCallback = null;
         pooledObject.getObject().forceCloseCallback = null;
         pooledObject.getObject().borrowedPoint = null;
     }
 
+    protected void safeCloseOperation(PooledObject<UplinkConnector<?>> pooledObject) {
+        if (pooledObject.getObject().operation == null) {
+            return;
+        }
+
+        try {
+            pooledObject.getObject().operation.close();
+        } catch (Exception e) {
+            Exceptions.ignore(e);
+        }
+
+        pooledObject.getObject().operation = null;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public void destroyObject(PooledObject<UplinkConnector<?>> pooledObject) throws Exception {
+        safeCloseOperation(pooledObject);
+
         if (StorageUtils.LOG.isFINE()) {
             StorageUtils.LOG.FINE("Layer 3/Uplinks: Destroying an object for %s: %s",
                                   config,
