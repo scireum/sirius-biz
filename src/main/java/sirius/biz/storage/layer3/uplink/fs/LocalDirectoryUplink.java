@@ -100,22 +100,18 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
               .withOutputStreamSupplier(this::outputStreamSupplier)
               .withRenameHandler(this::renameHandler)
               .withCreateDirectoryHandler(this::createDirectoryHandler)
-              .withCanMoveHandler(this::canMoveHandler)
-              .withMoveHandler(this::moveHandler);
+              .withCanFastMoveHandler(this::canFastMoveHandler)
+              .withFastMoveHandler(this::fastMoveHandler);
 
         result.attach(fileToWrap);
+        result.attach(this);
+
         return result;
     }
 
-    private boolean moveHandler(VirtualFile file, VirtualFile newParent) {
+    private boolean fastMoveHandler(VirtualFile file, VirtualFile newParent) {
         try {
-            //TODO SIRI-102 ensure that target is on the same FS etc.
-            File parent = newParent.tryAs(File.class).orElse(null);
-            if (parent == null) {
-                return false;
-            }
-
-            Files.move(file.as(File.class).toPath(), new File(parent, file.name()).toPath());
+            Files.move(file.as(File.class).toPath(), new File(newParent.as(File.class), file.name()).toPath());
             return true;
         } catch (Exception e) {
             throw Exceptions.handle()
@@ -126,9 +122,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
         }
     }
 
-    private boolean canMoveHandler(VirtualFile file) {
-        //TODO SIRI-102 ensure that target is on the same FS
-        return !readonly && file.exists();
+    private boolean canFastMoveHandler(VirtualFile file, VirtualFile newParent) {
+        return !readonly
+               && this.equals(file.tryAs(LocalDirectoryUplink.class).orElse(null))
+               && this.equals(newParent.tryAs(LocalDirectoryUplink.class).orElse(null));
     }
 
     private boolean renameHandler(VirtualFile file, String name) {

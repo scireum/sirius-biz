@@ -355,23 +355,23 @@ public class MutableVirtualFile extends VirtualFile {
     /**
      * Determines if there is an efficient way of moving this file.
      *
-     * @param canMoveHandler the predicate which determines if there is an efficient way of moving this file into a
+     * @param canMoveHandler the predicate which determines if there is an efficient way of moving this file into the
      *                       new parent
      * @return the file itself for fluent method calls
      */
-    public MutableVirtualFile withCanMoveHandler(Predicate<VirtualFile> canMoveHandler) {
-        this.canMoveHandler = canMoveHandler;
+    public MutableVirtualFile withCanFastMoveHandler(BiFunction<VirtualFile, VirtualFile, Boolean> canMoveHandler) {
+        this.canFastMoveHandler = canMoveHandler;
         return this;
     }
 
     /**
      * Provides a handler which permits to efficiently move a file.
      *
-     * @param moveHandler the handler which efficiently moves a file into another directory
+     * @param moveHandler the handler which efficiently moves a file into the given directory
      * @return the file itself for fluent method calls
      */
-    public MutableVirtualFile withMoveHandler(BiPredicate<VirtualFile, VirtualFile> moveHandler) {
-        this.moveHandler = moveHandler;
+    public MutableVirtualFile withFastMoveHandler(BiPredicate<VirtualFile, VirtualFile> moveHandler) {
+        this.fastMoveHandler = moveHandler;
         return this;
     }
 

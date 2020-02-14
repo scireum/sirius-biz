@@ -85,8 +85,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     protected Predicate<VirtualFile> canProvideInputStream;
     protected Function<VirtualFile, InputStream> inputStreamSupplier;
     protected BiConsumer<VirtualFile, Response> tunnelHandler = VirtualFile::defaultTunnelHandler;
-    protected Predicate<VirtualFile> canMoveHandler;
-    protected BiPredicate<VirtualFile, VirtualFile> moveHandler;
+    protected BiFunction<VirtualFile, VirtualFile, Boolean> canFastMoveHandler;
+    protected BiPredicate<VirtualFile, VirtualFile> fastMoveHandler;
     protected Predicate<VirtualFile> canRenameHandler;
     protected BiPredicate<VirtualFile, String> renameHandler;
 
@@ -399,21 +399,26 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Determines if this file can (probably) be move in an efficient way.
      *
+     * @param newParent the new parent directory
      * @return <tt>true</tt> if this file can be efficiently moved or <tt>false</tt> otherwise
      */
-    public boolean canFastMove() {
+    public boolean canFastMoveTo(VirtualFile newParent) {
         try {
-            if (moveHandler == null) {
+            if (fastMoveHandler == null) {
                 return false;
             }
 
-            if (canMoveHandler != null) {
-                return canMoveHandler.test(this);
+            if (!exists() || !newParent.exists() || !newParent.isDirectory()) {
+                return false;
+            }
+
+            if (canFastMoveHandler != null) {
+                return canFastMoveHandler.apply(this, newParent);
             } else {
                 return true;
             }
         } catch (Exception e) {
-            throw handleErrorInCallback(e, "canMoveHandler");
+            throw handleErrorInCallback(e, "canFastMoveHandler");
         }
     }
 
@@ -425,13 +430,13 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     public boolean tryFastMoveTo(VirtualFile newParent) {
         try {
-            if (!canFastMove()) {
+            if (!canFastMoveTo(newParent)) {
                 return false;
             }
 
-            return moveHandler.test(this, newParent);
+            return fastMoveHandler.test(this, newParent);
         } catch (Exception e) {
-            throw handleErrorInCallback(e, "moveHandler");
+            throw handleErrorInCallback(e, "fastMoveHandler");
         }
     }
 
@@ -453,24 +458,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @return <tt>true</tt> if the file can (probably) be moved, <tt>false</tt> otherwise
      */
     public boolean canMove() {
-        return canFastMove() || canDelete();
-    }
-
-    /**
-     * Tries to move this file in the given directory.
-     * <p>
-     * Note that this might be a long running operation if an efficient implementation cannot be used.
-     *
-     * @param newParent the new parent directory
-     * @return <tt>true</tt> if the operation was successful, <tt>false</tt> otherwise
-     */
-    public boolean tryMoveTo(VirtualFile newParent) {
-        if (tryFastMoveTo(newParent)) {
-            return true;
-        }
-
-        //TODO SIRI-102 implement properly
-        throw new UnsupportedOperationException("Move is currently not implemented");
+        return canDelete() && (isDirectory() || canCreateInputStream());
     }
 
     /**

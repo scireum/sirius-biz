@@ -96,6 +96,7 @@ public class UplinkConnectorPool {
         pool.setNumTestsPerEvictionRun(NUM_TESTS_PER_EVICTION_RUN);
         pool.setTestOnBorrow(true);
         pool.setTestWhileIdle(true);
+        pool.setTestOnReturn(true);
 
         return pool;
     }
