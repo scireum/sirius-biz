@@ -27,7 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * Contains the package, upgrades and additional and revoked permissions for an entity.
@@ -210,7 +210,7 @@ public class PackageData extends Composite {
      * @param selectionFunction the function which determines if the permission is either additionally added, or revoked
      */
     public void loadRevokedAndAdditionalPermission(List<String> allPermissions,
-                                                   Function<String, String> selectionFunction) {
+                                                   UnaryOperator<String> selectionFunction) {
         getAdditionalPermissions().clear();
         getRevokedPermissions().clear();
 

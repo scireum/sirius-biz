@@ -109,7 +109,6 @@ public class FTPUplink extends ConfigBasedUplink {
             UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
             try {
                 processListing(parent, search, relativeParent, connector);
-                return;
             } catch (Exception e) {
                 connector.forceClose();
                 if (attempt.shouldThrow(e)) {

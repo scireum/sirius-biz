@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 /**
@@ -232,7 +232,7 @@ public class Timeseries {
         }
     }
 
-    private Timeseries copy(Function<LocalDateTime, LocalDateTime> modifier) {
+    private Timeseries copy(UnaryOperator<LocalDateTime> modifier) {
         return new Timeseries(requestedStart,
                               requestedEnd,
                               effectiveUnit,

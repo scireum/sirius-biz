@@ -16,7 +16,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Encapsulates a search for children within a {@link ChildProvider}.
@@ -32,9 +32,9 @@ public class FileSearch {
     private String prefixFilter;
     private Set<String> fileExtensionFilters;
     private Limit limit = Limit.UNLIMITED;
-    private Function<VirtualFile, Boolean> resultProcessor;
+    private Predicate<VirtualFile> resultProcessor;
 
-    protected FileSearch(Function<VirtualFile, Boolean> resultProcessor) {
+    protected FileSearch(Predicate<VirtualFile> resultProcessor) {
         this.resultProcessor = resultProcessor;
     }
 
@@ -45,7 +45,7 @@ public class FileSearch {
      * @return the new search which can be passed in {@link ChildProvider#enumerate(VirtualFile, FileSearch)} or
      * {@link VirtualFile#children(FileSearch)}
      */
-    public static FileSearch iterateInto(Function<VirtualFile, Boolean> resultProcessor) {
+    public static FileSearch iterateInto(Predicate<VirtualFile> resultProcessor) {
         return new FileSearch(resultProcessor);
     }
 
@@ -187,7 +187,7 @@ public class FileSearch {
      */
     public boolean processResult(VirtualFile file) {
         if (matchesFiltering(file) && limit.nextRow()) {
-            return resultProcessor.apply(file);
+            return resultProcessor.test(file);
         }
 
         return limit.shouldContinue();

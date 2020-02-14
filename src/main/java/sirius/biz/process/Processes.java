@@ -16,6 +16,7 @@ import sirius.biz.process.logs.ProcessLogType;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.protocol.JournalData;
 import sirius.db.es.Elastic;
+import sirius.db.mixing.IntegrityConstraintFailedException;
 import sirius.db.mixing.OptimisticLockException;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.DelayLine;
@@ -401,6 +402,9 @@ public class Processes {
             } catch (OptimisticLockException e) {
                 Wait.randomMillis(250, 500);
                 process = elastic.find(Process.class, processId).orElse(null);
+            } catch (IntegrityConstraintFailedException e) {
+                Exceptions.handle(Log.BACKGROUND, e);
+                return false;
             }
         }
 

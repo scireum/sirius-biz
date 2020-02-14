@@ -8,14 +8,12 @@
 
 package sirius.biz.web;
 
-import sirius.biz.tenants.Tenant;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.health.Exceptions;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -72,5 +70,4 @@ public interface TenantAware {
      * the same.
      */
     void setOrVerifyCurrentTenant();
-
 }

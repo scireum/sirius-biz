@@ -34,7 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Provides a storage facility which stores blobs and directories as {@link MongoBlob} and {@link MongoDirectory} in a
@@ -412,7 +412,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     protected void listChildDirectories(MongoDirectory parent,
                                         String prefixFilter,
                                         int maxResults,
-                                        Function<? super Directory, Boolean> childProcessor) {
+                                        Predicate<? super Directory> childProcessor) {
         mango.select(MongoDirectory.class)
              .eq(MongoDirectory.SPACE_NAME, spaceName)
              .eq(MongoDirectory.PARENT, parent)
@@ -420,7 +420,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .eq(MongoDirectory.DELETED, false)
              .where(QueryBuilder.FILTERS.prefix(MongoDirectory.NORMALIZED_DIRECTORY_NAME, prefixFilter))
              .limit(maxResults)
-             .iterate(childProcessor::apply);
+             .iterate(childProcessor::test);
     }
 
     protected Optional<MongoBlob> findExistingChildBlob(MongoDirectory parent, String childName) {
@@ -522,7 +522,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                                   String prefixFilter,
                                   Set<String> fileTypes,
                                   int maxResults,
-                                  Function<? super Blob, Boolean> childProcessor) {
+                                  Predicate<? super Blob> childProcessor) {
         mango.select(MongoBlob.class)
              .eq(MongoBlob.SPACE_NAME, spaceName)
              .eq(MongoBlob.PARENT, parent)
@@ -530,7 +530,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .where(QueryBuilder.FILTERS.prefix(MongoBlob.NORMALIZED_FILENAME, prefixFilter))
              .where(QueryBuilder.FILTERS.containsOne(MongoBlob.FILE_EXTENSION, fileTypes.toArray()).build())
              .limit(maxResults)
-             .iterate(childProcessor::apply);
+             .iterate(childProcessor::test);
     }
 
     protected List<? extends BlobVariant> fetchVariants(MongoBlob blob) {

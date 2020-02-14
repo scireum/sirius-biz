@@ -9,6 +9,7 @@
 package sirius.biz.storage;
 
 import com.google.common.io.ByteStreams;
+import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Register;
@@ -27,7 +28,7 @@ import java.io.InputStream;
 /**
  * Provides a {@link PhysicalStorageEngine} which operates on the local file system.
  */
-@Register(name = "fs",framework = Storage.FRAMEWORK_STORAGE)
+@Register(name = "fs", framework = Storage.FRAMEWORK_STORAGE)
 public class FSStorageEngine implements PhysicalStorageEngine {
 
     @ConfigValue("storage.baseDir")
@@ -85,14 +86,7 @@ public class FSStorageEngine implements PhysicalStorageEngine {
         }
 
         File file = getFile(bucket, physicalKey);
-        if (file.exists()) {
-            if (!file.delete()) {
-                Exceptions.handle()
-                          .to(Storage.LOG)
-                          .withSystemErrorMessage("Cannot delete: %s", file.getAbsolutePath())
-                          .handle();
-            }
-        }
+        Files.delete(file);
     }
 
     @Nullable

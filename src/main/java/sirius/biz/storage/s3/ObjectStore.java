@@ -56,7 +56,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -256,7 +256,7 @@ public class ObjectStore {
      * @param consumer the consumer to be supplied with each found object. As soon as <tt>false</tt> is returned,
      *                 the iteration stops.
      */
-    public void listObjects(BucketName bucket, @Nullable String prefix, Function<S3ObjectSummary, Boolean> consumer) {
+    public void listObjects(BucketName bucket, @Nullable String prefix, Predicate<S3ObjectSummary> consumer) {
         ObjectListing objectListing = null;
         TaskContext taskContext = CallContext.getCurrent().get(TaskContext.class);
 
@@ -272,7 +272,7 @@ public class ObjectStore {
             }
 
             for (S3ObjectSummary obj : objectListing.getObjectSummaries()) {
-                if (!consumer.apply(obj) || !taskContext.isActive()) {
+                if (!consumer.test(obj) || !taskContext.isActive()) {
                     return;
                 }
             }
@@ -628,7 +628,7 @@ public class ObjectStore {
                     etags.add(uploadChunk(bucket, objectId, multipartUploadId, localAggregationBuffer));
                     localAggregationBuffer.clear();
                 }
-                
+
                 bytesRead = inputStream.read(transferBuffer);
             }
 

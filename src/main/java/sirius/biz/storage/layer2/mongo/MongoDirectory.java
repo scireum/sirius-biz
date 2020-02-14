@@ -26,7 +26,7 @@ import sirius.kernel.di.std.Part;
 import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Stores the metadata of a {@link Directory} in the underlying MongoDB.
@@ -166,7 +166,7 @@ public class MongoDirectory extends MongoEntity implements Directory, Optimistic
     @Override
     public void listChildDirectories(@Nullable String prefixFilter,
                                      int maxResults,
-                                     Function<? super Directory, Boolean> childProcessor) {
+                                     Predicate<? super Directory> childProcessor) {
         getStorageSpace().listChildDirectories(this, prefixFilter, maxResults, childProcessor);
     }
 
@@ -174,7 +174,7 @@ public class MongoDirectory extends MongoEntity implements Directory, Optimistic
     public void listChildBlobs(@Nullable String prefixFilter,
                                @Nullable Set<String> fileTypes,
                                int maxResults,
-                               Function<? super Blob, Boolean> childProcessor) {
+                               Predicate<? super Blob> childProcessor) {
         getStorageSpace().listChildBlobs(this, prefixFilter, fileTypes, maxResults, childProcessor);
     }
 

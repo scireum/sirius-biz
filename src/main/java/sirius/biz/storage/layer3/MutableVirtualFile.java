@@ -19,8 +19,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.ToLongFunction;
 import java.util.regex.Pattern;
 
 /**
@@ -146,7 +148,7 @@ public class MutableVirtualFile extends VirtualFile {
      * @return the file itself for fluent method calls
      * @see File#lastModified()
      */
-    public MutableVirtualFile withLastModifiedSupplier(Function<VirtualFile, Long> lastModifiedSupplier) {
+    public MutableVirtualFile withLastModifiedSupplier(ToLongFunction<VirtualFile> lastModifiedSupplier) {
         this.lastModifiedSupplier = lastModifiedSupplier;
         return this;
     }
@@ -157,7 +159,7 @@ public class MutableVirtualFile extends VirtualFile {
      * @param sizeSupplier the supplier which returns the size in bytes
      * @return the file itself for fluent method calls
      */
-    public MutableVirtualFile withSizeSupplier(Function<VirtualFile, Long> sizeSupplier) {
+    public MutableVirtualFile withSizeSupplier(ToLongFunction<VirtualFile> sizeSupplier) {
         this.sizeSupplier = sizeSupplier;
         return this;
     }
@@ -219,7 +221,7 @@ public class MutableVirtualFile extends VirtualFile {
      * @param createDirectoryHandler the handler to create the given file as directory
      * @return the file itself for fluent method calls
      */
-    public MutableVirtualFile withCreateDirectoryHandler(Function<VirtualFile, Boolean> createDirectoryHandler) {
+    public MutableVirtualFile withCreateDirectoryHandler(Predicate<VirtualFile> createDirectoryHandler) {
         this.createDirectoryHandler = createDirectoryHandler;
         return this;
     }
@@ -241,7 +243,7 @@ public class MutableVirtualFile extends VirtualFile {
      * @param deleteHandler the handler to delete the given file
      * @return the file itself for fluent method calls
      */
-    public MutableVirtualFile withDeleteHandler(Function<VirtualFile, Boolean> deleteHandler) {
+    public MutableVirtualFile withDeleteHandler(Predicate<VirtualFile> deleteHandler) {
         this.deleteHandler = deleteHandler;
         return this;
     }
@@ -369,7 +371,7 @@ public class MutableVirtualFile extends VirtualFile {
      * @param moveHandler the handler which efficiently moves a file into the given directory
      * @return the file itself for fluent method calls
      */
-    public MutableVirtualFile withFastMoveHandler(BiFunction<VirtualFile, VirtualFile, Boolean> moveHandler) {
+    public MutableVirtualFile withFastMoveHandler(BiPredicate<VirtualFile, VirtualFile> moveHandler) {
         this.fastMoveHandler = moveHandler;
         return this;
     }
@@ -391,7 +393,7 @@ public class MutableVirtualFile extends VirtualFile {
      * @param renameHandler the handler which renames the given file
      * @return the file itself for fluent method calls
      */
-    public MutableVirtualFile withRenameHandler(BiFunction<VirtualFile, String, Boolean> renameHandler) {
+    public MutableVirtualFile withRenameHandler(BiPredicate<VirtualFile, String> renameHandler) {
         this.renameHandler = renameHandler;
         return this;
     }

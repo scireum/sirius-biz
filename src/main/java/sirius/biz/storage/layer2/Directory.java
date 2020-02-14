@@ -13,7 +13,7 @@ import sirius.kernel.health.HandledException;
 import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Provides the metadata for a directory within a {@link BlobStorageSpace}.
@@ -119,7 +119,7 @@ public interface Directory {
      */
     void listChildDirectories(@Nullable String prefixFilter,
                               int maxResults,
-                              Function<? super Directory, Boolean> childProcessor);
+                              Predicate<? super Directory> childProcessor);
 
     /**
      * Lists all child blobs.
@@ -132,7 +132,7 @@ public interface Directory {
     void listChildBlobs(@Nullable String prefixFilter,
                         @Nullable Set<String> fileTypes,
                         int maxResults,
-                        Function<? super Blob, Boolean> childProcessor);
+                        Predicate<? super Blob> childProcessor);
 
     /**
      * Deletes the directory along with all children.

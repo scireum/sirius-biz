@@ -9,6 +9,7 @@
 package sirius.biz.storage;
 
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Files;
 import sirius.kernel.health.Exceptions;
 
 import java.io.ByteArrayInputStream;
@@ -73,14 +74,7 @@ class UpdatingOutputStream extends OutputStream {
                 storage.updateFile(destination, new ByteArrayInputStream(EMPTY_BUFFER), null, null, 0L);
             }
         } finally {
-            if (bufferFile != null && bufferFile.exists()) {
-                if (!bufferFile.delete()) {
-                    Exceptions.handle()
-                              .to(Storage.LOG)
-                              .withSystemErrorMessage("Cannot delete temporary file: %s", bufferFile.getAbsolutePath())
-                              .handle();
-                }
-            }
+            Files.delete(bufferFile);
             bufferFile = null;
             buffer = null;
             destination = null;
