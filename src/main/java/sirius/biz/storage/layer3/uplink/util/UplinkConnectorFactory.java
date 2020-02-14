@@ -83,6 +83,7 @@ class UplinkConnectorFactory implements PooledObjectFactory<UplinkConnector<?>> 
         }
         safeCloseOperation(pooledObject);
         pooledObject.getObject().closeCallback = null;
+        pooledObject.getObject().forceCloseCallback = null;
         pooledObject.getObject().borrowedPoint = null;
     }
 

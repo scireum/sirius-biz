@@ -280,8 +280,8 @@ public class L3Uplink implements VFSRoot {
         file.withRenameHandler(this::renameHandler);
         file.withCanDeleteHandler(this::isMutable);
         file.withDeleteHandler(this::deleteHandler);
-        file.withCanMoveHandler(this::isMutable);
-        file.withMoveHandler(this::moveHandler);
+        file.withCanFastMoveHandler(this::canFastMoveHandler);
+        file.withFastMoveHandler(this::fastMoveHandler);
         file.withCanCreateDirectoryHandler(this::canCreateDirectoryHandler);
         file.withCreateDirectoryHandler(this::createDirectoryHandler);
         file.withDirectoryFlagSupplier(this::directoryFlagSupplier);
@@ -359,16 +359,32 @@ public class L3Uplink implements VFSRoot {
         return false;
     }
 
-    private boolean moveHandler(VirtualFile file, VirtualFile newParent) {
+    private boolean canFastMoveHandler(VirtualFile file, VirtualFile newParent) {
+        Optional<Directory> destDirectory = newParent.tryAs(Directory.class);
+        if (!destDirectory.isPresent()) {
+            return false;
+        }
+
         Optional<Directory> directory = file.tryAs(Directory.class);
         if (directory.isPresent()) {
-            directory.get().move(newParent.tryAs(Directory.class).orElse(null));
+            return Strings.areEqual(directory.get().getSpaceName(), destDirectory.get().getSpaceName());
+        }
+
+        Optional<Blob> blob = file.tryAs(Blob.class);
+        return blob.filter(value -> Strings.areEqual(value.getSpaceName(), destDirectory.get().getSpaceName()))
+                   .isPresent();
+    }
+
+    private boolean fastMoveHandler(VirtualFile file, VirtualFile newParent) {
+        Optional<Directory> directory = file.tryAs(Directory.class);
+        if (directory.isPresent()) {
+            directory.get().move(newParent.as(Directory.class));
             return true;
         }
 
         Optional<Blob> blob = file.tryAs(Blob.class);
         if (blob.isPresent()) {
-            blob.get().move(newParent.tryAs(Directory.class).orElse(null));
+            blob.get().move(newParent.as(Directory.class));
             return true;
         }
 

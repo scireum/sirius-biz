@@ -16,7 +16,7 @@ import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplink;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplinkFactory;
-import sirius.biz.storage.layer3.uplink.util.Attempt;
+import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.layer3.uplink.util.RemotePath;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnector;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorPool;
@@ -185,10 +185,12 @@ public class FTPUplink extends ConfigBasedUplink {
               .withOutputStreamSupplier(this::outputStreamSupplier)
               .withRenameHandler(this::renameHandler)
               .withCreateDirectoryHandler(this::createDirectoryHandler)
-              .withCanMoveHandler(this::canMoveHandler)
-              .withMoveHandler(this::moveHandler);
+              .withCanFastMoveHandler(this::canFastMoveHandler)
+              .withFastMoveHandler(this::fastMoveHandler);
 
         result.attach(parent.as(RemotePath.class).child(filename));
+        result.attach(this);
+
         if (file != null) {
             result.attach(file);
         }
@@ -253,14 +255,36 @@ public class FTPUplink extends ConfigBasedUplink {
         return Math.max(0, fetchFTPFile(file).map(FTPFile::getTimestamp).map(Calendar::getTimeInMillis).orElse(0L));
     }
 
-    private boolean canMoveHandler(VirtualFile file) {
-        //TODO SIRI-102 implement properly
-        return false;
+    private boolean canFastMoveHandler(VirtualFile file, VirtualFile newParent) {
+        return !readonly && this.equals(file.tryAs(FTPUplink.class).orElse(null)) && this.equals(newParent.tryAs(
+                FTPUplink.class).orElse(null));
     }
 
-
-    private boolean moveHandler(VirtualFile file, VirtualFile targetFile) {
-        //TODO SIRI-102 implement properly
+    private boolean fastMoveHandler(VirtualFile file, VirtualFile newParent) {
+        for (Attempt attempt : Attempt.values()) {
+            UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
+            try {
+                connector.connector()
+                         .rename(file.as(RemotePath.class).getPath(),
+                                 newParent.as(RemotePath.class).child(file.name()).getPath());
+                return true;
+            } catch (Exception e) {
+                connector.forceClose();
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/FTP: Cannot move '%s' to '%s' in uplink '%s': %s (%s)",
+                                            file,
+                                            newParent,
+                                            ftpConfig)
+                                    .handle();
+                }
+            } finally {
+                connector.safeClose();
+            }
+        }
 
         return false;
     }

@@ -8,11 +8,9 @@
 
 package sirius.biz.storage.layer3.uplink.util;
 
-import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.RateLimit;
-import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 
@@ -98,8 +96,8 @@ public class UplinkConnectorPool {
         pool.setNumTestsPerEvictionRun(NUM_TESTS_PER_EVICTION_RUN);
         pool.setTestOnBorrow(true);
         pool.setTestWhileIdle(true);
+        pool.setTestOnReturn(true);
 
         return pool;
     }
-
 }
