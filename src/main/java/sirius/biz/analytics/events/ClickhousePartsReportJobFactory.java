@@ -122,7 +122,7 @@ public class ClickhousePartsReportJobFactory extends ReportJobFactory {
 
     private String determineLinkToSizeChart(String tableName) {
         if (tableNameToType == null) {
-            tableNameToType = mixing.getDesciptors()
+            tableNameToType = mixing.getDescriptors()
                                     .stream()
                                     .collect(Collectors.toMap(EntityDescriptor::getRelationName,
                                                               descriptor -> Mixing.getNameForType(descriptor.getType())));

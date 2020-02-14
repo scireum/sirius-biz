@@ -98,7 +98,7 @@ public class EntityDescriptorParameter extends Parameter<EntityDescriptor, Entit
      * @return the list of value defined by the enum type
      */
     public List<EntityDescriptor> getValues() {
-        Stream<EntityDescriptor> descriptors = mixing.getDesciptors().stream();
+        Stream<EntityDescriptor> descriptors = mixing.getDescriptors().stream();
         if (filter != null) {
             descriptors = descriptors.filter(filter);
         }
