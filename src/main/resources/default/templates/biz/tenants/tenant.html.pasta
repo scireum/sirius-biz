@@ -21,7 +21,7 @@
         <small>@tenant.getTenantData().getAccountNumber()</small>
 
         <span class="pull-right">
-            <i:extensions target="tenant" point="head" tenant="tenant" page="page"/>
+            <i:extensions target="tenant" point="head" tenant="tenant" controller="controller" page="page"/>
         </span>
     </w:pageHeader>
 
@@ -38,6 +38,7 @@
                     <i:extensions target="tenant" point="sidebar-infos" tenant="tenant" controller="controller" page="page"/>
                 </w:infobox>
 
+                <i:extensions target="tenant" point="sidebar-additional" tenant="tenant" controller="controller" page="page"/>
 
                 <w:navbox labelKey="Model.links">
                     <w:navboxLink labelKey="Model.details" url="@apply('/tenant/%s', tenant.getIdAsString())"
