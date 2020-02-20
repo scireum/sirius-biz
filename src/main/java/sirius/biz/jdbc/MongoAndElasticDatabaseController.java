@@ -48,7 +48,7 @@ public class MongoAndElasticDatabaseController extends BasicController {
      * @param webContext the context containing the query
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
-    @Routed("/system/db")
+    @Routed("/system/query")
     public void db(WebContext webContext) {
         String className = webContext.get("class").asString();
         String queryString = webContext.get("query").asString();
@@ -82,7 +82,7 @@ public class MongoAndElasticDatabaseController extends BasicController {
      * @param webContext the current web context containing the query
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
-    @Routed("/system/db/autocomplete")
+    @Routed("/system/query/autocomplete")
     public void entityTypeAutocomplete(WebContext webContext) {
         AutocompleteHelper.handle(webContext, ((query, result) -> {
             for (Class<?> type : getAvailableEntityTypes()) {

@@ -10,14 +10,14 @@
     </i:block>
 
     <i:block name="breadcrumbs">
-        <li><a href="/system/db">MongoDB / ElasticSearch - Query Tool</a></li>
+        <li><a href="/system/query">MongoDB / ElasticSearch - Query Tool</a></li>
     </i:block>
 
     <w:pageHeader title="MongoDB / ElasticSearch - Query Tool"/>
 
     <div class="row">
         <div class="col-md-12">
-            <w:editForm url="/system/db">
+            <w:editForm url="/system/query">
                 <div class="col-md-8">
                     <label>
                         Query
@@ -30,7 +30,7 @@
                     </div>
                 </div>
                 <w:autocompleteSingleSelect span="3" name="class" label="Entity Type"
-                                            serviceUri="/system/db/autocomplete"
+                                            serviceUri="/system/query/autocomplete"
                                             required="true">
                     <i:for var="clazz" items="selectableClasses" type="java.lang.Class">
                         <option value="@clazz.getSimpleName()"
