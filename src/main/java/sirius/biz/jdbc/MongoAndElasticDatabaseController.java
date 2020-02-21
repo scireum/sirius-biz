@@ -34,7 +34,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
- * Provides the management GUI for mongo database related activities.
+ * Provides the management GUI for MongoDB or ElasticSearch database related queries.
  */
 @Register(classes = Controller.class)
 public class MongoAndElasticDatabaseController extends BasicController {
@@ -43,7 +43,7 @@ public class MongoAndElasticDatabaseController extends BasicController {
     private Mixing mixing;
 
     /**
-     * Executes the given mongo query and renders the UI.
+     * Builds the given query via {@link Query#queryString}, executes it and renders the UI.
      *
      * @param webContext the context containing the query
      */
