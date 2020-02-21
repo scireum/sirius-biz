@@ -49,8 +49,7 @@ public class ClickhouseSizeChartJobFactory extends LinearChartJobFactory {
     private EventRecorder recorder;
 
     private EntityDescriptorParameter entityDescriptorParameter =
-            new EntityDescriptorParameter("type", "Event Type").withFilter(descriptor -> Event.class.isAssignableFrom(
-                    descriptor.getType()));
+            new EntityDescriptorParameter().withFilter(descriptor -> Event.class.isAssignableFrom(descriptor.getType()));
 
     @Override
     public String getLabel() {
