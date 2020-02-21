@@ -157,7 +157,7 @@ public class DatabaseController extends BasicController {
         if (value == null) {
             return "";
         }
-        
+
         if (value.getClass().isArray()) {
             return Arrays.stream((Object[]) value).map(NLS::toUserString).collect(Collectors.joining(", "));
         }
@@ -187,15 +187,16 @@ public class DatabaseController extends BasicController {
     public void changesList(WebContext ctx, JSONStructuredOutput out) {
         schema.computeRequiredSchemaChanges();
         out.beginArray("changes");
-        for (SchemaUpdateAction a : schema.getSchemaUpdateActions()) {
+        for (SchemaUpdateAction action : schema.getSchemaUpdateActions()) {
             out.beginObject("change");
-            out.property("id", a.getId());
-            out.property("reason", a.getReason());
-            out.property("sql", a.getSql());
-            out.property("executed", a.isExecuted());
-            out.property("failed", a.isFailed());
-            out.property("error", Value.of(a.getError()).asString());
-            out.property("datalossPossible", a.isDataLossPossible());
+            out.property("id", action.getId());
+            out.property("reason", action.getReason());
+            out.property("realm", action.getRealm());
+            out.property("sql", String.join(";\n", action.getSql()) + ";");
+            out.property("executed", action.isExecuted());
+            out.property("failed", action.isFailed());
+            out.property("error", Value.of(action.getError()).asString());
+            out.property("datalossPossible", action.isDataLossPossible());
             out.endObject();
         }
         out.endArray();
