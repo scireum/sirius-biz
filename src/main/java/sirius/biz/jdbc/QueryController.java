@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * Provides the management GUI for MongoDB or ElasticSearch database related queries.
  */
 @Register(classes = Controller.class)
-public class MongoAndElasticDatabaseController extends BasicController {
+public class QueryController extends BasicController {
 
     @Part
     private Mixing mixing;
