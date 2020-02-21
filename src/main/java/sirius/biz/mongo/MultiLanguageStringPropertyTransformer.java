@@ -21,7 +21,8 @@ import java.util.Map;
  * Generates a {@link StringList} from the values of a {@link MultiLanguageStringProperty}.
  */
 @Register
-public class MultiLanguageStringPropertyTransformer implements Transformer<MultiLanguageStringProperty, PrefixSearchableContentSupplier> {
+public class MultiLanguageStringPropertyTransformer
+        implements Transformer<MultiLanguageStringProperty, PrefixSearchableContentSupplier> {
 
     @Override
     public Class<MultiLanguageStringProperty> getSourceClass() {
