@@ -68,7 +68,7 @@ public class QueryController extends BasicController {
         }
 
         webContext.respondWith()
-                  .template("/templates/biz/model/db.html.pasta",
+                  .template("/templates/biz/model/query.html.pasta",
                             getAvailableEntityTypes(),
                             className,
                             queryString,
