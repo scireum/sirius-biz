@@ -60,7 +60,7 @@
 <script type="text/javascript">
     $(document).ready(function () {
         $('#editForm').keydown(function (e) {
-            if (e.keyCode === 13) {
+            if (e.keyCode === sirius.keys.KEY_ENTER) {
                 $('#editForm').submit();
                 return false;
             }
