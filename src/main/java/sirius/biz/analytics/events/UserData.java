@@ -27,7 +27,7 @@ public class UserData extends Composite {
      * Stores the ID of the current user.
      */
     public static final Mapping USER_ID = Mapping.named("userId");
-    @Length(26)
+    @Length(255)
     @NullAllowed
     private String userId;
 
@@ -35,7 +35,7 @@ public class UserData extends Composite {
      * Stores the ID of the current tenant.
      */
     public static final Mapping TENANT_ID = Mapping.named("tenantId");
-    @Length(26)
+    @Length(255)
     @NullAllowed
     private String tenantId;
 
