@@ -34,7 +34,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
- * Provides the management GUI for MongoDB or ElasticSearch database related queries.
+ Provides a query GUI for all entities managed by <tt>Mixing</tt>.
  */
 @Register(classes = Controller.class)
 public class QueryController extends BasicController {
@@ -49,7 +49,7 @@ public class QueryController extends BasicController {
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/query")
-    public void db(WebContext webContext) {
+    public void query(WebContext webContext) {
         String className = webContext.get("class").asString();
         String queryString = webContext.get("query").asString();
         int limit = webContext.get("limit").asInt(10);

@@ -4,16 +4,16 @@
 <i:arg type="String" name="entitySource" default=""/>
 <i:arg type="int" name="limit"/>
 
-<w:page title="MongoDB / ElasticSearch - Query Tool">
+<w:page title="Query Tool">
     <i:block name="head">
         <script src="/assets/wondergem/ace/ace.js" type="text/javascript"></script>
     </i:block>
 
     <i:block name="breadcrumbs">
-        <li><a href="/system/query">MongoDB / ElasticSearch - Query Tool</a></li>
+        <li><a href="/system/query">Query Tool</a></li>
     </i:block>
 
-    <w:pageHeader title="MongoDB / ElasticSearch - Query Tool"/>
+    <w:pageHeader title="Query Tool"/>
 
     <div class="row">
         <div class="col-md-12">
