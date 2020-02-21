@@ -21,6 +21,7 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
@@ -119,7 +120,11 @@ public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
 
     @Override
     protected String createProcessTitle(Map<String, String> context) {
-        return getLabel();
+        return Strings.apply("Re-Save Entities of type: %s",
+                             descriptorParameter.get(context)
+                                                .map(EntityDescriptor::getType)
+                                                .map(Class::getSimpleName)
+                                                .orElse("?"));
     }
 
     @Override
