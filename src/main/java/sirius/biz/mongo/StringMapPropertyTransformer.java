@@ -9,7 +9,6 @@
 package sirius.biz.mongo;
 
 import sirius.db.mixing.properties.StringMapProperty;
-import sirius.db.mixing.types.StringMap;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.di.transformers.Transformer;
 
@@ -18,10 +17,10 @@ import javax.annotation.Nullable;
 import java.util.Map;
 
 /**
- * Generates a {@link StringMap} from the values of a {@link StringMapProperty}.
+ * Invokes the provided method to tokenize words for the key+value pairs in a {@link StringMapProperty}.
  */
 @Register
-public class StringMapPropertyTransformer implements Transformer<StringMapProperty, PrefixSearchableContentSupplier> {
+public class StringMapPropertyTransformer implements Transformer<StringMapProperty, PrefixSearchableContentConsumer> {
 
     @Override
     public Class<StringMapProperty> getSourceClass() {
@@ -29,18 +28,19 @@ public class StringMapPropertyTransformer implements Transformer<StringMapProper
     }
 
     @Override
-    public Class<PrefixSearchableContentSupplier> getTargetClass() {
-        return PrefixSearchableContentSupplier.class;
+    public Class<PrefixSearchableContentConsumer> getTargetClass() {
+        return PrefixSearchableContentConsumer.class;
     }
 
     @Nullable
     @Override
     @SuppressWarnings("unchecked")
-    public PrefixSearchableContentSupplier make(@Nonnull StringMapProperty source) {
-        return entity -> {
-            StringMap tokens = new StringMap();
-            tokens.setData(((Map<String, String>) source.getValue(entity)));
-            return tokens;
+    public PrefixSearchableContentConsumer make(@Nonnull StringMapProperty source) {
+        return (entity, consumer) -> {
+            ((Map<String, String>) source.getValue(entity)).forEach((key, value) -> {
+                consumer.accept(key);
+                consumer.accept(value);
+            });
         };
     }
 }
