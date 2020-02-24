@@ -49,9 +49,7 @@ public class ExportSchemaChangesJobFactory extends SimpleBatchProcessJobFactory 
         try {
             for (SchemaUpdateAction action : schema.getSchemaUpdateActions()) {
                 PrintWriter writer = writers.computeIfAbsent(action.getRealm(), realm -> createWriter(process, realm));
-                action.getSql().forEach(writer::print);
-                writer.print(";");
-                writer.println();
+                action.getSql().stream().map(sql -> sql + ";\n").forEach(writer::print);
             }
         } finally {
             writers.values().forEach(writer -> safeCloseWriter(writer, process));
