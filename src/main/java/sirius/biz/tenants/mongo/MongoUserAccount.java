@@ -51,14 +51,14 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
 
     @BeforeSave
     protected void enhanceSearchField() {
-        addContent(getUserAccountData().getPerson().getFirstname());
-        addContent(getUserAccountData().getPerson().getLastname());
-        addContent(getUserAccountData().getLogin().getUsername());
-        addContent(getUserAccountData().getEmail());
+        addContentAsTokens(getUserAccountData().getPerson().getFirstname());
+        addContentAsTokens(getUserAccountData().getPerson().getLastname());
+        addContentAsTokens(getUserAccountData().getLogin().getUsername());
+        addContentAsTokens(getUserAccountData().getEmail());
 
         tenants.fetchCachedTenant(getTenant()).ifPresent(tenant -> {
-            addContent(tenant.getTenantData().getName());
-            addContent(tenant.getTenantData().getAccountNumber());
+            addContentAsTokens(tenant.getTenantData().getName());
+            addContentAsTokens(tenant.getTenantData().getAccountNumber());
         });
     }
 
