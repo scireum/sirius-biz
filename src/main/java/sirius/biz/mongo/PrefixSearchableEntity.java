@@ -13,10 +13,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Transient;
-import sirius.db.mixing.types.NestedList;
 import sirius.db.mixing.types.StringList;
-import sirius.db.mixing.types.StringListMap;
-import sirius.db.mixing.types.StringMap;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
 import sirius.kernel.commons.Explain;
@@ -71,36 +68,10 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
             .getProperties()
             .stream()
             .filter(p -> p.getAnnotation(PrefixSearchContent.class).isPresent())
-            .map(p -> p.tryAs(PrefixSearchableContentSupplier.class)
-                       .map(supplier -> supplier.apply(this))
-                       .orElse(p.getValue(this)))
-            .filter(Strings::isFilled)
-            .forEach(this::addContent);
-    }
-
-    /**
-     * Transforms a property value into searchable text.
-     *
-     * @param propertyValue the value to transform
-     */
-    protected void addContent(Object propertyValue) {
-        if (propertyValue instanceof StringList) {
-            ((StringList) propertyValue).forEach(this::addContentAsTokens);
-        } else if (propertyValue instanceof StringMap) {
-            ((StringMap) propertyValue).forEach(entry -> {
-                addContentAsTokens(entry.getKey());
-                addContentAsTokens(entry.getValue());
-            });
-        } else if (propertyValue instanceof StringListMap) {
-            ((StringListMap) propertyValue).forEach(entry -> {
-                addContentAsTokens(entry.getKey());
-                entry.getValue().forEach(this::addContentAsTokens);
-            });
-        } else if (propertyValue instanceof NestedList) {
-            throw new UnsupportedOperationException("Nested objects are not yet supported by PrefixSearchableEntity");
-        } else {
-            addContentAsTokens(propertyValue);
-        }
+            .map(p -> p.tryAs(PrefixSearchableContentConsumer.class).orElse((entity, consumer) -> {
+                consumer.accept(p.getValue(this));
+            }))
+            .forEach(consumer -> consumer.accept(this, this::addContentAsTokens));
     }
 
     /**
