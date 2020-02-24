@@ -77,6 +77,22 @@ class PrefixSearchableEntitySpec extends BaseSpecification {
         !tokens.contains("en")
     }
 
+    def "tokenizing string list works"() {
+        given:
+        PrefixSearchableTestEntity e = new PrefixSearchableTestEntity()
+        when:
+        e.getList().add("Grumpy Cat").add("Dog")
+        and:
+        e.updateSearchField()
+        and:
+        def tokens = e.getSearchPrefixes().data()
+        then:
+        tokens.contains("dog")
+        tokens.contains("grumpy")
+        tokens.contains("cat")
+        tokens.contains("grumpy cat")
+    }
+
     def "splitting with emails works"() {
         given:
         PrefixSearchableTestEntity e = new PrefixSearchableTestEntity()

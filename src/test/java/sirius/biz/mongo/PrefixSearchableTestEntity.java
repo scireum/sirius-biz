@@ -10,6 +10,7 @@ package sirius.biz.mongo;
 
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.types.MultiLanguageString;
+import sirius.db.mixing.types.StringList;
 import sirius.db.mixing.types.StringMap;
 
 public class PrefixSearchableTestEntity extends PrefixSearchableEntity {
@@ -22,6 +23,9 @@ public class PrefixSearchableTestEntity extends PrefixSearchableEntity {
 
     @PrefixSearchContent
     private final MultiLanguageString multiLanguageText = new MultiLanguageString();
+
+    @PrefixSearchContent
+    private final StringList list = new StringList();
 
     @NullAllowed
     private String unsearchableTest;
@@ -48,5 +52,9 @@ public class PrefixSearchableTestEntity extends PrefixSearchableEntity {
 
     public MultiLanguageString getMultiLanguageText() {
         return multiLanguageText;
+    }
+
+    public StringList getList() {
+        return list;
     }
 }
