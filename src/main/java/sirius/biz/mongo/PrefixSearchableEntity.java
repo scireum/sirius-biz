@@ -80,14 +80,13 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
      * @param value the value to tokenize
      */
     @SuppressWarnings("squid:S2259")
-    @Explain("input cannot be null due to Strings.isEmpty")
-    public void addContentAsTokens(Object value) {
-        String input = value == null ? null : String.valueOf(value);
-        if (Strings.isEmpty(input)) {
+    @Explain("value cannot be null due to Strings.isEmpty")
+    public void addContentAsTokens(String value) {
+        if (Strings.isEmpty(value)) {
             return;
         }
 
-        splitContent(input.toLowerCase()).forEach(this::appendSingleToken);
+        splitContent(value.toLowerCase()).forEach(this::appendSingleToken);
     }
 
     private Set<String> splitContent(String input) {
