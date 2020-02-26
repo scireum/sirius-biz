@@ -29,8 +29,12 @@ import java.util.regex.Pattern;
 
 /**
  * Maintains a <tt>prefixSearchField</tt> in which all fields annotated with {@link PrefixSearchContent} are indexed.
+ *
+ * Note that the <tt>searchPrefixes</tt> is not automatically indexed as it usually only make sense if indexed
+ * in combination with other field(s). Therefore make sure to include this field when extending this class into
+ * other {@link MongoEntity entities} where applicable. {@link sirius.biz.tenants.mongo.MongoTenantAware} is a good
+ * example.
  */
-@Index(name = "prefix_index", columns = "searchPrefixes", columnSettings = Mango.INDEX_ASCENDING)
 public abstract class PrefixSearchableEntity extends MongoEntity {
 
     /**
