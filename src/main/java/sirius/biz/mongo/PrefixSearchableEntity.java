@@ -69,7 +69,7 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
             .stream()
             .filter(p -> p.getAnnotation(PrefixSearchContent.class).isPresent())
             .map(p -> p.tryAs(PrefixSearchableContentConsumer.class).orElse((entity, consumer) -> {
-                consumer.accept(String.valueOf(p.getValue(this)));
+                consumer.accept(p.getValue(this));
             }))
             .forEach(consumer -> consumer.accept(this, this::addContentAsTokens));
     }
