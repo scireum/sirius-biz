@@ -34,6 +34,13 @@ public class EntityDescriptorParameter extends Parameter<EntityDescriptor, Entit
     private Predicate<EntityDescriptor> filter;
 
     /**
+     * Creates a new parameter with a default name and label.
+     */
+    public EntityDescriptorParameter() {
+        super("descriptor", "Type");
+    }
+
+    /**
      * Creates a new parameter with the given name and label.
      *
      * @param name  the name of the parameter

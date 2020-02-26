@@ -20,6 +20,7 @@ import java.util.Optional;
 public class BooleanParameter extends Parameter<Boolean, BooleanParameter> {
 
     private boolean nullable = false;
+    private boolean defaultValue;
 
     /**
      * Creates a new parameter with the given name and label.
@@ -47,11 +48,11 @@ public class BooleanParameter extends Parameter<Boolean, BooleanParameter> {
      */
     @Override
     protected String checkAndTransformValue(Value input) {
-        if (isRequired() && !input.asBoolean()) {
+        if (nullable && !input.isFilled()) {
             return null;
         }
-        if (nullable && !resolveFromString(input).isPresent()) {
-            return null;
+        if (defaultValue && !input.isFilled()) {
+            return Boolean.TRUE.toString();
         }
         return NLS.toMachineString(input.asBoolean());
     }
@@ -69,6 +70,16 @@ public class BooleanParameter extends Parameter<Boolean, BooleanParameter> {
         return self();
     }
 
+    /**
+     * Makes this parameter default to <tt>true</tt> instead of <tt>false</tt>.
+     *
+     * @return the parameter itself for fluent method calls
+     */
+    public BooleanParameter withDefaultTrue() {
+        this.defaultValue = true;
+        return self();
+    }
+
     @Override
     public BooleanParameter markRequired() {
         throw new UnsupportedOperationException(
@@ -82,9 +93,13 @@ public class BooleanParameter extends Parameter<Boolean, BooleanParameter> {
 
     @Override
     protected Optional<Boolean> resolveFromString(@Nonnull Value input) {
-        if (nullable && !input.isFilled()) {
+        if (nullable && input.isEmptyString()) {
             return Optional.empty();
         }
+        if (defaultValue && input.isEmptyString()) {
+            return Optional.of(true);
+        }
+
         return Optional.of(input.asBoolean());
     }
 }
