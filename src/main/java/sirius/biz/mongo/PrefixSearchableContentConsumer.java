@@ -17,6 +17,6 @@ import java.util.function.Consumer;
  * The consumer takes the {@link PrefixSearchableEntity} containing the values to extract which are then
  * passed as the {@link Consumer} argument.
  */
-public interface PrefixSearchableContentConsumer extends BiConsumer<PrefixSearchableEntity, Consumer<String>> {
+public interface PrefixSearchableContentConsumer extends BiConsumer<PrefixSearchableEntity, Consumer<Object>> {
 
 }
