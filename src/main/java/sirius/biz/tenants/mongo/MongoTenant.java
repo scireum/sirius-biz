@@ -55,9 +55,9 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
 
     @BeforeSave
     protected void enhanceSearchField() {
-        addContent(getTenantData().getAddress().getStreet());
-        addContent(getTenantData().getAddress().getZip());
-        addContent(getTenantData().getAddress().getCity());
+        addContentAsTokens(getTenantData().getAddress().getStreet());
+        addContentAsTokens(getTenantData().getAddress().getZip());
+        addContentAsTokens(getTenantData().getAddress().getCity());
     }
 
     @Override

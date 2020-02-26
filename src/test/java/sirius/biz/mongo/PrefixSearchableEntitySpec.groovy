@@ -38,6 +38,61 @@ class PrefixSearchableEntitySpec extends BaseSpecification {
         !tokens.contains("content")
     }
 
+    def "tokenizing string map works"() {
+        given:
+
+        PrefixSearchableTestEntity e = new PrefixSearchableTestEntity()
+        when:
+        e.getMap().put("color", "Indigo blue");
+        e.getMap().put("shape", "Triangle");
+        and:
+        e.updateSearchField()
+        and:
+        def tokens = e.getSearchPrefixes().data()
+        then:
+        tokens.contains("color")
+        tokens.contains("blue")
+        tokens.contains("indigo")
+        tokens.contains("indigo blue")
+        tokens.contains("shape")
+        tokens.contains("triangle")
+    }
+
+    def "tokenizing multi language works"() {
+        given:
+        PrefixSearchableTestEntity e = new PrefixSearchableTestEntity()
+        when:
+        e.getMultiLanguageText().addText("de", "Schmetterling")
+        e.getMultiLanguageText().addText("en", "Nice butterfly")
+        and:
+        e.updateSearchField()
+        and:
+        def tokens = e.getSearchPrefixes().data()
+        then:
+        tokens.contains("schmetterling")
+        tokens.contains("nice")
+        tokens.contains("butterfly")
+        tokens.contains("nice butterfly")
+        !tokens.contains("de")
+        !tokens.contains("en")
+    }
+
+    def "tokenizing string list works"() {
+        given:
+        PrefixSearchableTestEntity e = new PrefixSearchableTestEntity()
+        when:
+        e.getList().add("Grumpy Cat").add("Dog")
+        and:
+        e.updateSearchField()
+        and:
+        def tokens = e.getSearchPrefixes().data()
+        then:
+        tokens.contains("dog")
+        tokens.contains("grumpy")
+        tokens.contains("cat")
+        tokens.contains("grumpy cat")
+    }
+
     def "splitting with emails works"() {
         given:
         PrefixSearchableTestEntity e = new PrefixSearchableTestEntity()
