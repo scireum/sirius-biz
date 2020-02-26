@@ -23,7 +23,7 @@ import java.util.Optional;
  * <p>
  * Note that an index is automatically created containing the tenant itself and the searchPrefixes,
  * which are added via {@link MongoBizEntity}. You can skip the index creation by defining an {@link Index}
- * without columns.
+ * with the same name and without columns.
  */
 @Index(name = "index_tenant_prefixes",
         columns = {"tenant", "searchPrefixes"},
