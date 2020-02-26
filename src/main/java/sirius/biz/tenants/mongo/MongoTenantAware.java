@@ -25,7 +25,7 @@ import java.util.Optional;
  * which are added via {@link MongoBizEntity}. You can skip the index creation by defining an {@link Index}
  * without columns.
  */
-@Index(name = "tenant_searchPrefixes",
+@Index(name = "index_tenant_prefixes",
         columns = {"tenant", "searchPrefixes"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 public abstract class MongoTenantAware extends MongoBizEntity implements TenantAware {
