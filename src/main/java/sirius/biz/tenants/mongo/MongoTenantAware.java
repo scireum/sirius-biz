@@ -11,6 +11,8 @@ package sirius.biz.tenants.mongo;
 import sirius.biz.mongo.MongoBizEntity;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.web.TenantAware;
+import sirius.db.mixing.annotations.Index;
+import sirius.db.mongo.Mango;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.di.std.Part;
 
@@ -18,7 +20,14 @@ import java.util.Optional;
 
 /**
  * Base class which marks subclasses as aware of their tenant they belong to.
+ * <p>
+ * Note that an index is automatically created containing the tenant itself and the searchPrefixes,
+ * which are added via {@link MongoBizEntity}. You can skip the index creation by defining an {@link Index}
+ * with the same name and without columns.
  */
+@Index(name = "index_tenant_prefixes",
+        columns = {"tenant", "searchPrefixes"},
+        columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 public abstract class MongoTenantAware extends MongoBizEntity implements TenantAware {
 
     @Part

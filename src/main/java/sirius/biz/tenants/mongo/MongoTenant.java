@@ -16,9 +16,11 @@ import sirius.biz.tenants.Tenants;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
+import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.TranslationSource;
+import sirius.db.mongo.Mango;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
@@ -32,6 +34,7 @@ import java.util.TreeSet;
  */
 @Framework(MongoTenants.FRAMEWORK_TENANTS_MONGO)
 @TranslationSource(Tenant.class)
+@Index(name = "index_prefixes", columns = "searchPrefixes", columnSettings = Mango.INDEX_ASCENDING)
 public class MongoTenant extends MongoBizEntity implements Tenant<String> {
 
     /**

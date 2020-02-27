@@ -35,6 +35,7 @@ import java.util.function.Consumer;
         columnSettings = Mango.INDEX_ASCENDING,
         unique = true)
 @TranslationSource(UserAccount.class)
+@Index(name = "index_prefixes", columns = "searchPrefixes", columnSettings = Mango.INDEX_ASCENDING)
 public class MongoUserAccount extends MongoTenantAware implements UserAccount<String, MongoTenant> {
 
     public static final Mapping USER_ACCOUNT_DATA = Mapping.named("userAccountData");
