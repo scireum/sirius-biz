@@ -16,13 +16,14 @@ import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplink;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplinkFactory;
-import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.layer3.uplink.util.RemotePath;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnector;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorPool;
+import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.biz.storage.util.WatchableInputStream;
 import sirius.biz.storage.util.WatchableOutputStream;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.std.Part;
@@ -99,6 +100,8 @@ public class FTPUplink extends ConfigBasedUplink {
     }
 
     @Override
+    @SuppressWarnings("squid:S3626")
+    @Explain("False positive, the return is necessarry to prevent retries if an attempt was successful.")
     protected void enumerateDirectoryChildren(@Nonnull VirtualFile parent, FileSearch search) {
         if (!parent.isDirectory()) {
             return;
@@ -109,6 +112,7 @@ public class FTPUplink extends ConfigBasedUplink {
             UplinkConnector<FTPClient> connector = connectorPool.obtain(ftpConfig);
             try {
                 processListing(parent, search, relativeParent, connector);
+                return;
             } catch (Exception e) {
                 connector.forceClose();
                 if (attempt.shouldThrow(e)) {
