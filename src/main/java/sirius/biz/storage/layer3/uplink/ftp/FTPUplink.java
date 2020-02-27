@@ -101,7 +101,7 @@ public class FTPUplink extends ConfigBasedUplink {
 
     @Override
     @SuppressWarnings("squid:S3626")
-    @Explain("False positive, the return is necessarry to prevent retries if an attempt was successful.")
+    @Explain("False positive, the return is necessary to prevent retries if an attempt was successful.")
     protected void enumerateDirectoryChildren(@Nonnull VirtualFile parent, FileSearch search) {
         if (!parent.isDirectory()) {
             return;
