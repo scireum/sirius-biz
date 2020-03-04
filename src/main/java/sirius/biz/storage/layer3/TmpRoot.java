@@ -91,6 +91,7 @@ public class TmpRoot implements VFSRoot {
         MutableVirtualFile result = new MutableVirtualFile(parent, blob.getFilename());
         result.markAsExistingFile();
         result.withInputStreamSupplier(ignored -> blob.createInputStream());
+        result.withFileHandleSupplier(ignored -> blob.download().orElse(null));
 
         return result;
     }

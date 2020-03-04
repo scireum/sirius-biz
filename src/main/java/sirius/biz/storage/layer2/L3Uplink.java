@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer2;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.ChildProvider;
 import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
@@ -290,6 +291,8 @@ public class L3Uplink implements VFSRoot {
         file.withSizeSupplier(this::sizeSupplier);
         file.withCanProvideInputStream(this::isReadable);
         file.withInputStreamSupplier(this::inputStreamSupplier);
+        file.withCanProvideFileHandle(this::isReadable);
+        file.withFileHandleSupplier(this::fileHandleSupplier);
         file.withCustomTunnelHandler(this::tunnelHandler);
         file.withCanProvideOutputStream(this::isWriteable);
         file.withOutputStreamSupplier(this::outputStreamSupplier);
@@ -415,6 +418,10 @@ public class L3Uplink implements VFSRoot {
 
     private InputStream inputStreamSupplier(VirtualFile file) {
         return file.as(Blob.class).createInputStream();
+    }
+
+    private FileHandle fileHandleSupplier(VirtualFile file) {
+        return file.as(Blob.class).download().orElse(null);
     }
 
     private void tunnelHandler(VirtualFile file, Response response) {
