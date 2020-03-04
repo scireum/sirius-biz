@@ -14,7 +14,7 @@
         </i:for>
     </w:singleSelect>
 
-    <w:multiSelect span="12" name="upgrades" labelKey="PackageData.upgrades" optional="true">
+    <w:multiSelect span="12" name="upgrades" labelKey="PackageData.upgrades">
         <i:for var="upgrade" items="packages.getUpgrades(scope)" type="String">
             <option value="@upgrade" @selected="packageData.getUpgrades().contains(upgrade)">
                 @packages.getUpgradeName(scope, upgrade)
