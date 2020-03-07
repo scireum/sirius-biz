@@ -13,11 +13,11 @@ import sirius.db.mongo.MongoEntity;
 public class IndicatorTestEntity extends MongoEntity implements IndicatedEntity {
 
     private String value;
-    private final IndicatorData indicatorData = new IndicatorData(this);
+    private final IndicatorData indicators = new IndicatorData(this);
 
     @Override
     public IndicatorData getIndicators() {
-        return this.indicatorData;
+        return this.indicators;
     }
 
     public String getValue() {
