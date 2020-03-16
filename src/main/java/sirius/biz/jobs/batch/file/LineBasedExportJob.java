@@ -88,6 +88,11 @@ public abstract class LineBasedExportJob extends FileExportJob {
                        .orElse(fileType);
     }
 
+    @Override
+    protected String determineFileExtension() {
+        return fileType.name().toLowerCase();
+    }
+
     /**
      * Creates the appropriate {@link LineBasedExport} into {@link #export} based on the
      * {@link #determineEffectiveFileType() effective file type}.

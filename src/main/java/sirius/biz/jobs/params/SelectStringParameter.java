@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 /**
  * Provides a single select parameter from a list of key-value pairs.
  */
-public class SingleSelectParameter extends Parameter<String, SingleSelectParameter> {
+public class SelectStringParameter extends SelectParameter<String, SelectStringParameter> {
 
     private Map<String, String> entries = new LinkedHashMap<>();
 
@@ -25,7 +25,7 @@ public class SingleSelectParameter extends Parameter<String, SingleSelectParamet
      * @param name  the name of the parameter
      * @param label the label of the parameter, which will be {@link NLS#smartGet(String) auto translated}
      */
-    public SingleSelectParameter(String name, String label) {
+    public SelectStringParameter(String name, String label) {
         super(name, label);
     }
 
@@ -36,7 +36,7 @@ public class SingleSelectParameter extends Parameter<String, SingleSelectParamet
      * @param value the display value, which will be {@link NLS#smartGet(String) auto translated}
      * @return the parameter itself for fluent method calls
      */
-    public SingleSelectParameter withEntry(String key, String value) {
+    public SelectStringParameter withEntry(String key, String value) {
         this.entries.put(key, NLS.smartGet(value));
         return self();
     }
@@ -46,16 +46,12 @@ public class SingleSelectParameter extends Parameter<String, SingleSelectParamet
      *
      * @return list of {@link Tuple entries} with the key as first and display value as second tuple items.
      */
+    @Override
     public List<Tuple<String, String>> getValues() {
         return entries.keySet()
                       .stream()
                       .map(entry -> Tuple.create(entry, entries.get(entry)))
                       .collect(Collectors.toList());
-    }
-
-    @Override
-    public String getTemplateName() {
-        return "/templates/biz/jobs/params/selectString.html.pasta";
     }
 
     @Override
