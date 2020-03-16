@@ -177,11 +177,6 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     }
 
     @Override
-    protected String determineFileExtension() {
-        return fileType.name().toLowerCase();
-    }
-
-    @Override
     protected void executeIntoExport() throws Exception {
         if (templateFile == null) {
             fullExportWithoutTemplate();
