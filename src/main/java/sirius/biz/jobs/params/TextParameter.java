@@ -11,7 +11,7 @@ package sirius.biz.jobs.params;
 import sirius.kernel.nls.NLS;
 
 /**
- * Defines a parameter which uses the textfield and therefore can provide an addon text.
+ * Defines a parameter which uses the textfield as input field.
  *
  * @param <V> the type of values produced by this parameter
  * @param <P> recursive type reference to support fluent method calls
