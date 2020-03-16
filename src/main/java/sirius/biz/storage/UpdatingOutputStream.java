@@ -10,7 +10,6 @@ package sirius.biz.storage;
 
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
-import sirius.kernel.health.Exceptions;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
