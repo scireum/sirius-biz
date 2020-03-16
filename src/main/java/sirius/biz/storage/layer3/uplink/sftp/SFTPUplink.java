@@ -133,7 +133,9 @@ public class SFTPUplink extends ConfigBasedUplink {
               .withSizeSupplier(this::sizeSupplier)
               .withLastModifiedSupplier(this::lastModifiedSupplier)
               .withDeleteHandler(this::deleteHandler)
+              .withCanProvideInputStream(this::isExistingFile)
               .withInputStreamSupplier(this::inputStreamSupplier)
+              .withCanProvideOutputStream(this::isExistingFile)
               .withOutputStreamSupplier(this::outputStreamSupplier)
               .withRenameHandler(this::renameHandler)
               .withCreateDirectoryHandler(this::createDirectoryHandler)
@@ -261,6 +263,11 @@ public class SFTPUplink extends ConfigBasedUplink {
     private boolean isDirectoryFlagSupplier(VirtualFile file) {
         SftpClient.Attributes attributes = getAttributes(file);
         return attributes.isDirectory();
+    }
+
+    private boolean isExistingFile(VirtualFile file) {
+        SftpClient.Attributes attributes = getAttributes(file);
+        return attributes.isRegularFile();
     }
 
     private long sizeSupplier(VirtualFile file) {

@@ -10,6 +10,7 @@ package sirius.biz.storage.layer3;
 
 import com.google.common.io.ByteStreams;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
@@ -27,6 +28,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,7 +41,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -85,8 +86,10 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     protected BiConsumer<VirtualFile, File> consumeFileHandler;
     protected Predicate<VirtualFile> canProvideInputStream;
     protected Function<VirtualFile, InputStream> inputStreamSupplier;
+    protected Predicate<VirtualFile> canProvideFileHandle;
+    protected Function<VirtualFile, FileHandle> fileHandleSupplier;
     protected BiConsumer<VirtualFile, Response> tunnelHandler = VirtualFile::defaultTunnelHandler;
-    protected BiFunction<VirtualFile, VirtualFile, Boolean> canFastMoveHandler;
+    protected BiPredicate<VirtualFile, VirtualFile> canFastMoveHandler;
     protected BiPredicate<VirtualFile, VirtualFile> fastMoveHandler;
     protected Predicate<VirtualFile> canRenameHandler;
     protected BiPredicate<VirtualFile, String> renameHandler;
@@ -414,7 +417,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             }
 
             if (canFastMoveHandler != null) {
-                return canFastMoveHandler.apply(this, newParent);
+                return canFastMoveHandler.test(this, newParent);
             } else {
                 return true;
             }
@@ -1078,7 +1081,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Tries to create an input stream to read the contents of the file.
      *
-     * @return an input stream to read the contents of the child or an empty optional if no input stream can be created
+     * @return an input stream to read the contents of the file or an empty optional if no input stream can be created
      */
     public Optional<InputStream> tryCreateInputStream() {
         try {
@@ -1095,7 +1098,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Creates an input stream to write to the file.
      *
-     * @return an input stream to read the contents of the child
+     * @return an input stream to read the contents of the file
      * @throws HandledException if no input stream could be created
      */
     public InputStream createInputStream() {
@@ -1103,6 +1106,74 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                                                                   .withNLSKey("VirtualFile.cannotRead")
                                                                   .set("file", path())
                                                                   .handle());
+    }
+
+    /**
+     * Determines if the content can be provided as {@link FileHandle}.
+     *
+     * @return <tt>true</tt> if a the contents of this file can be provided as file handle, <tt>false</tt> otherwise
+     */
+    public boolean canDownload() {
+        try {
+            if (fileHandleSupplier == null && !canCreateInputStream()) {
+                return false;
+            }
+
+            if (canProvideFileHandle != null) {
+                return canProvideFileHandle.test(this);
+            } else {
+                return true;
+            }
+        } catch (Exception e) {
+            throw handleErrorInCallback(e, "canProvidFileHandle");
+        }
+    }
+
+    /**
+     * Tries to provides the contents of this file as {@link FileHandle}.
+     *
+     * @return a <tt>FileHandle</tt> with the contents of the file or an empty optional if no handle can be obtained
+     */
+    public Optional<FileHandle> tryDownload() {
+        try {
+            if (!canDownload()) {
+                return Optional.empty();
+            }
+            if (fileHandleSupplier == null) {
+                return tryManualDownload();
+            } else {
+                return Optional.ofNullable(fileHandleSupplier.apply(this));
+            }
+        } catch (Exception e) {
+            throw handleErrorInCallback(e, "fileHandleSupplier");
+        }
+    }
+
+    private Optional<FileHandle> tryManualDownload() throws IOException {
+        File temporaryFile = File.createTempFile("vfs-", null);
+        try {
+            try (FileOutputStream out = new FileOutputStream(temporaryFile); InputStream in = createInputStream()) {
+                ByteStreams.copy(in, out);
+            }
+
+            return Optional.of(FileHandle.temporaryFileHandle(temporaryFile));
+        } catch (IOException e) {
+            Files.delete(temporaryFile);
+            throw e;
+        }
+    }
+
+    /**
+     * Provides the contents of this file as {@link FileHandle}.
+     *
+     * @return a file handle representing the contents of this file
+     * @throws HandledException if no file handle could be obtained
+     */
+    public FileHandle download() {
+        return tryDownload().orElseThrow(() -> Exceptions.createHandled()
+                                                         .withNLSKey("VirtualFile.cannotRead")
+                                                         .set("file", path())
+                                                         .handle());
     }
 
     @Override

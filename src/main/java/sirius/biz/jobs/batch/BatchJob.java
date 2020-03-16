@@ -10,6 +10,7 @@ package sirius.biz.jobs.batch;
 
 import com.google.common.io.ByteStreams;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.VirtualFile;
 
 import java.io.Closeable;
@@ -48,6 +49,22 @@ public abstract class BatchJob implements Closeable {
      */
     protected void attachFile(VirtualFile file) {
         try (InputStream in = file.createInputStream(); OutputStream out = process.addFile(file.name())) {
+            ByteStreams.copy(in, out);
+        } catch (IOException e) {
+            process.handle(e);
+        }
+    }
+
+    /**
+     * Attaches the given file handle to the surrounding process.
+     * <p>
+     * This can be used e.g. to persist input data for import jobs.
+     *
+     * @param filename the name of the file to attach
+     * @param file     the file to attach
+     */
+    protected void attachFile(String filename, FileHandle file) {
+        try (InputStream in = file.getInputStream(); OutputStream out = process.addFile(filename)) {
             ByteStreams.copy(in, out);
         } catch (IOException e) {
             process.handle(e);

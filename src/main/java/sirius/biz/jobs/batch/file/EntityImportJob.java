@@ -12,8 +12,8 @@ import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.FileParameter;
-import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.tenants.Tenants;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
@@ -87,10 +87,10 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     }
 
     @Override
-    protected void backupInputFile(VirtualFile input) {
+    protected void backupInputFile(String name, FileHandle input) {
         // No need to create a backup copy if we only run a check...
         if (mode != ImportMode.CHECK_ONLY) {
-            super.backupInputFile(input);
+            super.backupInputFile(name, input);
         }
     }
 

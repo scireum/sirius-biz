@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer3;
 
+import sirius.biz.storage.layer1.FileHandle;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.web.http.Response;
@@ -308,6 +309,29 @@ public class MutableVirtualFile extends VirtualFile {
     }
 
     /**
+     * Determines if a file handle can be provided for this file.
+     *
+     * @param canProvideFileHandle the predicate which determines if a file handle can be created for the
+     *                             given file
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withCanProvideFileHandle(Predicate<VirtualFile> canProvideFileHandle) {
+        this.canProvideFileHandle = canProvideFileHandle;
+        return this;
+    }
+
+    /**
+     * Permits to obtain the contents of this file as file handle.
+     *
+     * @param fileHandleSupplier the handler which provides a file handle for the contents of this file
+     * @return the file itself for fluent method calls
+     */
+    public MutableVirtualFile withFileHandleSupplier(Function<VirtualFile, FileHandle> fileHandleSupplier) {
+        this.fileHandleSupplier = fileHandleSupplier;
+        return this;
+    }
+
+    /**
      * Permits to write the contents of a file.
      *
      * @param outputStreamSupplier the handler which provides an output stream to write into the file.
@@ -360,7 +384,7 @@ public class MutableVirtualFile extends VirtualFile {
      *                       new parent
      * @return the file itself for fluent method calls
      */
-    public MutableVirtualFile withCanFastMoveHandler(BiFunction<VirtualFile, VirtualFile, Boolean> canMoveHandler) {
+    public MutableVirtualFile withCanFastMoveHandler(BiPredicate<VirtualFile, VirtualFile> canMoveHandler) {
         this.canFastMoveHandler = canMoveHandler;
         return this;
     }

@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer3.uplink.fs;
 
+import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
@@ -96,7 +97,11 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
               .withSizeSupplier(this::sizeSupplier)
               .withLastModifiedSupplier(this::lastModifiedSupplier)
               .withDeleteHandler(this::deleteHandler)
+              .withCanProvideInputStream(this::isExistingFile)
               .withInputStreamSupplier(this::inputStreamSupplier)
+              .withCanProvideFileHandle(this::isExistingFile)
+              .withFileHandleSupplier(this::fileHandleSupplier)
+              .withCanProvideOutputStream(this::isExistingFile)
               .withOutputStreamSupplier(this::outputStreamSupplier)
               .withRenameHandler(this::renameHandler)
               .withCreateDirectoryHandler(this::createDirectoryHandler)
@@ -215,6 +220,10 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
         }
     }
 
+    private boolean isExistingFile(VirtualFile file) {
+        return existsFlagSupplier(file) && !isDirectoryFlagSupplier(file);
+    }
+
     private InputStream inputStreamSupplier(VirtualFile file) {
         try {
             return new FileInputStream(file.as(File.class));
@@ -223,6 +232,18 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
                             .to(StorageUtils.LOG)
                             .error(e)
                             .withSystemErrorMessage("Layer 3/FS: Cannot open input stream of %s - %s (%s)", file)
+                            .handle();
+        }
+    }
+
+    private FileHandle fileHandleSupplier(VirtualFile file) {
+        try {
+            return FileHandle.permanentFileHandle(file.as(File.class));
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Layer 3/FS: Cannot create a file handle of %s - %s (%s)", file)
                             .handle();
         }
     }
