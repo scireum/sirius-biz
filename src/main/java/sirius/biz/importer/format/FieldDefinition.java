@@ -48,6 +48,8 @@ public class FieldDefinition {
     public FieldDefinition(String name, String type) {
         this.name = name;
         this.type = type;
+
+        addAlias(getName());
     }
 
     /**
@@ -227,8 +229,7 @@ public class FieldDefinition {
      * @return the field itself for fluent method calls
      */
     public FieldDefinition withLabel(String constantLabel) {
-        this.label = () -> NLS.smartGet(constantLabel);
-        return this;
+        return withLabel(() -> NLS.smartGet(constantLabel));
     }
 
     /**
@@ -239,6 +240,7 @@ public class FieldDefinition {
      */
     public FieldDefinition withLabel(Supplier<String> labelFunction) {
         this.label = labelFunction;
+        addAlias(getLabel());
         return this;
     }
 

@@ -306,9 +306,6 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     }
 
     protected FieldDefinition expandAliases(FieldDefinition field, Extension aliases) {
-        field.addAlias(field.getName());
-        field.addAlias(field.getLabel());
-
         if (aliases != null && aliases.getConfig().hasPath(field.getName())) {
             aliases.getStringList(field.getName()).forEach(alias -> {
                 if (Sirius.isDev() && field.getAliases().contains(alias)) {
