@@ -8,7 +8,6 @@
 
 package sirius.biz.storage.layer3.uplink.sftp;
 
-import com.google.common.io.BaseEncoding;
 import org.apache.sshd.client.subsystem.sftp.SftpClient;
 import org.apache.sshd.common.subsystem.sftp.SftpConstants;
 import org.apache.sshd.common.subsystem.sftp.SftpException;
@@ -17,10 +16,10 @@ import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplink;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplinkFactory;
-import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.layer3.uplink.util.RemotePath;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnector;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorPool;
+import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.biz.storage.util.WatchableInputStream;
 import sirius.biz.storage.util.WatchableOutputStream;
