@@ -101,7 +101,6 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
               .withInputStreamSupplier(this::inputStreamSupplier)
               .withCanProvideFileHandle(this::isExistingFile)
               .withFileHandleSupplier(this::fileHandleSupplier)
-              .withCanProvideOutputStream(this::isExistingFile)
               .withOutputStreamSupplier(this::outputStreamSupplier)
               .withRenameHandler(this::renameHandler)
               .withCreateDirectoryHandler(this::createDirectoryHandler)
