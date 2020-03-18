@@ -186,7 +186,6 @@ public class FTPUplink extends ConfigBasedUplink {
               .withDeleteHandler(this::deleteHandler)
               .withCanProvideInputStream(this::isExistingFile)
               .withInputStreamSupplier(this::inputStreamSupplier)
-              .withCanProvideOutputStream(this::isExistingFile)
               .withOutputStreamSupplier(this::outputStreamSupplier)
               .withRenameHandler(this::renameHandler)
               .withCreateDirectoryHandler(this::createDirectoryHandler)
