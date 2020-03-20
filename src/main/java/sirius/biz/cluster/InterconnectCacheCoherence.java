@@ -28,10 +28,13 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
     private static final String MESSAGE_TYPE = "type";
     private static final String TYPE_CLEAR = "clear";
     private static final String TYPE_REMOVE = "remove";
+    private static final String TYPE_REMOVE_ALL = "removeAll";
     private static final String TYPE_PUT = "put";
 
     private static final String MESSAGE_CACHE = "cache";
     private static final String MESSAGE_KEY = "key";
+    private static final String MESSAGE_DISCRIMINATOR = "discriminator";
+    private static final String MESSAGE_TEST_VALUE = "testValue";
     private static final String MESSAGE_NODE = "node";
 
     @Part
@@ -62,6 +65,16 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
     }
 
     @Override
+    public void removeAll(Cache<String, ?> cache, String discriminator, String testInput) {
+        interconnect.dispatch(getName(),
+                              new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_REMOVE_ALL)
+                                              .fluentPut(MESSAGE_CACHE, cache.getName())
+                                              .fluentPut(MESSAGE_DISCRIMINATOR, discriminator)
+                                              .fluentPut(MESSAGE_TEST_VALUE, testInput)
+                                              .fluentPut(MESSAGE_NODE, CallContext.getNodeName()));
+    }
+
+    @Override
     public void handleEvent(JSONObject event) {
         String type = event.getString(MESSAGE_TYPE);
         String cache = event.getString(MESSAGE_CACHE);
@@ -71,6 +84,10 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
         } else if (Strings.areEqual(type, TYPE_REMOVE)) {
             String key = event.getString(MESSAGE_KEY);
             CacheManager.removeCoherentCacheKeyLocally(cache, key);
+        } else if (Strings.areEqual(type, TYPE_REMOVE_ALL)) {
+            String discriminator = event.getString(MESSAGE_DISCRIMINATOR);
+            String testValue = event.getString(MESSAGE_TEST_VALUE);
+            CacheManager.coherentCacheRemoveAllLocally(cache, discriminator, testValue);
         } else if (Strings.areEqual(type, TYPE_PUT)) {
             String node = event.getString(MESSAGE_NODE);
             // on a "put" event, we want to remove the key from all nodes, except the node "put" was called on
