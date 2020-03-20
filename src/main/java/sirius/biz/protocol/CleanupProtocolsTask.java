@@ -14,7 +14,7 @@ import sirius.kernel.async.Tasks;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.timer.EveryDay;
+import sirius.kernel.timer.EndOfDayTask;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
  * system configuration.
  */
 @Register
-public class CleanupProtocolsTask implements EveryDay {
+public class CleanupProtocolsTask implements EndOfDayTask {
 
     @Part
     private Elastic elastic;
@@ -53,24 +53,22 @@ public class CleanupProtocolsTask implements EveryDay {
     private Duration keepNegativeAudits;
 
     @Override
-    public String getConfigKeyName() {
+    public String getName() {
         return "protocols-cleaner";
     }
 
     @Override
-    public void runTimer() throws Exception {
+    public void execute() throws Exception {
         if (elastic != null && elastic.getReadyFuture().isCompleted() && !Sirius.isStartedAsTest()) {
-            tasks.defaultExecutor().fork(() -> {
-                if (Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_PROTOCOLS)) {
-                    deleteLogs();
-                    deleteIncidents();
-                    deleteMails();
-                    deleteAuditLogs();
-                }
-                if (Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_JOURNAL)) {
-                    deleteJournal();
-                }
-            });
+            if (Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_PROTOCOLS)) {
+                deleteLogs();
+                deleteIncidents();
+                deleteMails();
+                deleteAuditLogs();
+            }
+            if (Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_JOURNAL)) {
+                deleteJournal();
+            }
         }
     }
 
