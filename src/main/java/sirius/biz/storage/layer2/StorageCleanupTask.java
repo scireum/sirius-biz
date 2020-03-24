@@ -13,15 +13,15 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
-import sirius.kernel.timer.EveryDay;
+import sirius.kernel.timer.EndOfDayTask;
 
 /**
  * Removes old and outdated files from {@link BlobStorageSpace storage spaces}.
  *
  * @see BlobStorageSpace#runCleanup()
  */
-@Register(classes = EveryDay.class)
-public class StorageCleanupTask implements EveryDay {
+@Register
+public class StorageCleanupTask implements EndOfDayTask {
 
     @Part
     private Tasks tasks;
@@ -30,24 +30,18 @@ public class StorageCleanupTask implements EveryDay {
     private BlobStorage blobStorage;
 
     @Override
-    public String getConfigKeyName() {
+    public String getName() {
         return "storage-layer2-cleaner";
     }
 
     @Override
-    public void runTimer() throws Exception {
-        if (blobStorage == null) {
-            return;
-        }
-
-        tasks.defaultExecutor().start(this::runCleanup);
-    }
-
-    protected void runCleanup() {
-        try {
-            blobStorage.getSpaces().forEach(BlobStorageSpace::runCleanup);
-        } catch (Exception e) {
-            Exceptions.handle(Log.BACKGROUND, e);
+    public void execute() throws Exception {
+        if (blobStorage != null) {
+            try {
+                blobStorage.getSpaces().forEach(BlobStorageSpace::runCleanup);
+            } catch (Exception e) {
+                Exceptions.handle(Log.BACKGROUND, e);
+            }
         }
     }
 }
