@@ -203,6 +203,15 @@ public class InternationalAddressData extends AddressData {
         return Objects.hash(getStreet(), getZip(), getCity(), getCountry());
     }
 
+    /**
+     * Returns the value (translated name) of the country.
+     *
+     * @return the value for <tt>country</tt> from the <tt>countries</tt> code list
+     */
+    public String getTranslatedCountry() {
+        return codeLists.getTranslatedValue(CODE_LIST_COUNTRIES, country);
+    }
+
     public String getCountry() {
         return country;
     }
