@@ -44,8 +44,7 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     private IndexMappings mappings;
 
     private EntityDescriptorParameter entityDescriptorParameter =
-            new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity)
-                                                         .markRequired();
+            new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity).markRequired();
 
     @Override
     public String getLabel() {
@@ -66,8 +65,8 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     @Override
     protected void execute(ProcessContext process) throws Exception {
         EntityDescriptor ed = process.require(entityDescriptorParameter);
-        String nextIndex = determineNextIndexName(ed);
-        // set the dynamic mapping mode to "false", so that legacy fields in documents are just ignored and don't
+        String nextIndex = mappings.determineNextIndexName(ed);
+        // Set the dynamic mapping mode to "false", so that legacy fields in documents are just ignored and don't
         // cause the reindex process to abort
         mappings.createMapping(ed, nextIndex, IndexMappings.DynamicMapping.FALSE);
         process.log("Created index: " + nextIndex);
@@ -78,15 +77,6 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
         process.log("Started a reindex job in elasticsearch, check the task API to see the progress ...");
     }
 
-    private String determineNextIndexName(EntityDescriptor ed) {
-        String nextIndexName = ed.getRelationName() + "-" + NLS.toMachineString(LocalDate.now());
-        int run = 0;
-
-        while (run++ < 10) {
-            if (!elastic.getLowLevelClient().indexExists(nextIndexName)) {
-                return nextIndexName;
-            }
-            nextIndexName = ed.getRelationName() + "-" + NLS.toMachineString(LocalDate.now()) + "-" + run;
         }
 
         throw Exceptions.handle().withSystemErrorMessage("Couldn't find a unique index name after 10 runs!").handle();
