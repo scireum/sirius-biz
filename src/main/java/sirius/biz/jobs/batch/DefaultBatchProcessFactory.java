@@ -29,6 +29,24 @@ public abstract class DefaultBatchProcessFactory extends BatchProcessJobFactory 
         }
     }
 
+    /**
+     * Provides a default just like {@link DefaultBatchProcessTaskExecutor} but only executes the jobs partially.
+     * <p>
+     * This can be used by miscellaneous jobs which start a process that is finished / completed elsewhere.
+     */
+    public static class DefaultPartialBatchProcessTaskExecutor extends BatchProcessTaskExecutor {
+
+        @Override
+        public String queueName() {
+            return "jobs";
+        }
+
+        @Override
+        protected boolean shouldExecutePartially() {
+            return true;
+        }
+    }
+
     @Override
     protected Class<? extends DistributedTaskExecutor> getExecutor() {
         return DefaultBatchProcessTaskExecutor.class;
