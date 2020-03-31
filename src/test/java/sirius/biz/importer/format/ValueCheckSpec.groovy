@@ -8,11 +8,11 @@
 
 package sirius.biz.importer.format
 
-
+import sirius.kernel.BaseSpecification
 import sirius.kernel.commons.Value
 import spock.lang.Specification
 
-class ValueCheckSpec extends Specification {
+class ValueCheckSpec extends BaseSpecification {
 
     def "amount scale check correctly marks non numeric values as invalid"() {
         when:
