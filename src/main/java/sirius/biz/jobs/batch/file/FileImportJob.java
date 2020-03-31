@@ -13,6 +13,7 @@ import sirius.biz.jobs.batch.ImportJob;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.Storage;
+import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Files;
@@ -54,13 +55,17 @@ public abstract class FileImportJob extends ImportJob {
         VirtualFile file = process.require(fileParameter);
 
         if (canHandleFileExtension(Value.of(file.fileExtension()).toLowerCase())) {
-            backupInputFile(file);
-            try (InputStream in = file.createInputStream()) {
-                executeForStream(file.name(), in);
+            try (FileHandle fileHandle = file.download()) {
+                backupInputFile(file.name(), fileHandle);
+                try (InputStream in = fileHandle.getInputStream()) {
+                    executeForStream(file.name(), in);
+                }
             }
         } else if (FILE_EXTENSION_ZIP.equalsIgnoreCase(file.fileExtension())) {
-            backupInputFile(file);
-            executeForZIP(file);
+            try (FileHandle fileHandle = file.download()) {
+                backupInputFile(file.name(), fileHandle);
+                executeForZIP(fileHandle);
+            }
         } else {
             throw Exceptions.createHandled().withNLSKey("FileImportJob.fileNotSupported").handle();
         }
@@ -71,16 +76,17 @@ public abstract class FileImportJob extends ImportJob {
      * <p>
      * This can be suppressed by overwriting this method.
      *
-     * @param input the input file to backup
+     * @param filename the name of the file to backup
+     * @param input    the input file to backup
      */
-    protected void backupInputFile(VirtualFile input) {
-        attachFile(input);
+    protected void backupInputFile(String filename, FileHandle input) {
+        attachFile(filename, input);
     }
 
-    private void executeForZIP(VirtualFile file) throws Exception {
+    private void executeForZIP(FileHandle file) throws Exception {
         process.log(ProcessLog.info().withNLSKey("FileImportJob.importingZipFile"));
 
-        try (ZipInputStream zipInputStream = new ZipInputStream(file.createInputStream())) {
+        try (ZipInputStream zipInputStream = new ZipInputStream(file.getInputStream())) {
             ZipEntry entry = zipInputStream.getNextEntry();
 
             int filesImported = 0;

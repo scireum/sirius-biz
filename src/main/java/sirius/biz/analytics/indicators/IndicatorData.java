@@ -14,6 +14,7 @@ import sirius.db.mixing.Composite;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
+import sirius.db.mixing.types.StringList;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Parts;
@@ -21,8 +22,6 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -37,7 +36,7 @@ public class IndicatorData extends Composite {
     protected BaseEntity<?> owner;
 
     @NoJournal
-    private final List<String> indications = new ArrayList<>();
+    private final StringList indications = new StringList();
 
     @NoJournal
     @NullAllowed
@@ -62,7 +61,7 @@ public class IndicatorData extends Composite {
     @SuppressWarnings("squid:S2250")
     @Explain("There should only be some indicators present, so there is no performance hotspot expected.")
     public boolean updateIndication(String indicator, boolean newState) {
-        return newState ? indications.add(indicator) : indications.remove(indicator);
+        return newState ? indications.modify().add(indicator) : indications.modify().remove(indicator);
     }
 
     @BeforeSave
@@ -90,7 +89,7 @@ public class IndicatorData extends Composite {
      * @return a list of all indications being present
      */
     public List<String> getIndications() {
-        return Collections.unmodifiableList(indications);
+        return indications.original();
     }
 
     /**

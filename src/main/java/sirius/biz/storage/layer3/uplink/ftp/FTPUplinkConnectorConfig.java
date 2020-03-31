@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer3.uplink.ftp;
 
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorConfig;
 import sirius.biz.storage.util.StorageUtils;
@@ -42,6 +43,7 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
             client.setDefaultTimeout(readTimeoutMillis);
             client.connect(host, port);
             client.login(user, password);
+            client.setFileType(FTP.BINARY_FILE_TYPE);
             client.enterLocalPassiveMode();
 
             return client;

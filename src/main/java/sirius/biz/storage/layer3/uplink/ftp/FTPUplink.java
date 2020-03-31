@@ -184,6 +184,7 @@ public class FTPUplink extends ConfigBasedUplink {
               .withSizeSupplier(this::sizeSupplier)
               .withLastModifiedSupplier(this::lastModifiedSupplier)
               .withDeleteHandler(this::deleteHandler)
+              .withCanProvideInputStream(this::isExistingFile)
               .withInputStreamSupplier(this::inputStreamSupplier)
               .withOutputStreamSupplier(this::outputStreamSupplier)
               .withRenameHandler(this::renameHandler)
@@ -248,6 +249,10 @@ public class FTPUplink extends ConfigBasedUplink {
 
     private boolean isDirectoryFlagSupplier(VirtualFile file) {
         return fetchFTPFile(file).map(FTPFile::isDirectory).orElse(false);
+    }
+
+    private boolean isExistingFile(VirtualFile file) {
+        return fetchFTPFile(file).map(FTPFile::isFile).orElse(false);
     }
 
     private long sizeSupplier(VirtualFile file) {

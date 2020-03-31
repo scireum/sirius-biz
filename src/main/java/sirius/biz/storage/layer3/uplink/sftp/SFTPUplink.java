@@ -16,10 +16,10 @@ import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplink;
 import sirius.biz.storage.layer3.uplink.ConfigBasedUplinkFactory;
-import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.layer3.uplink.util.RemotePath;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnector;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorPool;
+import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.biz.storage.util.WatchableInputStream;
 import sirius.biz.storage.util.WatchableOutputStream;
@@ -133,6 +133,7 @@ public class SFTPUplink extends ConfigBasedUplink {
               .withSizeSupplier(this::sizeSupplier)
               .withLastModifiedSupplier(this::lastModifiedSupplier)
               .withDeleteHandler(this::deleteHandler)
+              .withCanProvideInputStream(this::isExistingFile)
               .withInputStreamSupplier(this::inputStreamSupplier)
               .withOutputStreamSupplier(this::outputStreamSupplier)
               .withRenameHandler(this::renameHandler)
@@ -261,6 +262,11 @@ public class SFTPUplink extends ConfigBasedUplink {
     private boolean isDirectoryFlagSupplier(VirtualFile file) {
         SftpClient.Attributes attributes = getAttributes(file);
         return attributes.isDirectory();
+    }
+
+    private boolean isExistingFile(VirtualFile file) {
+        SftpClient.Attributes attributes = getAttributes(file);
+        return attributes.isRegularFile();
     }
 
     private long sizeSupplier(VirtualFile file) {

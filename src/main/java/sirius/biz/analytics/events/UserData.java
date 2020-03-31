@@ -11,7 +11,6 @@ package sirius.biz.analytics.events;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
-import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Strings;
