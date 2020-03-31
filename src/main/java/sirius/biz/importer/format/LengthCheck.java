@@ -35,7 +35,7 @@ public class LengthCheck extends StringCheck {
         String effectiveValue = determineEffectiveValue(value);
         if (effectiveValue != null && effectiveValue.length() > maxLength) {
             throw new IllegalArgumentException(NLS.fmtr("LengthCheck.errorMsg")
-                                                  .set("length", value.asString().length())
+                                                  .set("length", effectiveValue.length())
                                                   .set("maxLength", maxLength)
                                                   .format());
         }
