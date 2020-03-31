@@ -75,7 +75,7 @@ class ValueCheckSpec extends BaseSpecification {
         new LengthCheck(5).checkUntrimmed().perform(Value.of("     55555"))
         then:
         thrown(IllegalArgumentException)
-        when: "The check fails for an imput which is too long"
+        when: "The check fails for an input which is too long"
         new LengthCheck(5).checkUntrimmed().perform(Value.of("555555555"))
         then:
         thrown(IllegalArgumentException)
@@ -95,7 +95,7 @@ class ValueCheckSpec extends BaseSpecification {
         new RequiredCheck().perform(Value.EMPTY)
         then:
         thrown(IllegalArgumentException)
-        when: "Check detects a whitespace input (when trimmin is enabled)"
+        when: "Check detects a whitespace input (when trimming is enabled)"
         new RequiredCheck().perform(Value.of("  "))
         then:
         thrown(IllegalArgumentException)
