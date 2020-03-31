@@ -13,8 +13,11 @@ import sirius.kernel.nls.NLS;
 
 /**
  * Enforces a given field length.
+ * <p>
+ * Note, as most of the {@link Value} methods will perform an automatic <tt>trim</tt>, we also trim the contents before
+ * checking the length. Use {@link #checkUntrimmed()} to suppress this behaviour.
  */
-public class LengthCheck implements ValueCheck {
+public class LengthCheck extends StringCheck {
 
     private int maxLength;
 
@@ -29,7 +32,8 @@ public class LengthCheck implements ValueCheck {
 
     @Override
     public void perform(Value value) {
-        if (value.asString().length() > maxLength) {
+        String effectiveValue = determineEffectiveValue(value);
+        if (effectiveValue != null && effectiveValue.length() > maxLength) {
             throw new IllegalArgumentException(NLS.fmtr("LengthCheck.errorMsg")
                                                   .set("length", value.asString().length())
                                                   .set("maxLength", maxLength)

@@ -8,11 +8,11 @@
 
 package sirius.biz.importer.format
 
-
+import sirius.kernel.BaseSpecification
 import sirius.kernel.commons.Value
 import spock.lang.Specification
 
-class ValueCheckSpec extends Specification {
+class ValueCheckSpec extends BaseSpecification {
 
     def "amount scale check correctly marks non numeric values as invalid"() {
         when:
@@ -63,6 +63,63 @@ class ValueCheckSpec extends Specification {
         5         | 2     | "12"
         5         | 2     | 123
         5         | 2     | "123"
+    }
+
+    def "LenghCheck works as expected"() {
+        when: "Check with proper lengths work and perform an auto-trim"
+        new LengthCheck(5).perform(Value.of("     55555"))
+        new LengthCheck(5).perform(Value.of("55555"))
+        then:
+        noExceptionThrown()
+        when: "Without trimming, the check fails appropriately"
+        new LengthCheck(5).checkUntrimmed().perform(Value.of("     55555"))
+        then:
+        thrown(IllegalArgumentException)
+        when: "The check fails for an input which is too long"
+        new LengthCheck(5).checkUntrimmed().perform(Value.of("555555555"))
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "RequiredCheck works as expected"() {
+        when: "Check accepts values and whitespaces (when checking untrimmed)"
+        new RequiredCheck().perform(Value.of("55555"))
+        new RequiredCheck().checkUntrimmed().perform(Value.of("  "))
+        then:
+        noExceptionThrown()
+        when: "Check detects an empty input"
+        new RequiredCheck().perform(Value.of(""))
+        then:
+        thrown(IllegalArgumentException)
+        when: "Check detects a null input"
+        new RequiredCheck().perform(Value.EMPTY)
+        then:
+        thrown(IllegalArgumentException)
+        when: "Check detects a whitespace input (when trimming is enabled)"
+        new RequiredCheck().perform(Value.of("  "))
+        then:
+        thrown(IllegalArgumentException)
+    }
+
+    def "ValueInListCheck works as expected"() {
+        when: "Check accepts values and whitespaces (when checking trimmed)"
+        new ValueInListCheck("A","B").perform(Value.of("A"))
+        new ValueInListCheck("A","B").perform(Value.of(" A"))
+        new ValueInListCheck("A","B").perform(Value.of("B"))
+        new ValueInListCheck("A","B").perform(Value.of("B "))
+        and: "Check ignores an empty value"
+        new ValueInListCheck("A","B").perform(Value.of(""))
+        new ValueInListCheck("A","B").perform(Value.EMPTY)
+        then:
+        noExceptionThrown()
+        when: "Check detects an invalid input"
+        new ValueInListCheck("A","B").perform(Value.of("C"))
+        then:
+        thrown(IllegalArgumentException)
+        when: "Check detects an invalid input when checking untrimmed"
+        new ValueInListCheck("A","B").checkUntrimmed().perform(Value.of("A "))
+        then:
+        thrown(IllegalArgumentException)
     }
 
 }
