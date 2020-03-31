@@ -24,8 +24,11 @@ import java.util.stream.Collectors;
  * <p>
  * Note that empty values are ignored by this check. Use a {@link RequiredCheck} or
  * {@link FieldDefinition#markRequired()} to strongly enforce the value list.
+ * <p>
+ * Note, as most of the {@link Value} methods will perform an automatic <tt>trim</tt>, we also trim the contents before
+ * checking if the value is in the list. Use {@link #checkUntrimmed()} to suppress this behaviour.
  */
-public class ValueInListCheck implements ValueCheck {
+public class ValueInListCheck extends StringCheck {
 
     private Set<String> values;
 
@@ -56,12 +59,14 @@ public class ValueInListCheck implements ValueCheck {
 
     @Override
     public void perform(Value value) {
-        if (value.isEmptyString()) {
+        String effectiveValue = determineEffectiveValue(value);
+        if (Strings.isEmpty(effectiveValue)) {
             return;
         }
-        if (!values.contains(value.asString())) {
+
+        if (!values.contains(effectiveValue)) {
             throw new IllegalArgumentException(NLS.fmtr("ValueInListCheck.errorMsg")
-                                                  .set("value", value.asString())
+                                                  .setDirect("value", effectiveValue, false)
                                                   .format());
         }
     }

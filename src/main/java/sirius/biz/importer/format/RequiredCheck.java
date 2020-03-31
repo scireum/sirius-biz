@@ -16,31 +16,16 @@ import sirius.kernel.nls.NLS;
  * Enforces the presence of a value for the associated field.
  * <p>
  * Note, as most of the {@link Value} methods will perform an automatic <tt>trim</tt>, we also trim the contents before
- * checking for a non-empty value. (Thus " " would be considered empty and yield an error).
- * <p>
- * Use {@link #checkUntrimmed()} in order to suppress this behaviour.
+ * checking for a non-empty value. (Thus " " would be considered empty and yield an error).Use {@link #checkUntrimmed()}
+ * to suppress this behaviour.
  */
-public class RequiredCheck implements ValueCheck {
-
-    private boolean trim = true;
+public class RequiredCheck extends StringCheck {
 
     @Override
     public void perform(Value value) {
-        String effectiveValue = trim ? value.getString() : value.getRawString();
-
-        if (Strings.isEmpty(effectiveValue)) {
+        if (Strings.isEmpty(determineEffectiveValue(value))) {
             throw new IllegalArgumentException(NLS.get("RequiredCheck.errorMsg"));
         }
-    }
-
-    /**
-     * Suppresses the automatic trim before checking if the given value is present.
-     *
-     * @return the check itself for fluent method calls
-     */
-    public RequiredCheck checkUntrimmed() {
-        this.trim = false;
-        return this;
     }
 
     @Override

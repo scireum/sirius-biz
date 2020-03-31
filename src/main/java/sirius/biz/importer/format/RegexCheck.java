@@ -19,8 +19,14 @@ import java.util.regex.Pattern;
 
 /**
  * Determines if the given values match a regular expression.
+ * <p>
+ * Note, as most of the {@link Value} methods will perform an automatic <tt>trim</tt>, we also trim the contents before
+ * applying the regular expression. Use {@link #checkUntrimmed()} to suppress this behaviour.
+ * <p>
+ * Also note that an empty value (<tt>null</tt>) will be treated as <tt>""</tt> here, so that the regular expression
+ * can handle it.
  */
-public class RegexCheck implements ValueCheck {
+public class RegexCheck extends StringCheck {
 
     private String remark;
     private Pattern pattern;
@@ -44,10 +50,14 @@ public class RegexCheck implements ValueCheck {
 
     @Override
     public void perform(Value value) {
-        String stringValue = value.asString();
-        if (!pattern.matcher(stringValue).matches()) {
+        String effectiveValue = determineEffectiveValue(value);
+        if (effectiveValue == null) {
+            effectiveValue = "";
+        }
+        if (!pattern.matcher(effectiveValue).matches()) {
             throw new IllegalArgumentException(Formatter.create(NLS.smartGet(errorMessage))
-                                                        .set("value", stringValue)
+                                                        .setDirect("value", effectiveValue, false)
+                                                        .set("value", effectiveValue)
                                                         .format());
         }
     }

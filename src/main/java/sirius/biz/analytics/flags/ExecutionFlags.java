@@ -15,7 +15,7 @@ import java.time.Period;
 import java.util.Optional;
 
 /**
- * Provides a database independent framework to remeber the execution timestamp of certain tasks for referenced objects.
+ * Provides a database independent framework to remember the execution timestamp of certain tasks for referenced objects.
  * <p>
  * This might be used to remember when the last execution of a specific checkup or analytical task for an entity
  * has been executed.
