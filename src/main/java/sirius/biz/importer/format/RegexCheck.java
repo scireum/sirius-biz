@@ -56,7 +56,7 @@ public class RegexCheck extends StringCheck {
         }
         if (!pattern.matcher(effectiveValue).matches()) {
             throw new IllegalArgumentException(Formatter.create(NLS.smartGet(errorMessage))
-                                                        .set("value", effectiveValue)
+                                                        .setDirect("value", effectiveValue, false)
                                                         .format());
         }
     }
