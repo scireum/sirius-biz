@@ -4,6 +4,10 @@
 <i:switch test="@point">
     <i:block name="system">
         <w:menuSection>
+            <w:menuItem titleKey="DisasterController.title" icon="fa-info-circle" url="/system/disaster"
+                        permission="flag-system-tenant-member"/>
+        </w:menuSection>
+        <w:menuSection>
             <w:menuItem title="State" icon="fa-info-circle" url="/system/state"
                         permission="flag-system-tenant-member"/>
             <w:menuItem title="System Load" icon="fa-dashboard" url="/system/load"
