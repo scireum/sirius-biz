@@ -1,0 +1,42 @@
+<i:arg type="sirius.biz.web.DisasterModeInfo" name="disasterInfo"/>
+
+<w:page titleKey="DisasterController.title">
+    <w:editForm url="/system/disaster">
+        <div class="row">
+            <w:booleanSelect span="12"
+                             smallSpan="12"
+                             name="locked"
+                             labelKey="DisasterController.locked"
+                             value="@disasterInfo.isRawLocked()"/>
+        </div>
+        <div class="row">
+            <w:textfield name="previewMessage"
+                         labelKey="DisasterController.previewMessage"
+                         value="@disasterInfo.getRawPreviewMessage()"
+                         span="12"/>
+        </div>
+        <div class="row">
+            <w:datefield name="messageDate"
+                         labelKey="DisasterController.messageDate"
+                         value="@toUserString(disasterInfo.getRawDisplayMessageStartDate())"/>
+            <w:timefield name="messageTime"
+                         labelKey="DisasterController.messageDate"
+                         value="disasterInfo.getRawDisplayMessageStartTime()"/>
+        </div>
+        <div class="row">
+            <w:textfield name="lockMessage"
+                         labelKey="DisasterController.lockMessage"
+                         value="@disasterInfo.getRawLockMessage()"
+                         span="12"/>
+        </div>
+        <div class="row">
+            <w:datefield name="lockDate"
+                         labelKey="DisasterController.lockDate"
+                         value="@toUserString(disasterInfo.getRawLockStartDate())"/>
+            <w:timefield name="lockTime"
+                         labelKey="DisasterController.lockTime"
+                         value="disasterInfo.getRawLockStartTime()"/>
+        </div>
+    </w:editForm>
+    <w:formBar/>
+</w:page>

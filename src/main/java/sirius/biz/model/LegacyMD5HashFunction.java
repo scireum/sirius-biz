@@ -8,13 +8,13 @@
 
 package sirius.biz.model;
 
-import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
-import com.google.common.io.BaseEncoding;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 /**
  * Provides an implementation which uses MD5 as hash function to protect the password.
@@ -28,7 +28,8 @@ public class LegacyMD5HashFunction implements PasswordHashFunction {
     @Override
     public String computeHash(@Nullable String username, @Nullable String salt, @Nonnull String password) {
         String hashInput = salt != null ? salt + password : password;
-        return BaseEncoding.base64().encode(Hashing.md5().hashString(hashInput, Charsets.UTF_8).asBytes());
+        return Base64.getEncoder()
+                     .encodeToString(Hashing.md5().hashString(hashInput, StandardCharsets.UTF_8).asBytes());
     }
 
     @Override

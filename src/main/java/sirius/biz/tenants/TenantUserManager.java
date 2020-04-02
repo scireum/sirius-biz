@@ -8,7 +8,7 @@
 
 package sirius.biz.tenants;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
@@ -646,8 +646,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     protected String getHashedApiToken(String apiToken, long timestampInDays) {
         return Hashing.md5()
                       .newHasher()
-                      .putString(apiToken, Charsets.UTF_8)
-                      .putString(String.valueOf(timestampInDays), Charsets.UTF_8)
+                      .putString(apiToken, StandardCharsets.UTF_8)
+                      .putString(String.valueOf(timestampInDays), StandardCharsets.UTF_8)
                       .hash()
                       .toString();
     }

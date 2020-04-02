@@ -9,9 +9,7 @@
 package sirius.biz.storage;
 
 import com.amazonaws.internal.ResettableInputStream;
-import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
-import com.google.common.io.BaseEncoding;
 import com.google.common.io.Files;
 import sirius.biz.protocol.TraceData;
 import sirius.biz.tenants.jdbc.SQLTenant;
@@ -40,10 +38,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -380,7 +380,7 @@ public class Storage {
      * @throws IOException in case of an IO error
      */
     public String calculateMd5(File file) throws IOException {
-        return BaseEncoding.base64().encode(Files.hash(file, Hashing.md5()).asBytes());
+        return Base64.getEncoder().encodeToString(Files.hash(file, Hashing.md5()).asBytes());
     }
 
     /**
@@ -625,7 +625,8 @@ public class Storage {
      */
     private String computeHash(String physicalKey, int offsetDays) {
         return Hashing.md5()
-                      .hashString(physicalKey + getTimestampOfDay(offsetDays) + getSharedSecret(), Charsets.UTF_8)
+                      .hashString(physicalKey + getTimestampOfDay(offsetDays) + getSharedSecret(),
+                                  StandardCharsets.UTF_8)
                       .toString();
     }
 
@@ -636,7 +637,7 @@ public class Storage {
      * @return a hash valid forever
      */
     private String computeEternallyValidHash(String physicalKey) {
-        return Hashing.md5().hashString(physicalKey + getSharedSecret(), Charsets.UTF_8).toString();
+        return Hashing.md5().hashString(physicalKey + getSharedSecret(), StandardCharsets.UTF_8).toString();
     }
 
     /**
