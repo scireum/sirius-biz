@@ -8,25 +8,28 @@
 
 package sirius.biz.elastic.reindex;
 
+import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.jobs.JobFactory;
+import sirius.biz.jobs.batch.DefaultBatchProcessFactory;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.EntityDescriptorParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.es.Elastic;
 import sirius.db.es.IndexMappings;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Timeout;
+import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.health.Exceptions;
-import sirius.kernel.nls.NLS;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.time.LocalDate;
+import java.time.Duration;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -44,8 +47,7 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     private IndexMappings mappings;
 
     private EntityDescriptorParameter entityDescriptorParameter =
-            new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity)
-                                                         .markRequired();
+            new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity).markRequired();
 
     @Override
     public String getLabel() {
@@ -64,32 +66,51 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     }
 
     @Override
+    protected Class<? extends DistributedTaskExecutor> getExecutor() {
+        return DefaultBatchProcessFactory.DefaultPartialBatchProcessTaskExecutor.class;
+    }
+
+    @Override
     protected void execute(ProcessContext process) throws Exception {
         EntityDescriptor ed = process.require(entityDescriptorParameter);
-        String nextIndex = determineNextIndexName(ed);
-        // set the dynamic mapping mode to "false", so that legacy fields in documents are just ignored and don't
+        String nextIndex = mappings.determineNextIndexName(ed);
+        // Set the dynamic mapping mode to "false", so that legacy fields in documents are just ignored and don't
         // cause the reindex process to abort
         mappings.createMapping(ed, nextIndex, IndexMappings.DynamicMapping.FALSE);
         process.log("Created index: " + nextIndex);
 
-        elastic.getLowLevelClient().reindex(ed, nextIndex, response -> {
-        }, exception -> {
-        });
+        Timeout firstStepCompleted = new Timeout(Duration.ofSeconds(3));
+        String currentIndex = elastic.determineEffectiveIndex(ed);
+        elastic.getLowLevelClient()
+               .reindex(currentIndex,
+                        nextIndex,
+                        response -> handleSuccess(process.getProcessId(), firstStepCompleted),
+                        exception -> handleFailure(exception, process.getProcessId(), firstStepCompleted));
         process.log("Started a reindex job in elasticsearch, check the task API to see the progress ...");
     }
 
-    private String determineNextIndexName(EntityDescriptor ed) {
-        String nextIndexName = ed.getRelationName() + "-" + NLS.toMachineString(LocalDate.now());
-        int run = 0;
-
-        while (run++ < 10) {
-            if (!elastic.getLowLevelClient().indexExists(nextIndexName)) {
-                return nextIndexName;
-            }
-            nextIndexName = ed.getRelationName() + "-" + NLS.toMachineString(LocalDate.now()) + "-" + run;
+    private void handleSuccess(String processId, Timeout firstStepCompleted) {
+        // If the re-index was super quick (took less than 3 seconds), we
+        // rather wait some seconds, as the process API is not meant to handle
+        // fully concurrent updates...
+        if (firstStepCompleted.notReached()) {
+            Wait.seconds(3);
         }
+        processes.execute(processId, processContext -> {
+            processContext.log(ProcessLog.success().withMessage("Reindex completed!"));
+        });
+    }
 
-        throw Exceptions.handle().withSystemErrorMessage("Couldn't find a unique index name after 10 runs!").handle();
+    private void handleFailure(Exception exception, String processId, Timeout firstStepCompleted) {
+        // If the re-index was super quick (took less than 3 seconds), we
+        // rather wait some seconds, as the process API is not meant to handle
+        // fully concurrent updates...
+        if (firstStepCompleted.notReached()) {
+            Wait.seconds(3);
+        }
+        processes.execute(processId, processContext -> {
+            processContext.handle(exception);
+        });
     }
 
     @Override
