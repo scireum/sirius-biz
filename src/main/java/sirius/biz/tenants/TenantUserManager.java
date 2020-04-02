@@ -615,6 +615,10 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     }
 
     protected boolean checkApiToken(LoginData loginData, String givenApiToken) {
+        if (Strings.isEmpty(loginData.getApiToken())) {
+            return false;
+        }
+
         if (Strings.areEqual(givenApiToken, loginData.getApiToken())) {
             return true;
         }
