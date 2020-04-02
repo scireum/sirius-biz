@@ -274,7 +274,7 @@ public class VersionManager {
 
     private void checkForCommandLine() {
         commandPresent = Strings.isFilled(conversionCommand);
-        if (!commandPresent) {
+        if (!Boolean.TRUE.equals(commandPresent)) {
             Storage.LOG.WARN("No ImageMagick command is given in 'storage.conversionCommand'."
                              + " Using Java conversion as fallback."
                              + " Note that ImageMagick is faster and supports more file formats.");

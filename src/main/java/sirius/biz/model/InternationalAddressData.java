@@ -180,6 +180,8 @@ public class InternationalAddressData extends AddressData {
     }
 
     @Override
+    @SuppressWarnings("java:S2159")
+    @Explain("In this case the call to super.equals works, as this accepts all subclasses of AddressData")
     public boolean equals(Object obj) {
         if (obj == null) {
             return false;

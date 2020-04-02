@@ -266,7 +266,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             }
         } else {
             result = factory.create();
-            if (correctnessTest.apply(result)) {
+            if (Boolean.TRUE.equals(correctnessTest.apply(result))) {
                 commit.invoke(result);
                 return result;
             } else {

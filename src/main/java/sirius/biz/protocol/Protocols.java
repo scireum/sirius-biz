@@ -68,7 +68,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
     @ConfigValue("protocols.maxLogMessageLength")
     private int maxMessageLength;
 
-    private volatile AtomicLong disabledUntil;
+    private AtomicLong disabledUntil;
 
     /**
      * In case the ES cluster is unreachable or we can for some reason not log errors or log messages,
