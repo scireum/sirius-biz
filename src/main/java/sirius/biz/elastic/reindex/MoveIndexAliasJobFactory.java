@@ -22,6 +22,8 @@ import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
@@ -46,8 +48,7 @@ public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
     private IndexMappings mappings;
 
     private EntityDescriptorParameter entityDescriptorParameter =
-            new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity)
-                                                         .markRequired();
+            new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity).markRequired();
     private StringParameter destinationParameter = new StringParameter("destination", "Destination").markRequired();
 
     @Override
@@ -63,10 +64,16 @@ public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
 
     @Override
     protected String createProcessTitle(Map<String, String> context) {
-        return Strings.apply("Moving active elasticsearch alias from index '%s' to '%s'",
-                             Strings.join(elastic.getLowLevelClient()
-                                                 .getIndicesForAlias(entityDescriptorParameter.require(context)), ","),
-                             destinationParameter.require(context));
+        try {
+            return Strings.apply("Moving active Elasticsearch alias from index '%s' to '%s'",
+                                 elastic.determineEffectiveIndex(entityDescriptorParameter.require(context)),
+                                 destinationParameter.require(context));
+        } catch (HandledException e) {
+            // In some rare cases, this might fail (if the system is inconsistent anyway). In this case
+            // we prefer that the job fails rather than the setup / start crashes...
+            Exceptions.ignore(e);
+            return Strings.apply("Moving active Elasticsearch alias to '%s'", destinationParameter.require(context));
+        }
     }
 
     @Override
@@ -74,19 +81,21 @@ public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
         String destination = process.require(destinationParameter);
         EntityDescriptor ed = process.require(entityDescriptorParameter);
 
-        process.log(elastic.getLowLevelClient().moveActiveAlias(ed, destination).toJSONString());
-        elastic.getLowLevelClient().getIndicesForAlias(ed).forEach(index -> {
-            process.log(Strings.apply("Setting dynamic mapping mode to 'strict' for index '%s'.", index));
-            // set the dynamic mapping mode to 'strict' as most probably it is currently set to 'false' which was used
-            // during reindexing
-            mappings.createMapping(ed, index, IndexMappings.DynamicMapping.STRICT);
-        });
+        process.log(elastic.getLowLevelClient()
+                           .createOrMoveAlias(elastic.determineReadAlias(ed), destination)
+                           .toJSONString());
+
+        String effectiveIndex = elastic.determineEffectiveIndex(ed);
+        process.log(Strings.apply("Setting dynamic mapping mode to 'strict' for index '%s'.", effectiveIndex));
+        // Set the dynamic mapping mode to 'strict' as most probably it is currently set to 'false' which was used
+        // during reindexing (see ReindexJobFactory)
+        mappings.createMapping(ed, effectiveIndex, IndexMappings.DynamicMapping.STRICT);
     }
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
-        parameterCollector.accept(destinationParameter);
         parameterCollector.accept(entityDescriptorParameter);
+        parameterCollector.accept(destinationParameter);
     }
 
     @Nonnull
