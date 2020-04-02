@@ -66,7 +66,7 @@ public class ValueInListCheck extends StringCheck {
 
         if (!values.contains(effectiveValue)) {
             throw new IllegalArgumentException(NLS.fmtr("ValueInListCheck.errorMsg")
-                                                  .setDirect("value", effectiveValue, false)
+                                                  .setDirect("value", effectiveValue)
                                                   .format());
         }
     }

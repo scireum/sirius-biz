@@ -64,7 +64,7 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
 
     @Override
     public void setId(Long id) {
-        setId((long) id);
+        setId(id);
     }
 
     @Override

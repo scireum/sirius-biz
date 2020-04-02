@@ -8,7 +8,7 @@
 
 package sirius.biz.storage.layer1.transformer;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.settings.Extension;
@@ -55,7 +55,7 @@ public class AES256CipherFactory implements CipherFactory {
 
         SecretKeyFactory factory = SecretKeyFactory.getInstance(KEY_DERIVATION_FUNCTION);
         KeySpec spec =
-                new PBEKeySpec(passphrase.toCharArray(), SALT.getBytes(Charsets.UTF_8), NUM_ITERATIONS, KEY_LENGTH);
+                new PBEKeySpec(passphrase.toCharArray(), SALT.getBytes(StandardCharsets.UTF_8), NUM_ITERATIONS, KEY_LENGTH);
         SecretKey tmp = factory.generateSecret(spec);
         SecretKeySpec secretKey = new SecretKeySpec(tmp.getEncoded(), KEY_ALGORITHM_NAME);
 

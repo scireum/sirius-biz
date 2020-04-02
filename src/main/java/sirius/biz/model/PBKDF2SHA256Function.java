@@ -8,8 +8,6 @@
 
 package sirius.biz.model;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.BaseEncoding;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
@@ -20,7 +18,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import java.nio.charset.StandardCharsets;
 import java.security.spec.KeySpec;
+import java.util.Base64;
 
 /**
  * Uses the PBKDF2 function (with SHA-256 and 65536 iterations) to "hash" passwords.
@@ -48,11 +48,13 @@ public class PBKDF2SHA256Function implements PasswordHashFunction {
                 return null;
             }
 
-            KeySpec spec =
-                    new PBEKeySpec(password.toCharArray(), salt.getBytes(Charsets.UTF_8), NUMBER_OF_RUNS, KEY_LENGTH);
+            KeySpec spec = new PBEKeySpec(password.toCharArray(),
+                                          salt.getBytes(StandardCharsets.UTF_8),
+                                          NUMBER_OF_RUNS,
+                                          KEY_LENGTH);
             SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
             byte[] hash = f.generateSecret(spec).getEncoded();
-            return BaseEncoding.base64().encode(hash);
+            return Base64.getEncoder().encodeToString(hash);
         } catch (Exception e) {
             Exceptions.handle(Log.APPLICATION, e);
             return null;
