@@ -13,6 +13,7 @@ import sirius.kernel.async.CallContext;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.cache.InlineCache;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.transformers.AutoTransform;
 import sirius.kernel.health.Exceptions;
@@ -121,7 +122,7 @@ public class DisasterModeInfo implements MaintenanceInfo {
                 displayMessageStartTime =
                         NLS.parseMachineString(LocalDateTime.class, db.get(REDIS_DISASTER_MESSAGE_START));
                 maintenancePreviewMessage = db.get(REDIS_DISASTER_PREVIEW_MESSAGE);
-                lockScope = NLS.parseMachineString(Boolean.class, db.get(REDIS_DISASTER_LOCKED));
+                lockScope = Value.of(db.get(REDIS_DISASTER_LOCKED)).asBoolean();
                 lockStartTime = NLS.parseMachineString(LocalDateTime.class, db.get(REDIS_DISASTER_LOCK_START));
                 maintenanceLockMessage = db.get(REDIS_DISASTER_LOCK_MESSAGE);
             } catch (Exception e) {
