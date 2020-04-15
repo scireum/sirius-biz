@@ -63,7 +63,7 @@ public class ConversionEngine {
      * Therefore we keep a map which stores the effective file extension per variant as this is both, frequently used
      * and constant over the lifetime of the system.
      */
-    private Map<String, String> fileExtensionPerVariant = new ConcurrentHashMap<>();
+    private Map<String, String> fileExtensionPerVariant;
 
     /**
      * Contains the fully initialized and configured {@link Converter} for each variant. As these are itself
