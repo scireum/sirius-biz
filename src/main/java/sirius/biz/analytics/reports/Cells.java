@@ -112,6 +112,42 @@ public class Cells {
     }
 
     /**
+     * Generates a green cell.
+     *
+     * @param value the value to output
+     * @return a cell which is colored green
+     */
+    public Cell green(Object value) {
+        return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
+                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "color green")
+                                        .fluentPut(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
+    }
+
+    /**
+     * Generates a yellow cell.
+     *
+     * @param value the value to output
+     * @return a cell which is colored red
+     */
+    public Cell yellow(Object value) {
+        return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
+                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "color yellow")
+                                        .fluentPut(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
+    }
+
+    /**
+     * Generates a red cell.
+     *
+     * @param value the value to output
+     * @return a cell which is colored red
+     */
+    public Cell red(Object value) {
+        return new Cell(new JSONObject().fluentPut(KEY_TYPE, CSSCellFormat.TYPE)
+                                        .fluentPut(CSSCellFormat.KEY_CLASSES, "color red")
+                                        .fluentPut(CSSCellFormat.KEY_VALUE, NLS.toUserString(value)));
+    }
+
+    /**
      * Generates a colored cell.
      *
      * @param value     the value to output
