@@ -50,7 +50,7 @@ public class BlobController extends BizController {
      */
     @Routed(value = "/dasd/upload-file/:1", preDispatchable = true, jsonCall = true)
     @LoginRequired
-    public void uploaduploadFile(final WebContext ctx,
+    public void uploadFile(final WebContext ctx,
                                  JSONStructuredOutput out,
                                  String spaceName,
                                  InputStreamHandler upload) {

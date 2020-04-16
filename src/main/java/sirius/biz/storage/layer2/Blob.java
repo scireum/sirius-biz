@@ -161,7 +161,7 @@ public interface Blob {
      * Also note that if a file is used to provide the new contents of this blob, use
      * {@link #updateContent(String, File)} as this is likely way more efficient.
      * <p>
-     * Note that this blob object itself will also be update with the aprropriate metadata
+     * Note that this blob object itself will also be updated with the appropriate metadata
      * (filename, size, lastModified).
      *
      * @param filename      the new filename to use (if given)
