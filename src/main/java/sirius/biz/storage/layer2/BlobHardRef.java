@@ -157,15 +157,30 @@ public class BlobHardRef {
     }
 
     /**
+     * Provides a convenience method to resolve the {@link BlobStorageSpace} for <tt>space</tt>.
+     * <p>
+     * If possible, this uses the already resolved space from the blob being held.
+     *
+     * @return the storage space which holds the blobs referenced by this reference
+     */
+    public BlobStorageSpace getStorageSpace() {
+        if (blob != null) {
+            return blob.getStorageSpace();
+        }
+
+        return storage.getSpace(space);
+    }
+
+    /**
      * Provides a builder which can be used to create a delivery or download link.
      *
      * @return a builder to create a download or delivery URL
      */
     public URLBuilder url() {
         if (blob != null) {
-            return new URLBuilder(storage.getSpace(space), blob);
+            return new URLBuilder(getStorageSpace(), blob);
+        } else {
+            return new URLBuilder(getStorageSpace(), key);
         }
-
-        return new URLBuilder(storage.getSpace(space), key);
     }
 }

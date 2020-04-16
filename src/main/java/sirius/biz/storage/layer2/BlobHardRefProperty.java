@@ -152,7 +152,7 @@ public class BlobHardRefProperty extends Property implements SQLPropertyInfo {
     protected void onAfterSave(Object entity) {
         BlobHardRef ref = getRef(entity);
         if (ref.changed) {
-            BlobStorageSpace storageSpace = ref.getBlob().getStorageSpace();
+            BlobStorageSpace storageSpace = ref.getStorageSpace();
             String uniqueName = ((BaseEntity<?>) entity).getUniqueName();
 
             if (ref.isFilled()) {
