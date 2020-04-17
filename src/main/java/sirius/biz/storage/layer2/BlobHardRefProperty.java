@@ -151,13 +151,14 @@ public class BlobHardRefProperty extends Property implements SQLPropertyInfo {
     @Override
     protected void onAfterSave(Object entity) {
         BlobHardRef ref = getRef(entity);
-        if (ref.changed && ref.isFilled()) {
-            ref.getBlob()
-               .getStorageSpace()
-               .markAsUsed(((BaseEntity<?>) entity).getUniqueName(), getName(), ref.getKey());
-            ref.getBlob()
-               .getStorageSpace()
-               .deleteReferencedBlobs(((BaseEntity<?>) entity).getUniqueName(), getName(), ref.getKey());
+        if (ref.changed) {
+            BlobStorageSpace storageSpace = ref.getStorageSpace();
+            String uniqueName = ((BaseEntity<?>) entity).getUniqueName();
+
+            if (ref.isFilled()) {
+                storageSpace.markAsUsed(uniqueName, getName(), ref.getKey());
+            }
+            storageSpace.deleteReferencedBlobs(uniqueName, getName(), ref.getKey());
         }
         ref.changed = false;
     }

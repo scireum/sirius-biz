@@ -1,0 +1,86 @@
+<i:arg type="sirius.biz.storage.layer2.BlobHardRef" name="objectRef"/>
+<i:arg type="String" name="id" default="@('file-upload' + call.generateLocalId())"/>
+<i:arg type="String" name="inputId" default=""/>
+<i:arg type="String" name="defaultPreview" default=""/>
+<i:arg type="String" name="allowedExtensions" default=""/>
+<i:arg type="String" name="action" default="@apply('/dasd/upload-file/%s', objectRef.getSpace())"/>
+<i:arg type="boolean" name="showResetButton" default="@objectRef.isFilled()"/>
+<i:arg type="boolean" name="urlAllowed" default="false" description=""/>
+<i:arg type="String" name="params" default="{}" description="the parameters to be sent with the upload request"/>
+
+<div id="@id" class="file-upload">
+    <div class="qq-upload-drop-area qq-image-area qq-upload-drop-area-js">
+        <div class="file-upload-file file-upload-file-js">
+            <i class="fa fa-3x file-upload-icon file-upload-icon-js hide" aria-hidden="true"></i>
+
+            <p>
+                <a href="@objectRef.url().asDownload().buildURL().orElse('')" class="file-upload-name file-upload-name-js" style="word-wrap: break-word">
+                    @objectRef.getFilename()
+                </a>
+            </p>
+        </div>
+
+        <div class="file-upload-progress file-upload-progress-js hide">
+            <i class="fa fa-spinner fa-3x fa-spin"></i>
+
+            <div class="file-upload-progress-name file-upload-progress-name-js" style="word-wrap: break-word"></div>
+            <div class="file-upload-progress-percent file-upload-progress-percent-js"></div>
+
+            <p>
+                <a href="#" role="button">@i18n("StoredObject.cancelUpload")</a>
+            </p>
+        </div>
+
+        <p>@i18n("StoredObject.uploadArea")</p>
+    </div>
+
+    <div class="qq-upload-button qq-upload-button-js btn btn-primary btn-block">@i18n("StoredObject.uploadBtn")</div>
+
+    <i:if test="@urlAllowed">
+        <button type="button" class="btn btn-block" data-placement="top" data-toggle="popover">
+            @i18n("StoredObject.specifyURL")
+        </button>
+
+        <div class="popover-content hide">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>@i18n("StoredObject.URL")</label>
+                        <input type="text" class="form-control">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-block btn-primary button-apply">
+                        @i18n("NLS.ok") <i class="fa fa-check"></i>
+                    </button>
+                </div>
+
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-block button-close">
+                        @i18n("NLS.cancel") <i class="fa fa-close"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </i:if>
+
+
+    <button type="button" class="btn btn-block btn-reset-js @if(!showResetButton) { hide }">
+        @i18n("StoredObject.resetBtn")
+    </button>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        var $container = $('#@id');
+
+        $container.storedObjectUploader({
+            action: '@action',
+            allowedExtensions: '@allowedExtensions',
+            defaultPreview: '@defaultPreview',
+            inputId: '@inputId',
+            params: ___params
+        });
+    });
+</script>

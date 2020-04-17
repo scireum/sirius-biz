@@ -341,7 +341,15 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                                      .executeFor(MongoBlob.class)
                                      .getModifiedCount();
             if (numUpdated == 1) {
-                return Optional.ofNullable(blob.getPhysicalObjectKey());
+                // Also update in-memory to avoid an additional database fetch...
+                String previousPhysicalObjectKey = blob.getPhysicalObjectKey();
+                blob.setPhysicalObjectKey(nextPhysicalId);
+                blob.setFilename(filename);
+                blob.updateFilenameFields();
+                blob.setSize(size);
+                blob.setLastModified(LocalDateTime.now());
+
+                return Optional.ofNullable(previousPhysicalObjectKey);
             } else if (retries > 0) {
                 blob = mango.refreshOrFail(blob);
             }

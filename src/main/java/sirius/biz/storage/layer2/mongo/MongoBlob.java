@@ -178,6 +178,10 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
             blobKey = keyGen.generateId();
         }
 
+        updateFilenameFields();
+    }
+
+    protected void updateFilenameFields() {
         if (Strings.isFilled(filename)) {
             this.filename = filename.trim();
             if (Strings.isFilled(filename)) {
