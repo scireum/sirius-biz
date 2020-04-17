@@ -10,7 +10,10 @@ package sirius.biz.analytics.events;
 
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
+import sirius.kernel.async.CallContext;
 import sirius.kernel.commons.Strings;
+import sirius.web.controller.ControllerDispatcher;
+import sirius.web.http.WebContext;
 
 /**
  * Records a page view or page impression.
@@ -35,14 +38,25 @@ import sirius.kernel.commons.Strings;
 public class PageImpressionEvent extends Event {
 
     /**
-     * Contains a generic or shortened URL which can be used to aggregate on.
+     * Contains a generic or shortened URI which can be used to aggregate on.
      * <p>
      * If, for example a web shop would record views of items with urls like "/item/0815" and "/item/0816", these
-     * would end up in {@link WebData#URL}. However, to sum up the total view of items one could use "/item" as
+     * would end up in {@link WebData#URL}. However, to sum up the total view of items one could use "/item/:1" as
      * <b>aggregationUri</b>.
+     * <p>
+     * If no explicit value is given, but a controller {@link sirius.web.controller.Routed route} is hit,
+     * is pattern will be used.
      */
     public static final Mapping AGGREGATION_URI = Mapping.named("aggregationUri");
     private String aggregationUri;
+
+    /**
+     * Contains the effectively requested URI.
+     * <p>
+     * If not explicit value is given, we use the {@link WebContext#getRequestedURI() requested URI}.
+     */
+    public static final Mapping URI = Mapping.named("uri");
+    private String uri;
 
     /**
      * Contains the current user, tenant and scope if available.
@@ -57,7 +71,22 @@ public class PageImpressionEvent extends Event {
     private final WebData webData = new WebData();
 
     @BeforeSave
-    protected void check() {
+    protected void fillAndCheck() {
+        if (Strings.isEmpty(uri) || Strings.isEmpty(aggregationUri)) {
+            WebContext webContext = CallContext.getCurrent().get(WebContext.class);
+            if (webContext.isValid()) {
+                if (Strings.isEmpty(uri)) {
+                    uri = webContext.getRequestedURI();
+                }
+                if (Strings.isEmpty(aggregationUri)) {
+                    aggregationUri = webContext.get(ControllerDispatcher.ATTRIBUTE_MATCHED_ROUTE).getString();
+                }
+            }
+        }
+
+        if (Strings.isEmpty(uri)) {
+            throw new IllegalArgumentException("Please provide an URI");
+        }
         if (Strings.isEmpty(aggregationUri)) {
             throw new IllegalArgumentException("Please provide an aggregation URI");
         }
