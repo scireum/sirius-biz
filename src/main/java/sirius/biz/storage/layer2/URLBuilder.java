@@ -308,6 +308,9 @@ public class URLBuilder {
         if (Strings.isFilled(filename)) {
             return filename;
         }
+        if (blob != null) {
+            return blob.getFilename();
+        }
 
         return space.resolveFilename(blobKey).orElse(blobKey);
     }
