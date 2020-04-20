@@ -45,7 +45,7 @@ public class PageImpressionEvent extends Event {
      * <b>aggregationUri</b>.
      * <p>
      * If no explicit value is given, but a controller {@link sirius.web.controller.Routed route} is hit,
-     * is pattern will be used.
+     * its pattern will be used.
      */
     public static final Mapping AGGREGATION_URI = Mapping.named("aggregationUri");
     private String aggregationUri;
