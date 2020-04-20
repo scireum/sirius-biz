@@ -15,7 +15,6 @@ import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.StringList;
-import sirius.kernel.commons.Explain;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.health.Exceptions;
@@ -58,10 +57,12 @@ public class IndicatorData extends Composite {
      * @param newState  <tt>true</tt> to set the indicator, <tt>false</tt> to clear it
      * @return <tt>true</tt> if the indicator was not yet present
      */
-    @SuppressWarnings("squid:S2250")
-    @Explain("There should only be some indicators present, so there is no performance hotspot expected.")
     public boolean updateIndication(String indicator, boolean newState) {
-        return newState ? indications.modify().add(indicator) : indications.modify().remove(indicator);
+        if (newState) {
+            return !indications.contains(indicator) && indications.modify().add(indicator);
+        } else {
+            return indications.contains(indicator) && indications.modify().remove(indicator);
+        }
     }
 
     @BeforeSave

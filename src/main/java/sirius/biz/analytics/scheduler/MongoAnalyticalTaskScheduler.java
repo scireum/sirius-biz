@@ -65,7 +65,7 @@ public abstract class MongoAnalyticalTaskScheduler extends BaseAnalyticalTaskSch
 
     @Override
     protected boolean isMatchingEntityType(AnalyticalTask<?> task) {
-        return MongoQuery.class.isAssignableFrom(task.getType());
+        return MongoEntity.class.isAssignableFrom(task.getType());
     }
 
     @Override
