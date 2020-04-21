@@ -6,60 +6,35 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage.layer1
+package sirius.biz.storage.layer2
 
-import com.google.common.base.Charsets
-import com.google.common.io.CharStreams
-import sirius.biz.storage.layer1.replication.ReplicationBackgroundLoop
-import sirius.biz.storage.layer1.replication.ReplicationManager
+import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
-import sirius.kernel.Scope
-import sirius.kernel.async.BackgroundLoop
 import sirius.kernel.di.std.Part
 
-import java.time.Duration
-
-@Scope(Scope.SCOPE_NIGHTLY)
-class ReplicationSpec extends BaseSpecification {
+class BlobHardRefSpec extends BaseSpecification {
 
     @Part
-    private static ObjectStorage storage
+    private static OMA oma;
 
     @Part
-    private static ReplicationManager replicationManager
+    private static BlobStorage blobStorage;
 
-    def awaitReplication() {
-        BackgroundLoop.nextExecution(ReplicationBackgroundLoop.class).await(Duration.ofMinutes(1))
-    }
-
-    def "updates are replicated correctly"() {
+    def "store entity with unchanged hard ref blob must not fail"() {
         given:
-        def testData = "test".getBytes(Charsets.UTF_8)
+        def testEntity = new BlobHardRefEntity()
+        Blob blob = blobStorage.getSpace("blob-files").createTemporaryBlob()
+        testEntity.getTheBlobRef().setBlob(blob)
+        oma.update(testEntity)
         when:
-        storage.getSpace("repl-primary").upload("repl-update-test", new ByteArrayInputStream(testData), testData.length)
-        and:
-        awaitReplication()
-        def downloaded = storage.getSpace("reply-secondary").download("repl-update-test")
-        then:
-        downloaded.isPresent()
-        and:
-        CharStreams.toString(new InputStreamReader(downloaded.get().getInputStream(), Charsets.UTF_8)) == "test"
-    }
-
-    def "deletes are replicated correctly"() {
-        given:
-        def testData = "test".getBytes(Charsets.UTF_8)
-        when:
-        storage.getSpace("repl-primary").upload("repl-delete-test", new ByteArrayInputStream(testData), testData.length)
-        and:
-        awaitReplication()
-        and:
-        storage.getSpace("repl-primary").delete("repl-delete-test")
-        and:
-        awaitReplication()
-        def downloaded = storage.getSpace("reply-secondary").download("repl-delete-test")
-        then:
-        !downloaded.isPresent()
+        def loadedEntity = oma.
+                select(BlobHardRefEntity.class).
+                eq(BlobHardRefEntity.ID, testEntity.getId()).
+                first().
+                get()
+        oma.update(loadedEntity)
+        then: 'no exceptions must be thrown'
+        noExceptionThrown()
     }
 
 }
