@@ -98,7 +98,6 @@ public class BlobHardRefProperty extends BlobRefProperty implements SQLPropertyI
             }
             storageSpace.deleteReferencedBlobs(uniqueName, getName(), ref.getKey());
         }
-        ref.changed = false;
     }
 
     @Override

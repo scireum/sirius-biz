@@ -90,6 +90,5 @@ public class BlobSoftRefProperty extends BlobRefProperty implements SQLPropertyI
                                     entity)
                             .handle();
         }
-        ref.changed = false;
     }
 }

@@ -23,6 +23,12 @@ import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.sql.Types;
 
+/**
+ * Holder of common parts of blob reference property handling.
+ * <p>
+ * NOTE: This implementation assumes that BlobHardRef stays the parent class for all blob reference
+ * property classes, which should be valid because hard and soft references should be enough.
+ */
 public abstract class BlobRefProperty extends Property implements SQLPropertyInfo {
 
     protected static final int DEFAULT_KEY_LENGTH = 64;
@@ -40,6 +46,12 @@ public abstract class BlobRefProperty extends Property implements SQLPropertyInf
         super(descriptor, accessPath, field);
     }
 
+    /**
+     * Gets a {@link BlobHardRef} for the given entity.
+     *
+     * @param entity The entity to get the reference from
+     * @return a {@link BlobHardRef} or a subclass of it
+     */
     protected BlobHardRef getRef(Object entity) {
         try {
             return (BlobHardRef) super.getValueFromField(this.accessPath.apply(entity));
@@ -80,8 +92,14 @@ public abstract class BlobRefProperty extends Property implements SQLPropertyInf
         this.setValueToField(object, entity);
     }
 
-    protected void setValueToField(Object value, Object target) {
-        BlobHardRef ref = getRef(target);
+    /**
+     * Sets the given value on the target entity as either a blob or a key depending on the value.
+     *
+     * @param value        The value to be set
+     * @param targetEntity The entity to be set on
+     */
+    protected void setValueToField(Object value, Object targetEntity) {
+        BlobHardRef ref = getRef(targetEntity);
 
         if (value == null || value instanceof Blob) {
             ref.setBlob((Blob) value);
@@ -95,6 +113,12 @@ public abstract class BlobRefProperty extends Property implements SQLPropertyInf
         table.getColumns().add(new TableColumn(this, Types.CHAR));
     }
 
+    /**
+     * Checks if the blob reference on the entity has changed since loading from DB.
+     *
+     * @param entity the entity to check
+     * @return <tt>true</tt> if unchanged, else <tt>false</tt>
+     */
     protected boolean isChanged(Object entity) {
         BaseEntity<?> baseEntity = (BaseEntity<?>) entity;
         return baseEntity.isChanged(nameAsMapping);
