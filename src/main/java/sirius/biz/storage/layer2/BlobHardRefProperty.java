@@ -74,7 +74,7 @@ public class BlobHardRefProperty extends BlobRefProperty implements SQLPropertyI
     @Override
     protected void onBeforeSaveChecks(Object entity) {
         BlobHardRef ref = getRef(entity);
-        if (ref.changed && ref.isFilled() && !ref.getBlob().isTemporary()) {
+        if (isChanged(entity) && ref.isFilled() && !ref.getBlob().isTemporary()) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage(
@@ -89,7 +89,7 @@ public class BlobHardRefProperty extends BlobRefProperty implements SQLPropertyI
     @Override
     protected void onAfterSave(Object entity) {
         BlobHardRef ref = getRef(entity);
-        if (ref.changed) {
+        if (isChanged(entity)) {
             BlobStorageSpace storageSpace = ref.getStorageSpace();
             String uniqueName = ((BaseEntity<?>) entity).getUniqueName();
 

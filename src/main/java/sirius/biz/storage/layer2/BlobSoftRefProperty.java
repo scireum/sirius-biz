@@ -79,8 +79,8 @@ public class BlobSoftRefProperty extends BlobRefProperty implements SQLPropertyI
 
     @Override
     protected void onBeforeSaveChecks(Object entity) {
-        if (ref.changed && ref.isFilled() && ref.getBlob().isTemporary()) {
         BlobHardRef ref = getRef(entity);
+        if (isChanged(entity) && ref.isFilled() && ref.getBlob().isTemporary()) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage(

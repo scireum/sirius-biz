@@ -96,7 +96,7 @@ public abstract class BlobRefProperty extends Property implements SQLPropertyInf
     }
 
     protected boolean isChanged(Object entity) {
-        BaseEntity baseEntity = (BaseEntity) entity;
+        BaseEntity<?> baseEntity = (BaseEntity<?>) entity;
         return baseEntity.isChanged(nameAsMapping);
     }
 }
