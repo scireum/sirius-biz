@@ -76,7 +76,7 @@ public abstract class SearchableEntity extends ElasticEntity {
      */
     public static final Mapping SEARCH_FIELD = Mapping.named("searchField");
     @Analyzed(analyzer = Analyzed.ANALYZER_WHITESPACE, indexOptions = Analyzed.IndexOption.DOCS)
-    @IndexMode(indexed = ESOption.TRUE, normsEnabled = ESOption.TRUE)
+    @IndexMode(indexed = ESOption.TRUE, normsEnabled = ESOption.TRUE, stored = ESOption.FALSE, excludeFromSource = true)
     @NullAllowed
     @NoJournal
     private String searchField;
