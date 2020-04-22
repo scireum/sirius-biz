@@ -29,7 +29,7 @@ import java.sql.Types;
  * NOTE: This implementation assumes that BlobHardRef stays the parent class for all blob reference
  * property classes, which should be valid because hard and soft references should be enough.
  */
-public abstract class BlobRefProperty extends Property implements SQLPropertyInfo {
+abstract class BlobRefProperty extends Property implements SQLPropertyInfo {
 
     protected static final int DEFAULT_KEY_LENGTH = 64;
 
@@ -117,7 +117,7 @@ public abstract class BlobRefProperty extends Property implements SQLPropertyInf
      * Checks if the blob reference on the entity has changed since loading from DB.
      *
      * @param entity the entity to check
-     * @return <tt>true</tt> if unchanged, else <tt>false</tt>
+     * @return <tt>true</tt> if changed, <tt>false</tt> otherwise
      */
     protected boolean isChanged(Object entity) {
         BaseEntity<?> baseEntity = (BaseEntity<?>) entity;
