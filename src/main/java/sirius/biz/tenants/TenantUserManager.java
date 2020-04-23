@@ -8,7 +8,7 @@
 
 package sirius.biz.tenants;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
@@ -163,15 +163,21 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @Parts(AdditionalRolesProvider.class)
     private static PartCollection<AdditionalRolesProvider> additionalRolesProviders;
 
+    private static final String REMOVE_BY_TENANT_UNIQUE_NAME = "tenant-unique-name";
+
     protected static Cache<String, Tuple<Set<String>, String>> rolesCache =
-            CacheManager.createCoherentCache("tenants-roles");
+            CacheManager.<Tuple<Set<String>, String>>createCoherentCache("tenants-roles").addRemover(
+                    REMOVE_BY_TENANT_UNIQUE_NAME,
+                    (uniqueTenantName, entry) -> Strings.areEqual(uniqueTenantName, entry.getValue().getSecond()));
 
     protected static Cache<String, UserAccount<?, ?>> userAccountCache =
             CacheManager.createCoherentCache("tenants-users");
     protected static Cache<String, Tenant<?>> tenantsCache = CacheManager.createCoherentCache("tenants-tenants");
 
     protected static Cache<String, Tuple<UserSettings, String>> configCache =
-            CacheManager.createCoherentCache("tenants-configs");
+            CacheManager.<Tuple<UserSettings, String>>createCoherentCache("tenants-configs").addRemover(
+                    REMOVE_BY_TENANT_UNIQUE_NAME,
+                    (uniqueTenantName, entry) -> Strings.areEqual(uniqueTenantName, entry.getValue().getSecond()));
 
     protected TenantUserManager(ScopeInfo scope, Extension config) {
         super(scope, config);
@@ -201,10 +207,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     public static void flushCacheForTenant(Tenant<?> tenant) {
         tenantsCache.remove(tenant.getIdAsString());
         configCache.remove(tenant.getUniqueName());
-        configCache.removeIf(cachedValue -> Strings.areEqual(cachedValue.getValue().getSecond(),
-                                                             tenant.getUniqueName()));
-        rolesCache.removeIf(cachedValue -> Strings.areEqual(cachedValue.getValue().getSecond(),
-                                                            tenant.getUniqueName()));
+        configCache.removeAll(REMOVE_BY_TENANT_UNIQUE_NAME, tenant.getUniqueName());
+        rolesCache.removeAll(REMOVE_BY_TENANT_UNIQUE_NAME, tenant.getUniqueName());
     }
 
     @Override
@@ -611,6 +615,10 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     }
 
     protected boolean checkApiToken(LoginData loginData, String givenApiToken) {
+        if (Strings.isEmpty(loginData.getApiToken())) {
+            return false;
+        }
+
         if (Strings.areEqual(givenApiToken, loginData.getApiToken())) {
             return true;
         }
@@ -638,8 +646,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     protected String getHashedApiToken(String apiToken, long timestampInDays) {
         return Hashing.md5()
                       .newHasher()
-                      .putString(apiToken, Charsets.UTF_8)
-                      .putString(String.valueOf(timestampInDays), Charsets.UTF_8)
+                      .putString(apiToken, StandardCharsets.UTF_8)
+                      .putString(String.valueOf(timestampInDays), StandardCharsets.UTF_8)
                       .hash()
                       .toString();
     }

@@ -1,0 +1,53 @@
+<i:arg type="sirius.biz.web.DisasterModeInfo" name="disasterInfo"/>
+
+<w:page titleKey="DisasterController.title">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="@call.getRequestedURI()">@i18n("DisasterController.title")</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader titleKey="DisasterController.title"/>
+    <w:editForm url="@call.getRequestedURI()">
+        <w:subHeading labelKey="DisasterController.maintenanceMessage"/>
+        <div class="row">
+            <w:textfield name="previewMessage"
+                         helpKey="DisasterController.previewMessageHelp"
+                         labelKey="DisasterController.message"
+                         value="@disasterInfo.getRawPreviewMessage()"
+                         span="12"/>
+        </div>
+        <div class="row">
+            <w:datefield name="messageDate"
+                         labelKey="DisasterController.date"
+                         value="@toUserString(disasterInfo.getRawDisplayMessageStartDate())"/>
+            <w:timefield name="messageTime"
+                         labelKey="DisasterController.time"
+                         value="disasterInfo.getRawDisplayMessageStartTime()"/>
+        </div>
+
+        <w:subHeading labelKey="DisasterController.lock"/>
+        <div class="row">
+            <w:textfield name="lockMessage"
+                         labelKey="DisasterController.message"
+                         helpKey="DisasterController.lockMessageHelp"
+                         value="@disasterInfo.getRawLockMessage()"
+                         span="12"/>
+        </div>
+        <div class="row">
+            <w:booleanSelect name="locked"
+                             labelKey="DisasterController.locked"
+                             value="@disasterInfo.isRawLocked()"
+                             span="4"/>
+            <w:datefield name="lockDate"
+                         labelKey="DisasterController.date"
+                         value="@toUserString(disasterInfo.getRawLockStartDate())"
+                         span="4"/>
+            <w:timefield name="lockTime"
+                         labelKey="DisasterController.time"
+                         value="disasterInfo.getRawLockStartTime()"
+                         span="4"/>
+        </div>
+    </w:editForm>
+    <w:formBar/>
+</w:page>

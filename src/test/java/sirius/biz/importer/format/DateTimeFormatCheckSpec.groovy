@@ -8,10 +8,11 @@
 
 package sirius.biz.importer.format
 
+import sirius.kernel.BaseSpecification
 import sirius.kernel.commons.Value
 import spock.lang.Specification
 
-class DateTimeFormatCheckSpec extends Specification {
+class DateTimeFormatCheckSpec extends BaseSpecification {
 
     def "valid dates throws no exception"() {
         when:

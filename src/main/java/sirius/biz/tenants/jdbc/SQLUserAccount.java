@@ -15,6 +15,7 @@ import sirius.biz.tenants.UserAccountData;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.TranslationSource;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.di.std.Framework;
 import sirius.web.controller.Message;
 
@@ -63,8 +64,10 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
     }
 
     @Override
+    @SuppressWarnings("squid:S1185")
+    @Explain("This method must be overridden, because it is defined with a generic parameter in UserAccount")
     public void setId(Long id) {
-        setId((long) id);
+        super.setId(id);
     }
 
     @Override

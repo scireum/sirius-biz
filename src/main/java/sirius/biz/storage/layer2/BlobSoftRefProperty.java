@@ -110,6 +110,16 @@ public class BlobSoftRefProperty extends Property implements SQLPropertyInfo {
     }
 
     @Override
+    protected Object transformToMongo(Object object) {
+        return object;
+    }
+
+    @Override
+    protected Object transformFromMongo(Value object) {
+        return object.get();
+    }
+
+    @Override
     public void setValue(Object entity, Object object) {
         this.setValueToField(object, entity);
     }

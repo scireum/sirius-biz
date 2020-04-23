@@ -8,12 +8,12 @@
 
 package sirius.biz.importer.format
 
+import sirius.kernel.BaseSpecification
 import sirius.kernel.commons.Amount
 import sirius.kernel.commons.NumberFormat
 import sirius.kernel.commons.Value
-import spock.lang.Specification
 
-class AmountRangeCheckSpec extends Specification {
+class AmountRangeCheckSpec extends BaseSpecification {
 
     def "values below the inclusive lower limit are correctly marked as invalid"() {
         when:
@@ -113,5 +113,4 @@ class AmountRangeCheckSpec extends Specification {
         then:
         noExceptionThrown()
     }
-
 }

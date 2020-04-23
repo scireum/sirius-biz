@@ -8,7 +8,6 @@
 
 package sirius.biz.web;
 
-import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.process.PersistencePeriod;
@@ -45,6 +44,7 @@ import sirius.web.util.LinkBuilder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -563,7 +563,7 @@ public class BizController extends BasicController {
         }
 
         long unixTimeInDays = TimeUnit.DAYS.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS);
-        return Hashing.md5().hashString(uri + secret + unixTimeInDays, Charsets.UTF_8).toString();
+        return Hashing.md5().hashString(uri + secret + unixTimeInDays, StandardCharsets.UTF_8).toString();
     }
 
     /**
