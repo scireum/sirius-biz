@@ -31,7 +31,7 @@ public class ConversionEvent extends Event {
     private String sourceFileName;
 
     /**
-     * Contains the type of file used as a source for the conversion.
+     * Contains the file type / extension of the file used as a source for the conversion.
      */
     public static final Mapping SOURCE_TYPE = Mapping.named("sourceType");
     private String sourceType;
