@@ -142,8 +142,6 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
             event.getDescriptor().beforeSave(event);
             buffer.offer(event);
             bufferedEvents.incrementAndGet();
-        } catch (HandledException e) {
-            Exceptions.ignore(e);
         } catch (Exception e) {
             Exceptions.handle(Log.BACKGROUND, e);
         }
