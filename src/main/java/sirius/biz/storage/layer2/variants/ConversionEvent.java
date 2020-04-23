@@ -60,12 +60,6 @@ public class ConversionEvent extends Event {
     private String toolName;
 
     /**
-     * Contains the version code or number of the actual tool / application used for the conversion.
-     */
-    public static final Mapping TOOL_VERSION = Mapping.named("toolVersion");
-    private String toolVersion;
-
-    /**
      * Contains whether or not the conversion resulted in the desired output file.
      */
     public static final Mapping SUCCESSFUL = Mapping.named("successful");
@@ -143,14 +137,6 @@ public class ConversionEvent extends Event {
 
     public void setToolName(String toolName) {
         this.toolName = toolName;
-    }
-
-    public String getToolVersion() {
-        return toolVersion;
-    }
-
-    public void setToolVersion(String toolVersion) {
-        this.toolVersion = toolVersion;
     }
 
     public boolean isSuccessful() {
