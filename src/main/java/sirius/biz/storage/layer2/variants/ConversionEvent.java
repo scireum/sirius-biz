@@ -9,7 +9,6 @@
 package sirius.biz.storage.layer2.variants;
 
 import sirius.biz.analytics.events.Event;
-import sirius.biz.analytics.events.UserData;
 import sirius.db.mixing.Mapping;
 
 /**
@@ -78,10 +77,10 @@ public class ConversionEvent extends Event {
     private long duration = 0;
 
     /**
-     * Contains the current user, tenant and scope if available.
+     * Contains the tenant owning the source and target files being converted.
      */
-    public static final Mapping USER = Mapping.named("user");
-    private final UserData user = new UserData();
+    public static final Mapping TENANT_ID = Mapping.named("tenantId");
+    private String tenantId;
 
     public String getSourceId() {
         return sourceId;
@@ -163,7 +162,11 @@ public class ConversionEvent extends Event {
         this.duration = duration;
     }
 
-    public UserData getUser() {
-        return user;
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
     }
 }
