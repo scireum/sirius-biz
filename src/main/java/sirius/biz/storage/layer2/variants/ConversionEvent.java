@@ -10,6 +10,7 @@ package sirius.biz.storage.layer2.variants;
 
 import sirius.biz.analytics.events.Event;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.NullAllowed;
 
 /**
  * Records the successful/failed conversion of a {@link BlobVariant} by a {@link Converter}.
@@ -20,6 +21,7 @@ public class ConversionEvent extends Event {
      * Contains the database ID (if available) of the file used as a source for the conversion.
      */
     public static final Mapping SOURCE_ID = Mapping.named("sourceId");
+    @NullAllowed
     private String sourceId;
 
     /**
@@ -38,6 +40,7 @@ public class ConversionEvent extends Event {
      * Contains the database ID (if available) of the file used as a source for the conversion.
      */
     public static final Mapping TARGET_ID = Mapping.named("targetId");
+    @NullAllowed
     private String targetId;
 
     /**
@@ -50,12 +53,14 @@ public class ConversionEvent extends Event {
      * Contains the key of the {@link Converter} running the conversion.
      */
     public static final Mapping CONVERTER = Mapping.named("converter");
+    @NullAllowed
     private String converter;
 
     /**
      * Contains the name of the actual tool / application used for the conversion.
      */
     public static final Mapping TOOL_NAME = Mapping.named("toolName");
+    @NullAllowed
     private String toolName;
 
     /**
@@ -68,6 +73,7 @@ public class ConversionEvent extends Event {
      * Contains an optional descriptive reason when the conversion failed.
      */
     public static final Mapping FAIL_REASON = Mapping.named("failReason");
+    @NullAllowed
     private String failReason;
 
     /**
@@ -80,6 +86,7 @@ public class ConversionEvent extends Event {
      * Contains the tenant owning the source and target files being converted.
      */
     public static final Mapping TENANT_ID = Mapping.named("tenantId");
+    @NullAllowed
     private String tenantId;
 
     public String getSourceId() {
