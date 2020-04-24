@@ -83,11 +83,11 @@ public class ConversionEvent extends Event {
     private long duration = 0;
 
     /**
-     * Contains the tenant owning the source and target files being converted.
+     * Contains the ID of the tenant owning the source and target files being converted.
      */
-    public static final Mapping TENANT_ID = Mapping.named("tenantId");
+    public static final Mapping TENANT = Mapping.named("tenant");
     @NullAllowed
-    private String tenantId;
+    private String tenant;
 
     public String getSourceId() {
         return sourceId;
@@ -169,11 +169,11 @@ public class ConversionEvent extends Event {
         this.duration = duration;
     }
 
-    public String getTenantId() {
-        return tenantId;
+    public String getTenant() {
+        return tenant;
     }
 
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
+    public void setTenant(String tenant) {
+        this.tenant = tenant;
     }
 }
