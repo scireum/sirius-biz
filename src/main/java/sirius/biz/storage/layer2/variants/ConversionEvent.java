@@ -37,7 +37,7 @@ public class ConversionEvent extends Event {
     private String sourceType;
 
     /**
-     * Contains the database ID (if available) of the file used as a source for the conversion.
+     * Contains the database ID (if available) of the file used as the target or destination for the conversion.
      */
     public static final Mapping TARGET_ID = Mapping.named("targetId");
     @NullAllowed
