@@ -12,7 +12,7 @@ import sirius.biz.analytics.flags.ExecutionFlags;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.timer.EveryDay;
+import sirius.kernel.timer.EndOfDayTask;
 
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -21,9 +21,9 @@ import java.util.Optional;
 /**
  * Provides an implementation which stores the execution flags in a JDBC database as {@link ExecutionFlag}.
  */
-@Register(classes = {ExecutionFlags.class, EveryDay.class},
+@Register(classes = {ExecutionFlags.class, EndOfDayTask.class},
         framework = SQLExecutionFlags.FRAMEWORK_EXECUTION_FLAGS_JDBC)
-public class SQLExecutionFlags extends ExecutionFlags implements EveryDay {
+public class SQLExecutionFlags extends ExecutionFlags implements EndOfDayTask {
 
     /**
      * Determines the name of the framework which enables this implementation.
@@ -63,12 +63,12 @@ public class SQLExecutionFlags extends ExecutionFlags implements EveryDay {
     }
 
     @Override
-    public String getConfigKeyName() {
+    public String getName() {
         return "delete-execution-flags";
     }
 
     @Override
-    public void runTimer() throws Exception {
+    public void execute() throws Exception {
         oma.select(ExecutionFlag.class)
            .where(OMA.FILTERS.lt(ExecutionFlag.STORAGE_LIMIT, LocalDateTime.now()))
            .delete();

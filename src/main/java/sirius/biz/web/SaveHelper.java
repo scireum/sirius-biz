@@ -14,6 +14,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.nls.Formatter;
 import sirius.web.http.WebContext;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
@@ -77,6 +78,20 @@ public class SaveHelper {
      */
     public SaveHelper withMappings(Mapping... columns) {
         this.mappings = Arrays.asList(columns);
+        return this;
+    }
+
+    /**
+     * Specifies what mappings should be loaded from the request context.
+     * <p>
+     * Note that by default also all properties wearing an {@link Autoloaded} annotation will be loaded. To suppress
+     * this behaviour {@link #disableAutoload()} has to be called.
+     *
+     * @param columns array of {@link Mapping} objects
+     * @return the helper itself for fluent method calls
+     */
+    public SaveHelper withMappings(List<Mapping> columns) {
+        this.mappings = new ArrayList<>(columns);
         return this;
     }
 

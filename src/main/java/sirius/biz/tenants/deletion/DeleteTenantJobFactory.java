@@ -70,7 +70,7 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
     @Override
     protected String createProcessTitle(Map<String, String> context) {
         String name = TENANT_PARAMETER.require(context).getTenantData().getName();
-        if (TAKE_ACTION_PARAMETER.require(context)) {
+        if (Boolean.TRUE.equals(TAKE_ACTION_PARAMETER.require(context))) {
             return NLS.fmtr("DeleteTenantJobFactory.title").set("name", name).format();
         } else {
             return NLS.fmtr("DeleteTenantJobFactory.title.simulate").set("name", name).format();

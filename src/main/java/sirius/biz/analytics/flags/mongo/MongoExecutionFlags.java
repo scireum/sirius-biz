@@ -13,7 +13,7 @@ import sirius.db.mongo.Mango;
 import sirius.db.mongo.QueryBuilder;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.timer.EveryDay;
+import sirius.kernel.timer.EndOfDayTask;
 
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -22,9 +22,9 @@ import java.util.Optional;
 /**
  * Provides an implementation which stores the execution flags in a MongoDB as {@link ExecutionFlag}.
  */
-@Register(classes = {ExecutionFlags.class, EveryDay.class},
+@Register(classes = {ExecutionFlags.class, EndOfDayTask.class},
         framework = MongoExecutionFlags.FRAMEWORK_EXECUTION_FLAGS_MONGO)
-public class MongoExecutionFlags extends ExecutionFlags implements EveryDay {
+public class MongoExecutionFlags extends ExecutionFlags implements EndOfDayTask {
 
     /**
      * Determines the name of the framework which enables this implementation.
@@ -63,12 +63,12 @@ public class MongoExecutionFlags extends ExecutionFlags implements EveryDay {
     }
 
     @Override
-    public String getConfigKeyName() {
+    public String getName() {
         return "delete-execution-flags";
     }
 
     @Override
-    public void runTimer() throws Exception {
+    public void execute() throws Exception {
         mango.select(ExecutionFlag.class)
              .where(QueryBuilder.FILTERS.lt(ExecutionFlag.STORAGE_LIMIT, LocalDateTime.now()))
              .delete();

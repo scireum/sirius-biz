@@ -70,7 +70,7 @@
                         <b>@node.getNodeName()</b>
                     </td>
                     <i:local name="jobInfo"
-                             value="@node.getJobs().get(job).as(sirius.biz.cluster.BackgroundJobInfo.class)"/>
+                             value="@node.getJobs().get(job)"/>
                     <i:if test="jobInfo != null">
                         <td>
                             <i:if test="jobInfo.isGloballyEnabled()">

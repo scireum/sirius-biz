@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.elastic.reindex;
+package sirius.biz.elastic;
 
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.jobs.JobFactory;

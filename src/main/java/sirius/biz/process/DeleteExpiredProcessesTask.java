@@ -14,7 +14,7 @@ import sirius.kernel.Sirius;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.timer.EveryDay;
+import sirius.kernel.timer.EndOfDayTask;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -24,7 +24,7 @@ import java.util.Optional;
  * processes.
  */
 @Register(framework = Processes.FRAMEWORK_PROCESSES)
-public class DeleteExpiredProcessesTask implements EveryDay {
+public class DeleteExpiredProcessesTask implements EndOfDayTask {
 
     @Part
     private Elastic elastic;
@@ -33,14 +33,14 @@ public class DeleteExpiredProcessesTask implements EveryDay {
     private Tasks tasks;
 
     @Override
-    public String getConfigKeyName() {
+    public String getName() {
         return "cleanup-processes";
     }
 
     @Override
-    public void runTimer() throws Exception {
+    public void execute() throws Exception {
         if (elastic != null && elastic.getReadyFuture().isCompleted() && !Sirius.isStartedAsTest()) {
-            tasks.defaultExecutor().fork(this::cleanup);
+            this.cleanup();
         }
     }
 

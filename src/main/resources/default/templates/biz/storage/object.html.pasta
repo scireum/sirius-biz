@@ -66,7 +66,7 @@
             <i:if test="@bucket.isShowPublicURLs()">
                 <div class="row">
                     <w:textfield span="12" name="publicUrl" labelKey="VirtualObject.publicUrl" readonly="true"
-                                 value="@object.prepareURL().eternallyValid().buildURL().orElse('').as(String.class)"/>
+                                 value="@object.prepareURL().eternallyValid().buildURL().orElse('')"/>
                 </div>
             </i:if>
 
