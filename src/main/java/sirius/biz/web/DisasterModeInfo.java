@@ -213,7 +213,7 @@ public class DisasterModeInfo implements MaintenanceInfo {
             return null;
         }
 
-        return Message.info(message);
+        return Message.warn(message);
     }
 
     /**
