@@ -114,6 +114,7 @@ public class DisasterModeInfo implements MaintenanceInfo {
         if (!Strings.areEqual(ScopeInfo.DEFAULT_SCOPE.getScopeId(), scopeInfo.getScopeId())) {
             throw new IllegalArgumentException();
         }
+        scopeInfo.attach(DisasterModeInfo.class, this);
     }
 
     private void updateFromRedis() {
