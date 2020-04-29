@@ -23,7 +23,6 @@ public class BlobHardRef {
     protected final String space;
     protected Blob blob;
     protected String key;
-    protected boolean changed;
 
     @Part
     protected static BlobStorage storage;
@@ -60,14 +59,8 @@ public class BlobHardRef {
     public void setBlob(Blob blob) {
         this.blob = blob;
         if (blob == null) {
-            if (Strings.isFilled(this.key)) {
-                this.changed = true;
-            }
             this.key = null;
         } else {
-            if (!Strings.areEqual(this.key, blob.getBlobKey())) {
-                this.changed = true;
-            }
             this.key = blob.getBlobKey();
         }
     }
@@ -78,10 +71,6 @@ public class BlobHardRef {
      * @param key the key of the object to reference
      */
     public void setKey(String key) {
-        if (!Strings.areEqual(this.key, key)) {
-            this.changed = true;
-        }
-
         if (Strings.isEmpty(key)) {
             this.key = null;
             this.blob = null;
