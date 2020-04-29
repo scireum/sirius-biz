@@ -94,7 +94,8 @@ public class JobsRoot extends SingularVFSRoot {
 
     @Override
     protected void populateRoot(MutableVirtualFile rootDirectory) {
-        rootDirectory.withChildren(new EnumerateOnlyProvider(this::listFileJobs));
+        rootDirectory.withCanCreateChildren(MutableVirtualFile.CONSTANT_FALSE)
+                     .withChildren(new EnumerateOnlyProvider(this::listFileJobs));
     }
 
     private void listFileJobs(VirtualFile jobsDirectory, FileSearch fileSearch) {
@@ -102,8 +103,10 @@ public class JobsRoot extends SingularVFSRoot {
             .filter(JobFactory::canStartInBackground)
             .filter(this::isFileJob)
             .forEach(fileJobFactory -> {
-                MutableVirtualFile jobDirectory = MutableVirtualFile.checkedCreate(jobsDirectory, fileJobFactory.getName());
+                MutableVirtualFile jobDirectory =
+                        MutableVirtualFile.checkedCreate(jobsDirectory, fileJobFactory.getName());
                 jobDirectory.markAsExistingDirectory();
+                jobDirectory.withCanCreateChildren(MutableVirtualFile.CONSTANT_FALSE);
                 jobDirectory.withChildren(new EnumerateOnlyProvider(this::listPresets));
                 jobDirectory.attach(JobFactory.class, fileJobFactory);
                 jobDirectory.withDescription(fileJobFactory.getDescription());
