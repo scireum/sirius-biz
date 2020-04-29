@@ -17,6 +17,7 @@ import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.ValueHolder;
@@ -108,6 +109,8 @@ public class JobConfigData extends Composite {
      *
      * @return the configuation as mutable map
      */
+    @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
+    @Explain("This is intentionally mutable.")
     public Map<String, String> getConfigMap() {
         if (configMap == null) {
             configMap = new HashMap<>();
