@@ -135,6 +135,7 @@ public class JobConfigData extends Composite {
      * @param ctx the request to read the parameter values from
      */
     public void loadFromContext(WebContext ctx) {
+        // Check all parameters here to notify the user about config short comings...
         ValueHolder<HandledException> errorHolder = new ValueHolder<>(null);
         Map<String, String> data = getJobFactory().buildAndVerifyContext(ctx::get, true, ex -> {
             if (errorHolder.get() == null) {
@@ -142,8 +143,10 @@ public class JobConfigData extends Composite {
             }
         });
 
+        // ...however, store the original user input here as JobFactory.startInBackground will
+        // beform another check and transform itself...
         getConfigMap().clear();
-        getConfigMap().putAll(data);
+        data.keySet().forEach(key -> getConfigMap().put(key, ctx.getParameter(key)));
 
         if (errorHolder.get() != null) {
             throw errorHolder.get();
