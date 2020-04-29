@@ -96,7 +96,7 @@ public class DatabaseController extends BasicController {
             SQLQuery qry = db.createQuery(sqlStatement);
 
             if (isDDSStatement(sqlStatement)) {
-                // To prevent accidential damage, we try to filter DDS queries (modifying the database structure) and
+                // To prevent accidential damage, we try to filter DDL queries (modifying the database structure) and
                 // only permit them against our system database.
                 if (!Strings.areEqual(database, defaultDatabase)) {
                     throw Exceptions.createHandled()
