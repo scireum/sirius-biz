@@ -135,10 +135,10 @@ public class BlobDispatcher implements WebDispatcher {
     }
 
     @Override
-    public boolean dispatch(WebContext request) throws Exception {
+    public DispatchDecision dispatch(WebContext request) throws Exception {
         String uri = request.getRequestedURI();
         if (!uri.startsWith(URI_PREFIX)) {
-            return false;
+            return DispatchDecision.CONTINUE;
         }
 
         uri = uri.substring(URI_PREFIX_LENGTH);
@@ -152,7 +152,7 @@ public class BlobDispatcher implements WebDispatcher {
                              uriParts.at(2).asString(),
                              Files.getFilenameWithoutExtension(filename),
                              filename);
-            return true;
+            return DispatchDecision.DONE;
         }
 
         if (Strings.areEqual(type, PHYSICAL_DOWNLOAD)) {
@@ -161,7 +161,7 @@ public class BlobDispatcher implements WebDispatcher {
                              uriParts.at(2).asString(),
                              uriParts.at(3).asString(),
                              stripAdditionalText(uriParts.at(4).asString()));
-            return true;
+            return DispatchDecision.DONE;
         }
 
         if (Strings.areEqual(type, VIRTUAL_DELIVERY)) {
@@ -174,7 +174,7 @@ public class BlobDispatcher implements WebDispatcher {
                             filename,
                             false,
                             false);
-            return true;
+            return DispatchDecision.DONE;
         }
 
         if (Strings.areEqual(type, VIRTUAL_DOWNLOAD)) {
@@ -186,7 +186,7 @@ public class BlobDispatcher implements WebDispatcher {
                             stripAdditionalText(uriParts.at(5).asString()),
                             true,
                             false);
-            return true;
+            return DispatchDecision.DONE;
         }
 
         if (Strings.areEqual(type, VIRTUAL_CACHABLE_DELIVERY)) {
@@ -199,7 +199,7 @@ public class BlobDispatcher implements WebDispatcher {
                             filename,
                             false,
                             true);
-            return true;
+            return DispatchDecision.DONE;
         }
 
         if (Strings.areEqual(type, VIRTUAL_CACHABLE_DOWNLOAD)) {
@@ -211,10 +211,10 @@ public class BlobDispatcher implements WebDispatcher {
                             stripAdditionalText(uriParts.at(5).asString()),
                             true,
                             true);
-            return true;
+            return DispatchDecision.DONE;
         }
 
-        return false;
+        return DispatchDecision.CONTINUE;
     }
 
     /**
