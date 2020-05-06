@@ -14,12 +14,10 @@ import sirius.db.es.ElasticQuery;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
-import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.query.Query;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Watch;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.Controller;
@@ -45,9 +43,6 @@ public class QueryController extends BizController {
 
     private static final int DEFAULT_LIMIT = 100;
     private static final int MAX_LIMIT = 1000;
-
-    @Part
-    private Mixing mixing;
 
     /**
      * Builds the given query via {@link Query#queryString}, executes it and renders the UI.
