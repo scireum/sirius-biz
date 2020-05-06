@@ -16,7 +16,9 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.query.Query;
+import sirius.db.mixing.query.constraints.Constraint;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.AutocompleteHelper;
@@ -77,14 +79,22 @@ public class QueryController extends BizController {
     }
 
     @SuppressWarnings("unchecked")
-    private <Q extends Query<Q, ?, ?>> List<BaseEntity<?>> executeQuery(EntityDescriptor descriptor,
-                                                                        String queryString,
-                                                                        int limit) {
+    private <C extends Constraint, Q extends Query<Q, ?, C>> List<BaseEntity<?>> executeQuery(EntityDescriptor descriptor,
+                                                                                              String queryString,
+                                                                                              int limit) {
         try {
             // As Query is a self-referential type, we have to use a custom generic type here...
-            Q baseQuery = (Q) descriptor.getMapper()
-                                        .select((Class<BaseEntity<?>>) descriptor.getType())
-                                        .queryString(queryString);
+            Q baseQuery = (Q) descriptor.getMapper().select((Class<BaseEntity<?>>) descriptor.getType());
+
+            // Compile the query string and extract the debug flag...
+            Tuple<Constraint, Boolean> constraintAndDebugFlag =
+                    descriptor.getMapper().filters().compileString(descriptor, queryString, Collections.emptyList());
+            baseQuery.where((C) constraintAndDebugFlag.getFirst());
+
+            // Log effective query if desired...
+            if (Boolean.TRUE.equals(constraintAndDebugFlag.getSecond())) {
+                UserContext.message(Message.info("Effective Query: " + baseQuery.toString()));
+            }
 
             // Elastic entities might be routed - we ignore this here and access all shards anyway...
             if (baseQuery instanceof ElasticQuery) {
@@ -99,6 +109,7 @@ public class QueryController extends BizController {
             if (numberOfEntites > 0) {
                 Watch watch = Watch.start();
                 baseQuery.limit(limit).iterateAll(result::add);
+
                 UserContext.message(Message.info(Strings.apply("Showing %s of %s results - Query took %sms",
                                                                result.size(),
                                                                numberOfEntites,

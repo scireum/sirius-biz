@@ -21,6 +21,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Facet;
+import sirius.web.controller.Message;
 import sirius.web.controller.Page;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
@@ -55,6 +56,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     protected List<Tuple<Facet, BiConsumer<Facet, Q>>> facets = new ArrayList<>();
     protected int pageSize = DEFAULT_PAGE_SIZE;
     protected boolean fetchTotalCount = false;
+    protected boolean debugging;
 
     protected BasePageHelper(Q query) {
         this.baseQuery = query;
@@ -352,6 +354,13 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
             List<E> items = executeQuery();
             enforcePaging(result, items);
             fillPage(w, result, items);
+
+            if (debugging) {
+                UserContext.message(Message.info(Strings.apply("Effective Query: %s (Matches: %s, Duration: %s ms)",
+                                                               baseQuery,
+                                                               baseQuery.count(),
+                                                               w.elapsedMillis())));
+            }
         } catch (Exception e) {
             UserContext.handle(e);
         }
@@ -374,7 +383,10 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
 
     private void applyQuery(String query) {
         if (Strings.isFilled(query) && !searchFields.isEmpty()) {
-            baseQuery.where(baseQuery.filters().queryString(baseQuery.getDescriptor(), query, searchFields));
+            Tuple<C, Boolean> constraintAndFlag =
+                    baseQuery.filters().compileString(baseQuery.getDescriptor(), query, searchFields);
+            baseQuery.where(constraintAndFlag.getFirst());
+            this.debugging = constraintAndFlag.getSecond();
         }
     }
 
