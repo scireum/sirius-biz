@@ -23,6 +23,7 @@ import java.util.Optional;
 public class DateRangeParameter extends Parameter<DateRange, DateRangeParameter> {
 
     private List<DateRange> dateRanges;
+    private DateRange defaultValue;
 
     /**
      * Creates a new parameter with the given name, label and any number of {@link DateRange date ranges}
@@ -54,6 +55,18 @@ public class DateRangeParameter extends Parameter<DateRange, DateRangeParameter>
                                         DateRange.lastYear());
     }
 
+
+    /**
+     * Specifies the default value to use.
+     *
+     * @param defaultValue the default value to use
+     * @return the parameter itself for fluent method calls
+     */
+    public DateRangeParameter withDefault(DateRange defaultValue) {
+        this.defaultValue = defaultValue;
+        return this;
+    }
+
     @Override
     public String getTemplateName() {
         return "/templates/biz/jobs/params/daterange.html.pasta";
@@ -61,6 +74,10 @@ public class DateRangeParameter extends Parameter<DateRange, DateRangeParameter>
 
     @Override
     protected String checkAndTransformValue(Value input) {
+        if (input.isNull()) {
+            return defaultValue != null ? defaultValue.getKey() : null;
+        }
+
         if (!resolveFromString(input).isPresent()) {
             return null;
         }
