@@ -8,6 +8,7 @@
 
 package sirius.biz.web;
 
+import sirius.db.jdbc.Databases;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.DateRange;
 import sirius.db.mixing.Mapping;
@@ -159,24 +160,27 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     /**
      * Adds a time series based filter which permits to filter on certain time ranges.
      *
-     * @param name   the name of the field to filter on
-     * @param title  the title of the filter shown to the user
-     * @param ranges the ranges which are supported as filter values
+     * @param name         the name of the field to filter on
+     * @param title        the title of the filter shown to the user
+     * @param useLocalDate determines if the filter should be applied as {@link java.time.LocalDate} (<tt>true</tt>)
+     *                     or as {@link java.time.LocalDateTime} (<tt>false</tt>). This is crucial, as a these
+     *                     are entirely differently encoded in the database (see {@link Databases#convertValue(Object)}.
+     * @param ranges       the ranges which are supported as filter values
      * @return the helper itself for fluent method calls
      */
     @SuppressWarnings("unchecked")
-    public B addTimeFacet(String name, String title, DateRange... ranges) {
-        createTimeFacet(name, title, ranges);
+    public B addTimeFacet(String name, String title, boolean useLocalDate, DateRange... ranges) {
+        createTimeFacet(name, title, useLocalDate, ranges);
 
         return (B) this;
     }
 
-    protected Facet createTimeFacet(String name, String title, DateRange[] ranges) {
+    protected Facet createTimeFacet(String name, String title, boolean useLocalDate, DateRange[] ranges) {
         Facet facet = new Facet(title, name, null, null);
         addFacet(facet, (f, q) -> {
             for (DateRange range : ranges) {
                 if (Strings.areEqual(f.getValue(), range.getKey())) {
-                    range.applyTo(name, q);
+                    range.applyTo(name, useLocalDate, q);
                 }
             }
         });

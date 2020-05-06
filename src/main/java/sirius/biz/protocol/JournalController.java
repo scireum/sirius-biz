@@ -39,6 +39,7 @@ public class JournalController extends BizController {
         ph.withContext(ctx);
         ph.addTermAggregation(JournalEntry.TARGET_TYPE);
         ph.addTimeAggregation(JournalEntry.TOD,
+                              false,
                               DateRange.lastFiveMinutes(),
                               DateRange.lastFiveteenMinutes(),
                               DateRange.lastTwoHours(),
@@ -70,6 +71,7 @@ public class JournalController extends BizController {
                                                                                 .orderDesc(JournalEntry.TOD));
         ph.withContext(ctx);
         ph.addTimeAggregation(JournalEntry.TOD,
+                              false,
                               DateRange.lastFiveMinutes(),
                               DateRange.lastFiveteenMinutes(),
                               DateRange.lastTwoHours(),

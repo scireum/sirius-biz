@@ -42,6 +42,7 @@ public class LogController extends BizController {
         ph.addTermAggregation(LoggedMessage.LEVEL);
         ph.addTermAggregation(LoggedMessage.NODE);
         ph.addTimeAggregation(LoggedMessage.TOD,
+                              false,
                               DateRange.lastFiveMinutes(),
                               DateRange.lastFiveteenMinutes(),
                               DateRange.lastTwoHours(),

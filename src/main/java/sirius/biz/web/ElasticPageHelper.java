@@ -120,24 +120,36 @@ public class ElasticPageHelper<E extends ElasticEntity>
     /**
      * Adds a time series based aggregation.
      *
-     * @param field  the field to filter on
-     * @param ranges the ranges which are supported as filter values
+     * @param field        the field to filter on
+     * @param useLocalDate determines if the filter should be applied as {@link java.time.LocalDate} (<tt>true</tt>)
+     *                     or as {@link java.time.LocalDateTime} (<tt>false</tt>). This is crucial, as a these
+     *                     are entirely differently encoded in the database.
+     * @param ranges       the ranges which are supported as filter values
      * @return the helper itself for fluent method calls
      */
-    public ElasticPageHelper<E> addTimeAggregation(Mapping field, DateRange... ranges) {
-        return addTimeAggregation(field, baseQuery.getDescriptor().findProperty(field.toString()).getLabel(), ranges);
+    public ElasticPageHelper<E> addTimeAggregation(Mapping field, boolean useLocalDate, DateRange... ranges) {
+        return addTimeAggregation(field,
+                                  useLocalDate,
+                                  baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
+                                  ranges);
     }
 
     /**
      * Adds a time series based aggregation.
      *
-     * @param field  the field to filter on
-     * @param title  the title of the filter shown to the user
-     * @param ranges the ranges which are supported as filter values
+     * @param field        the field to filter on
+     * @param title        the title of the filter shown to the user
+     * @param useLocalDate determines if the filter should be applied as {@link java.time.LocalDate} (<tt>true</tt>)
+     *                     or as {@link java.time.LocalDateTime} (<tt>false</tt>). This is crucial, as a these
+     *                     are entirely differently encoded.
+     * @param ranges       the ranges which are supported as filter values
      * @return the helper itself for fluent method calls
      */
-    public ElasticPageHelper<E> addTimeAggregation(Mapping field, String title, DateRange... ranges) {
-        Facet facet = createTimeFacet(field.toString(), title, ranges);
+    public ElasticPageHelper<E> addTimeAggregation(Mapping field,
+                                                   boolean useLocalDate,
+                                                   String title,
+                                                   DateRange... ranges) {
+        Facet facet = createTimeFacet(field.toString(), title, useLocalDate, ranges);
         baseQuery.addDateAggregation(field.toString(), field, Arrays.asList(ranges));
         aggregatingFacets.add(Tuple.create(facet, null));
 
