@@ -125,22 +125,4 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
         return result;
     }
 
-    @Override
-    protected void enforcePostLoadConstraints(SQLUserAccount entity) {
-        if (!canSkipTenantCheck(entity)) {
-            super.enforcePostLoadConstraints(entity);
-        }
-    }
-
-    @Override
-    public void enforcePreSaveConstraints(SQLUserAccount entity) {
-        if (!canSkipTenantCheck(entity)) {
-            super.enforcePreSaveConstraints(entity);
-        }
-    }
-
-    private boolean canSkipTenantCheck(SQLUserAccount entity) {
-        return UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)
-               && entity.getTenant().isFilled();
-    }
 }
