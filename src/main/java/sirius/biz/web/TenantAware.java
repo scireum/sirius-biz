@@ -11,9 +11,7 @@ package sirius.biz.web;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Explain;
-import sirius.kernel.health.Exceptions;
 
-import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -49,14 +47,7 @@ public interface TenantAware {
      *                   error message
      * @param other      the object to check
      */
-    default void assertSameTenant(Supplier<String> fieldLabel, TenantAware other) {
-        if (other != null && (!Objects.equals(other.getTenantAsString(), getTenantAsString()))) {
-            throw Exceptions.createHandled()
-                            .withNLSKey("TenantAware.invalidTenant")
-                            .set("field", fieldLabel.get())
-                            .handle();
-        }
-    }
+    void assertSameTenant(Supplier<String> fieldLabel, TenantAware other);
 
     /**
      * Installs the currently present tenant (in the {@link sirius.web.security.UserContext}) into this entity.

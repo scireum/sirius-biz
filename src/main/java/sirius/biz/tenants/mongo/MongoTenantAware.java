@@ -15,8 +15,11 @@ import sirius.db.mixing.annotations.Index;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
 
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Base class which marks subclasses as aware of their tenant they belong to.
@@ -51,6 +54,16 @@ public abstract class MongoTenantAware extends MongoBizEntity implements TenantA
     @Override
     public void fillWithCurrentTenant() {
         getTenant().setValue(tenants.getRequiredTenant());
+    }
+
+    @Override
+    public void assertSameTenant(Supplier<String> fieldLabel, TenantAware other) {
+        if (other != null && (!Objects.equals(other.getTenantAsString(), getTenantAsString()))) {
+            throw Exceptions.createHandled()
+                            .withNLSKey("TenantAware.invalidTenant")
+                            .set("field", fieldLabel.get())
+                            .handle();
+        }
     }
 
     @Override
