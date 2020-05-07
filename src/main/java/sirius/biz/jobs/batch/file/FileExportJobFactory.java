@@ -34,15 +34,8 @@ public abstract class FileExportJobFactory extends ExportBatchProcessFactory {
      * @return the completely initialized parameter.
      */
     public static FileOrDirectoryParameter createDestinationParameter() {
-        FileOrDirectoryParameter destinationParameter =
-                new FileOrDirectoryParameter("destination", "$FileExportJobFactory.destination");
-        destinationParameter.withDescription("$FileExportJobFactory.destination.help");
-        destinationParameter.withBasePath("/work");
-        return destinationParameter;
-    }
-
-    protected FileExportJobFactory() {
-        // Makes the constructor protected as this is an abstract class
+        return new FileOrDirectoryParameter("destination", "$FileExportJobFactory.destination").withDescription(
+                "$FileExportJobFactory.destination.help").withBasePath("/work");
     }
 
     @Override

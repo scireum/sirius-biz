@@ -39,10 +39,6 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
         return new FileParameter("file", "$FileImportJobFactory.file").withBasePath("/work").markRequired();
     }
 
-    protected FileImportJobFactory() {
-        // Makes the constructor protected as this is an abstract class
-    }
-
     @Override
     protected String createProcessTitle(Map<String, String> context) {
         return getLabel() + ": " + fileParameter.get(context).map(VirtualFile::name).orElse("-");

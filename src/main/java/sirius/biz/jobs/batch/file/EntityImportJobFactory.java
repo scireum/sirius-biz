@@ -43,16 +43,8 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
      * @return the completely initialized parameter.
      */
     public static EnumParameter<ImportMode> createImportModeParameter() {
-        EnumParameter<ImportMode> importModeParameter =
-                new EnumParameter<>("importMode", "$EntityImportJobFactory.importMode", ImportMode.class);
-        importModeParameter.withDefault(ImportMode.NEW_AND_UPDATES);
-        importModeParameter.markRequired();
-        importModeParameter.withDescription("$EntityImportJobFactory.importMode.help");
-        return importModeParameter;
-    }
-
-    protected EntityImportJobFactory() {
-        // Makes the constructor protected as this is an abstract class
+        return new EnumParameter<>("importMode", "$EntityImportJobFactory.importMode", ImportMode.class).withDefault(
+                ImportMode.NEW_AND_UPDATES).markRequired().withDescription("$EntityImportJobFactory.importMode.help");
     }
 
     @Override

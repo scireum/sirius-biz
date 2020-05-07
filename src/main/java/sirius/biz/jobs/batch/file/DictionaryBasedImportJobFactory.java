@@ -35,14 +35,8 @@ public abstract class DictionaryBasedImportJobFactory extends LineBasedImportJob
      * @return the completely initialized parameter.
      */
     public static BooleanParameter createIgnoreEmptyParameter() {
-        BooleanParameter ignoreEmptyParameter;
-        ignoreEmptyParameter = new BooleanParameter("ignoreEmpty", "$DictionaryBasedImportJobFactory.ignoreEmpty");
-        ignoreEmptyParameter.withDescription("$DictionaryBasedImportJobFactory.ignoreEmpty.help");
-        return ignoreEmptyParameter;
-    }
-
-    protected DictionaryBasedImportJobFactory() {
-        // Makes the constructor protected as this is an abstract class
+        return new BooleanParameter("ignoreEmpty", "$DictionaryBasedImportJobFactory.ignoreEmpty").withDescription(
+                "$DictionaryBasedImportJobFactory.ignoreEmpty.help");
     }
 
     @Override

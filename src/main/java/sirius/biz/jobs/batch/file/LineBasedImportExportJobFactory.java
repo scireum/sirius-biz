@@ -29,10 +29,6 @@ public abstract class LineBasedImportExportJobFactory extends LineBasedImportJob
     protected final EnumParameter<ExportFileType> fileTypeParameter =
             LineBasedExportJobFactory.createFileTypeParameter();
 
-    protected LineBasedImportExportJobFactory() {
-        // Makes the constructor protected as this is an abstract class
-    }
-
     @Override
     protected abstract LineBasedImportExportJob createJob(ProcessContext process);
 

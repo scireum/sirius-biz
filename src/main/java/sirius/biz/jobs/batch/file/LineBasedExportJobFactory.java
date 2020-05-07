@@ -31,16 +31,8 @@ public abstract class LineBasedExportJobFactory extends FileExportJobFactory {
      * @return the completely initialized parameter.
      */
     protected static EnumParameter<ExportFileType> createFileTypeParameter() {
-        EnumParameter<ExportFileType> fileTypeParameter =
-                new EnumParameter<>("fileType", "$LineBasedExportJobFactory.fileType", ExportFileType.class);
-        fileTypeParameter.withDefault(ExportFileType.XLSX);
-        fileTypeParameter.withDescription("$LineBasedExportJobFactory.fileType.help");
-        fileTypeParameter.markRequired();
-        return fileTypeParameter;
-    }
-
-    protected LineBasedExportJobFactory() {
-        // Makes the constructor protected as this is an abstract class
+        return new EnumParameter<>("fileType", "$LineBasedExportJobFactory.fileType", ExportFileType.class).withDefault(
+                ExportFileType.XLSX).withDescription("$LineBasedExportJobFactory.fileType.help").markRequired();
     }
 
     @Override
