@@ -91,7 +91,7 @@ public class MongoPageHelper<E extends MongoEntity>
      *
      * @param field        the field to filter on
      * @param useLocalDate determines if the filter should be applied as {@link java.time.LocalDate} (<tt>true</tt>)
-     *                     or as {@link java.time.LocalDateTime} (<tt>false</tt>). This is crucial, as a these
+     *                     or as {@link java.time.LocalDateTime} (<tt>false</tt>). This is crucial, as these
      *                     are entirely differently encoded in the database.
      * @param ranges       the ranges which are supported as filter values
      * @return the helper itself for fluent method calls
@@ -109,7 +109,7 @@ public class MongoPageHelper<E extends MongoEntity>
      * @param field        the field to filter on
      * @param title        the title of the filter shown to the user
      * @param useLocalDate determines if the filter should be applied as {@link java.time.LocalDate} (<tt>true</tt>)
-     *                     or as {@link java.time.LocalDateTime} (<tt>false</tt>). This is crucial, as a these
+     *                     or as {@link java.time.LocalDateTime} (<tt>false</tt>). This is crucial, as these
      *                     are entirely differently encoded in the database.
      * @param ranges       the ranges which are supported as filter values
      * @return the helper itself for fluent method calls
