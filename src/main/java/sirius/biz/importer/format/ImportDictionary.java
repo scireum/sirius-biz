@@ -83,15 +83,22 @@ public class ImportDictionary {
 
         this.fields.put(field.getName(), field);
 
-        for (String alias : field.getAliases()) {
-            if (aliases.containsKey(alias)) {
-                throw new IllegalArgumentException(Strings.apply("An alias named '%s' is already present!", alias));
-            }
-
-            aliases.put(alias, field.getName());
-        }
+        addCheckedAlias(field, field.getName());
+        addCheckedAlias(field, field.getLabel());
+        field.getAliases().forEach(alias -> addCheckedAlias(field, alias));
 
         return this;
+    }
+
+    private void addCheckedAlias(FieldDefinition field, String alias) {
+        String previousField = aliases.put(normalize(alias), field.getName());
+        if (Strings.isFilled(previousField) && !Strings.areEqual(field.getName(), previousField)) {
+            throw new IllegalArgumentException(Strings.apply(
+                    "Cannot add alias '%s' for field '%s', as this alias already points to '%s'!",
+                    alias,
+                    field.getName(),
+                    previousField));
+        }
     }
 
     /**

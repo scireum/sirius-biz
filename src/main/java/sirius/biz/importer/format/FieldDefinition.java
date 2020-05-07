@@ -274,7 +274,7 @@ public class FieldDefinition {
      * @return the field itself for fluent method calls
      */
     public FieldDefinition addAlias(String alias) {
-        aliases.add(ImportDictionary.normalize(NLS.smartGet(alias)));
+        aliases.add(NLS.smartGet(alias));
 
         return this;
     }
