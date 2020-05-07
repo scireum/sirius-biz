@@ -14,6 +14,7 @@ import sirius.biz.storage.layer3.FileOrDirectoryParameter;
 import sirius.biz.storage.layer3.FileParameter;
 import sirius.kernel.commons.Values;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 /**
@@ -87,8 +88,8 @@ public abstract class LineBasedImportExportJob extends LineBasedImportJob {
 
     @Override
     public void close() throws IOException {
-        try (Closeable c = super) {
-            exportJob.close();
+        try (Closeable c = exportJob) {
+            super.close();
         }
     }
 }
