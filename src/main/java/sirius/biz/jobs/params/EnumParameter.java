@@ -64,7 +64,11 @@ public class EnumParameter<E extends Enum<E>> extends Parameter<E, EnumParameter
 
     @Override
     protected String checkAndTransformValue(Value input) {
-        return input.getEnum(type).map(E::name).orElse(defaultValue != null ? defaultValue.name() : null);
+        if (input.isNull()) {
+            return defaultValue != null ? defaultValue.name() : null;
+        }
+
+        return input.getEnum(type).map(E::name).orElse(null);
     }
 
     @Override

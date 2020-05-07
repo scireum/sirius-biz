@@ -89,24 +89,36 @@ public class MongoPageHelper<E extends MongoEntity>
     /**
      * Adds a time series based aggregation.
      *
-     * @param field  the field to filter on
-     * @param ranges the ranges which are supported as filter values
+     * @param field        the field to filter on
+     * @param useLocalDate determines if the filter should be applied as {@link java.time.LocalDate} (<tt>true</tt>)
+     *                     or as {@link java.time.LocalDateTime} (<tt>false</tt>). This is crucial, as these
+     *                     are entirely differently encoded in the database.
+     * @param ranges       the ranges which are supported as filter values
      * @return the helper itself for fluent method calls
      */
-    public MongoPageHelper<E> addTimeAggregation(Mapping field, DateRange... ranges) {
-        return addTimeAggregation(field, baseQuery.getDescriptor().findProperty(field.toString()).getLabel(), ranges);
+    public MongoPageHelper<E> addTimeAggregation(Mapping field, boolean useLocalDate, DateRange... ranges) {
+        return addTimeAggregation(field,
+                                  baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
+                                  useLocalDate,
+                                  ranges);
     }
 
     /**
      * Adds a time series based aggregation.
      *
-     * @param field  the field to filter on
-     * @param title  the title of the filter shown to the user
-     * @param ranges the ranges which are supported as filter values
+     * @param field        the field to filter on
+     * @param title        the title of the filter shown to the user
+     * @param useLocalDate determines if the filter should be applied as {@link java.time.LocalDate} (<tt>true</tt>)
+     *                     or as {@link java.time.LocalDateTime} (<tt>false</tt>). This is crucial, as these
+     *                     are entirely differently encoded in the database.
+     * @param ranges       the ranges which are supported as filter values
      * @return the helper itself for fluent method calls
      */
-    public MongoPageHelper<E> addTimeAggregation(Mapping field, String title, DateRange... ranges) {
-        Facet facet = createTimeFacet(field.toString(), title, ranges);
+    public MongoPageHelper<E> addTimeAggregation(Mapping field,
+                                                 String title,
+                                                 boolean useLocalDate,
+                                                 DateRange... ranges) {
+        Facet facet = createTimeFacet(field.toString(), title, useLocalDate, ranges);
 
         baseQuery.addFacet(new MongoDateRangeFacet(field, Arrays.asList(ranges)).onComplete(mongoFacet -> {
             Iterator<FacetItem> iter = facet.getAllItems().iterator();

@@ -97,6 +97,7 @@ public class TableProcessOutputType implements ProcessOutputType {
         ElasticPageHelper<ProcessLog> ph = ElasticPageHelper.withQuery(query);
         ph.withContext(ctx);
         ph.addTimeAggregation(ProcessLog.TIMESTAMP,
+                              false,
                               DateRange.lastFiveMinutes(),
                               DateRange.lastFiveteenMinutes(),
                               DateRange.lastTwoHours());

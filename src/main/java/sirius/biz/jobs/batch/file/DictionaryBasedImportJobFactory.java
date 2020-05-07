@@ -23,11 +23,20 @@ public abstract class DictionaryBasedImportJobFactory extends LineBasedImportJob
     /**
      * Contains the parameter which is used to determine if empty values should be ignored).
      */
-    protected final BooleanParameter ignoreEmptyParameter;
+    protected final BooleanParameter ignoreEmptyParameter = createIgnoreEmptyParameter();
 
-    protected DictionaryBasedImportJobFactory() {
-        ignoreEmptyParameter = new BooleanParameter("ignoreEmpty", "$DictionaryBasedImportJobFactory.ignoreEmpty");
-        ignoreEmptyParameter.withDescription("$DictionaryBasedImportJobFactory.ignoreEmpty.help");
+    /**
+     * Creates the parameter which determines if empty rows should be ignored.
+     * <p>
+     * This is provided as a helper method so that other / similar jobs can re-use it.
+     * We do not re-use the same parameter, as a parameter isn't immutable, so a global constant could
+     * be easily set into an inconsistent state.
+     *
+     * @return the completely initialized parameter.
+     */
+    public static BooleanParameter createIgnoreEmptyParameter() {
+        return new BooleanParameter("ignoreEmpty", "$DictionaryBasedImportJobFactory.ignoreEmpty").withDescription(
+                "$DictionaryBasedImportJobFactory.ignoreEmpty.help");
     }
 
     @Override

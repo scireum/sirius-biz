@@ -22,12 +22,20 @@ import java.util.function.Consumer;
  */
 public abstract class FileExportJobFactory extends ExportBatchProcessFactory {
 
-    protected final FileOrDirectoryParameter destinationParameter;
+    protected final FileOrDirectoryParameter destinationParameter = createDestinationParameter();
 
-    protected FileExportJobFactory() {
-        destinationParameter = new FileOrDirectoryParameter("destination", "$FileExportJobFactory.destination");
-        destinationParameter.withDescription("$FileExportJobFactory.destination.help");
-        destinationParameter.withBasePath("/work");
+    /**
+     * Creates the parameter which is used to specify the destination for the generated output file.
+     * <p>
+     * This is provided as a helper method so that other / similar jobs can re-use it.
+     * We do not re-use the same parameter, as a parameter isn't immutable, so a global constant could
+     * be easily set into an inconsistent state.
+     *
+     * @return the completely initialized parameter.
+     */
+    public static FileOrDirectoryParameter createDestinationParameter() {
+        return new FileOrDirectoryParameter("destination", "$FileExportJobFactory.destination").withDescription(
+                "$FileExportJobFactory.destination.help").withBasePath("/work");
     }
 
     @Override

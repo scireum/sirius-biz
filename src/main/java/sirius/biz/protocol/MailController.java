@@ -41,6 +41,7 @@ public class MailController extends BizController {
         ph.addTermAggregation(MailProtocol.NODE);
         ph.addTermAggregation(MailProtocol.TYPE);
         ph.addTimeAggregation(MailProtocol.TOD,
+                              false,
                               DateRange.lastFiveMinutes(),
                               DateRange.lastFiveteenMinutes(),
                               DateRange.lastTwoHours(),

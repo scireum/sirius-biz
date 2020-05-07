@@ -62,6 +62,7 @@ public class AuditLogController extends BizController {
         ph.withContext(ctx);
         ph.withPageSize(100);
         ph.addTimeAggregation(AuditLogEntry.TIMESTAMP,
+                              false,
                               DateRange.lastFiveMinutes(),
                               DateRange.lastFiveteenMinutes(),
                               DateRange.lastTwoHours(),
