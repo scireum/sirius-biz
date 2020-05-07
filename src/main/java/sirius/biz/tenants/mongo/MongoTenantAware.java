@@ -12,6 +12,7 @@ import sirius.biz.mongo.MongoBizEntity;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.annotations.Index;
+import sirius.db.mixing.annotations.Transient;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.di.std.Part;
@@ -35,6 +36,9 @@ public abstract class MongoTenantAware extends MongoBizEntity implements TenantA
 
     @Part
     private static MongoTenants tenants;
+
+    @Transient
+    private boolean skipTenantCheck;
 
     /**
      * Contains the tenant the entity belongs to.
@@ -67,10 +71,15 @@ public abstract class MongoTenantAware extends MongoBizEntity implements TenantA
     }
 
     @Override
+    public void skipTenantCheck() {
+        this.skipTenantCheck = true;
+    }
+
+    @Override
     public void setOrVerifyCurrentTenant() {
         if (getTenant().isEmpty()) {
             fillWithCurrentTenant();
-        } else {
+        } else if (!skipTenantCheck) {
             tenants.assertTenant(this);
         }
     }

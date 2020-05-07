@@ -12,6 +12,7 @@ import sirius.biz.jdbc.BizEntity;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.SQLEntityRef;
+import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
@@ -26,6 +27,9 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
 
     @Part
     private static SQLTenants tenants;
+
+    @Transient
+    private boolean skipTenantCheck;
 
     /**
      * Contains the tenant the entity belongs to.
@@ -57,15 +61,20 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
                             .handle();
         }
     }
+
+    @Override
+    public void skipTenantCheck() {
+        this.skipTenantCheck = true;
+    }
+
     @Override
     public void setOrVerifyCurrentTenant() {
         if (getTenant().isEmpty()) {
             fillWithCurrentTenant();
-        } else {
+        } else if (!skipTenantCheck) {
             tenants.assertTenant(this);
         }
     }
-
 
     /**
      * Fills the tenant with the given one.

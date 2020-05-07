@@ -8,6 +8,8 @@
 
 package sirius.biz.web;
 
+import sirius.biz.importer.BaseImportHandler;
+import sirius.biz.importer.Importer;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Explain;
@@ -55,10 +57,24 @@ public interface TenantAware {
     void fillWithCurrentTenant();
 
     /**
+     * Skips any tenant checks in imports.
+     * <p>
+     * This essentially suppresses the tenant check performed by {@link #setOrVerifyCurrentTenant()} when creating
+     * or updating an entity via a {@link BaseImportHandler} / the {@link Importer} framework.
+     * <p>
+     * Note that this should obviously the exception but might be needed for import jobs which modify data of
+     * child tenants or for jobs run by the system tenant.
+     */
+    void skipTenantCheck();
+
+    /**
      * Installs the currently present tenant (in the {@link sirius.web.security.UserContext}) into this entity.
      * <p>
      * However, if there is already a tenant present in the entity, it is asserted, that the tenant remains
      * the same.
+     * <p>
+     * Note that the check will not be executed, if {@link #skipTenantCheck()} has been invoked previously, but
+     * also not that the initialization part (fill if tenant field is empty) is always performed.
      */
     void setOrVerifyCurrentTenant();
 }
