@@ -19,7 +19,7 @@ import java.io.IOException;
 /**
  * Provides a job for transforming a line based file into another.
  * <p>
- * This is implemented by a {@link LineBasedImportExportJobFactory} and will reaa line based file, process a row
+ * This is implemented by a {@link LineBasedImportExportJobFactory} and will read a line based file, process a row
  * and output one or more rows into an output file.
  */
 public abstract class LineBasedImportExportJob extends LineBasedImportJob {
@@ -87,7 +87,8 @@ public abstract class LineBasedImportExportJob extends LineBasedImportJob {
 
     @Override
     public void close() throws IOException {
-        super.close();
-        exportJob.close();
+        try (Closeable c = super) {
+            exportJob.close();
+        }
     }
 }
