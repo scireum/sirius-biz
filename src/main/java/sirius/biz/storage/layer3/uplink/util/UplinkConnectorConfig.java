@@ -12,6 +12,8 @@ import com.google.common.base.Objects;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.settings.Extension;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Provides a configuration which tells the {@link UplinkConnectorPool} how to create and maintain a
  * {@link UplinkConnector}.
@@ -22,10 +24,10 @@ public abstract class UplinkConnectorConfig<C> {
 
     private static final int DEFAULT_MAX_IDLE = 1;
     private static final int DEFAULT_MAX_ACTIVE = 5;
-    private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 10_000;
-    private static final int DEFAULT_READ_TIMEOUT_MILLIS = 10_000;
-    private static final int DEFAULT_IDLE_TIMEOUT_MILLIS = 60_000;
-    private static final int DEFAULT_MAX_WAIT_MILLIS = 10_000;
+    private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = (int) TimeUnit.SECONDS.toMillis(10);
+    private static final int DEFAULT_READ_TIMEOUT_MILLIS = (int) TimeUnit.SECONDS.toMillis(10);
+    private static final int DEFAULT_IDLE_TIMEOUT_MILLIS = (int) TimeUnit.MINUTES.toMillis(10);
+    private static final int DEFAULT_MAX_WAIT_MILLIS = (int) TimeUnit.SECONDS.toMillis(10);
 
     protected String label;
     protected String host;
