@@ -522,8 +522,9 @@ public class ObjectStore {
         metadata.setContentLength(contentLength);
         try {
             ensureBucketExists(bucket);
-            return transferManager.upload(new PutObjectRequest(bucket.getName(), objectId, inputStream, metadata),
-                                          new MonitoringProgressListener(true));
+            PutObjectRequest putObjectRequest = new PutObjectRequest(bucket.getName(), objectId, inputStream, metadata);
+            putObjectRequest.getRequestClientOptions().setReadLimit(MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE);
+            return transferManager.upload(putObjectRequest, new MonitoringProgressListener(true));
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
@@ -562,7 +563,11 @@ public class ObjectStore {
                        long contentLength,
                        @Nullable ObjectMetadata metadata) {
         try {
-            uploadAsync(bucket, objectId, inputStream, contentLength, metadata).waitForUploadResult();
+            if (contentLength >= MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE) {
+                upload(bucket, objectId, inputStream);
+            } else {
+                uploadAsync(bucket, objectId, inputStream, contentLength, metadata).waitForUploadResult();
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw Exceptions.handle()
