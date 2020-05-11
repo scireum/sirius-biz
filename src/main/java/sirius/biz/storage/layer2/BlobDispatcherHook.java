@@ -8,6 +8,8 @@
 
 package sirius.biz.storage.layer2;
 
+import sirius.kernel.di.std.Named;
+
 import javax.annotation.Nullable;
 
 /**
@@ -19,7 +21,7 @@ import javax.annotation.Nullable;
  * by statistic / logging tasks. If such a protection is required, it has to be enforced
  * manually.
  */
-public interface BlobDispatcherHook {
+public interface BlobDispatcherHook extends Named {
 
     /**
      * Processes the given payload after a blob was successfully delivered via the blob dispatcher.
