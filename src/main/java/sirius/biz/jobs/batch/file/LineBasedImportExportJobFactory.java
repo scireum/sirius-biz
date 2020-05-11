@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 public abstract class LineBasedImportExportJobFactory extends LineBasedImportJobFactory {
 
     protected final FileOrDirectoryParameter destinationParameter =
-            FileExportJobFactory.createDestinationParameter().withLabel("LineBasedImportExportJobFactory.outputFile");
+            FileExportJobFactory.createDestinationParameter().withLabel("$LineBasedImportExportJobFactory.outputFile");
 
     protected final EnumParameter<ExportFileType> fileTypeParameter =
             LineBasedExportJobFactory.createFileTypeParameter();
