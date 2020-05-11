@@ -8,11 +8,13 @@
 
 package sirius.biz.storage;
 
+import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
 
@@ -32,6 +34,8 @@ public class DownloadBuilder {
     private String physicalKey;
     private boolean eternallyValid;
     private String addonText;
+    private String hook;
+    private String payload;
 
     @Part
     private static VersionManager versionManager;
@@ -144,6 +148,22 @@ public class DownloadBuilder {
         this.addonText = text;
         return this;
     }
+
+    /**
+     * Permits to add additional text to the URL which is ignored by the storage layer.
+     * <p>
+     * This might be used to add SEO texts for image URLs...
+     *
+     * @param text the text to include in the URL (will be escaped properly).
+     * @return the builder itself for fluent method calls
+     */
+    public DownloadBuilder withHook(String hook, @Nullable String payload) {
+        this.hook =hook;
+        this.payload =payload;
+        return this;
+    }
+
+
 
     /**
      * Builds the effective URL according to the parameters specified wrapped in an {@link Optional}.
