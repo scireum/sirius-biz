@@ -622,6 +622,7 @@ public class ObjectStore {
                                             InputStream inputStream,
                                             String multipartUploadId) throws IOException {
         List<PartETag> etags = new ArrayList<>();
+        int partNumber = 1;
 
         ByteBuf localAggregationBuffer = Unpooled.buffer(INITIAL_LOCAL_AGGREGATION_BUFFER_SIZE);
         try {
@@ -630,7 +631,7 @@ public class ObjectStore {
             while (bytesRead > 0) {
                 localAggregationBuffer.writeBytes(transferBuffer, 0, bytesRead);
                 if (localAggregationBuffer.readableBytes() > MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE) {
-                    etags.add(uploadChunk(bucket, objectId, multipartUploadId, localAggregationBuffer));
+                    etags.add(uploadChunk(bucket, objectId, multipartUploadId, localAggregationBuffer, partNumber++));
                     localAggregationBuffer.clear();
                 }
 
@@ -638,7 +639,7 @@ public class ObjectStore {
             }
 
             if (localAggregationBuffer.isReadable()) {
-                etags.add(uploadChunk(bucket, objectId, multipartUploadId, localAggregationBuffer));
+                etags.add(uploadChunk(bucket, objectId, multipartUploadId, localAggregationBuffer, partNumber++));
             }
         } finally {
             localAggregationBuffer.release();
@@ -650,10 +651,12 @@ public class ObjectStore {
     protected PartETag uploadChunk(BucketName bucket,
                                    String objectId,
                                    String multipartUploadId,
-                                   ByteBuf localAggregationBuffer) {
+                                   ByteBuf localAggregationBuffer,
+                                   int partNumber) {
         UploadPartRequest request = new UploadPartRequest().withBucketName(bucket.getName())
                                                            .withKey(objectId)
                                                            .withUploadId(multipartUploadId)
+                                                           .withPartNumber(partNumber)
                                                            .withPartSize(localAggregationBuffer.readableBytes())
                                                            .withInputStream(new ByteBufInputStream(
                                                                    localAggregationBuffer));
