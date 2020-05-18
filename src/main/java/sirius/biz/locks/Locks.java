@@ -66,7 +66,7 @@ public class Locks implements MetricProvider {
      */
     public boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout) {
         Long currentThreadId = Thread.currentThread().getId();
-        if (hasLocalLock(lockName, currentThreadId)) {
+        if (acquireLockLocally(lockName, currentThreadId)) {
             return true;
         }
 
@@ -93,7 +93,7 @@ public class Locks implements MetricProvider {
                            @Nullable Duration acquireTimeout,
                            @Nonnull Duration lockTimeout) {
         Long currentThreadId = Thread.currentThread().getId();
-        if (hasLocalLock(lockName, currentThreadId)) {
+        if (acquireLockLocally(lockName, currentThreadId)) {
             return true;
         }
 
@@ -105,7 +105,7 @@ public class Locks implements MetricProvider {
         return false;
     }
 
-    private boolean hasLocalLock(String lockName, Long currentThreadId) {
+    private boolean acquireLockLocally(String lockName, Long currentThreadId) {
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
 
         if (localLockInfo == null) {
