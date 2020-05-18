@@ -8,7 +8,6 @@
 
 package sirius.biz.cluster.work;
 
-import org.apache.commons.collections4.CollectionUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Transaction;
 import sirius.db.redis.Redis;
@@ -17,6 +16,7 @@ import sirius.kernel.commons.Wait;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -104,8 +104,9 @@ class RedisNamedCounters implements NamedCounters {
         } else {
             txn.hset(name, counter, String.valueOf(nextCounterValue));
         }
-        
-        if (CollectionUtils.isEmpty(txn.exec())) {
+
+        List<?> response = txn.exec();
+        if (response == null || response.isEmpty()) {
             return null;
         } else {
             return nextCounterValue;
