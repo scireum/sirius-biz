@@ -89,9 +89,7 @@ public class Locks implements MetricProvider {
      * @param lockTimeout    the max duration for which the lock will be kept before auto-releasing it
      * @return <tt>true</tt> if the lock was acquired, <tt>false</tt> otherwise
      */
-    public boolean tryLock(@Nonnull String lockName,
-                           @Nullable Duration acquireTimeout,
-                           @Nonnull Duration lockTimeout) {
+    public boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout, @Nonnull Duration lockTimeout) {
         Long currentThreadId = Thread.currentThread().getId();
         if (acquireLockLocally(lockName, currentThreadId)) {
             return true;
@@ -152,7 +150,6 @@ public class Locks implements MetricProvider {
         // calls properly...
         localLockInfo.getSecond().incrementAndGet();
         return true;
-
     }
 
     /**
