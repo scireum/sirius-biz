@@ -19,14 +19,20 @@ import java.util.function.Consumer;
  */
 public abstract class LineBasedExportJobFactory extends FileExportJobFactory {
 
-    protected final EnumParameter<ExportFileType> fileTypeParameter;
+    protected final EnumParameter<ExportFileType> fileTypeParameter = createFileTypeParameter();
 
-    protected LineBasedExportJobFactory() {
-        fileTypeParameter =
-                new EnumParameter<>("fileType", "$LineBasedExportJobFactory.fileType", ExportFileType.class);
-        fileTypeParameter.withDefault(ExportFileType.XLSX);
-        fileTypeParameter.withDescription("$LineBasedExportJobFactory.fileType.help");
-        fileTypeParameter.markRequired();
+    /**
+     * Creates the parameter which determines the output file type to generate.
+     * <p>
+     * This is provided as a helper method so that other / similar jobs can re-use it.
+     * We do not re-use the same parameter, as a parameter isn't immutable, so a global constant could
+     * be easily set into an inconsistent state.
+     *
+     * @return the completely initialized parameter.
+     */
+    protected static EnumParameter<ExportFileType> createFileTypeParameter() {
+        return new EnumParameter<>("fileType", "$LineBasedExportJobFactory.fileType", ExportFileType.class).withDefault(
+                ExportFileType.XLSX).withDescription("$LineBasedExportJobFactory.fileType.help").markRequired();
     }
 
     @Override

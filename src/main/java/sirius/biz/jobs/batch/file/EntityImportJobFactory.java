@@ -31,13 +31,20 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     /**
      * Determines the {@link ImportMode}.
      */
-    protected final EnumParameter<ImportMode> importModeParameter;
+    protected final EnumParameter<ImportMode> importModeParameter = createImportModeParameter();
 
-    protected EntityImportJobFactory() {
-        importModeParameter = new EnumParameter<>("importMode", "$EntityImportJobFactory.importMode", ImportMode.class);
-        importModeParameter.withDefault(ImportMode.NEW_AND_UPDATES);
-        importModeParameter.markRequired();
-        importModeParameter.withDescription("$EntityImportJobFactory.importMode.help");
+    /**
+     * Creates the parameter which determines the import mode to use.
+     * <p>
+     * This is provided as a helper method so that other / similar jobs can re-use it.
+     * We do not re-use the same parameter, as a parameter isn't immutable, so a global constant could
+     * be easily set into an inconsistent state.
+     *
+     * @return the completely initialized parameter.
+     */
+    public static EnumParameter<ImportMode> createImportModeParameter() {
+        return new EnumParameter<>("importMode", "$EntityImportJobFactory.importMode", ImportMode.class).withDefault(
+                ImportMode.NEW_AND_UPDATES).markRequired().withDescription("$EntityImportJobFactory.importMode.help");
     }
 
     @Override

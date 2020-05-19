@@ -23,13 +23,14 @@ import java.util.Optional;
 public class DateRangeParameter extends Parameter<DateRange, DateRangeParameter> {
 
     private List<DateRange> dateRanges;
+    private DateRange defaultValue;
 
     /**
      * Creates a new parameter with the given name, label and any number of {@link DateRange date ranges}
      *
      * @param name       the name of the parameter
      * @param label      the label of the parameter
-     * @param dateRanges to fill up the list
+     * @param dateRanges the list of ranges to offer
      */
     public DateRangeParameter(String name, String label, DateRange... dateRanges) {
         super(name, label);
@@ -54,6 +55,36 @@ public class DateRangeParameter extends Parameter<DateRange, DateRangeParameter>
                                         DateRange.lastYear());
     }
 
+    /**
+     * Creates a new parameter with the given name and default label and the list of {@link DateRange date ranges}
+     *
+     * @param name       the name of the parameter
+     * @param dateRanges the list of ranges to offer
+     */
+    public DateRangeParameter(String name, DateRange... dateRanges) {
+        this(name, "DateRangeParameter.label", dateRanges);
+    }
+
+    /**
+     * Creates a new parameter with the default name, label and the list of {@link DateRange date ranges}
+     *
+     * @param dateRanges the list of ranges to offer
+     */
+    public DateRangeParameter(DateRange... dateRanges) {
+        this("dateRange", dateRanges);
+    }
+
+    /**
+     * Specifies the default value to use.
+     *
+     * @param defaultValue the default value to use
+     * @return the parameter itself for fluent method calls
+     */
+    public DateRangeParameter withDefault(DateRange defaultValue) {
+        this.defaultValue = defaultValue;
+        return this;
+    }
+
     @Override
     public String getTemplateName() {
         return "/templates/biz/jobs/params/daterange.html.pasta";
@@ -61,6 +92,10 @@ public class DateRangeParameter extends Parameter<DateRange, DateRangeParameter>
 
     @Override
     protected String checkAndTransformValue(Value input) {
+        if (input.isNull()) {
+            return defaultValue != null ? defaultValue.getKey() : null;
+        }
+
         if (!resolveFromString(input).isPresent()) {
             return null;
         }

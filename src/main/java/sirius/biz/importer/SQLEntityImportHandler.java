@@ -228,6 +228,10 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     protected E createOrUpdate(E entity, boolean batch) {
         enforcePreSaveConstraints(entity);
 
+        // Invoke the beforeSave checks so that the change-detection below works for
+        // computed properties...
+        descriptor.beforeSave(entity);
+
         if (entity.isNew()) {
             return createIfChanged(entity, batch);
         } else {
@@ -271,10 +275,6 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
      * @return the updated entity or, if batch updates are active, the given entity
      */
     protected E updateIfChanged(E entity, boolean batch) {
-        // Invoke the beforeSave checks so that the change-detection below works for
-        // computed properties...
-        descriptor.beforeSave(entity);
-
         if (isChanged(entity)) {
             getUpdateQuery().update(entity, true, batch);
         }

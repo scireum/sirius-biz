@@ -15,9 +15,6 @@ import sirius.biz.process.ProcessContext;
  */
 public abstract class LineBasedImportJobFactory extends FileImportJobFactory {
 
-    protected LineBasedImportJobFactory() {
-    }
-
     @Override
     protected abstract LineBasedImportJob createJob(ProcessContext process);
 

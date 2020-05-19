@@ -11,6 +11,7 @@ package sirius.biz.importer;
 import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.FieldDefinitionSupplier;
 import sirius.biz.importer.format.ImportDictionary;
+import sirius.biz.protocol.Journaled;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
@@ -196,6 +197,10 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         if (entity instanceof TenantAware) {
             ((TenantAware) entity).setOrVerifyCurrentTenant();
         }
+
+        if (entity instanceof Journaled) {
+            ((Journaled) entity).getJournal().enableBatchLog();
+        }
     }
 
     /**
@@ -209,9 +214,8 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @param entity the entity to check
      */
     protected void enforcePreDeleteConstraints(E entity) {
-        if (entity instanceof TenantAware) {
-            ((TenantAware) entity).setOrVerifyCurrentTenant();
-        }
+        // By default the constraints are the same as when the entity is saved...
+        enforcePreSaveConstraints(entity);
     }
 
     @SuppressWarnings("unchecked")

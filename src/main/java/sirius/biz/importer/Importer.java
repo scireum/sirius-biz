@@ -218,9 +218,6 @@ public class Importer implements Closeable {
      * <p>
      * Uses the appropriate {@link ImportHandler} to determine if the entity already exists and then either updates
      * the entity or creates a new one.
-     * <p>
-     * Note that this will execute an update per entity. Use {@link #createNowOrUpdateInBatch(BaseEntity)} or even
-     * {@link #createOrUpdateInBatch(BaseEntity)} to yield maximal performance by grouping changes into batch updates.
      *
      * @param entity the entity to update or create
      * @param <E>    the generic type of the entity
@@ -238,11 +235,9 @@ public class Importer implements Closeable {
      * the entity or creates a new one.
      * <p>
      * Using a batch update will most probably yield substantial performance benefits with the downside, that the updated
-     * entity cannot be returned by this method.
-     * <p>
-     * Note that {@link #createNowOrUpdateInBatch(BaseEntity)} is most probably a better choice, as it makes the entity
-     * immediatelly visible to the database and all internal consistency checks and still provides optimal performance
-     * when updating many objects.
+     * entity cannot be returned by this method. Also note that some databases (e.g. MariaDB) easily run into deadlocks
+     * while performing concurrent batch updates as overlapping regions of the primary key index get locked. Therefore
+     * a batch update should only be used when it is known that no concurrent batch update occurs.
      *
      * @param entity the entity to update or create
      * @param <E>    the generic type of the entity
@@ -261,7 +256,9 @@ public class Importer implements Closeable {
      * the entity or creates a new one.
      * <p>
      * Using a batch update will most probably yield substantial performance benefits with the downside, that the updated
-     * entity cannot be returned by this method.
+     * entity cannot be returned by this method. Also note that some databases (e.g. MariaDB) easily run into deadlocks
+     * while performing concurrent batch updates as overlapping regions of the primary key index get locked. Therefore
+     * a batch update should only be used when it is known that no concurrent batch update occurs.
      *
      * @param entity the entity to update or create
      * @param <E>    the generic type of the entity

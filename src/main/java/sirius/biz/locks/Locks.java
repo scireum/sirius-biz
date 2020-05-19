@@ -66,7 +66,7 @@ public class Locks implements MetricProvider {
      */
     public boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout) {
         Long currentThreadId = Thread.currentThread().getId();
-        if (hasLocalLock(lockName, currentThreadId)) {
+        if (acquireLockLocally(lockName, currentThreadId)) {
             return true;
         }
 
@@ -89,11 +89,9 @@ public class Locks implements MetricProvider {
      * @param lockTimeout    the max duration for which the lock will be kept before auto-releasing it
      * @return <tt>true</tt> if the lock was acquired, <tt>false</tt> otherwise
      */
-    public boolean tryLock(@Nonnull String lockName,
-                           @Nullable Duration acquireTimeout,
-                           @Nonnull Duration lockTimeout) {
+    public boolean tryLock(@Nonnull String lockName, @Nullable Duration acquireTimeout, @Nonnull Duration lockTimeout) {
         Long currentThreadId = Thread.currentThread().getId();
-        if (hasLocalLock(lockName, currentThreadId)) {
+        if (acquireLockLocally(lockName, currentThreadId)) {
             return true;
         }
 
@@ -105,7 +103,39 @@ public class Locks implements MetricProvider {
         return false;
     }
 
-    private boolean hasLocalLock(String lockName, Long currentThreadId) {
+    /**
+     * Permits to transfer an acquired lock from one thread to another.
+     * <p>
+     * In order to achieve a successful lock transfer, a thread has to first obtain a lock. Then it call this method
+     * to generate the transfer function. This function is then executed in the target thread. Once this is completed,
+     * the lock belongs to the target thread and has to be released by it, not by the original owner.
+     *
+     * @param lockName the name of the lock to transfer (has to be acquired by the calling thread).
+     * @return a transfer function which is invoked by the target thread to which the lock should be transferred
+     */
+    public Runnable initiateLockTransfer(@Nonnull String lockName) {
+        Long currentThreadId = Thread.currentThread().getId();
+        Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
+
+        if (localLockInfo == null || !Objects.equals(currentThreadId, localLockInfo.getFirst())) {
+            throw new IllegalStateException("The current thread doesn't hold the lock: " + lockName);
+        }
+        return () -> transferLockToCurrentThread(lockName, currentThreadId);
+    }
+
+    private void transferLockToCurrentThread(String lockName, Long ownerThreadId) {
+        Long currentThreadId = Thread.currentThread().getId();
+        Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
+
+        if (localLockInfo == null || !Objects.equals(ownerThreadId, localLockInfo.getFirst())) {
+            throw new IllegalStateException("Failed to transfer lock! The owner thread no longer holds the lock: "
+                                            + lockName);
+        }
+
+        localLockInfo.setFirst(currentThreadId);
+    }
+
+    private boolean acquireLockLocally(String lockName, Long currentThreadId) {
         Tuple<Long, AtomicInteger> localLockInfo = localLocks.get(lockName);
 
         if (localLockInfo == null) {
@@ -120,7 +150,6 @@ public class Locks implements MetricProvider {
         // calls properly...
         localLockInfo.getSecond().incrementAndGet();
         return true;
-
     }
 
     /**
