@@ -88,6 +88,7 @@ public class BizController extends BasicController {
     protected Tenants<?, ?, ?> tenants;
 
     @ConfigValue("product.baseUrl")
+    @Nullable
     private static String baseUrl;
     private static boolean baseUrlChecked;
 
