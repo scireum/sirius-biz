@@ -8,6 +8,7 @@
 
 package sirius.biz.protocol;
 
+import sirius.biz.elastic.AutoBatchLoop;
 import sirius.biz.web.BizController;
 import sirius.db.es.Elastic;
 import sirius.db.mixing.BaseEntity;
@@ -19,6 +20,7 @@ import sirius.db.mixing.annotations.AfterSave;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.TaskContext;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.security.UserContext;
@@ -39,7 +41,13 @@ public class JournalData extends Composite {
     private volatile boolean silent;
 
     @Transient
+    private volatile boolean batchLog;
+
+    @Transient
     private BaseEntity<?> owner;
+
+    @Part
+    private static AutoBatchLoop autoBatchLoop;
 
     /**
      * Creates a new instance for the given entity.
@@ -60,7 +68,7 @@ public class JournalData extends Composite {
             String changes = buildChangeJournal();
 
             if (changes.length() > 0) {
-                addJournalEntry(owner, changes);
+                addJournalEntry(owner, changes, batchLog);
             }
         } catch (Exception e) {
             Exceptions.handle(e);
@@ -118,6 +126,10 @@ public class JournalData extends Composite {
      * @param changes the entry to add to the journal
      */
     public static void addJournalEntry(BaseEntity<?> entity, String changes) {
+        addJournalEntry(entity, changes, false);
+    }
+
+    private static void addJournalEntry(BaseEntity<?> entity, String changes, boolean batchLog) {
         if (!Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_PROTOCOLS) || entity.isNew()) {
             return;
         }
@@ -132,6 +144,11 @@ public class JournalData extends Composite {
             entry.setSubsystem(TaskContext.get().getSystemString());
             entry.setUserId(UserContext.getCurrentUser().getUserId());
             entry.setUsername(UserContext.getCurrentUser().getProtocolUsername());
+
+            if (batchLog && autoBatchLoop.insertAsync(entry)) {
+                return;
+            }
+
             elastic.update(entry);
         } catch (Exception e) {
             Exceptions.handle(Elastic.LOG, e);
@@ -142,7 +159,7 @@ public class JournalData extends Composite {
     protected void onDelete() {
         if (!silent) {
             try {
-                addJournalEntry(owner, "Entity has been deleted.");
+                addJournalEntry(owner, "Entity has been deleted.", batchLog);
             } catch (Exception e) {
                 Exceptions.handle(e);
             }
@@ -168,6 +185,20 @@ public class JournalData extends Composite {
      */
     public void setSilent(boolean silent) {
         this.silent = silent;
+    }
+
+    /**
+     * Encourages the framework to log this journal entry via a batch update.
+     * <p>
+     * By default, each journal entry is created and persisted in a synchronous operation.
+     * However, for fast operations, like import jobs, this provides quite an overhead. Therefore,
+     * this method can be used to group batch insert all journal entries via the {@link AutoBatchLoop}.
+     * <p>
+     * Note however, that this optimization comes with the risk of loosing updates, if the
+     * batch loop is heavily overloaded or contains malformed entities.
+     */
+    public void enableBatchLog() {
+        this.batchLog = true;
     }
 
     /**
