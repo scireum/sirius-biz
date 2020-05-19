@@ -9,6 +9,7 @@
 package sirius.biz.analytics.reports;
 
 import com.alibaba.fastjson.JSONObject;
+import sirius.biz.web.BizController;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Register;
 import sirius.web.templates.ContentHelper;
@@ -20,9 +21,6 @@ import javax.annotation.Nonnull;
  */
 @Register(classes = {LinkCellFormat.class, CellFormat.class})
 public class LinkCellFormat implements CellFormat {
-
-    @ConfigValue("product.baseUrl")
-    private static String productBaseUrl;
 
     protected static final String TYPE = "link";
     protected static final String KEY_URL = "url";
@@ -41,7 +39,7 @@ public class LinkCellFormat implements CellFormat {
     public String rawValue(JSONObject data) {
         StringBuilder linkUrl = new StringBuilder(data.getString(KEY_URL));
         if (!linkUrl.toString().startsWith("http") && linkUrl.toString().startsWith("/")) {
-            linkUrl.insert(0, productBaseUrl);
+            linkUrl.insert(0, BizController.getBaseUrl());
         }
         return linkUrl.toString();
     }
