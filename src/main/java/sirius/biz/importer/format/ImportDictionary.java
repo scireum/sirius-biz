@@ -91,7 +91,7 @@ public class ImportDictionary {
     }
 
     private void addCheckedAlias(FieldDefinition field, String alias) {
-        String previousField = aliases.put(normalize(alias), field.getName());
+        String previousField = aliases.putIfAbsent(normalize(alias), field.getName());
         if (Strings.isFilled(previousField) && !Strings.areEqual(field.getName(), previousField)) {
             throw new IllegalArgumentException(Strings.apply(
                     "Cannot add alias '%s' for field '%s', as this alias already points to '%s'!",
