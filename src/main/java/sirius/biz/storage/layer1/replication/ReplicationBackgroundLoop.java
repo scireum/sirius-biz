@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
  *
  * @see ReplicationTaskStorage
  */
-@Register(classes = BackgroundLoop.class, framework = StorageUtils.FRAMEWORK_STORAGE)
+@Register(framework = StorageUtils.FRAMEWORK_STORAGE)
 public class ReplicationBackgroundLoop extends BackgroundLoop {
 
     private static final double EVERY_TWO_SECONDS = 1d / 2;

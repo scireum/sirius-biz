@@ -28,7 +28,7 @@ import java.util.List;
  * A bucket can specify a max age for its objects. Older objects are automatically deleted by the system (vis this
  * loop).
  */
-@Register(classes = EveryDay.class, framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
+@Register(framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class StorageCleanupTask implements EveryDay {
 
     @Part
