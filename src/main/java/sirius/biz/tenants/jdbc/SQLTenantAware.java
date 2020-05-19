@@ -14,6 +14,7 @@ import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 /**
@@ -22,6 +23,7 @@ import java.util.Optional;
 public abstract class SQLTenantAware extends BizEntity implements TenantAware {
 
     @Part
+    @Nullable
     private static SQLTenants tenants;
 
     /**
@@ -53,7 +55,6 @@ public abstract class SQLTenantAware extends BizEntity implements TenantAware {
             tenants.assertTenant(this);
         }
     }
-
 
     /**
      * Fills the tenant with the given one.

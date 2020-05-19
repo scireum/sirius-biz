@@ -16,6 +16,7 @@ import sirius.db.mongo.Mango;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 /**
@@ -31,6 +32,7 @@ import java.util.Optional;
 public abstract class MongoTenantAware extends MongoBizEntity implements TenantAware {
 
     @Part
+    @Nullable
     private static MongoTenants tenants;
 
     /**
