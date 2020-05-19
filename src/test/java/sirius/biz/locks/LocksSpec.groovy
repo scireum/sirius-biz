@@ -12,9 +12,10 @@ import sirius.kernel.BaseSpecification
 import sirius.kernel.async.Tasks
 import sirius.kernel.di.std.Part
 
+import java.time.Duration
 import java.util.concurrent.Semaphore
 
-class LocksSpec extends BaseSpecification {
+abstract class LocksSpec extends BaseSpecification {
 
     @Part
     protected static Locks locks
@@ -24,9 +25,9 @@ class LocksSpec extends BaseSpecification {
 
     def "an acquired lock cannot be locked again unless it has been released"() {
         when:
-        locks.tryLock("test", null)
+        locks.tryLock("test", Duration.ofSeconds(1))
         then:
-        locks.tryLock("test", null)
+        locks.tryLock("test", Duration.ofSeconds(1))
         and:
         locks.unlock("test")
         and:
@@ -39,7 +40,7 @@ class LocksSpec extends BaseSpecification {
 
     def "an acquired lock can be transferred to another thread"() {
         when: "Acquire test lock in main thread"
-        locks.tryLock("test", null)
+        locks.tryLock("test", Duration.ofSeconds(1))
         and: "Initiate a lock transfer"
         Runnable lockTransfer = locks.initiateLockTransfer("test")
         and: "Create a semaphore to sync actions across both threads"
@@ -57,12 +58,8 @@ class LocksSpec extends BaseSpecification {
         locks.isLocked("test")
         when: "Enable forked thread to unlock the transferred lock"
         semaphore.release()
-        and: "Await that the thread started executing..."
-        while (semaphore.availablePermits() > 0) {
-            Thread.yield()
-        }
         and: "Await that the thread completed executing..."
-        while (semaphore.availablePermits() == 0) {
+        while (locks.isLocked("test")) {
             Thread.yield()
         }
         then: "The lock is now unlocked by the other thread..."
