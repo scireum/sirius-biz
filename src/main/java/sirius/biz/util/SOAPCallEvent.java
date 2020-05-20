@@ -15,7 +15,7 @@ import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
 
 /**
- * Record a SOAP call performed by {@link sirius.biz.util.MoniRemoveDeletedEntitiesLooptoredSOAPClient}.
+ * Record a SOAP call performed by {@link sirius.biz.util.MonitoredSOAPClient}.
  */
 public class SOAPCallEvent extends Event {
     /**
