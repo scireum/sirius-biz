@@ -18,6 +18,7 @@ import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -35,6 +36,7 @@ import java.util.function.Supplier;
 public abstract class MongoTenantAware extends MongoBizEntity implements TenantAware {
 
     @Part
+    @Nullable
     private static MongoTenants tenants;
 
     @Transient

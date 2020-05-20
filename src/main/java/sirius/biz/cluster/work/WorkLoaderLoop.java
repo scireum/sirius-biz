@@ -31,7 +31,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * {@link #executeWork(DistributedTasks.DistributedTask)} immediatelly tries to find another task. Therefore the
  * performance is not limited by the rather slow running background loop.
  */
-@Register(classes = BackgroundLoop.class)
+@Register
 public class WorkLoaderLoop extends BackgroundLoop {
 
     private static final double EVERY_SECOND = 1d;

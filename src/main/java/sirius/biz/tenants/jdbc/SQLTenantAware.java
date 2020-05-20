@@ -16,6 +16,7 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -26,6 +27,7 @@ import java.util.function.Supplier;
 public abstract class SQLTenantAware extends BizEntity implements TenantAware {
 
     @Part
+    @Nullable
     private static SQLTenants tenants;
 
     @Transient

@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
 /**
  * Notifies the {@link EventRecorder} to persist events (if enough data is available).
  */
-@Register(classes = BackgroundLoop.class)
+@Register
 public class EventProcessorLoop extends BackgroundLoop {
 
     @Part

@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Finally deletes {@link SQLDirectory directories} and {@link SQLBlob blobs} which have been marked as deleted.
  */
-@Register(classes = BackgroundLoop.class, framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
+@Register(framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class RemoveDeletedEntitiesLoop extends BackgroundLoop {
 
     private static final double FREQUENCY_EVERY_FIVE_MINUTES = 1 / 320d;
