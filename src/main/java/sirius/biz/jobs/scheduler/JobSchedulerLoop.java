@@ -30,7 +30,7 @@ import java.time.LocalDateTime;
 /**
  * Responsible for executing all {@link SchedulerEntry scheduler entries} of all {@link SchedulerEntryProvider providers}.
  */
-@Register(classes = BackgroundLoop.class)
+@Register
 public class JobSchedulerLoop extends BackgroundLoop {
 
     @Part

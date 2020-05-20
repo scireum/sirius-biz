@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
 /**
  * Executed once per minute to remove all IPs which have been blocked long enough.
  */
-@Register(classes = BackgroundLoop.class, framework = Isenguard.FRAMEWORK_ISENGUARD)
+@Register(framework = Isenguard.FRAMEWORK_ISENGUARD)
 public class RedisLimiterCleanupLoop extends BackgroundLoop {
 
     @Part

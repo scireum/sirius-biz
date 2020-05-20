@@ -11,6 +11,7 @@ package sirius.biz.importer;
 import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.FieldDefinitionSupplier;
 import sirius.biz.importer.format.ImportDictionary;
+import sirius.biz.protocol.Journaled;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
@@ -196,6 +197,10 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         if (entity instanceof TenantAware) {
             ((TenantAware) entity).setOrVerifyCurrentTenant();
         }
+
+        if (entity instanceof Journaled) {
+            ((Journaled) entity).getJournal().enableBatchLog();
+        }
     }
 
     /**
@@ -209,9 +214,8 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @param entity the entity to check
      */
     protected void enforcePreDeleteConstraints(E entity) {
-        if (entity instanceof TenantAware) {
-            ((TenantAware) entity).setOrVerifyCurrentTenant();
-        }
+        // By default the constraints are the same as when the entity is saved...
+        enforcePreSaveConstraints(entity);
     }
 
     @SuppressWarnings("unchecked")
@@ -291,38 +295,18 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
 
     @Override
     public ImportDictionary getImportDictionary() {
-        ImportDictionary dict = new ImportDictionary();
+        ImportDictionary importDictionary = new ImportDictionary();
         getAutoImportMappings().stream()
                                .map(descriptor::getProperty)
                                .map(property -> property.tryAs(FieldDefinitionSupplier.class)
                                                         .map(FieldDefinitionSupplier::get)
                                                         .orElse(null))
                                .filter(Objects::nonNull)
-                               .map(field -> expandAliases(field, aliases))
+                               .map(this::expandAliases)
                                .sorted(Comparator.comparing(FieldDefinition::getLabel))
-                               .forEach(dict::addField);
+                               .forEach(importDictionary::addField);
 
-        return dict;
-    }
-
-    protected FieldDefinition expandAliases(FieldDefinition field, Extension aliases) {
-        field.addAlias(field.getName());
-        field.addAlias(field.getLabel());
-
-        if (aliases != null && aliases.getConfig().hasPath(field.getName())) {
-            aliases.getStringList(field.getName()).forEach(alias -> {
-                if (Sirius.isDev() && field.getAliases().contains(alias)) {
-                    Importer.LOG.WARN("%s (for %s) has a duplicate alias: %s (Check configuration?)",
-                                      getClass().getName(),
-                                      newEntity().getClass().getName(),
-                                      alias);
-                }
-
-                field.addAlias(alias);
-            });
-        }
-
-        return field;
+        return importDictionary;
     }
 
     /**
@@ -343,20 +327,44 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
                          .collect(Collectors.toList());
     }
 
+    /**
+     * Uses the aliases provided in the system configuration and applies them to the given field.
+     *
+     * @param field the field to expand the aliases for
+     * @return the field with expanded aliases
+     */
+    protected FieldDefinition expandAliases(FieldDefinition field) {
+        if (aliases != null && aliases.getConfig().hasPath(field.getName())) {
+            aliases.getStringList(field.getName()).forEach(alias -> {
+                if (Sirius.isDev() && field.getAliases().contains(alias)) {
+                    Importer.LOG.WARN("%s (for %s) has a duplicate alias: %s (Check configuration?)",
+                                      getClass().getName(),
+                                      newEntity().getClass().getName(),
+                                      alias);
+                }
+
+                field.addAlias(alias);
+            });
+        }
+
+        return field;
+    }
+
     @Override
     public ImportDictionary getExportDictionary() {
-        ImportDictionary dict = new ImportDictionary();
+        ImportDictionary exportDictionary = new ImportDictionary();
         getExportableMappings().stream()
                                .map(descriptor::getProperty)
                                .map(property -> property.tryAs(FieldDefinitionSupplier.class)
                                                         .map(FieldDefinitionSupplier::get)
                                                         .orElse(null))
                                .filter(Objects::nonNull)
-                               .map(field -> expandAliases(field, aliases))
-                               .forEach(dict::addField);
+                               .map(this::expandAliases)
+                               .forEach(exportDictionary::addField);
 
-        return dict;
+        return exportDictionary;
     }
+
 
     /**
      * Returns all exportable mappings.
