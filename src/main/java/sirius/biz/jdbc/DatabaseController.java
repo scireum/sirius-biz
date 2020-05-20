@@ -16,7 +16,6 @@ import sirius.db.jdbc.Row;
 import sirius.db.jdbc.SQLQuery;
 import sirius.db.jdbc.schema.Schema;
 import sirius.db.jdbc.schema.SchemaUpdateAction;
-import sirius.kernel.Sirius;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
@@ -98,11 +97,9 @@ public class DatabaseController extends BasicController {
             String sqlStatement = ctx.get("query").asString();
             SQLQuery qry = db.createQuery(sqlStatement);
 
-            if (!Sirius.isDev()) {
-                OMA.LOG.INFO("Executing SQL (via /system/sql, authored by %s): %s",
-                             UserContext.getCurrentUser().getUserName(),
-                             sqlStatement);
-            }
+            OMA.LOG.INFO("Executing SQL (via /system/sql, authored by %s): %s",
+                         UserContext.getCurrentUser().getUserName(),
+                         sqlStatement);
 
             if (isDDSStatement(sqlStatement)) {
                 // To prevent accidential damage, we try to filter DDL queries (modifying the database structure) and
