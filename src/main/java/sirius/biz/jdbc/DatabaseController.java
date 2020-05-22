@@ -11,6 +11,7 @@ package sirius.biz.jdbc;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.jdbc.Database;
 import sirius.db.jdbc.Databases;
+import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.Row;
 import sirius.db.jdbc.SQLQuery;
 import sirius.db.jdbc.schema.Schema;
@@ -31,6 +32,7 @@ import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
+import sirius.web.security.UserContext;
 import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
@@ -94,6 +96,10 @@ public class DatabaseController extends BasicController {
             Database db = determineDatabase(database);
             String sqlStatement = ctx.get("query").asString();
             SQLQuery qry = db.createQuery(sqlStatement);
+
+            OMA.LOG.INFO("Executing SQL (via /system/sql, authored by %s): %s",
+                         UserContext.getCurrentUser().getUserName(),
+                         sqlStatement);
 
             if (isDDSStatement(sqlStatement)) {
                 // To prevent accidential damage, we try to filter DDL queries (modifying the database structure) and
