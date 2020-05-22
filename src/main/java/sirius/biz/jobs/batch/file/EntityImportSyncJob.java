@@ -37,10 +37,10 @@ import java.util.function.Consumer;
  * Provides a job for importing line based files (CSV, Excel) as relational entities.
  * <p>
  * This job behaves alomost exactly like {@link EntityImportJob}. The only difference is that it is suited for
- * "relational" entities (entities which represent a relation between two other entities). Theser are often
+ * "relational" entities (entities which represent a relation between two other entities). These are often
  * synchronized as described by {@link SyncMode}, which is handled by this implementation.
  * <p>
- * To support an ideal operation, such entities should implement {@link ImportTransactionalEntity} to that the
+ * To support an efficient operation, such entities should implement {@link ImportTransactionalEntity} to that the
  * framework can provide efficient delta updates.
  *
  * @param <E> the type of entities being imported by this job
@@ -156,7 +156,7 @@ public class EntityImportSyncJob<E extends BaseEntity<?> & ImportTransactionalEn
         }
     }
 
-    private void createorUpdateEntity(E entity, Context context, Watch watch) {
+    private void createOrUpdateEntity(E entity, Context context, Watch watch) {
         try {
             if (shouldSkip(entity)) {
                 process.incCounter(NLS.get("EntityImportJob.rowIgnored"));

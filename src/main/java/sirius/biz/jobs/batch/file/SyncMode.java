@@ -16,7 +16,7 @@ import sirius.kernel.nls.NLS;
 public enum SyncMode {
 
     /**
-     * Only updates existing entities.
+     * Creates new entities and also updates existing ones.
      */
     NEW_AND_UPDATE_ONLY,
 
@@ -31,7 +31,7 @@ public enum SyncMode {
     NEW_ONLY,
 
     /**
-     * Creates new entities and also updates existing ones.
+     * Creates new entities, updates existing ones and deletes outdated entities.
      */
     SYNC,
 
