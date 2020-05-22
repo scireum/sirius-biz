@@ -39,7 +39,7 @@ public abstract class EntityBatchJob<E extends BaseEntity<?>, Q extends Query<Q,
      * @param process the process context in which the job is executed
      * @param type    the type of entities being processed
      */
-    public EntityBatchJob(ProcessContext process, Class<E> type) {
+    protected EntityBatchJob(ProcessContext process, Class<E> type) {
         super(process);
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);
