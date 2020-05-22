@@ -18,11 +18,13 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
-import sirius.biz.protocol.Journaled;
 import sirius.biz.protocol.Traced;
 import sirius.biz.tenants.TenantUserManager;
+import sirius.db.jdbc.SQLEntity;
+import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
+import sirius.db.mixing.query.Query;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Register;
@@ -85,9 +87,12 @@ public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
 
         @Override
         public void execute() throws Exception {
-            descriptor.getMapper()
-                      .select((descriptor.getType().asSubclass(BaseEntity.class)))
-                      .iterateAll(this::processEntity);
+            Query<?, ?, ?> query = descriptor.getMapper().select((descriptor.getType().asSubclass(BaseEntity.class)));
+            if (query instanceof SmartQuery) {
+                ((SmartQuery<? extends SQLEntity>) query).iterateBlockwiseAll(this::processEntity);
+            } else {
+                query.iterateAll(this::processEntity);
+            }
         }
 
         private void processEntity(BaseEntity<?> entity) {

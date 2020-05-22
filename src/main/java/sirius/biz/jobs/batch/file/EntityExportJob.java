@@ -19,6 +19,7 @@ import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.web.TenantAware;
+import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
@@ -349,18 +350,26 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
      * The mapping was either determined by {@link #templateBasedExport()} or by using the default mapping in
      * {@link #fullExportWithoutTemplate()}.
      */
+    @SuppressWarnings("unchecked")
     private void fullExportWithGivenMapping() {
         process.log(ProcessLog.info().withNLSKey("EntityExport.fullExport"));
-        createFullExportQuery().iterateAll(entity -> {
-            Watch watch = Watch.start();
-            try {
-                export.addRow(exportAsRow(null, entity));
-            } catch (IOException e) {
-                throw process.handle(e);
-            } finally {
-                process.addTiming(descriptor.getPluralLabel(), watch.elapsedMillis());
-            }
-        });
+        Q query = createFullExportQuery();
+        if (query instanceof SmartQuery) {
+            ((SmartQuery<?>) query).iterateBlockwiseAll(entity -> exportEntity((E) entity));
+        } else {
+            query.iterateAll(this::exportEntity);
+        }
+    }
+
+    protected void exportEntity(E entity) {
+        Watch watch = Watch.start();
+        try {
+            export.addRow(exportAsRow(null, entity));
+        } catch (IOException e) {
+            throw process.handle(e);
+        } finally {
+            process.addTiming(descriptor.getPluralLabel(), watch.elapsedMillis());
+        }
     }
 
     /**
