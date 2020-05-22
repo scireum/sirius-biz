@@ -25,6 +25,7 @@ public class BridgeSftpSubsystemFactory extends SftpSubsystemFactory {
      * Creates a new instance if the {@link BridgeSftpSubsystem}.
      */
     public BridgeSftpSubsystemFactory() {
+
         setFileSystemAccessor(new BridgeFileSystemAccessor());
     }
 
