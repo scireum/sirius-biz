@@ -39,16 +39,16 @@ import java.util.function.Consumer;
  */
 public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImportJob {
 
-    protected final EntityDescriptor descriptor;
-    protected Consumer<Context> contextExtender;
-    protected Class<E> type;
-    protected ImportMode mode;
-
     @Part
     private static Mixing mixing;
 
     @Part
     private static Tenants<?, ?, ?> rawTenants;
+
+    protected final EntityDescriptor descriptor;
+    protected Consumer<Context> contextExtender;
+    protected Class<E> type;
+    protected ImportMode mode;
 
     /**
      * Creates a new job for the given factory, name and process.

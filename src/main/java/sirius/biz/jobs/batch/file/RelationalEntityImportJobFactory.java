@@ -31,7 +31,7 @@ import java.util.function.Consumer;
  * @param <E> the type of entities being imported by this job
  * @param <Q> the generic type of queries for the entities being procesed
  */
-public abstract class EntityImportSyncJobFactory<E extends BaseEntity<?> & ImportTransactionalEntity, Q extends Query<Q, E, ?>>
+public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> & ImportTransactionalEntity, Q extends Query<Q, E, ?>>
         extends DictionaryBasedImportJobFactory {
 
     /**
@@ -67,14 +67,14 @@ public abstract class EntityImportSyncJobFactory<E extends BaseEntity<?> & Impor
 
     @SuppressWarnings("squid:S2095")
     @Explain("The job must not be closed here as it is returned and managed by the caller.")
-    protected EntityImportSyncJob createImportJob(ProcessContext process, ImportContext parameterContext) {
-        return new EntityImportSyncJob<E, Q>(fileParameter,
-                                             ignoreEmptyParameter,
-                                             syncModeParameter,
-                                             getImportType(),
-                                             getDictionary(),
-                                             process,
-                                             getName()).withDeleteQueryTuner(this::tuneDeleteQuery)
+    protected RelationalEntityImportJob createImportJob(ProcessContext process, ImportContext parameterContext) {
+        return new RelationalEntityImportJob<E, Q>(fileParameter,
+                                                   ignoreEmptyParameter,
+                                                   syncModeParameter,
+                                                   getImportType(),
+                                                   getDictionary(),
+                                                   process,
+                                                   getName()).withDeleteQueryTuner(this::tuneDeleteQuery)
                                                        .withContextExtender(context -> context.putAll(parameterContext));
     }
 

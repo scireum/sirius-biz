@@ -46,8 +46,14 @@ import java.util.function.Consumer;
  * @param <E> the type of entities being imported by this job
  * @param <Q> the generic type of queries for the entities being procesed
  */
-public class EntityImportSyncJob<E extends BaseEntity<?> & ImportTransactionalEntity, Q extends Query<Q, E, ?>>
+public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransactionalEntity, Q extends Query<Q, E, ?>>
         extends DictionaryBasedImportJob {
+
+    @Part
+    private static Mixing mixing;
+
+    @Part
+    private static Tenants<?, ?, ?> rawTenants;
 
     protected final EntityDescriptor descriptor;
     protected Consumer<Context> contextExtender;
@@ -55,12 +61,6 @@ public class EntityImportSyncJob<E extends BaseEntity<?> & ImportTransactionalEn
     protected Class<E> type;
     protected SyncMode mode;
     protected BiConsumer<ProcessContext, Q> queryTuner;
-
-    @Part
-    private static Mixing mixing;
-
-    @Part
-    private static Tenants<?, ?, ?> rawTenants;
 
     /**
      * Creates a new job for the given factory, name and process.
@@ -73,13 +73,13 @@ public class EntityImportSyncJob<E extends BaseEntity<?> & ImportTransactionalEn
      * @param process              the process context itself
      * @param factoryName          the name of the factory which created this job
      */
-    public EntityImportSyncJob(FileParameter fileParameter,
-                               BooleanParameter ignoreEmptyParameter,
-                               EnumParameter<SyncMode> syncModeParameter,
-                               Class<E> type,
-                               ImportDictionary dictionary,
-                               ProcessContext process,
-                               String factoryName) {
+    public RelationalEntityImportJob(FileParameter fileParameter,
+                                     BooleanParameter ignoreEmptyParameter,
+                                     EnumParameter<SyncMode> syncModeParameter,
+                                     Class<E> type,
+                                     ImportDictionary dictionary,
+                                     ProcessContext process,
+                                     String factoryName) {
         super(fileParameter, ignoreEmptyParameter, dictionary, process);
         this.importer.setFactoryName(factoryName);
         this.importTransactionHelper = importer.findHelper(ImportTransactionHelper.class);
@@ -94,12 +94,20 @@ public class EntityImportSyncJob<E extends BaseEntity<?> & ImportTransactionalEn
      * @param contextExtender the extender to specify
      * @return the import job itself for fluent method calls
      */
-    public EntityImportSyncJob<E, Q> withContextExtender(Consumer<Context> contextExtender) {
+    public RelationalEntityImportJob<E, Q> withContextExtender(Consumer<Context> contextExtender) {
         this.contextExtender = contextExtender;
         return this;
     }
 
-    public EntityImportSyncJob<E, Q> withDeleteQueryTuner(BiConsumer<ProcessContext, Q> queryTuner) {
+    /**
+     * Specifies the delete query tuner to use.
+     * <p>
+     * This permits to control which enities will be deleted if the remain unmarked during an import.
+     *
+     * @param queryTuner the tuner to invoke
+     * @return the job itself for fluent method calls
+     */
+    public RelationalEntityImportJob<E, Q> withDeleteQueryTuner(BiConsumer<ProcessContext, Q> queryTuner) {
         this.queryTuner = queryTuner;
         return this;
     }
@@ -152,11 +160,11 @@ public class EntityImportSyncJob<E extends BaseEntity<?> & ImportTransactionalEn
                 process.addTiming(NLS.get("EntityImportJob.entityDeleted"), watch.elapsedMillis());
             }
         } else {
-            createorUpdateEntity(entity, context, watch);
+            createOrUpdateEntity(entity, context, watch);
         }
     }
 
-    private void createOrUpdateEntity(E entity, Context context, Watch watch) {
+    protected void createOrUpdateEntity(E entity, Context context, Watch watch) {
         try {
             if (shouldSkip(entity)) {
                 process.incCounter(NLS.get("EntityImportJob.rowIgnored"));

@@ -65,6 +65,12 @@ import java.util.stream.Collectors;
  */
 public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> extends LineBasedExportJob {
 
+    @Part
+    private static Mixing mixing;
+
+    @Part
+    private static Tenants<?, ?, ?> tenants;
+
     protected final VirtualFile templateFile;
     protected final ImportDictionary dictionary;
     protected final EntityDescriptor descriptor;
@@ -75,12 +81,6 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     protected Consumer<Q> queryExtender;
     protected Consumer<Context> contextExtender;
     protected String targetFileName;
-
-    @Part
-    private static Mixing mixing;
-
-    @Part
-    private static Tenants<?, ?, ?> tenants;
 
     /**
      * Creates a new job for the given factory, name and process.
