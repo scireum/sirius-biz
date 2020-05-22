@@ -31,7 +31,7 @@ public class BridgeSftpSubsystemFactory extends SftpSubsystemFactory {
 
     @Override
     public Command createSubsystem(ChannelSession channel) throws IOException {
-        SftpSubsystem subsystem = new BridgeSftpSubsystem(this.resolveExecutorService(),
+        SftpSubsystem subsystem = new BridgeSftpSubsystem(resolveExecutorService(),
                                                           getUnsupportedAttributePolicy(),
                                                           getFileSystemAccessor(),
                                                           getErrorStatusDataHandler());

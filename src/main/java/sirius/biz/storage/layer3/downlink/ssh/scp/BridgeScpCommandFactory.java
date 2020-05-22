@@ -29,7 +29,7 @@ public class BridgeScpCommandFactory extends ScpCommandFactory implements ScpTra
     @Override
     protected Command executeSupportedCommand(String command) {
         return new BridgeScpCommand(command,
-                                    this.resolveExecutorService(),
+                                    resolveExecutorService(),
                                     getSendBufferSize(),
                                     getReceiveBufferSize(),
                                     getScpFileOpener(),
