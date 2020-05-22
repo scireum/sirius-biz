@@ -177,10 +177,9 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      * This can be overwritten to use a custom way of persisting data. Also this can be used to perfrom
      * post-save activities.
      * <p>
-     * By default we instantly create or update the entity. Note that if this is set
-     * Therefore a post-save handler would either need to be a
-     * {@link sirius.biz.importer.ImporterContext#addPostCommitCallback(Runnable)} or
-     * {@link sirius.biz.importer.Importer#createOrUpdateNow(BaseEntity)} needs to be used to persist data.
+     * By default we instantly create or update the entity. Note that if this is set to batch updates,
+     * a post-save handler would need to be a
+     * {@link sirius.biz.importer.ImporterContext#addPostCommitCallback(Runnable)}.
      *
      * @param entity  the entity to persist
      * @param context the row represented as context
