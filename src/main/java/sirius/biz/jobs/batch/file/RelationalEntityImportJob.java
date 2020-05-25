@@ -9,35 +9,45 @@
 package sirius.biz.jobs.batch.file;
 
 import sirius.biz.importer.format.ImportDictionary;
+import sirius.biz.importer.txn.ImportTransactionHelper;
+import sirius.biz.importer.txn.ImportTransactionalEntity;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.process.ProcessContext;
-import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.tenants.Tenants;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
+import sirius.db.mixing.query.Query;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
+import sirius.web.data.LineBasedProcessor;
 
+import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
- * Provides a job for importing line based files (CSV, Excel) as entities.
+ * Provides a job for importing line based files (CSV, Excel) as relational entities.
  * <p>
- * Utilizing {@link sirius.biz.importer.ImportHandler import handlers} this can be used as is in most cases.
+ * This job behaves alomost exactly like {@link EntityImportJob}. The only difference is that it is suited for
+ * "relational" entities (entities which represent a relation between two other entities). These are often
+ * synchronized as described by {@link SyncMode}, which is handled by this implementation.
  * <p>
- * Note that {@link #enforceSaveConstraints(BaseEntity, Context)} can be overwritten to perform any pre-save activities or
- * {@link #createOrUpdate(BaseEntity, Context)} to use a custom way to persist data or to perform some post-save activities.
+ * To support an efficient operation, such entities should implement {@link ImportTransactionalEntity} to that the
+ * framework can provide efficient delta updates.
  *
  * @param <E> the type of entities being imported by this job
+ * @param <Q> the generic type of queries for the entities being procesed
  */
-public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImportJob {
+public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransactionalEntity, Q extends Query<Q, E, ?>>
+        extends DictionaryBasedImportJob {
 
     @Part
     private static Mixing mixing;
@@ -47,30 +57,33 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
 
     protected final EntityDescriptor descriptor;
     protected Consumer<Context> contextExtender;
+    protected ImportTransactionHelper importTransactionHelper;
     protected Class<E> type;
-    protected ImportMode mode;
+    protected SyncMode mode;
+    protected BiConsumer<ProcessContext, Q> queryTuner;
 
     /**
      * Creates a new job for the given factory, name and process.
      *
      * @param fileParameter        the parameter which is used to derive the import file from
      * @param ignoreEmptyParameter the parameter which is used to determine if empty values should be ignored
-     * @param importModeParameter  the parameter which is used to determine the {@link ImportMode} to use
+     * @param syncModeParameter    the parameter which is used to determine the {@link SyncMode} to use
      * @param type                 the type of entities being imported
      * @param dictionary           the import dictionary to use
      * @param process              the process context itself
      * @param factoryName          the name of the factory which created this job
      */
-    public EntityImportJob(FileParameter fileParameter,
-                           BooleanParameter ignoreEmptyParameter,
-                           EnumParameter<ImportMode> importModeParameter,
-                           Class<E> type,
-                           ImportDictionary dictionary,
-                           ProcessContext process,
-                           String factoryName) {
+    public RelationalEntityImportJob(FileParameter fileParameter,
+                                     BooleanParameter ignoreEmptyParameter,
+                                     EnumParameter<SyncMode> syncModeParameter,
+                                     Class<E> type,
+                                     ImportDictionary dictionary,
+                                     ProcessContext process,
+                                     String factoryName) {
         super(fileParameter, ignoreEmptyParameter, dictionary, process);
-        importer.setFactoryName(factoryName);
-        this.mode = process.getParameter(importModeParameter).orElse(ImportMode.NEW_AND_UPDATES);
+        this.importer.setFactoryName(factoryName);
+        this.importTransactionHelper = importer.findHelper(ImportTransactionHelper.class);
+        this.mode = process.getParameter(syncModeParameter).orElse(SyncMode.NEW_AND_UPDATE_ONLY);
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);
     }
@@ -81,17 +94,55 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      * @param contextExtender the extender to specify
      * @return the import job itself for fluent method calls
      */
-    public EntityImportJob<E> withContextExtender(Consumer<Context> contextExtender) {
+    public RelationalEntityImportJob<E, Q> withContextExtender(Consumer<Context> contextExtender) {
         this.contextExtender = contextExtender;
         return this;
     }
 
+    /**
+     * Specifies the delete query tuner to use.
+     * <p>
+     * This permits to control which enities will be deleted if the remain unmarked during an import.
+     *
+     * @param queryTuner the tuner to invoke
+     * @return the job itself for fluent method calls
+     */
+    public RelationalEntityImportJob<E, Q> withDeleteQueryTuner(BiConsumer<ProcessContext, Q> queryTuner) {
+        this.queryTuner = queryTuner;
+        return this;
+    }
+
     @Override
-    protected void backupInputFile(String name, FileHandle input) {
-        // No need to create a backup copy if we only run a check...
-        if (mode != ImportMode.CHECK_ONLY) {
-            super.backupInputFile(name, input);
+    protected void executeForStream(String filename, InputStream in) throws Exception {
+        importTransactionHelper.start();
+        LineBasedProcessor.create(filename, in).run(this, error -> {
+            process.handle(error);
+            return true;
+        });
+        commitImportTransaction();
+    }
+
+    /**
+     * Commits the import transaction by deleting all untouched entities.
+     */
+    protected void commitImportTransaction() {
+        if (mode != SyncMode.SYNC) {
+            return;
         }
+
+        Watch watch = Watch.start();
+        importTransactionHelper.deleteUnmarked(type, this::tuneImportTransactionDeleteQuery, entity -> {
+            process.addTiming(NLS.get("EntityImportJob.entityDeleted"), watch.elapsed(TimeUnit.MILLISECONDS, true));
+        });
+    }
+
+    /**
+     * Tunes the delete query of the import transaction so that all untouched entities will be deleted.
+     *
+     * @param deleteQuery the query to enhance
+     */
+    protected void tuneImportTransactionDeleteQuery(Q deleteQuery) {
+        queryTuner.accept(process, deleteQuery);
     }
 
     @Override
@@ -103,6 +154,17 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
         }
 
         E entity = findAndLoad(context);
+        if (mode == SyncMode.DELETE_EXISTING) {
+            if (!entity.isNew()) {
+                importer.deleteNow(entity);
+                process.addTiming(NLS.get("EntityImportJob.entityDeleted"), watch.elapsedMillis());
+            }
+        } else {
+            createOrUpdateEntity(entity, context, watch);
+        }
+    }
+
+    protected void createOrUpdateEntity(E entity, Context context, Watch watch) {
         try {
             if (shouldSkip(entity)) {
                 process.incCounter(NLS.get("EntityImportJob.rowIgnored"));
@@ -110,12 +172,6 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
             }
 
             fillAndVerify(entity, context);
-            if (mode == ImportMode.CHECK_ONLY) {
-                enforceSaveConstraints(entity, context);
-            } else {
-                createOrUpdate(entity, context);
-            }
-
             if (entity.isNew()) {
                 process.addTiming(NLS.get("EntityImportJob.entityCreated"), watch.elapsedMillis());
             } else {
@@ -131,17 +187,6 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     }
 
     /**
-     * Enforces the save constraints manually in case of {@link ImportMode#CHECK_ONLY}.
-     *
-     * @param entity  the entity to check
-     * @param context the row represented as context
-     */
-    protected void enforceSaveConstraints(E entity, Context context) {
-        importer.findHandler(type).enforcePreSaveConstraints(entity);
-        entity.getDescriptor().beforeSave(entity);
-    }
-
-    /**
      * Tries to resolve the context into an entity.
      * <p>
      * Overwrite this method do add additional parameters to the <tt>context</tt>.
@@ -153,8 +198,14 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
         return importer.findAndLoad(type, context);
     }
 
+    /**
+     * Determines if the given entity should be persisted or skipped.
+     *
+     * @param entity the entity to check
+     * @return <tt>true</tt> if further processing should be skipped, <tt>false</tt> if the entity should be persisted
+     */
     protected boolean shouldSkip(E entity) {
-        return mode == ImportMode.NEW_ONLY && !entity.isNew() || (mode == ImportMode.UPDATE_ONLY && entity.isNew());
+        return mode == SyncMode.NEW_ONLY && !entity.isNew() || (mode == SyncMode.UPDATE_ONLY && entity.isNew());
     }
 
     /**
