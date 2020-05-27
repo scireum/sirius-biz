@@ -8,8 +8,6 @@
 
 package sirius.biz.storage.layer1
 
-import com.google.common.base.Charsets
-import com.google.common.io.CharStreams
 import sirius.biz.storage.layer1.replication.ReplicationBackgroundLoop
 import sirius.biz.storage.layer1.replication.ReplicationManager
 import sirius.kernel.BaseSpecification
@@ -17,6 +15,7 @@ import sirius.kernel.Scope
 import sirius.kernel.async.BackgroundLoop
 import sirius.kernel.di.std.Part
 
+import java.nio.charset.StandardCharsets
 import java.time.Duration
 
 @Scope(Scope.SCOPE_NIGHTLY)
@@ -43,12 +42,12 @@ class ReplicationSpec extends BaseSpecification {
         then:
         downloaded.isPresent()
         and:
-        CharStreams.toString(new InputStreamReader(downloaded.get().getInputStream(), Charsets.UTF_8)) == "test"
+        CharStreams.toString(new InputStreamReader(downloaded.get().getInputStream(), StandardCharsets.UTF_8)) == "test"
     }
 
     def "deletes are replicated correctly"() {
         given:
-        def testData = "test".getBytes(Charsets.UTF_8)
+        def testData = "test".getBytes(StandardCharsets.UTF_8)
         when:
         storage.getSpace("repl-primary").upload("repl-delete-test", new ByteArrayInputStream(testData), testData.length)
         and:

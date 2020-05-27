@@ -8,7 +8,6 @@
 
 package sirius.biz.i5;
 
-import com.google.common.collect.Maps;
 import sirius.kernel.Sirius;
 import sirius.kernel.Stoppable;
 import sirius.kernel.commons.Tuple;
@@ -21,6 +20,7 @@ import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -37,7 +37,7 @@ public class I5Connector implements Stoppable {
     protected Counter calls = new Counter();
     protected Average callDuration = new Average();
     protected Average callUtilization = new Average();
-    protected Map<Tuple<String, String>, I5ConnectionPool> pools = Maps.newConcurrentMap();
+    protected Map<Tuple<String, String>, I5ConnectionPool> pools = new ConcurrentHashMap<>();
 
     /**
      * Provides a connection from the connection pool created for the configured i5.

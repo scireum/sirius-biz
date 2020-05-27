@@ -899,7 +899,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * Note that if the source is a {@link File} {@link #consumeFile(File)} can be used which is likely to be more
      * efficient.
      *
-     * @param inputStream the stream to read the contents from
+     * @param inputStream the stream to read the contents from. Note that the caller has to close the stream itself.
      * @param length      the total number of bytes which will be provided via the given stream
      * @return <tt>true</tt> if the stream was consumed and the contents were updated, <tt>false</tt> otherwise
      */
@@ -919,7 +919,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
         if (outputStreamSupplier != null) {
             try (OutputStream out = outputStreamSupplier.apply(this)) {
-                ByteStreams.copy(inputStream, out);
+                Streams.transfer(inputStream, out);
                 return true;
             } catch (Exception e) {
                 throw handleErrorInCallback(e, HANDLER_OUTPUT_STREAM_SUPPLIER);
@@ -934,7 +934,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                     throw handleErrorInCallback(e, HANDLER_CONSUME_FILE_HANDLER);
                 }
             })) {
-                ByteStreams.copy(inputStream, out);
+                Streams.transfer(inputStream, out);
                 return true;
             } catch (Exception e) {
                 throw Exceptions.handle()
@@ -1015,7 +1015,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
         if (outputStreamSupplier != null) {
             try (OutputStream out = outputStreamSupplier.apply(this); FileInputStream in = new FileInputStream(data)) {
-                ByteStreams.copy(in, out);
+                Streams.transfer(in, out);
                 return true;
             } catch (Exception e) {
                 throw handleErrorInCallback(e, HANDLER_OUTPUT_STREAM_SUPPLIER);
@@ -1153,7 +1153,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         File temporaryFile = File.createTempFile("vfs-", null);
         try {
             try (FileOutputStream out = new FileOutputStream(temporaryFile); InputStream in = createInputStream()) {
-                ByteStreams.copy(in, out);
+                Streams.transfer(in, out);
             }
 
             return Optional.of(FileHandle.temporaryFileHandle(temporaryFile));
@@ -1246,7 +1246,6 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
     }
 
-    @SuppressWarnings("UnstableApiUsage")
     private static void defaultTunnelHandler(VirtualFile file, Response response) {
         try (InputStream from = file.createInputStream()) {
             if (from == null) {
@@ -1256,10 +1255,42 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
             try (OutputStream to = response.outputStream(HttpResponseStatus.OK,
                                                          MimeHelper.guessMimeType(file.name()))) {
-                ByteStreams.copy(from, to);
+                Streams.transfer(from, to);
             }
         } catch (IOException e) {
             response.error(HttpResponseStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    @Override
+    public String toString() {
+        return path();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+
+        if ((other instanceof VirtualFile) && (Objects.equals(((VirtualFile) other).parent, parent))) {
+            return Objects.equals(name, ((VirtualFile) other).name);
+        }
+
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return path().hashCode();
+    }
+
+    @Override
+    public int compareTo(VirtualFile other) {
+        if (other == null) {
+            return 1;
+        }
+
+        return Objects.compare(path(), other.path(), String::compareTo);
     }
 }

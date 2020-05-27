@@ -8,8 +8,6 @@
 
 package sirius.biz.i5;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.ibm.as400.access.AS400Bin4;
 import com.ibm.as400.access.AS400PackedDecimal;
 import com.ibm.as400.access.AS400Text;
@@ -19,8 +17,10 @@ import sirius.kernel.health.Exceptions;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,10 +34,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Transformer {
 
-    private Map<Field, Transform> transforms = Maps.newLinkedHashMap();
+    private Map<Field, Transform> transforms = new LinkedHashMap<>();
 
     Transformer(Class<?> target) {
-        List<Field> result = Lists.newArrayList();
+        List<Field> result = new ArrayList<>();
         for (Field field : target.getDeclaredFields()) {
             if (field.isAnnotationPresent(Transform.class)) {
                 field.setAccessible(true);

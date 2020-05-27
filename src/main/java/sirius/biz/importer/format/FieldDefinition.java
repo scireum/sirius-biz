@@ -8,7 +8,6 @@
 
 package sirius.biz.importer.format;
 
-import com.google.common.collect.ImmutableList;
 import sirius.kernel.commons.Lambdas;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
@@ -30,8 +29,7 @@ import java.util.stream.Collectors;
  */
 public class FieldDefinition {
 
-    private static final ValueInListCheck BOOLEAN_VALUES_CHECK =
-            new ValueInListCheck(ImmutableList.of("true", "false"));
+    private static final ValueInListCheck BOOLEAN_VALUES_CHECK = new ValueInListCheck("true", "false");
 
     protected String name;
     protected String type;

@@ -8,10 +8,9 @@
 
 package sirius.biz.i5;
 
-import com.google.common.collect.Maps;
-
 import javax.annotation.Nonnull;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static sirius.kernel.health.Exceptions.handle;
 
@@ -24,7 +23,7 @@ import static sirius.kernel.health.Exceptions.handle;
  */
 public abstract class Transformable {
 
-    private static Map<Class<?>, Transformer> transformers = Maps.newConcurrentMap();
+    private static Map<Class<?>, Transformer> transformers = new ConcurrentHashMap<>();
 
     private static <T> Transformer getTransformer(@Nonnull Class<T> type) {
         return transformers.computeIfAbsent(type, k -> new Transformer(type));

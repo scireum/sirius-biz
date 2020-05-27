@@ -8,10 +8,9 @@
 
 package sirius.biz.storage.util;
 
-import java.nio.charset.StandardCharsets;
-import com.google.common.hash.Hashing;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Register;
@@ -106,9 +105,7 @@ public class StorageUtils {
      * @return a hash valid for the given day and key
      */
     public String computeHash(String key, int offsetDays) {
-        return Hashing.md5()
-                      .hashString(key + getTimestampOfDay(offsetDays) + getSharedSecret(), StandardCharsets.UTF_8)
-                      .toString();
+        return Hasher.md5().hash(key + getTimestampOfDay(offsetDays) + getSharedSecret()).toHexString();
     }
 
     /**
@@ -118,7 +115,7 @@ public class StorageUtils {
      * @return a hash valid forever
      */
     public String computeEternallyValidHash(String key) {
-        return Hashing.md5().hashString(key + getSharedSecret(), StandardCharsets.UTF_8).toString();
+        return Hasher.md5().hash(key + getSharedSecret()).toHexString();
     }
 
     /**

@@ -1,4 +1,4 @@
-<i:arg type="sirius.biz.storage.StoredObjectRef" name="objectRef"/>
+<i:arg type="sirius.biz.storage.legacy.StoredObjectRef" name="objectRef"/>
 <i:arg type="String" name="inputId"/>
 <i:arg type="String" name="id" default="@('file-upload' + call.generateLocalId())"/>
 <i:arg type="String" name="defaultPreview" default=""/>

@@ -8,12 +8,12 @@
 
 package sirius.biz.storage.layer1;
 
-import com.google.common.io.ByteStreams;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.layer1.transformer.ByteBlockTransformer;
 import sirius.biz.storage.layer1.transformer.TransformingInputStream;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -130,7 +130,7 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
     protected void storePhysicalObject(String objectKey, InputStream data, long size) throws IOException {
         File file = getFile(objectKey);
         try (FileOutputStream out = new FileOutputStream(file)) {
-            ByteStreams.copy(data, out);
+            Streams.transfer(data, out);
         }
     }
 
@@ -140,7 +140,7 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
         File file = getFile(objectKey);
         try (FileOutputStream out = new FileOutputStream(file);
              TransformingInputStream in = new TransformingInputStream(data, transformer)) {
-            ByteStreams.copy(in, out);
+            Streams.transfer(in, out);
         }
     }
 
@@ -181,7 +181,7 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
 
         try (OutputStream out = response.outputStream(HttpResponseStatus.OK, null);
              InputStream in = getAsStream(objectKey, transformer)) {
-            ByteStreams.copy(in, out);
+            Streams.transfer(in, out);
         }
     }
 
@@ -208,7 +208,7 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
             dest = File.createTempFile("FSTRANSFORM", null);
             try (FileOutputStream out = new FileOutputStream(dest);
                  InputStream in = getAsStream(objectKey, transformer)) {
-                ByteStreams.copy(in, out);
+                Streams.transfer(in, out);
             }
             return FileHandle.temporaryFileHandle(dest);
         } catch (Exception e) {

@@ -8,11 +8,11 @@
 
 package sirius.biz.storage.layer3.downlink.ftp;
 
-import com.google.common.io.ByteStreams;
 import org.apache.ftpserver.ftplet.FtpFile;
 import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.commons.Streams;
 import sirius.kernel.health.Exceptions;
 
 import java.io.ByteArrayInputStream;
@@ -156,7 +156,7 @@ class BridgeFile implements FtpFile {
 
             if (destination.isWritable() && this.isReadable()) {
                 try (OutputStream out = destination.createOutputStream(0L); InputStream in = createInputStream(0L)) {
-                    ByteStreams.copy(in, out);
+                    Streams.transfer(in, out);
                 }
             }
             return this.delete();
