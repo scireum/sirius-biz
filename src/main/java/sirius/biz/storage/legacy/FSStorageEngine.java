@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage;
+package sirius.biz.storage.legacy;
 
 import com.google.common.io.ByteStreams;
 import sirius.kernel.commons.Files;
@@ -28,6 +28,7 @@ import java.io.InputStream;
 /**
  * Provides a {@link PhysicalStorageEngine} which operates on the local file system.
  */
+@Deprecated
 @Register(name = "fs", framework = Storage.FRAMEWORK_STORAGE)
 public class FSStorageEngine implements PhysicalStorageEngine {
 

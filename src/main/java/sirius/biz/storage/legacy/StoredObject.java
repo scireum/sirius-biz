@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage;
+package sirius.biz.storage.legacy;
 
 import javax.annotation.Nullable;
 import java.time.LocalDateTime;
@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 /**
  * Represents the public accessible part of an object (file) stored by {@link Storage}.
  */
+@Deprecated
 public interface StoredObject {
 
     /**

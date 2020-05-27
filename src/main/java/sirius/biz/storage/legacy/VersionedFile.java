@@ -1,6 +1,13 @@
-package sirius.biz.storage.versions;
+/*
+ * Made with all the love in the world
+ * by scireum in Remshalden, Germany
+ *
+ * Copyright by scireum GmbH
+ * http://www.scireum.de - info@scireum.de
+ */
 
-import sirius.biz.storage.StoredObjectRef;
+package sirius.biz.storage.legacy;
+
 import sirius.biz.storage.layer2.jdbc.SQLBlobStorage;
 import sirius.biz.tenants.jdbc.SQLTenantAware;
 import sirius.db.mixing.Mapping;
@@ -15,6 +22,7 @@ import java.time.LocalDateTime;
 /**
  * Entity holding meta information about a versioned file.
  */
+@Deprecated
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class VersionedFile extends SQLTenantAware {
 

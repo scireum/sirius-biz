@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage;
+package sirius.biz.storage.legacy;
 
 import com.amazonaws.internal.ResettableInputStream;
 import com.google.common.hash.Hashing;
@@ -21,6 +21,7 @@ import sirius.kernel.Sirius;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
+import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.ConfigValue;
@@ -38,7 +39,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -68,6 +68,7 @@ import java.util.stream.Collectors;
  * For database entities referencing virtual objects a {@link StoredObjectRef} can be used, which takes care of
  * referential integrity (deletes the object, if the entity is deleted etc.)
  */
+@Deprecated
 @Register(classes = Storage.class, framework = Storage.FRAMEWORK_STORAGE)
 public class Storage {
 
@@ -624,10 +625,7 @@ public class Storage {
      * @return a hash valid for the given day and key
      */
     private String computeHash(String physicalKey, int offsetDays) {
-        return Hashing.md5()
-                      .hashString(physicalKey + getTimestampOfDay(offsetDays) + getSharedSecret(),
-                                  StandardCharsets.UTF_8)
-                      .toString();
+        return Hasher.md5().hash(physicalKey + getTimestampOfDay(offsetDays) + getSharedSecret()).toHexString();
     }
 
     /**
@@ -637,7 +635,7 @@ public class Storage {
      * @return a hash valid forever
      */
     private String computeEternallyValidHash(String physicalKey) {
-        return Hashing.md5().hashString(physicalKey + getSharedSecret(), StandardCharsets.UTF_8).toString();
+        return Hasher.md5().hash(physicalKey + getSharedSecret()).toHexString();
     }
 
     /**
