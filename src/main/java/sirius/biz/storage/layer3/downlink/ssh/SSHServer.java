@@ -8,8 +8,6 @@
 
 package sirius.biz.storage.layer3.downlink.ssh;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.apache.sshd.common.file.FileSystemFactory;
 import org.apache.sshd.common.io.IoSession;
 import org.apache.sshd.common.session.Session;
@@ -28,6 +26,7 @@ import sirius.kernel.Stoppable;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Log;
 import sirius.web.security.MaintenanceInfo;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -37,6 +36,7 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.logging.Level;
 
 /**
  * Provides a built-in SSH server which provides access to the {@link sirius.biz.storage.layer3.VirtualFile} via
@@ -94,7 +94,7 @@ public class SSHServer implements Startable, Stoppable, Killable {
 
     private void disableLogging() {
         // Some parts of the scp/sftp sub systems are too chatty...
-        Logger.getLogger("sirius.biz.storage.layer3.downlink.ssh.BridgeSession").setLevel(Level.WARN);
+        Log.setLevel("sirius.biz.storage.layer3.downlink.ssh.BridgeSession", Level.WARNING);
     }
 
     protected void installSCPCommandFactory() {
