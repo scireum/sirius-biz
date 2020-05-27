@@ -8,10 +8,8 @@
 
 package sirius.biz.storage.layer2;
 
-import sirius.biz.storage.Storage;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
-import sirius.db.jdbc.schema.SQLPropertyInfo;
 import sirius.db.mixing.AccessPath;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
@@ -29,12 +27,12 @@ import java.util.function.Consumer;
 /**
  * Handles fields of the type {@link BlobHardRef} within an {@link BaseEntity}.
  */
-public class BlobHardRefProperty extends BlobRefProperty implements SQLPropertyInfo {
+public class BlobHardRefProperty extends BlobRefProperty {
 
     /**
      * Factory for generating properties based on their field type
      */
-    @Register(framework = Storage.FRAMEWORK_STORAGE)
+    @Register(framework = StorageUtils.FRAMEWORK_STORAGE)
     public static class Factory implements PropertyFactory {
 
         @Override

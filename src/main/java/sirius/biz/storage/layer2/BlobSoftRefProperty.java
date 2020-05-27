@@ -8,15 +8,12 @@
 
 package sirius.biz.storage.layer2;
 
-import sirius.biz.storage.Storage;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
-import sirius.db.jdbc.schema.SQLPropertyInfo;
 import sirius.db.mixing.AccessPath;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.PropertyFactory;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 
@@ -28,7 +25,7 @@ import java.util.function.Consumer;
 /**
  * Handles fields of the type {@link BlobSoftRef} within an {@link sirius.db.mixing.BaseEntity}.
  */
-public class BlobSoftRefProperty extends BlobRefProperty implements SQLPropertyInfo {
+public class BlobSoftRefProperty extends BlobRefProperty {
 
     /**
      * Contains the field length to use if URLs are also supported for this field.
@@ -38,7 +35,7 @@ public class BlobSoftRefProperty extends BlobRefProperty implements SQLPropertyI
     /**
      * Factory for generating properties based on their field type
      */
-    @Register(framework = Storage.FRAMEWORK_STORAGE)
+    @Register(framework = StorageUtils.FRAMEWORK_STORAGE)
     public static class Factory implements PropertyFactory {
 
         @Override
@@ -60,9 +57,6 @@ public class BlobSoftRefProperty extends BlobRefProperty implements SQLPropertyI
             propertyConsumer.accept(new BlobSoftRefProperty(descriptor, accessPath, field));
         }
     }
-
-    @Part
-    private static Storage storage;
 
     private BlobSoftRefProperty(@Nonnull EntityDescriptor descriptor,
                                 @Nonnull AccessPath accessPath,
