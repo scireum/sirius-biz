@@ -1,7 +1,13 @@
-package sirius.biz.storage
+/*
+ * Made with all the love in the world
+ * by scireum in Remshalden, Germany
+ *
+ * Copyright by scireum GmbH
+ * http://www.scireum.de - info@scireum.de
+ */
 
-import sirius.biz.storage.versions.VersionedFile
-import sirius.biz.storage.versions.VersionedFiles
+package sirius.biz.storage.legacy
+
 import sirius.biz.tenants.Tenant
 import sirius.biz.tenants.TenantsHelper
 import sirius.db.jdbc.OMA
@@ -13,7 +19,7 @@ import sirius.web.security.UserContext
 import java.time.Duration
 
 /**
- * Provides tests for {@link sirius.biz.storage.versions.VersionedFiles}.
+ * Provides tests for {@link VersionedFiles}.
  */
 class VersionedFilesSpec extends BaseSpecification {
     @Part
@@ -62,7 +68,10 @@ class VersionedFilesSpec extends BaseSpecification {
     def "delete older versions"() {
         given:
         String identifier = "created-version"
-        int maxNumberOfVersions = Sirius.getSettings().get("storage.buckets.versioned-files.maxNumberOfVersions").asInt(1)
+        int maxNumberOfVersions = Sirius.
+                getSettings().
+                get("storage.buckets.versioned-files.maxNumberOfVersions").
+                asInt(1)
         when:
         for (int i = 0; i < maxNumberOfVersions * 2; i++) {
             versionedFiles.createVersion(tenant, identifier, "test content", "test comment " + i)
