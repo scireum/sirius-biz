@@ -61,11 +61,13 @@ class ObjectStoresSpec extends BaseSpecification {
         URLConnection c = new URL(stores.store().
                 objectUrl(stores.store().getBucketName("test"), "test")).openConnection()
         and:
-        String downloadedData = new String(Streams.toByteArray(c.getInputStream()), StandardCharsets.UTF_8)
+        def expectedContents = com.google.common.io.Files.toString(file, StandardCharsets.UTF_8)
+        def downloadedContents = com.google.common.io.Files.toString(download, StandardCharsets.UTF_8)
+        def downloadedData = new String(Streams.toByteArray(c.getInputStream()), StandardCharsets.UTF_8)
         then:
-        Files.toString(file, Charsets.UTF_8) == Files.toString(download, StandardCharsets.UTF_8)
+        expectedContents == downloadedData
         and:
-        downloadedData == Files.toString(file, StandardCharsets.UTF_8)
+        expectedContents == downloadedContents
         cleanup:
         sirius.kernel.commons.Files.delete(file)
         sirius.kernel.commons.Files.delete((File) download)
