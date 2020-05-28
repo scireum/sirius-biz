@@ -38,7 +38,7 @@ public class FieldDefinition {
     protected Supplier<String> label;
     protected Set<String> aliases = new HashSet<>();
     protected List<ValueCheck> checks = new ArrayList<>();
-    protected boolean includeIdentifierAndValueInErrorMessage;
+    protected boolean appendContextInErrorMessage;
 
     /**
      * Creates a new field with the given name and type.
@@ -270,8 +270,8 @@ public class FieldDefinition {
      *
      * @return the field itself for fluent method calls
      */
-    public FieldDefinition includeIdentifierAndValueInErrorMessage() {
-        this.includeIdentifierAndValueInErrorMessage = true;
+    public FieldDefinition appendContextInErrorMessage() {
+        this.appendContextInErrorMessage = true;
         return this;
     }
 
@@ -280,8 +280,8 @@ public class FieldDefinition {
      *
      * @return true if this field's name and value should be included in error messages, false otherwise
      */
-    public boolean isIncludeIdentifierAndValueInErrorMessage() {
-        return includeIdentifierAndValueInErrorMessage;
+    public boolean isAppendContextInErrorMessage() {
+        return appendContextInErrorMessage;
     }
 
     /**
