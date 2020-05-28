@@ -8,11 +8,11 @@
 
 package sirius.biz.storage.layer3;
 
-import com.google.common.io.ByteStreams;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
@@ -1260,37 +1260,5 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         } catch (IOException e) {
             response.error(HttpResponseStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
-    }
-
-    @Override
-    public String toString() {
-        return path();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (other == this) {
-            return true;
-        }
-
-        if ((other instanceof VirtualFile) && (Objects.equals(((VirtualFile) other).parent, parent))) {
-            return Objects.equals(name, ((VirtualFile) other).name);
-        }
-
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return path().hashCode();
-    }
-
-    @Override
-    public int compareTo(VirtualFile other) {
-        if (other == null) {
-            return 1;
-        }
-
-        return Objects.compare(path(), other.path(), String::compareTo);
     }
 }
