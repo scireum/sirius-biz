@@ -34,11 +34,14 @@ class ObjectStoresSpec extends BaseSpecification {
         stores.store().upload(stores.store().getBucketName("test"), "test", file, null)
         and:
         download = stores.store().download(stores.store().getBucketName("test"), "test")
+        and:
+        def expectedContents = com.google.common.io.Files.toString(file, StandardCharsets.UTF_8)
+        def downloadedContents = com.google.common.io.Files.toString(download, StandardCharsets.UTF_8)
         then:
-        Files.toString(file, StandardCharsets.UTF_8) == Files.toString(download, StandardCharsets.UTF_8)
+        expectedContents == downloadedContents
         cleanup:
         Files.delete(file)
-        Files.delete((File) download)
+        Files.delete(download)
     }
 
     def "PUT and GET works"() {
