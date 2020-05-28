@@ -11,8 +11,11 @@ package sirius.biz.storage.layer1.replication;
 import com.alibaba.fastjson.JSONObject;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
+
+import javax.annotation.Nullable;
 
 /**
  * Responsible to transfering batches of replication tasks back to
@@ -29,6 +32,7 @@ public class ReplicationTaskExecutor implements DistributedTaskExecutor {
     public static final String REPLICATION_TASK_QUEUE = "storage-layer1-replication";
 
     @Part
+    @Nullable
     private ReplicationTaskStorage taskStorage;
 
     @Override
