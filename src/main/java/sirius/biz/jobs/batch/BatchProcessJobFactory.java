@@ -178,7 +178,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
 
     protected abstract BatchJob createJob(ProcessContext process) throws Exception;
 
-    private void logParameters(ProcessContext process) {
+    protected void logParameters(ProcessContext process) {
         StringBuilder output = new StringBuilder();
         output.append("Parameter:\n\n");
 
