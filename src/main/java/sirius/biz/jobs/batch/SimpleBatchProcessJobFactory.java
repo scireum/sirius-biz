@@ -38,6 +38,7 @@ public abstract class SimpleBatchProcessJobFactory extends BatchProcessJobFactor
 
     @Override
     protected final void executeTask(ProcessContext process) throws Exception {
+        logParameters(process);
         execute(process);
     }
 
