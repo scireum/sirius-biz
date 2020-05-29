@@ -15,8 +15,6 @@ import org.apache.ftpserver.ftplet.FtpException;
 import org.apache.ftpserver.ftplet.Ftplet;
 import org.apache.ftpserver.listener.ListenerFactory;
 import org.apache.ftpserver.ssl.SslConfigurationFactory;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.Startable;
 import sirius.kernel.Stoppable;
@@ -25,11 +23,13 @@ import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
 
 import java.io.File;
 import java.time.Duration;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.Level;
 
 /**
  * Provides a bridge between the {@link sirius.biz.storage.layer3.VirtualFileSystem} and the Apache FTP server.
@@ -174,6 +174,6 @@ public class FTPServer implements Startable, Stoppable {
 
     private void disableLogging() {
         // The Apache FTP Server is wayyy too chatty.....
-        Logger.getLogger("org.apache.ftpserver").setLevel(Level.ERROR);
+        Log.setLevel("org.apache.ftpserver", Level.SEVERE);
     }
 }

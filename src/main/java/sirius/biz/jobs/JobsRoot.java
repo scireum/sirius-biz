@@ -25,6 +25,7 @@ import sirius.biz.storage.layer3.VFSRoot;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.tenants.Tenants;
+import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
@@ -58,6 +59,7 @@ public class JobsRoot extends SingularVFSRoot {
     public static final String PATH_JOBS = "jobs";
 
     @Part
+    @Nullable
     private JobPresets presets;
 
     @Part

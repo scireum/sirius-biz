@@ -8,10 +8,10 @@
 
 package sirius.biz.storage.layer3;
 
-import com.google.common.io.ByteStreams;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Limit;
+import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -123,7 +123,7 @@ public class VFSController extends BizController {
             } else {
                 try (OutputStream outputStream = file.createOutputStream()) {
                     ctx.markAsLongCall();
-                    ByteStreams.copy(inputStream, outputStream);
+                    Streams.transfer(inputStream, outputStream);
                 } finally {
                     inputStream.close();
                 }

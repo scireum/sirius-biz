@@ -8,10 +8,6 @@
 
 package sirius.biz.tenants;
 
-import java.nio.charset.StandardCharsets;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.common.hash.Hashing;
 import com.typesafe.config.Config;
 import sirius.biz.model.LoginData;
 import sirius.biz.protocol.AuditLog;
@@ -21,6 +17,7 @@ import sirius.kernel.async.CallContext;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.ValueHolder;
@@ -43,11 +40,13 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -248,7 +247,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         if (spyUser == null) {
             return null;
         }
-        List<String> extraRoles = Lists.newArrayList();
+        List<String> extraRoles = new ArrayList<>();
         extraRoles.add(PERMISSION_SPY_USER);
         extraRoles.add(PERMISSION_SELECT_USER_ACCOUNT);
         if (rootUser.hasPermission(PERMISSION_SYSTEM_TENANT_AFFILIATE)) {
@@ -542,7 +541,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         Set<String> roles = computeRoles(null, account.getUniqueName());
         if (extraRoles != null) {
             // Make a copy so that we do not modify the cached set...
-            roles = Sets.newTreeSet(roles);
+            roles = new TreeSet<>(roles);
             roles.addAll(extraRoles);
         }
         return asUserWithRoles(account, roles, appendixSupplier);
@@ -644,12 +643,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
      * @return the md5 hash of the apiToken and timestampInDays
      */
     protected String getHashedApiToken(String apiToken, long timestampInDays) {
-        return Hashing.md5()
-                      .newHasher()
-                      .putString(apiToken, StandardCharsets.UTF_8)
-                      .putString(String.valueOf(timestampInDays), StandardCharsets.UTF_8)
-                      .hash()
-                      .toString();
+        return Hasher.md5().hash(apiToken).hash(String.valueOf(timestampInDays)).toHexString();
     }
 
     protected void completeAuditLogForUser(AuditLog.AuditLogBuilder builder, U account) {
@@ -821,7 +815,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     }
 
     private Set<String> computeRoles(U user, T tenant, boolean isSystemTenant) {
-        Set<String> roles = Sets.newTreeSet();
+        Set<String> roles = new TreeSet<>();
         roles.add(UserInfo.PERMISSION_LOGGED_IN);
         roles.addAll(user.getUserAccountData().getPermissions().getPermissions().data());
         roles.addAll(tenant.getTenantData().getPackageData().computeCombinedPermissions());

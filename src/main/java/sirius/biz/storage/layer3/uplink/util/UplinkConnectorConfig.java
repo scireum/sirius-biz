@@ -8,10 +8,10 @@
 
 package sirius.biz.storage.layer3.uplink.util;
 
-import com.google.common.base.Objects;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.settings.Extension;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -93,7 +93,7 @@ public abstract class UplinkConnectorConfig<C> {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(host, port, user, password);
+        return Objects.hash(host, port, user, password);
     }
 
     @Override
@@ -112,10 +112,10 @@ public abstract class UplinkConnectorConfig<C> {
 
         UplinkConnectorConfig<?> other = (UplinkConnectorConfig<?>) obj;
 
-        return Objects.equal(host, other.host)
-               && Objects.equal(port, other.port)
-               && Objects.equal(user, other.user)
-               && Objects.equal(password, other.password);
+        return Objects.equals(host, other.host)
+               && Objects.equals(port, other.port)
+               && Objects.equals(user, other.user)
+               && Objects.equals(password, other.password);
     }
 
     @Override

@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage;
+package sirius.biz.storage.legacy;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 /**
  * Provides a management UI for the storage system.
  */
+@Deprecated
 @Register(classes = Controller.class, framework = Storage.FRAMEWORK_STORAGE)
 public class StorageController extends BizController {
 

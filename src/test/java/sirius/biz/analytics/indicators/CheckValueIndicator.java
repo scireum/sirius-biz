@@ -10,7 +10,7 @@ package sirius.biz.analytics.indicators;
 
 import sirius.kernel.di.std.Register;
 
-@Register(classes = Indicator.class)
+@Register
 public class CheckValueIndicator implements Indicator<IndicatorTestEntity> {
     @Override
     public Class<IndicatorTestEntity> getType() {

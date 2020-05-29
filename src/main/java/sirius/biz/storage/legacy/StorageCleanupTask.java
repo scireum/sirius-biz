@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage;
+package sirius.biz.storage.legacy;
 
 import sirius.biz.protocol.TraceData;
 import sirius.biz.storage.layer2.jdbc.SQLBlobStorage;
@@ -28,6 +28,7 @@ import java.util.List;
  * A bucket can specify a max age for its objects. Older objects are automatically deleted by the system (vis this
  * loop).
  */
+@Deprecated
 @Register(framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class StorageCleanupTask implements EveryDay {
 

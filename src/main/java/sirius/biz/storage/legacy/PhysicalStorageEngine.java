@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage;
+package sirius.biz.storage.legacy;
 
 import sirius.web.http.WebContext;
 
@@ -17,6 +17,7 @@ import java.io.InputStream;
 /**
  * Represents the actual physical storage layer for objects within buckets.
  */
+@Deprecated
 public interface PhysicalStorageEngine {
 
     /**

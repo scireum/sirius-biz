@@ -6,9 +6,8 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage;
+package sirius.biz.storage.legacy;
 
-import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
@@ -21,6 +20,7 @@ import java.util.Optional;
 /**
  * Represents a <b>builder</b> for download URLs for {@link StoredObject stored objects}.
  */
+@Deprecated
 public class DownloadBuilder {
 
     private final Storage storage;
@@ -158,12 +158,10 @@ public class DownloadBuilder {
      * @return the builder itself for fluent method calls
      */
     public DownloadBuilder withHook(String hook, @Nullable String payload) {
-        this.hook =hook;
-        this.payload =payload;
+        this.hook = hook;
+        this.payload = payload;
         return this;
     }
-
-
 
     /**
      * Builds the effective URL according to the parameters specified wrapped in an {@link Optional}.

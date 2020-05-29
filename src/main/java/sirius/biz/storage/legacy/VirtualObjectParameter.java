@@ -1,8 +1,14 @@
-package sirius.biz.jobs.params;
+/*
+ * Made with all the love in the world
+ * by scireum in Remshalden, Germany
+ *
+ * Copyright by scireum GmbH
+ * http://www.scireum.de - info@scireum.de
+ */
 
-import sirius.biz.storage.Storage;
-import sirius.biz.storage.StoredObject;
-import sirius.biz.storage.VirtualObject;
+package sirius.biz.storage.legacy;
+
+import sirius.biz.jobs.params.EntityParameter;
 import sirius.biz.tenants.jdbc.SQLTenant;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
@@ -16,6 +22,7 @@ import java.util.Optional;
 /**
  * Provides a base class to implement autocomplete parameters for {@link VirtualObject entities}.
  */
+@Deprecated
 public class VirtualObjectParameter extends EntityParameter<VirtualObject, VirtualObjectParameter> {
 
     @Part

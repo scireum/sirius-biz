@@ -12,6 +12,7 @@ import com.alibaba.fastjson.JSONObject;
 import sirius.biz.analytics.flags.ExecutionFlags;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.cluster.work.DistributedTasks;
+import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
@@ -19,12 +20,15 @@ import sirius.kernel.di.std.Parts;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.timer.EveryDay;
 
+import javax.annotation.Nullable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Executes on a daily basis and invokes all {@link AnalyticsScheduler schedulers} (daily or once per month).
@@ -69,11 +73,18 @@ public class AnalyticalEngine implements EveryDay {
     @Part
     private DistributedTasks cluster;
 
+    /**
+     * Contains the implementation which stores which scheduler was executed when.
+     * <p>
+     * This is permitted to remain empty as long as the whole framework is unused. Otherwise we report a custom error.
+     */
     @Part
+    @Nullable
     private ExecutionFlags flags;
 
     @Parts(AnalyticsScheduler.class)
     private PartCollection<AnalyticsScheduler> schedulers;
+    private List<AnalyticsScheduler> activeSchedulers;
 
     @Override
     public String getConfigKeyName() {
@@ -82,7 +93,25 @@ public class AnalyticalEngine implements EveryDay {
 
     @Override
     public void runTimer() throws Exception {
-        tasks.defaultExecutor().start(this::queueSchedulers);
+        if (activeSchedulers == null) {
+            initialize();
+        }
+        if (!activeSchedulers.isEmpty()) {
+            tasks.defaultExecutor().start(this::queueSchedulers);
+        }
+    }
+
+    protected void initialize() {
+        activeSchedulers =
+                schedulers.getParts().stream().filter(AnalyticsScheduler::isActive).collect(Collectors.toList());
+
+        if (flags == null && activeSchedulers.stream()
+                                             .anyMatch(scheduler -> scheduler.getInterval()
+                                                                    != ScheduleInterval.DAILY)) {
+            DistributedTasks.LOG.WARN(
+                    "The AnalyticalEngine is present but neither 'biz.analytics-execution-flags-jdbc' nor"
+                    + " 'biz.analytics-execution-flags-mongo' is enabled! This will result in NullPointerExceptions");
+        }
     }
 
     /**
@@ -91,11 +120,9 @@ public class AnalyticalEngine implements EveryDay {
      */
     private void queueSchedulers() {
         Map<String, Boolean> queueCache = new HashMap<>();
-        schedulers.getParts()
-                  .stream()
-                  .filter(AnalyticsScheduler::isActive)
-                  .filter(scheduler -> shouldSchedule(scheduler, queueCache))
-                  .forEach(this::queueScheduler);
+        activeSchedulers.stream()
+                        .filter(scheduler -> shouldSchedule(scheduler, queueCache))
+                        .forEach(this::queueScheduler);
     }
 
     /**
