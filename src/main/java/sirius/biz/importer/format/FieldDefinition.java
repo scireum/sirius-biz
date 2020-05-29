@@ -36,6 +36,7 @@ public class FieldDefinition {
     protected Supplier<String> label;
     protected Set<String> aliases = new HashSet<>();
     protected List<ValueCheck> checks = new ArrayList<>();
+    protected boolean appendContextInErrorMessage;
 
     /**
      * Creates a new field with the given name and type.
@@ -260,6 +261,25 @@ public class FieldDefinition {
      */
     public FieldDefinition markRequired() {
         return withCheck(new RequiredCheck());
+    }
+
+    /**
+     * Marks the current field definition to be included in error messages with name and value for row identification purposes.
+     *
+     * @return the field itself for fluent method calls
+     */
+    public FieldDefinition appendContextInErrorMessage() {
+        this.appendContextInErrorMessage = true;
+        return this;
+    }
+
+    /**
+     * Returns the info if this field's name and value should be included in error messages.
+     *
+     * @return true if this field's name and value should be included in error messages, false otherwise
+     */
+    public boolean shouldAppendContextInErrorMessage() {
+        return appendContextInErrorMessage;
     }
 
     /**
