@@ -280,7 +280,7 @@ public class FieldDefinition {
      *
      * @return true if this field's name and value should be included in error messages, false otherwise
      */
-    public boolean isAppendContextInErrorMessage() {
+    public boolean shouldAppendContextInErrorMessage() {
         return appendContextInErrorMessage;
     }
 
