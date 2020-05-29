@@ -62,7 +62,7 @@ public class DateRangeParameter extends Parameter<DateRange, DateRangeParameter>
      * @param dateRanges the list of ranges to offer
      */
     public DateRangeParameter(String name, DateRange... dateRanges) {
-        this(name, "DateRangeParameter.label", dateRanges);
+        this(name, "$DateRangeParameter.label", dateRanges);
     }
 
     /**
