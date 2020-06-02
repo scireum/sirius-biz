@@ -102,6 +102,7 @@ public class Storage {
     private GlobalContext context;
 
     @ConfigValue("storage.sharedSecret")
+    @Nullable
     private String sharedSecret;
     private String safeSharedSecret;
 
