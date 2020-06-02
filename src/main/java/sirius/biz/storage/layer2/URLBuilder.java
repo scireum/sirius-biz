@@ -252,16 +252,7 @@ public class URLBuilder {
             result.append(determineEffectiveFileExtension());
         }
 
-        // This will be picked up by the BlobDispatcher and will trigger the matching
-        // BlobDispatcherHook...
-        if (Strings.isFilled(hook)) {
-            result.append("?hook=");
-            result.append(Strings.urlEncode(hook));
-            if (Strings.isFilled(payload)) {
-                result.append("&payload=");
-                result.append(Strings.urlEncode(payload));
-            }
-        }
+        appendHook(result);
 
         return result.toString();
     }
@@ -296,7 +287,28 @@ public class URLBuilder {
             result.append(determineEffectiveFileExtension());
         }
 
+        appendHook(result);
+
         return result.toString();
+    }
+
+    /**
+     * Appends the given hook name and payload if present.
+     * <p>
+     * This will be picked up by the BlobDispatcher and will trigger the matching
+     * BlobDispatcherHook...
+     *
+     * @param urlBuilder the builder to append the strings to
+     */
+    private void appendHook(StringBuilder urlBuilder) {
+        if (Strings.isFilled(hook)) {
+            urlBuilder.append("?hook=");
+            urlBuilder.append(Strings.urlEncode(hook));
+            if (Strings.isFilled(payload)) {
+                urlBuilder.append("&payload=");
+                urlBuilder.append(Strings.urlEncode(payload));
+            }
+        }
     }
 
     private StringBuilder createBaseURL() {
