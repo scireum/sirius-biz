@@ -63,6 +63,10 @@ public class RemoveDeletedEntitiesLoop extends BackgroundLoop {
         AtomicInteger numBlobs = new AtomicInteger();
         mango.select(MongoBlob.class).eq(MongoBlob.DELETED, true).limit(256).iterateAll(blob -> {
             try {
+                if (Strings.isFilled(blob.getPhysicalObjectKey())) {
+                    blob.getStorageSpace().getPhysicalSpace().delete(blob.getPhysicalObjectKey());
+                }
+
                 mango.delete(blob);
                 numBlobs.incrementAndGet();
             } catch (Exception e) {
