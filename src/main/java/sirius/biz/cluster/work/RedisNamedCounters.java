@@ -16,6 +16,7 @@ import sirius.kernel.commons.Wait;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -104,7 +105,8 @@ class RedisNamedCounters implements NamedCounters {
             txn.hset(name, counter, String.valueOf(nextCounterValue));
         }
 
-        if (txn.exec().isEmpty()) {
+        List<?> response = txn.exec();
+        if (response == null || response.isEmpty()) {
             return null;
         } else {
             return nextCounterValue;

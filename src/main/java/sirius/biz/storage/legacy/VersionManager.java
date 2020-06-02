@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage;
+package sirius.biz.storage.legacy;
 
 import com.google.common.io.ByteStreams;
 import sirius.db.KeyGenerator;
@@ -51,6 +51,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * This is placed here, as the {@link DownloadBuilder} uses this class to fetch the physical keys for an object version
  * (even for the main one).
  */
+@Deprecated
 @Register(classes = VersionManager.class, framework = Storage.FRAMEWORK_STORAGE)
 public class VersionManager {
 

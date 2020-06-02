@@ -104,6 +104,7 @@ public class ProcessController extends BizController {
                                      null);
         pageHelper.addTermAggregation(Process.PROCESS_TYPE, value -> NLS.getIfExists(value, null).orElse(null));
         pageHelper.addTimeAggregation(Process.STARTED,
+                                      false,
                                       DateRange.lastFiveMinutes(),
                                       DateRange.lastFiveteenMinutes(),
                                       DateRange.lastTwoHours(),
@@ -166,6 +167,7 @@ public class ProcessController extends BizController {
         ph.addTermAggregation(ProcessLog.STATE, ProcessLogState.class);
         ph.addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
         ph.addTimeAggregation(ProcessLog.TIMESTAMP,
+                              false,
                               DateRange.lastFiveMinutes(),
                               DateRange.lastFiveteenMinutes(),
                               DateRange.lastTwoHours());

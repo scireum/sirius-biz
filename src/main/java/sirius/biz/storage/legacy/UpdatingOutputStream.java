@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage;
+package sirius.biz.storage.legacy;
 
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
@@ -20,6 +20,7 @@ import java.io.OutputStream;
 /**
  * Buffers all contents on disk and uploads them in the storage once the stream is closed.
  */
+@Deprecated
 class UpdatingOutputStream extends OutputStream {
 
     public static final byte[] EMPTY_BUFFER = new byte[0];

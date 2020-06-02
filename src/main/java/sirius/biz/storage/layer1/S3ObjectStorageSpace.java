@@ -9,7 +9,6 @@
 package sirius.biz.storage.layer1;
 
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
-import com.google.common.io.ByteStreams;
 import sirius.biz.storage.layer1.transformer.ByteBlockTransformer;
 import sirius.biz.storage.layer1.transformer.TransformingInputStream;
 import sirius.biz.storage.s3.BucketName;
@@ -17,6 +16,7 @@ import sirius.biz.storage.s3.ObjectStore;
 import sirius.biz.storage.s3.ObjectStores;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Streams;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
@@ -146,7 +146,7 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
             dest = File.createTempFile("AMZS3", null);
             try (FileOutputStream out = new FileOutputStream(dest);
                  InputStream in = getAsStream(objectKey, transformer)) {
-                ByteStreams.copy(in, out);
+                Streams.transfer(in, out);
             }
             return FileHandle.temporaryFileHandle(dest);
         } catch (Exception e) {

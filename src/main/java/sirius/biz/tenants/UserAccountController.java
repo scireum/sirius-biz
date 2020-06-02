@@ -516,7 +516,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     @Routed("/user-accounts/autocomplete")
     public void usersAutocomplete(final WebContext webContext) {
         AutocompleteHelper.handle(webContext, (query, result) -> {
-            Page<U> accounts = getSelectableUsersAsPage().withContext(webContext).asPage();
+            Page<U> accounts = getUsersAsPage().withContext(webContext).asPage();
             accounts.getItems().forEach(userAccount -> {
                 result.accept(new AutocompleteHelper.Completion(userAccount.getUniqueName(),
                                                                 userAccount.toString(),

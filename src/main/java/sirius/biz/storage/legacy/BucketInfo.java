@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage;
+package sirius.biz.storage.legacy;
 
 import sirius.biz.tenants.Tenant;
 import sirius.db.jdbc.OMA;
@@ -21,6 +21,7 @@ import sirius.web.security.UserContext;
  * <p>
  * Most of this is taken from <tt>storage.buckets.[bucketName]</tt> from the system config.
  */
+@Deprecated
 public class BucketInfo {
 
     private String name;

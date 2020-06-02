@@ -1,0 +1,64 @@
+<i:arg type="sirius.db.mixing.EntityDescriptor" name="type"/>
+<i:arg type="String" name="query"/>
+<i:arg type="int" name="limit"/>
+<i:arg type="List" name="entities"/>
+<i:arg type="List" name="properties"/>
+
+<w:page title="Query Tool">
+    <i:block name="breadcrumbs">
+        <li><a href="/system/query">Query Tool</a></li>
+    </i:block>
+
+    <w:pageHeader title="Query Tool"/>
+
+    <i:invoke template="/templates/biz/model/query-header.html.pasta" query="@query" limit="@limit" type="type"/>
+
+    <i:for type="sirius.db.mixing.BaseEntity" var="entity" items="entities">
+        <div class="well">
+            <table class="table table-bordered table-striped">
+                <tr>
+                    <td colspan="2" class="align-center"><b>@type.getType().getSimpleName(): @entity.getIdAsString()</b></td>
+                </tr>
+                <i:for type="sirius.db.mixing.Property" var="property" items="properties">
+                    <tr>
+                        <td clas="col-md-3">@property.getName()</td>
+                        <td clas="col-md-9">
+                            <i:if test="property.is(sirius.db.mixing.properties.LocalDateTimeProperty.class)
+                                 || property.is(sirius.db.mixing.properties.LocalDateProperty.class)
+                                 || property.is(sirius.db.mixing.properties.IntegerProperty.class)
+                                 || property.is(sirius.db.mixing.properties.LongProperty.class)
+                                 || property.is(sirius.db.mixing.properties.BooleanProperty.class)">
+                                <div class="align-right">@toUserString(property.getValue(entity))</div>
+                                <i:else>
+                                    <i:if test="property.is(sirius.db.mixing.properties.BaseEntityRefProperty.class)">
+                                        <i:local name="reference"
+                                                 value="property.as(sirius.db.mixing.properties.BaseEntityRefProperty.class)"/>
+                                        <a href="/system/query?class=@reference.getReferencedDescriptor().getName()&query=id:@reference.getValue(entity)"
+                                           target="_blank">
+                                            <b>@reference.getValue(entity)</b>
+                                        </a>
+                                        <i:else>
+                                            @toUserString(property.getValue(entity))
+                                        </i:else>
+                                    </i:if>
+                                </i:else>
+                            </i:if>
+                        </td>
+                    </tr>
+                </i:for>
+            </table>
+        </div>
+    </i:for>
+
+</w:page>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#editForm').keydown(function (e) {
+            if (e.keyCode === sirius.keys.KEY_ENTER) {
+                $('#editForm').submit();
+                return false;
+            }
+        });
+    });
+</script>

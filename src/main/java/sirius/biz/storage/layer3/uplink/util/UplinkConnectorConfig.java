@@ -8,9 +8,11 @@
 
 package sirius.biz.storage.layer3.uplink.util;
 
-import com.google.common.base.Objects;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.settings.Extension;
+
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Provides a configuration which tells the {@link UplinkConnectorPool} how to create and maintain a
@@ -22,10 +24,10 @@ public abstract class UplinkConnectorConfig<C> {
 
     private static final int DEFAULT_MAX_IDLE = 1;
     private static final int DEFAULT_MAX_ACTIVE = 5;
-    private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 10_000;
-    private static final int DEFAULT_READ_TIMEOUT_MILLIS = 10_000;
-    private static final int DEFAULT_IDLE_TIMEOUT_MILLIS = 60_000;
-    private static final int DEFAULT_MAX_WAIT_MILLIS = 10_000;
+    private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = (int) TimeUnit.SECONDS.toMillis(10);
+    private static final int DEFAULT_READ_TIMEOUT_MILLIS = (int) TimeUnit.SECONDS.toMillis(10);
+    private static final int DEFAULT_IDLE_TIMEOUT_MILLIS = (int) TimeUnit.MINUTES.toMillis(10);
+    private static final int DEFAULT_MAX_WAIT_MILLIS = (int) TimeUnit.SECONDS.toMillis(10);
 
     protected String label;
     protected String host;
@@ -91,7 +93,7 @@ public abstract class UplinkConnectorConfig<C> {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(host, port, user, password);
+        return Objects.hash(host, port, user, password);
     }
 
     @Override
@@ -110,10 +112,10 @@ public abstract class UplinkConnectorConfig<C> {
 
         UplinkConnectorConfig<?> other = (UplinkConnectorConfig<?>) obj;
 
-        return Objects.equal(host, other.host)
-               && Objects.equal(port, other.port)
-               && Objects.equal(user, other.user)
-               && Objects.equal(password, other.password);
+        return Objects.equals(host, other.host)
+               && Objects.equals(port, other.port)
+               && Objects.equals(user, other.user)
+               && Objects.equals(password, other.password);
     }
 
     @Override

@@ -8,10 +8,10 @@
 
 package sirius.biz.jobs.batch;
 
-import com.google.common.io.ByteStreams;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.VirtualFile;
+import sirius.kernel.commons.Streams;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -49,7 +49,7 @@ public abstract class BatchJob implements Closeable {
      */
     protected void attachFile(VirtualFile file) {
         try (InputStream in = file.createInputStream(); OutputStream out = process.addFile(file.name())) {
-            ByteStreams.copy(in, out);
+            Streams.transfer(in, out);
         } catch (IOException e) {
             process.handle(e);
         }
@@ -65,7 +65,7 @@ public abstract class BatchJob implements Closeable {
      */
     protected void attachFile(String filename, FileHandle file) {
         try (InputStream in = file.getInputStream(); OutputStream out = process.addFile(filename)) {
-            ByteStreams.copy(in, out);
+            Streams.transfer(in, out);
         } catch (IOException e) {
             process.handle(e);
         }

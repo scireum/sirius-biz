@@ -21,6 +21,7 @@ import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.web.controller.Message;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -48,6 +49,7 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
     private final JournalData journal = new JournalData(this);
 
     @Part
+    @Nullable
     private static MongoTenants tenants;
 
     @BeforeSave

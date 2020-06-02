@@ -39,16 +39,16 @@ import java.util.function.Consumer;
  */
 public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImportJob {
 
-    protected final EntityDescriptor descriptor;
-    protected Consumer<Context> contextExtender;
-    protected Class<E> type;
-    protected ImportMode mode;
-
     @Part
     private static Mixing mixing;
 
     @Part
     private static Tenants<?, ?, ?> rawTenants;
+
+    protected final EntityDescriptor descriptor;
+    protected Consumer<Context> contextExtender;
+    protected Class<E> type;
+    protected ImportMode mode;
 
     /**
      * Creates a new job for the given factory, name and process.
@@ -175,17 +175,17 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
      * Creates or updates the given entity.
      * <p>
      * This can be overwritten to use a custom way of persisting data. Also this can be used to perfrom
-     * post-save activities. Note however, in the default implementation a batch update is used.
+     * post-save activities.
      * <p>
-     * Therefore a post-save handler would either need to be a
-     * {@link sirius.biz.importer.ImporterContext#addPostCommitCallback(Runnable)} or
-     * {@link sirius.biz.importer.Importer#createOrUpdateNow(BaseEntity)} needs to be used to persist data.
+     * By default we instantly create or update the entity. Note that if this is set to batch updates,
+     * a post-save handler would need to be a
+     * {@link sirius.biz.importer.ImporterContext#addPostCommitCallback(Runnable)}.
      *
      * @param entity  the entity to persist
      * @param context the row represented as context
-     * @see sirius.biz.importer.Importer#createNowOrUpdateInBatch(BaseEntity)
+     * @see sirius.biz.importer.Importer#createOrUpdateNow(BaseEntity)
      */
     protected void createOrUpdate(E entity, Context context) {
-        importer.createNowOrUpdateInBatch(entity);
+        importer.createOrUpdateNow(entity);
     }
 }

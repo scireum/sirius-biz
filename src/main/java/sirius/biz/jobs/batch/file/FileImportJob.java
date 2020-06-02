@@ -12,14 +12,12 @@ import org.apache.commons.io.input.CloseShieldInputStream;
 import sirius.biz.jobs.batch.ImportJob;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
-import sirius.biz.storage.Storage;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nullable;
@@ -33,9 +31,6 @@ import java.util.zip.ZipInputStream;
 public abstract class FileImportJob extends ImportJob {
 
     private static final String FILE_EXTENSION_ZIP = "zip";
-
-    @Part
-    private static Storage storage;
 
     private FileParameter fileParameter;
 

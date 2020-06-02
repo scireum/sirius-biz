@@ -25,6 +25,7 @@ import sirius.biz.storage.layer3.VFSRoot;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.tenants.Tenants;
+import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
@@ -58,6 +59,7 @@ public class JobsRoot extends SingularVFSRoot {
     public static final String PATH_JOBS = "jobs";
 
     @Part
+    @Nullable
     private JobPresets presets;
 
     @Part
@@ -94,7 +96,8 @@ public class JobsRoot extends SingularVFSRoot {
 
     @Override
     protected void populateRoot(MutableVirtualFile rootDirectory) {
-        rootDirectory.withChildren(new EnumerateOnlyProvider(this::listFileJobs));
+        rootDirectory.withCanCreateChildren(MutableVirtualFile.CONSTANT_FALSE)
+                     .withChildren(new EnumerateOnlyProvider(this::listFileJobs));
     }
 
     private void listFileJobs(VirtualFile jobsDirectory, FileSearch fileSearch) {
@@ -102,8 +105,10 @@ public class JobsRoot extends SingularVFSRoot {
             .filter(JobFactory::canStartInBackground)
             .filter(this::isFileJob)
             .forEach(fileJobFactory -> {
-                MutableVirtualFile jobDirectory = MutableVirtualFile.checkedCreate(jobsDirectory, fileJobFactory.getName());
+                MutableVirtualFile jobDirectory =
+                        MutableVirtualFile.checkedCreate(jobsDirectory, fileJobFactory.getName());
                 jobDirectory.markAsExistingDirectory();
+                jobDirectory.withCanCreateChildren(MutableVirtualFile.CONSTANT_FALSE);
                 jobDirectory.withChildren(new EnumerateOnlyProvider(this::listPresets));
                 jobDirectory.attach(JobFactory.class, fileJobFactory);
                 jobDirectory.withDescription(fileJobFactory.getDescription());

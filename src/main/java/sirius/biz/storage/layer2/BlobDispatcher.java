@@ -16,8 +16,10 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Values;
+import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
 import sirius.web.http.Response;
 import sirius.web.http.WebContext;
 import sirius.web.http.WebDispatcher;
@@ -120,6 +122,10 @@ public class BlobDispatcher implements WebDispatcher {
      */
     private static final String VIRTUAL_CACHABLE_DOWNLOAD = FLAG_CACHABLE + FLAG_VIRTUAL + FLAG_DOWNLOAD;
 
+
+    private static final String PARAM_HOOK = "hook";
+    private static final String PARAM_PAYLOAD = "payload";
+
     @Part
     private BlobStorage blobStorage;
 
@@ -129,17 +135,22 @@ public class BlobDispatcher implements WebDispatcher {
     @Part
     private StorageUtils utils;
 
+    @Part
+    private GlobalContext globalContext;
+
     @Override
     public int getPriority() {
         return 10;
     }
 
     @Override
-    public boolean dispatch(WebContext request) throws Exception {
+    public DispatchDecision dispatch(WebContext request) throws Exception {
         String uri = request.getRequestedURI();
         if (!uri.startsWith(URI_PREFIX)) {
-            return false;
+            return DispatchDecision.CONTINUE;
         }
+
+        installCompletionHook(uri, request);
 
         uri = uri.substring(URI_PREFIX_LENGTH);
 
@@ -152,7 +163,7 @@ public class BlobDispatcher implements WebDispatcher {
                              uriParts.at(2).asString(),
                              Files.getFilenameWithoutExtension(filename),
                              filename);
-            return true;
+            return DispatchDecision.DONE;
         }
 
         if (Strings.areEqual(type, PHYSICAL_DOWNLOAD)) {
@@ -161,7 +172,7 @@ public class BlobDispatcher implements WebDispatcher {
                              uriParts.at(2).asString(),
                              uriParts.at(3).asString(),
                              stripAdditionalText(uriParts.at(4).asString()));
-            return true;
+            return DispatchDecision.DONE;
         }
 
         if (Strings.areEqual(type, VIRTUAL_DELIVERY)) {
@@ -174,7 +185,7 @@ public class BlobDispatcher implements WebDispatcher {
                             filename,
                             false,
                             false);
-            return true;
+            return DispatchDecision.DONE;
         }
 
         if (Strings.areEqual(type, VIRTUAL_DOWNLOAD)) {
@@ -186,7 +197,7 @@ public class BlobDispatcher implements WebDispatcher {
                             stripAdditionalText(uriParts.at(5).asString()),
                             true,
                             false);
-            return true;
+            return DispatchDecision.DONE;
         }
 
         if (Strings.areEqual(type, VIRTUAL_CACHABLE_DELIVERY)) {
@@ -199,7 +210,7 @@ public class BlobDispatcher implements WebDispatcher {
                             filename,
                             false,
                             true);
-            return true;
+            return DispatchDecision.DONE;
         }
 
         if (Strings.areEqual(type, VIRTUAL_CACHABLE_DOWNLOAD)) {
@@ -211,10 +222,42 @@ public class BlobDispatcher implements WebDispatcher {
                             stripAdditionalText(uriParts.at(5).asString()),
                             true,
                             true);
-            return true;
+            return DispatchDecision.DONE;
         }
 
-        return false;
+        return DispatchDecision.CONTINUE;
+    }
+
+    private void installCompletionHook(String uri, WebContext request) {
+        String hook = request.get(PARAM_HOOK).asString();
+        if (Strings.isEmpty(hook)) {
+            return;
+        }
+
+        String payload = request.get(PARAM_PAYLOAD).asString();
+        request.getCompletionPromise().onSuccess(code -> {
+            if (code == HttpResponseStatus.OK.code()) {
+                executeHook(uri, hook, payload);
+            }
+        });
+    }
+
+    private void executeHook(String uri, String hook, String payload) {
+        try {
+            BlobDispatcherHook dispatcherHook = globalContext.getPart(hook, BlobDispatcherHook.class);
+            if (dispatcherHook != null) {
+                dispatcherHook.hook(payload);
+            }
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .withSystemErrorMessage(
+                              "An error occured when executing hook '%s' with payload '%s' for URI: '%s'",
+                              hook,
+                              payload,
+                              uri)
+                      .handle();
+        }
     }
 
     /**

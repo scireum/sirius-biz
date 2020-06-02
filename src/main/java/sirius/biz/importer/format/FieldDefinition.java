@@ -8,7 +8,6 @@
 
 package sirius.biz.importer.format;
 
-import com.google.common.collect.ImmutableList;
 import sirius.kernel.commons.Lambdas;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
@@ -30,14 +29,14 @@ import java.util.stream.Collectors;
  */
 public class FieldDefinition {
 
-    private static final ValueInListCheck BOOLEAN_VALUES_CHECK =
-            new ValueInListCheck(ImmutableList.of("true", "false"));
+    private static final ValueInListCheck BOOLEAN_VALUES_CHECK = new ValueInListCheck("true", "false");
 
     protected String name;
     protected String type;
     protected Supplier<String> label;
     protected Set<String> aliases = new HashSet<>();
     protected List<ValueCheck> checks = new ArrayList<>();
+    protected boolean appendContextInErrorMessage;
 
     /**
      * Creates a new field with the given name and type.
@@ -265,6 +264,25 @@ public class FieldDefinition {
     }
 
     /**
+     * Marks the current field definition to be included in error messages with name and value for row identification purposes.
+     *
+     * @return the field itself for fluent method calls
+     */
+    public FieldDefinition appendContextInErrorMessage() {
+        this.appendContextInErrorMessage = true;
+        return this;
+    }
+
+    /**
+     * Returns the info if this field's name and value should be included in error messages.
+     *
+     * @return true if this field's name and value should be included in error messages, false otherwise
+     */
+    public boolean shouldAppendContextInErrorMessage() {
+        return appendContextInErrorMessage;
+    }
+
+    /**
      * Adds an alias for the field.
      * <p>
      * Aliases are used by {@link ImportDictionary#determineMappingFromHeadings(Values, boolean)} to "learn" which
@@ -274,7 +292,7 @@ public class FieldDefinition {
      * @return the field itself for fluent method calls
      */
     public FieldDefinition addAlias(String alias) {
-        aliases.add(ImportDictionary.normalize(NLS.smartGet(alias)));
+        aliases.add(NLS.smartGet(alias));
 
         return this;
     }

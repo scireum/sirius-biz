@@ -72,8 +72,25 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
     public E createOrUpdateNow(E entity) {
         enforcePreSaveConstraints(entity);
 
-        mango.update(entity);
+        // Invoke the beforeSave checks so that the change-detection below works for
+        // computed properties...
+        descriptor.beforeSave(entity);
+
+        if (isChanged(entity)) {
+            mango.update(entity);
+        }
+
         return entity;
+    }
+
+    /**
+     * Checks whether any property of the entity has changed.
+     *
+     * @param entity the entity to check
+     * @return <tt>true</tt> if any property checked is changed, <tt>false</tt> otherwise
+     */
+    protected boolean isChanged(E entity) {
+        return entity.isChanged(mappingsToLoad);
     }
 
     @Override

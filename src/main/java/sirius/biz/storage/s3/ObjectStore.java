@@ -522,8 +522,9 @@ public class ObjectStore {
         metadata.setContentLength(contentLength);
         try {
             ensureBucketExists(bucket);
-            return transferManager.upload(new PutObjectRequest(bucket.getName(), objectId, inputStream, metadata),
-                                          new MonitoringProgressListener(true));
+            PutObjectRequest putObjectRequest = new PutObjectRequest(bucket.getName(), objectId, inputStream, metadata);
+            putObjectRequest.getRequestClientOptions().setReadLimit(MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE);
+            return transferManager.upload(putObjectRequest, new MonitoringProgressListener(true));
         } catch (Exception e) {
             throw Exceptions.handle()
                             .to(ObjectStores.LOG)
@@ -562,7 +563,11 @@ public class ObjectStore {
                        long contentLength,
                        @Nullable ObjectMetadata metadata) {
         try {
-            uploadAsync(bucket, objectId, inputStream, contentLength, metadata).waitForUploadResult();
+            if (contentLength >= MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE) {
+                upload(bucket, objectId, inputStream);
+            } else {
+                uploadAsync(bucket, objectId, inputStream, contentLength, metadata).waitForUploadResult();
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw Exceptions.handle()
@@ -617,6 +622,7 @@ public class ObjectStore {
                                             InputStream inputStream,
                                             String multipartUploadId) throws IOException {
         List<PartETag> etags = new ArrayList<>();
+        int partNumber = 1;
 
         ByteBuf localAggregationBuffer = Unpooled.buffer(INITIAL_LOCAL_AGGREGATION_BUFFER_SIZE);
         try {
@@ -625,7 +631,7 @@ public class ObjectStore {
             while (bytesRead > 0) {
                 localAggregationBuffer.writeBytes(transferBuffer, 0, bytesRead);
                 if (localAggregationBuffer.readableBytes() > MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE) {
-                    etags.add(uploadChunk(bucket, objectId, multipartUploadId, localAggregationBuffer));
+                    etags.add(uploadChunk(bucket, objectId, multipartUploadId, localAggregationBuffer, partNumber++));
                     localAggregationBuffer.clear();
                 }
 
@@ -633,7 +639,7 @@ public class ObjectStore {
             }
 
             if (localAggregationBuffer.isReadable()) {
-                etags.add(uploadChunk(bucket, objectId, multipartUploadId, localAggregationBuffer));
+                etags.add(uploadChunk(bucket, objectId, multipartUploadId, localAggregationBuffer, partNumber++));
             }
         } finally {
             localAggregationBuffer.release();
@@ -645,10 +651,12 @@ public class ObjectStore {
     protected PartETag uploadChunk(BucketName bucket,
                                    String objectId,
                                    String multipartUploadId,
-                                   ByteBuf localAggregationBuffer) {
+                                   ByteBuf localAggregationBuffer,
+                                   int partNumber) {
         UploadPartRequest request = new UploadPartRequest().withBucketName(bucket.getName())
                                                            .withKey(objectId)
                                                            .withUploadId(multipartUploadId)
+                                                           .withPartNumber(partNumber)
                                                            .withPartSize(localAggregationBuffer.readableBytes())
                                                            .withInputStream(new ByteBufInputStream(
                                                                    localAggregationBuffer));

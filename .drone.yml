@@ -39,7 +39,7 @@ steps:
   - name: test
     image: scireum/sirius-build
     commands:
-      - mvn clean test
+      - mvn -U clean test
     volumes: *scireum_volumes
     when:
       event:

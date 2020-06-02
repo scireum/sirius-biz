@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage;
+package sirius.biz.storage.legacy;
 
 import sirius.biz.storage.layer2.jdbc.SQLBlobStorage;
 import sirius.biz.tenants.jdbc.SQLTenantAware;
@@ -38,6 +38,7 @@ import java.time.LocalDateTime;
 @Index(name = "cleanup_lookup", columns = {"bucket", "trace_changedAt"})
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 @ComplexDelete(false)
+@Deprecated
 public class VirtualObject extends SQLTenantAware implements StoredObject {
 
     /**

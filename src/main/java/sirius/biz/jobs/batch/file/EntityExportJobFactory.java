@@ -37,9 +37,21 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
     protected final FileParameter templateFileParameter;
 
     protected EntityExportJobFactory() {
-        templateFileParameter = new FileParameter("templateFile", "$EntityExportJobFactory.templateFile");
-        templateFileParameter.withDescription("$EntityExportJobFactory.templateFile.help");
-        templateFileParameter.withBasePath("/work");
+        this.templateFileParameter = createTemplateFileParameter();
+    }
+
+    /**
+     * Creates the parameter which determines the template file which determines the desired export format (if present).
+     * <p>
+     * This is provided as a helper method so that other / similar jobs can re-use it.
+     * We do not re-use the same parameter, as a parameter isn't immutable, so a global constant could
+     * be easily set into an inconsistent state.
+     *
+     * @return the completely initialized parameter.
+     */
+    public static FileParameter createTemplateFileParameter() {
+        return new FileParameter("templateFile", "$EntityExportJobFactory.templateFile").withDescription(
+                "$EntityExportJobFactory.templateFile.help").withBasePath("/work");
     }
 
     @Override

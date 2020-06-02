@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage;
+package sirius.biz.storage.legacy;
 
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.SQLEntity;
@@ -33,6 +33,7 @@ import java.util.function.Consumer;
 /**
  * Handles fields of the type {@link StoredObjectRef} within an {@link SQLEntity}.
  */
+@Deprecated
 public class StoredObjectRefProperty extends Property implements SQLPropertyInfo {
 
     /**

@@ -1,7 +1,13 @@
-package sirius.biz.storage.versions;
+/*
+ * Made with all the love in the world
+ * by scireum in Remshalden, Germany
+ *
+ * Copyright by scireum GmbH
+ * http://www.scireum.de - info@scireum.de
+ */
 
-import sirius.biz.storage.Storage;
-import sirius.biz.storage.StoredObject;
+package sirius.biz.storage.legacy;
+
 import sirius.biz.storage.layer2.jdbc.SQLBlobStorage;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.jdbc.SQLTenant;
@@ -27,6 +33,7 @@ import java.util.stream.Collectors;
 /**
  * Small helper class to access and create {@link VersionedFile versioned files}.
  */
+@Deprecated
 @Register(classes = VersionedFiles.class, framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class VersionedFiles {
 

@@ -9,6 +9,6 @@
                 optional="@!param.isRequired()"
                 required="@param.isRequired()">
     <i:for var="entry" type="Tuple" items="@param.getValues()">
-        <option value="@entry.getFirst()" @selected="entry.getSecond() == param.get(context).orElse(null)">@entry.getSecond()</option>
+        <option value="@entry.getFirst()" @selected="entry.getFirst() == context.get(param.getName())">@entry.getSecond()</option>
     </i:for>
 </w:singleSelect>

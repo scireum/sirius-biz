@@ -8,12 +8,13 @@
 
 package sirius.biz.storage.s3
 
-import com.google.common.base.Charsets
-import com.google.common.io.ByteStreams
-import com.google.common.io.Files
 import sirius.kernel.BaseSpecification
+import sirius.kernel.commons.Files
+import sirius.kernel.commons.Streams
 import sirius.kernel.commons.Tuple
 import sirius.kernel.di.std.Part
+
+import java.nio.charset.StandardCharsets
 
 class ObjectStoresSpec extends BaseSpecification {
 
@@ -24,40 +25,49 @@ class ObjectStoresSpec extends BaseSpecification {
         File download
         when:
         File file = File.createTempFile("test", "")
+        FileOutputStream fout = new FileOutputStream(file)
         for (int i = 0; i < 10024; i++) {
-            Files.append("This is a test.", file, Charsets.UTF_8)
+            fout.write("This is a test.".getBytes(StandardCharsets.UTF_8))
         }
+        fout.close()
         and:
         stores.store().upload(stores.store().getBucketName("test"), "test", file, null)
         and:
         download = stores.store().download(stores.store().getBucketName("test"), "test")
+        and:
+        def expectedContents = com.google.common.io.Files.toString(file, StandardCharsets.UTF_8)
+        def downloadedContents = com.google.common.io.Files.toString(download, StandardCharsets.UTF_8)
         then:
-        Files.toString(file, Charsets.UTF_8) == Files.toString(download, Charsets.UTF_8)
+        expectedContents == downloadedContents
         cleanup:
-        sirius.kernel.commons.Files.delete(file)
-        sirius.kernel.commons.Files.delete((File) download)
+        Files.delete(file)
+        Files.delete(download)
     }
 
     def "PUT and GET works"() {
         File download
         when:
         File file = File.createTempFile("test", "")
+        FileOutputStream fout = new FileOutputStream(file)
         for (int i = 0; i < 10024; i++) {
-            Files.append("This is a test.", file, Charsets.UTF_8)
+            fout.write("This is a test.".getBytes(StandardCharsets.UTF_8))
         }
+        fout.close()
         and:
         stores.store().upload(stores.store().getBucketName("test"), "test", file, null)
         and:
         download = stores.store().download(stores.store().getBucketName("test"), "test")
         and:
         URLConnection c = new URL(stores.store().
-                                          objectUrl(stores.store().getBucketName("test"), "test")).openConnection()
+                objectUrl(stores.store().getBucketName("test"), "test")).openConnection()
         and:
-        String downloadedData = new String(ByteStreams.toByteArray(c.getInputStream()), Charsets.UTF_8)
+        def expectedContents = com.google.common.io.Files.toString(file, StandardCharsets.UTF_8)
+        def downloadedContents = com.google.common.io.Files.toString(download, StandardCharsets.UTF_8)
+        def downloadedData = new String(Streams.toByteArray(c.getInputStream()), StandardCharsets.UTF_8)
         then:
-        Files.toString(file, Charsets.UTF_8) == Files.toString(download, Charsets.UTF_8)
+        expectedContents == downloadedData
         and:
-        downloadedData == Files.toString(file, Charsets.UTF_8)
+        expectedContents == downloadedContents
         cleanup:
         sirius.kernel.commons.Files.delete(file)
         sirius.kernel.commons.Files.delete((File) download)

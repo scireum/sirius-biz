@@ -58,9 +58,4 @@ public class SQLTenantImportHandler extends SQLEntityImportHandler<SQLTenant> {
                                           .findQuery(SQLTenant.class,
                                                      SQLTenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)));
     }
-
-    @Override
-    protected boolean parseComplexProperty(SQLTenant entity, Property property, Value value, Context data) {
-        return false;
-    }
 }

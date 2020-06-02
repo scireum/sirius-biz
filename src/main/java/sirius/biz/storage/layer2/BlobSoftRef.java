@@ -56,9 +56,9 @@ public class BlobSoftRef extends BlobHardRef {
     }
 
     /**
-     * Determines if an URL was stored instead of an object key.
+     * Determines if a URL was stored instead of an object key.
      *
-     * @return <tt>true</tt> if an URL was stored, <tt>false</tt> if an object key or nothing yet is stored
+     * @return <tt>true</tt> if a URL was stored, <tt>false</tt> if an object key or nothing yet is stored
      */
     public boolean isURL() {
         return supportsURL && Strings.isFilled(key) && URL_PATTERN.matcher(key).find();

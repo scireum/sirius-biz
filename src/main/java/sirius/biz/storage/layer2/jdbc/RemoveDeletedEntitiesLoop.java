@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Finally deletes {@link SQLDirectory directories} and {@link SQLBlob blobs} which have been marked as deleted.
  */
-@Register(classes = BackgroundLoop.class, framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
+@Register(framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class RemoveDeletedEntitiesLoop extends BackgroundLoop {
 
     private static final double FREQUENCY_EVERY_FIVE_MINUTES = 1 / 320d;
@@ -60,6 +60,10 @@ public class RemoveDeletedEntitiesLoop extends BackgroundLoop {
         AtomicInteger numBlobs = new AtomicInteger();
         oma.select(SQLBlob.class).eq(SQLBlob.DELETED, true).limit(256).iterateAll(blob -> {
             try {
+                if (Strings.isFilled(blob.getPhysicalObjectKey())) {
+                    blob.getStorageSpace().getPhysicalSpace().delete(blob.getPhysicalObjectKey());
+                }
+
                 oma.delete(blob);
                 numBlobs.incrementAndGet();
             } catch (Exception e) {

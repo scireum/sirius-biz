@@ -8,12 +8,12 @@
 
 package sirius.biz.storage.layer1
 
-import com.google.common.base.Charsets
-import com.google.common.io.ByteStreams
 import sirius.kernel.BaseSpecification
+import sirius.kernel.commons.Streams
 import sirius.kernel.di.std.Part
 import spock.lang.Ignore
 
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 
 class ObjectStorageSpec extends BaseSpecification {
@@ -33,7 +33,7 @@ class ObjectStorageSpec extends BaseSpecification {
         given:
         def testData = generateRandomData(length)
         def objectName = "test-data-" + length
-        def objectSpace =  storage.getSpace(space)
+        def objectSpace = storage.getSpace(space)
         when:
         objectSpace.upload(objectName, new ByteArrayInputStream(testData), testData.length)
         and:
@@ -43,7 +43,7 @@ class ObjectStorageSpec extends BaseSpecification {
         and:
         Files.readAllBytes(downloaded.get().getFile().toPath()) == testData
         and:
-        ByteStreams.toByteArray(objectSpace.getInputStream(objectName).get()) == testData
+        Streams.toByteArray(objectSpace.getInputStream(objectName).get()) == testData
         where:
         length | space
         128    | "fs-test"
@@ -90,8 +90,8 @@ class ObjectStorageSpec extends BaseSpecification {
 
     def "deleting data works as expected"(String space) {
         given:
-        def testData = "test".getBytes(Charsets.UTF_8)
-        def objectSpace =  storage.getSpace(space)
+        def testData = "test".getBytes(StandardCharsets.UTF_8)
+        def objectSpace = storage.getSpace(space)
         when:
         objectSpace.upload("delete-test", new ByteArrayInputStream(testData), testData.length)
         and:
@@ -105,7 +105,7 @@ class ObjectStorageSpec extends BaseSpecification {
         and:
         !downloadedAfterDelete.isPresent()
         where:
-        space | _
+        space     | _
         "fs-test" | _
         "s3-test" | _
     }

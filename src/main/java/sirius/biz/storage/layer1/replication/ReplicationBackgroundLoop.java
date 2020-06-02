@@ -10,6 +10,7 @@ package sirius.biz.storage.layer1.replication;
 
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.BackgroundLoop;
 import sirius.kernel.di.std.Part;
@@ -23,7 +24,7 @@ import javax.annotation.Nullable;
  *
  * @see ReplicationTaskStorage
  */
-@Register(classes = BackgroundLoop.class, framework = StorageUtils.FRAMEWORK_STORAGE)
+@Register(framework = StorageUtils.FRAMEWORK_STORAGE)
 public class ReplicationBackgroundLoop extends BackgroundLoop {
 
     private static final double EVERY_TWO_SECONDS = 1d / 2;
@@ -33,6 +34,7 @@ public class ReplicationBackgroundLoop extends BackgroundLoop {
     private DistributedTasks distributedTasks;
 
     @Part
+    @Nullable
     private ReplicationTaskStorage taskStorage;
 
     @Nonnull

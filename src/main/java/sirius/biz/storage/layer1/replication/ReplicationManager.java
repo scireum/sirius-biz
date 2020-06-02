@@ -11,10 +11,12 @@ package sirius.biz.storage.layer1.replication;
 import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
+import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +43,7 @@ public class ReplicationManager {
     private ObjectStorage objectStorage;
 
     @Part
+    @Nullable
     private ReplicationTaskStorage taskStorage;
 
     /**

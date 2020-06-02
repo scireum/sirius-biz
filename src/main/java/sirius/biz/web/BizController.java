@@ -8,7 +8,6 @@
 
 package sirius.biz.web;
 
-import com.google.common.hash.Hashing;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.Processes;
@@ -26,6 +25,7 @@ import sirius.db.mixing.properties.BooleanProperty;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Values;
@@ -44,7 +44,6 @@ import sirius.web.util.LinkBuilder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -88,6 +87,7 @@ public class BizController extends BasicController {
     protected Tenants<?, ?, ?> tenants;
 
     @ConfigValue("product.baseUrl")
+    @Nullable
     private static String baseUrl;
     private static boolean baseUrlChecked;
 
@@ -563,7 +563,7 @@ public class BizController extends BasicController {
         }
 
         long unixTimeInDays = TimeUnit.DAYS.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS);
-        return Hashing.md5().hashString(uri + secret + unixTimeInDays, StandardCharsets.UTF_8).toString();
+        return Hasher.md5().hash(uri + secret + unixTimeInDays).toHexString();
     }
 
     /**

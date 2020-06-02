@@ -6,19 +6,21 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage;
+package sirius.biz.storage.legacy;
 
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
 
 /**
  * Represents a <b>builder</b> for download URLs for {@link StoredObject stored objects}.
  */
+@Deprecated
 public class DownloadBuilder {
 
     private final Storage storage;
@@ -32,6 +34,8 @@ public class DownloadBuilder {
     private String physicalKey;
     private boolean eternallyValid;
     private String addonText;
+    private String hook;
+    private String payload;
 
     @Part
     private static VersionManager versionManager;
@@ -142,6 +146,20 @@ public class DownloadBuilder {
      */
     public DownloadBuilder withAddonText(String text) {
         this.addonText = text;
+        return this;
+    }
+
+    /**
+     * Permits to add additional text to the URL which is ignored by the storage layer.
+     * <p>
+     * This might be used to add SEO texts for image URLs...
+     *
+     * @param text the text to include in the URL (will be escaped properly).
+     * @return the builder itself for fluent method calls
+     */
+    public DownloadBuilder withHook(String hook, @Nullable String payload) {
+        this.hook = hook;
+        this.payload = payload;
         return this;
     }
 

@@ -14,6 +14,7 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -44,6 +45,8 @@ public class URLBuilder {
     protected boolean reusable;
     protected boolean forceDownload;
     protected boolean suppressCache;
+    protected String hook;
+    protected String payload;
 
     @Part
     private static StorageUtils utils;
@@ -178,6 +181,21 @@ public class URLBuilder {
     }
 
     /**
+     * Permits to trigger a {@link BlobDispatcherHook} once the blob was completely delivered.
+     * <p>
+     * This can be used to emit events etc.
+     *
+     * @param hook    the name of the hook to trigger
+     * @param payload the paylog to send to the tirgger (e.g. a database id or the like)
+     * @return the builder itself for fluent method calls
+     */
+    public URLBuilder withHook(String hook, @Nullable String payload) {
+        this.hook = hook;
+        this.payload = payload;
+        return this;
+    }
+
+    /**
      * Builds the effective URL according to the parameters specified wrapped in an {@link Optional}.
      * <p>
      * {@link Optional#empty()} is returned when the file cannot be found in the storage engine.
@@ -234,6 +252,8 @@ public class URLBuilder {
             result.append(determineEffectiveFileExtension());
         }
 
+        appendHook(result);
+
         return result.toString();
     }
 
@@ -267,7 +287,28 @@ public class URLBuilder {
             result.append(determineEffectiveFileExtension());
         }
 
+        appendHook(result);
+
         return result.toString();
+    }
+
+    /**
+     * Appends the given hook name and payload if present.
+     * <p>
+     * This will be picked up by the BlobDispatcher and will trigger the matching
+     * BlobDispatcherHook...
+     *
+     * @param urlBuilder the builder to append the strings to
+     */
+    private void appendHook(StringBuilder urlBuilder) {
+        if (Strings.isFilled(hook)) {
+            urlBuilder.append("?hook=");
+            urlBuilder.append(Strings.urlEncode(hook));
+            if (Strings.isFilled(payload)) {
+                urlBuilder.append("&payload=");
+                urlBuilder.append(Strings.urlEncode(payload));
+            }
+        }
     }
 
     private StringBuilder createBaseURL() {

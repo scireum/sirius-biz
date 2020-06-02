@@ -11,6 +11,7 @@ package sirius.biz.jdbc;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.jdbc.Database;
 import sirius.db.jdbc.Databases;
+import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.Row;
 import sirius.db.jdbc.SQLQuery;
 import sirius.db.jdbc.schema.Schema;
@@ -31,6 +32,7 @@ import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
+import sirius.web.security.UserContext;
 import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
@@ -89,33 +91,43 @@ public class DatabaseController extends BasicController {
     public void executeQuery(WebContext ctx, JSONStructuredOutput out) throws SQLException {
         Watch w = Watch.start();
 
-        String database = ctx.get("db").asString(defaultDatabase);
-        Database db = determineDatabase(database);
-        String sqlStatement = ctx.get("query").asString();
-        SQLQuery qry = db.createQuery(sqlStatement);
+        try {
+            String database = ctx.get("db").asString(defaultDatabase);
+            Database db = determineDatabase(database);
+            String sqlStatement = ctx.get("query").asString();
+            SQLQuery qry = db.createQuery(sqlStatement);
 
-        if (isDDSStatement(sqlStatement)) {
-            // To prevent accidential damage, we try to filter DDS queries (modifying the database structure) and
-            // only permit them against our system database.
-            if (!Strings.areEqual(database, defaultDatabase)) {
-                throw Exceptions.createHandled()
-                                .withSystemErrorMessage(
-                                        "Cannot execute a DDS query against this database. This can be only done for '%s'",
-                                        database)
-                                .handle();
-            }
+            OMA.LOG.INFO("Executing SQL (via /system/sql, authored by %s): %s",
+                         UserContext.getCurrentUser().getUserName(),
+                         sqlStatement);
 
-            out.property("rowModified", qry.executeUpdate());
-        } else if (isModifyStatement(sqlStatement)) {
-            out.property("rowModified", qry.executeUpdate());
-        } else {
-            Monoflop monoflop = Monoflop.create();
-            qry.iterateAll(r -> outputRow(out, monoflop, r), new Limit(0, ctx.get("limit").asInt(DEFAULT_LIMIT)));
-            if (monoflop.successiveCall()) {
-                out.endArray();
+            if (isDDSStatement(sqlStatement)) {
+                // To prevent accidential damage, we try to filter DDL queries (modifying the database structure) and
+                // only permit them against our system database.
+                if (!Strings.areEqual(database, defaultDatabase)) {
+                    throw Exceptions.createHandled()
+                                    .withSystemErrorMessage(
+                                            "Cannot execute a DDS query against this database. This can be only done for '%s'",
+                                            database)
+                                    .handle();
+                }
+
+                out.property("rowModified", qry.executeUpdate());
+            } else if (isModifyStatement(sqlStatement)) {
+                out.property("rowModified", qry.executeUpdate());
+            } else {
+                Monoflop monoflop = Monoflop.create();
+                qry.iterateAll(r -> outputRow(out, monoflop, r), new Limit(0, ctx.get("limit").asInt(DEFAULT_LIMIT)));
+                if (monoflop.successiveCall()) {
+                    out.endArray();
+                }
             }
+            out.property("duration", w.duration());
+        } catch (SQLException exception) {
+            // In case of an invalid query, we do not want to log this into the syslog but
+            // rather just directly output the message to the user....
+            throw Exceptions.createHandled().error(exception).withSystemErrorMessage("%s").handle();
         }
-        out.property("duration", w.duration());
     }
 
     protected Database determineDatabase(String database) {

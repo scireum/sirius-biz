@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage;
+package sirius.biz.storage.legacy;
 
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Strings;
@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
  * If the owning entity is deleted, the referenced object is also deleted if it was uploaded specifically
  * for this reference. If it was a shared object from within a bucket, the referenced object remains untouched.
  */
+@Deprecated
 public class StoredObjectRef {
 
     private final String bucket;

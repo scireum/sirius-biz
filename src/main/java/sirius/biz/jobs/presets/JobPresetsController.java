@@ -8,7 +8,6 @@
 
 package sirius.biz.jobs.presets;
 
-import com.google.common.collect.ImmutableSet;
 import sirius.biz.jobs.JobConfigData;
 import sirius.biz.web.BizController;
 import sirius.biz.web.TenantAware;
@@ -16,6 +15,11 @@ import sirius.db.mixing.BaseEntity;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.services.JSONStructuredOutput;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Provides the database independent part for the controller which is responsible for managing job presets.
@@ -28,8 +32,11 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
     private static final String PARAM_PRESET = "preset";
     private static final String PARAM_PRESET_NAME = "presetName";
 
-    private static final ImmutableSet<String> IGNORED_PARAMETERS =
-            ImmutableSet.of(PARAM_JOB_FACTORY, PARAM_PRESET_NAME, "CSRFToken", "updateOnly");
+    private static final Set<String> IGNORED_PARAMETERS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            PARAM_JOB_FACTORY,
+            PARAM_PRESET_NAME,
+            "CSRFToken",
+            "updateOnly")));
 
     private static final String RESPONSE_PARAMS = "params";
     private static final String RESPONSE_PARAM = "param";

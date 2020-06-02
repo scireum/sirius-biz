@@ -6,7 +6,7 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-package sirius.biz.storage;
+package sirius.biz.storage.legacy;
 
 import sirius.biz.storage.layer2.jdbc.SQLBlobStorage;
 import sirius.db.jdbc.SQLEntity;
@@ -24,6 +24,7 @@ import java.time.LocalDate;
 /**
  * Represents a resized image version of a {@link VirtualObject}.
  */
+@Deprecated
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class VirtualObjectVersion extends SQLEntity {
 

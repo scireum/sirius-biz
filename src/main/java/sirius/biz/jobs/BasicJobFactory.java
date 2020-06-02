@@ -63,6 +63,7 @@ public abstract class BasicJobFactory implements JobFactory {
     private static final String PARAM_UPDATE_ONLY = "updateOnly";
 
     @Part
+    @Nullable
     private JobPresets presets;
 
     @Override

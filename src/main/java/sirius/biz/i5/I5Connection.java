@@ -8,7 +8,6 @@
 
 package sirius.biz.i5;
 
-import com.google.common.collect.Lists;
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400Message;
 import com.ibm.as400.access.DataQueue;
@@ -25,6 +24,7 @@ import javax.annotation.Nonnull;
 import java.io.Closeable;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -197,7 +197,7 @@ public class I5Connection implements Closeable {
      */
     @Nonnull
     public List<DataQueueEntry> readQueue(String queue, int timeoutSeconds) throws Exception {
-        List<DataQueueEntry> result = Lists.newArrayList();
+        List<DataQueueEntry> result = new ArrayList<>();
         DataQueue q = new DataQueue(i5, queue);
         DataQueueEntry entry = q.read(timeoutSeconds);
         while (entry != null) {
