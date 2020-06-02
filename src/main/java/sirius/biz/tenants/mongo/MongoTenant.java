@@ -15,13 +15,13 @@ import sirius.biz.tenants.TenantData;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.types.MongoRef;
+import sirius.db.text.Tokenizer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
@@ -56,11 +56,11 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
     @Part
     private static Tenants<?, ?, ?> tenants;
 
-    @BeforeSave
-    protected void enhanceSearchField() {
-        addContentAsTokens(getTenantData().getAddress().getStreet());
-        addContentAsTokens(getTenantData().getAddress().getZip());
-        addContentAsTokens(getTenantData().getAddress().getCity());
+    @Override
+    protected void addCustomSearchPrefixes(Tokenizer tokenizer) {
+        addContentAsTokens(tokenizer, getTenantData().getAddress().getStreet());
+        addContentAsTokens(tokenizer, getTenantData().getAddress().getZip());
+        addContentAsTokens(tokenizer, getTenantData().getAddress().getCity());
     }
 
     @Override
