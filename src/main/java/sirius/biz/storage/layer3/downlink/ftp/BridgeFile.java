@@ -186,6 +186,7 @@ class BridgeFile implements FtpFile {
         if (doesExist()) {
             return file.createOutputStream();
         }
+        StorageUtils.LOG.FINE("Uploading file '%s'", childName);
 
         return parent.resolve(childName).createOutputStream();
     }
@@ -195,6 +196,7 @@ class BridgeFile implements FtpFile {
         if (doesExist()) {
             return file.createInputStream();
         }
+        StorageUtils.LOG.FINE("Reading file '%s'", childName);
 
         return new ByteArrayInputStream(EMPTY_BUFFER);
     }
