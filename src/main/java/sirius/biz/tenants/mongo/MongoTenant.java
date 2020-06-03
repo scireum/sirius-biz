@@ -21,13 +21,13 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.types.MongoRef;
-import sirius.db.text.Tokenizer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 /**
  * Reprensents the MongoDB implementation of {@link Tenant}.
@@ -57,10 +57,10 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
     private static Tenants<?, ?, ?> tenants;
 
     @Override
-    protected void addCustomSearchPrefixes(Tokenizer tokenizer) {
-        addContentAsTokens(tokenizer, getTenantData().getAddress().getStreet());
-        addContentAsTokens(tokenizer, getTenantData().getAddress().getZip());
-        addContentAsTokens(tokenizer, getTenantData().getAddress().getCity());
+    protected void addCustomSearchPrefixes(Consumer<String> tokenizer) {
+        tokenizer.accept(getTenantData().getAddress().getStreet());
+        tokenizer.accept(getTenantData().getAddress().getZip());
+        tokenizer.accept(getTenantData().getAddress().getCity());
     }
 
     @Override

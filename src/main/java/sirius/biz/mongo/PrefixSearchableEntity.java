@@ -14,12 +14,12 @@ import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.StringList;
 import sirius.db.mongo.MongoEntity;
-import sirius.db.text.BasicIndexTokenizer;
 import sirius.db.text.Tokenizer;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 
 import java.util.Collections;
+import java.util.function.Consumer;
 
 /**
  * Maintains a <tt>prefixSearchField</tt> in which all fields annotated with {@link PrefixSearchContent} are indexed.
@@ -59,15 +59,18 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
             }))
             .forEach(consumer -> consumer.accept(this, value -> addContentAsTokens(tokenizer, value)));
 
-        addCustomSearchPrefixes(tokenizer);
+        addCustomSearchPrefixes(token -> addContentAsTokens(tokenizer, token));
     }
 
     /**
      * Adds custom fields as search prefixes.
      * <p>
      * This method is empty by default and intended to be overwritten by sub classes.
+     *
+     * @param contentConsumer can be supplied with strings to be tokenized and added to the list
+     *                        of search prefixes
      */
-    protected void addCustomSearchPrefixes(Tokenizer tokenizer) {
+    protected void addCustomSearchPrefixes(Consumer<String> contentConsumer) {
         // Empty by default, to be overwritten by sub classes
     }
 

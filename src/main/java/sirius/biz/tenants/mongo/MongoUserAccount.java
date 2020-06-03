@@ -16,7 +16,6 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mongo.Mango;
-import sirius.db.text.Tokenizer;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 import sirius.web.controller.Message;
@@ -53,15 +52,15 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
     private static MongoTenants tenants;
 
     @Override
-    protected void addCustomSearchPrefixes(Tokenizer tokenizer) {
-        addContentAsTokens(tokenizer, getUserAccountData().getPerson().getFirstname());
-        addContentAsTokens(tokenizer, getUserAccountData().getPerson().getLastname());
-        addContentAsTokens(tokenizer, getUserAccountData().getLogin().getUsername());
-        addContentAsTokens(tokenizer, getUserAccountData().getEmail());
+    protected void addCustomSearchPrefixes(Consumer<String> tokenizer) {
+        tokenizer.accept(getUserAccountData().getPerson().getFirstname());
+        tokenizer.accept(getUserAccountData().getPerson().getLastname());
+        tokenizer.accept(getUserAccountData().getLogin().getUsername());
+        tokenizer.accept(getUserAccountData().getEmail());
 
         tenants.fetchCachedTenant(getTenant()).ifPresent(tenant -> {
-            addContentAsTokens(tokenizer, tenant.getTenantData().getName());
-            addContentAsTokens(tokenizer, tenant.getTenantData().getAccountNumber());
+            tokenizer.accept(tenant.getTenantData().getName());
+            tokenizer.accept(tenant.getTenantData().getAccountNumber());
         });
     }
 
