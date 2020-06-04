@@ -916,7 +916,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 getPhysicalSpace().delete(previousPhysicalId.get());
             }
 
-            blobByPathCache.clear();
+            if (Strings.isFilled(filename)) {
+                blobByPathCache.clear();
+            }
         } catch (Exception e) {
             try {
                 getPhysicalSpace().delete(nextPhysicalId);
@@ -968,7 +970,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 getPhysicalSpace().delete(previousPhysicalId.get());
             }
 
-            blobByPathCache.clear();
+            if (Strings.isFilled(filename)) {
+                blobByPathCache.clear();
+            }
         } catch (Exception e) {
             try {
                 getPhysicalSpace().delete(nextPhysicalId);
