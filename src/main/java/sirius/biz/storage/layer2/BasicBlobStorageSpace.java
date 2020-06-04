@@ -314,9 +314,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             return Optional.empty();
         }
 
-        String cacheKey = tenantId + "-" + ensureRelativePath(path);
+        return Optional.ofNullable(blobByPathCache.get(determinePathCacheKey(tenantId, path),
+                                                       ignored -> fetchByPath(tenantId, path)));
+    }
 
-        return Optional.ofNullable(blobByPathCache.get(cacheKey, ignored -> fetchByPath(tenantId, path)));
+    @Nonnull
+    private String determinePathCacheKey(String tenantId, String path) {
+        return spaceName + "-" + tenantId + "-" + ensureRelativePath(path);
     }
 
     protected Blob fetchByPath(String tenantId, @Nonnull String path) {
@@ -354,9 +358,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             throw new IllegalArgumentException("An empty path was provided!");
         }
 
-        String cacheKey = tenantId + "-" + ensureRelativePath(path);
-
-        return blobByPathCache.get(cacheKey, ignored -> fetchOrCreateByPath(tenantId, path));
+        return blobByPathCache.get(determinePathCacheKey(tenantId, path),
+                                   ignored -> fetchOrCreateByPath(tenantId, path));
     }
 
     protected Blob fetchOrCreateByPath(String tenantId, @Nonnull String path) {
