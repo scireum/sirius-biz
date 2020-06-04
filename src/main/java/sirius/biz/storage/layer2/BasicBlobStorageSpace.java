@@ -731,6 +731,24 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
+     * Deletes the given directory.
+     *
+     * @param directory the directory to delete
+     */
+    public void deleteDirectory(D directory) {
+        markDirectoryAsDeleted(directory);
+
+        blobByPathCache.clear();
+    }
+
+    /**
+     * Marks the given directory as deleted.
+     *
+     * @param directory the directory to delete
+     */
+    protected abstract void markDirectoryAsDeleted(D directory);
+
+    /**
      * Effectively updates the parent of the given directory.
      * <p>
      * This is invoked after all checks have been passed.
@@ -802,6 +820,24 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param newParent the new parent to move the directory into
      */
     protected abstract void updateBlobParent(B blob, D newParent);
+
+    /**
+     * Deletes the given blob.
+     *
+     * @param blob the blob to delete
+     */
+    public void delete(B blob) {
+        markBlobAsDeleted(blob);
+
+        blobByPathCache.clear();
+    }
+
+    /**
+     * Marks the given blob as deleted.
+     *
+     * @param blob the blob to delete
+     */
+    protected abstract void markBlobAsDeleted(B blob);
 
     /**
      * Renames the blob to the new name.

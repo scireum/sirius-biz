@@ -270,10 +270,9 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .executeFor(MongoBlob.class);
     }
 
-    protected void delete(MongoBlob blob) {
+    @Override
+    protected void markBlobAsDeleted(MongoBlob blob) {
         mongo.update().set(MongoBlob.DELETED, true).where(MongoBlob.ID, blob.getId()).executeFor(MongoBlob.class);
-
-        blobByPathCache.clear();
     }
 
     @Override
@@ -290,7 +289,8 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         mango.update(blob);
     }
 
-    protected void deleteDirectory(MongoDirectory directory) {
+    @Override
+    protected void markDirectoryAsDeleted(MongoDirectory directory) {
         mongo.update()
              .set(MongoDirectory.DELETED, true)
              .where(MongoDirectory.ID, directory.getId())

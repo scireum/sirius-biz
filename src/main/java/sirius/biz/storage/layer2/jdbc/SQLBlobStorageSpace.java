@@ -309,14 +309,13 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         }
     }
 
-    protected void delete(SQLBlob blob) {
+    @Override
+    protected void markBlobAsDeleted(SQLBlob blob) {
         try {
             oma.updateStatement(SQLBlob.class)
                .set(SQLBlob.DELETED, true)
                .where(SQLBlob.ID, blob.getId())
                .executeUpdate();
-
-            blobByPathCache.clear();
         } catch (SQLException e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
@@ -340,7 +339,8 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         oma.update(blob);
     }
 
-    protected void deleteDirectory(SQLDirectory directory) {
+    @Override
+    protected void markDirectoryAsDeleted(SQLDirectory directory) {
         try {
             oma.updateStatement(SQLDirectory.class)
                .set(SQLDirectory.DELETED, true)
