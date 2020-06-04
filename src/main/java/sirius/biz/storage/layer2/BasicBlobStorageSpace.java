@@ -912,6 +912,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 blob.fetchVariants().forEach(BlobVariant::delete);
                 getPhysicalSpace().delete(previousPhysicalId.get());
             }
+
+            blobByPathCache.clear();
         } catch (Exception e) {
             try {
                 getPhysicalSpace().delete(nextPhysicalId);
@@ -962,6 +964,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 blob.fetchVariants().forEach(BlobVariant::delete);
                 getPhysicalSpace().delete(previousPhysicalId.get());
             }
+
+            blobByPathCache.clear();
         } catch (Exception e) {
             try {
                 getPhysicalSpace().delete(nextPhysicalId);
