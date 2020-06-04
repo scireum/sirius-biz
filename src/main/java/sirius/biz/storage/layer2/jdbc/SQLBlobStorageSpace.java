@@ -315,6 +315,8 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                .set(SQLBlob.DELETED, true)
                .where(SQLBlob.ID, blob.getId())
                .executeUpdate();
+
+            blobByPathCache.clear();
         } catch (SQLException e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)

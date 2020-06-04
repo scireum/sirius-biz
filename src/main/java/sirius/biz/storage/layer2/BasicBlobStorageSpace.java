@@ -146,14 +146,29 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @ConfigValue("storage.layer2.conversion.hosts")
     protected static List<String> conversionHosts;
 
+    /**
+     * Caches the {@link Directory directories} that belong to certain id
+     */
     protected static Cache<String, Directory> directoryByIdCache =
             CacheManager.createCoherentCache("storage-directories");
 
+    /**
+     * Caches the {@link Blob#getFilename() file names} that belong to certain {@link Blob#getBlobKey() blob keys}
+     */
     protected static Cache<String, String> blobKeyToFilenameCache =
             CacheManager.createCoherentCache("storage-filenames");
 
+    /**
+     * Caches the {@link Blob#getPhysicalObjectKey() physical keys} that belong to certain
+     * {@link Blob#getBlobKey() blob keys}
+     */
     protected static Cache<String, String> blobKeyToPhysicalCache =
             CacheManager.createCoherentCache("storage-physical-keys");
+
+    /**
+     * Caches the {@link Blob blobs} that belong to certain paths
+     */
+    protected static Cache<String, Blob> blobByPathCache = CacheManager.createCoherentCache("storage-paths");
 
     protected final Extension config;
     protected final String description;
@@ -298,6 +313,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         if (Strings.isEmpty(path)) {
             return Optional.empty();
         }
+
+        String cacheKey = tenantId + "-" + ensureRelativePath(path);
+
+        return Optional.ofNullable(blobByPathCache.get(cacheKey, ignored -> fetchByPath(tenantId, path)));
+    }
+
+    protected Blob fetchByPath(String tenantId, @Nonnull String path) {
         String[] parts = ensureRelativePath(path).split("/");
         Directory currentDirectory = getRoot(tenantId);
         int index = 0;
@@ -307,9 +329,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         if (currentDirectory != null) {
-            return currentDirectory.findChildBlob(parts[index]);
+            return currentDirectory.findChildBlob(parts[index]).orElse(null);
         } else {
-            return Optional.empty();
+            return null;
         }
     }
 
@@ -332,6 +354,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             throw new IllegalArgumentException("An empty path was provided!");
         }
 
+        String cacheKey = tenantId + "-" + ensureRelativePath(path);
+
+        return blobByPathCache.get(cacheKey, ignored -> fetchOrCreateByPath(tenantId, path));
+    }
+
+    protected Blob fetchOrCreateByPath(String tenantId, @Nonnull String path) {
         String[] parts = ensureRelativePath(path).split("/");
         Directory currentDirectory = getRoot(tenantId);
         int index = 0;
@@ -672,6 +700,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         updateDirectoryParent(directory, newParent);
 
         directoryByIdCache.remove(directory.getIdAsString());
+        blobByPathCache.clear();
     }
 
     /**
@@ -727,7 +756,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         updateDirectoryName(directory, newName);
+
         directoryByIdCache.remove(directory.getIdAsString());
+        blobByPathCache.clear();
     }
 
     /**
@@ -758,6 +789,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         updateBlobParent(blob, newParent);
+
+        blobByPathCache.clear();
     }
 
     /**
@@ -782,7 +815,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         updateBlobName(blob, newName);
+
         blobKeyToFilenameCache.remove(blob.getBlobKey());
+        blobByPathCache.clear();
     }
 
     /**

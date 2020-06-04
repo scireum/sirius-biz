@@ -272,6 +272,8 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
 
     protected void delete(MongoBlob blob) {
         mongo.update().set(MongoBlob.DELETED, true).where(MongoBlob.ID, blob.getId()).executeFor(MongoBlob.class);
+
+        blobByPathCache.clear();
     }
 
     @Override
