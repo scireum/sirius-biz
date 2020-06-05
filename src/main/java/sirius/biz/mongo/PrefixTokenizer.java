@@ -10,16 +10,19 @@ package sirius.biz.mongo;
 
 import sirius.db.text.ChainableTokenProcessor;
 import sirius.db.text.DeduplicateProcessor;
-import sirius.db.text.LowerCaseProcessor;
 import sirius.db.text.PatternReplaceProcessor;
 import sirius.db.text.PatternSplitProcessor;
 import sirius.db.text.PipelineProcessor;
 import sirius.db.text.ReduceCharacterProcessor;
+import sirius.db.text.ToLowercaseProcessor;
 import sirius.db.text.TokenLimitProcessor;
 import sirius.db.text.Tokenizer;
 
 import java.util.regex.Pattern;
 
+/**
+ * Provides the tokenizer which computes prefixes for the {@link PrefixSearchableEntity}.
+ */
 public class PrefixTokenizer extends Tokenizer {
 
     /**
@@ -40,7 +43,7 @@ public class PrefixTokenizer extends Tokenizer {
                                      new PatternSplitProcessor(SPLIT_TOKEN_LEVEL_1, true, true),
                                      new PatternSplitProcessor(SPLIT_TOKEN_LEVEL_2, true, true),
                                      new TokenLimitProcessor(1, 255),
-                                     new LowerCaseProcessor(),
+                                     new ToLowercaseProcessor(),
                                      new DeduplicateProcessor(true));
     }
 }
