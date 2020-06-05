@@ -102,6 +102,9 @@ public class ConversionEngine {
      * @return <tt>true</tt> if a configuration is present, <tt>false</tt> otherwise
      */
     public boolean isKnownVariant(String variant) {
+        if (fileExtensionPerVariant == null) {
+            initializeFileExtensions();
+        }
         return fileExtensionPerVariant.containsKey(variant);
     }
 
