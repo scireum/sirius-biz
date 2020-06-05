@@ -24,8 +24,6 @@ import sirius.db.text.BasicIndexTokenizer;
 import sirius.db.text.Tokenizer;
 import sirius.kernel.commons.Strings;
 
-import java.util.Collections;
-
 /**
  * Maintains a <tt>searchField</tt> in which all fields annotated with {@link SearchContent} are indexed.
  * <p>
@@ -99,8 +97,7 @@ public abstract class SearchableEntity extends ElasticEntity {
     }
 
     private void addContentAsTokens(Tokenizer tokenizer, StringBuilder contentBuilder, String value) {
-        tokenizer.accept(Collections.singletonList(value),
-                         tokens -> tokens.forEach(token -> contentBuilder.append(" ").append(token)));
+        tokenizer.acceptPlain(value, token -> contentBuilder.append(" ").append(token));
     }
 
     public String getSearchableContent() {
