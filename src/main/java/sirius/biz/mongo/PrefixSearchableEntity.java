@@ -18,7 +18,6 @@ import sirius.db.text.Tokenizer;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 
-import java.util.Collections;
 import java.util.function.Consumer;
 
 /**
@@ -97,7 +96,7 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
             return;
         }
 
-        tokenizer.accept(Collections.singletonList(input), tokens -> tokens.forEach(searchPrefixes::add));
+        tokenizer.acceptPlain(input, searchPrefixes::add);
     }
 
     public StringList getSearchPrefixes() {
