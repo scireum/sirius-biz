@@ -146,14 +146,29 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @ConfigValue("storage.layer2.conversion.hosts")
     protected static List<String> conversionHosts;
 
+    /**
+     * Caches the {@link Directory directories} that belong to certain id
+     */
     protected static Cache<String, Directory> directoryByIdCache =
             CacheManager.createCoherentCache("storage-directories");
 
+    /**
+     * Caches the {@link Blob#getFilename() file names} that belong to certain {@link Blob#getBlobKey() blob keys}
+     */
     protected static Cache<String, String> blobKeyToFilenameCache =
             CacheManager.createCoherentCache("storage-filenames");
 
+    /**
+     * Caches the {@link Blob#getPhysicalObjectKey() physical keys} that belong to certain
+     * {@link Blob#getBlobKey() blob keys}
+     */
     protected static Cache<String, String> blobKeyToPhysicalCache =
             CacheManager.createCoherentCache("storage-physical-keys");
+
+    /**
+     * Caches the {@link Blob blobs} that belong to certain paths
+     */
+    protected static Cache<String, Blob> blobByPathCache = CacheManager.createCoherentCache("storage-paths");
 
     protected final Extension config;
     protected final String description;
@@ -298,6 +313,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         if (Strings.isEmpty(path)) {
             return Optional.empty();
         }
+
+        return Optional.ofNullable(blobByPathCache.get(determinePathCacheKey(tenantId, path),
+                                                       ignored -> fetchByPath(tenantId, path)));
+    }
+
+    @Nonnull
+    private String determinePathCacheKey(String tenantId, String path) {
+        return spaceName + "-" + tenantId + "-" + ensureRelativePath(path);
+    }
+
+    protected Blob fetchByPath(String tenantId, @Nonnull String path) {
         String[] parts = ensureRelativePath(path).split("/");
         Directory currentDirectory = getRoot(tenantId);
         int index = 0;
@@ -307,9 +333,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         if (currentDirectory != null) {
-            return currentDirectory.findChildBlob(parts[index]);
+            return currentDirectory.findChildBlob(parts[index]).orElse(null);
         } else {
-            return Optional.empty();
+            return null;
         }
     }
 
@@ -332,6 +358,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             throw new IllegalArgumentException("An empty path was provided!");
         }
 
+        return blobByPathCache.get(determinePathCacheKey(tenantId, path),
+                                   ignored -> fetchOrCreateByPath(tenantId, path));
+    }
+
+    protected Blob fetchOrCreateByPath(String tenantId, @Nonnull String path) {
         String[] parts = ensureRelativePath(path).split("/");
         Directory currentDirectory = getRoot(tenantId);
         int index = 0;
@@ -672,6 +703,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         updateDirectoryParent(directory, newParent);
 
         directoryByIdCache.remove(directory.getIdAsString());
+        blobByPathCache.clear();
     }
 
     /**
@@ -702,6 +734,24 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
+     * Deletes the given directory.
+     *
+     * @param directory the directory to delete
+     */
+    public void deleteDirectory(D directory) {
+        markDirectoryAsDeleted(directory);
+
+        blobByPathCache.clear();
+    }
+
+    /**
+     * Marks the given directory as deleted.
+     *
+     * @param directory the directory to delete
+     */
+    protected abstract void markDirectoryAsDeleted(D directory);
+
+    /**
      * Effectively updates the parent of the given directory.
      * <p>
      * This is invoked after all checks have been passed.
@@ -727,7 +777,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         updateDirectoryName(directory, newName);
+
         directoryByIdCache.remove(directory.getIdAsString());
+        blobByPathCache.clear();
     }
 
     /**
@@ -758,6 +810,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         updateBlobParent(blob, newParent);
+
+        blobByPathCache.clear();
     }
 
     /**
@@ -771,6 +825,24 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected abstract void updateBlobParent(B blob, D newParent);
 
     /**
+     * Deletes the given blob.
+     *
+     * @param blob the blob to delete
+     */
+    public void delete(B blob) {
+        markBlobAsDeleted(blob);
+
+        blobByPathCache.clear();
+    }
+
+    /**
+     * Marks the given blob as deleted.
+     *
+     * @param blob the blob to delete
+     */
+    protected abstract void markBlobAsDeleted(B blob);
+
+    /**
      * Renames the blob to the new name.
      *
      * @param blob    the blob to rename
@@ -782,7 +854,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         updateBlobName(blob, newName);
+
         blobKeyToFilenameCache.remove(blob.getBlobKey());
+        blobByPathCache.clear();
     }
 
     /**
@@ -841,6 +915,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 blob.fetchVariants().forEach(BlobVariant::delete);
                 getPhysicalSpace().delete(previousPhysicalId.get());
             }
+
+            if (Strings.isFilled(filename)) {
+                blobByPathCache.clear();
+            }
         } catch (Exception e) {
             try {
                 getPhysicalSpace().delete(nextPhysicalId);
@@ -890,6 +968,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             if (previousPhysicalId.isPresent()) {
                 blob.fetchVariants().forEach(BlobVariant::delete);
                 getPhysicalSpace().delete(previousPhysicalId.get());
+            }
+
+            if (Strings.isFilled(filename)) {
+                blobByPathCache.clear();
             }
         } catch (Exception e) {
             try {
