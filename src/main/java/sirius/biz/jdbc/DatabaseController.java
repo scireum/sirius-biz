@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 /**
  * Provides the management GUI for database related activities.
  */
-@Register(classes = Controller.class)
+@Register
 public class DatabaseController extends BasicController {
 
     /**

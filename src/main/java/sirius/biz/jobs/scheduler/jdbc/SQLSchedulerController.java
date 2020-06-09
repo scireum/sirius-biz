@@ -18,7 +18,7 @@ import sirius.web.controller.Controller;
 /**
  * Provides the controller for managing the SQL based scheduler.
  */
-@Register(classes = Controller.class, framework = SQLSchedulerController.FRAMEWORK_SCHEDULER_JDBC)
+@Register(framework = SQLSchedulerController.FRAMEWORK_SCHEDULER_JDBC)
 public class SQLSchedulerController extends SchedulerController<SQLSchedulerEntry> {
 
     /**

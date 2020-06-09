@@ -36,7 +36,7 @@ import java.util.Optional;
 /**
  * Provides a web based UI for the {@link VirtualFileSystem}.
  */
-@Register(classes = Controller.class)
+@Register
 public class VFSController extends BizController {
 
     @Part

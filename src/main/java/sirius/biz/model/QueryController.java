@@ -40,7 +40,7 @@ import java.util.stream.Stream;
 /**
  * Provides a query GUI for all entities managed by <tt>Mixing</tt>.
  */
-@Register(classes = Controller.class)
+@Register
 public class QueryController extends BizController {
 
     private static final int DEFAULT_LIMIT = 100;

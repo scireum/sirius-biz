@@ -12,7 +12,6 @@ import sirius.biz.web.BizController;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Page;
 import sirius.web.controller.Routed;
@@ -25,7 +24,7 @@ import java.util.Collection;
 /**
  * Provides the UI for the jobs framework.
  */
-@Register(classes = Controller.class, framework = Jobs.FRAMEWORK_JOBS)
+@Register(framework = Jobs.FRAMEWORK_JOBS)
 public class JobsController extends BizController {
 
     @Part

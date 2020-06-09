@@ -45,7 +45,7 @@ import java.util.ArrayList;
 /**
  * Provides the management UI for {@link java.lang.Process processes}.
  */
-@Register(classes = Controller.class, framework = Processes.FRAMEWORK_PROCESSES)
+@Register(framework = Processes.FRAMEWORK_PROCESSES)
 public class ProcessController extends BizController {
     /**
      * Defines the permission required to view and manage processes of other users within the same tenant.

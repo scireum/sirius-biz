@@ -24,7 +24,7 @@ import sirius.web.security.UserContext;
 /**
  * Provides an admin GUI to display {@link AuditLogEntry audit log entries}.
  */
-@Register(classes = Controller.class)
+@Register
 public class AuditLogController extends BizController {
 
     /**

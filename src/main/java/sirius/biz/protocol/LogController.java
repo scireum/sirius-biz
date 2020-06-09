@@ -22,7 +22,7 @@ import sirius.web.security.Permission;
 /**
  * Provides a GUI for viewing system logs.
  */
-@Register(classes = Controller.class, framework = Protocols.FRAMEWORK_PROTOCOLS)
+@Register(framework = Protocols.FRAMEWORK_PROTOCOLS)
 public class LogController extends BizController {
 
     /**

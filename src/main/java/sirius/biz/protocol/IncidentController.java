@@ -22,7 +22,7 @@ import sirius.web.security.Permission;
 /**
  * Provides a GUI for viewing incidents.
  */
-@Register(classes = Controller.class, framework = Protocols.FRAMEWORK_PROTOCOLS)
+@Register(framework = Protocols.FRAMEWORK_PROTOCOLS)
 public class IncidentController extends BizController {
 
     /**

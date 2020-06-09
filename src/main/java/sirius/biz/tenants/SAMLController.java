@@ -36,7 +36,7 @@ import java.util.UUID;
  * @param <T> specifies the effective entity type used to represent Tenants
  * @param <U> specifies the effective entity type used to represent UserAccounts
  */
-@Register(classes = Controller.class, framework = Tenants.FRAMEWORK_TENANTS)
+@Register(framework = Tenants.FRAMEWORK_TENANTS)
 public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {
 

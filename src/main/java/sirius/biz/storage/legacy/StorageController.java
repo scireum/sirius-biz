@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  * Provides a management UI for the storage system.
  */
 @Deprecated
-@Register(classes = Controller.class, framework = Storage.FRAMEWORK_STORAGE)
+@Register(framework = Storage.FRAMEWORK_STORAGE)
 public class StorageController extends BizController {
 
     private static final String NO_REFERENCE = "-";
