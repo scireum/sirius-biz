@@ -67,6 +67,8 @@ import java.util.stream.Collectors;
  * <p>
  * For database entities referencing virtual objects a {@link StoredObjectRef} can be used, which takes care of
  * referential integrity (deletes the object, if the entity is deleted etc.)
+ *
+ * @deprecated use the new storage APIs
  */
 @Deprecated
 @Register(classes = Storage.class, framework = Storage.FRAMEWORK_STORAGE)

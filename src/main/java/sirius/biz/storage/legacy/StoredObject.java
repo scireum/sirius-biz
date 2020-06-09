@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 
 /**
  * Represents the public accessible part of an object (file) stored by {@link Storage}.
+ * @deprecated use the new storage APIs
  */
 @Deprecated
 public interface StoredObject {

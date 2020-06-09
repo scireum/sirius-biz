@@ -20,6 +20,8 @@ import sirius.web.security.UserContext;
  * Represents metadata available for a bucket.
  * <p>
  * Most of this is taken from <tt>storage.buckets.[bucketName]</tt> from the system config.
+ *
+ * @deprecated use the new BlobStorageSpace API
  */
 @Deprecated
 public class BucketInfo {

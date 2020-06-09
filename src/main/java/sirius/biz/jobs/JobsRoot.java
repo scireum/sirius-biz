@@ -25,7 +25,6 @@ import sirius.biz.storage.layer3.VFSRoot;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.tenants.Tenants;
-import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;

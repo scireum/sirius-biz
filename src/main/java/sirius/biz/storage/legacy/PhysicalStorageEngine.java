@@ -16,6 +16,8 @@ import java.io.InputStream;
 
 /**
  * Represents the actual physical storage layer for objects within buckets.
+ *
+ * @deprecated use the new storage APIs
  */
 @Deprecated
 public interface PhysicalStorageEngine {

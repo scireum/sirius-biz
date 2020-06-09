@@ -50,6 +50,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * This class also maintans the <tt>logicalToPhysicalCache</tt> which contains the physical keys for virtual objects.
  * This is placed here, as the {@link DownloadBuilder} uses this class to fetch the physical keys for an object version
  * (even for the main one).
+ *
+ * @deprecated use the new storage APIs
  */
 @Deprecated
 @Register(classes = VersionManager.class, framework = Storage.FRAMEWORK_STORAGE)

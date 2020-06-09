@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
  * Stores the metadata for an object managed by the {@link Storage}.
  * <p>
  * Note that the externally visible methods are decalred by {@link StoredObject} which is the public interface.
+ * @deprecated use the new storage APIs
  */
 @Index(name = "object_key_lookup", columns = "objectKey", unique = true)
 @Index(name = "path_lookup", columns = {"tenant", "bucket", "path"})

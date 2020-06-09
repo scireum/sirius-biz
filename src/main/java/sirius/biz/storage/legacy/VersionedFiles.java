@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 
 /**
  * Small helper class to access and create {@link VersionedFile versioned files}.
+ * @deprecated use the new storage APIs
  */
 @Deprecated
 @Register(classes = VersionedFiles.class, framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)

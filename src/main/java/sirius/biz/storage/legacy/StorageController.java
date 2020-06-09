@@ -23,7 +23,6 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.web.controller.AutocompleteHelper;
-import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
 import sirius.web.http.InputStreamHandler;
@@ -38,6 +37,8 @@ import java.util.stream.Collectors;
 
 /**
  * Provides a management UI for the storage system.
+ *
+ * @deprecated use the new storage APIs
  */
 @Deprecated
 @Register(framework = Storage.FRAMEWORK_STORAGE)

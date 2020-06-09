@@ -21,6 +21,7 @@ import java.util.Optional;
 
 /**
  * Provides a base class to implement autocomplete parameters for {@link VirtualObject entities}.
+ * @deprecated use the new storage APIs
  */
 @Deprecated
 public class VirtualObjectParameter extends EntityParameter<VirtualObject, VirtualObjectParameter> {

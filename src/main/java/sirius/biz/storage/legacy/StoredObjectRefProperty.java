@@ -32,6 +32,7 @@ import java.util.function.Consumer;
 
 /**
  * Handles fields of the type {@link StoredObjectRef} within an {@link SQLEntity}.
+ * @deprecated use the new storage APIs
  */
 @Deprecated
 public class StoredObjectRefProperty extends Property implements SQLPropertyInfo {

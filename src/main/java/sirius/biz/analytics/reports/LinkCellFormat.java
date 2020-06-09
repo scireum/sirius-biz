@@ -10,7 +10,6 @@ package sirius.biz.analytics.reports;
 
 import com.alibaba.fastjson.JSONObject;
 import sirius.biz.web.BizController;
-import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Register;
 import sirius.web.templates.ContentHelper;
 

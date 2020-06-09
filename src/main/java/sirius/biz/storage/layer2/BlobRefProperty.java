@@ -108,6 +108,7 @@ abstract class BlobRefProperty extends Property implements SQLPropertyInfo {
      * @param value        The value to be set
      * @param targetEntity The entity to be set on
      */
+    @Override
     protected void setValueToField(Object value, Object targetEntity) {
         BlobHardRef ref = getRef(targetEntity);
 
