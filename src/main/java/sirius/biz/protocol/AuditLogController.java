@@ -15,7 +15,6 @@ import sirius.db.es.ElasticQuery;
 import sirius.db.mixing.DateRange;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Register;
-import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
@@ -24,7 +23,7 @@ import sirius.web.security.UserContext;
 /**
  * Provides an admin GUI to display {@link AuditLogEntry audit log entries}.
  */
-@Register(classes = Controller.class)
+@Register
 public class AuditLogController extends BizController {
 
     /**

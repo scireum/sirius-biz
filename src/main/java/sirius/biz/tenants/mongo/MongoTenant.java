@@ -15,7 +15,6 @@ import sirius.biz.tenants.TenantData;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
-import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
@@ -28,6 +27,7 @@ import sirius.kernel.di.std.Part;
 
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 /**
  * Reprensents the MongoDB implementation of {@link Tenant}.
@@ -56,11 +56,11 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
     @Part
     private static Tenants<?, ?, ?> tenants;
 
-    @BeforeSave
-    protected void enhanceSearchField() {
-        addContentAsTokens(getTenantData().getAddress().getStreet());
-        addContentAsTokens(getTenantData().getAddress().getZip());
-        addContentAsTokens(getTenantData().getAddress().getCity());
+    @Override
+    protected void addCustomSearchPrefixes(Consumer<String> tokenizer) {
+        tokenizer.accept(getTenantData().getAddress().getStreet());
+        tokenizer.accept(getTenantData().getAddress().getZip());
+        tokenizer.accept(getTenantData().getAddress().getCity());
     }
 
     @Override

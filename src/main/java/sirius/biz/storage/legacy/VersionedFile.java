@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 
 /**
  * Entity holding meta information about a versioned file.
+ * @deprecated use the new storage APIs
  */
 @Deprecated
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)

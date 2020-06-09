@@ -14,13 +14,11 @@ import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.StringList;
 import sirius.db.mongo.MongoEntity;
+import sirius.db.text.Tokenizer;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Pattern;
+import java.util.function.Consumer;
 
 /**
  * Maintains a <tt>prefixSearchField</tt> in which all fields annotated with {@link PrefixSearchContent} are indexed.
@@ -31,22 +29,6 @@ import java.util.regex.Pattern;
  * example.
  */
 public abstract class PrefixSearchableEntity extends MongoEntity {
-
-    /**
-     * We will not index anything longer than 255 characters as it is pointless.
-     */
-    private static final int MAX_TOKEN_LENGTH = 255;
-
-    /**
-     * Represents a regular expression which detects all character which aren't allowed in a search prefix.
-     */
-    public static final Pattern SPLIT_TOKEN_LEVEL_1 = Pattern.compile("[^\\p{L}\\d_\\-.]");
-
-    /**
-     * Represents a regular expression which detects all characters which are allowed in a search prefix but still cause
-     * a token to be splitted.
-     */
-    public static final Pattern SPLIT_TOKEN_LEVEL_2 = Pattern.compile("[^\\p{L}]");
 
     /**
      * Contains manually maintained content to be added to the search field.
@@ -66,6 +48,7 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
 
         getSearchPrefixes().clear();
 
+        Tokenizer tokenizer = createPrefixTokenizer();
         this.getDescriptor()
             .getProperties()
             .stream()
@@ -73,44 +56,47 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
             .map(p -> p.tryAs(PrefixSearchableContentConsumer.class).orElse((entity, consumer) -> {
                 consumer.accept(p.getValue(this));
             }))
-            .forEach(consumer -> consumer.accept(this, this::addContentAsTokens));
+            .forEach(consumer -> consumer.accept(this, value -> addContentAsTokens(tokenizer, value)));
+
+        addCustomSearchPrefixes(token -> addContentAsTokens(tokenizer, token));
+    }
+
+    /**
+     * Adds custom fields as search prefixes.
+     * <p>
+     * This method is empty by default and intended to be overwritten by sub classes.
+     *
+     * @param contentConsumer can be supplied with strings to be tokenized and added to the list
+     *                        of search prefixes
+     */
+    protected void addCustomSearchPrefixes(Consumer<String> contentConsumer) {
+        // Empty by default, to be overwritten by sub classes
+    }
+
+    /**
+     * Creates the tokenizer to use.
+     *
+     * @return a new tokenier used to fill the search prefix list
+     */
+    protected Tokenizer createPrefixTokenizer() {
+        return new PrefixTokenizer();
     }
 
     /**
      * Tokenizes the given string into the given output builder.
      *
-     * @param value the value to tokenize
+     * @param tokenizer the tokenizer to use
+     * @param value     the value to tokenize
      */
     @SuppressWarnings("squid:S2259")
     @Explain("input cannot be null due to Strings.isEmpty")
-    public void addContentAsTokens(Object value) {
+    protected void addContentAsTokens(Tokenizer tokenizer, Object value) {
         String input = value == null ? null : String.valueOf(value);
         if (Strings.isEmpty(input)) {
             return;
         }
 
-        splitContent(input.toLowerCase()).forEach(this::appendSingleToken);
-    }
-
-    private Set<String> splitContent(String input) {
-        Set<String> result = new HashSet<>();
-        result.add(input);
-
-        for (String subToken : SPLIT_TOKEN_LEVEL_1.matcher(input).replaceAll(" ").split(" ")) {
-            result.add(subToken);
-
-            Collections.addAll(result, SPLIT_TOKEN_LEVEL_2.matcher(subToken.toLowerCase()).replaceAll(" ").split(" "));
-        }
-
-        result.remove("");
-        return result;
-    }
-
-    private void appendSingleToken(String subToken) {
-        int length = subToken.length();
-        if (length <= MAX_TOKEN_LENGTH) {
-            getSearchPrefixes().modify().add(subToken.toLowerCase());
-        }
+        tokenizer.acceptPlain(input, searchPrefixes::add);
     }
 
     public StringList getSearchPrefixes() {

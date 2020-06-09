@@ -56,7 +56,7 @@ class SearchableEntitySpec extends BaseSpecification {
         input                        | output
         "max.mustermann@website.com" | ["com", "max", "max.mustermann", "max.mustermann@website.com", "mustermann", "website", "website.com"]
         "test-foobar"                | ["foobar", "test", "test-foobar"]
-        "test123@bla-bar.foo"        | ["bar", "bla", "bla-bar.foo", "foo", "test", "test123", "test123@bla-bar.foo"]
+        "test123@bla-bar.foo"        | ["bar", "bla", "bla-bar.foo", "foo", "test123", "test123@bla-bar.foo"]
     }
 
 }

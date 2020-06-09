@@ -27,6 +27,8 @@ import java.util.List;
  * <p>
  * A bucket can specify a max age for its objects. Older objects are automatically deleted by the system (vis this
  * loop).
+ *
+ * @deprecated use the new storage APIs
  */
 @Deprecated
 @Register(framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)

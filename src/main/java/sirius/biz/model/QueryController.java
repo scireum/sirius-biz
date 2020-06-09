@@ -22,7 +22,6 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.AutocompleteHelper;
-import sirius.web.controller.Controller;
 import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
@@ -40,7 +39,7 @@ import java.util.stream.Stream;
 /**
  * Provides a query GUI for all entities managed by <tt>Mixing</tt>.
  */
-@Register(classes = Controller.class)
+@Register
 public class QueryController extends BizController {
 
     private static final int DEFAULT_LIMIT = 100;

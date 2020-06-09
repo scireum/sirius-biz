@@ -19,6 +19,7 @@ import java.util.Optional;
 
 /**
  * Represents a <b>builder</b> for download URLs for {@link StoredObject stored objects}.
+ * @deprecated use the new storage APIs
  */
 @Deprecated
 public class DownloadBuilder {

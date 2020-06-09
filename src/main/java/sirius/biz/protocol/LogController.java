@@ -13,7 +13,6 @@ import sirius.biz.web.ElasticPageHelper;
 import sirius.db.mixing.DateRange;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Register;
-import sirius.web.controller.Controller;
 import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
@@ -22,7 +21,7 @@ import sirius.web.security.Permission;
 /**
  * Provides a GUI for viewing system logs.
  */
-@Register(classes = Controller.class, framework = Protocols.FRAMEWORK_PROTOCOLS)
+@Register(framework = Protocols.FRAMEWORK_PROTOCOLS)
 public class LogController extends BizController {
 
     /**

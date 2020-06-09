@@ -32,7 +32,6 @@ import java.util.function.IntConsumer;
 /**
  * Provides a {@link ObjectStorageSpace} which operates on the local file system.
  */
-
 public class FSObjectStorageSpace extends ObjectStorageSpace {
 
     /**

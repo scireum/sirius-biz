@@ -11,7 +11,6 @@ package sirius.biz.storage.layer1.replication;
 import com.alibaba.fastjson.JSONObject;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.storage.util.StorageUtils;
-import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 

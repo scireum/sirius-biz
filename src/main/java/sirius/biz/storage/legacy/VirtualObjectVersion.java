@@ -23,6 +23,7 @@ import java.time.LocalDate;
 
 /**
  * Represents a resized image version of a {@link VirtualObject}.
+ * @deprecated use the new storage APIs
  */
 @Deprecated
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)

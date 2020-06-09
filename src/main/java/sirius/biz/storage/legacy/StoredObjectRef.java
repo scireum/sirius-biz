@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
  * <p>
  * If the owning entity is deleted, the referenced object is also deleted if it was uploaded specifically
  * for this reference. If it was a shared object from within a bucket, the referenced object remains untouched.
+ * @deprecated use the new storage APIs
  */
 @Deprecated
 public class StoredObjectRef {

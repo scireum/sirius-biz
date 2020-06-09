@@ -56,6 +56,7 @@ public class StorageUtils {
     public enum ConfigScope {LAYER1, LAYER2, LAYER3}
 
     @ConfigValue("storage.sharedSecret")
+    @Nullable
     private String sharedSecret;
     private String safeSharedSecret;
 

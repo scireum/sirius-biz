@@ -28,7 +28,6 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.BasicController;
-import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
@@ -44,7 +43,7 @@ import java.util.stream.Collectors;
 /**
  * Provides the management GUI for database related activities.
  */
-@Register(classes = Controller.class)
+@Register
 public class DatabaseController extends BasicController {
 
     /**

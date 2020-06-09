@@ -14,12 +14,11 @@ import sirius.biz.codelists.CodeListEntryData;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.SQLPageHelper;
 import sirius.kernel.di.std.Register;
-import sirius.web.controller.Controller;
 
 /**
  * Provides the JDBC/SQL implementation of the {@link CodeListController}.
  */
-@Register(classes = Controller.class, framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
+@Register(framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
 public class SQLCodeListController extends CodeListController<Long, SQLCodeList, SQLCodeListEntry> {
 
     @Override

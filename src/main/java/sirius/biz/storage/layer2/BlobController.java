@@ -30,7 +30,7 @@ import java.io.IOException;
  * Note that most of the management UI is handled via the VFS (layer 3) in the
  * {@link sirius.biz.storage.layer3.VFSController}.
  */
-@Register(framework = StorageUtils.FRAMEWORK_STORAGE, classes = Controller.class)
+@Register(framework = StorageUtils.FRAMEWORK_STORAGE)
 public class BlobController extends BizController {
 
     @Part

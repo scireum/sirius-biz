@@ -27,6 +27,8 @@ import java.io.InputStream;
 
 /**
  * Provides a {@link PhysicalStorageEngine} which operates on the local file system.
+ *
+ * @deprecated use the new storage APIs
  */
 @Deprecated
 @Register(name = "fs", framework = Storage.FRAMEWORK_STORAGE)
