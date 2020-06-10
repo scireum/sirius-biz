@@ -99,7 +99,8 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     }
 
     @Override
-    protected void storePhysicalObject(String objectKey, File file, ByteBlockTransformer transformer) throws IOException {
+    protected void storePhysicalObject(String objectKey, File file, ByteBlockTransformer transformer)
+            throws IOException {
         storePhysicalObject(objectKey, new FileInputStream(file), transformer);
     }
 
@@ -116,9 +117,9 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
 
     @Override
     protected void deliverPhysicalObject(Response response,
-                                      String objectKey,
-                                      ByteBlockTransformer transformer,
-                                      @Nullable IntConsumer failureHandler) throws IOException {
+                                         String objectKey,
+                                         ByteBlockTransformer transformer,
+                                         @Nullable IntConsumer failureHandler) throws IOException {
         response.tunnel(store.objectUrl(bucketName(), objectKey), buffer -> {
             if (buffer.isReadable()) {
                 return transformer.apply(buffer);
