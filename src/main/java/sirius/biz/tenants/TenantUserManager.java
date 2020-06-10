@@ -708,7 +708,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
      * @param user the user which logged in
      */
     public void onExternalLogin(WebContext ctx, UserInfo user) {
-        updateLoginCookie(ctx, user);
+        updateLoginCookie(ctx, user, true);
         recordLogin(user, true);
     }
 
