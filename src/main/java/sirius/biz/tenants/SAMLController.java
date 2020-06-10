@@ -107,7 +107,7 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
         userContext.setCurrentUser(user);
         manager.onExternalLogin(ctx, user);
 
-        ctx.respondWith().redirectToGet(ctx.get("goto").asString(wondergemRoot));
+        ctx.respondWith().template("/templates/biz/tenants/saml-complete.html.pasta", response);
     }
 
     private UserInfo tryCreateUser(WebContext ctx, SAMLResponse response) {

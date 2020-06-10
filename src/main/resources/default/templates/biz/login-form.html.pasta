@@ -48,6 +48,12 @@
         } else {
             $('#user').focus();
         }
+
+        try {
+            window.localStorage.setItem('samlPostLoginUri', '@originalUrl');
+        } catch (e) {
+            console.log(e);
+        }
     });
 
     function submitForgotPassword() {
