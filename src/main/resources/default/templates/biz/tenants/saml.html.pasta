@@ -1,6 +1,6 @@
 <i:arg type="List" name="tenants"/>
 
-<w:page titleKey="SAMLController.loginViaSAML">
+<w:page titleKey="SAMLController.loginViaSAML" ignoreDisasterMode="true">
     <i:block name="breadcrumbs">
         <li>
             <a href="/saml">@i18n("SAMLController.loginViaSAML")</a>

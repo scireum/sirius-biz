@@ -39,6 +39,11 @@ import java.util.UUID;
 public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {
 
+    /**
+     * Contains the URI prefix shared by all routes related to the SAML login process.
+     */
+    public static final String SAML_URI_PREFIX = "/saml";
+
     @Part
     private SAMLHelper saml;
 
@@ -53,7 +58,7 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
      *
      * @param ctx the current request
      */
-    @Routed("/saml")
+    @Routed(SAML_URI_PREFIX)
     public void saml(WebContext ctx) {
         List<T> tenants = obtainTenantsForSaml(ctx);
 
@@ -96,10 +101,10 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
      *
      * @param ctx the SAML response as request
      */
-    @Routed("/saml/login")
+    @Routed(SAML_URI_PREFIX + "/login")
     public void samlLogin(WebContext ctx) {
         if (!ctx.isUnsafePOST()) {
-            ctx.respondWith().redirectToGet("/saml");
+            ctx.respondWith().redirectToGet(SAML_URI_PREFIX);
             return;
         }
 
