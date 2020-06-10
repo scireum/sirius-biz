@@ -63,6 +63,11 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
         ctx.respondWith().template("/templates/biz/tenants/saml.html.pasta", tenants);
     }
 
+    /**
+     * Returns the actual entity class used to represent tenants.
+     *
+     * @return the entity class represeting tenants
+     */
     @SuppressWarnings("unchecked")
     protected Class<T> getTenantClass() {
         return (Class<T>) tenants.getTenantClass();
@@ -139,6 +144,11 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
         }
     }
 
+    /**
+     * Returns the actual entity class used to represent users.
+     *
+     * @return the entity class represeting users
+     */
     @SuppressWarnings("unchecked")
     protected Class<U> getUserClass() {
         return (Class<U>) tenants.getUserClass();
