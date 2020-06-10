@@ -102,12 +102,6 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
         userContext.setCurrentUser(user);
         manager.onExternalLogin(ctx, user);
 
-        manager.installFingerprintInSession(ctx,
-                                            user.getUserObject(UserAccount.class)
-                                                .getUserAccountData()
-                                                .getLogin()
-                                                .getFingerprint());
-
         ctx.respondWith().redirectToGet(ctx.get("goto").asString(wondergemRoot));
     }
 
