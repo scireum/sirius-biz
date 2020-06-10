@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 /**
  * Provides an import job for {@link SQLCodeList code lists} stored in a JDBC database.
  */
-@Register(classes = JobFactory.class, framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
+@Register(framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
 @Permission(CodeListController.PERMISSION_MANAGE_CODELISTS)
 public class SQLCodeListImportJobFactory extends EntityImportJobFactory {
 

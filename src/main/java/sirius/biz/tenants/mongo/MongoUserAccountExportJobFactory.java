@@ -21,7 +21,7 @@ import javax.annotation.Nonnull;
 /**
  * Provides an export for {@link MongoUserAccount user accounts}.
  */
-@Register(classes = JobFactory.class, framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
+@Register(framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
 @Permission(UserAccountController.PERMISSION_MANAGE_USER_ACCOUNTS)
 public class MongoUserAccountExportJobFactory
         extends EntityExportJobFactory<MongoUserAccount, MongoQuery<MongoUserAccount>> {

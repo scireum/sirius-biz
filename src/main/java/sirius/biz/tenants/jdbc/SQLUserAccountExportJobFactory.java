@@ -21,7 +21,7 @@ import javax.annotation.Nonnull;
 /**
  * Provides an export for {@link SQLUserAccount user accounts}.
  */
-@Register(classes = JobFactory.class, framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
+@Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
 @Permission(UserAccountController.PERMISSION_MANAGE_USER_ACCOUNTS)
 public class SQLUserAccountExportJobFactory extends EntityExportJobFactory<SQLUserAccount, SmartQuery<SQLUserAccount>> {
 

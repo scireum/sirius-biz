@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 /**
  * Provides a report which shows the utilization of the Clickhouse database which stores all recorded events.
  */
-@Register(classes = JobFactory.class)
+@Register
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ClickhousePartsReportJobFactory extends ReportJobFactory {
 

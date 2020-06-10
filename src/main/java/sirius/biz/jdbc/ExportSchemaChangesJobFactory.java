@@ -33,7 +33,7 @@ import java.util.function.Consumer;
 /**
  * Exports all required schema changes as defined by {@link Schema#getSchemaUpdateActions()}.
  */
-@Register(classes = JobFactory.class)
+@Register
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ExportSchemaChangesJobFactory extends SimpleBatchProcessJobFactory {
 

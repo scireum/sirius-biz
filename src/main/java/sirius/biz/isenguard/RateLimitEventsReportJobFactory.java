@@ -39,7 +39,7 @@ import java.util.function.Consumer;
  * <p>
  * This job will also offer itself as matching job for all entities which implement {@link RateLimitedEntity}.
  */
-@Register(classes = JobFactory.class, framework = Isenguard.FRAMEWORK_ISENGUARD)
+@Register(framework = Isenguard.FRAMEWORK_ISENGUARD)
 @Permission(Isenguard.PERMISSION_VIEW_RATE_LIMITS)
 public class RateLimitEventsReportJobFactory extends ReportJobFactory {
 

@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 /**
  * Provides an export for entries of a {@link sirius.biz.codelists.mongo.MongoCodeList}.
  */
-@Register(classes = JobFactory.class, framework = MongoCodeLists.FRAMEWORK_CODE_LISTS_MONGO)
+@Register(framework = MongoCodeLists.FRAMEWORK_CODE_LISTS_MONGO)
 @Permission(CodeListController.PERMISSION_MANAGE_CODELISTS)
 public class MongoCodeListExportJobFactory
         extends EntityExportJobFactory<MongoCodeListEntry, MongoQuery<MongoCodeListEntry>> {

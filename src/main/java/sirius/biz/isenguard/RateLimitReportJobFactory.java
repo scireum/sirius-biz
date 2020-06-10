@@ -35,7 +35,7 @@ import java.util.function.Consumer;
  *
  * @see Isenguard#PERMISSION_VIEW_RATE_LIMITS
  */
-@Register(classes = JobFactory.class, framework = Isenguard.FRAMEWORK_ISENGUARD)
+@Register(framework = Isenguard.FRAMEWORK_ISENGUARD)
 @Permission(UserInfo.PERMISSION_LOGGED_IN)
 public class RateLimitReportJobFactory extends ReportJobFactory {
 

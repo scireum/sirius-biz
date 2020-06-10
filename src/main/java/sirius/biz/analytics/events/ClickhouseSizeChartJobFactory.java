@@ -36,7 +36,7 @@ import java.util.function.Consumer;
 /**
  * Shows the growth of the analytics data warehouse stored in Clickhouse.
  */
-@Register(classes = JobFactory.class)
+@Register
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ClickhouseSizeChartJobFactory extends LinearChartJobFactory {
 

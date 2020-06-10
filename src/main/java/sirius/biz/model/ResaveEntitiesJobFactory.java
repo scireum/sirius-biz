@@ -46,7 +46,7 @@ import java.util.function.Consumer;
  * @see sirius.db.mixing.annotations.BeforeSave
  * @see sirius.db.mixing.annotations.OnValidate
  */
-@Register(classes = JobFactory.class)
+@Register
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
 

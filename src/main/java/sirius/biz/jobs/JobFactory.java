@@ -11,6 +11,7 @@ package sirius.biz.jobs;
 import sirius.biz.jobs.infos.JobInfo;
 import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.commons.Value;
+import sirius.kernel.di.std.AutoRegister;
 import sirius.kernel.di.std.Named;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.health.HandledException;
@@ -31,6 +32,7 @@ import java.util.function.Function;
  * Also note, that an implementation should most probably subclass {@link BasicJobFactory} as it performs all the
  * heavy lifting.
  */
+@AutoRegister
 public interface JobFactory extends Named, Priorized {
 
     /**

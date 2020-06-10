@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 /**
  * Lists all currently blocked IP addresses as reported by {@link Isenguard#getBlockedIPs()}.
  */
-@Register(classes = JobFactory.class, framework = Isenguard.FRAMEWORK_ISENGUARD)
+@Register(framework = Isenguard.FRAMEWORK_ISENGUARD)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class BlockedIPsReportJobFactory extends ReportJobFactory {
 

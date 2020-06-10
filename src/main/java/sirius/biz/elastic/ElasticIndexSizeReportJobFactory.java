@@ -33,7 +33,7 @@ import java.util.function.Consumer;
 /**
  * Reports the cluster health and index size of Elasticsearch.
  */
-@Register(classes = JobFactory.class)
+@Register
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ElasticIndexSizeReportJobFactory extends ReportJobFactory {
 

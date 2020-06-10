@@ -32,7 +32,7 @@ import java.util.function.Consumer;
 /**
  * Exports all rows of a given SQL query as Excel or CSV file.
  */
-@Register(classes = JobFactory.class)
+@Register
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ExportQueryResultJobFactory extends LineBasedExportJobFactory {
 

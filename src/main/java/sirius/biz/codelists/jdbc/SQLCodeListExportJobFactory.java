@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 /**
  * Provides an export for entries of a {@link sirius.biz.codelists.jdbc.SQLCodeList}.
  */
-@Register(classes = JobFactory.class, framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
+@Register(framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
 @Permission(CodeListController.PERMISSION_MANAGE_CODELISTS)
 public class SQLCodeListExportJobFactory
         extends EntityExportJobFactory<SQLCodeListEntry, SmartQuery<SQLCodeListEntry>> {

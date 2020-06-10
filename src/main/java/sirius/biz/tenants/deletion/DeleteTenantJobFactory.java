@@ -41,7 +41,7 @@ import java.util.function.Consumer;
  * Implement and register a {@link DeleteTenantTask} object to implement logic for deleting external tenant data,
  * like {@link UserAccount UserAccounts} for example.
  */
-@Register(classes = JobFactory.class, framework = Tenants.FRAMEWORK_TENANTS)
+@Register(framework = Tenants.FRAMEWORK_TENANTS)
 @Permission(TenantController.PERMISSION_MANAGE_TENANTS)
 public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
 
