@@ -34,7 +34,11 @@
         </tbody>
     </w:table>
 
+    <i:if test="tenants.size() == 1 && !user.getUser().isLoggedIn()">
         <script type="text/javascript">
+            $(document).ready(function() {
+                $('form.samlForm').submit();
+            });
         </script>
     </i:if>
 </w:page>
