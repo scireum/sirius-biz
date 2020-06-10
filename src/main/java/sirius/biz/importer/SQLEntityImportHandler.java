@@ -91,12 +91,13 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
 
     @Override
     protected void collectExportableMappings(BiConsumer<Integer, Mapping> collector) {
-        // Empty by default as this is kind of an exotic way to extend the handler
+        collector.accept(10, SQLEntity.ID);
     }
 
     @Override
     protected void collectDefaultExportableMappings(BiConsumer<Integer, Mapping> collector) {
-        collector.accept(10, SQLEntity.ID);
+        // Provides an empty base implementation as for most entities this can be controlled
+        // via @Exportable
     }
 
     /**
