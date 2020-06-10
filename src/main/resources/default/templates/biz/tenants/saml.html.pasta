@@ -9,49 +9,32 @@
 
     <w:pageHeader titleKey="SAMLController.loginViaSAML"/>
 
-    <i:if test="!tenants.isEmpty()">
-        <w:table data="tenants">
-            <thead>
+    <w:table data="tenants">
+        <thead>
+        <tr>
+            <th>
+                @i18n("Model.name")
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants">
             <tr>
-                <th>
-                    @i18n("Model.name")
-                </th>
+                <td>
+                    <i:local name="id" value="call.generateLocalId()"/>
+                    <form class="samlForm" id="@id" method="post" action="@tenant.getTenantData().getSamlIssuerUrl()">
+                        <input type="hidden" name="SAMLRequest"
+                               value="@saml.generateAuthenticationRequest(tenant.getTenantData().getSamlRequestIssuerName(), tenant.getTenantData().getSamlIssuerIndex())"/>
+                    </form>
+
+                    <a class="link" href="javascript:$('#@id').submit()">@tenant.getTenantData().getName()</a>
+                </td>
             </tr>
-            </thead>
-            <tbody>
-            <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants">
-                <tr>
-                    <td>
-                        <i:local name="id" value="call.generateLocalId()"/>
-                        <form class="samlForm" id="@id" method="post" action="@tenant.getTenantData().getSamlIssuerUrl()">
-                            <input type="hidden" name="SAMLRequest"
-                                   value="@saml.generateAuthenticationRequest(tenant.getTenantData().getSamlRequestIssuerName(), tenant.getTenantData().getSamlIssuerIndex())"/>
-                        </form>
+        </i:for>
+        </tbody>
+    </w:table>
 
-                        <a class="link" href="javascript:$('#@id').submit()">@tenant.getTenantData().getName()</a>
-                    </td>
-                </tr>
-            </i:for>
-            </tbody>
-        </w:table>
-    </i:if>
-    <w:subHeading labelKey="SAMLController.customSaml"/>
-    <w:editForm url="/saml">
-        <div class="row">
-            <w:textfield name="issuerName" value="@call.get('issuerName').asString()"
-                         labelKey="TenantData.samlRequestIssuerName"
-                         required="true"/>
-            <w:textfield name="issuerIndex" value="@call.get('issuerIndex').asString('0')"
-                         labelKey="TenantData.samlIssuerIndex" required="true"/>
-            <w:textfield name="issuerUrl" value="@call.get('issuerUrl').asString()" labelKey="TenantData.samlIssuerUrl"
-                         required="true" span="12"/>
-        </div>
-
-        <w:formBar/>
-    </w:editForm>
-    <i:if test="tenants.size() == 1 && tenants.get(0).as(sirius.biz.tenants.Tenant.class).isNew()">
         <script type="text/javascript">
-            $('form.samlForm').submit();
         </script>
     </i:if>
 </w:page>
