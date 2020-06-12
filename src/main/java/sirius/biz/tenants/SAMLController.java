@@ -24,7 +24,6 @@ import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,6 +37,11 @@ import java.util.UUID;
 @Register(framework = Tenants.FRAMEWORK_TENANTS)
 public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {
+
+    /**
+     * Contains the URI prefix shared by all routes related to the SAML login process.
+     */
+    public static final String SAML_URI_PREFIX = "/saml";
 
     @Part
     private SAMLHelper saml;
@@ -53,39 +57,17 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
      *
      * @param ctx the current request
      */
-    @Routed("/saml")
+    @Routed(SAML_URI_PREFIX)
     public void saml(WebContext ctx) {
-        List<T> tenants = obtainTenantsForSaml(ctx);
-
+        List<T> tenants = querySAMLTenants();
         ctx.respondWith().template("/templates/biz/tenants/saml.html.pasta", tenants);
     }
 
-    private List<T> obtainTenantsForSaml(WebContext ctx) {
-        // If GET parameters are present, we create a "fake" tenant to provide a custom SAML target.
-        // This can be used if several identity providers are available for a single tenant.
-        // We can verify several tenants but we can only redirect to a single identity provider.
-        // Therefore these parameters can be used to create a SAML request to a custom one.
-        if (ctx.hasParameter("issuerName")) {
-            return createFakeTenantForUserSubmittedData(ctx);
-        }
-
-        return querySAMLTenants();
-    }
-
-    protected List<T> createFakeTenantForUserSubmittedData(WebContext ctx) {
-        T fakeTenant = null;
-        try {
-            fakeTenant = getTenantClass().getDeclaredConstructor().newInstance();
-            fakeTenant.getTenantData().setSamlRequestIssuerName(ctx.require("issuerName").asString());
-            fakeTenant.getTenantData().setSamlIssuerUrl(ctx.require("issuerUrl").asString().replace("javascript:", ""));
-            fakeTenant.getTenantData().setSamlIssuerIndex(ctx.get("issuerIndex").asString("0"));
-        } catch (Exception e) {
-            Exceptions.handle(BizController.LOG, e);
-        }
-
-        return Collections.singletonList(fakeTenant);
-    }
-
+    /**
+     * Returns the actual entity class used to represent tenants.
+     *
+     * @return the entity class represeting tenants
+     */
     @SuppressWarnings("unchecked")
     protected Class<T> getTenantClass() {
         return (Class<T>) tenants.getTenantClass();
@@ -96,10 +78,10 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
      *
      * @param ctx the SAML response as request
      */
-    @Routed("/saml/login")
+    @Routed(SAML_URI_PREFIX + "/login")
     public void samlLogin(WebContext ctx) {
         if (!ctx.isUnsafePOST()) {
-            ctx.respondWith().redirectToGet("/saml");
+            ctx.respondWith().redirectToGet(SAML_URI_PREFIX);
             return;
         }
 
@@ -125,13 +107,7 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
         userContext.setCurrentUser(user);
         manager.onExternalLogin(ctx, user);
 
-        manager.installFingerprintInSession(ctx,
-                                            user.getUserObject(UserAccount.class)
-                                                .getUserAccountData()
-                                                .getLogin()
-                                                .getFingerprint());
-
-        ctx.respondWith().redirectToGet(ctx.get("goto").asString(wondergemRoot));
+        ctx.respondWith().template("/templates/biz/tenants/saml-complete.html.pasta", response);
     }
 
     private UserInfo tryCreateUser(WebContext ctx, SAMLResponse response) {
@@ -168,6 +144,11 @@ public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends Ba
         }
     }
 
+    /**
+     * Returns the actual entity class used to represent users.
+     *
+     * @return the entity class represeting users
+     */
     @SuppressWarnings("unchecked")
     protected Class<U> getUserClass() {
         return (Class<U>) tenants.getUserClass();

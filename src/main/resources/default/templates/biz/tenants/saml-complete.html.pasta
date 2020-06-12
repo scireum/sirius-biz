@@ -1,0 +1,29 @@
+<i:arg type="sirius.web.security.SAMLResponse" name="response" />
+
+<w:page titleKey="SAMLController.loginViaSAML" ignoreDisasterMode="true">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/saml">@i18n("SAMLController.loginViaSAML")</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader titleKey="SAMLController.samlRedirect"/>
+        <script type="text/javascript">
+            $(document).ready(function () {
+                let target = '@wondergemRoot';
+
+                try {
+                    target = window.localStorage.getItem('samlPostLoginUri');
+                    if (target != null && target !== '') {
+                        window.location.replace(target);
+                        return;
+                    }
+                } catch (e) {
+                    console.log(e);
+                }
+
+                window.location.replace('@wondergemRoot');
+            });
+        </script>
+
+</w:page>

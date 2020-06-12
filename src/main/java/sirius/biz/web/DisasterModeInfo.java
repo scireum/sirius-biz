@@ -8,6 +8,7 @@
 
 package sirius.biz.web;
 
+import sirius.biz.tenants.SAMLController;
 import sirius.db.redis.Redis;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.cache.CacheManager;
@@ -192,7 +193,7 @@ public class DisasterModeInfo implements MaintenanceInfo {
      * @return <tt>true</tt> if the uri can be accessed despite of an active lock, <tt>false</tt> otherwise
      */
     private boolean isWhitelistedURI(String uri) {
-        return DisasterController.URI_DISASTER.equals(uri) || (DisasterController.URI_SYSTEM_DISASTER).equals(uri);
+        return DisasterController.URI_DISASTER.equals(uri) || DisasterController.URI_SYSTEM_DISASTER.equals(uri) || uri.startsWith(SAMLController.SAML_URI_PREFIX);
     }
 
     /**
