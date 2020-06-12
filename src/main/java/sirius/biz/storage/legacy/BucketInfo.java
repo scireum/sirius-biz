@@ -36,6 +36,7 @@ public class BucketInfo {
     private boolean showPublicURLs;
     private int deleteFilesAfterDays;
     private PhysicalStorageEngine engine;
+    private boolean logAsDeprecated;
 
     @Part
     private static OMA oma;
@@ -59,6 +60,7 @@ public class BucketInfo {
         this.showPublicURLs = extension.get("showPublicURLs").asBoolean();
         this.deleteFilesAfterDays = extension.get("deleteFilesAfterDays").asInt(0);
         this.engine = context.findPart(extension.get("engine").asString(), PhysicalStorageEngine.class);
+        this.logAsDeprecated = extension.get("logAsDeprecated").asBoolean();
     }
 
     /**
@@ -163,5 +165,14 @@ public class BucketInfo {
      */
     public PhysicalStorageEngine getEngine() {
         return engine;
+    }
+
+    /**
+     * Determines if uses of the bucket should be logged into the deprecated log if it's log level is FINE.
+     *
+     * @return <tt>true</tt> if uses should be logged, <tt>false</tt> otherwise
+     */
+    public boolean shouldLogAsDeprecated() {
+        return logAsDeprecated;
     }
 }
