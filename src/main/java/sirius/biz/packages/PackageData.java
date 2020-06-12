@@ -14,6 +14,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.annotations.OnValidate;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.StringList;
 import sirius.kernel.commons.Strings;
@@ -27,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
 /**
@@ -90,6 +92,13 @@ public class PackageData extends Composite {
     public PackageData(BaseEntity<?> owner, String scope) {
         this.owner = owner;
         this.scope = scope;
+    }
+
+    @OnValidate
+    protected void validate(Consumer<String> warningConsumer) {
+        if (Strings.isEmpty(packageString) && hasAvailablePackagesOrUpgrades()) {
+            warningConsumer.accept("Es wurde noch kein Leistungspaket zugewiesen.");
+        }
     }
 
     /**
