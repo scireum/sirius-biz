@@ -5,8 +5,14 @@
     <i:block name="settings">
         <w:menuSection framework="biz.tenants">
             <w:menuItem titleKey="Tenant.plural" url="/tenants" permission="permission-manage-tenants"/>
-            <w:menuItem titleKey="UserAccount.plural" url="/user-accounts"
-                        permission="permission-manage-user-accounts"/>
+            <i:if test="user.getCurrentUser().as(sirius.biz.tenants.Tenant.class).hasPermission('flag-system-tenant')">
+                <w:menuItem titleKey="UserAccount.plural" url="/user-accounts"
+                            permission="permission-manage-system-users"/>
+                <i:else>
+                    <w:menuItem titleKey="UserAccount.plural" url="/user-accounts"
+                                permission="permission-manage-user-accounts"/>
+                </i:else>
+            </i:if>
         </w:menuSection>
 
     </i:block>

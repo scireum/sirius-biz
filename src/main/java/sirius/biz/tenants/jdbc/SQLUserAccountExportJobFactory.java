@@ -10,11 +10,15 @@ package sirius.biz.tenants.jdbc;
 
 import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
+import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.jdbc.SmartQuery;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.http.QueryString;
 import sirius.web.security.Permission;
+import sirius.web.security.UserContext;
+import sirius.web.security.UserInfo;
 
 import javax.annotation.Nonnull;
 
@@ -22,13 +26,25 @@ import javax.annotation.Nonnull;
  * Provides an export for {@link SQLUserAccount user accounts}.
  */
 @Register(classes = JobFactory.class, framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
-@Permission(UserAccountController.PERMISSION_MANAGE_USER_ACCOUNTS)
 public class SQLUserAccountExportJobFactory extends EntityExportJobFactory<SQLUserAccount, SmartQuery<SQLUserAccount>> {
+
+    @Part
+    private SQLTenants tenants;
 
     @Nonnull
     @Override
     public String getName() {
         return "export-sql-user-accounts";
+    }
+
+    @Override
+    protected void checkPermissions() {
+        UserInfo currentUser = UserContext.getCurrentUser();
+        if (tenants.getRequiredTenant().hasPermission(Tenant.PERMISSION_SYSTEM_TENANT)) {
+            currentUser.assertPermission(UserAccountController.PERMISSION_MANAGE_SYSTEM_USERS);
+        } else {
+            currentUser.assertPermission(UserAccountController.PERMISSION_MANAGE_USER_ACCOUNTS);
+        }
     }
 
     @Override

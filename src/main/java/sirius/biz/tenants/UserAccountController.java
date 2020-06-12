@@ -56,6 +56,12 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     public static final String PERMISSION_MANAGE_USER_ACCOUNTS = "permission-manage-user-accounts";
 
+
+    /**
+     * The permission required to add, modify or lock accounts of the system tenant.
+     */
+    public static final String PERMISSION_MANAGE_SYSTEM_USERS = "permission-manage-system-users";
+
     /**
      * The feature required to provide a custom config per user account.
      */
@@ -107,8 +113,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     @Routed(LIST_ROUTE)
     @DefaultRoute
     @LoginRequired
-    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void accounts(WebContext webContext) {
+        assertProperUserManagementPermission();
         Page<U> accounts = getUsersAsPage().withContext(webContext)
                                            .addBooleanFacet(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                          .inner(LoginData.ACCOUNT_LOCKED)
@@ -117,6 +123,14 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                                            .asPage();
 
         webContext.respondWith().template("/templates/biz/tenants/user-accounts.html.pasta", accounts, getUserClass());
+    }
+
+    protected void assertProperUserManagementPermission() {
+        if (tenants.getRequiredTenant().hasPermission(Tenant.PERMISSION_SYSTEM_TENANT)) {
+            assertPermission(PERMISSION_MANAGE_SYSTEM_USERS);
+        } else {
+            assertPermission(PERMISSION_MANAGE_USER_ACCOUNTS);
+        }
     }
 
     /**
@@ -144,8 +158,9 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     @Routed("/user-account/:1")
     @LoginRequired
-    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void account(WebContext webContext, String accountId) {
+        assertProperUserManagementPermission();
+
         U userAccount = findForTenant(getUserClass(), accountId);
 
         boolean requestHandled = prepareSave(webContext).withAfterCreateURI("/user-account/${id}")
@@ -204,9 +219,10 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     @Routed("/user-account/:1/config")
     @LoginRequired
-    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     @Permission(FEATURE_USER_ACCOUNT_CONFIG)
     public void accountConfig(WebContext webContext, String accountId) {
+        assertProperUserManagementPermission();
+
         U userAccount = findForTenant(getUserClass(), accountId);
         assertNotNew(userAccount);
         webContext.respondWith().template("/templates/biz/tenants/user-account-config.html.pasta", userAccount);
@@ -221,9 +237,10 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     @Routed(value = "/user-account/:1/config/update", jsonCall = true)
     @LoginRequired
-    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     @Permission(FEATURE_USER_ACCOUNT_CONFIG)
     public void updateAccountConfig(WebContext webContext, JSONStructuredOutput jsonOutput, String accountId) {
+        assertProperUserManagementPermission();
+
         U userAccount = findForTenant(getUserClass(), accountId);
         assertNotNew(userAccount);
 
@@ -279,8 +296,9 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     @Routed("/user-account/:1/generate-password")
     @LoginRequired
-    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void generatePassword(final WebContext webContext, String accountId) {
+        assertProperUserManagementPermission();
+
         U userAccount = findForTenant(getUserClass(), accountId);
 
         generateNewPassword(userAccount);
@@ -297,8 +315,9 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     @Routed("/user-account/:1/generate-and-send-password")
     @LoginRequired
-    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void generateAndSendPassword(final WebContext webContext, String accountId) {
+        assertProperUserManagementPermission();
+
         U userAccount = findForTenant(getUserClass(), accountId);
 
         generateNewPassword(userAccount);
@@ -439,8 +458,9 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     @LoginRequired
     @Routed("/user-account/:1/lock")
-    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void lockUser(final WebContext webContext, String accountId) {
+        assertProperUserManagementPermission();
+
         Optional<U> account = tryFindForTenant(getUserClass(), accountId);
         account.ifPresent(user -> {
             if (Objects.equals(getUser().getUserObject(UserAccount.class), user)) {
@@ -462,8 +482,9 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     @LoginRequired
     @Routed("/user-account/:1/unlock")
-    @Permission(PERMISSION_MANAGE_USER_ACCOUNTS)
     public void unlockUser(final WebContext webContext, String accountId) {
+        assertProperUserManagementPermission();
+
         Optional<U> account = tryFindForTenant(getUserClass(), accountId);
         account.ifPresent(user -> {
             user.getUserAccountData().getLogin().setAccountLocked(false);
@@ -483,6 +504,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     @Routed("/user-account/:1/delete")
     @Permission(PERMISSION_DELETE_USER_ACCOUNTS)
     public void deleteAdmin(final WebContext webContext, String accountId) {
+        assertProperUserManagementPermission();
+        
         Optional<U> account = tryFindForTenant(getUserClass(), accountId);
         account.ifPresent(u -> {
             if (Objects.equals(getUser().getUserObject(UserAccount.class), u)) {
