@@ -252,6 +252,79 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
+    public void attachBlobByType(String objectKey, String referencingEntity, String referenceDesignator) {
+        if (Strings.isEmpty(referencingEntity)) {
+            return;
+        }
+
+        if (Strings.isEmpty(referenceDesignator)) {
+            return;
+        }
+
+        if (Strings.isEmpty(objectKey)) {
+            return;
+        }
+
+        try {
+            // Remove any previous references...
+            oma.updateStatement(SQLBlob.class)
+               .set(SQLBlob.REFERENCE, null)
+               .set(SQLBlob.REFERENCE_DESIGNATOR, null)
+               .where(SQLBlob.SPACE_NAME, spaceName)
+               .where(SQLBlob.REFERENCE, referencingEntity)
+               .where(SQLBlob.REFERENCE_DESIGNATOR, referenceDesignator)
+               .where(SQLBlob.TEMPORARY, false)
+               .where(SQLBlob.COMMITTED, true)
+               .where(SQLBlob.DELETED, false)
+               .executeUpdate();
+
+            // Place new reference...
+            int numChanges = oma.updateStatement(SQLBlob.class)
+                                .set(SQLBlob.REFERENCE, referencingEntity)
+                                .set(SQLBlob.REFERENCE_DESIGNATOR, referenceDesignator)
+                                .where(SQLBlob.SPACE_NAME, spaceName)
+                                .where(SQLBlob.BLOB_KEY, objectKey)
+                                .where(SQLBlob.REFERENCE, null)
+                                .where(SQLBlob.REFERENCE_DESIGNATOR, null)
+                                .where(SQLBlob.TEMPORARY, false)
+                                .where(SQLBlob.COMMITTED, true)
+                                .where(SQLBlob.DELETED, false)
+                                .executeUpdate();
+            if (numChanges == 0) {
+                throw Exceptions.handle()
+                                .to(StorageUtils.LOG)
+                                .withSystemErrorMessage(
+                                        "Layer 2/SQL: An error occured, cannot reference '%s' from '%s' ('%s'): The blob is either deleted, temporary or already in use.",
+                                        objectKey,
+                                        referencingEntity,
+                                        referenceDesignator)
+                                .handle();
+            }
+        } catch (SQLException e) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .error(e)
+                            .withSystemErrorMessage(
+                                    "Layer 2/SQL: An error occured, when referencing '%s' from '%s' ('%s'): %s (%s)",
+                                    objectKey,
+                                    referencingEntity,
+                                    referenceDesignator)
+                            .handle();
+        }
+    }
+
+    @Override
+    public Optional<? extends Blob> findAttachedBlobByType(String referencingEntity, String referenceDesignator) {
+        return oma.select(SQLBlob.class)
+                  .eq(SQLBlob.SPACE_NAME, spaceName)
+                  .eq(SQLBlob.REFERENCE, referencingEntity)
+                  .eq(SQLBlob.REFERENCE_DESIGNATOR, referenceDesignator)
+                  .eq(SQLBlob.COMMITTED, true)
+                  .eq(SQLBlob.DELETED, false)
+                  .first();
+    }
+
+    @Override
     public void markAsUsed(String referencingEntity, String referenceDesignator, String objectKey) {
         if (Strings.isEmpty(referencingEntity)) {
             return;

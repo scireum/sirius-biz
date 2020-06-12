@@ -168,6 +168,26 @@ public interface BlobStorageSpace {
     void deleteAttachedBlobs(String referencingEntity);
 
     /**
+     * Attaches the given existing blob to the given entity and designator.
+     * <p>
+     * This is used by the {@link BlobCrossRef} to reference existing (most probably visible blobs) from an entity.
+     *
+     * @param objectKey           the blob to reference
+     * @param referencingEntity   the unique name of the entity
+     * @param referenceDesignator the field name of the {@link BlobCrossRef}
+     */
+    void attachBlobByType(String objectKey, String referencingEntity, String referenceDesignator);
+
+    /**
+     * Resolves the referenced blob for a {@link BlobCrossRef}.
+     *
+     * @param referencingEntity   the unique name of the entity
+     * @param referenceDesignator the field name of the {@link BlobCrossRef}
+     * @return the referenced blob wrapped as optional or an empty optional if no blob was attached
+     */
+    Optional<? extends Blob> findAttachedBlobByType(String referencingEntity, String referenceDesignator);
+
+    /**
      * Used by {@link BlobHardRef} when the referencing entity is persisted.
      * <p>
      * This will mark blobs created with {@link #createTemporaryBlob()} as permanent.
