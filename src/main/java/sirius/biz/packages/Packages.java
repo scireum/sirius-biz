@@ -64,6 +64,17 @@ public class Packages {
     }
 
     /**
+     * Returns the translated description for the given package of the given scope.
+     *
+     * @param scope      the scope
+     * @param packageKey the package key
+     * @return the translated name for the given package of the given scope
+     */
+    public String getPackageDescription(@Nonnull String scope, @Nonnull String packageKey) {
+        return NLS.getIfExists("Packages.package." + scope + "." + packageKey + ".description", null).orElse("");
+    }
+
+    /**
      * Returns the list of upgrades available for the given scope.
      *
      * @param scope the scope
@@ -88,6 +99,17 @@ public class Packages {
             return "";
         }
         return NLS.get("Packages.upgrade." + scope + "." + upgradeKey);
+    }
+
+    /**
+     * Returns the translated description for the given upgrade of the given scope.
+     *
+     * @param scope      the scope
+     * @param upgradeKey the upgrade key
+     * @return the translated name for the given upgrade of the given scope
+     */
+    public String getUpgradeDescription(@Nonnull String scope, @Nonnull String upgradeKey) {
+        return NLS.getIfExists("Packages.upgrade." + scope + "." + upgradeKey + ".description", null).orElse("");
     }
 
     /**
