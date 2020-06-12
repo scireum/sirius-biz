@@ -78,13 +78,46 @@ public class PackageData extends Composite {
     @Transient
     private Set<String> directPermissions;
 
+    @Transient
+    private String scope;
+
     /**
      * Creates a new instance for the given owner.
      *
      * @param owner the owner entity which contains this composite.
+     * @param scope the scope used to determine which packages and updgrades to consider
      */
-    public PackageData(BaseEntity<?> owner) {
+    public PackageData(BaseEntity<?> owner, String scope) {
         this.owner = owner;
+        this.scope = scope;
+    }
+
+    /**
+     * Boilerplate method to determine all available packages for the scope of this package data.
+     *
+     * @return a list of all available packages
+     */
+    public List<String> getAvailablePackages() {
+        return packages.getPackages(scope);
+    }
+
+    /**
+     * Boilerplate method to determine all available upgrades for the scope of this package data.
+     *
+     * @return a list of all available upgrades
+     */
+    public List<String> getAvailableUpgrades() {
+        return packages.getUpgrades(scope);
+    }
+
+    /**
+     * Determines if there are either packages or upgrades defined for the scope of this package data.
+     *
+     * @return <tt>true</tt>if either {@link #getAvailablePackages()} or {@link #getAvailableUpgrades()} will return
+     * a non-empty list
+     */
+    public boolean hasAvailablePackagesOrUpgrades() {
+        return !getAvailablePackages().isEmpty() || !getAvailableUpgrades().isEmpty();
     }
 
     public void setPackage(String packageString) {
@@ -227,5 +260,9 @@ public class PackageData extends Composite {
 
     public BaseEntity<?> getOwner() {
         return owner;
+    }
+
+    public String getScope() {
+        return scope;
     }
 }
