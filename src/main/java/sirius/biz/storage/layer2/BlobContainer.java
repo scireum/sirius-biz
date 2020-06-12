@@ -25,19 +25,8 @@ import java.util.Optional;
  * <p>
  * This also contains an automatic delete handler which removes all blobs once the referencing entity is deleted.
  */
-public class BlobContainer extends Composite {
+public class BlobContainer extends BaseBlobContainer {
 
-    @Transient
-    private final String spaceName;
-
-    @Transient
-    private final BaseEntity<?> owner;
-
-    @Transient
-    private BlobStorageSpace space;
-
-    @Part
-    private static BlobStorage objectStorage;
 
     /**
      * Creates a new container for the given entity.
@@ -46,21 +35,7 @@ public class BlobContainer extends Composite {
      * @param spaceName the space used to store the attached files
      */
     public BlobContainer(BaseEntity<?> owner, String spaceName) {
-        this.owner = owner;
-        this.spaceName = spaceName;
-    }
-
-    /**
-     * Returns the space which is in charge of managing the attached blobs.
-     *
-     * @return the space which stores the attached blobs
-     */
-    protected BlobStorageSpace getSpace() {
-        if (space == null) {
-            space = objectStorage.getSpace(spaceName);
-        }
-
-        return space;
+        super(owner, spaceName);
     }
 
     /**
@@ -90,13 +65,6 @@ public class BlobContainer extends Composite {
                             .to(StorageUtils.LOG)
                             .withSystemErrorMessage(
                                     "Layer 2: Cannot create an attached object for a non-persistent entity of type %s",
-                                    owner.getClass().getName())
-                            .handle();
-        }
-        if (objectStorage == null) {
-            throw Exceptions.handle() .to(StorageUtils.LOG)
-                            .withSystemErrorMessage(
-                                    "Layer 2: No metadata storage framework has been enabled.",
                                     owner.getClass().getName())
                             .handle();
         }
