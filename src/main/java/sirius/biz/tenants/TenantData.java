@@ -272,7 +272,7 @@ public class TenantData extends Composite implements Journaled {
     public TenantData(BaseEntity<?> tenantObject) {
         this.tenantObject = tenantObject;
         this.journal = new JournalData(tenantObject);
-        this.packageData = new PackageData(tenantObject);
+        this.packageData = new PackageData(tenantObject, "tenant");
     }
 
     @BeforeSave
