@@ -40,12 +40,7 @@ public class SQLUserAccountImportJobFactory extends EntityImportJobFactory {
 
     @Override
     protected void checkPermissions() {
-        UserInfo currentUser = UserContext.getCurrentUser();
-        if (tenants.getRequiredTenant().hasPermission(Tenant.PERMISSION_SYSTEM_TENANT)) {
-            currentUser.assertPermission(UserAccountController.PERMISSION_MANAGE_SYSTEM_USERS);
-        } else {
-            currentUser.assertPermission(UserAccountController.PERMISSION_MANAGE_USER_ACCOUNTS);
-        }
+        UserAccountController.assertProperUserManagementPermission();
     }
 
     @Override
