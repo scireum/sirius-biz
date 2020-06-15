@@ -14,7 +14,7 @@ import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 
-@Register(classes = Controller.class)
+@Register
 public class AutoLoadController extends BizController {
 
     @Routed("/auto-load-controller/:1")
