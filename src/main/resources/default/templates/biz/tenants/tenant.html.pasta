@@ -43,7 +43,7 @@
                 <w:navbox labelKey="Model.links">
                     <w:navboxLink labelKey="Model.details" url="@apply('/tenant/%s', tenant.getIdAsString())"
                                   active="page == 'details'"/>
-                    <i:if test="packages.hasPackagesOrUpgrades('tenant')">
+                    <i:if test="tenant.getTenantData().getPackageData().hasAvailablePackagesOrUpgrades()">
                         <w:navboxLink labelKey="PackageData.packageString" url="@apply('/tenant/%s/package', tenant.getIdAsString())"
                                       active="page == 'package'"/>
                     </i:if>
