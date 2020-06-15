@@ -11,8 +11,10 @@ package sirius.biz.storage.layer2;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.annotations.AfterDelete;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
 
+import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -20,11 +22,12 @@ import java.util.Optional;
 /**
  * Can be placed into a {@link BaseEntity} to attach various {@link Blob blobs} to it.
  * <p>
- * This also contains an automatic delete handler which removes all blobs once the referencing entity is deleted.
+ * Compared to {@link BlobContainer}, this only references <b>existing</b> blobs which are e.g. created via
+ * {@link BlobStorageSpace#findOrCreateByPath(String)}
  *
- * @see BlobReferenceContainer
+ * @see BlobContainer
  */
-public class BlobContainer extends BaseBlobContainer {
+public class BlobReferenceContainer extends BaseBlobContainer {
 
     /**
      * Creates a new container for the given entity.
@@ -32,32 +35,33 @@ public class BlobContainer extends BaseBlobContainer {
      * @param owner     the entity to which the blobs are attached
      * @param spaceName the space used to store the attached files
      */
-    public BlobContainer(BaseEntity<?> owner, String spaceName) {
+    public BlobReferenceContainer(BaseEntity<?> owner, String spaceName) {
         super(owner, spaceName);
     }
 
     /**
-     * Tries to resolve the blob with the given filename which has been attached to the referencing entity.
+     * Tries to resolve the blob which has been attached for the given type to the referencing entity.
      *
-     * @param filename the file to lookup
-     * @return the blob with the given name wrapped as optional or an empty optional if no matching blob was found
+     * @param type the type for which the blob was attached earlier
+     * @return the blob with the given type wrapped as optional or an empty optional if no matching blob was found
      */
-    public Optional<? extends Blob> findAttachedBlobByName(String filename) {
+    public Optional<? extends Blob> findReferencedBlobByType(String type) {
         if (owner.isNew() || objectStorage == null) {
             return Optional.empty();
         }
-        return getSpace().findAttachedBlobByName(owner.getUniqueName(), filename);
+        return getSpace().findAttachedBlobByType(owner.getUniqueName(), type);
     }
 
     /**
-     * Tries to resolve the blob with the given filename which has been attached to the referencing entity or creates
-     * a new one if none is found.
+     * Attaches the given blob with the given type to the referenced entity.
+     * <p>
+     * Note that the type can be any custom value, but must not match the name of a {@link BlobHardRef} or
+     * {@link BlobSoftRef} in the entity.
      *
-     * @param filename the file to lookup
-     * @return the blob with the given name which is attached to the referencing entity
-     * @throws sirius.kernel.health.HandledException if the referencing entity is new and hasn't been persisted yet
+     * @param blob the blob to attach
+     * @param type the type to attach the blob for
      */
-    public Blob findOrCreateAttachedBlobByName(String filename) {
+    public void attachBlob(Blob blob, @Nonnull String type) {
         if (owner.isNew()) {
             throw Exceptions.handle()
                             .to(StorageUtils.LOG)
@@ -66,7 +70,14 @@ public class BlobContainer extends BaseBlobContainer {
                                     owner.getClass().getName())
                             .handle();
         }
-        return getSpace().findOrCreateAttachedBlobByName(owner.getUniqueName(), filename);
+        if (blob == null) {
+            return;
+        }
+        if (Strings.isEmpty(type)) {
+            throw new IllegalArgumentException("type most not be empty!");
+        }
+
+        getSpace().attachBlobByType(owner.getUniqueName(), owner.getUniqueName(), type);
     }
 
     /**

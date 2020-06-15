@@ -233,6 +233,68 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
+    public void attachBlobByType(String objectKey, String referencingEntity, String referenceDesignator) {
+        if (Strings.isEmpty(referencingEntity)) {
+            return;
+        }
+
+        if (Strings.isEmpty(referenceDesignator)) {
+            return;
+        }
+
+        if (Strings.isEmpty(objectKey)) {
+            return;
+        }
+
+        // Remove any previous references...
+        mongo.update()
+             .set(MongoBlob.REFERENCE, null)
+             .set(MongoBlob.REFERENCE_DESIGNATOR, null)
+             .where(MongoBlob.SPACE_NAME, spaceName)
+             .where(MongoBlob.REFERENCE, referencingEntity)
+             .where(MongoBlob.REFERENCE_DESIGNATOR, referenceDesignator)
+             .where(MongoBlob.TEMPORARY, false)
+             .where(MongoBlob.COMMITTED, true)
+             .where(MongoBlob.DELETED, false)
+             .executeFor(MongoBlob.class);
+
+        // Place new reference...
+        long numChanges = mongo.update()
+                               .set(MongoBlob.REFERENCE, referencingEntity)
+                               .set(MongoBlob.REFERENCE_DESIGNATOR, referenceDesignator)
+                               .where(MongoBlob.SPACE_NAME, spaceName)
+                               .where(MongoBlob.BLOB_KEY, objectKey)
+                               .where(MongoBlob.REFERENCE, null)
+                               .where(MongoBlob.REFERENCE_DESIGNATOR, null)
+                               .where(MongoBlob.TEMPORARY, false)
+                               .where(MongoBlob.COMMITTED, true)
+                               .where(MongoBlob.DELETED, false)
+                               .executeFor(MongoBlob.class)
+                               .getModifiedCount();
+        if (numChanges == 0) {
+            throw Exceptions.handle()
+                            .to(StorageUtils.LOG)
+                            .withSystemErrorMessage(
+                                    "Layer 2/Mongo: An error occured, cannot reference '%s' from '%s' ('%s'): The blob is either deleted, temporary or already in use.",
+                                    objectKey,
+                                    referencingEntity,
+                                    referenceDesignator)
+                            .handle();
+        }
+    }
+
+    @Override
+    public Optional<? extends Blob> findAttachedBlobByType(String referencingEntity, String referenceDesignator) {
+        return mango.select(MongoBlob.class)
+                    .eq(MongoBlob.SPACE_NAME, spaceName)
+                    .eq(MongoBlob.REFERENCE, referencingEntity)
+                    .eq(MongoBlob.REFERENCE_DESIGNATOR, referenceDesignator)
+                    .eq(MongoBlob.COMMITTED, true)
+                    .eq(MongoBlob.DELETED, false)
+                    .first();
+    }
+
+    @Override
     public void markAsUsed(String referencingEntity, String referenceDesignator, String objectKey) {
         if (Strings.isEmpty(referencingEntity)) {
             return;
