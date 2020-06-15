@@ -35,6 +35,7 @@ import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
 import sirius.web.security.Permissions;
 import sirius.web.security.UserContext;
+import sirius.web.security.UserInfo;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.util.List;
@@ -55,7 +56,6 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      * The permission required to add, modify or lock accounts.
      */
     public static final String PERMISSION_MANAGE_USER_ACCOUNTS = "permission-manage-user-accounts";
-
 
     /**
      * The permission required to add, modify or lock accounts of the system tenant.
@@ -125,11 +125,20 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         webContext.respondWith().template("/templates/biz/tenants/user-accounts.html.pasta", accounts, getUserClass());
     }
 
-    protected void assertProperUserManagementPermission() {
-        if (tenants.getRequiredTenant().hasPermission(Tenant.PERMISSION_SYSTEM_TENANT)) {
-            assertPermission(PERMISSION_MANAGE_SYSTEM_USERS);
+    /**
+     * Ensures that the current user is permitted to manage the user accounts for the current tenant.
+     * <p>
+     * This is made public so that other controllers which enhance the user management can re-use the logic.
+     */
+    public static void assertProperUserManagementPermission() {
+        UserInfo currentUser = UserContext.getCurrentUser();
+        boolean isCurrentTenantSystemTenant = currentUser.tryAs(Tenant.class)
+                                                         .map(tenant -> tenant.hasPermission(Tenant.PERMISSION_SYSTEM_TENANT))
+                                                         .orElse(false);
+        if (isCurrentTenantSystemTenant) {
+            currentUser.assertPermission(PERMISSION_MANAGE_SYSTEM_USERS);
         } else {
-            assertPermission(PERMISSION_MANAGE_USER_ACCOUNTS);
+            currentUser.assertPermission(PERMISSION_MANAGE_USER_ACCOUNTS);
         }
     }
 
@@ -505,7 +514,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     @Permission(PERMISSION_DELETE_USER_ACCOUNTS)
     public void deleteAdmin(final WebContext webContext, String accountId) {
         assertProperUserManagementPermission();
-        
+
         Optional<U> account = tryFindForTenant(getUserClass(), accountId);
         account.ifPresent(u -> {
             if (Objects.equals(getUser().getUserObject(UserAccount.class), u)) {
