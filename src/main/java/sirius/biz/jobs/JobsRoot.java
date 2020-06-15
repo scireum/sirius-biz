@@ -11,6 +11,9 @@ package sirius.biz.jobs;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.presets.JobPreset;
 import sirius.biz.jobs.presets.JobPresets;
+import sirius.biz.process.ProcessContext;
+import sirius.biz.process.Processes;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.BlobStorage;
 import sirius.biz.storage.layer2.BlobStorageSpace;
@@ -30,6 +33,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 import sirius.web.security.UserContext;
 
@@ -72,6 +76,9 @@ public class JobsRoot extends SingularVFSRoot {
 
     @Part
     private VirtualFileSystem virtualFileSystem;
+
+    @Part
+    private Processes processes;
 
     @Override
     protected String getName() {
@@ -154,15 +161,44 @@ public class JobsRoot extends SingularVFSRoot {
     }
 
     private void trigger(JobPreset preset, Blob buffer, String filename) {
+        processes.executeInStandbyProcessForCurrentTenant("biz-jobs-root",
+                                                          () -> "/jobs Uploads",
+                                                          ctx -> triggerInProcess(preset, buffer, filename, ctx));
+    }
+
+    private void triggerInProcess(JobPreset preset, Blob buffer, String filename, ProcessContext ctx) {
+        if (ctx.isDebugging()) {
+            ctx.debug(ProcessLog.info()
+                                .withFormattedMessage(
+                                        "Starting preset '%s' for job '%s' and user '%s' using the uploaded file '%s' (%s')",
+                                        preset.getJobConfigData().getLabel(),
+                                        preset.getJobConfigData().getJobName(),
+                                        UserContext.getCurrentUser().getUserName(),
+                                        buffer.getFilename(),
+                                        NLS.formatSize(buffer.getSize())));
+        }
+
         String parameterName = findFileParemter(preset);
 
-        preset.getJobConfigData().getJobFactory().startInBackground(param -> {
-            if (Strings.areEqual(param, parameterName)) {
-                return Value.of(virtualFileSystem.makePath(TmpRoot.TMP_PATH, buffer.getBlobKey(), filename));
-            } else {
-                return Value.of(preset.getJobConfigData().getConfigMap().get(param));
-            }
-        });
+        try {
+            preset.getJobConfigData().getJobFactory().startInBackground(param -> {
+                if (Strings.areEqual(param, parameterName)) {
+                    return Value.of(virtualFileSystem.makePath(TmpRoot.TMP_PATH, buffer.getBlobKey(), filename));
+                } else {
+                    return Value.of(preset.getJobConfigData().getConfigMap().get(param));
+                }
+            });
+        } catch (HandledException exception) {
+            ctx.log(ProcessLog.error()
+                              .withFormattedMessage(
+                                      "Failed to start preset '%s' for job '%s' and user '%s' using the uploaded file '%s' (%s'): %s",
+                                      preset.getJobConfigData().getLabel(),
+                                      preset.getJobConfigData().getJobName(),
+                                      UserContext.getCurrentUser().getUserName(),
+                                      buffer.getFilename(),
+                                      NLS.formatSize(buffer.getSize()),
+                                      exception.getMessage()));
+        }
     }
 
     private String findFileParemter(JobPreset preset) {
