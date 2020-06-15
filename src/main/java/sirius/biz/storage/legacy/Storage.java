@@ -79,6 +79,8 @@ public class Storage {
      */
     public static final Log LOG = Log.get("storage");
 
+    private static final Log DEPRECATION_LOG = Log.get("deprecated");
+
     /**
      * Names the framework which must be enabled to activate the storage feature.
      */
@@ -254,6 +256,10 @@ public class Storage {
      * object exists.
      */
     public Optional<StoredObject> findByPath(SQLTenant tenant, String bucketName, String path) {
+        if (shouldLogDeprecated(bucketName)) {
+            Exceptions.logDeprecatedMethodUse();
+        }
+
         String normalizedPath = normalizePath(path);
 
         if (normalizedPath == null) {
@@ -541,6 +547,10 @@ public class Storage {
      * @param fileExtension the file extension of the file (to determine the <tt>Content-Type</tt>)
      */
     protected void deliverPhysicalFile(WebContext ctx, String bucket, String physicalKey, String fileExtension) {
+        if (shouldLogDeprecated(bucket)) {
+            DEPRECATION_LOG.WARN("A file from the deprecated storage was requested: %s", ctx.getRequest().toString());
+        }
+
         getStorageEngine(bucket).deliver(ctx, bucket, physicalKey, fileExtension);
     }
 
@@ -552,6 +562,10 @@ public class Storage {
      * @return a builder to construct a download URL
      */
     public DownloadBuilder prepareDownload(String bucket, String objectKey) {
+        if (shouldLogDeprecated(bucket)) {
+            Exceptions.logDeprecatedMethodUse();
+        }
+
         return new DownloadBuilder(this, bucket, objectKey);
     }
 
@@ -562,7 +576,19 @@ public class Storage {
      * @return a builder to construct a download URL
      */
     protected DownloadBuilder prepareDownload(VirtualObject object) {
+        if (shouldLogDeprecated(object.getBucket())) {
+            Exceptions.logDeprecatedMethodUse();
+        }
+
         return new DownloadBuilder(this, object);
+    }
+
+    private boolean shouldLogDeprecated(String bucket) {
+        if (!DEPRECATION_LOG.isFINE()) {
+            return false;
+        }
+
+        return getBucket(bucket).map(BucketInfo::shouldLogAsDeprecated).orElse(false);
     }
 
     /**
