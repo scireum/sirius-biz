@@ -83,7 +83,6 @@ public class ImportDictionary {
 
         this.fields.put(field.getName(), field);
 
-        addCheckedAlias(field, field.getName());
         addCheckedAlias(field, field.getLabel());
         field.getAliases().forEach(alias -> addCheckedAlias(field, alias));
 
