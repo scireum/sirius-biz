@@ -20,7 +20,7 @@ import sirius.web.controller.Controller;
  * Provides the MongoDB implementation of the {@link CodeListController}.
  */
 
-@Register(classes = Controller.class, framework = MongoCodeLists.FRAMEWORK_CODE_LISTS_MONGO)
+@Register(framework = MongoCodeLists.FRAMEWORK_CODE_LISTS_MONGO)
 public class MongoCodeListController extends CodeListController<String, MongoCodeList, MongoCodeListEntry> {
 
     @Override
