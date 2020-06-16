@@ -90,7 +90,7 @@
                     <w:singleSelect span="12"
                                     name="customPersistencePeriod"
                                     labelKey="JobConfigData.customPersistencePeriod"
-                                    help="JobConfigData.customPersistencePeriod.help"
+                                    helpKey="JobConfigData.customPersistencePeriod.help"
                                     optional="true"
                                     required="false">
                         <i:for var="period"
