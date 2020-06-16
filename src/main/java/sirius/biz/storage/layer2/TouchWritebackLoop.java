@@ -54,6 +54,10 @@ public class TouchWritebackLoop extends BackgroundLoop {
             return;
         }
 
+        if (blobStorage == null) {
+            return;
+        }
+
         boolean added = touchedBlobs.offer(Tuple.create(space, blobKey));
         if (!added && logLimit.check()) {
             StorageUtils.LOG.WARN("Layer2: Dropping touch events as the internal queue is full!");
@@ -77,6 +81,10 @@ public class TouchWritebackLoop extends BackgroundLoop {
         Watch w = Watch.start();
         List<Tuple<String, String>> unitOfWork = new ArrayList<>();
         touchedBlobs.drainTo(unitOfWork);
+
+        if (blobStorage == null) {
+            return null;
+        }
 
         Map<String, Set<String>> blobsPerSpace = unitOfWork.stream()
                                                            .collect(Collectors.groupingBy(Tuple::getFirst,
