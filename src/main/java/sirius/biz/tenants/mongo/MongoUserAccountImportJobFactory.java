@@ -12,6 +12,7 @@ import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.EntityImportJobFactory;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.http.QueryString;
 import sirius.web.security.Permission;
@@ -25,6 +26,9 @@ import javax.annotation.Nonnull;
 @Permission(UserAccountController.PERMISSION_MANAGE_USER_ACCOUNTS)
 public class MongoUserAccountImportJobFactory extends EntityImportJobFactory {
 
+    @Part
+    private MongoTenants tenants;
+
     @Nonnull
     @Override
     public String getName() {
@@ -32,10 +36,14 @@ public class MongoUserAccountImportJobFactory extends EntityImportJobFactory {
     }
 
     @Override
+    protected void checkPermissions() {
+        UserAccountController.assertProperUserManagementPermission();
+    }
+
+    @Override
     protected Class<? extends BaseEntity<?>> getImportType() {
         return MongoUserAccount.class;
     }
-
 
     @Override
     protected boolean hasPresetFor(QueryString queryString, Object targetObject) {

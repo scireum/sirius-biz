@@ -4,57 +4,55 @@
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders the additional and revoked permissions"/>
 
-<div class="row">
-    <w:table data="@allPermissions">
-        <thead>
+<w:table data="@allPermissions">
+    <thead>
+    <tr>
+        <th>
+            @i18n("Packages.permission.name")<br>
+            <small class="muted">@i18n("Packages.permission.description")</small>
+        </th>
+        <th class="col-md-1">@i18n("Packages.permission.active")</th>
+        <th class="col-md-1">@i18n("Packages.permission.denied")</th>
+        <th class="col-md-1">
+            @i18n("Packages.permission.default")
+            <small class="muted">@i18n("Packages.permission.defaultValue")</small>
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+    <i:for var="permission" items="allPermissions" type="String">
         <tr>
-            <th>
-                @i18n("Packages.permission.name")<br>
-                <small class="muted">@i18n("Packages.permission.description")</small>
-            </th>
-            <th class="col-md-1">@i18n("Packages.permission.active")</th>
-            <th class="col-md-1">@i18n("Packages.permission.denied")</th>
-            <th class="col-md-1">
-                @i18n("Packages.permission.default")
-                <small class="muted">@i18n("Packages.permission.defaultValue")</small>
-            </th>
-        </tr>
-        </thead>
-        <tbody>
-        <i:for var="permission" items="allPermissions" type="String">
-            <tr>
-                <td>
-                    @i18n(apply("Permission.%s", permission))
-                    <span class="help-block" style="margin-bottom: 0;">
+            <td>
+                @i18n(apply("Permission.%s", permission))
+                <span class="help-block" style="margin-bottom: 0;">
                         @i18n(apply("Permission.%s.description", permission))
                     </span>
-                </td>
-                <i:local name="isEnabled" value="packageData.getAdditionalPermissions().contains(permission)"/>
-                <i:local name="isDenied" value="packageData.getRevokedPermissions().contains(permission)"/>
-                <td>
-                    <div class="form-group radio" style="margin-bottom: 0;">
-                        <label>
-                            <input type="radio" name="@permission" value="additional" @checked="isEnabled"/>
-                        </label>
-                    </div>
-                </td>
-                <td>
-                    <div class="form-group radio" style="margin-bottom: 0;">
-                        <label>
-                            <input type="radio" name="@permission" value="revoked" @checked="isDenied"/>
-                        </label>
-                    </div>
-                </td>
-                <td>
-                    <div class="form-group radio" style="margin-bottom: 0;">
-                        <label>
-                            <input type="radio" name="@permission" value="default" @checked="!isEnabled && !isDenied"/>
-                        </label>
-                    </div>
-                    <span class="muted">@toUserString(packageData.getPackageAndUpgradePermissions().contains(permission))</span>
-                </td>
-            </tr>
-        </i:for>
-        </tbody>
-    </w:table>
-</div>
+            </td>
+            <i:local name="isEnabled" value="packageData.getAdditionalPermissions().contains(permission)"/>
+            <i:local name="isDenied" value="packageData.getRevokedPermissions().contains(permission)"/>
+            <td>
+                <div class="form-group radio" style="margin-bottom: 0;">
+                    <label>
+                        <input type="radio" name="@permission" value="additional" @checked="isEnabled"/>
+                    </label>
+                </div>
+            </td>
+            <td>
+                <div class="form-group radio" style="margin-bottom: 0;">
+                    <label>
+                        <input type="radio" name="@permission" value="revoked" @checked="isDenied"/>
+                    </label>
+                </div>
+            </td>
+            <td>
+                <div class="form-group radio" style="margin-bottom: 0;">
+                    <label>
+                        <input type="radio" name="@permission" value="default" @checked="!isEnabled && !isDenied"/>
+                    </label>
+                </div>
+                <span class="muted">@toUserString(packageData.getPackageAndUpgradePermissions().contains(permission))</span>
+            </td>
+        </tr>
+    </i:for>
+    </tbody>
+</w:table>

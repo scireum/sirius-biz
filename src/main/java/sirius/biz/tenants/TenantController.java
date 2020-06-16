@@ -136,6 +136,27 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         T tenant = find(getTenantClass(), tenantId);
 
         SaveHelper saveHelper = prepareSave(webContext).withAfterCreateURI("/tenant/${id}");
+        boolean requestHandled = saveHelper.saveEntity(tenant);
+        if (!requestHandled) {
+            validate(tenant);
+
+            webContext.respondWith().template("/templates/biz/tenants/tenant-details.html.pasta", tenant, this);
+        }
+    }
+
+    /**
+     * Provides an editor for updating a tenant.
+     *
+     * @param webContext the current request
+     * @param tenantId   the id of the tenant to change
+     */
+    @Routed("/tenant/:1/package")
+    @Permission(PERMISSION_MANAGE_TENANTS)
+    public void packageAndUpgrades(WebContext webContext, String tenantId) {
+        T tenant = find(getTenantClass(), tenantId);
+        assertNotNew(tenant);
+
+        SaveHelper saveHelper = prepareSave(webContext);
         saveHelper.withPreSaveHandler(isNew -> {
             tenant.getTenantData()
                   .getPackageData()
@@ -148,7 +169,25 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         if (!requestHandled) {
             validate(tenant);
 
-            webContext.respondWith().template("/templates/biz/tenants/tenant-details.html.pasta", tenant, this);
+            webContext.respondWith().template("/templates/biz/tenants/tenant-package.html.pasta", tenant, this);
+        }
+    }
+
+ /**
+     * Provides an editor for updating a tenant.
+     *
+     * @param webContext the current request
+     * @param tenantId   the id of the tenant to change
+     */
+    @Routed("/tenant/:1/extended")
+    @Permission(PERMISSION_MANAGE_TENANTS)
+    public void extended(WebContext webContext, String tenantId) {
+        T tenant = find(getTenantClass(), tenantId);
+
+        boolean requestHandled = prepareSave(webContext).saveEntity(tenant);
+        if (!requestHandled) {
+            validate(tenant);
+            webContext.respondWith().template("/templates/biz/tenants/tenant-extended.html.pasta", tenant, this);
         }
     }
 
