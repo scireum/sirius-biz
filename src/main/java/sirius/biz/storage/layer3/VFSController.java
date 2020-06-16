@@ -230,19 +230,27 @@ public class VFSController extends BizController {
     public void move(WebContext ctx) {
         VirtualFile file = vfs.resolve(ctx.get("path").asString());
         VirtualFile newParent = vfs.resolve(ctx.get("newParent").asString());
-        if (file.exists()) {
-            try {
-                if (newParent.exists() && newParent.isDirectory()) {
-                    file.fastMoveTo(newParent);
+        if (!file.exists()) {
+            ctx.respondWith().redirectToGet("/fs");
+            return;
+        }
+
+        try {
+            if (newParent.exists() && newParent.isDirectory()) {
+                Optional<String> processId = file.transferTo(newParent).move();
+                if (processId.isPresent()) {
+                    UserContext.message(Message.info(NLS.get("VFSController.movedInProcess"))
+                                               .withAction("/ps/" + processId.get(),
+                                                           NLS.get("VFSController.moveProcess")));
+                } else {
                     UserContext.message(Message.info(NLS.get("VFSController.moved")));
                 }
-            } catch (Exception e) {
-                UserContext.handle(e);
             }
-            ctx.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
-        } else {
-            ctx.respondWith().redirectToGet("/fs");
+        } catch (Exception e) {
+            UserContext.handle(e);
         }
+
+        ctx.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", file.parent().path()).toString());
     }
 
     /**
