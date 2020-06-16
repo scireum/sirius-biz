@@ -90,6 +90,26 @@ public class ImportDictionary {
         return this;
     }
 
+    /**
+     * Removes a field from the record
+     * Note that corresponding aliases will be removed too
+     * <p>
+     * Note that this cannot be done once the mapping function has been defined.
+     *
+     * @param fieldName String of the Field to remove
+     * @return the instance itself for fluent method calls
+     */
+    public ImportDictionary removeField(String fieldName) {
+        if (mappingFunction != null) {
+            throw new IllegalStateException("Cannot remove fields once the mapping function has been set.");
+        }
+
+        this.fields.remove(fieldName);
+        this.aliases.entrySet().removeIf( alias -> (fieldName.equals(alias.getValue())) );
+
+        return this;
+    }
+
     private void addCheckedAlias(FieldDefinition field, String alias) {
         String previousField = aliases.putIfAbsent(normalize(alias), field.getName());
         if (Strings.isFilled(previousField) && !Strings.areEqual(field.getName(), previousField)) {
