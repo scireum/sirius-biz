@@ -118,7 +118,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Contains the name of the executor in which requests are moved which might be blocked while waiting for
      * a conversion to happen. We do not want to jam our main executor of the web server for this, therefore
-     * a separater one is used.
+     * a separator one is used.
      */
     private static final String EXECUTOR_STORAGE_CONVERSION_DELIVERY = "storage-conversion-delivery";
 
