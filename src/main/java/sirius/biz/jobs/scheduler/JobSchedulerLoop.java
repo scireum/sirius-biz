@@ -19,6 +19,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -128,21 +129,30 @@ public class JobSchedulerLoop extends BackgroundLoop {
                                                       UserContext.getCurrentUser().getUserName()));
         }
 
-        String processId = entry.getJobConfigData()
-                                .getJobFactory()
-                                .startInBackground(entry.getJobConfigData().asParameterProvider());
+        try {
+            String processId = entry.getJobConfigData()
+                                    .getJobFactory()
+                                    .startInBackground(entry.getJobConfigData().asParameterProvider());
 
-        if (processId != null) {
-            processes.log(processId,
-                          ProcessLog.info()
-                                    .withNLSKey("JobSchedulerLoop.scheduledExecutionInfo")
-                                    .withContext("entry", entry.toString()));
-            processes.addLink(processId,
-                              new ProcessLink().withLabel("$JobSchedulerLoop.jobLink")
-                                               .withUri("/jobs/scheduler/entry/" + entry.getIdAsString()));
-            processes.addReference(processId, entry.getUniqueName());
+            if (processId != null) {
+                processes.log(processId,
+                              ProcessLog.info()
+                                        .withNLSKey("JobSchedulerLoop.scheduledExecutionInfo")
+                                        .withContext("entry", entry.toString()));
+                processes.addLink(processId,
+                                  new ProcessLink().withLabel("$JobSchedulerLoop.jobLink")
+                                                   .withUri("/jobs/scheduler/entry/" + entry.getIdAsString()));
+                processes.addReference(processId, entry.getUniqueName());
+            }
+
+            provider.markExecuted(entry, now);
+        } catch (HandledException exception) {
+            ctx.log(ProcessLog.error()
+                              .withFormattedMessage("Failed to start scheduled job %s (%s) for user %s: %s",
+                                                    entry,
+                                                    entry.getJobConfigData().getJobName(),
+                                                    UserContext.getCurrentUser().getUserName(),
+                                                    exception.getMessage()));
         }
-
-        provider.markExecuted(entry, now);
     }
 }

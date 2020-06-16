@@ -39,7 +39,6 @@ public class PrefixTokenizer extends Tokenizer {
     @Override
     protected ChainableTokenProcessor createProcessor() {
         return new PipelineProcessor(PatternReplaceProcessor.createRemoveControlCharacters(),
-                                     new ReduceCharacterProcessor(),
                                      new PatternSplitProcessor(SPLIT_TOKEN_LEVEL_1, true, true),
                                      new PatternSplitProcessor(SPLIT_TOKEN_LEVEL_2, true, true),
                                      new TokenLimitProcessor(1, 255),
