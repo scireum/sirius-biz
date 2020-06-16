@@ -10,16 +10,12 @@ package sirius.biz.importer.format;
 
 import sirius.db.mixing.properties.StringProperty;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.di.transformers.Transformer;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * Generates a {@link FieldDefinition} for a {@link StringProperty}.
  */
 @Register
-public class StringPropertyTransformer implements Transformer<StringProperty, FieldDefinitionSupplier> {
+public class StringPropertyTransformer extends BaseFieldDefinitionTransformer<StringProperty> {
 
     @Override
     public Class<StringProperty> getSourceClass() {
@@ -27,25 +23,14 @@ public class StringPropertyTransformer implements Transformer<StringProperty, Fi
     }
 
     @Override
-    public Class<FieldDefinitionSupplier> getTargetClass() {
-        return FieldDefinitionSupplier.class;
+    protected String determineType(StringProperty property) {
+        return FieldDefinition.typeString(property.getLength());
     }
 
-    @Nullable
     @Override
-    public FieldDefinitionSupplier make(@Nonnull StringProperty property) {
-        return () -> {
-            FieldDefinition field =
-                    new FieldDefinition(property.getName(), FieldDefinition.typeString(property.getLength()));
-            field.withLabel(property::getLabel);
-            if (property.getLength() > 0) {
-                field.withCheck(new LengthCheck(property.getLength()));
-            }
-            if (!property.isNullable()) {
-                field.withCheck(new RequiredCheck());
-            }
-
-            return field;
-        };
+    protected void customizeField(StringProperty property, FieldDefinition field) {
+        if (property.getLength() > 0) {
+            field.withCheck(new LengthCheck(property.getLength()));
+        }
     }
 }
