@@ -77,7 +77,7 @@ public class BlobReferenceContainer extends BaseBlobContainer {
             throw new IllegalArgumentException("type most not be empty!");
         }
 
-        getSpace().attachBlobByType(owner.getUniqueName(), owner.getUniqueName(), type);
+        getSpace().attachBlobByType(blob.getBlobKey(), owner.getUniqueName(), type);
     }
 
     /**
