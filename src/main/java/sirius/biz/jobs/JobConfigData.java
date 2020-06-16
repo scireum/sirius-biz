@@ -29,6 +29,7 @@ import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.web.http.WebContext;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -134,18 +135,18 @@ public class JobConfigData extends Composite {
     }
 
     /**
-     * Returns a parameter provider to be supplied to {@link JobFactory#startInBackground(Function)}.
+     * Returns the parameter value which can be used as provider for {@link JobFactory#startInBackground(Function)}.
      *
-     * @return the parameters of this object as parameter provider
+     * @param key the parameter value to fetch
+     * @return the value for the given parameter wrapped as <tt>Value</tt>
      */
-    public Function<String, Value> asParameterProvider() {
-        return key -> {
-            if (BatchProcessJobFactory.HIDDEN_PARAMETER_CUSTOM_PERSISTENCE_PERIOD.equals(key)) {
-                return Value.of(customPersistencePeriod);
-            } else {
-                return Value.of(getConfigMap().get(key));
-            }
-        };
+    @Nonnull
+    public Value fetchParameter(String key) {
+        if (BatchProcessJobFactory.HIDDEN_PARAMETER_CUSTOM_PERSISTENCE_PERIOD.equals(key)) {
+            return Value.of(customPersistencePeriod);
+        } else {
+            return Value.of(getConfigMap().get(key));
+        }
     }
 
     /**

@@ -182,13 +182,12 @@ public class JobsRoot extends SingularVFSRoot {
         String parameterName = findFileParemter(preset);
 
         try {
-            Function<String, Value> fallbackParameterProvider = preset.getJobConfigData().asParameterProvider();
             preset.getJobConfigData().getJobFactory().startInBackground(param -> {
                 if (Strings.areEqual(param, parameterName)) {
                     return Value.of(virtualFileSystem.makePath(TmpRoot.TMP_PATH, buffer.getBlobKey(), filename));
                 }
 
-                return fallbackParameterProvider.apply(param);
+                return preset.getJobConfigData().fetchParameter(param);
             });
         } catch (HandledException exception) {
             ctx.log(ProcessLog.error()
