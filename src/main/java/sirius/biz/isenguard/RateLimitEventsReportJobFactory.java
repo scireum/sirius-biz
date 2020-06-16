@@ -11,7 +11,6 @@ package sirius.biz.isenguard;
 import sirius.biz.analytics.reports.Cell;
 import sirius.biz.analytics.reports.Report;
 import sirius.biz.jobs.JobCategory;
-import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.interactive.ReportJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.StringParameter;
@@ -39,15 +38,14 @@ import java.util.function.Consumer;
  * <p>
  * This job will also offer itself as matching job for all entities which implement {@link RateLimitedEntity}.
  */
-@Register(classes = JobFactory.class, framework = Isenguard.FRAMEWORK_ISENGUARD)
+@Register(framework = Isenguard.FRAMEWORK_ISENGUARD)
 @Permission(Isenguard.PERMISSION_VIEW_RATE_LIMITS)
 public class RateLimitEventsReportJobFactory extends ReportJobFactory {
 
     @Part
     private OMA oma;
 
-    private static final StringParameter SCOPE_PARAMETER =
-            new StringParameter("scope", "Scope").hidden();
+    private static final StringParameter SCOPE_PARAMETER = new StringParameter("scope", "Scope").hidden();
 
     @Override
     protected boolean hasPresetFor(QueryString queryString, Object targetObject) {

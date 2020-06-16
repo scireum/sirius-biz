@@ -11,7 +11,6 @@ package sirius.biz.analytics.events;
 import sirius.biz.analytics.reports.Cell;
 import sirius.biz.analytics.reports.Report;
 import sirius.biz.jobs.JobCategory;
-import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.interactive.ReportJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.tenants.TenantUserManager;
@@ -37,7 +36,7 @@ import java.util.stream.Collectors;
 /**
  * Provides a report which shows the utilization of the Clickhouse database which stores all recorded events.
  */
-@Register(classes = JobFactory.class)
+@Register
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ClickhousePartsReportJobFactory extends ReportJobFactory {
 

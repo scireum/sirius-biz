@@ -11,7 +11,6 @@ package sirius.biz.codelists.jdbc;
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.importer.ImportContext;
-import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.EntityImportJobFactory;
 import sirius.biz.jobs.params.CodeListParameter;
 import sirius.biz.jobs.params.Parameter;
@@ -28,7 +27,7 @@ import java.util.function.Consumer;
 /**
  * Provides an import job for {@link SQLCodeList code lists} stored in a JDBC database.
  */
-@Register(classes = JobFactory.class, framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
+@Register(framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
 @Permission(CodeListController.PERMISSION_MANAGE_CODELISTS)
 public class SQLCodeListImportJobFactory extends EntityImportJobFactory {
 

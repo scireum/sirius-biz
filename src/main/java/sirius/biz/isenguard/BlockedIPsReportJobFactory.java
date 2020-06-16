@@ -11,7 +11,6 @@ package sirius.biz.isenguard;
 import sirius.biz.analytics.reports.Cell;
 import sirius.biz.analytics.reports.Report;
 import sirius.biz.jobs.JobCategory;
-import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.interactive.ReportJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.tenants.TenantUserManager;
@@ -28,7 +27,7 @@ import java.util.function.Consumer;
 /**
  * Lists all currently blocked IP addresses as reported by {@link Isenguard#getBlockedIPs()}.
  */
-@Register(classes = JobFactory.class, framework = Isenguard.FRAMEWORK_ISENGUARD)
+@Register(framework = Isenguard.FRAMEWORK_ISENGUARD)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class BlockedIPsReportJobFactory extends ReportJobFactory {
 

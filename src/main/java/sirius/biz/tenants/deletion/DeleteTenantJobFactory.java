@@ -8,7 +8,6 @@
 
 package sirius.biz.tenants.deletion;
 
-import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
@@ -41,7 +40,7 @@ import java.util.function.Consumer;
  * Implement and register a {@link DeleteTenantTask} object to implement logic for deleting external tenant data,
  * like {@link UserAccount UserAccounts} for example.
  */
-@Register(classes = JobFactory.class, framework = Tenants.FRAMEWORK_TENANTS)
+@Register(framework = Tenants.FRAMEWORK_TENANTS)
 @Permission(TenantController.PERMISSION_MANAGE_TENANTS)
 public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
 
@@ -51,8 +50,7 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
      */
     public static final String TIMING_DELETED_ITEMS = "Deleted Items";
 
-    protected static final TenantParameter TENANT_PARAMETER =
-            new TenantParameter("tenant", "$Model.tenant").markRequired();
+    protected static final TenantParameter TENANT_PARAMETER = new TenantParameter("tenant", "$Model.tenant").markRequired();
 
     protected static final BooleanParameter TAKE_ACTION_PARAMETER =
             new BooleanParameter("takeAction", "$DeleteTenantJobFactory.takeAction").withDescription(
