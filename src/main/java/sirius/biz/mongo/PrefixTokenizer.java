@@ -13,7 +13,6 @@ import sirius.db.text.DeduplicateProcessor;
 import sirius.db.text.PatternReplaceProcessor;
 import sirius.db.text.PatternSplitProcessor;
 import sirius.db.text.PipelineProcessor;
-import sirius.db.text.ReduceCharacterProcessor;
 import sirius.db.text.ToLowercaseProcessor;
 import sirius.db.text.TokenLimitProcessor;
 import sirius.db.text.Tokenizer;
