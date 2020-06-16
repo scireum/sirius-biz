@@ -36,7 +36,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -46,8 +45,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * Represents a file or directory in the {@link VirtualFileSystem}.
@@ -555,60 +552,18 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      *
      * @return all child files as list
      */
-    public List<VirtualFile> allChildren() {
-        List<VirtualFile> result = new ArrayList<>();
-        children(FileSearch.iterateAll(result::add));
-        return result;
+    public TreeVisitorBuilder allChildren() {
+        return tree().directChildrenOnly();
     }
 
     /**
-     * Returns a stream which will iterate all children (and their children) of this file.
-     * <p>
-     * This will start with this file and then perform a depth first search.
+     * Creates a configurable directory traversal visitor which visits all files and directories below this file.
      *
-     * @param directoryFilter this filter is applied on all directories being discovered. If the predicate returns
-     *                        <tt>false</tt> the directory will neither occur in the stream, nor its children will be
-     *                        visited.
-     * @return a stream visiting this and then all children in DFS order
+     * @return a new visitor which visits can be configured to visit all or a specific set of child files below
+     * this file
      */
-    public Stream<VirtualFile> tree(Predicate<VirtualFile> directoryFilter) {
-        return StreamSupport.stream(new VirtualFileWalker(Collections.singletonList(this), directoryFilter), false);
-    }
-
-    /**
-     * Returns a stream which will iterate all children (and their children) of this file.
-     * <p>
-     * This will start with this file and then perform a depth first search.
-     *
-     * @return a stream visiting this and then all children in DFS order
-     */
-    public Stream<VirtualFile> tree() {
-        return tree(ignored -> true);
-    }
-
-    /**
-     * Returns a stream which will iterate all children (and their children) of this file.
-     * <p>
-     * This will directly start with the children of this file and then perform a depth first search.
-     *
-     * @param directoryFilter this filter is applied on all directories being discovered. If the predicate returns
-     *                        <tt>false</tt> the directory will neither occur in the stream, nor its children will be
-     *                        visited.
-     * @return a stream visiting all children in DFS order
-     */
-    public Stream<VirtualFile> subTree(Predicate<VirtualFile> directoryFilter) {
-        return StreamSupport.stream(new VirtualFileWalker(allChildren(), directoryFilter), false);
-    }
-
-    /**
-     * Returns a stream which will iterate all children (and their children) of this file.
-     * <p>
-     * This will directly start with the children of this file and then perform a depth first search.
-     *
-     * @return a stream visiting all children in DFS order
-     */
-    public Stream<VirtualFile> subTree() {
-        return subTree(ignored -> true);
+    public TreeVisitorBuilder tree() {
+        return new TreeVisitorBuilder(this);
     }
 
     /**
