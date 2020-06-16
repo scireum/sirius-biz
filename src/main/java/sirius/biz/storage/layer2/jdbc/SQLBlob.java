@@ -157,6 +157,13 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     private LocalDateTime lastModified = LocalDateTime.now();
 
     /**
+     * Stores the last access timestamp.
+     */
+    public static final Mapping LAST_TOUCHED = Mapping.named("lastTouched");
+    @NullAllowed
+    private LocalDateTime lastTouched;
+
+    /**
      * Stores if a blob has been fully initialized.
      * <p>
      * This is used by the optimistic locking algorithms to ensure that blob names remain unique
@@ -243,6 +250,11 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     @Override
     public void delete() {
         getStorageSpace().delete(this);
+    }
+
+    @Override
+    public void touch() {
+        getStorageSpace().touch(getBlobKey());
     }
 
     @Override
@@ -366,6 +378,10 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
         this.tenantId = tenantId;
     }
 
+    public void setBlobKey(String blobKey) {
+        this.blobKey = blobKey;
+    }
+
     @Override
     public String getBlobKey() {
         return blobKey;
@@ -411,5 +427,14 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     public void setHidden(boolean hidden) {
         this.hidden = hidden;
+    }
+
+    @Override
+    public LocalDateTime getLastTouched() {
+        return lastTouched;
+    }
+
+    public void setLastTouched(LocalDateTime lastTouched) {
+        this.lastTouched = lastTouched;
     }
 }

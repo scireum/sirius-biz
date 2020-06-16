@@ -104,6 +104,14 @@ public interface Blob {
     LocalDateTime getLastModified();
 
     /**
+     * Returns time timestamp when the blob was last accessed.
+     *
+     * @return the last access timestamp
+     */
+    @Nullable
+    LocalDateTime getLastTouched();
+
+    /**
      * Provides a on-disk copy of the data associated with this blob
      *
      * @return a handle to the data of this blob
@@ -123,6 +131,14 @@ public interface Blob {
      * @return <tt>true</tt> if the blob is temporary, <tt>false</tt> otherwise
      */
     boolean isTemporary();
+
+    /**
+     * Marks the blob as "read accessed".
+     * <p>
+     * Note that in nearly all circumstances, this isn't needed to be invoked manually as the framework will
+     * track access.
+     */
+    void touch();
 
     /**
      * Deletes the blob.

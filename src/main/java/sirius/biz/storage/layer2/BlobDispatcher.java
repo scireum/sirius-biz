@@ -83,14 +83,14 @@ public class BlobDispatcher implements WebDispatcher {
     /**
      * Detects the flag combination for a direct physical delivery (no download).
      * <p>
-     * This will expect an URI like: <tt>/dasd/p/SPACE/ACCESS_TOKEN/PHYSICAL_KEY.FILE_EXTENSION</tt>
+     * This will expect an URI like: <tt>/dasd/p/SPACE/ACCESS_TOKEN/BLOB_KEY/PHYSICAL_KEY.FILE_EXTENSION</tt>
      */
     private static final String PHYSICAL_DELIVERY = FLAG_PHYSICAL;
 
     /**
      * Detects the flag combination for a physical download.
      * <p>
-     * This will expect an URI like: <tt>/dasd/pd/SPACE/ACCESS_TOKEN/PHYSICAL_KEY/FILENAME.FILE_EXTENSION</tt>
+     * This will expect an URI like: <tt>/dasd/pd/SPACE/ACCESS_TOKEN/BLOB_KEY/PHYSICAL_KEY/FILENAME.FILE_EXTENSION</tt>
      */
     private static final String PHYSICAL_DOWNLOAD = FLAG_PHYSICAL + FLAG_DOWNLOAD;
 
@@ -122,15 +122,11 @@ public class BlobDispatcher implements WebDispatcher {
      */
     private static final String VIRTUAL_CACHABLE_DOWNLOAD = FLAG_CACHABLE + FLAG_VIRTUAL + FLAG_DOWNLOAD;
 
-
     private static final String PARAM_HOOK = "hook";
     private static final String PARAM_PAYLOAD = "payload";
 
     @Part
     private BlobStorage blobStorage;
-
-    @Part
-    private ObjectStorage objectStorage;
 
     @Part
     private StorageUtils utils;
@@ -157,21 +153,48 @@ public class BlobDispatcher implements WebDispatcher {
         Values uriParts = Values.of(uri.split("/"));
         String type = uriParts.at(0).asString();
         if (Strings.areEqual(type, PHYSICAL_DELIVERY)) {
-            String filename = stripAdditionalText(uriParts.at(3).asString());
-            physicalDelivery(request,
-                             uriParts.at(1).asString(),
-                             uriParts.at(2).asString(),
-                             Files.getFilenameWithoutExtension(filename),
-                             filename);
+            if (uriParts.length() == 4) {
+                // Support for legacy URLS (where the blob key is missing)
+                // TODO delete by Sept 2020
+                String filename = stripAdditionalText(uriParts.at(3).asString());
+                physicalDelivery(request,
+                                 uriParts.at(1).asString(),
+                                 uriParts.at(2).asString(),
+                                 null,
+                                 Files.getFilenameWithoutExtension(filename),
+                                 filename);
+                // End of legacy support....
+            } else {
+                String filename = stripAdditionalText(uriParts.at(4).asString());
+                physicalDelivery(request,
+                                 uriParts.at(1).asString(),
+                                 uriParts.at(2).asString(),
+                                 uriParts.at(4).asString(),
+                                 Files.getFilenameWithoutExtension(filename),
+                                 filename);
+            }
             return DispatchDecision.DONE;
         }
 
         if (Strings.areEqual(type, PHYSICAL_DOWNLOAD)) {
-            physicalDownload(request,
-                             uriParts.at(1).asString(),
-                             uriParts.at(2).asString(),
-                             uriParts.at(3).asString(),
-                             stripAdditionalText(uriParts.at(4).asString()));
+            if (uriParts.length() == 5) {
+                // Support for legacy URLS (where the blob key is missing)
+                // TODO delete by Sept 2020
+                physicalDownload(request,
+                                 uriParts.at(1).asString(),
+                                 uriParts.at(2).asString(),
+                                 null,
+                                 uriParts.at(3).asString(),
+                                 stripAdditionalText(uriParts.at(4).asString()));
+                // End of legacy support....
+            } else {
+                physicalDownload(request,
+                                 uriParts.at(1).asString(),
+                                 uriParts.at(2).asString(),
+                                 uriParts.at(3).asString(),
+                                 uriParts.at(4).asString(),
+                                 stripAdditionalText(uriParts.at(5).asString()));
+            }
             return DispatchDecision.DONE;
         }
 
@@ -283,12 +306,14 @@ public class BlobDispatcher implements WebDispatcher {
      * @param request     the request to handle
      * @param space       the space which is accessed
      * @param accessToken the security token to verify
+     * @param blobKey the blob key to be delivered
      * @param physicalKey the physical object key used to determine which object should be delivered
      * @param filename    the filename which is used to setup a proper <tt>Content-Type</tt>
      */
     private void physicalDelivery(WebContext request,
                                   String space,
                                   String accessToken,
+                                  String blobKey,
                                   String physicalKey,
                                   String filename) {
         if (!utils.verifyHash(physicalKey, accessToken)) {
@@ -297,7 +322,7 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         Response response = request.respondWith().infinitelyCached().named(filename);
-        objectStorage.getSpace(space).deliver(response, physicalKey);
+        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey,response);
     }
 
     /**
@@ -306,12 +331,14 @@ public class BlobDispatcher implements WebDispatcher {
      * @param request     the request to handle
      * @param space       the space which is accessed
      * @param accessToken the security token to verify
+     * @param blobKey     the blob key of the blob to download
      * @param physicalKey the physical object key used to determine which object should be delivered
      * @param filename    the filename which is used to setup a proper <tt>Content-Type</tt>
      */
     private void physicalDownload(WebContext request,
                                   String space,
                                   String accessToken,
+                                  String blobKey,
                                   String physicalKey,
                                   String filename) {
         if (!utils.verifyHash(physicalKey, accessToken)) {
@@ -320,7 +347,7 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         Response response = request.respondWith().infinitelyCached().download(filename);
-        objectStorage.getSpace(space).deliver(response, physicalKey);
+        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey,response);
     }
 
     /**

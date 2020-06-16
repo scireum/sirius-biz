@@ -15,6 +15,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Represents a layer 2 storage space which manages {@link Blob blobs} and {@link Directory directories}.
@@ -258,9 +259,35 @@ public interface BlobStorageSpace {
     void deliver(@Nonnull String blobKey, @Nonnull String variant, @Nonnull Response response);
 
     /**
+     * Delivers the contents of the given blob by using the alredy known physicalKey.
+     *
+     * @param blobKey     the id of the blob to deliver (mostly for touch tracking)
+     * @param physicalKey the physical object to deliver
+     * @param response    the response to populate
+     */
+    void deliverPhysical(@Nullable String blobKey, @Nonnull String physicalKey, @Nonnull Response response);
+
+    /**
      * Performs some housekeeping and maintenance tasks.
      * <p>
      * This shouldn't be invoked manually as it is triggered via the {@link StorageCleanupTask}.
      */
     void runCleanup();
+
+    /**
+     * Determines if touch tracking is active for this space.
+     *
+     * @return <tt>true</tt> if touch tracking is active, <tt>false</tt> otherwise
+     */
+    boolean isTouchTracking();
+
+    /**
+     * Stores that the given blob keys have been accessed.
+     * <p>
+     * This is used by {@link TouchWritebackLoop} to actually update the blobs. This method should not be
+     * invoked externally.
+     *
+     * @param blobKeys the set of keys to mark as accessed
+     */
+    void markTouched(Set<String> blobKeys);
 }
