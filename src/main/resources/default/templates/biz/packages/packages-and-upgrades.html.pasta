@@ -5,20 +5,45 @@
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders the package and upgrades"/>
 
-<div class="row">
-    <w:singleSelect span="12" name="package" labelKey="PackageData.packageString" optional="true">
-        <i:for var="package" items="packages.getPackages(scope)" type="String">
-            <option value="@package" @selected="package == packageData.getPackage()">
-                @packages.getPackageName(scope, package)
-            </option>
-        </i:for>
-    </w:singleSelect>
+<i:local name="availablePackages" value="packageData.getAvailablePackages()"/>
 
-    <w:multiSelect span="12" name="upgrades" labelKey="PackageData.upgrades">
-        <i:for var="upgrade" items="packages.getUpgrades(scope)" type="String">
-            <option value="@upgrade" @selected="packageData.getUpgrades().contains(upgrade)">
-                @packages.getUpgradeName(scope, upgrade)
-            </option>
+<i:if test="!availablePackages.isEmpty()">
+    <w:subHeading labelKey="PackageData.packageString"/>
+    <div class="row">
+        <i:for var="package" items="availablePackages" type="String">
+            <div class="col-md-12 form-group">
+                <div class="radio">
+                    <label>
+                        <input type="radio" name="package" value="@package"
+                               @checked="package == packageData.getPackage()"/>
+                        <span> @packages.getPackageName(packageData.getScope(), package)</span>
+                        <span class="help-block checkbox-help">
+                            @packages.getPackageDescription(packageData.getScope(), package)
+                        </span>
+                    </label>
+                </div>
+            </div>
         </i:for>
-    </w:multiSelect>
-</div>
+    </div>
+</i:if>
+
+<i:local name="upgrades" value="packageData.getAvailableUpgrades()"/>
+<i:if test="!upgrades.isEmpty()">
+    <w:subHeading labelKey="PackageData.upgrades"/>
+    <div class="row">
+        <i:for var="upgrade" items="upgrades" type="String">
+            <div class="col-md-12 form-group">
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="upgrades" value="@upgrade"
+                               @checked="packageData.getUpgrades().contains(upgrade)"/>
+                        <span> @packages.getUpgradeName(packageData.getScope(), upgrade)</span>
+                        <span class="help-block checkbox-help">
+                            @packages.getUpgradeDescription(packageData.getScope(), upgrade)
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </i:for>
+    </div>
+</i:if>
