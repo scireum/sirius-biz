@@ -40,6 +40,7 @@ import sirius.web.security.UserContext;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.OutputStream;
+import java.util.function.Function;
 
 /**
  * Provides a {@link VFSRoot} to trigger jobs via the built-in {@link VirtualFileSystem}.
@@ -181,12 +182,13 @@ public class JobsRoot extends SingularVFSRoot {
         String parameterName = findFileParemter(preset);
 
         try {
+            Function<String, Value> fallbackParameterProvider = preset.getJobConfigData().asParameterProvider();
             preset.getJobConfigData().getJobFactory().startInBackground(param -> {
                 if (Strings.areEqual(param, parameterName)) {
                     return Value.of(virtualFileSystem.makePath(TmpRoot.TMP_PATH, buffer.getBlobKey(), filename));
-                } else {
-                    return Value.of(preset.getJobConfigData().getConfigMap().get(param));
                 }
+
+                return fallbackParameterProvider.apply(param);
             });
         } catch (HandledException exception) {
             ctx.log(ProcessLog.error()

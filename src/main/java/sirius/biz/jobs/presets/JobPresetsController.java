@@ -9,6 +9,7 @@
 package sirius.biz.jobs.presets;
 
 import sirius.biz.jobs.JobConfigData;
+import sirius.biz.process.PersistencePeriod;
 import sirius.biz.web.BizController;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
@@ -31,10 +32,12 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
     private static final String PARAM_JOB_FACTORY = "jobFactory";
     private static final String PARAM_PRESET = "preset";
     private static final String PARAM_PRESET_NAME = "presetName";
+    private static final String PARAM_CUSTOM_PERSISTENCE_PERIOD = "customPersistencePeriod";
 
     private static final Set<String> IGNORED_PARAMETERS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             PARAM_JOB_FACTORY,
             PARAM_PRESET_NAME,
+            PARAM_CUSTOM_PERSISTENCE_PERIOD,
             "CSRFToken",
             "updateOnly")));
 
@@ -79,6 +82,11 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
         } else {
             preset.getJobConfigData().getConfigMap().clear();
         }
+
+        preset.getJobConfigData()
+              .setCustomPersistencePeriod(ctx.get(PARAM_CUSTOM_PERSISTENCE_PERIOD)
+                                             .getEnum(PersistencePeriod.class)
+                                             .orElse(null));
 
         for (String parameter : ctx.getParameterNames()) {
             if (!IGNORED_PARAMETERS.contains(parameter)) {

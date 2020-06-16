@@ -9,6 +9,8 @@
 package sirius.biz.jobs;
 
 import com.alibaba.fastjson.JSON;
+import sirius.biz.jobs.batch.BatchProcessJobFactory;
+import sirius.biz.process.PersistencePeriod;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
@@ -59,6 +61,14 @@ public class JobConfigData extends Composite {
     @NullAllowed
     @Autoloaded
     private String label;
+
+    /**
+     * Contains a custom persistence period for jobs started via this configuration.
+     */
+    public static final Mapping CUSTOM_PERSISTENCE_PERIOD = Mapping.named("customPersistencePeriod");
+    @NullAllowed
+    @Autoloaded
+    private PersistencePeriod customPersistencePeriod;
 
     /**
      * Contains the configuration stored as JSON object.
@@ -129,7 +139,13 @@ public class JobConfigData extends Composite {
      * @return the parameters of this object as parameter provider
      */
     public Function<String, Value> asParameterProvider() {
-        return key -> Value.of(getConfigMap().get(key));
+        return key -> {
+            if (BatchProcessJobFactory.HIDDEN_PARAMETER_CUSTOM_PERSISTENCE_PERIOD.equals(key)) {
+                return Value.of(customPersistencePeriod);
+            } else {
+                return Value.of(getConfigMap().get(key));
+            }
+        };
     }
 
     /**
@@ -174,5 +190,13 @@ public class JobConfigData extends Composite {
 
     public void setLabel(String label) {
         this.label = label;
+    }
+
+    public PersistencePeriod getCustomPersistencePeriod() {
+        return customPersistencePeriod;
+    }
+
+    public void setCustomPersistencePeriod(PersistencePeriod customPersistencePeriod) {
+        this.customPersistencePeriod = customPersistencePeriod;
     }
 }

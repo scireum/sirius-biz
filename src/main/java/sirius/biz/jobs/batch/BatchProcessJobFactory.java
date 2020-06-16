@@ -17,12 +17,16 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.process.ProcessLink;
 import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Provides a base implementation for batch jobs which are executed as
@@ -41,6 +45,15 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
      * Used to store and retrieve the job factory which is responsible for executing the actual task.
      */
     public static final String CONTEXT_JOB_FACTORY = "jobFactory";
+
+    /**
+     * Contains a normally hidden parameter which permits to overwrite the persistence period of a job.
+     * <p>
+     * This is mainly used by {@link sirius.biz.storage.layer3.VFSRoot} and the
+     * {@link sirius.biz.jobs.scheduler.JobSchedulerLoop} to permit to lower the persistence period of regularly
+     * created processes.
+     */
+    public static final String HIDDEN_PARAMETER_CUSTOM_PERSISTENCE_PERIOD = "_customPersistencePeriod";
 
     @Part
     protected Processes processes;
@@ -74,6 +87,20 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
         return startWithContext(context);
     }
 
+    @Override
+    public Map<String, String> buildAndVerifyContext(Function<String, Value> parameterProvider,
+                                                     boolean enforceRequiredParameters,
+                                                     Consumer<HandledException> errorConsumer) {
+        Map<String, String> context =
+                super.buildAndVerifyContext(parameterProvider, enforceRequiredParameters, errorConsumer);
+
+        parameterProvider.apply(HIDDEN_PARAMETER_CUSTOM_PERSISTENCE_PERIOD)
+                         .ifFilled(Value::asString,
+                                   period -> context.put(HIDDEN_PARAMETER_CUSTOM_PERSISTENCE_PERIOD, period));
+
+        return context;
+    }
+
     /**
      * Creates a {@link Process} and schedules a {@link sirius.biz.cluster.work.DistributedTasks task}
      * to execute the job (on this node or another one).
@@ -82,16 +109,23 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
      * @return the id of the newly created process
      */
     protected String startWithContext(Map<String, String> context) {
+
         String processId = processes.createProcessForCurrentUser(getClass().getSimpleName() + ".label",
                                                                  createProcessTitle(context),
                                                                  getIcon(),
-                                                                 getPersistencePeriod(),
+                                                                 determinePersistencePeriod(context),
                                                                  context);
         logScheduledMessage(processId);
         addLinkToJob(processId);
         createAndScheduleDistributedTask(processId);
 
         return processId;
+    }
+
+    private PersistencePeriod determinePersistencePeriod(Map<String, String> context) {
+        return Value.of(context.get(HIDDEN_PARAMETER_CUSTOM_PERSISTENCE_PERIOD))
+                    .getEnum(PersistencePeriod.class)
+                    .orElseGet(this::getPersistencePeriod);
     }
 
     /**

@@ -87,6 +87,18 @@
                 <fieldset>
                     <w:textfield span="12" name="presetName" value="" labelKey="Model.name"
                                  helpKey="JobsController.createPreset.help" required="true"/>
+                    <w:singleSelect span="12"
+                                    name="customPersistencePeriod"
+                                    labelKey="JobConfigData.customPersistencePeriod"
+                                    help="sdgsd"
+                                    optional="true"
+                                    required="false">
+                        <i:for var="period"
+                               type="sirius.biz.process.PersistencePeriod"
+                               items="@enumValues(sirius.biz.process.PersistencePeriod.class)">
+                            <option value="@period.name()">@period.toString()</option>
+                        </i:for>
+                    </w:singleSelect>
                 </fieldset>
             </w:modalBody>
             <w:modalFooter cancelKey="NLS.cancel">
