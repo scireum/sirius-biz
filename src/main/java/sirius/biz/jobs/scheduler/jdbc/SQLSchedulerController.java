@@ -13,7 +13,6 @@ import sirius.biz.jobs.scheduler.SchedulerController;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.SQLPageHelper;
 import sirius.kernel.di.std.Register;
-import sirius.web.controller.Controller;
 
 /**
  * Provides the controller for managing the SQL based scheduler.
