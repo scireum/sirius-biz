@@ -9,6 +9,8 @@
 package sirius.biz.jobs;
 
 import com.alibaba.fastjson.JSON;
+import sirius.biz.jobs.batch.BatchProcessJobFactory;
+import sirius.biz.process.PersistencePeriod;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
@@ -27,6 +29,7 @@ import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.web.http.WebContext;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -59,6 +62,14 @@ public class JobConfigData extends Composite {
     @NullAllowed
     @Autoloaded
     private String label;
+
+    /**
+     * Contains a custom persistence period for jobs started via this configuration.
+     */
+    public static final Mapping CUSTOM_PERSISTENCE_PERIOD = Mapping.named("customPersistencePeriod");
+    @NullAllowed
+    @Autoloaded
+    private PersistencePeriod customPersistencePeriod;
 
     /**
      * Contains the configuration stored as JSON object.
@@ -124,12 +135,18 @@ public class JobConfigData extends Composite {
     }
 
     /**
-     * Returns a parameter provider to be supplied to {@link JobFactory#startInBackground(Function)}.
+     * Returns the parameter value which can be used as provider for {@link JobFactory#startInBackground(Function)}.
      *
-     * @return the parameters of this object as parameter provider
+     * @param key the parameter value to fetch
+     * @return the value for the given parameter wrapped as <tt>Value</tt>
      */
-    public Function<String, Value> asParameterProvider() {
-        return key -> Value.of(getConfigMap().get(key));
+    @Nonnull
+    public Value fetchParameter(String key) {
+        if (BatchProcessJobFactory.HIDDEN_PARAMETER_CUSTOM_PERSISTENCE_PERIOD.equals(key)) {
+            return Value.of(customPersistencePeriod);
+        } else {
+            return Value.of(getConfigMap().get(key));
+        }
     }
 
     /**
@@ -174,5 +191,13 @@ public class JobConfigData extends Composite {
 
     public void setLabel(String label) {
         this.label = label;
+    }
+
+    public PersistencePeriod getCustomPersistencePeriod() {
+        return customPersistencePeriod;
+    }
+
+    public void setCustomPersistencePeriod(PersistencePeriod customPersistencePeriod) {
+        this.customPersistencePeriod = customPersistencePeriod;
     }
 }

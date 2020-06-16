@@ -21,14 +21,14 @@
                          labelKey="JobConfigData.job"
                          value="@entry.getJobConfigData().getJobFactory().getLabel()"
                          readonly="true"/>
-            <input type="hidden" name="job" value="@entry.getJobConfigData().getJob()" />
+            <input type="hidden" name="job" value="@entry.getJobConfigData().getJob()"/>
             <w:textfield name="jobConfigData_label"
                          labelKey="JobConfigData.label"
                          helpKey="JobConfigData.label.help"
                          value="@entry.getJobConfigData().getLabel()"/>
         </div>
         <div class="row">
-            <w:autocompleteSingleSelect span="4"
+            <w:autocompleteSingleSelect span="6"
                                         name="schedulerData_userId"
                                         labelKey="SchedulerData.userId"
                                         helpKey="SchedulerData.userId.help"
@@ -40,61 +40,79 @@
                     </option>
                 </i:if>
             </w:autocompleteSingleSelect>
-            <w:booleanSelect span="4"
+            <w:booleanSelect span="6"
                              name="schedulerData_enabled"
                              labelKey="SchedulerData.enabled"
                              helpKey="SchedulerData.enabled.help"
                              trueLabelKey="SchedulerData.enabled.true"
                              falseLabelKey="SchedulerData.enabled.false"
-                             value="@entry.getSchedulerData().isEnabled()" />
-            <w:textfield span="4"
+                             value="@entry.getSchedulerData().isEnabled()"/>
+        </div>
+        <div class="row">
+            <w:textfield span="6"
                          name="schedulerData_runs"
                          labelKey="SchedulerData.runs"
                          helpKey="SchedulerData.runs.help"
-                         value="@toUserString(entry.getSchedulerData().getRuns())" />
+                         value="@toUserString(entry.getSchedulerData().getRuns())"/>
+            <w:singleSelect span="6"
+                            name="jobConfigData_customPersistencePeriod"
+                            labelKey="JobConfigData.customPersistencePeriod"
+                            helpKey="JobConfigData.customPersistencePeriod.help"
+                            optional="true"
+                            required="false">
+                <i:for var="period"
+                       type="sirius.biz.process.PersistencePeriod"
+                       items="@enumValues(sirius.biz.process.PersistencePeriod.class)">
+                    <option value="@period.name()"
+                            @selected="period == entry.getJobConfigData().getCustomPersistencePeriod()">
+                        @period.toString()
+                    </option>
+                </i:for>
+            </w:singleSelect>
         </div>
 
-        <w:subHeading labelKey="SchedulderController.planning" />
+        <w:subHeading labelKey="SchedulderController.planning"/>
         <div class="row">
             <w:textfield name="schedulerData_year"
-                        labelKey="SchedulerData.year"
-                        helpKey="SchedulerData.year.help"
-                        value="@entry.getSchedulerData().getYear()" />
+                         labelKey="SchedulerData.year"
+                         helpKey="SchedulerData.year.help"
+                         value="@entry.getSchedulerData().getYear()"/>
             <w:textfield name="schedulerData_month"
                          labelKey="SchedulerData.month"
                          helpKey="SchedulerData.month.help"
-                         value="@entry.getSchedulerData().getMonth()" />
+                         value="@entry.getSchedulerData().getMonth()"/>
         </div>
         <div class="row">
             <w:textfield name="schedulerData_dayOfMonth"
-                        labelKey="SchedulerData.dayOfMonth"
-                        helpKey="SchedulerData.dayOfMonth.help"
-                        value="@entry.getSchedulerData().getDayOfMonth()" />
+                         labelKey="SchedulerData.dayOfMonth"
+                         helpKey="SchedulerData.dayOfMonth.help"
+                         value="@entry.getSchedulerData().getDayOfMonth()"/>
             <w:textfield name="schedulerData_dayOfWeek"
                          labelKey="SchedulerData.dayOfWeek"
                          helpKey="SchedulerData.dayOfWeek.help"
-                         value="@entry.getSchedulerData().getDayOfWeek()" />
+                         value="@entry.getSchedulerData().getDayOfWeek()"/>
         </div>
         <div class="row">
             <w:textfield name="schedulerData_hourOfDay"
-                        labelKey="SchedulerData.hourOfDay"
-                        helpKey="SchedulerData.hourOfDay.help"
-                        value="@entry.getSchedulerData().getHourOfDay()" />
+                         labelKey="SchedulerData.hourOfDay"
+                         helpKey="SchedulerData.hourOfDay.help"
+                         value="@entry.getSchedulerData().getHourOfDay()"/>
             <w:textfield name="schedulerData_minute"
                          labelKey="SchedulerData.minute"
                          helpKey="SchedulerData.minute.help"
-                         value="@entry.getSchedulerData().getMinute()" />
+                         value="@entry.getSchedulerData().getMinute()"/>
         </div>
-        <w:subHeading labelKey="SchedulderController.parameters" />
+        <w:subHeading labelKey="SchedulderController.parameters"/>
         <div class="row">
             <i:for type="sirius.biz.jobs.params.Parameter" var="param"
                    items="entry.getJobConfigData().getJobFactory().getParameters()">
-                <i:dynamicInvoke template="@param.getEffectiveTemplateName(entry.getJobConfigData().getConfigMap())" param="@param"
+                <i:dynamicInvoke template="@param.getEffectiveTemplateName(entry.getJobConfigData().getConfigMap())"
+                                 param="@param"
                                  context="@entry.getJobConfigData().getConfigMap()"/>
             </i:for>
         </div>
     </w:editForm>
 
-    <w:formBar backUrl="/jobs/scheduler" />
+    <w:formBar backUrl="/jobs/scheduler"/>
 
 </w:page>

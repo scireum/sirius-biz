@@ -132,7 +132,7 @@ public class JobSchedulerLoop extends BackgroundLoop {
         try {
             String processId = entry.getJobConfigData()
                                     .getJobFactory()
-                                    .startInBackground(entry.getJobConfigData().asParameterProvider());
+                                    .startInBackground(entry.getJobConfigData()::fetchParameter);
 
             if (processId != null) {
                 processes.log(processId,
