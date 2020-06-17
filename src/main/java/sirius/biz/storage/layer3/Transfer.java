@@ -161,7 +161,7 @@ public class Transfer {
      *     </li>
      * </ul>
      *
-     * @return a process ID if a backkground process has been created to perform the operation. An empty optional if the
+     * @return a process ID if a background process has been created to perform the operation. An empty optional if the
      * operation was either handled interactively or if a process context was already available.
      */
     public Optional<String> move() {
@@ -210,7 +210,7 @@ public class Transfer {
      *     </li>
      * </ul>
      *
-     * @return a process ID if a backkground process has been created to perform the operation. An empty optional if the
+     * @return a process ID if a background process has been created to perform the operation. An empty optional if the
      * operation was either handled interactively or if a process context was already available.
      */
     public Optional<String> copy() {
@@ -237,7 +237,7 @@ public class Transfer {
      * <p>
      * If the children to be moved are large, the same rules as for {@link #move()} apply.
      *
-     * @return a process ID if a backkground process has been created to perform the operation. An empty optional if the
+     * @return a process ID if a background process has been created to perform the operation. An empty optional if the
      * operation was either handled interactively or if a process context was already available.
      */
     @CheckReturnValue
@@ -288,7 +288,7 @@ public class Transfer {
      * <p>
      * If the children to be moved are large, the same rules as for {@link #copy()} apply.
      *
-     * @return a process ID if a backkground process has been created to perform the operation. An empty optional if the
+     * @return a process ID if a background process has been created to perform the operation. An empty optional if the
      * operation was either handled interactively or if a process context was already available.
      */
     @CheckReturnValue
