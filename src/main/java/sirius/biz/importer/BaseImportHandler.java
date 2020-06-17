@@ -333,6 +333,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * <p>
      * This method can be overwritten to suppress properties which wear an <tt>AutoImport</tt> annotation
      * from being put into the <tt>ImportDictionary</tt>.
+     * <p>
      * By default, this will constantly return <tt>true</tt>.
      *
      * @param mapping the mapping to evaluate
