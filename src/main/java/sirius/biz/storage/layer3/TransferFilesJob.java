@@ -29,10 +29,29 @@ import java.util.function.Consumer;
 @Register
 public class TransferFilesJob extends SimpleBatchProcessJobFactory {
 
+    /**
+     * Contains the name of this job.
+     */
     public static final String NAME = "transfer-files";
+
+    /**
+     * Contains the parameter name of the source file.
+     */
     public static final String SOURCE_PARAMETER_NAME = "source";
+
+    /**
+     * Contains the parameter name of the destination file.
+     */
     public static final String DESTINATION_PARAMETER_NAME = "destination";
+
+    /**
+     * Contains the parameter name of the mode to use.
+     */
     public static final String MODE_PARAMETER_NAME = "mode";
+
+    /**
+     * Contains the parameter name which determines if "smart" copying should be used.
+     */
     public static final String SMART_TRANSFER_PARAMETER_NAME = "smartTransfer";
 
     /**

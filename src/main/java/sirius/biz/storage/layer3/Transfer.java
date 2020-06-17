@@ -30,8 +30,16 @@ import java.util.function.Function;
  */
 public class Transfer {
 
+    /**
+     * Contains the max number of files to be copied / moved interactively.
+     */
     private static final int MAX_FILES_THRESHOLD = 128;
-    private static final long MAX_SIZE_THRESHOLD = 32_768;
+
+    /**
+     * Contains the max total size (in bytes) of files which can be copied / Moved interactively.
+     */
+    private static final long MAX_SIZE_THRESHOLD = 32_768 * 1024;
+
     private final VirtualFile source;
     private final VirtualFile destination;
     private boolean forceWrite = true;
