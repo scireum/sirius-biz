@@ -17,6 +17,8 @@ import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.Operator;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.jdbc.UpdateStatement;
+import sirius.db.jdbc.batch.BatchContext;
+import sirius.db.jdbc.batch.UpdateQuery;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.async.CallContext;
@@ -29,6 +31,7 @@ import sirius.kernel.settings.Extension;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -754,11 +757,16 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         }
 
         try {
-            oma.select(SQLBlob.class)
-               .eq(SQLBlob.SPACE_NAME, spaceName)
-               .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED, LocalDateTime.now().minusDays(retentionDays)))
-               .limit(256)
-               .delete();
+            SmartQuery<SQLBlob> deleteQuery = oma.select(SQLBlob.class)
+                                                 .eq(SQLBlob.SPACE_NAME, spaceName)
+                                                 .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED,
+                                                                       LocalDateTime.now().minusDays(retentionDays)));
+            if (isTouchTracking()) {
+                deleteQuery.where(OMA.FILTERS.ltOrEmpty(SQLBlob.LAST_TOUCHED,
+                                                        LocalDateTime.now().minusDays(retentionDays)));
+            }
+
+            deleteQuery.limit(256).delete();
         } catch (Exception e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
@@ -781,6 +789,26 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                       .to(StorageUtils.LOG)
                       .error(e)
                       .withSystemErrorMessage("Layer 2/SQL: Failed to delete temporary blobs in %s: %s (%s)", spaceName)
+                      .handle();
+        }
+    }
+
+    @Override
+    public void markTouched(Set<String> blobKeys) {
+        try (BatchContext batchContext = new BatchContext(() -> "Mark SQLBlobs as touched", Duration.ofMinutes(1))) {
+            UpdateQuery<SQLBlob> markTouchedQuery =
+                    batchContext.updateQuery(SQLBlob.class, SQLBlob.BLOB_KEY).withUpdatedMappings(SQLBlob.LAST_TOUCHED);
+            SQLBlob template = new SQLBlob();
+            template.setLastTouched(LocalDateTime.now());
+            for (String blobKey : blobKeys) {
+                template.setBlobKey(blobKey);
+                markTouchedQuery.update(template, false, false);
+            }
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .to(StorageUtils.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Layer 2/SQL: Failed to mark blobs in %s as touched: %s (%s)", spaceName)
                       .handle();
         }
     }

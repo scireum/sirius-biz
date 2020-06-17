@@ -146,6 +146,13 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     private LocalDateTime lastModified = LocalDateTime.now();
 
     /**
+     * Stores the last access timestamp.
+     */
+    public static final Mapping LAST_TOUCHED = Mapping.named("lastTouched");
+    @NullAllowed
+    private LocalDateTime lastTouched;
+
+    /**
      * Stores if a blob has been fully initialized.
      * <p>
      * This is used by the optimistic locking algorithms to ensure that blob names remain unique
@@ -232,6 +239,11 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     @Override
     public void delete() {
         getStorageSpace().delete(this);
+    }
+
+    @Override
+    public void touch() {
+        getStorageSpace().touch(getBlobKey());
     }
 
     @Override
@@ -400,5 +412,14 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     public void setHidden(boolean hidden) {
         this.hidden = hidden;
+    }
+
+    @Override
+    public LocalDateTime getLastTouched() {
+        return lastTouched;
+    }
+
+    public void setLastTouched(LocalDateTime lastTouched) {
+        this.lastTouched = lastTouched;
     }
 }
