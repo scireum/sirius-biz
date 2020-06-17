@@ -303,7 +303,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     /**
      * Determines if this file can (probably) be deleted.
      *
-     * @return <tt>true</tt> if this file can be delete or <tt>false</tt> otherwise
+     * @return <tt>true</tt> if this file can be deleted or <tt>false</tt> otherwise
      */
     public boolean canDelete() {
         try {
