@@ -33,8 +33,12 @@ import java.util.function.Supplier;
 
 /**
  * Provides the adapter between the layer 2 (blob storage) and the layer 3 (browsable virtual file system).
+ * <p>
+ * Note that this is also accessible via an {@link Part} annotation as the helper methods
+ * {@link #wrapBlob(VirtualFile, Blob, boolean)} and {@link #wrapDirectory(VirtualFile, Directory, boolean)} might be
+ * used by custom VFS roots which also access blobs under the hoods.
  */
-@Register
+@Register(classes = {VFSRoot.class, L3Uplink.class})
 public class L3Uplink implements VFSRoot {
 
     @Part
@@ -127,15 +131,7 @@ public class L3Uplink implements VFSRoot {
 
             MutableVirtualFile file = MutableVirtualFile.checkedCreate(parent, name);
             file.attach(new Placeholder(parent, name));
-            attachHandlers(file);
-
-            return file;
-        }
-
-        private VirtualFile wrapBlob(VirtualFile parent, Blob blob) {
-            MutableVirtualFile file = MutableVirtualFile.checkedCreate(parent, blob.getFilename());
-            file.attach(Blob.class, blob);
-            attachHandlers(file);
+            attachHandlers(file, false);
 
             return file;
         }
@@ -162,19 +158,19 @@ public class L3Uplink implements VFSRoot {
             // try to resolve it as such and then fallback to resolving as directory...
             if (Strings.isFilled(Files.getFileExtension(name))) {
                 return priorizedLookup(() -> parentDir.findChildBlob(name)
-                                                      .map(blob -> wrapBlob(parent, blob))
+                                                      .map(blob -> wrapBlob(parent, blob, false))
                                                       .orElse(null),
                                        () -> parentDir.findChildDirectory(name)
-                                                      .map(directory -> wrapDirectory(parent, directory))
+                                                      .map(directory -> wrapDirectory(parent, directory, false))
                                                       .orElse(null),
                                        () -> createPlaceholder(parentDir, parent, name));
             } else {
                 //...if there is no file extension we reverse the lookup order
                 return priorizedLookup(() -> parentDir.findChildDirectory(name)
-                                                      .map(directory -> wrapDirectory(parent, directory))
+                                                      .map(directory -> wrapDirectory(parent, directory, false))
                                                       .orElse(null),
                                        () -> parentDir.findChildBlob(name)
-                                                      .map(blob -> wrapBlob(parent, blob))
+                                                      .map(blob -> wrapBlob(parent, blob, false))
                                                       .orElse(null),
                                        () -> createPlaceholder(parentDir, parent, name));
             }
@@ -206,22 +202,51 @@ public class L3Uplink implements VFSRoot {
                                .listChildDirectories(search.getPrefixFilter().orElse(null),
                                                      search.getMaxRemainingItems().orElse(0),
                                                      directory -> search.processResult(wrapDirectory(parent,
-                                                                                                     directory)));
+                                                                                                     directory,
+                                                                                                     false)));
                 if (!search.isOnlyDirectories()) {
                     parentDirectory.get()
                                    .listChildBlobs(search.getPrefixFilter().orElse(null),
                                                    search.getFileExtensionFilters(),
                                                    search.getMaxRemainingItems().orElse(0),
-                                                   blob -> search.processResult(wrapBlob(parent, blob)));
+                                                   blob -> search.processResult(wrapBlob(parent, blob, false)));
                 }
             }
         }
     }
 
-    private MutableVirtualFile wrapDirectory(VirtualFile parent, Directory directory) {
+    /**
+     * Wraps the given directory into a {@link MutableVirtualFile}.
+     *
+     * @param parent    the parent file to use
+     * @param directory the directory to wrap
+     * @param readonly  determines if the directory should be forcefully set to readonly (independent of
+     *                  {@link BlobStorageSpace#isReadonly()}. Note that setting this to <tt>false</tt> will not
+     *                  make the directory writable if <tt>BlobStorageSpace#isReadonly()</tt> returns <tt>true</tt>
+     * @return the resulting mutable virtual file
+     */
+    public MutableVirtualFile wrapDirectory(VirtualFile parent, Directory directory, boolean readonly) {
         MutableVirtualFile file = MutableVirtualFile.checkedCreate(parent, directory.getName());
         file.attach(Directory.class, directory);
-        attachHandlers(file);
+        attachHandlers(file, readonly);
+
+        return file;
+    }
+
+    /**
+     * Wraps the given blob into a {@link MutableVirtualFile}.
+     *
+     * @param parent   the parent file to use
+     * @param blob     the blob to wrap
+     * @param readonly determines if the blob should be forcefully set to readonly (independent of
+     *                 {@link BlobStorageSpace#isReadonly()}. Note that setting this to <tt>false</tt> will not
+     *                 make the blob writable if <tt>BlobStorageSpace#isReadonly()</tt> returns <tt>true</tt>
+     * @return the resulting mutable virtual file
+     */
+    public MutableVirtualFile wrapBlob(VirtualFile parent, Blob blob, boolean readonly) {
+        MutableVirtualFile file = MutableVirtualFile.checkedCreate(parent, blob.getFilename());
+        file.attach(Blob.class, blob);
+        attachHandlers(file, readonly);
 
         return file;
     }
@@ -246,7 +271,7 @@ public class L3Uplink implements VFSRoot {
             return null;
         }
 
-        return wrapDirectory(parent, space.getRoot(tenants.getRequiredTenant().getIdAsString()));
+        return wrapDirectory(parent, space.getRoot(tenants.getRequiredTenant().getIdAsString()), false);
     }
 
     /**
@@ -263,7 +288,7 @@ public class L3Uplink implements VFSRoot {
 
         storage.getSpaces().filter(BlobStorageSpace::isBrowsable).map(space -> {
             Directory directory = space.getRoot(tenants.getRequiredTenant().getIdAsString());
-            MutableVirtualFile wrappedDirectory = wrapDirectory(parent, directory);
+            MutableVirtualFile wrappedDirectory = wrapDirectory(parent, directory, false);
             wrappedDirectory.withDescription(space.getDescription());
             return wrappedDirectory;
         }).forEach(search::processResult);
@@ -274,16 +299,8 @@ public class L3Uplink implements VFSRoot {
         return DEFAULT_PRIORITY;
     }
 
-    private void attachHandlers(MutableVirtualFile file) {
-        file.withCanCreateChildren(this::canCreateChildren);
+    private void attachHandlers(MutableVirtualFile file, boolean readonly) {
         file.withChildren(directoryChildProvider);
-        file.withCanRenameHandler(this::isMutable);
-        file.withRenameHandler(this::renameHandler);
-        file.withCanDeleteHandler(this::isMutable);
-        file.withDeleteHandler(this::deleteHandler);
-        file.withCanFastMoveHandler(this::canFastMoveHandler);
-        file.withFastMoveHandler(this::fastMoveHandler);
-        file.withCanCreateDirectoryHandler(this::canCreateDirectoryHandler);
         file.withCreateDirectoryHandler(this::createDirectoryHandler);
         file.withDirectoryFlagSupplier(this::directoryFlagSupplier);
         file.withExistsFlagSupplier(this::existsFlagSupplier);
@@ -294,12 +311,32 @@ public class L3Uplink implements VFSRoot {
         file.withCanProvideFileHandle(this::isReadable);
         file.withFileHandleSupplier(this::fileHandleSupplier);
         file.withCustomTunnelHandler(this::tunnelHandler);
-        file.withCanProvideOutputStream(this::isWriteable);
-        file.withOutputStreamSupplier(this::outputStreamSupplier);
-        file.withCanConsumeStream(this::isWriteable);
-        file.withConsumeStreamHandler(this::consumeStreamHandler);
-        file.withCanConsumeFile(this::isWriteable);
-        file.withConsumeFileHandler(this::consumeFileHandler);
+
+        if (readonly) {
+            file.withCanCreateChildren(MutableVirtualFile.CONSTANT_FALSE);
+            file.withCanCreateDirectoryHandler(MutableVirtualFile.CONSTANT_FALSE);
+            file.withCanDeleteHandler(MutableVirtualFile.CONSTANT_FALSE);
+            file.withCanRenameHandler(MutableVirtualFile.CONSTANT_FALSE);
+            file.withCanFastMoveHandler((ignoredSource, ignoredDestination) -> false);
+            file.withCanProvideOutputStream(MutableVirtualFile.CONSTANT_FALSE);
+            file.withCanConsumeStream(MutableVirtualFile.CONSTANT_FALSE);
+            file.withCanConsumeFile(MutableVirtualFile.CONSTANT_FALSE);
+        } else {
+            file.withCanCreateDirectoryHandler(this::canCreateDirectoryHandler);
+            file.withCanCreateChildren(this::canCreateChildren);
+            file.withCanDeleteHandler(this::isMutable);
+            file.withDeleteHandler(this::deleteHandler);
+            file.withCanRenameHandler(this::isMutable);
+            file.withRenameHandler(this::renameHandler);
+            file.withCanFastMoveHandler(this::canFastMoveHandler);
+            file.withFastMoveHandler(this::fastMoveHandler);
+            file.withCanProvideOutputStream(this::isWriteable);
+            file.withOutputStreamSupplier(this::outputStreamSupplier);
+            file.withCanConsumeStream(this::isWriteable);
+            file.withConsumeStreamHandler(this::consumeStreamHandler);
+            file.withCanConsumeFile(this::isWriteable);
+            file.withConsumeFileHandler(this::consumeFileHandler);
+        }
     }
 
     private long sizeSupplier(VirtualFile file) {
