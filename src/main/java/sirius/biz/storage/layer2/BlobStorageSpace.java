@@ -259,7 +259,7 @@ public interface BlobStorageSpace {
     void deliver(@Nonnull String blobKey, @Nonnull String variant, @Nonnull Response response);
 
     /**
-     * Delivers the contents of the given blob by using the alredy known physicalKey.
+     * Delivers the contents of the given blob by using the already known physicalKey.
      *
      * @param blobKey     the id of the blob to deliver (mostly for touch tracking)
      * @param physicalKey the physical object to deliver
