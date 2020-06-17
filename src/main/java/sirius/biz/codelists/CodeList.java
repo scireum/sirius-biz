@@ -30,22 +30,6 @@ public interface CodeList extends TenantAware {
     CodeListData getCodeListData();
 
     /**
-     * Determines if the entity is new (not yet written to the database).
-     *
-     * @return <tt>true</tt> if the entity has not been written to the database yes, <tt>false</tt> otherwise
-     */
-    boolean isNew();
-
-    /**
-     * Returns a string representation of the entity ID.
-     * <p>
-     * If the entity is new, "new" will be returned.
-     *
-     * @return the entity ID as string or "new" if the entity {@link #isNew()}.
-     */
-    String getIdAsString();
-
-    /**
      * Fills the tenant with the given one.
      *
      * @param tenant the tenant to set for this entity

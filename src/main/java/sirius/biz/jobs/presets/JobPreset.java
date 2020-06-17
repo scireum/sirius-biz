@@ -27,27 +27,6 @@ public interface JobPreset extends TenantAware {
     Mapping JOB_CONFIG_DATA = Mapping.named("jobConfigData");
 
     /**
-     * Makes {@link BaseEntity#getIdAsString()} visible so that it can be used in Tagliatelle templates.
-     *
-     * @return the id of the underlying entity as string
-     */
-    String getIdAsString();
-
-    /**
-     * Makes {@link BaseEntity#getUniqueName()} visible so that it can be used in Tagliatelle templates.
-     *
-     * @return the unique name of this entity
-     */
-    String getUniqueName();
-
-    /**
-     * Makes {@link BaseEntity#isNew()} visible so that it can be used in Tagliatelle templates.
-     *
-     * @return <tt>ture</tt> if the underlying entity has not been persisted yet, <tt>false</tt> otherwise
-     */
-    boolean isNew();
-
-    /**
      * Provides access to the job configuration stored in the underlying entity.
      *
      * @return the job configuration of this entry.

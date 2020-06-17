@@ -10,6 +10,7 @@ package sirius.biz.web;
 
 import sirius.biz.importer.BaseImportHandler;
 import sirius.biz.importer.Importer;
+import sirius.db.mixing.Entity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Explain;
@@ -21,7 +22,7 @@ import java.util.function.Supplier;
  */
 @SuppressWarnings("squid:S1214")
 @Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real enttiy.")
-public interface TenantAware {
+public interface TenantAware extends Entity {
 
     /**
      * Defines the mapping which stores the tenant to which this user belongs.
