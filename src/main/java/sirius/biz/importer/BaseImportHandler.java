@@ -329,13 +329,14 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     }
 
     /**
-     * Determines if mapping should be considered.
+     * Determines if an auto imported mapping should be put into the <tt>ImportDictionary</tt>.
      * <p>
-     * This method returns true by default and is intended to be overwritten
-     * by sub classes if specific mappings should be ignored.
+     * This method can be overwritten to suppress properties which wear an <tt>AutoImport</tt> annotation
+     * from being put into the <tt>ImportDictionary</tt>.
+     * By default, this will constantly return <tt>true</tt>.
      *
      * @param mapping the mapping to evaluate
-     * @return true by default
+     * @return <tt>true</tt> to accept the mapping, <tt>false</tt> otherwise
      */
     protected boolean isAutoImportMappingAccepted(Mapping mapping) {
         return true;
