@@ -155,7 +155,7 @@ public class BlobDispatcher implements WebDispatcher {
         if (Strings.areEqual(type, PHYSICAL_DELIVERY)) {
             if (uriParts.length() == 4) {
                 // Support for legacy URLS (where the blob key is missing)
-                // TODO delete by Sept 2020
+                // TODO delete by Sept 2020 - SIRI-231
                 String filename = stripAdditionalText(uriParts.at(3).asString());
                 physicalDelivery(request,
                                  uriParts.at(1).asString(),
@@ -179,7 +179,7 @@ public class BlobDispatcher implements WebDispatcher {
         if (Strings.areEqual(type, PHYSICAL_DOWNLOAD)) {
             if (uriParts.length() == 5) {
                 // Support for legacy URLS (where the blob key is missing)
-                // TODO delete by Sept 2020
+                // TODO delete by Sept 2020 - SIRI-231
                 physicalDownload(request,
                                  uriParts.at(1).asString(),
                                  uriParts.at(2).asString(),
