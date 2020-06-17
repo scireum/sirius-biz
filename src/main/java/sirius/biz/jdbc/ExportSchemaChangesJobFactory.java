@@ -8,7 +8,6 @@
 
 package sirius.biz.jdbc;
 
-import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.PersistencePeriod;
@@ -33,7 +32,7 @@ import java.util.function.Consumer;
 /**
  * Exports all required schema changes as defined by {@link Schema#getSchemaUpdateActions()}.
  */
-@Register(classes = JobFactory.class)
+@Register
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ExportSchemaChangesJobFactory extends SimpleBatchProcessJobFactory {
 

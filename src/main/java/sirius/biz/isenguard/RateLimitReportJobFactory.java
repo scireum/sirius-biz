@@ -11,7 +11,6 @@ package sirius.biz.isenguard;
 import sirius.biz.analytics.reports.Cell;
 import sirius.biz.analytics.reports.Report;
 import sirius.biz.jobs.JobCategory;
-import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.interactive.ReportJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.kernel.async.CallContext;
@@ -35,7 +34,7 @@ import java.util.function.Consumer;
  *
  * @see Isenguard#PERMISSION_VIEW_RATE_LIMITS
  */
-@Register(classes = JobFactory.class, framework = Isenguard.FRAMEWORK_ISENGUARD)
+@Register(framework = Isenguard.FRAMEWORK_ISENGUARD)
 @Permission(UserInfo.PERMISSION_LOGGED_IN)
 public class RateLimitReportJobFactory extends ReportJobFactory {
 

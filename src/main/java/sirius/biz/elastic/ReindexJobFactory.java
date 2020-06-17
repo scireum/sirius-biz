@@ -9,7 +9,6 @@
 package sirius.biz.elastic;
 
 import sirius.biz.cluster.work.DistributedTaskExecutor;
-import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.DefaultBatchProcessFactory;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.EntityDescriptorParameter;
@@ -36,7 +35,7 @@ import java.util.function.Consumer;
 /**
  * Implements a job which reindexes a given index in elastic.
  */
-@Register(classes = JobFactory.class)
+@Register
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
 

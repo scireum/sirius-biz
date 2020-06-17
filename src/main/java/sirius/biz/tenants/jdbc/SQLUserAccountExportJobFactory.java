@@ -8,7 +8,6 @@
 
 package sirius.biz.tenants.jdbc;
 
-import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.jdbc.SmartQuery;
@@ -21,7 +20,7 @@ import javax.annotation.Nonnull;
 /**
  * Provides an export for {@link SQLUserAccount user accounts}.
  */
-@Register(classes = JobFactory.class, framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
+@Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
 public class SQLUserAccountExportJobFactory extends EntityExportJobFactory<SQLUserAccount, SmartQuery<SQLUserAccount>> {
 
     @Part

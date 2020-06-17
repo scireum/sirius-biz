@@ -40,7 +40,6 @@ import sirius.web.security.UserContext;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.OutputStream;
-import java.util.function.Function;
 
 /**
  * Provides a {@link VFSRoot} to trigger jobs via the built-in {@link VirtualFileSystem}.

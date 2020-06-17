@@ -8,50 +8,89 @@
 
 package sirius.biz.storage.layer3;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 /**
  * Implements a spliterator which is used to stream through sub trees of the VFS via {@link VirtualFile#tree()} etc.
  */
 class VirtualFileWalker implements Spliterator<VirtualFile> {
 
-    private Predicate<VirtualFile> directoryFilter;
+    private TreeVisitorBuilder settings;
     private List<Iterator<VirtualFile>> stack;
     private Iterator<VirtualFile> children;
+    private int filesScanned = 0;
 
-    VirtualFileWalker(List<VirtualFile> children, Predicate<VirtualFile> directoryFilter) {
-        this.children = children.iterator();
-        this.directoryFilter = directoryFilter;
+    VirtualFileWalker(VirtualFile rootFile, TreeVisitorBuilder settings) {
+        this.settings = settings;
+
+        if (settings.subTreeOnly) {
+            settings.maxDepth -= 1;
+            this.children = new BlockwiseIterator(rootFile);
+        } else {
+            this.children = Collections.singletonList(rootFile).iterator();
+        }
     }
 
     @Override
     public boolean tryAdvance(Consumer<? super VirtualFile> action) {
         while (true) {
-            if (!children.hasNext()) {
-                if (stack.isEmpty()) {
-                    return false;
-                } else {
-                    children = stack.remove(stack.size() - 1);
-                }
+            if (!prepareNext()) {
+                return false;
             }
 
             VirtualFile next = children.next();
-            if (!next.isDirectory()) {
+            if (shouldProcessAsFile(next)) {
                 action.accept(next);
-                return true;
+                return scanCompleted();
             }
 
-            if (directoryFilter.test(next)) {
-                stack.add(children);
-                children = next.allChildren().iterator();
-                action.accept(next);
-                return true;
+            if (shouldVisitDirectory(next)) {
+                if (shouldEnterDirectory()) {
+                    stack.add(children);
+                    children = new BlockwiseIterator(next);
+                }
+                if (shouldProcessAsDirectory()) {
+                    action.accept(next);
+                    return scanCompleted();
+                }
             }
         }
+    }
+
+    private boolean prepareNext() {
+        if (children.hasNext()) {
+            return true;
+        }
+        if (stack.isEmpty()) {
+            return false;
+        }
+
+        children = stack.remove(stack.size() - 1);
+        return true;
+    }
+
+    private boolean shouldProcessAsFile(VirtualFile next) {
+        return !next.isDirectory() && !settings.excludeFiles;
+    }
+
+    private boolean shouldVisitDirectory(VirtualFile next) {
+        return next.isDirectory() && (settings.directoryFilter == null || settings.directoryFilter.test(next));
+    }
+
+    private boolean shouldEnterDirectory() {
+        return settings.maxDepth < 0 || stack.size() < settings.maxDepth;
+    }
+
+    private boolean shouldProcessAsDirectory() {
+        return !settings.excludeDirectories;
+    }
+
+    private boolean scanCompleted() {
+        return settings.maxFiles <= 0 || filesScanned++ < settings.maxFiles;
     }
 
     @Override
@@ -61,7 +100,7 @@ class VirtualFileWalker implements Spliterator<VirtualFile> {
 
     @Override
     public long estimateSize() {
-        return Long.MAX_VALUE;
+        return settings.maxFiles > 0 ? settings.maxFiles : Long.MAX_VALUE;
     }
 
     @Override

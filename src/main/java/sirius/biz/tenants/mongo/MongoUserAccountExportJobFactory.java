@@ -8,24 +8,19 @@
 
 package sirius.biz.tenants.mongo;
 
-import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
-import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.mongo.MongoQuery;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.http.QueryString;
-import sirius.web.security.Permission;
-import sirius.web.security.UserContext;
-import sirius.web.security.UserInfo;
 
 import javax.annotation.Nonnull;
 
 /**
  * Provides an export for {@link MongoUserAccount user accounts}.
  */
-@Register(classes = JobFactory.class, framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
+@Register(framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
 public class MongoUserAccountExportJobFactory
         extends EntityExportJobFactory<MongoUserAccount, MongoQuery<MongoUserAccount>> {
 
@@ -37,7 +32,6 @@ public class MongoUserAccountExportJobFactory
     public String getName() {
         return "export-mongo-user-accounts";
     }
-
 
     @Override
     protected void checkPermissions() {

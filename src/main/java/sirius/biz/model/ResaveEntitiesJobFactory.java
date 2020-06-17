@@ -9,7 +9,6 @@
 package sirius.biz.model;
 
 import sirius.biz.jobs.JobCategory;
-import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.BatchJob;
 import sirius.biz.jobs.batch.DefaultBatchProcessFactory;
 import sirius.biz.jobs.params.BooleanParameter;
@@ -46,7 +45,7 @@ import java.util.function.Consumer;
  * @see sirius.db.mixing.annotations.BeforeSave
  * @see sirius.db.mixing.annotations.OnValidate
  */
-@Register(classes = JobFactory.class)
+@Register
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
 

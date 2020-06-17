@@ -8,7 +8,6 @@
 
 package sirius.biz.tenants.jdbc;
 
-import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.file.EntityImportJobFactory;
 import sirius.biz.tenants.UserAccountController;
 import sirius.db.mixing.BaseEntity;
@@ -22,7 +21,7 @@ import javax.annotation.Nonnull;
 /**
  * Provides an import job for {@link SQLUserAccount user accounts} stored in a JDBC database.
  */
-@Register(classes = JobFactory.class, framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
+@Register(framework = SQLTenants.FRAMEWORK_TENANTS_JDBC)
 @Permission(UserAccountController.PERMISSION_MANAGE_USER_ACCOUNTS)
 public class SQLUserAccountImportJobFactory extends EntityImportJobFactory {
 

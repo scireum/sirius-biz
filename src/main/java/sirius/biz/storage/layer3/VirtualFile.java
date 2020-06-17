@@ -10,6 +10,8 @@ package sirius.biz.storage.layer3;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.biz.storage.layer2.Blob;
+import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Streams;
@@ -24,6 +26,7 @@ import sirius.web.http.MimeHelper;
 import sirius.web.http.Response;
 import sirius.web.http.WebContext;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
@@ -36,7 +39,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -46,8 +48,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * Represents a file or directory in the {@link VirtualFileSystem}.
@@ -401,71 +401,6 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     }
 
     /**
-     * Determines if this file can (probably) be move in an efficient way.
-     *
-     * @param newParent the new parent directory
-     * @return <tt>true</tt> if this file can be efficiently moved or <tt>false</tt> otherwise
-     */
-    public boolean canFastMoveTo(VirtualFile newParent) {
-        try {
-            if (fastMoveHandler == null) {
-                return false;
-            }
-
-            if (!exists() || !newParent.exists() || !newParent.isDirectory()) {
-                return false;
-            }
-
-            if (canFastMoveHandler != null) {
-                return canFastMoveHandler.test(this, newParent);
-            } else {
-                return true;
-            }
-        } catch (Exception e) {
-            throw handleErrorInCallback(e, "canFastMoveHandler");
-        }
-    }
-
-    /**
-     * Tries to efficiently move the file in the given directory.
-     *
-     * @param newParent the new parent directory
-     * @return <tt>true</tt> if the operation was successful, <tt>false</tt> otherwise
-     */
-    public boolean tryFastMoveTo(VirtualFile newParent) {
-        try {
-            if (!canFastMoveTo(newParent)) {
-                return false;
-            }
-
-            return fastMoveHandler.test(this, newParent);
-        } catch (Exception e) {
-            throw handleErrorInCallback(e, "fastMoveHandler");
-        }
-    }
-
-    /**
-     * Efficiently moves the file in the given directory.
-     *
-     * @param newParent the new parent directory
-     * @throws HandledException if the file cannot be efficiently moved
-     */
-    public void fastMoveTo(VirtualFile newParent) {
-        if (!tryFastMoveTo(newParent)) {
-            throw Exceptions.createHandled().withNLSKey("VirtualFile.cannotMove").set("file", path()).handle();
-        }
-    }
-
-    /**
-     * Determines if this file can be moved (either via an efficient implementation or by copy+delete).
-     *
-     * @return <tt>true</tt> if the file can (probably) be moved, <tt>false</tt> otherwise
-     */
-    public boolean canMove() {
-        return canDelete() && (isDirectory() || canCreateInputStream());
-    }
-
-    /**
      * Determines if the file exists.
      *
      * @return <tt>true</tt> if the file exists, <tt>false</tt> otherwise
@@ -555,60 +490,18 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      *
      * @return all child files as list
      */
-    public List<VirtualFile> allChildren() {
-        List<VirtualFile> result = new ArrayList<>();
-        children(FileSearch.iterateAll(result::add));
-        return result;
+    public TreeVisitorBuilder allChildren() {
+        return tree().directChildrenOnly();
     }
 
     /**
-     * Returns a stream which will iterate all children (and their children) of this file.
-     * <p>
-     * This will start with this file and then perform a depth first search.
+     * Creates a configurable directory traversal visitor which visits all files and directories below this file.
      *
-     * @param directoryFilter this filter is applied on all directories being discovered. If the predicate returns
-     *                        <tt>false</tt> the directory will neither occur in the stream, nor its children will be
-     *                        visited.
-     * @return a stream visiting this and then all children in DFS order
+     * @return a new visitor which visits can be configured to visit all or a specific set of child files below
+     * this file
      */
-    public Stream<VirtualFile> tree(Predicate<VirtualFile> directoryFilter) {
-        return StreamSupport.stream(new VirtualFileWalker(Collections.singletonList(this), directoryFilter), false);
-    }
-
-    /**
-     * Returns a stream which will iterate all children (and their children) of this file.
-     * <p>
-     * This will start with this file and then perform a depth first search.
-     *
-     * @return a stream visiting this and then all children in DFS order
-     */
-    public Stream<VirtualFile> tree() {
-        return tree(ignored -> true);
-    }
-
-    /**
-     * Returns a stream which will iterate all children (and their children) of this file.
-     * <p>
-     * This will directly start with the children of this file and then perform a depth first search.
-     *
-     * @param directoryFilter this filter is applied on all directories being discovered. If the predicate returns
-     *                        <tt>false</tt> the directory will neither occur in the stream, nor its children will be
-     *                        visited.
-     * @return a stream visiting all children in DFS order
-     */
-    public Stream<VirtualFile> subTree(Predicate<VirtualFile> directoryFilter) {
-        return StreamSupport.stream(new VirtualFileWalker(allChildren(), directoryFilter), false);
-    }
-
-    /**
-     * Returns a stream which will iterate all children (and their children) of this file.
-     * <p>
-     * This will directly start with the children of this file and then perform a depth first search.
-     *
-     * @return a stream visiting all children in DFS order
-     */
-    public Stream<VirtualFile> subTree() {
-        return subTree(ignored -> true);
+    public TreeVisitorBuilder tree() {
+        return new TreeVisitorBuilder(this);
     }
 
     /**
@@ -1176,36 +1069,111 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                                                          .handle());
     }
 
-    @Override
-    public String toString() {
-        return path();
+    /**
+     * Determines if this file can (probably) be move in an efficient way.
+     *
+     * @param newParent the new parent directory
+     * @return <tt>true</tt> if this file can be efficiently moved or <tt>false</tt> otherwise
+     */
+    public boolean canFastMoveTo(VirtualFile newParent) {
+        try {
+            if (fastMoveHandler == null) {
+                return false;
+            }
+
+            if (!exists() || !newParent.exists() || !newParent.isDirectory()) {
+                return false;
+            }
+
+            if (canFastMoveHandler != null) {
+                return canFastMoveHandler.test(this, newParent);
+            } else {
+                return true;
+            }
+        } catch (Exception e) {
+            throw handleErrorInCallback(e, "canFastMoveHandler");
+        }
     }
 
-    @Override
-    public boolean equals(Object other) {
-        if (other == this) {
-            return true;
-        }
-
-        if ((other instanceof VirtualFile) && (Objects.equals(((VirtualFile) other).parent, parent))) {
-            return Objects.equals(name, ((VirtualFile) other).name);
-        }
-
-        return false;
+    /**
+     * Determines if this file can be moved (either via an efficient implementation or by copy+delete).
+     *
+     * @return <tt>true</tt> if the file can (probably) be moved, <tt>false</tt> otherwise
+     */
+    public boolean canMove() {
+        return canDelete() && (isDirectory() || canCreateInputStream());
     }
 
-    @Override
-    public int hashCode() {
-        return path().hashCode();
+    /**
+     * Tries to efficiently move the file in the given directory.
+     * <p>
+     * This is only an interal API as the public API is accessible via {@link #transferTo(VirtualFile)}.
+     *
+     * @param newParent the new parent directory
+     * @return <tt>true</tt> if the operation was successful, <tt>false</tt> otherwise
+     */
+    protected boolean tryFastMoveTo(VirtualFile newParent) {
+        try {
+            if (!canFastMoveTo(newParent)) {
+                return false;
+            }
+
+            return fastMoveHandler.test(this, newParent);
+        } catch (Exception e) {
+            throw handleErrorInCallback(e, "fastMoveHandler");
+        }
     }
 
-    @Override
-    public int compareTo(VirtualFile other) {
-        if (other == null) {
-            return 1;
-        }
+    /**
+     * Provides various ways of copying or moving the contents of this file to the given destination.
+     *
+     * @param destination the desntiantion to transer the contents to
+     * @return a helper which permits to transfer the contents of this file to the given destination
+     */
+    @CheckReturnValue
+    public Transfer transferTo(VirtualFile destination) {
+        return new Transfer(this, destination);
+    }
 
-        return Objects.compare(path(), other.path(), String::compareTo);
+    /**
+     * Transfers the contents of this file into the given blob.
+     * <p>
+     * This will support retries in case the transfer is interrupted. Also, this will set the filename of the
+     * destination blob to <tt>name()</tt>.
+     *
+     * @param destination the blob to write the contents to
+     */
+    public void transferFileToBlob(Blob destination) {
+        transferFileToBlob(name(), destination);
+    }
+
+    /**
+     * Transfers the contents of this file into the given blob.
+     * <p>
+     * This will support retries in case the transfer is interrupted.
+     *
+     * @param filename    the filename to specify for the destination blob or <tt>null</tt> to leave it unchanged
+     * @param destination the blob to write the contents to
+     */
+    public void transferFileToBlob(@Nullable String filename, Blob destination) {
+        for (Attempt attempt : Attempt.values()) {
+            try (InputStream input = createInputStream()) {
+                destination.updateContent(filename, input, size());
+                return;
+            } catch (Exception e) {
+                if (attempt.shouldThrow(e)) {
+                    throw Exceptions.handle()
+                                    .to(StorageUtils.LOG)
+                                    .error(e)
+                                    .withSystemErrorMessage(
+                                            "Layer 3/VFS: An error occurred when transferting '%s' to %s in '%s': %s (%s)",
+                                            path(),
+                                            destination.getStorageSpace().getName(),
+                                            destination.getBlobKey())
+                                    .handle();
+                }
+            }
+        }
     }
 
     /**
@@ -1260,5 +1228,37 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         } catch (IOException e) {
             response.error(HttpResponseStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    @Override
+    public String toString() {
+        return path();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+
+        if ((other instanceof VirtualFile) && (Objects.equals(((VirtualFile) other).parent, parent))) {
+            return Objects.equals(name, ((VirtualFile) other).name);
+        }
+
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return path().hashCode();
+    }
+
+    @Override
+    public int compareTo(VirtualFile other) {
+        if (other == null) {
+            return 1;
+        }
+
+        return Objects.compare(path(), other.path(), String::compareTo);
     }
 }
