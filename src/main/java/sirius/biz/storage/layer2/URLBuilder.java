@@ -241,6 +241,8 @@ public class URLBuilder {
         result.append("/");
         result.append(computeAccessToken(physicalKey));
         result.append("/");
+        result.append(blobKey);
+        result.append("/");
         if (forceDownload) {
             result.append(physicalKey);
             result.append("/");
