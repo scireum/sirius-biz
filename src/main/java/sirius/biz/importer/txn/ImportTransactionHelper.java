@@ -135,13 +135,12 @@ public class ImportTransactionHelper extends ImportHelper {
      * @param value          the value used to determine if the entity should be deleted or not
      * @param entityCallback an optional callback which is invoked for each entity to be deleted
      * @param <E>            the generic type of entities being deleted
-     * @param <Q>            the generic type of the query used to delete the entities
      */
-    public <I, E extends BaseEntity<I> & ImportTransactionalEntity, Q extends Query<Q, E, ?>> void deleteUnmarked(Class<E> entityType,
-                                                                                                                  Mapping field,
-                                                                                                                  Object value,
-                                                                                                                  @Nullable
-                                                                                                                          Consumer<E> entityCallback) {
+    public <I, E extends BaseEntity<I> & ImportTransactionalEntity> void deleteUnmarked(Class<E> entityType,
+                                                                                        Mapping field,
+                                                                                        Object value,
+                                                                                        @Nullable
+                                                                                                Consumer<E> entityCallback) {
         deleteUnmarked(entityType, qry -> qry.eq(field, value), entityCallback);
     }
 }
