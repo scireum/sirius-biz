@@ -9,7 +9,6 @@
 package sirius.biz.storage.layer2;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
@@ -306,7 +305,7 @@ public class BlobDispatcher implements WebDispatcher {
      * @param request     the request to handle
      * @param space       the space which is accessed
      * @param accessToken the security token to verify
-     * @param blobKey the blob key to be delivered
+     * @param blobKey     the blob key to be delivered
      * @param physicalKey the physical object key used to determine which object should be delivered
      * @param filename    the filename which is used to setup a proper <tt>Content-Type</tt>
      */
@@ -322,7 +321,7 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         Response response = request.respondWith().infinitelyCached().named(filename);
-        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey,response);
+        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey, response);
     }
 
     /**
@@ -347,7 +346,7 @@ public class BlobDispatcher implements WebDispatcher {
         }
 
         Response response = request.respondWith().infinitelyCached().download(filename);
-        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey,response);
+        blobStorage.getSpace(space).deliverPhysical(blobKey, physicalKey, response);
     }
 
     /**
