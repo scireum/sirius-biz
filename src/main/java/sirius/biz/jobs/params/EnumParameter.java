@@ -11,7 +11,9 @@ package sirius.biz.jobs.params;
 import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +26,7 @@ public class EnumParameter<E extends Enum<E>> extends Parameter<E, EnumParameter
 
     private final Class<E> type;
     private E defaultValue;
+    private List<E> values;
 
     /**
      * Creates a new parameter with the given name, label and enum type.
@@ -35,6 +38,7 @@ public class EnumParameter<E extends Enum<E>> extends Parameter<E, EnumParameter
     public EnumParameter(String name, String label, Class<E> type) {
         super(name, label);
         this.type = type;
+        this.values = Arrays.asList(type.getEnumConstants());
     }
 
     /**
@@ -49,12 +53,25 @@ public class EnumParameter<E extends Enum<E>> extends Parameter<E, EnumParameter
     }
 
     /**
+     * Specifies the actual list of possible values to select.
+     * <p>
+     * By default, all enum values are offered.
+     *
+     * @param values the list of values to select
+     * @return the parameter itself for fluent method calls
+     */
+    public EnumParameter<E> withCustomValues(List<E> values) {
+        this.values = new ArrayList<>(values);
+        return this;
+    }
+
+    /**
      * Enumerates all values provided by the enum.
      *
      * @return the list of value defined by the enum type
      */
     public List<E> getValues() {
-        return Arrays.asList(type.getEnumConstants());
+        return Collections.unmodifiableList(values);
     }
 
     @Override
