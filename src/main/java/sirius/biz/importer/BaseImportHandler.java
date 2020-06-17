@@ -324,7 +324,23 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
                                                      .orElse(false))
                          .map(Property::getName)
                          .map(Mapping::named)
+                         .filter(this::isAutoImportMappingAccepted)
                          .collect(Collectors.toList());
+    }
+
+    /**
+     * Determines if an auto imported mapping should be put into the <tt>ImportDictionary</tt>.
+     * <p>
+     * This method can be overwritten to suppress properties which wear an <tt>AutoImport</tt> annotation
+     * from being put into the <tt>ImportDictionary</tt>.
+     * <p>
+     * By default, this will constantly return <tt>true</tt>.
+     *
+     * @param mapping the mapping to evaluate
+     * @return <tt>true</tt> to accept the mapping, <tt>false</tt> otherwise
+     */
+    protected boolean isAutoImportMappingAccepted(Mapping mapping) {
+        return true;
     }
 
     /**
@@ -364,7 +380,6 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
 
         return exportDictionary;
     }
-
 
     /**
      * Returns all exportable mappings.

@@ -720,4 +720,11 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                       .handle();
         }
     }
+
+    @Override
+    public void markTouched(Set<String> blobKeys) {
+        blobKeys.forEach(blobKey -> {
+            mongo.update().set(MongoBlob.LAST_TOUCHED, LocalDateTime.now()).where(MongoBlob.BLOB_KEY, blobKey);
+        });
+    }
 }

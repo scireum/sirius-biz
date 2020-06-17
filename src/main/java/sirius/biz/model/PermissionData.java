@@ -32,7 +32,7 @@ import java.util.TreeSet;
 import java.util.function.Predicate;
 
 /**
- * Stores a set of permissions and optinally a custom configuration for an account or tenant which can be embedded into
+ * Stores a set of permissions and optionally a custom configuration for an account or tenant which can be embedded into
  * other entities or mixins.
  */
 public class PermissionData extends Composite {

@@ -15,6 +15,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Represents a layer 2 storage space which manages {@link Blob blobs} and {@link Directory directories}.
@@ -170,19 +171,20 @@ public interface BlobStorageSpace {
     /**
      * Attaches the given existing blob to the given entity and designator.
      * <p>
-     * This is used by the {@link BlobCrossRef} to reference existing (most probably visible blobs) from an entity.
+     * This is used by the {@link BlobReferenceContainer} to reference existing (most probably visible blobs)
+     * from an entity.
      *
      * @param objectKey           the blob to reference
      * @param referencingEntity   the unique name of the entity
-     * @param referenceDesignator the field name of the {@link BlobCrossRef}
+     * @param referenceDesignator the type in {@link BlobReferenceContainer}
      */
     void attachBlobByType(String objectKey, String referencingEntity, String referenceDesignator);
 
     /**
-     * Resolves the referenced blob for a {@link BlobCrossRef}.
+     * Resolves the referenced blob for a {@link BlobReferenceContainer}.
      *
      * @param referencingEntity   the unique name of the entity
-     * @param referenceDesignator the field name of the {@link BlobCrossRef}
+     * @param referenceDesignator the type used in {@link BlobReferenceContainer}
      * @return the referenced blob wrapped as optional or an empty optional if no blob was attached
      */
     Optional<? extends Blob> findAttachedBlobByType(String referencingEntity, String referenceDesignator);
@@ -257,9 +259,35 @@ public interface BlobStorageSpace {
     void deliver(@Nonnull String blobKey, @Nonnull String variant, @Nonnull Response response);
 
     /**
+     * Delivers the contents of the given blob by using the already known physicalKey.
+     *
+     * @param blobKey     the id of the blob to deliver (mostly for touch tracking)
+     * @param physicalKey the physical object to deliver
+     * @param response    the response to populate
+     */
+    void deliverPhysical(@Nullable String blobKey, @Nonnull String physicalKey, @Nonnull Response response);
+
+    /**
      * Performs some housekeeping and maintenance tasks.
      * <p>
      * This shouldn't be invoked manually as it is triggered via the {@link StorageCleanupTask}.
      */
     void runCleanup();
+
+    /**
+     * Determines if touch tracking is active for this space.
+     *
+     * @return <tt>true</tt> if touch tracking is active, <tt>false</tt> otherwise
+     */
+    boolean isTouchTracking();
+
+    /**
+     * Stores that the given blob keys have been accessed.
+     * <p>
+     * This is used by {@link TouchWritebackLoop} to actually update the blobs. This method should not be
+     * invoked externally.
+     *
+     * @param blobKeys the set of keys to mark as accessed
+     */
+    void markTouched(Set<String> blobKeys);
 }

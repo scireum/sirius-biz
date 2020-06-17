@@ -11,16 +11,12 @@ package sirius.biz.importer.format;
 import sirius.db.mixing.properties.LocalDateTimeProperty;
 import sirius.db.mixing.properties.LocalTimeProperty;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.di.transformers.Transformer;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * Generates a {@link FieldDefinition} for a {@link LocalDateTimeProperty}.
  */
 @Register
-public class LocalTimePropertyTransformer implements Transformer<LocalTimeProperty, FieldDefinitionSupplier> {
+public class LocalTimePropertyTransformer extends BaseFieldDefinitionTransformer<LocalTimeProperty> {
 
     @Override
     public Class<LocalTimeProperty> getSourceClass() {
@@ -28,21 +24,7 @@ public class LocalTimePropertyTransformer implements Transformer<LocalTimeProper
     }
 
     @Override
-    public Class<FieldDefinitionSupplier> getTargetClass() {
-        return FieldDefinitionSupplier.class;
-    }
-
-    @Nullable
-    @Override
-    public FieldDefinitionSupplier make(@Nonnull LocalTimeProperty property) {
-        return () -> {
-            FieldDefinition field = new FieldDefinition(property.getName(), FieldDefinition.typeTime());
-            field.withLabel(property::getLabel);
-            if (!property.isNullable()) {
-                field.withCheck(new RequiredCheck());
-            }
-
-            return field;
-        };
+    protected String determineType(LocalTimeProperty property) {
+        return FieldDefinition.typeTime();
     }
 }

@@ -116,9 +116,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static final String CONFIG_KEY_RETENTION_DAYS = "retentionDays";
 
     /**
+     * Determines if touch tracking is active for this space.
+     */
+    private static final String CONFIG_KEY_TOUCH_TRACKING = "touchTracking";
+
+    /**
      * Contains the name of the executor in which requests are moved which might be blocked while waiting for
      * a conversion to happen. We do not want to jam our main executor of the web server for this, therefore
-     * a separater one is used.
+     * a separator one is used.
      */
     private static final String EXECUTOR_STORAGE_CONVERSION_DELIVERY = "storage-conversion-delivery";
 
@@ -139,6 +144,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     @Part
     protected static Tasks tasks;
+
+    @Part
+    protected static TouchWritebackLoop touchWritebackLoop;
 
     @ConfigValue("storage.layer2.conversion.enabled")
     protected static boolean conversionEnabled;
@@ -178,6 +186,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected String baseUrl;
     protected boolean useNormalizedNames;
     protected int retentionDays;
+    protected boolean touchTracking;
     protected ObjectStorageSpace objectStorageSpace;
 
     /**
@@ -195,6 +204,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         this.useNormalizedNames = config.get(CONFIG_KEY_USE_NORMALIZED_NAMES).asBoolean();
         this.description = config.get(CONFIG_KEY_DESCRIPTION).getString();
         this.retentionDays = config.get(CONFIG_KEY_RETENTION_DAYS).asInt(0);
+        this.touchTracking = config.get(CONFIG_KEY_TOUCH_TRACKING).asBoolean();
     }
 
     @Override
@@ -224,6 +234,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Override
     public boolean isReadonly() {
         return !UserContext.getCurrentUser().hasPermission(writePermission);
+    }
+
+    @Override
+    public boolean isTouchTracking() {
+        return touchTracking;
     }
 
     /**
@@ -879,6 +894,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             return Optional.empty();
         }
 
+        touch(blob.getBlobKey());
         return getPhysicalSpace().download(blob.getPhysicalObjectKey());
     }
 
@@ -889,6 +905,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @return an input stream to read and process the contents of the blob
      */
     public InputStream createInputStream(Blob blob) {
+        touch(blob.getBlobKey());
+
         return getPhysicalSpace().getInputStream(blob.getPhysicalObjectKey())
                                  .orElseThrow(() -> Exceptions.handle()
                                                               .to(StorageUtils.LOG)
@@ -1032,11 +1050,32 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     @Override
     public void deliver(String blobKey, String variant, Response response) {
+        touch(blobKey);
+
         String physicalKey = resolvePhysicalKey(blobKey, variant, true);
         if (physicalKey != null) {
             getPhysicalSpace().deliver(response, physicalKey);
         } else {
             deliverAsync(blobKey, variant, response);
+        }
+    }
+
+    @Override
+    public void deliverPhysical(@Nullable String blobKey, @Nonnull String physicalKey, @Nonnull Response response) {
+        touch(blobKey);
+        getPhysicalSpace().deliver(response, physicalKey);
+    }
+
+    /**
+     * Marks the given blob as touched.
+     * <p>
+     * We internally de-duplicate touch events via {@link TouchWritebackLoop}.
+     *
+     * @param blobKey the blob to mark as touched
+     */
+    public void touch(String blobKey) {
+        if (isTouchTracking() && Strings.isFilled(blobKey)) {
+            touchWritebackLoop.markTouched(spaceName, blobKey);
         }
     }
 

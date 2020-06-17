@@ -335,7 +335,7 @@ public class FieldDefinition {
      * @return the aliases of this field
      */
     public Set<String> getAliases() {
-        return aliases == null ? Collections.emptySet() : Collections.unmodifiableSet(aliases);
+        return Collections.unmodifiableSet(aliases);
     }
 
     /**
