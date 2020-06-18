@@ -29,6 +29,7 @@ import sirius.web.security.UserContext;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Level;
 
 /**
  * Adapter which records all log entries and incidents and mails into the appropriate database entities.
@@ -140,8 +141,8 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
         try {
             LoggedMessage msg = new LoggedMessage();
             msg.setCategory(message.getReceiver().getName());
-            msg.setLevel(message.getLogLevel().toString());
-            msg.setMessage(Strings.limit(message.getMessage(),maxMessageLength, false));
+            msg.setLevel(determineLevel(message.getLogLevel()));
+            msg.setMessage(Strings.limit(message.getMessage(), maxMessageLength, false));
             msg.setNode(CallContext.getNodeName());
             msg.setUser(UserContext.getCurrentUser().getProtocolUsername());
 
@@ -150,6 +151,20 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
             Exceptions.ignore(e);
             disableForOneMinute();
         }
+    }
+
+    private String determineLevel(Level logLevel) {
+        if (Level.SEVERE.equals(logLevel)) {
+            return "ERROR";
+        }
+        if (Level.WARNING.equals(logLevel)) {
+            return "WARN";
+        }
+        if (Level.INFO.equals(logLevel)) {
+            return "INFO";
+        }
+
+        return "DEBUG";
     }
 
     protected boolean shouldNotLog(LogMessage message) {
