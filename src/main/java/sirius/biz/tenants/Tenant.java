@@ -11,6 +11,7 @@ package sirius.biz.tenants;
 import sirius.biz.isenguard.RateLimitedEntity;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.protocol.Traced;
+import sirius.db.mixing.Entity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Explain;
@@ -25,7 +26,7 @@ import sirius.kernel.di.transformers.Transformable;
  */
 @SuppressWarnings("squid:S1214")
 @Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
-public interface Tenant<I> extends Transformable, Traced, Journaled, RateLimitedEntity {
+public interface Tenant<I> extends Entity, Transformable, Traced, Journaled, RateLimitedEntity {
 
     /**
      * This flag permission is granted to tenant objects only.
@@ -62,32 +63,6 @@ public interface Tenant<I> extends Transformable, Traced, Journaled, RateLimited
      * @return the tenant data composite which stores all values in a database independent manner.
      */
     TenantData getTenantData();
-
-    /**
-     * Returns a string representation of the entity ID.
-     * <p>
-     * If the entity is new, "new" will be returned.
-     *
-     * @return the entity ID as string or "new" if the entity {@link #isNew()}.
-     */
-    String getIdAsString();
-
-    /**
-     * Returns an unique name of this entity.
-     * <p>
-     * This unique string representation of this entity is made up of its type along with its id.
-     *
-     * @return an unique representation of this entity or an empty string if the entity was not written to the
-     * database yet
-     */
-    String getUniqueName();
-
-    /**
-     * Determines if the entity is new (not yet written to the database).
-     *
-     * @return <tt>true</tt> if the entity has not been written to the database yes, <tt>false</tt> otherwise
-     */
-    boolean isNew();
 
     /**
      * Determines if this tenant has the requested permission.

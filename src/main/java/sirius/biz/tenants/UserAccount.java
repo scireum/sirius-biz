@@ -45,32 +45,6 @@ public interface UserAccount<I, T extends BaseEntity<I> & Tenant<I>>
     UserAccountData getUserAccountData();
 
     /**
-     * Returns an unique name of this entity.
-     * <p>
-     * This unique string representation of this entity is made up of its type along with its id.
-     *
-     * @return an unique representation of this entity or an empty string if the entity was not written to the
-     * database yet
-     */
-    String getUniqueName();
-
-    /**
-     * Determines if the entity is new (not yet written to the database).
-     *
-     * @return <tt>true</tt> if the entity has not been written to the database yes, <tt>false</tt> otherwise
-     */
-    boolean isNew();
-
-    /**
-     * Returns a string representation of the entity ID.
-     * <p>
-     * If the entity is new, "new" will be returned.
-     *
-     * @return the entity ID as string or "new" if the entity {@link #isNew()}.
-     */
-    String getIdAsString();
-
-    /**
      * Sets the ID of the user account.
      * <p>
      * This method must be used very carefully. For normal operations, this method should ne be used at all

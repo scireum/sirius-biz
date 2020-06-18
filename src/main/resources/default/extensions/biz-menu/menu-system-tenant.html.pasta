@@ -5,7 +5,7 @@
     <i:block name="system">
         <w:menuSection>
             <w:menuItem titleKey="DisasterController.title" icon="fa-info-circle" url="/system/disaster"
-                        permission="flag-system-tenant-member"/>
+                        permission="permission-control-disaster-mode"/>
         </w:menuSection>
         <w:menuSection>
             <w:menuItem title="State" icon="fa-info-circle" url="/system/state"
