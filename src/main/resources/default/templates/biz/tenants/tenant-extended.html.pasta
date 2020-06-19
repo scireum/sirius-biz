@@ -2,7 +2,7 @@
 <i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 
 <i:invoke template="/templates/biz/tenants/tenant.html.pasta" tenant="tenant" controller="controller" page="extended">
-    <w:editForm url="@apply('/tenant/%s/textended', tenant.getIdAsString())">
+    <w:editForm url="@apply('/tenant/%s/extended', tenant.getIdAsString())">
 
         <w:subHeading labelKey="Model.security"/>
         <div class="row">
