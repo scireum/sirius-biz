@@ -14,9 +14,9 @@ import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
 import sirius.biz.web.BizController;
-import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mongo.Mongo;
 import sirius.db.mongo.MongoEntity;
+import sirius.db.mongo.Updater;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -27,6 +27,7 @@ import sirius.web.security.UserManager;
 import sirius.web.security.UserManagerFactory;
 
 import javax.annotation.Nonnull;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -63,33 +64,30 @@ public class MongoTenantUserManager extends TenantUserManager<String, MongoTenan
     protected void recordLogin(UserInfo user, boolean external) {
         try {
             MongoUserAccount account = getUserObject(user);
-            EntityDescriptor ed = mixing.getDescriptor(getUserClass());
 
-            String numberOfLoginsField = ed.getProperty(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                                                     .inner(LoginData.NUMBER_OF_LOGINS))
-                                           .getPropertyName();
-            String lastLoginField = ed.getProperty(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                                                .inner(LoginData.LAST_LOGIN))
-                                      .getPropertyName();
-
+            Updater updater = mongo.update()
+                                   .where(MongoEntity.ID, account.getId())
+                                   .inc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                     .inner(LoginData.NUMBER_OF_LOGINS), 1)
+                                   .set(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                     .inner(LoginData.LAST_LOGIN), LocalDateTime.now());
             if (external) {
-                String lastExternalLoginField =
-                        ed.getProperty(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                                    .inner(LoginData.LAST_EXTERNAL_LOGIN))
-                          .getPropertyName();
-                mongo.update()
-                     .where(MongoEntity.ID, account.getId())
-                     .inc(numberOfLoginsField, 1)
-                     .set(lastExternalLoginField, LocalDateTime.now())
-                     .set(lastLoginField, LocalDateTime.now())
-                     .executeFor(ed.getRelationName());
-            } else {
-                mongo.update()
-                     .where(MongoEntity.ID, account.getId())
-                     .inc(numberOfLoginsField, 1)
-                     .set(lastLoginField, LocalDateTime.now())
-                     .executeFor(ed.getRelationName());
+                updater.set(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                         .inner(LoginData.LAST_EXTERNAL_LOGIN), LocalDateTime.now());
             }
+            updater.executeFor(account);
+        } catch (Exception e) {
+            Exceptions.handle(BizController.LOG, e);
+        }
+    }
+
+    @Override
+    protected void updateLastSeen(MongoUserAccount user) {
+        try {
+            mongo.update()
+                 .set(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.LAST_SEEN),
+                      LocalDate.now())
+                 .executeFor(user);
         } catch (Exception e) {
             Exceptions.handle(BizController.LOG, e);
         }

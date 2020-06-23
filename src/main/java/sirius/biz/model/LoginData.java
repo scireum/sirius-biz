@@ -26,6 +26,7 @@ import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -142,6 +143,16 @@ public class LoginData extends Composite {
     @NoJournal
     @NullAllowed
     private LocalDateTime lastLogin;
+
+    /**
+     * Records the timestamp when the user was last seen.
+     * <p>
+     * Note that this is only updated once per day.
+     */
+    public static final Mapping LAST_SEEN = Mapping.named("lastSeen");
+    @NoJournal
+    @NullAllowed
+    private LocalDate lastSeen;
 
     /**
      * Records the timestamp of the last login via an external system.
@@ -435,5 +446,9 @@ public class LoginData extends Composite {
     @Override
     public String toString() {
         return username;
+    }
+
+    public LocalDate getLastSeen() {
+        return lastSeen;
     }
 }

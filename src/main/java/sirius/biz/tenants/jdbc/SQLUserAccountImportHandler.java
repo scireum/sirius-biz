@@ -87,7 +87,8 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
                                                          .inner(PermissionData.PERMISSIONS));
         collector.accept(210,
                          SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.ACCOUNT_LOCKED));
-        collector.accept(300,
+        collector.accept(300, SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.LAST_SEEN));
+        collector.accept(305,
                          SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.LAST_LOGIN));
         collector.accept(310,
                          SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)

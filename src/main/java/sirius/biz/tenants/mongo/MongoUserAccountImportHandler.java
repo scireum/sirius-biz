@@ -102,6 +102,8 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
                          MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                            .inner(LoginData.ACCOUNT_LOCKED));
         collector.accept(300,
+                         MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.LAST_SEEN));
+        collector.accept(305,
                          MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.LAST_LOGIN));
         collector.accept(310,
                          MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)

@@ -27,7 +27,7 @@
                     <i:extensions target="user-accounts" point="first-column-head" page="accounts"/>
                     <th>
                         @i18n("LoginData.username")<br>
-                        <small class="muted"> @i18n("LoginData.lastLogin") (@i18n("LoginData.numberOfLogins"))</small>
+                        <small class="muted">@i18n("LoginData.lastSeen")</small>
                     </th>
                     <th>
                         @i18n("Model.name")<br>
@@ -51,9 +51,8 @@
                                href="/user-account/@account.getIdAsString()">@account.getUserAccountData().getLogin().getUsername()</a>
                             <br>
                             <small class="muted">
-                                <i:if test="account.getUserAccountData().getLogin().getLastLogin() != null">
-                                    @toSpokenDate(account.getUserAccountData().getLogin().getLastLogin().toLocalDate())
-                                    (@account.getUserAccountData().getLogin().getNumberOfLogins())
+                                <i:if test="account.getUserAccountData().getLogin().getLastSeen() != null">
+                                    @toSpokenDate(account.getUserAccountData().getLogin().getLastSeen())
                                     <i:else>-</i:else>
                                 </i:if>
                             </small>
