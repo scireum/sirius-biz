@@ -11,6 +11,7 @@ package sirius.biz.analytics.checks;
 import sirius.biz.analytics.scheduler.AnalyticalTask;
 import sirius.biz.protocol.Traced;
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.di.std.AutoRegister;
 
 import java.time.LocalDate;
 
@@ -25,6 +26,7 @@ import java.time.LocalDate;
  *
  * @param <E> the type of entities being processed by this check.
  */
+@AutoRegister
 public abstract class ChangeCheck<E extends BaseEntity<?> & Traced> implements AnalyticalTask<E> {
 
     @Override
