@@ -34,6 +34,7 @@ public interface AnalyticalTask<E extends BaseEntity<?>> {
      *
      * @param date   the data for which the task is to be executed
      * @param entity the entity for which this task is to be executed
+     * @throws Exception in case of an error during the computation
      */
-    void compute(LocalDate date, E entity);
+    void compute(LocalDate date, E entity) throws Exception;
 }
