@@ -19,7 +19,7 @@
                 @for(sirius.biz.analytics.charts.Dataset dataset : datasets) {
                     datasets.push({ label: '@dataset.getLabel()',
                                     data: [ @raw { @dataset.renderData() } ],
-                                    axis: @raw { @dataset.renderAxis() }});
+                                    axis: @raw { @dataset.renderAxisName() }});
                 }
                 barChart('#chart', [ @labels ], datasets);
             });
