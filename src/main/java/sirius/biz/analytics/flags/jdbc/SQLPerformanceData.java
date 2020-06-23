@@ -37,7 +37,7 @@ public class SQLPerformanceData extends PerformanceData {
     }
 
     @Override
-    public PerformanceFlagModifier modifier() {
+    public PerformanceFlagModifier modify() {
         return new SQLPerformanceFlagModifier(this);
     }
 

@@ -42,7 +42,7 @@ public abstract class PerformanceData extends Composite {
      *
      * @return a modifier used to change the flags for the underlying entity
      */
-    public abstract PerformanceFlagModifier modifier();
+    public abstract PerformanceFlagModifier modify();
 
     /**
      * Determines if a given performance flag is set.
