@@ -21,7 +21,7 @@ import sirius.kernel.di.std.Part;
  * they are visible to the framework.
  * <p>
  * Note that these computers are also invoked on a daily basis for the current month to update its value
- * (if possible - as nest effort scheduling is used).
+ * (if possible - as best effort scheduling is used).
  *
  * @param <E> the type of entities being processed by this computer
  */
@@ -31,6 +31,11 @@ public abstract class MonthlyMetricComputer<E extends BaseEntity<?>> implements 
     @Part
     protected Metrics metrics;
 
+    /**
+     * Determines if best effort scheduling should be skipped.
+     *
+     * @return <tt>true</tt> to suppress best effort scheduling, <tt>false</tt> otherwise (default)
+     */
     public boolean suppressBestEffortScheduling() {
         return false;
     }
