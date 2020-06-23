@@ -8,10 +8,12 @@
 
 package sirius.biz.tenants.jdbc;
 
+import sirius.biz.analytics.flags.jdbc.SQLPerformanceData;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
+import sirius.biz.tycho.academy.OnboardingData;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.TranslationSource;
@@ -41,6 +43,7 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
     public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal = new JournalData(this);
 
+    private final SQLPerformanceData performanceData = new SQLPerformanceData(this);
     @Override
     public <A> Optional<A> tryAs(Class<A> adapterType) {
         if (getUserAccountData().is(adapterType)) {
@@ -88,5 +91,10 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
     @Override
     public String getRateLimitScope() {
         return getIdAsString();
+    }
+
+    @Override
+    public SQLPerformanceData getPerformanceData() {
+        return performanceData;
     }
 }
