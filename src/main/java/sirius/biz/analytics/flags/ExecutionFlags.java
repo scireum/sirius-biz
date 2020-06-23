@@ -39,6 +39,15 @@ public abstract class ExecutionFlags {
     }
 
     /**
+     * Determines the last execution of the given <tt>flag</tt> for the given <tt>reference</tt>.
+     *
+     * @param reference the entity for which the execution flag is to be determined
+     * @param flag      the flag or type of execution to read
+     * @return the timestamp of the last execution wrapped as optional or an empty optional if no record is available
+     */
+    public abstract Optional<LocalDateTime> readExecutionFlag(String reference, String flag);
+
+    /**
      * Determines if the last execution of the given <tt>flag</tt> for the given <tt>reference</tt> was within the
      * given <tt>duration</tt>.
      *
@@ -50,15 +59,6 @@ public abstract class ExecutionFlags {
     public boolean wasExecuted(BaseEntity<?> reference, String flag, Duration duration) {
         return wasExecuted(reference.getUniqueName(), flag, duration);
     }
-
-    /**
-     * Determines the last execution of the given <tt>flag</tt> for the given <tt>reference</tt>.
-     *
-     * @param reference the entity for which the execution flag is to be determined
-     * @param flag      the flag or type of execution to read
-     * @return the timestamp of the last execution wrapped as optional or an empty optional if no record is available
-     */
-    public abstract Optional<LocalDateTime> readExecutionFlag(String reference, String flag);
 
     /**
      * Determines if the last execution of the given <tt>flag</tt> for the given <tt>reference</tt> was within the
