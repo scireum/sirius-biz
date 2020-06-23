@@ -16,7 +16,7 @@ import sirius.db.jdbc.constraints.SQLConstraint;
 /**
  * Provides a constraint which performs a bitwise check in order to determine if a performance flag is toggled.
  */
-class BitwiseConstraint extends SQLConstraint {
+class PerformanceFlagConstraint extends SQLConstraint {
 
     private PerformanceFlag flag;
     private boolean expectedState;
@@ -27,7 +27,7 @@ class BitwiseConstraint extends SQLConstraint {
      * @param flag          the flag to check
      * @param expectedState the state to filter on
      */
-    BitwiseConstraint(PerformanceFlag flag, boolean expectedState) {
+    PerformanceFlagConstraint(PerformanceFlag flag, boolean expectedState) {
         this.flag = flag;
         this.expectedState = expectedState;
     }

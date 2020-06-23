@@ -53,7 +53,7 @@ public class SQLPerformanceData extends PerformanceData {
      * @return a constraint which can be added to {@link sirius.db.jdbc.SmartQuery#where(SQLConstraint)}
      */
     public static SQLConstraint filterFlagSet(PerformanceFlag flag) {
-        return new BitwiseConstraint(flag, true);
+        return new PerformanceFlagConstraint(flag, true);
     }
 
     /**
@@ -63,7 +63,7 @@ public class SQLPerformanceData extends PerformanceData {
      * @return a constraint which can be added to {@link sirius.db.jdbc.SmartQuery#where(SQLConstraint)}
      */
     public static SQLConstraint filterFlagClear(PerformanceFlag flag) {
-        return new BitwiseConstraint(flag, false);
+        return new PerformanceFlagConstraint(flag, false);
     }
 
     /**
