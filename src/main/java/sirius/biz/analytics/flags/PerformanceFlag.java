@@ -8,6 +8,10 @@
 
 package sirius.biz.analytics.flags;
 
+import sirius.biz.analytics.flags.jdbc.SQLPerformanceData;
+import sirius.biz.analytics.flags.mongo.MongoPerformanceData;
+import sirius.biz.web.MongoPageHelper;
+import sirius.biz.web.SQLPageHelper;
 import sirius.kernel.commons.MultiMap;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
@@ -17,6 +21,11 @@ import sirius.kernel.nls.NLS;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ * Represents a performance flag which can be toggled for an entity.
+ * <p>
+ * As we use an optimized represnetation, each performance flag must be know ahead of time (declared as constant).
+ */
 public class PerformanceFlag {
 
     private static final MultiMap<Class<?>, PerformanceFlag> flagsPerType = MultiMap.createOrdered();
@@ -35,6 +44,18 @@ public class PerformanceFlag {
 
     }
 
+    /**
+     * Registers a new performance flag for the given entity type.
+     * <p>
+     * This must be done when initializing a constant as a performance flag has to be unique.
+     *
+     * @param targetType the target type for which this flag can be toggled
+     * @param name       the name of the flag
+     * @param bitIndex   the bit index to use. This has to be a unique index per type with a value ranging form 0 to 63.
+     *                   Note that 0 to 15 are reseverd for sirius libraries, therefore an application can define up to
+     *                   48 custom flags per entity type
+     * @return the performance flag which can be used for toggeling and filtering
+     */
     public static PerformanceFlag register(Class<?> targetType, String name, int bitIndex) {
         PerformanceFlag result = new PerformanceFlag();
         result.targetType = targetType;
@@ -81,10 +102,23 @@ public class PerformanceFlag {
                                                       .handle());
     }
 
+    /**
+     * Returns a stream of all tags registered for a given entity type.
+     *
+     * @param aClass the entity type to resolve the flags for
+     * @return a stream of all known flags for the given type
+     */
     public static Stream<PerformanceFlag> flagsOfType(Class<?> aClass) {
         return flagsPerType.get(aClass).stream();
     }
 
+    /**
+     * Returns the flag with the given name.
+     *
+     * @param aClass the entity to fetch the flag for
+     * @param name   the name of the flag
+     * @return the flag wrapped as optional or an empty optional if no flag with the given name exists
+     */
     public static Optional<PerformanceFlag> flagWithName(Class<?> aClass, String name) {
         if (Strings.isEmpty(name)) {
             return Optional.empty();
@@ -93,11 +127,28 @@ public class PerformanceFlag {
         return flagsOfType(aClass).filter(flag -> Strings.areEqual(name, flag.getName())).findFirst();
     }
 
+    /**
+     * Makes this performance flag visible in the UI.
+     * <p>
+     * By default a performance flag is hidden from the user and only used internally. However, there are good reasons
+     * to make a lot of perfromance flags visible.
+     *
+     * @return the flag itself for fluent method calls
+     */
     public PerformanceFlag makeVisible() {
         this.visible = true;
         return this;
     }
 
+    /**
+     * Marks this performance flag as recommended for filtering.
+     * <p>
+     * If marked, a flag will show up as facet filter.
+     *
+     * @return the flag itself for fluent method calls
+     * @see SQLPerformanceData#addFilterFacet(SQLPageHelper)
+     * @see MongoPerformanceData#addFilterFacet(MongoPageHelper)
+     */
     public PerformanceFlag markAsFilter() {
         this.filterable = true;
         return this;
