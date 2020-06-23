@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 /**
  * Represents a performance flag which can be toggled for an entity.
  * <p>
- * As we use an optimized represnetation, each performance flag must be know ahead of time (declared as constant).
+ * As we use an optimized representation, each performance flag must be know ahead of time (declared as constant).
  */
 public class PerformanceFlag {
 
