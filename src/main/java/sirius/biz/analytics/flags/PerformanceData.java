@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 /**
  * Can be embedded into an {@link BaseEntity entity} in order to record / toggle performance flags for it.
  * <p>
- * Note that this provides a abstract and database independent part. Use {@link SQLPerformanceData} or
+ * Note that this provides an abstract and database independent part. Use {@link SQLPerformanceData} or
  * {@link MongoPerformanceData} depending on the actual entity type.
  */
 public abstract class PerformanceData extends Composite {
@@ -42,7 +42,7 @@ public abstract class PerformanceData extends Composite {
      *
      * @return a modifier used to change the flags for the underlying entity
      */
-    public abstract PerformanceFlagModifier modifier();
+    public abstract PerformanceFlagModifier modify();
 
     /**
      * Determines if a given performance flag is set.

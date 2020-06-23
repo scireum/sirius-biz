@@ -18,5 +18,5 @@ use [SQLPerformanceData](jdbc/SQLPerformanceData.java)) or a MongoEntity (which 
 [MongoPerformanceData](mongo/MongoPerformanceData.java)). Flags will be stored in a way optimized for the
 underlying database. We use bit fields for JDBC/SQL and StringList for MongoDB. Most probably a performance
 flag will be toggled when computing metrics e.g. via a **MonthlyMetricComputer**. However, they can also
-be togglend on demand using the resepctive [PerformanceFlagModifier](PerformanceFlagModifier.java).
+be toggled on demand using the respective [PerformanceFlagModifier](PerformanceFlagModifier.java).
   

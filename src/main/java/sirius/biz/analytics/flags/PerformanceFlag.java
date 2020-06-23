@@ -22,9 +22,11 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * Represents a performance flag which can be toggled for an entity.
+ * Defines the required metadata for a performance flag.
  * <p>
- * As we use an optimized represnetation, each performance flag must be know ahead of time (declared as constant).
+ * A performance flag can be toggled for the entities it was defined for and thus record things like "this is an
+ * active user", "this is a large object" etc. As we use an optimized representation, each performance flag must be
+ * known ahead of time (declared as constant).
  */
 public class PerformanceFlag {
 
