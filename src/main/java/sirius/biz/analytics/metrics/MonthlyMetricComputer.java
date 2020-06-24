@@ -10,6 +10,7 @@ package sirius.biz.analytics.metrics;
 
 import sirius.biz.analytics.scheduler.AnalyticalTask;
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.di.std.AutoRegister;
 import sirius.kernel.di.std.Part;
 
 /**
@@ -24,8 +25,13 @@ import sirius.kernel.di.std.Part;
  *
  * @param <E> the type of entities being processed by this computer
  */
+@AutoRegister
 public abstract class MonthlyMetricComputer<E extends BaseEntity<?>> implements AnalyticalTask<E> {
 
     @Part
     protected Metrics metrics;
+
+    public boolean suppressBestEffortScheduling() {
+        return false;
+    }
 }

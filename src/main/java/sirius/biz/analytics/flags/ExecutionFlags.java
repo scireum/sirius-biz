@@ -10,6 +10,7 @@ package sirius.biz.analytics.flags;
 
 import sirius.db.mixing.BaseEntity;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.Optional;
@@ -45,6 +46,34 @@ public abstract class ExecutionFlags {
      * @return the timestamp of the last execution wrapped as optional or an empty optional if no record is available
      */
     public abstract Optional<LocalDateTime> readExecutionFlag(String reference, String flag);
+
+    /**
+     * Determines if the last execution of the given <tt>flag</tt> for the given <tt>reference</tt> was within the
+     * given <tt>duration</tt>.
+     *
+     * @param reference the entity for which the execution flag is to be determined
+     * @param flag      the flag or type of execution to read
+     * @param duration  the reference duration
+     * @return <tt>true</tt> was stored (set) within the given duration, <tt>false</tt> otherwise
+     */
+    public boolean wasExecuted(BaseEntity<?> reference, String flag, Duration duration) {
+        return wasExecuted(reference.getUniqueName(), flag, duration);
+    }
+
+    /**
+     * Determines if the last execution of the given <tt>flag</tt> for the given <tt>reference</tt> was within the
+     * given <tt>duration</tt>.
+     *
+     * @param reference the entity for which the execution flag is to be determined
+     * @param flag      the flag or type of execution to read
+     * @param duration  the reference duration
+     * @return <tt>true</tt> was stored (set) within the given duration, <tt>false</tt> otherwise
+     */
+    public boolean wasExecuted(String reference, String flag, Duration duration) {
+        Optional<LocalDateTime> timestamp = readExecutionFlag(reference, flag);
+        return timestamp.filter(localDateTime -> Duration.between(localDateTime, LocalDateTime.now())
+                                                         .compareTo(duration) < 0).isPresent();
+    }
 
     /**
      * Stores the execution of a specific task or flag for the given reference.
