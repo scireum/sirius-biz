@@ -44,7 +44,7 @@ public abstract class SingleDatasetChartJobFactory extends InteractiveJobFactory
                          this,
                          context,
                          LinearChartJobFactory.formatLabels(labels),
-                         dataset.getData(),
+                         dataset.renderData(),
                          additionalMetrics);
     }
 

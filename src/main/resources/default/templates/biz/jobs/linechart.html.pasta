@@ -18,8 +18,8 @@
                 var datasets = [];
                 @for(sirius.biz.analytics.charts.Dataset dataset : datasets) {
                     datasets.push({ label: '@dataset.getLabel()',
-                                    data: [ @raw { @dataset.getData() } ],
-                                    axis: @raw { @dataset.getAxis() }});
+                                    data: [ @raw { @dataset.renderData() } ],
+                                    axis: @raw { @dataset.renderAxisName() }});
                 }
                 lineChart('#chart', [ @labels ], datasets);
             });

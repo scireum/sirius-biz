@@ -80,22 +80,4 @@ public class BlobReferenceContainer extends BaseBlobContainer {
         getSpace().attachBlobByType(blob.getBlobKey(), owner.getUniqueName(), type);
     }
 
-    /**
-     * Lists all attached blobs.
-     *
-     * @return the list of all attached blobs
-     */
-    public List<? extends Blob> findAttachedBlobs() {
-        if (objectStorage == null) {
-            return Collections.emptyList();
-        }
-        return getSpace().findAttachedBlobs(owner.getUniqueName());
-    }
-
-    @AfterDelete
-    protected void onDelete() {
-        if (!owner.isNew() && objectStorage != null) {
-            getSpace().deleteAttachedBlobs(owner.getUniqueName());
-        }
-    }
 }
