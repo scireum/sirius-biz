@@ -15,6 +15,10 @@ import sirius.db.jdbc.constraints.SQLConstraint;
 
 /**
  * Provides a constraint which performs a bitwise check in order to determine if a performance flag is toggled.
+ * <p>
+ * {@link SQLPerformanceData} stores all performance flag as bits in a 64 bit long ({@link SQLPerformanceData#FLAGS}).
+ * So in order to check if a flag is set or not, we perform a bitwise and of this bit pattern
+ * ({@code 1 << flag.getBitIndex()}) and then check for 1 if we filter on a set flag and 0 to filter on a cleared flag.
  */
 class PerformanceFlagConstraint extends SQLConstraint {
 
