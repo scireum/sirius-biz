@@ -109,10 +109,20 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     }
 
     /**
+     * Determines if a valid database configuration is present.
+     *
+     * @return <tt>true</tt> if a valid configuration is present, <tt>false</tt> otherwise
+     */
+    public boolean isConfigured() {
+        return configured;
+    }
+
+    /**
      * Returns the database which is used to store events in.
      *
      * @return the database used to talk to the <b>Clickhouse</b> server which stores the events. Might be
-     * <tt>null</tt> if no database is configured.
+     * <tt>null</tt> if no database is configured. Therefore {@link #isConfigured()} should most probably
+     * be checked before using it
      */
     @Nullable
     public Database getDatabase() {
