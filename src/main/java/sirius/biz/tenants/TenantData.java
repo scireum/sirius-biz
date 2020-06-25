@@ -34,9 +34,11 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.kernel.settings.Settings;
 import sirius.web.http.IPRange;
 import sirius.web.http.WebContext;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Set;
@@ -363,7 +365,7 @@ public class TenantData extends Composite implements Journaled {
     /**
      * Returns the parsed config for the tenant.
      *
-     * @return the parsed configuration
+     * @return the parsed configuration, or <tt>null</tt> if the config is empty
      */
     @Nullable
     public Config getConfig() {
@@ -386,6 +388,22 @@ public class TenantData extends Composite implements Journaled {
         }
 
         return config;
+    }
+
+    /**
+     * Returns the parsed settings for the tenant
+     *
+     * @return the parsed configuration
+     */
+    @Nonnull
+    public Settings getSettings() {
+        Config config = getConfig();
+
+        if (config != null) {
+            return new Settings(config, false);
+        }
+
+        return new Settings(ConfigFactory.empty(), false);
     }
 
     /**

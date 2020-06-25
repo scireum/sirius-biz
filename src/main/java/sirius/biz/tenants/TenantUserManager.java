@@ -722,22 +722,25 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @Override
     protected UserSettings getUserSettings(UserSettings scopeSettings, UserInfo userInfo) {
         U user = userInfo.getUserObject(getUserClass());
-        if (user.getUserAccountData().getPermissions().getConfig() == null) {
-            if (user.getTenant().fetchValue().getTenantData().getConfig() == null) {
+        Config userAccountConfig = user.getUserAccountData().getPermissions().getConfig();
+        Config tenantConfig = user.getTenant().fetchValue().getTenantData().getConfig();
+
+        if (userAccountConfig == null) {
+            if (tenantConfig == null) {
                 return scopeSettings;
             }
 
             return configCache.get(user.getTenant().getUniqueObjectName(), i -> {
                 Config cfg = scopeSettings.getConfig();
-                cfg = user.getTenant().fetchValue().getTenantData().getConfig().withFallback(cfg);
+                cfg = tenantConfig.withFallback(cfg);
                 return Tuple.create(new UserSettings(cfg, false), user.getTenant().getUniqueObjectName());
             }).getFirst();
         }
 
         return configCache.get(user.getUniqueName(), i -> {
             Config cfg = scopeSettings.getConfig();
-            cfg = user.getTenant().fetchValue().getTenantData().getConfig().withFallback(cfg);
-            cfg = user.getUserAccountData().getPermissions().getConfig().withFallback(cfg);
+            cfg = tenantConfig.withFallback(cfg);
+            cfg = userAccountConfig.withFallback(cfg);
             return Tuple.create(new UserSettings(cfg, false), user.getTenant().getUniqueObjectName());
         }).getFirst();
     }
