@@ -393,19 +393,17 @@ public class TenantData extends Composite implements Journaled {
     /**
      * Returns the parsed settings for the tenant
      *
-     * @param strict determines if the config is strict. A strict config will log an error if an unkown path is
-     *               requested
      * @return the parsed configuration
      */
     @Nonnull
-    public Settings getSettings(boolean strict) {
+    public Settings getSettings() {
         Config config = getConfig();
 
         if (config != null) {
-            return new Settings(config, strict);
+            return new Settings(config, false);
         }
 
-        return new Settings(ConfigFactory.empty(), strict);
+        return new Settings(ConfigFactory.empty(), false);
     }
 
     /**
