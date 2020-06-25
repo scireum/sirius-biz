@@ -722,11 +722,11 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @Override
     protected UserSettings getUserSettings(UserSettings scopeSettings, UserInfo userInfo) {
         U user = userInfo.getUserObject(getUserClass());
-        Config userAccountConfig = user.getUserAccountData().getPermissions().getSafeConfig();
-        Config tenantConfig = user.getTenant().fetchValue().getTenantData().getSafeConfig();
+        Config userAccountConfig = user.getUserAccountData().getPermissions().getConfig();
+        Config tenantConfig = user.getTenant().fetchValue().getTenantData().getConfig();
 
-        if (userAccountConfig.isEmpty()) {
-            if (tenantConfig.isEmpty()) {
+        if (userAccountConfig == null) {
+            if (tenantConfig == null) {
                 return scopeSettings;
             }
 

@@ -34,6 +34,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.kernel.settings.Settings;
 import sirius.web.http.IPRange;
 import sirius.web.http.WebContext;
 
@@ -390,19 +391,21 @@ public class TenantData extends Composite implements Journaled {
     }
 
     /**
-     * Returns the parsed config for the tenant
+     * Returns the parsed settings for the tenant
      *
+     * @param strict determines if the config is strict. A strict config will log an error if an unkown path is
+     *               requested
      * @return the parsed configuration
      */
     @Nonnull
-    public Config getSafeConfig() {
+    public Settings getSettings(boolean strict) {
         Config config = getConfig();
 
         if (config != null) {
-            return config;
+            return new Settings(config, strict);
         }
 
-        return ConfigFactory.empty();
+        return new Settings(ConfigFactory.empty(), strict);
     }
 
     /**

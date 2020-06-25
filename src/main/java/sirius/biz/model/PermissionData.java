@@ -22,6 +22,7 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.StringList;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.settings.Settings;
 import sirius.web.security.Permissions;
 
 import javax.annotation.Nonnull;
@@ -176,19 +177,21 @@ public class PermissionData extends Composite {
     }
 
     /**
-     * Returns the parsed config for the associated entity
+     * Returns the parsed settings for the associated entity
      *
+     * @param strict determines if the config is strict. A strict config will log an error if an unkown path is
+     *               requested
      * @return the parsed configuration
      */
     @Nonnull
-    public Config getSafeConfig() {
+    public Settings getSettings(boolean strict) {
         Config config = getConfig();
 
         if (config != null) {
-            return config;
+            return new Settings(config, strict);
         }
 
-        return ConfigFactory.empty();
+        return new Settings(ConfigFactory.empty(), strict);
     }
 
     /**
