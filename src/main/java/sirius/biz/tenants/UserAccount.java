@@ -12,10 +12,8 @@ import sirius.biz.analytics.flags.PerformanceFlagged;
 import sirius.biz.isenguard.RateLimitedEntity;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.protocol.Traced;
-import sirius.biz.tycho.academy.OnboardingParticipant;
 import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
-import sirius.db.mixing.Entity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Explain;
@@ -33,8 +31,7 @@ import sirius.web.security.MessageProvider;
 @SuppressWarnings("squid:S1214")
 @Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
 public interface UserAccount<I, T extends BaseEntity<I> & Tenant<I>>
-        extends Transformable, MessageProvider, Traced, Journaled, TenantAware, RateLimitedEntity,
-                PerformanceFlagged {
+        extends Transformable, MessageProvider, Traced, Journaled, TenantAware, RateLimitedEntity, PerformanceFlagged {
 
     /**
      * Defines the mapping which is used for the user account data composite.
