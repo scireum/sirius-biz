@@ -47,16 +47,16 @@ class BlockwiseIterator implements Iterator<VirtualFile> {
 
     @Override
     public boolean hasNext() {
-        return currentBlock != null;
-    }
-
-    @Override
-    public VirtualFile next() {
         if (currentBlock != null && !currentBlock.hasNext()) {
             currentBlock = fetchNextBlock();
         }
 
-        if (currentBlock == null) {
+        return currentBlock != null && currentBlock.hasNext();
+    }
+
+    @Override
+    public VirtualFile next() {
+        if (!hasNext()) {
             throw new NoSuchElementException();
         }
 
