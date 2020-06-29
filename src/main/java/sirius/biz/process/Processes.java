@@ -397,6 +397,10 @@ public class Processes {
             try {
                 elastic.tryUpdate(process);
                 process1stLevelCache.put(processId, process);
+                
+                // Trigger a flush of the process ID on every node so the change will be reflected
+                process2ndLevelCache.remove(processId);
+                
                 process2ndLevelCache.put(processId, process);
                 return true;
             } catch (OptimisticLockException e) {
