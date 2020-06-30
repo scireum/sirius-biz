@@ -61,6 +61,7 @@ public class MongoTenantAutoSetup implements AutoSetupRule {
         // This should be enough to grant us more roles via the UI
         ua.getUserAccountData().getPermissions().getPermissions().add("administrator");
         ua.getUserAccountData().getPermissions().getPermissions().add("user-administrator");
+        ua.getUserAccountData().getPermissions().getPermissions().add("system-administrator");
         mango.update(ua);
     }
 
