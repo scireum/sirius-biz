@@ -23,9 +23,11 @@ import javax.annotation.Nullable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -42,7 +44,7 @@ import java.util.stream.Collectors;
  * <p>
  * Consult the <a href="README.md">framework description</a> for a complete overview of the inner workings.
  */
-@Register
+@Register(classes = {EveryDay.class, AnalyticalEngine.class})
 public class AnalyticalEngine implements EveryDay {
 
     /**
@@ -92,12 +94,17 @@ public class AnalyticalEngine implements EveryDay {
 
     @Override
     public void runTimer() throws Exception {
+        if (!getActiveSchedulers().isEmpty()) {
+            tasks.defaultExecutor().start(this::queueSchedulers);
+        }
+    }
+
+    protected List<AnalyticsScheduler> getActiveSchedulers() {
         if (activeSchedulers == null) {
             initialize();
         }
-        if (!activeSchedulers.isEmpty()) {
-            tasks.defaultExecutor().start(this::queueSchedulers);
-        }
+
+        return Collections.unmodifiableList(activeSchedulers);
     }
 
     protected void initialize() {
@@ -121,7 +128,7 @@ public class AnalyticalEngine implements EveryDay {
         Map<String, Boolean> queueCache = new HashMap<>();
         activeSchedulers.stream()
                         .filter(scheduler -> shouldSchedule(scheduler, queueCache))
-                        .forEach(this::queueScheduler);
+                        .forEach(scheduler -> queueScheduler(scheduler, false, null));
     }
 
     /**
@@ -132,7 +139,7 @@ public class AnalyticalEngine implements EveryDay {
      * @param queueCache the cached state of the queues being used by the schedulers
      * @return <tt>true</tt> if the scheduler should run, <tt>false</tt> otherwise
      */
-    private boolean shouldSchedule(AnalyticsScheduler scheduler, Map<String, Boolean> queueCache) {
+    protected boolean shouldSchedule(AnalyticsScheduler scheduler, Map<String, Boolean> queueCache) {
         if (!scheduler.useBestEffortScheduling()) {
             return true;
         }
@@ -149,24 +156,31 @@ public class AnalyticalEngine implements EveryDay {
      * Creates an entry which is processed by the {@link AnalyticsScheduler#getExecutorForScheduling() scheduling executor}
      * and will eventually invoke {@link AnalyticsScheduler#scheduleBatches(Consumer)} for the given scheduler.
      * <p>
-     * This method also enforces the {@link AnalyticsScheduler#getInterval() scheduling interval}.
+     * This method also enforces the {@link AnalyticsScheduler#getInterval() scheduling interval} unless <tt>force</tt>
+     * is set to <tt>true</tt>.
      *
-     * @param scheduler the scheduler to queue
+     * @param scheduler   the scheduler to queue
+     * @param force       determines if executon is forced
+     * @param contextDate the context date to execute within - this can be used to execute a scheduler for a different
+     *                    date than now, e.g. to manualy compute old / outdated metrics etc.
      */
-    private void queueScheduler(AnalyticsScheduler scheduler) {
-        if (!shouldExecuteAgain(scheduler)) {
+    protected void queueScheduler(AnalyticsScheduler scheduler, boolean force, @Nullable LocalDate contextDate) {
+        if (!force && !shouldExecuteAgain(scheduler)) {
             return;
         }
 
         Class<? extends DistributedTaskExecutor> executor = scheduler.getExecutorForScheduling();
         cluster.submitFIFOTask(executor,
                                new JSONObject().fluentPut(CONTEXT_SCHEDULER_NAME, scheduler.getName())
-                                               .fluentPut(CONTEXT_DATE, LocalDate.now()));
+                                               .fluentPut(CONTEXT_DATE,
+                                                          contextDate == null ? LocalDate.now() : contextDate));
 
-        if (scheduler.getInterval() != ScheduleInterval.DAILY) {
+        if (contextDate == null || LocalDate.now().equals(contextDate)) {
             flags.storeExecutionFlag(computeExecutionFlagName(scheduler),
                                      EXECUTION_FLAG,
                                      LocalDateTime.now(),
+                                     scheduler.getInterval() == ScheduleInterval.DAILY ?
+                                     Period.ofDays(3) :
                                      Period.ofDays(35));
         }
     }
@@ -193,12 +207,25 @@ public class AnalyticalEngine implements EveryDay {
             return true;
         }
 
-        LocalDateTime lastExecution =
-                flags.readExecutionFlag(computeExecutionFlagName(scheduler), EXECUTION_FLAG).orElse(null);
+        LocalDateTime lastExecution = getLastExecution(scheduler).orElse(null);
         if (lastExecution == null) {
             return true;
         }
 
         return lastExecution.getMonthValue() != LocalDate.now().getMonthValue();
+    }
+
+    /**
+     * Determines the last execution timestamp of the given scheduler.
+     * <p>
+     * Note that this only accounts for regular (planned) invocations of the scheduler as well as forced
+     * executions for the current day. If an execution if foced for another day, this will not be recorded
+     * as execution flag and therefore not be reported here.
+     *
+     * @param scheduler the scheduler to check the last execution for
+     * @return the last execution timestamp or an empty optional
+     */
+    protected Optional<LocalDateTime> getLastExecution(AnalyticsScheduler scheduler) {
+        return flags.readExecutionFlag(computeExecutionFlagName(scheduler), EXECUTION_FLAG);
     }
 }
