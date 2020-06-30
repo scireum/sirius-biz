@@ -10,12 +10,11 @@ package sirius.biz.jobs.presets.mongo;
 
 import sirius.biz.jobs.presets.JobPresetsController;
 import sirius.kernel.di.std.Register;
-import sirius.web.controller.Controller;
 
 /**
  * Provides the actual controller responsible for managing job presets based in a MongoDB database as storage.
  */
-@Register(classes = Controller.class, framework = MongoJobPresets.FRAMEWORK_PRESETS_MONGO)
+@Register(framework = MongoJobPresets.FRAMEWORK_PRESETS_MONGO)
 public class MongoJobPresetsController extends JobPresetsController<MongoJobPreset> {
 
     @Override

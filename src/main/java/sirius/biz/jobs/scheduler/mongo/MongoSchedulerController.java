@@ -13,12 +13,11 @@ import sirius.biz.jobs.scheduler.SchedulerController;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.MongoPageHelper;
 import sirius.kernel.di.std.Register;
-import sirius.web.controller.Controller;
 
 /**
  * Provides the controller for managing the MongoDB based scheduler.
  */
-@Register(classes = Controller.class, framework = MongoSchedulerController.FRAMEWORK_SCHEDULER_MONGO)
+@Register(framework = MongoSchedulerController.FRAMEWORK_SCHEDULER_MONGO)
 public class MongoSchedulerController extends SchedulerController<MongoSchedulerEntry> {
 
     /**

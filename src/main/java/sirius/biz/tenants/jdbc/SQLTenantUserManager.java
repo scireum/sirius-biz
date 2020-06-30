@@ -74,4 +74,16 @@ public class SQLTenantUserManager extends TenantUserManager<Long, SQLTenant, SQL
             Exceptions.handle(BizController.LOG, e);
         }
     }
+
+    @Override
+    protected void updateLastSeen(SQLUserAccount user) {
+        try {
+            oma.updateStatement(SQLUserAccount.class)
+               .setToToday(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.LAST_SEEN))
+               .where(SQLUserAccount.ID, user.getId())
+               .executeUpdate();
+        } catch (Exception e) {
+            Exceptions.handle(BizController.LOG, e);
+        }
+    }
 }
