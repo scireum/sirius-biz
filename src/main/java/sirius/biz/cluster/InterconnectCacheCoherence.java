@@ -56,15 +56,6 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
     }
 
     @Override
-    public void signalPut(Cache<String, ?> cache, String key) {
-        interconnect.dispatch(getName(),
-                              new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_PUT)
-                                              .fluentPut(MESSAGE_CACHE, cache.getName())
-                                              .fluentPut(MESSAGE_KEY, key)
-                                              .fluentPut(MESSAGE_NODE, CallContext.getNodeName()));
-    }
-
-    @Override
     public void removeAll(Cache<String, ?> cache, String discriminator, String testInput) {
         interconnect.dispatch(getName(),
                               new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_REMOVE_ALL)
