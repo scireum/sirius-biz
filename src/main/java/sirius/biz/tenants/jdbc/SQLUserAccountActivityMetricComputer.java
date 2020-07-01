@@ -16,7 +16,7 @@ import sirius.kernel.di.std.Register;
 /**
  * Provides the actual <tt>user-activity</tt> computer for {@link SQLUserAccount}.
  */
-@Register(classes = MonthlyMetricComputer.class)
+@Register
 public class SQLUserAccountActivityMetricComputer extends UserAccountActivityMetricComputer<SQLUserAccount> {
 
     @Override
