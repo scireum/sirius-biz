@@ -17,6 +17,7 @@ import sirius.biz.storage.layer1.replication.ReplicationTaskStorage;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.Operator;
+import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.Mixing;
 import sirius.kernel.di.std.ConfigValue;
@@ -141,7 +142,7 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
         }
     }
 
-    private void filterOnExecutableTasks(SmartQuery<SQLReplicationTask> query, boolean forScheduling) {
+    private void filterOnExecutableTasks(SmartQuery<SQLEntity> query, boolean forScheduling) {
         query.eq(SQLReplicationTask.FAILED, false);
         query.where(OMA.FILTERS.lt(SQLReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()));
         if (forScheduling) {

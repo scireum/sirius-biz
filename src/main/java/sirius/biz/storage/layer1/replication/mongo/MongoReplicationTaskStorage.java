@@ -18,6 +18,7 @@ import sirius.biz.storage.util.StorageUtils;
 import sirius.db.mixing.Mixing;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.Mongo;
+import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.MongoQuery;
 import sirius.db.mongo.QueryBuilder;
 import sirius.db.mongo.Updater;
@@ -148,7 +149,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
         }
     }
 
-    private void filterOnExecutableTasks(MongoQuery<MongoReplicationTask> query, boolean forScheduling) {
+    private void filterOnExecutableTasks(MongoQuery<MongoEntity> query, boolean forScheduling) {
         query.eq(MongoReplicationTask.FAILED, false);
         query.where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()));
         if (forScheduling) {
