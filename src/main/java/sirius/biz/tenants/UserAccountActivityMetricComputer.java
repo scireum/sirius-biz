@@ -47,21 +47,21 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
      * If the computation would be interpreted as sliding window approach, this would define the size / length of
      * the window.
      */
-    @ConfigValue("analytics.user-account.observationPeriodDays")
+    @ConfigValue("analytics.user-accounts.observationPeriodDays")
     private int observationPeriodDays;
 
     /**
      * Contains the minimum number of this in the {@link #observationPeriodDays} so that the user is considered
      * as "active".
      */
-    @ConfigValue("analytics.user-account.minDaysForActiveUsers")
+    @ConfigValue("analytics.user-accounts.minDaysForActiveUsers")
     private int minDaysForActiveUsers;
 
     /**
      * Contains the minimum number of this in the {@link #observationPeriodDays} so that the user is considered
      * as "frequent user".
      */
-    @ConfigValue("analytics.user-account.minDaysForFrequentUsers")
+    @ConfigValue("analytics.user-accounts.minDaysForFrequentUsers")
     private int minDaysForFrequentUsers;
 
     @Part

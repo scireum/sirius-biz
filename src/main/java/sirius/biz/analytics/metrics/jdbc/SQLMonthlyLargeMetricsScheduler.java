@@ -62,7 +62,7 @@ public class SQLMonthlyLargeMetricsScheduler extends SQLAnalyticalTaskScheduler 
     @Nonnull
     @Override
     public String getName() {
-        return "sql-metrics-monthly";
+        return "sql-large-metrics-monthly";
     }
 
     @Override
