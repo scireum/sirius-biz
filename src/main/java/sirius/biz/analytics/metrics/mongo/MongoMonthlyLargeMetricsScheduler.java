@@ -32,7 +32,7 @@ public class MongoMonthlyLargeMetricsScheduler extends MongoAnalyticalTaskSchedu
 
     @Override
     protected Class<?> getAnalyticalTaskType() {
-        return MonthlyMetricComputer.class;
+        return MonthlyLargeMetricComputer.class;
     }
 
     @Override
