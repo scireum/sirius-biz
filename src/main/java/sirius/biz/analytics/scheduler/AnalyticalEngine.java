@@ -160,7 +160,7 @@ public class AnalyticalEngine implements EveryDay {
      * is set to <tt>true</tt>.
      *
      * @param scheduler   the scheduler to queue
-     * @param force       determines if executon is forced
+     * @param force       determines if execution is forced
      * @param contextDate the context date to execute within - this can be used to execute a scheduler for a different
      *                    date than now, e.g. to manualy compute old / outdated metrics etc.
      */
@@ -219,8 +219,8 @@ public class AnalyticalEngine implements EveryDay {
      * Determines the last execution timestamp of the given scheduler.
      * <p>
      * Note that this only accounts for regular (planned) invocations of the scheduler as well as forced
-     * executions for the current day. If an execution if foced for another day, this will not be recorded
-     * as execution flag and therefore not be reported here.
+     * executions for the current day. If an execution if forced for another day, this will not be recorded
+     * as execution flag and therefore not be returned here.
      *
      * @param scheduler the scheduler to check the last execution for
      * @return the last execution timestamp or an empty optional

@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Provides a maintenance command to execute analytical schedulers on demand and to also diplay their state.
+ * Provides a maintenance command to execute analytical schedulers on demand and to also display their state.
  */
 @Register
 public class AnalyticsCommand implements Command {
