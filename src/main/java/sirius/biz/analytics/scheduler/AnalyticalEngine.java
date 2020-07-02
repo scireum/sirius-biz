@@ -17,6 +17,7 @@ import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Log;
 import sirius.kernel.timer.EveryDay;
 
 import javax.annotation.Nullable;
@@ -46,6 +47,11 @@ import java.util.stream.Collectors;
  */
 @Register(classes = {EveryDay.class, AnalyticalEngine.class})
 public class AnalyticalEngine implements EveryDay {
+
+    /**
+     * Contains the log used by the analytical scheduler and all its related classes.
+     */
+    public static final Log LOG = Log.get("analytics");
 
     /**
      * Specifies the field of the task context which contains the scheduler to execute.
@@ -114,9 +120,8 @@ public class AnalyticalEngine implements EveryDay {
         if (flags == null && activeSchedulers.stream()
                                              .anyMatch(scheduler -> scheduler.getInterval()
                                                                     != ScheduleInterval.DAILY)) {
-            DistributedTasks.LOG.WARN(
-                    "The AnalyticalEngine is present but neither 'biz.analytics-execution-flags-jdbc' nor"
-                    + " 'biz.analytics-execution-flags-mongo' is enabled! This will result in NullPointerExceptions");
+            LOG.WARN("The AnalyticalEngine is present but neither 'biz.analytics-execution-flags-jdbc' nor"
+                     + " 'biz.analytics-execution-flags-mongo' is enabled! This will result in NullPointerExceptions");
         }
     }
 
@@ -144,8 +149,17 @@ public class AnalyticalEngine implements EveryDay {
             return true;
         }
 
-        return queueCache.computeIfAbsent(cluster.getQueueName(scheduler.getExecutorForScheduling()),
-                                          this::checkIfQueueIsEmpty);
+        String queueName = cluster.getQueueName(scheduler.getExecutorForScheduling());
+        boolean isQueueEmpty = queueCache.computeIfAbsent(queueName, this::checkIfQueueIsEmpty);
+
+        if (!isQueueEmpty && LOG.isFINE()) {
+            LOG.FINE("Skipping best-effort scheduler '%s' (%s) as its queue '%s' isn't empty...",
+                     scheduler.getName(),
+                     scheduler.getClass().getSimpleName(),
+                     queueName);
+        }
+
+        return isQueueEmpty;
     }
 
     private Boolean checkIfQueueIsEmpty(String queueName) {
@@ -165,11 +179,22 @@ public class AnalyticalEngine implements EveryDay {
      *                    date than now, e.g. to manualy compute old / outdated metrics etc.
      */
     protected void queueScheduler(AnalyticsScheduler scheduler, boolean force, @Nullable LocalDate contextDate) {
-        if (!force && !shouldExecuteAgain(scheduler)) {
+        if (!force && contextDate == null && !shouldExecuteAgain(scheduler)) {
+            if (LOG.isFINE()) {
+                LOG.FINE("Skipping scheduler '%s' (%s) as it has already been executed recently...",
+                         scheduler.getName(),
+                         scheduler.getClass().getSimpleName());
+            }
             return;
         }
 
         Class<? extends DistributedTaskExecutor> executor = scheduler.getExecutorForScheduling();
+        if (LOG.isFINE()) {
+            LOG.FINE("Scheduling '%s' (%s) via '%s'...",
+                     scheduler.getName(),
+                     scheduler.getClass().getSimpleName(),
+                     executor.getSimpleName());
+        }
         cluster.submitFIFOTask(executor,
                                new JSONObject().fluentPut(CONTEXT_SCHEDULER_NAME, scheduler.getName())
                                                .fluentPut(CONTEXT_DATE,
