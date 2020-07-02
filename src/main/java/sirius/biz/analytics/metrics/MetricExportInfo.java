@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.ToIntFunction;
 
 /**
- * Wraps all infos required to inject a metric into an entity export via an {@link MetricExporter}.
+ * Wraps all infos required to inject a metric into an entity export via a {@link MetricExporter}.
  */
 public class MetricExportInfo {
     private final String name;
