@@ -92,4 +92,26 @@ public interface EntityImportHandlerExtender {
                                            BiConsumer<Integer, Mapping> collector) {
         // intentionally left empty as not all extenders will customize all methods
     }
+
+    /**
+     * Resolves a custom field into a <tt>FieldDefinition</tt>.
+     * <p>
+     * This more or less must be implemented for additional fields reported by <tt>collectExportableMappings</tt>
+     * as otherwise no description and also no column heading will be provided by them.
+     * <p>
+     * Remember that also {@link #createExtractor(BaseImportHandler, EntityDescriptor, ImporterContext, String)} should
+     * be implemented for fields recognized by this method.
+     *
+     * @param handler    the handler which can be extended
+     * @param descriptor the descriptor determining what kind of entities are processed by the given handler
+     * @param field      the field to resolve
+     * @return a field definition for the requested field or <tt>null</tt> if the field is unknown
+     */
+    @Nullable
+    default FieldDefinition resolveCustomField(BaseImportHandler<? extends BaseEntity<?>> handler,
+                                               EntityDescriptor descriptor,
+                                               String field) {
+        // intentionally left empty as not all extenders will customize all methods
+        return null;
+    }
 }
