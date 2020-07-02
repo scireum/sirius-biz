@@ -33,7 +33,7 @@ import java.util.function.Function;
  * <p>
  * To extend the export of an entity, a {@link MetricExporter} has to be created and
  * registered. Most probably this can be the {@link MonthlyMetricComputer} (or the like)
- * itself. This can now deciede which metric to make exportable (or even place them
+ * itself. This can now decide which metric to make exportable (or even place them
  * in the default export).
  */
 @Register
