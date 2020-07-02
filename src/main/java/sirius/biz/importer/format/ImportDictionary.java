@@ -60,7 +60,7 @@ public class ImportDictionary {
     private Map<String, FieldDefinition> fields = new LinkedHashMap<>();
     private Map<String, String> aliases = new LinkedHashMap<>();
     private List<String> mappingFunction;
-    private List<Function<String, FieldDefinition>> computedFieldLookup = new ArrayList<>();
+    private List<Function<String, FieldDefinition>> computedFieldLookups = new ArrayList<>();
 
     /**
      * Adds a field to the record.
@@ -109,7 +109,7 @@ public class ImportDictionary {
      * @return the dictionary itself for fluent method calls
      */
     public ImportDictionary withCustomFieldLookup(Function<String, FieldDefinition> computedFieldLookup) {
-        this.computedFieldLookup.add(computedFieldLookup);
+        this.computedFieldLookups.add(computedFieldLookup);
         return this;
     }
 
@@ -567,7 +567,7 @@ public class ImportDictionary {
     }
 
     protected Optional<FieldDefinition> resolveComputedField(String name) {
-        for (Function<String, FieldDefinition> customLookup : computedFieldLookup) {
+        for (Function<String, FieldDefinition> customLookup : computedFieldLookups) {
             FieldDefinition result = customLookup.apply(name);
             if (result != null) {
                 return Optional.of(result);

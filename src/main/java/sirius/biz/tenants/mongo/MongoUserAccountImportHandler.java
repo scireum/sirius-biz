@@ -63,11 +63,6 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
     }
 
     @Override
-    protected void collectExcactLookups(Consumer<List<Mapping>> filterListConsumer) {
-        super.collectExcactLookups(filterListConsumer);
-    }
-
-    @Override
     public Optional<MongoUserAccount> tryFind(Context data) {
         if (data.containsKey(MongoUserAccount.ID.getName())) {
             return mango.select(MongoUserAccount.class)

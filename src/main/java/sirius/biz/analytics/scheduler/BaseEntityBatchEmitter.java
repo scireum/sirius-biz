@@ -31,7 +31,7 @@ import java.util.function.Predicate;
  * @param <I> the id type of the entities being processed by this emitter
  * @param <C> the constraint type to be applied on entities processed by this emitter
  * @param <B> the entity type being processed by this emitter
- * @param <Q> the query type used to retireve entities being processed by this emitter
+ * @param <Q> the query type used to retrieve entities being processed by this emitter
  */
 public abstract class BaseEntityBatchEmitter<I, C extends Constraint, B extends BaseEntity<I>, Q extends Query<Q, B, C>> {
 

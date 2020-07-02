@@ -248,22 +248,24 @@ public class MetricQuery {
             case YEARLY:
                 return date.plusYears(1);
             default:
-                return date.plusYears(999);
+                // In case of a fact, there is no point in changing the date. However, to be 100% sure that
+                // any loop etc will terminate we output the extreme here...
+                return LocalDate.MAX;
         }
     }
 
     private LocalDate decrement(LocalDate date, Interval interval) {
         switch (interval) {
             case DAILY:
-                return LocalDate.now().minusDays(1);
+                return date.minusDays(1);
             case MONTHLY:
-                return LocalDate.now().minusMonths(1);
+                return date.minusMonths(1);
             case YEARLY:
-                return LocalDate.now().minusYears(1);
-            case FACT:
-                return date.minusYears(999);
+                return date.minusYears(1);
             default:
-                return date.plusYears(999);
+                // In case of a fact, there is no point in changing the date. However, to be 100% sure that
+                // any loop etc will terminate we output the extreme here...
+                return LocalDate.MIN;
         }
     }
 
