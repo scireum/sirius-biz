@@ -70,15 +70,17 @@ public class MongoPerformanceFlagModifier implements PerformanceFlagModifier {
     @Override
     public void commit() {
         try {
-            if (flagsToAdd.isEmpty() && flagsToRemove.isEmpty()) {
-                return;
+            if (!flagsToRemove.isEmpty()) {
+                mongo.update()
+                     .pullAll(PerformanceFlagged.PERFORMANCE_DATA.inner(MongoPerformanceData.FLAGS),
+                              flagsToRemove.toArray())
+                     .executeFor((MongoEntity) target.getOwner());
             }
-
-            mongo.update()
-                 .addEachToSet(PerformanceFlagged.PERFORMANCE_DATA.inner(MongoPerformanceData.FLAGS), flagsToAdd)
-                 .pullAll(PerformanceFlagged.PERFORMANCE_DATA.inner(MongoPerformanceData.FLAGS),
-                          flagsToRemove.toArray())
-                 .executeFor((MongoEntity) target.getOwner());
+            if (flagsToAdd.isEmpty()) {
+                mongo.update()
+                     .addEachToSet(PerformanceFlagged.PERFORMANCE_DATA.inner(MongoPerformanceData.FLAGS), flagsToAdd)
+                     .executeFor((MongoEntity) target.getOwner());
+            }
         } catch (Exception e) {
             Exceptions.handle()
                       .to(Log.BACKGROUND)
