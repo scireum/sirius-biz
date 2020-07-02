@@ -50,7 +50,7 @@ public class MongoPerformanceFlagModifier implements PerformanceFlagModifier {
     @Override
     public PerformanceFlagModifier set(PerformanceFlag flag) {
         String bitIndexAsString = String.valueOf(flag.getBitIndex());
-        if (flagsToAdd.add(bitIndexAsString)) {
+        if (!target.isSet(flag) && flagsToAdd.add(bitIndexAsString)) {
             target.flags.add(bitIndexAsString);
         }
 
@@ -60,7 +60,7 @@ public class MongoPerformanceFlagModifier implements PerformanceFlagModifier {
     @Override
     public PerformanceFlagModifier clear(PerformanceFlag flag) {
         String bitIndexAsString = String.valueOf(flag.getBitIndex());
-        if (flagsToRemove.add(bitIndexAsString)) {
+        if (target.isSet(flag) && flagsToRemove.add(bitIndexAsString)) {
             target.flags.modify().remove(bitIndexAsString);
         }
 
