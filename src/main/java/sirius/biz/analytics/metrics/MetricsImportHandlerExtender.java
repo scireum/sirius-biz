@@ -63,7 +63,6 @@ public class MetricsImportHandlerExtender implements EntityImportHandlerExtender
         return exportableMetrics.get(descriptor.getType());
     }
 
-    @SuppressWarnings("unchecked")
     @Nullable
     @Override
     public <E extends BaseEntity<?>> Function<? super E, ?> createExtractor(BaseImportHandler<E> handler,
@@ -72,7 +71,7 @@ public class MetricsImportHandlerExtender implements EntityImportHandlerExtender
                                                                             String fieldToExport) {
         for (MetricExportInfo metricInfo : fetchMetricsForType(descriptor)) {
             if (Strings.areEqual(METRIC_FIELD_PREFIX + metricInfo.getName(), fieldToExport)) {
-                return (Function<Object, Integer>) metricInfo.getExtractor();
+                return entity -> metricInfo.getExtractor().applyAsInt(entity);
             }
         }
 
