@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.jdbc;
 
+import sirius.biz.analytics.flags.jdbc.SQLPerformanceData;
 import sirius.biz.model.AddressData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantController;
@@ -33,6 +34,13 @@ public class SQLTenantController extends TenantController<Long, SQLTenant, SQLUs
     @Override
     protected BasePageHelper<SQLTenant, ?, ?, ?> getTenantsAsPage(WebContext ctx) {
         SmartQuery<SQLTenant> query = oma.select(SQLTenant.class).orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME));
+        SQLPageHelper<SQLTenant> pageHelper = createTenantPageHelper(ctx, query);
+        pageHelper.applyExtenders("/tenants");
+
+        return pageHelper;
+    }
+
+    private SQLPageHelper<SQLTenant> createTenantPageHelper(WebContext ctx, SmartQuery<SQLTenant> query) {
         SQLPageHelper<SQLTenant> pageHelper = SQLPageHelper.withQuery(query).withContext(ctx);
         pageHelper.withSearchFields(QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.NAME)),
                                     QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)),
@@ -41,9 +49,9 @@ public class SQLTenantController extends TenantController<Long, SQLTenant, SQLUs
                                     QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS)
                                                                           .inner(AddressData.CITY)));
 
-        pageHelper.applyExtenders("/tenants/*");
-        pageHelper.applyExtenders("/tenants");
+        SQLPerformanceData.addFilterFacet(pageHelper);
 
+        pageHelper.applyExtenders("/tenants/*");
         return pageHelper;
     }
 
@@ -51,15 +59,7 @@ public class SQLTenantController extends TenantController<Long, SQLTenant, SQLUs
     protected BasePageHelper<SQLTenant, ?, ?, ?> getSelectableTenantsAsPage(WebContext ctx, SQLTenant currentTenant) {
         SmartQuery<SQLTenant> query =
                 queryPossibleTenants(currentTenant).orderAsc(Tenant.TENANT_DATA.inner(TenantData.NAME));
-        SQLPageHelper<SQLTenant> pageHelper = SQLPageHelper.withQuery(query).withContext(ctx);
-        pageHelper.withSearchFields(QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.NAME)),
-                                    QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)),
-                                    QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS)
-                                                                          .inner(AddressData.STREET)),
-                                    QueryField.contains(Tenant.TENANT_DATA.inner(TenantData.ADDRESS)
-                                                                          .inner(AddressData.CITY)));
-
-        pageHelper.applyExtenders("/tenants/*");
+        SQLPageHelper<SQLTenant> pageHelper = createTenantPageHelper(ctx, query);
         pageHelper.applyExtenders("/tenants/select");
 
         return pageHelper;

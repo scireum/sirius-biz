@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import sirius.biz.analytics.flags.PerformanceFlagged;
 import sirius.biz.isenguard.RateLimitedEntity;
 import sirius.biz.protocol.Journaled;
 import sirius.biz.protocol.Traced;
@@ -26,7 +27,7 @@ import sirius.kernel.di.transformers.Transformable;
  */
 @SuppressWarnings("squid:S1214")
 @Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
-public interface Tenant<I> extends Entity, Transformable, Traced, Journaled, RateLimitedEntity {
+public interface Tenant<I> extends Entity, Transformable, Traced, Journaled, RateLimitedEntity, PerformanceFlagged {
 
     /**
      * This flag permission is granted to tenant objects only.
