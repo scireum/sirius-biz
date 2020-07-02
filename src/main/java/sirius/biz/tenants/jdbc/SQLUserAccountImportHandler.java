@@ -9,6 +9,7 @@
 package sirius.biz.tenants.jdbc;
 
 import sirius.biz.analytics.flags.PerformanceData;
+import sirius.biz.analytics.flags.PerformanceDataImportExtender;
 import sirius.biz.importer.ImportHandler;
 import sirius.biz.importer.ImportHandlerFactory;
 import sirius.biz.importer.ImporterContext;
@@ -88,7 +89,7 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
                                                          .inner(PermissionData.PERMISSIONS));
         collector.accept(210,
                          SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.ACCOUNT_LOCKED));
-        collector.accept(220, SQLUserAccount.PERFORMANCE_DATA.inner(PerformanceData.FLAGS));
+        collector.accept(220, PerformanceDataImportExtender.PERFORMANCE_FLAGS);
         collector.accept(300, SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.LAST_SEEN));
         collector.accept(305,
                          SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.LAST_LOGIN));
