@@ -183,7 +183,7 @@ public interface ImportHandler<E extends BaseEntity<?>> {
      * @param fieldToExport the field or column to export
      * @return a function which extracts the field to be exported from a given entity
      */
-    Function<E, Object> createExtractor(String fieldToExport);
+    Function<? super E, ?> createExtractor(String fieldToExport);
 
     /**
      * Returns the default representation of an entity of this type with the given id.

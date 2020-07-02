@@ -18,8 +18,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 
 import java.sql.SQLException;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 /**
  * Stores metrics into the appropriate tables of the underlying JDBC database.
@@ -172,46 +171,27 @@ public class SQLMetrics extends BasicMetrics<SQLEntity> {
     }
 
     @Override
-    public int queryFact(String targetType, String targetId, String name) {
-        return oma.select(Fact.class)
-                  .eq(Fact.TARGET_TYPE, targetType)
-                  .eq(Fact.TARGET_ID, targetId)
-                  .eq(Fact.NAME, name)
-                  .fields(Fact.VALUE)
-                  .first()
-                  .map(Fact::getValue)
-                  .orElse(0);
-    }
-
-    @Override
-    public Map<String, Integer> queryFacts(String targetType, String targetId) {
-        return oma.select(Fact.class)
-                  .eq(Fact.TARGET_TYPE, targetType)
-                  .eq(Fact.TARGET_ID, targetId)
-                  .fields(Fact.NAME, Fact.VALUE)
-                  .queryList()
-                  .stream()
-                  .collect(Collectors.toMap(Fact::getName, Fact::getValue));
-    }
-
-    @Override
-    protected int queryMetric(Class<? extends SQLEntity> table,
-                              String targetType,
-                              String targetId,
-                              String name,
-                              Integer year,
-                              Integer month,
-                              Integer day) {
-        return oma.select(table)
-                  .fields(Fact.VALUE)
-                  .eq(Fact.TARGET_TYPE, targetType)
-                  .eq(Fact.TARGET_ID, targetId)
-                  .eq(Fact.NAME, name)
-                  .eqIgnoreNull(YearlyMetric.YEAR, year)
-                  .eqIgnoreNull(MonthlyMetric.MONTH, month)
-                  .eqIgnoreNull(DailyMetric.DAY, day)
-                  .first()
-                  .map(entity -> ((Fact) entity).getValue())
-                  .orElse(0);
+    protected Optional<Integer> queryMetric(Class<? extends SQLEntity> table,
+                                            String targetType,
+                                            String targetId,
+                                            String name,
+                                            Integer year,
+                                            Integer month,
+                                            Integer day) {
+        try {
+            return oma.select(table)
+                      .fields(Fact.VALUE)
+                      .eq(Fact.TARGET_TYPE, targetType)
+                      .eq(Fact.TARGET_ID, targetId)
+                      .eq(Fact.NAME, name)
+                      .eqIgnoreNull(YearlyMetric.YEAR, year)
+                      .eqIgnoreNull(MonthlyMetric.MONTH, month)
+                      .eqIgnoreNull(DailyMetric.DAY, day)
+                      .asSQLQuery()
+                      .first()
+                      .map(row -> row.getValue(Fact.VALUE).asInt(0));
+        } catch (SQLException ex) {
+            throw Exceptions.handle(OMA.LOG, ex);
+        }
     }
 }

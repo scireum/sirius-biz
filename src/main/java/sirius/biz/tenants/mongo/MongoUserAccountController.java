@@ -36,7 +36,8 @@ public class MongoUserAccountController extends UserAccountController<String, Mo
                                                       .orderAsc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                              .inner(PersonData.FIRSTNAME));
 
-        MongoPageHelper<MongoUserAccount> pageHelper = MongoPageHelper.withQuery(tenants.forCurrentTenant(baseQuery));
+        MongoPageHelper<MongoUserAccount> pageHelper =
+                MongoPageHelper.withQuery(tenants.forCurrentTenant(baseQuery)).withContext(webContext);
         pageHelper.withSearchFields(QueryField.startsWith(MongoUserAccount.SEARCH_PREFIXES));
 
         MongoPerformanceData.addFilterFacet(pageHelper);

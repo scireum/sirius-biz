@@ -20,6 +20,9 @@ public interface PerformanceFlagged {
 
     /**
      * Contains the name used for the performance data composite.
+     * <p>
+     * Note that when exporting flags, the mapping {@link PerformanceDataImportExtender#PERFORMANCE_FLAGS} should be
+     * used to obtain a readable list of flags instead of the internal representation.
      */
     Mapping PERFORMANCE_DATA = Mapping.named("performanceData");
 

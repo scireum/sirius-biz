@@ -12,10 +12,9 @@ import sirius.biz.analytics.flags.PerformanceData;
 import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.analytics.flags.PerformanceFlagModifier;
 import sirius.biz.analytics.flags.PerformanceFlagged;
-import sirius.biz.analytics.flags.jdbc.ExecutionFlag;
 import sirius.biz.web.MongoPageHelper;
-import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.constraints.SQLConstraint;
+import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mixing.types.StringList;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.QueryBuilder;
@@ -26,6 +25,7 @@ import sirius.web.controller.Facet;
 /**
  * Can be embedded into a {@link MongoEntity} in order to record / toggle performance flags for it.
  */
+@TranslationSource(PerformanceData.class)
 public class MongoPerformanceData extends PerformanceData {
 
     private static final String FACET_NAME_PERFORMANCE_FLAGS = "performanceFlag";
@@ -79,7 +79,7 @@ public class MongoPerformanceData extends PerformanceData {
      * @param pageHelper the helper to append the facet to
      */
     public static void addFilterFacet(MongoPageHelper<? extends PerformanceFlagged> pageHelper) {
-        Facet facet = new Facet(NLS.get("PerformanceFlag.plural"), FACET_NAME_PERFORMANCE_FLAGS, null, null);
+        Facet facet = new Facet(NLS.get("PerformanceData.flags"), FACET_NAME_PERFORMANCE_FLAGS, null, null);
         Class<?> type = pageHelper.getBaseQuery().getDescriptor().getType();
 
         pageHelper.addFacet(facet, (currentFacet, query) -> {

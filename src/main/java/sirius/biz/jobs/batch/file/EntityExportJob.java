@@ -77,7 +77,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     protected final Importer importer;
     protected final List<String> defaultMapping;
     protected Class<E> type;
-    protected List<Function<E, Object>> extractors;
+    protected List<Function<? super E, ?>> extractors;
     protected Consumer<Q> queryExtender;
     protected Consumer<Context> contextExtender;
     protected String targetFileName;
@@ -261,7 +261,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
      * @param field the field to extract
      * @return the extractor to use
      */
-    protected Function<E, Object> createExtractor(String field) {
+    protected Function<? super E, ?> createExtractor(String field) {
         Function<E, Object> customExtractor = customFieldExtractor(field);
         if (customExtractor != null) {
             return customExtractor;
@@ -319,7 +319,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     private List<Object> exportAsRow(Values baseRow, E entity) {
         List<Object> row = new ArrayList<>(extractors.size());
         for (int i = 0; i < extractors.size(); i++) {
-            Function<E, Object> extractor = extractors.get(i);
+            Function<? super E, ?> extractor = extractors.get(i);
             if (extractor == null) {
                 row.add(baseRow == null ? null : baseRow.at(i));
             } else {
