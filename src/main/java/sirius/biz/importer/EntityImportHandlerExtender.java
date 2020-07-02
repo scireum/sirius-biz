@@ -57,7 +57,7 @@ public interface EntityImportHandlerExtender {
      * @see BaseImportHandler#createExtractor(String)
      */
     @Nullable
-    default <E extends BaseEntity<?>> Function<E, Object> createExtractor(BaseImportHandler<E> handler,
+    default <E extends BaseEntity<?>> Function<? super E, ?> createExtractor(BaseImportHandler<E> handler,
                                                                           EntityDescriptor descriptor,
                                                                           ImporterContext context,
                                                                           String fieldToExport) {

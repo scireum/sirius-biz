@@ -484,9 +484,9 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @return a function which extracts the field to be exported from a given entity
      */
     @Override
-    public Function<E, Object> createExtractor(String fieldToExport) {
+    public Function<? super E, ?> createExtractor(String fieldToExport) {
         for (EntityImportHandlerExtender extender : extenders) {
-            Function<E, Object> result = extender.createExtractor(this, descriptor, context, fieldToExport);
+            Function<? super E, ?> result = extender.createExtractor(this, descriptor, context, fieldToExport);
             if (result != null) {
                 return result;
             }
