@@ -76,7 +76,7 @@ public class MongoPerformanceFlagModifier implements PerformanceFlagModifier {
                               flagsToRemove.toArray())
                      .executeFor((MongoEntity) target.getOwner());
             }
-            if (flagsToAdd.isEmpty()) {
+            if (!flagsToAdd.isEmpty()) {
                 mongo.update()
                      .addEachToSet(PerformanceFlagged.PERFORMANCE_DATA.inner(MongoPerformanceData.FLAGS), flagsToAdd)
                      .executeFor((MongoEntity) target.getOwner());
