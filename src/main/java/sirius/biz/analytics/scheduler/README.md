@@ -23,11 +23,11 @@ isn't overloaded).
 For maintenance and troubleshooting some options are available:
 * The [AnalyticsCommand](AnalyticsCommand.java) can be used in the [System Console](https://localhost:9000/system/console)
 by calling **analytics**. This lists all active schedulers, their queue and last execution. It also permits
-to forcefully start a scheduler imedietally.
-* The Logger **analytics** can be set to FINE (using the **logger**) command to observer when the framework is
+to forcefully start a scheduler immediately.
+* The Logger **analytics** can be set to FINE (using the **logger** command) to observe what the framework is
 doing.
 * The [Cluster State](https://localhost:9000/system/cluster) and the [Load Info](https://localhost:9000/system/load)
-report the queue lenghts in whiche the tasks are scheduler and also list which server is charce of executing
+report the queue lengths in which the tasks are scheduler and also list which server is in charge of executing
 the tasks.
 
 Examples on how to use this framework can be found in [Checks](../checks) and [Metrics](../metrics).
