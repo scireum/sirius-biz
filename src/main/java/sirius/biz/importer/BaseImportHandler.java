@@ -397,7 +397,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     }
 
     /**
-     * Resolves an field into a <tt>FieldDefinition</tt>.
+     * Resolves a field into a <tt>FieldDefinition</tt>.
      * <p>
      * For fields which are unknown as property of our <tt>descriptor</tt>, these come most probably from one of our
      * <tt>EntityImportHandlerExtenders</tt>, we therefore iterate over them and hope for the best.
