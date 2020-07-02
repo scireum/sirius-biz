@@ -8,6 +8,8 @@
 
 package sirius.biz.analytics.metrics;
 
+import sirius.kernel.di.std.Part;
+
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.ToIntFunction;
 
@@ -15,11 +17,15 @@ import java.util.function.ToIntFunction;
  * Wraps all infos required to inject a metric into an entity export via a {@link MetricExporter}.
  */
 public class MetricExportInfo {
+
     private final String name;
     private final String label;
     private int priority;
     private boolean defaultExport;
     private ToIntFunction<Object> extractor;
+
+    @Part
+    private static Metrics metrics;
 
     /**
      * Creates an info for the given metric name and its label.
@@ -30,6 +36,16 @@ public class MetricExportInfo {
     public MetricExportInfo(String name, String label) {
         this.name = name;
         this.label = label;
+    }
+
+    /**
+     * Creates an info for the given metric name while using the {@link Metrics#fetchLabel(String) default label}.
+     *
+     * @param name  the name of the metric to export
+     */
+    public MetricExportInfo(String name) {
+        this.name = name;
+        this.label = metrics.fetchLabel(name);
     }
 
     /**

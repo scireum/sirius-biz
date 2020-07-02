@@ -211,4 +211,14 @@ public interface Metrics {
      * @return a query to be executed against the metrics database
      */
     MetricQuery query();
+
+    /**
+     * Fetches the label for the given metric.
+     * <p>
+     * This is boilerplate for {@code NLS.get('Metric.'+name)}
+     *
+     * @param name the name of the metric to fetch the label for
+     * @return the label of the metric in the current language
+     */
+    String fetchLabel(String name);
 }

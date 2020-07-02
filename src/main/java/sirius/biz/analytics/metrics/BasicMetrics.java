@@ -13,6 +13,7 @@ import sirius.db.mixing.Mixing;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.nls.NLS;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -31,6 +32,8 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
      * For global metrics we fill both fields with the value to store and retrieve them.
      */
     protected static final String GLOBAL = "global";
+
+    private static final String METRIC_NLS_PREFIX = "Metric.";
 
     private Cache<String, Integer> metricCache = CacheManager.createCoherentCache("metrics");
 
@@ -336,6 +339,11 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
     @Override
     public MetricQuery query() {
         return new MetricQuery(this);
+    }
+
+    @Override
+    public String fetchLabel(String name) {
+        return NLS.get(METRIC_NLS_PREFIX + name);
     }
 
     /**
