@@ -8,6 +8,7 @@
 
 package sirius.biz.importer;
 
+import sirius.biz.importer.format.FieldDefinition;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mapping;
@@ -58,9 +59,9 @@ public interface EntityImportHandlerExtender {
      */
     @Nullable
     default <E extends BaseEntity<?>> Function<? super E, ?> createExtractor(BaseImportHandler<E> handler,
-                                                                          EntityDescriptor descriptor,
-                                                                          ImporterContext context,
-                                                                          String fieldToExport) {
+                                                                             EntityDescriptor descriptor,
+                                                                             ImporterContext context,
+                                                                             String fieldToExport) {
         // intentionally left empty as not all extenders will customize all methods
         return null;
     }
