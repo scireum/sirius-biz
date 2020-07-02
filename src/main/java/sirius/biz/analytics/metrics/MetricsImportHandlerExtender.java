@@ -42,9 +42,6 @@ public class MetricsImportHandlerExtender implements EntityImportHandlerExtender
     private static final int DEFAULT_PRIORITY_OFFSET = 500;
     private static final String METRIC_FIELD_PREFIX = "metric-";
 
-    @Part
-    private Metrics metrics;
-
     @Parts(MetricExporter.class)
     private PartCollection<MetricExporter<?>> exporters;
 
