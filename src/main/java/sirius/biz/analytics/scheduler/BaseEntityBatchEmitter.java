@@ -27,6 +27,11 @@ import java.util.function.Predicate;
  * <p>
  * These batches are described using JSON and can be evaluated into an iterator of entities using
  * {@link #evaluateBatch(JSONObject, Consumer, Consumer)}.
+ *
+ * @param <I> the id type of the entities being processed by this emitter
+ * @param <C> the constraint type to be applied on entities processed by this emitter
+ * @param <B> the entity type being processed by this emitter
+ * @param <Q> the query type used to retireve entities being processed by this emitter
  */
 public abstract class BaseEntityBatchEmitter<I, C extends Constraint, B extends BaseEntity<I>, Q extends Query<Q, B, C>> {
 
