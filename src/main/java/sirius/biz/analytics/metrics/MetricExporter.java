@@ -9,6 +9,7 @@
 package sirius.biz.analytics.metrics;
 
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.di.std.AutoRegister;
 
 import java.util.function.BiConsumer;
 import java.util.function.ToIntFunction;
@@ -21,6 +22,7 @@ import java.util.function.ToIntFunction;
  *
  * @param <E> the entity type to extend
  */
+@AutoRegister
 public interface MetricExporter<E extends BaseEntity<?>> {
 
     /**
