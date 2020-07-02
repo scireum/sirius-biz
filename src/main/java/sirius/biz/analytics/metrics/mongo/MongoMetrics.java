@@ -20,6 +20,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -163,46 +164,21 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
     }
 
     @Override
-    public int queryFact(String targetType, String targetId, String name) {
-        return mango.select(Fact.class)
-                    .eq(Fact.TARGET_TYPE, targetType)
-                    .eq(Fact.TARGET_ID, targetId)
-                    .eq(Fact.NAME, name)
-                    .fields(Fact.VALUE)
-                    .first()
-                    .map(Fact::getValue)
-                    .orElse(0);
-    }
-
-    @Override
-    public Map<String, Integer> queryFacts(String targetType, String targetId) {
-        return mango.select(Fact.class)
-                    .eq(Fact.TARGET_TYPE, targetType)
-                    .eq(Fact.TARGET_ID, targetId)
-                    .fields(Fact.NAME, Fact.VALUE)
-                    .queryList()
-                    .stream()
-                    .collect(Collectors.toMap(Fact::getName, Fact::getValue));
-    }
-
-    @Override
-    protected int queryMetric(Class<? extends MongoEntity> table,
-                              String targetType,
-                              String targetId,
-                              String name,
-                              Integer year,
-                              Integer month,
-                              Integer day) {
-        return mango.select(table)
-                    .fields(Fact.VALUE)
-                    .eq(Fact.TARGET_TYPE, targetType)
-                    .eq(Fact.TARGET_ID, targetId)
-                    .eq(Fact.NAME, name)
-                    .eqIgnoreNull(YearlyMetric.YEAR, year)
-                    .eqIgnoreNull(MonthlyMetric.MONTH, month)
-                    .eqIgnoreNull(DailyMetric.DAY, day)
-                    .first()
-                    .map(entity -> ((Fact) entity).getValue())
-                    .orElse(0);
+    protected Optional<Integer> queryMetric(Class<? extends MongoEntity> table,
+                                            String targetType,
+                                            String targetId,
+                                            String name,
+                                            Integer year,
+                                            Integer month,
+                                            Integer day) {
+        return mongo.find()
+                    .where(Fact.TARGET_TYPE, targetType)
+                    .where(Fact.TARGET_ID, targetId)
+                    .where(Fact.NAME, name)
+                    .whereIgnoreNull(YearlyMetric.YEAR, year)
+                    .whereIgnoreNull(MonthlyMetric.MONTH, month)
+                    .whereIgnoreNull(DailyMetric.DAY, day)
+                    .singleIn(table)
+                    .map(doc -> doc.get(Fact.VALUE).asInt(0));
     }
 }
