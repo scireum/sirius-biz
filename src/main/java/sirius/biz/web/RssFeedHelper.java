@@ -22,7 +22,7 @@ import java.io.StringReader;
 import java.net.URL;
 
 /**
- * Helps to obtain an <tt>SyndFeed</tt> object
+ * Helps to obtain an {@link SyndFeed} object
  */
 public class RssFeedHelper {
 
