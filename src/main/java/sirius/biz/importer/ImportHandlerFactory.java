@@ -8,6 +8,7 @@
 
 package sirius.biz.importer;
 
+import sirius.kernel.di.std.AutoRegister;
 import sirius.kernel.di.std.Priorized;
 
 /**
@@ -20,6 +21,7 @@ import sirius.kernel.di.std.Priorized;
  * common practice to put the factory as static public inner class into the actual import handler as they are tightly
  * coupled anyway.
  */
+@AutoRegister
 public interface ImportHandlerFactory extends Priorized {
 
     /**

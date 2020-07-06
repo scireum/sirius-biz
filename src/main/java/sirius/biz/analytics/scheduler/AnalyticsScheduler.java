@@ -9,6 +9,7 @@
 package sirius.biz.analytics.scheduler;
 
 import com.alibaba.fastjson.JSONObject;
+import sirius.kernel.di.std.AutoRegister;
 import sirius.kernel.di.std.Named;
 
 import java.time.LocalDate;
@@ -28,6 +29,7 @@ import java.util.function.Consumer;
  * batch. In most implementations the scheduler will then pick all matching {@link AnalyticalTask analytical tasks} and
  * executes them on the entity.
  */
+@AutoRegister
 public interface AnalyticsScheduler extends Named {
 
     /**

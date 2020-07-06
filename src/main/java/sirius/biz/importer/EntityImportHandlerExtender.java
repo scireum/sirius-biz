@@ -8,11 +8,13 @@
 
 package sirius.biz.importer;
 
+import com.google.j2objc.annotations.AutoreleasePool;
 import sirius.biz.importer.format.FieldDefinition;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Context;
+import sirius.kernel.di.std.AutoRegister;
 
 import javax.annotation.Nullable;
 import java.util.function.BiConsumer;
@@ -24,6 +26,7 @@ import java.util.function.Function;
  * This might be useful for customizations or {@link sirius.db.mixing.annotations.Mixin mixins} which need to extend the
  * import process beyond adding fields.
  */
+@AutoRegister
 public interface EntityImportHandlerExtender {
 
     /**
