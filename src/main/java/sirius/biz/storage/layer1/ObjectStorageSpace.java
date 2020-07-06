@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 import java.util.function.IntConsumer;
+import java.util.function.Predicate;
 
 /**
  * Provides access to a layer 1 storage space.
@@ -471,6 +472,17 @@ public abstract class ObjectStorageSpace {
     public String getName() {
         return name;
     }
+
+    /**
+     * Iterates over all known objects in this space.
+     * <p>
+     * Note that this is most probably a very inefficient operation and should only be used for maintenance or
+     * debugging tasks.
+     *
+     * @param physicalKeyHandler a handler to be invoced for every key found in this space
+     * @throws IOException in case of an IO error
+     */
+    public abstract void iterateObjects(Predicate<String> physicalKeyHandler) throws IOException;
 
     /**
      * Returns the configuration block which was used to setup this space.
