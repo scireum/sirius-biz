@@ -13,6 +13,7 @@ import sirius.db.jdbc.batch.BatchContext;
 import sirius.db.jdbc.batch.InsertQuery;
 import sirius.db.jdbc.schema.Schema;
 import sirius.db.mixing.annotations.Realm;
+import sirius.kernel.Sirius;
 import sirius.kernel.Startable;
 import sirius.kernel.Stoppable;
 import sirius.kernel.di.std.Part;
@@ -59,6 +60,11 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * Determines the max period until an insertion run is forced (independent of the buffer size).
      */
     private static final Duration MAX_BUFFER_AGE = Duration.ofMinutes(5);
+
+    /**
+     * Determines the max period to be used in development system.
+     */
+    private static final Duration MAX_BUFFER_AGE_DEV = Duration.ofSeconds(10);
 
     /**
      * Determines the max number of events to process in one insertion run.
@@ -161,18 +167,23 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * Invoked periodically by the {@link EventProcessorLoop} to process events if necessary.
      * <p>
      * An insertion run will be started if there are enough events in the buffer (more than {@link #MIN_BUFFER_SIZE})
-     * or if enough time elapsed since the last insertion run (more than {@link #MAX_BUFFER_AGE}).
+     * or if enough time elapsed since the last insertion run (more than {@link #MAX_BUFFER_AGE} or
+     * {@link #MAX_BUFFER_AGE_DEV} in development systems).
      *
      * @return the number of inserted events
      */
     protected int processIfBufferIsFilled() {
         if (bufferedEvents.get() > MIN_BUFFER_SIZE
             || lastProcessed == null
-            || Duration.between(lastProcessed, LocalDateTime.now()).compareTo(MAX_BUFFER_AGE) > 0) {
+            || Duration.between(lastProcessed, LocalDateTime.now()).compareTo(getEffectiveMaxAge()) > 0) {
             return process();
         } else {
             return 0;
         }
+    }
+
+    private Duration getEffectiveMaxAge() {
+        return Sirius.isDev() ? MAX_BUFFER_AGE_DEV : MAX_BUFFER_AGE;
     }
 
     /**
