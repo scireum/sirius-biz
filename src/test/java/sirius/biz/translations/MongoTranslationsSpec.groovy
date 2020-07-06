@@ -11,16 +11,14 @@ package sirius.biz.translations
 
 import sirius.biz.translations.mongo.MongoTranslation
 import sirius.db.mongo.Mango
-import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
 
-class MongoTranslationsSpec extends BaseSpecification {
+class MongoTranslationsSpec extends TranslationsSpec {
 
     @Part
     private static Mango mango
 
-    private static final DESCRIPTION_TEXT = "This is a test"
-    private static final TRANSLATED_TEXT = "Das ist ein Test"
+    private static final DESCRIPTION_FIELD = MongoTranslatableTestEntity.DESCRIPTION
 
     private static MongoTranslation mongoTranslation
     private static MongoTranslatableTestEntity mongoTranslatable
@@ -31,27 +29,93 @@ class MongoTranslationsSpec extends BaseSpecification {
         mango.update(mongoTranslatable)
     }
 
+    def cleanup() {
+        List<MongoTranslation> translations = mango.select(MongoTranslation.class).queryList()
+        for (MongoTranslation t : translations) {
+            mango.delete(t)
+        }
+    }
+
     def "translating a field of a mongo entity works"() {
         given:
-        mongoTranslatable.
-                getTranslations().
-                updateText(MongoTranslatableTestEntity.DESCRIPTION, "deu", TRANSLATED_TEXT)
+        mongoTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, GERMAN, GERMAN_TEXT)
         when:
-        MongoTranslation translation = mango.select(MongoTranslation.class).queryOne()
+        List<MongoTranslation> translations = mango.select(MongoTranslation.class).queryList()
         then:
-        translation != null
+        translations.size() == 1
+        and:
+        translations.get(0).translationData.text == GERMAN_TEXT
+    }
+
+    def "deleting a translation works"() {
+        given:
+        mongoTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, GERMAN, GERMAN_TEXT)
+        when:
+        mongoTranslatable.getTranslations().deleteText(DESCRIPTION_FIELD, GERMAN)
+        and:
+        List<MongoTranslation> translations = mango.select(MongoTranslation.class).queryList()
+        then:
+        translations.size() == 0
+    }
+
+    def "updating translation with empty text deletes it"() {
+        given:
+        mongoTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, GERMAN, GERMAN_TEXT)
+        when:
+        mongoTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, GERMAN, "")
+        and:
+        List<MongoTranslation> translations = mango.select(MongoTranslation.class).queryList()
+        then:
+        translations.size() == 0
     }
 
     def "get mongo translated text works"() {
         given:
-        mongoTranslatable.
-                getTranslations().
-                updateText(MongoTranslatableTestEntity.DESCRIPTION, "deu", TRANSLATED_TEXT)
+        mongoTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, GERMAN, GERMAN_TEXT)
         when:
-        String translatedText = mongoTranslatable.
-                getTranslations().
-                getText(MongoTranslatableTestEntity.DESCRIPTION, "deu")
+        Optional<String> translatedText = mongoTranslatable.getTranslations().getText(DESCRIPTION_FIELD, GERMAN)
         then:
-        translatedText == TRANSLATED_TEXT
+        translatedText.isPresent()
+        and:
+        translatedText.get() == GERMAN_TEXT
+    }
+
+    def "get mongo translated text with fallback works"() {
+        given:
+        mongoTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, SWEDISH, SWEDISH_TEXT)
+        when:
+        String text = mongoTranslatable.getTranslations().getRequiredText(DESCRIPTION_FIELD, GERMAN, SWEDISH)
+        then:
+        text == SWEDISH_TEXT
+    }
+
+    def "get mongo translated text with no matches returns default"() {
+        given:
+        when:
+        String text = mongoTranslatable.getTranslations().getRequiredText(DESCRIPTION_FIELD, GERMAN, SWEDISH)
+        then:
+        text == DESCRIPTION_TEXT
+    }
+
+    def "get all texts works"() {
+        given:
+        mongoTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, GERMAN, GERMAN_TEXT)
+        and:
+        mongoTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, SWEDISH, SWEDISH_TEXT)
+        when:
+        Map<String, String> translations = mongoTranslatable.getTranslations().getAllTexts(DESCRIPTION_FIELD)
+        then:
+        translations.size() == 2
+    }
+
+    def "delete all texts works"() {
+        given:
+        mongoTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, GERMAN, GERMAN_TEXT)
+        and:
+        mongoTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, SWEDISH, SWEDISH_TEXT)
+        when:
+        mongoTranslatable.getTranslations().deleteAllTexts(DESCRIPTION_FIELD)
+        then:
+        mongoTranslatable.getTranslations().getAllTexts(DESCRIPTION_FIELD).isEmpty()
     }
 }
