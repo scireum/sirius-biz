@@ -9,11 +9,13 @@
 package sirius.biz.translations.jdbc;
 
 import sirius.biz.translations.BasicTranslations;
+import sirius.biz.translations.Translation;
 import sirius.biz.translations.TranslationData;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Strings;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -30,7 +32,7 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
         SQLTranslation translation = findOrCreateTranslation(field, lang, text);
 
         if (Strings.isEmpty(text)) {
-            //TODO: delete translation if text is empty
+            deleteText(field, lang);
             return;
         }
 
@@ -40,7 +42,27 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
     }
 
     @Override
+    public void deleteText(Mapping field, String lang) {
+        Optional<SQLTranslation> translation = fetchTranslation(field, lang);
+        translation.ifPresent(sqlTranslation -> oma.delete(sqlTranslation));
+    }
+
+    @Override
+    public void deleteAllTexts(Mapping field) {
+        Optional<List<SQLTranslation>> translations = fetchAllTranslations(field);
+        if (translations.isPresent()) {
+            for (SQLTranslation translation : translations.get()) {
+                oma.delete(translation);
+            }
+        }
+    }
+
+    @Override
     protected SQLTranslation findOrCreateTranslation(Mapping field, String lang, String text) {
+        if (!isSupportedLanguage(lang)) {
+            return null;
+        }
+
         Optional<SQLTranslation> translation = fetchTranslation(field, lang);
 
         if (translation.isPresent()) {
@@ -56,10 +78,28 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
 
     @Override
     protected Optional<SQLTranslation> fetchTranslation(Mapping field, String lang) {
-        return Optional.ofNullable(oma.select(SQLTranslation.class)
-                                      .eq(SQLTranslation.OWNER, owner.getUniqueName())
-                                      .eq(SQLTranslation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
-                                      .eq(SQLTranslation.TRANSLATION_DATA.inner(TranslationData.LANG), lang)
-                                      .queryFirst());
+        if (field == null) {
+            return Optional.empty();
+        } else {
+            return Optional.ofNullable(oma.select(SQLTranslation.class)
+                                          .eq(Translation.OWNER, owner.getUniqueName())
+                                          .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD),
+                                              field.getName())
+                                          .eq(Translation.TRANSLATION_DATA.inner(TranslationData.LANG), lang)
+                                          .queryFirst());
+        }
+    }
+
+    @Override
+    protected Optional<List<SQLTranslation>> fetchAllTranslations(Mapping field) {
+        if (field == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(oma.select(SQLTranslation.class)
+                                  .eq(Translation.OWNER, owner.getUniqueName())
+                                  .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
+                                  .limit(supportedLanguages.size())
+                                  .queryList());
+        }
     }
 }
