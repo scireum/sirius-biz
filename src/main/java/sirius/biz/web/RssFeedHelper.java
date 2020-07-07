@@ -28,9 +28,6 @@ public class RssFeedHelper {
 
     private static final String RSS_FEED_HELPER = "RSSFeedHelper";
 
-    /**
-     * Generates a helper instance per shop.
-     */
     @Register
     public static class RssFeedHelperFactory implements HelperFactory<RssFeedHelper> {
 

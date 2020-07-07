@@ -10,7 +10,7 @@
 
 <i:pragma
         name="description"
-        value="Provides an template to integrate RSS feeds. WARNING - USE WITH CAUTION: This tag does integrate and render external resources which may potentially contain malicious content! Please always ensure that the source from which the contents are fetched is trustworthy!" />
+        value="Provides a template to integrate RSS feeds. WARNING - USE WITH CAUTION: This tag does integrate and render external resources which may potentially contain malicious content! Please always ensure that the source from which the contents are fetched is trustworthy!" />
 
 <i:local name="syndFeedObject" value="@user.getHelper(sirius.biz.web.RssFeedHelper.class).processFeed(url)" />
 
