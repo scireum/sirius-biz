@@ -479,7 +479,7 @@ public abstract class ObjectStorageSpace {
      * Note that this is most probably a very inefficient operation and should only be used for maintenance or
      * debugging tasks.
      *
-     * @param physicalKeyHandler a handler to be invoced for every key found in this space
+     * @param physicalKeyHandler a handler to be invoked for every key found in this space
      * @throws IOException in case of an IO error
      */
     public abstract void iterateObjects(Predicate<String> physicalKeyHandler) throws IOException;
