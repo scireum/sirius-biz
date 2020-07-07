@@ -49,7 +49,7 @@ public class RssFeedHelper {
     }
 
     /**
-     * Retrieve <tt>SyndFeed</tt> of the given URL
+     * Retrieves a {@link SyndFeed} of the given URL
      *
      * @param feedUrl the URL to fetch the RSS feed from
      * @return a SyndFeed instance for the given URL
