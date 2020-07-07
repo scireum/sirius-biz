@@ -377,8 +377,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         Blob blob = blobByPathCache.get(key);
         if (blob == null) {
             blobByPathCache.remove(key);
-            blob = blobByPathCache.get(determinePathCacheKey(tenantId, path),
-                                       ignored -> fetchOrCreateByPath(tenantId, path));
+            blob = blobByPathCache.get(key, ignored -> fetchOrCreateByPath(tenantId, path));
         }
         return blob;
     }
