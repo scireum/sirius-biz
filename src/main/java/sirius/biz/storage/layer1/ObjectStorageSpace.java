@@ -479,7 +479,7 @@ public abstract class ObjectStorageSpace {
      * Note that this is most probably a very inefficient operation and should only be used for maintenance or
      * debugging tasks.
      *
-     * @param physicalKeyHandler a handler to be invoced for every key found in this space. Returns <tt>true</tt>
+     * @param physicalKeyHandler a handler to be invoked for every key found in this space. Returns <tt>true</tt>
      *                           to continue iterating and <tt>false</tt> to abort.
      * @throws IOException in case of an IO error
      */
