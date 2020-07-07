@@ -9,7 +9,6 @@
 package sirius.biz.analytics.checks;
 
 import sirius.biz.analytics.scheduler.AnalyticsBatchExecutor;
-import sirius.biz.analytics.scheduler.AnalyticsScheduler;
 import sirius.biz.analytics.scheduler.AnalyticsSchedulerExecutor;
 import sirius.biz.analytics.scheduler.SQLAnalyticalTaskScheduler;
 import sirius.biz.analytics.scheduler.ScheduleInterval;
@@ -27,7 +26,7 @@ import java.time.LocalDateTime;
  * Provides the scheduler which is in charge of creating and executing the batches of JDBC entities for which
  * {@link ChangeCheck change checks} are present.
  */
-@Register(classes = AnalyticsScheduler.class)
+@Register
 public class SQLChangeCheckScheduler extends SQLAnalyticalTaskScheduler {
 
     @Override

@@ -27,7 +27,7 @@ import java.time.LocalDateTime;
  * Provides the scheduler which is in charge of creating and executing the batches of MongoDB entities for which
  * {@link ChangeCheck change checks} are present.
  */
-@Register(classes = AnalyticsScheduler.class)
+@Register
 public class MongoChangeCheckScheduler extends MongoAnalyticalTaskScheduler {
 
     @Override

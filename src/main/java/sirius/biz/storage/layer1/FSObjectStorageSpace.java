@@ -27,7 +27,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.function.IntConsumer;
+import java.util.function.Predicate;
 
 /**
  * Provides a {@link ObjectStorageSpace} which operates on the local file system.
@@ -251,5 +256,22 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
         }
 
         return null;
+    }
+
+    @Override
+    public void iterateObjects(Predicate<String> physicalKeyHandler) throws IOException {
+        java.nio.file.Files.walkFileTree(baseDir.toPath(), new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                if (file.toFile().isFile()) {
+                    if (physicalKeyHandler.test(file.toFile().getName())) {
+                        return FileVisitResult.CONTINUE;
+                    } else {
+                        return FileVisitResult.TERMINATE;
+                    }
+                }
+                return super.visitFile(file, attrs);
+            }
+        });
     }
 }
