@@ -91,7 +91,7 @@ public class AnalyticsCommand implements Command {
             analyticalEngine.queueScheduler(analyticsScheduler.get(),
                                             true,
                                             params.length > 1 ?
-                                            NLS.parseMachineString(LocalDate.class, params[2]) :
+                                            NLS.parseMachineString(LocalDate.class, params[1]) :
                                             null);
         }
         output.blankLine();
