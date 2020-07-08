@@ -16,6 +16,7 @@ import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
+import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
@@ -35,6 +36,10 @@ import java.util.function.Predicate;
  * Note that all non trivial methods delegate to the associated {@link SQLBlobStorageSpace}.
  */
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
+@Index(name = "directory_tenant_lookup", columns = {"spaceName", "tenantId", "deleted"})
+@Index(name = "directory_name_lookup", columns = {"spaceName", "parent", "deleted", "directoryName"})
+@Index(name = "directory_normalized_name_lookup",
+        columns = {"spaceName", "parent", "deleted", "normalizedDirectoryName"})
 public class SQLDirectory extends SQLEntity implements Directory, OptimisticCreate {
 
     /**
