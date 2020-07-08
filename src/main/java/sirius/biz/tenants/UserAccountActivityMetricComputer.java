@@ -70,30 +70,30 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
     @Override
     public void compute(LocalDate date, U entity) throws Exception {
         LocalDate lowerLimit = date.minusDays(observationPeriodDays);
-        eventRecorder.getDatabase()
-                     .createQuery("SELECT COUNT(DISTINCT eventDate) AS numberOfDays"
-                                  + " FROM useractivityevent"
-                                  + " WHERE userData_userId = ${userId}"
-                                  + "   AND eventDate > ${lowerLimit}"
-                                  + "   AND eventDate <= ${upperLimit}")
-                     .set("userId", entity.getUniqueName())
-                     .set("lowerLimit", lowerLimit)
-                     .set("upperLimit", date)
-                     .first()
-                     .ifPresent(row -> {
-                         int numberOfActiveDays = row.getValue("numberOfDays").asInt(0);
 
-                         int activityRateInPercent = numberOfActiveDays * 100 / observationPeriodDays;
-                         metrics.updateMonthlyMetric(entity, METRIC_USER_ACTIVITY, date, activityRateInPercent);
+        int numberOfActiveDays = eventRecorder.getDatabase()
+                                              .createQuery("SELECT COUNT(DISTINCT eventDate) AS numberOfDays"
+                                                           + " FROM useractivityevent"
+                                                           + " WHERE userData_userId = ${userId}"
+                                                           + "   AND eventDate > ${lowerLimit}"
+                                                           + "   AND eventDate <= ${upperLimit}")
+                                              .set("userId", entity.getUniqueName())
+                                              .set("lowerLimit", lowerLimit)
+                                              .set("upperLimit", date)
+                                              .first()
+                                              .flatMap(row -> row.getValue("numberOfDays").asOptionalInt())
+                                              .orElse(0);
 
-                         if (date.getMonthValue() == LocalDate.now().getMonthValue()) {
-                             entity.getPerformanceData()
-                                   .modify()
-                                   .set(getActiveUserFlag(), numberOfActiveDays >= minDaysForActiveUsers)
-                                   .set(getFrequentUserFlag(), numberOfActiveDays >= minDaysForFrequentUsers)
-                                   .commit();
-                         }
-                     });
+        int activityRateInPercent = numberOfActiveDays * 100 / observationPeriodDays;
+        metrics.updateMonthlyMetric(entity, METRIC_USER_ACTIVITY, date, activityRateInPercent);
+
+        if (date.getMonthValue() == LocalDate.now().getMonthValue()) {
+            entity.getPerformanceData()
+                  .modify()
+                  .set(getActiveUserFlag(), numberOfActiveDays >= minDaysForActiveUsers)
+                  .set(getFrequentUserFlag(), numberOfActiveDays >= minDaysForFrequentUsers)
+                  .commit();
+        }
     }
 
     protected abstract PerformanceFlag getActiveUserFlag();
