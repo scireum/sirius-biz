@@ -47,21 +47,21 @@ import java.util.Optional;
  */
 @Framework(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
 @ComplexDelete(false)
-@Index(name = "blob_lookup_1",
+@Index(name = "blob_normalized_filename_lookup",
         columns = {"spaceName", "deleted", "normalizedFilename", "parent", "committed"},
         columnSettings = {Mango.INDEX_ASCENDING,
                           Mango.INDEX_ASCENDING,
                           Mango.INDEX_ASCENDING,
                           Mango.INDEX_ASCENDING,
                           Mango.INDEX_ASCENDING})
-@Index(name = "blob_lookup_2",
+@Index(name = "blob_filename_lookup",
         columns = {"spaceName", "deleted", "filename", "parent", "committed"},
         columnSettings = {Mango.INDEX_ASCENDING,
                           Mango.INDEX_ASCENDING,
                           Mango.INDEX_ASCENDING,
                           Mango.INDEX_ASCENDING,
                           Mango.INDEX_ASCENDING})
-@Index(name = "blob_lookup_3",
+@Index(name = "blob_reference_lookup",
         columns = {"spaceName", "deleted", "reference", "referenceDesignator"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
