@@ -21,6 +21,7 @@ import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.ComplexDelete;
+import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
@@ -46,6 +47,10 @@ import java.util.Optional;
  */
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 @ComplexDelete(false)
+@Index(name = "blob_normalized_filename_lookup",
+        columns = {"spaceName", "deleted", "normalizedFilename", "parent", "committed"})
+@Index(name = "blob_filename_lookup", columns = {"spaceName", "deleted", "filename", "parent", "committed"})
+@Index(name = "blob_reference_lookup", columns = {"spaceName", "deleted", "reference", "referenceDesignator"})
 public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Transient
