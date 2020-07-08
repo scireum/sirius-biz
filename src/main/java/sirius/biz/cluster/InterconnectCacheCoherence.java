@@ -44,7 +44,9 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
     public void clear(Cache<String, ?> cache) {
         interconnect.dispatch(getName(),
                               new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_CLEAR)
-                                              .fluentPut(MESSAGE_CACHE, cache.getName()));
+                                              .fluentPut(MESSAGE_CACHE, cache.getName())
+                                              .fluentPut(MESSAGE_NODE, CallContext.getNodeName()));
+        CacheManager.clearCoherentCacheLocally(getName());
     }
 
     @Override
@@ -52,7 +54,9 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
         interconnect.dispatch(getName(),
                               new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_REMOVE)
                                               .fluentPut(MESSAGE_CACHE, cache.getName())
-                                              .fluentPut(MESSAGE_KEY, key));
+                                              .fluentPut(MESSAGE_KEY, key)
+                                              .fluentPut(MESSAGE_NODE, CallContext.getNodeName()));
+        CacheManager.removeCoherentCacheKeyLocally(getName(), key);
     }
 
     @Override
@@ -63,12 +67,18 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
                                               .fluentPut(MESSAGE_DISCRIMINATOR, discriminator)
                                               .fluentPut(MESSAGE_TEST_VALUE, testInput)
                                               .fluentPut(MESSAGE_NODE, CallContext.getNodeName()));
+        CacheManager.coherentCacheRemoveAllLocally(getName(), discriminator, testInput);
     }
 
     @Override
     public void handleEvent(JSONObject event) {
         String type = event.getString(MESSAGE_TYPE);
         String cache = event.getString(MESSAGE_CACHE);
+
+        // Ignore our own messages, as we already have executed them...
+        if (Strings.areEqual(CallContext.getNodeName(), event.getString(NODE_IDENTIFIER))) {
+            return;
+        }
 
         if (Strings.areEqual(type, TYPE_CLEAR)) {
             CacheManager.clearCoherentCacheLocally(cache);
