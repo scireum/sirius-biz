@@ -18,7 +18,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
-import java.util.UUID;
 
 /**
  * Provides a {@link CacheCoherence cache coherence} handler based on the {@link Interconnect}.
@@ -36,8 +35,6 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
     private static final String MESSAGE_DISCRIMINATOR = "discriminator";
     private static final String MESSAGE_TEST_VALUE = "testValue";
     private static final String MESSAGE_NODE = "node";
-
-    private static final String NODE_IDENTIFIER = UUID.randomUUID().toString();
 
     @Part
     private Interconnect interconnect;
@@ -78,7 +75,7 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
         String cache = event.getString(MESSAGE_CACHE);
 
         // Ignore our own messages, as we already have executed them...
-        if (Strings.areEqual(CallContext.getNodeName(), event.getString(NODE_IDENTIFIER))) {
+        if (Strings.areEqual(CallContext.getNodeName(), event.getString(MESSAGE_NODE))) {
             return;
         }
 
