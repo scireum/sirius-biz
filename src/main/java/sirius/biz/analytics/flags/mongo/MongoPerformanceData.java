@@ -55,7 +55,7 @@ public class MongoPerformanceData extends PerformanceData {
      * Creates a constraint to filter on entities which have the given performance flag set.
      *
      * @param flag the flag to check
-     * @return a constraint which can be added to {@link sirius.db.jdbc.SmartQuery#where(SQLConstraint)}
+     * @return a constraint which can be added to {@link sirius.db.mongo.MongoQuery#where(MongoConstraint)}
      */
     public static MongoConstraint filterFlagSet(PerformanceFlag flag) {
         return QueryBuilder.FILTERS.eq(PerformanceFlagged.PERFORMANCE_DATA.inner(FLAGS),
@@ -66,7 +66,7 @@ public class MongoPerformanceData extends PerformanceData {
      * Creates a constraint to filter on entities which have the given performance flag cleared.
      *
      * @param flag the flag to check
-     * @return a constraint which can be added to {@link sirius.db.jdbc.SmartQuery#where(SQLConstraint)}
+     * @return a constraint which can be added to {@link sirius.db.mongo.MongoQuery#where(MongoConstraint)}
      */
     public static MongoConstraint filterFlagClear(PerformanceFlag flag) {
         return QueryBuilder.FILTERS.ne(PerformanceFlagged.PERFORMANCE_DATA.inner(FLAGS),
