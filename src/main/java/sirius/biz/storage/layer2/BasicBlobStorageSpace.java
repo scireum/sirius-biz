@@ -373,8 +373,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             throw new IllegalArgumentException("An empty path was provided!");
         }
 
-        return blobByPathCache.get(determinePathCacheKey(tenantId, path),
-                                   ignored -> fetchOrCreateByPath(tenantId, path));
+        String key = determinePathCacheKey(tenantId, path);
+        Blob blob = blobByPathCache.get(key);
+        if (blob == null) {
+            blobByPathCache.remove(key);
+            blob = blobByPathCache.get(key, ignored -> fetchOrCreateByPath(tenantId, path));
+        }
+        return blob;
     }
 
     protected Blob fetchOrCreateByPath(String tenantId, @Nonnull String path) {
