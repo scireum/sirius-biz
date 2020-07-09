@@ -10,6 +10,7 @@ package sirius.biz.analytics.metrics;
 
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.ToIntFunction;
 
@@ -25,6 +26,7 @@ public class MetricExportInfo {
     private ToIntFunction<Object> extractor;
 
     @Part
+    @Nullable
     private static Metrics metrics;
 
     /**

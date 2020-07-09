@@ -19,10 +19,12 @@ import sirius.db.KeyGenerator;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.ComplexDelete;
+import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Unique;
 import sirius.db.mixing.types.BaseEntityRef;
+import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.commons.Strings;
@@ -45,6 +47,23 @@ import java.util.Optional;
  */
 @Framework(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
 @ComplexDelete(false)
+@Index(name = "blob_normalized_filename_lookup",
+        columns = {"spaceName", "deleted", "normalizedFilename", "parent", "committed"},
+        columnSettings = {Mango.INDEX_ASCENDING,
+                          Mango.INDEX_ASCENDING,
+                          Mango.INDEX_ASCENDING,
+                          Mango.INDEX_ASCENDING,
+                          Mango.INDEX_ASCENDING})
+@Index(name = "blob_filename_lookup",
+        columns = {"spaceName", "deleted", "filename", "parent", "committed"},
+        columnSettings = {Mango.INDEX_ASCENDING,
+                          Mango.INDEX_ASCENDING,
+                          Mango.INDEX_ASCENDING,
+                          Mango.INDEX_ASCENDING,
+                          Mango.INDEX_ASCENDING})
+@Index(name = "blob_reference_lookup",
+        columns = {"spaceName", "deleted", "reference", "referenceDesignator"},
+        columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     @Transient

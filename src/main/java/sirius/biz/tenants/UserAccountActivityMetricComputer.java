@@ -70,6 +70,7 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
     @Override
     public void compute(LocalDate date, U entity) throws Exception {
         LocalDate lowerLimit = date.minusDays(observationPeriodDays);
+
         int numberOfActiveDays = eventRecorder.getDatabase()
                                               .createQuery("SELECT COUNT(DISTINCT eventDate) AS numberOfDays"
                                                            + " FROM useractivityevent"
@@ -79,9 +80,9 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
                                               .set("userId", entity.getUniqueName())
                                               .set("lowerLimit", lowerLimit)
                                               .set("upperLimit", date)
-                                              .queryFirst()
-                                              .getValue("numberOfDays")
-                                              .asInt(0);
+                                              .first()
+                                              .flatMap(row -> row.getValue("numberOfDays").asOptionalInt())
+                                              .orElse(0);
 
         int activityRateInPercent = numberOfActiveDays * 100 / observationPeriodDays;
         metrics.updateMonthlyMetric(entity, METRIC_USER_ACTIVITY, date, activityRateInPercent);

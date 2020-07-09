@@ -17,9 +17,9 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>dev-19.2</sirius.kernel>
-        <sirius.web>dev-29.5.1</sirius.web>
-        <sirius.db>dev-18.7.1</sirius.db>
+        <sirius.kernel>dev-19.3</sirius.kernel>
+        <sirius.web>dev-29.6</sirius.web>
+        <sirius.db>dev-18.9</sirius.db>
     </properties>
 
     <repositories>
@@ -130,6 +130,11 @@
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
             <version>3.6</version>
+        </dependency>
+        <dependency>
+            <groupId>com.rometools</groupId>
+            <artifactId>rome</artifactId>
+            <version>1.11.0</version>
         </dependency>
     </dependencies>
 
