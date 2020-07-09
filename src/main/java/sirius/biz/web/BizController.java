@@ -59,6 +59,12 @@ import java.util.stream.Collectors;
  */
 public class BizController extends BasicController {
 
+    /**
+     * This suffix is used to find hidden input fields which show the presence of an unchecked checkbox which itself
+     * doesn't submit anything back to the server.
+     */
+    private static final String CHECKBOX_PRESENCE_MARKER = "_marker";
+
     @Part
     protected Mixing mixing;
 
@@ -287,9 +293,13 @@ public class BizController extends BasicController {
 
         // If the property is a boolean one, it will most probably handled
         // by a checkbox. As an unchecked checkbox will not submit any value
-        // we still process this property, which is then considered to be
-        // false (matching the unchecked checkbox).
-        return property instanceof BooleanProperty;
+        // we therefore add a hidden field which is signals the presence of the
+        // checkbox. The field is named "property"_marker.
+        if (property instanceof BooleanProperty) {
+            return ctx.hasParameter(property.getName() + CHECKBOX_PRESENCE_MARKER);
+        }
+
+        return false;
     }
 
     private boolean isAutoloaded(Property property) {
