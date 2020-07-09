@@ -15,6 +15,8 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Strings;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,17 +45,13 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
 
     @Override
     public void deleteText(Mapping field, String lang) {
-        Optional<SQLTranslation> translation = fetchTranslation(field, lang);
-        translation.ifPresent(sqlTranslation -> oma.delete(sqlTranslation));
+        fetchTranslation(field, lang).ifPresent(oma::delete);
     }
 
     @Override
     public void deleteAllTexts(Mapping field) {
-        Optional<List<SQLTranslation>> translations = fetchAllTranslations(field);
-        if (translations.isPresent()) {
-            for (SQLTranslation translation : translations.get()) {
-                oma.delete(translation);
-            }
+        for (SQLTranslation translation : fetchAllTranslations(field)) {
+            oma.delete(translation);
         }
     }
 
@@ -91,15 +89,15 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
     }
 
     @Override
-    protected Optional<List<SQLTranslation>> fetchAllTranslations(Mapping field) {
+    protected List<SQLTranslation> fetchAllTranslations(Mapping field) {
         if (field == null) {
-            return Optional.empty();
+            return Collections.emptyList();
         } else {
-            return Optional.of(oma.select(SQLTranslation.class)
-                                  .eq(Translation.OWNER, owner.getUniqueName())
-                                  .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
-                                  .limit(supportedLanguages.size())
-                                  .queryList());
+            return oma.select(SQLTranslation.class)
+                      .eq(Translation.OWNER, owner.getUniqueName())
+                      .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
+                      .limit(supportedLanguages.size())
+                      .queryList();
         }
     }
 }

@@ -144,12 +144,8 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * @return a {@link Map} of all translated texts with corresponding language code as key, empty map if none present
      */
     public Map<String, String> getAllTexts(Mapping field) {
-        Optional<List<T>> translations = fetchAllTranslations(field);
-        if (!translations.isPresent()) {
-            return new HashMap<>();
-        }
         Map<String, String> translatedTexts = new HashMap<>();
-        for (T t : translations.get()) {
+        for (T t : fetchAllTranslations(field)) {
             translatedTexts.put(t.getTranslationData().getLang(), t.getTranslationData().getText());
         }
         return translatedTexts;
@@ -168,7 +164,7 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * Looks up and returns all available {@link Translation translation} entities for the given field
      *
      * @param field {@link Mapping} of the translated field
-     * @return {@link Optional} with a {@link java.util.List} of all {@link Translation translations}, or empty if none are found
+     * @return {@link java.util.List} of all {@link Translation translations}, or empty if none are found
      */
-    protected abstract Optional<List<T>> fetchAllTranslations(Mapping field);
+    protected abstract List<T> fetchAllTranslations(Mapping field);
 }

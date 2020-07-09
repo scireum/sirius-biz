@@ -15,6 +15,8 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Strings;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,11 +51,8 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
 
     @Override
     public void deleteAllTexts(Mapping field) {
-        Optional<List<MongoTranslation>> translations = fetchAllTranslations(field);
-        if (translations.isPresent()) {
-            for (MongoTranslation translation : translations.get()) {
-                mango.delete(translation);
-            }
+        for (MongoTranslation translation : fetchAllTranslations(field)) {
+            mango.delete(translation);
         }
     }
 
@@ -91,15 +90,15 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
     }
 
     @Override
-    protected Optional<List<MongoTranslation>> fetchAllTranslations(Mapping field) {
+    protected List<MongoTranslation> fetchAllTranslations(Mapping field) {
         if (field == null) {
-            return Optional.empty();
+            return Collections.emptyList();
         } else {
-            return Optional.of(mango.select(MongoTranslation.class)
-                                    .eq(Translation.OWNER, owner.getUniqueName())
-                                    .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
-                                    .limit(supportedLanguages.size())
-                                    .queryList());
+            return mango.select(MongoTranslation.class)
+                        .eq(Translation.OWNER, owner.getUniqueName())
+                        .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
+                        .limit(supportedLanguages.size())
+                        .queryList();
         }
     }
 }
