@@ -936,7 +936,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, file.length(), filename);
             if (previousPhysicalId.isPresent()) {
-                blob.fetchVariants().forEach(BlobVariant::delete);
+                purgeBlobVariants(blob);
                 getPhysicalSpace().delete(previousPhysicalId.get());
             }
 
@@ -991,7 +991,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, contentLength, filename);
             if (previousPhysicalId.isPresent()) {
-                blob.fetchVariants().forEach(BlobVariant::delete);
+                purgeBlobVariants(blob);
                 getPhysicalSpace().delete(previousPhysicalId.get());
             }
 
@@ -1013,6 +1013,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                                     spaceName)
                             .handle();
         }
+    }
+
+    private void purgeBlobVariants(B blob) {
+        blob.fetchVariants().forEach(blobVariant -> {
+            blobVariant.delete();
+            blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), blobVariant.getVariantName()));
+        });
     }
 
     /**
