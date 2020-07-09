@@ -45,7 +45,7 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
                               new JSONObject().fluentPut(MESSAGE_TYPE, TYPE_CLEAR)
                                               .fluentPut(MESSAGE_CACHE, cache.getName())
                                               .fluentPut(MESSAGE_NODE, CallContext.getNodeName()));
-        CacheManager.clearCoherentCacheLocally(getName());
+        CacheManager.clearCoherentCacheLocally(cache.getName());
     }
 
     @Override
@@ -55,7 +55,7 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
                                               .fluentPut(MESSAGE_CACHE, cache.getName())
                                               .fluentPut(MESSAGE_KEY, key)
                                               .fluentPut(MESSAGE_NODE, CallContext.getNodeName()));
-        CacheManager.removeCoherentCacheKeyLocally(getName(), key);
+        CacheManager.removeCoherentCacheKeyLocally(cache.getName(), key);
     }
 
     @Override
@@ -66,7 +66,7 @@ public class InterconnectCacheCoherence implements CacheCoherence, InterconnectH
                                               .fluentPut(MESSAGE_DISCRIMINATOR, discriminator)
                                               .fluentPut(MESSAGE_TEST_VALUE, testInput)
                                               .fluentPut(MESSAGE_NODE, CallContext.getNodeName()));
-        CacheManager.coherentCacheRemoveAllLocally(getName(), discriminator, testInput);
+        CacheManager.coherentCacheRemoveAllLocally(cache.getName(), discriminator, testInput);
     }
 
     @Override
