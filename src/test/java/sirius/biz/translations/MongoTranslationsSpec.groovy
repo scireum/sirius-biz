@@ -118,4 +118,17 @@ class MongoTranslationsSpec extends TranslationsSpec {
         then:
         mongoTranslatable.getTranslations().getAllTexts(DESCRIPTION_FIELD).isEmpty()
     }
+
+    def "deleting the owner entity also deletes all associated translations"() {
+        given:
+        mongoTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, GERMAN, GERMAN_TEXT)
+        and:
+        mongoTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, SWEDISH, SWEDISH_TEXT)
+        when:
+        mango.delete(mongoTranslatable)
+        and:
+        List<MongoTranslation> translations = mango.select(MongoTranslation.class).queryList()
+        then:
+        translations.size() == 0
+    }
 }

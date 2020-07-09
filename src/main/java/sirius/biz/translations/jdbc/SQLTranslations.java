@@ -15,7 +15,6 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Strings;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +26,15 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
 
     public SQLTranslations(BaseEntity<?> owner) {
         super(owner);
+    }
+
+    @Override
+    protected void deleteAllTranslations() {
+        for (SQLTranslation t : oma.select(SQLTranslation.class)
+                                   .eq(Translation.OWNER, owner.getUniqueName())
+                                   .queryList()) {
+            oma.delete(t);
+        }
     }
 
     @Override

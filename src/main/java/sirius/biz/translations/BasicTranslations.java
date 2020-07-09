@@ -12,6 +12,7 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.FieldLookupCache;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -43,6 +44,12 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
     protected BasicTranslations(BaseEntity<?> owner) {
         this.owner = owner;
     }
+
+    /**
+     * Ensures that if the owner entity is deleted, all of its translations are deleted as well
+     */
+    @AfterDelete
+    protected abstract void deleteAllTranslations();
 
     /**
      * Provides a validator so translations can only be added for supported languages.

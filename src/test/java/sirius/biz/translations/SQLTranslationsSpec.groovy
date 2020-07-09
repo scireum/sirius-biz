@@ -119,4 +119,17 @@ class SQLTranslationsSpec extends TranslationsSpec {
         then:
         sqlTranslatable.getTranslations().getAllTexts(DESCRIPTION_FIELD).isEmpty()
     }
+
+    def "deleting the owner entity also deletes all associated translations"() {
+        given:
+        sqlTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, GERMAN, GERMAN_TEXT)
+        and:
+        sqlTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, SWEDISH, SWEDISH_TEXT)
+        when:
+        oma.delete(sqlTranslatable)
+        and:
+        List<SQLTranslation> translations = oma.select(SQLTranslation.class).queryList()
+        then:
+        translations.size() == 0
+    }
 }
