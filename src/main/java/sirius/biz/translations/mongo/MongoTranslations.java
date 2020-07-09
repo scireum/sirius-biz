@@ -43,8 +43,7 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
 
     @Override
     public void deleteText(Mapping field, String lang) {
-        Optional<MongoTranslation> translation = fetchTranslation(field, lang);
-        translation.ifPresent(mongoTranslation -> mango.delete(mongoTranslation));
+        fetchTranslation(field, lang).ifPresent(mango::delete);
     }
 
     @Override
