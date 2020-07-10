@@ -293,7 +293,7 @@ public class BizController extends BasicController {
 
         // If the property is a boolean one, it will most probably handled
         // by a checkbox. As an unchecked checkbox will not submit any value
-        // we therefore add a hidden field which is signals the presence of the
+        // we therefore add a hidden field which signals the presence of the
         // checkbox. The field is named "property"_marker.
         if (property instanceof BooleanProperty) {
             return ctx.hasParameter(property.getName() + CHECKBOX_PRESENCE_MARKER);
@@ -614,4 +614,3 @@ public class BizController extends BasicController {
         return true;
     }
 }
-
