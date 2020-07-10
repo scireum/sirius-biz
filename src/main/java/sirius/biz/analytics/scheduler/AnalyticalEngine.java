@@ -200,7 +200,8 @@ public class AnalyticalEngine implements EveryDay {
                                                .fluentPut(CONTEXT_DATE,
                                                           contextDate == null ? LocalDate.now() : contextDate));
 
-        if (contextDate == null || LocalDate.now().equals(contextDate)) {
+        if (scheduler.getInterval() != ScheduleInterval.DAILY && (contextDate == null || LocalDate.now()
+                                                                                                  .equals(contextDate))) {
             flags.storeExecutionFlag(computeExecutionFlagName(scheduler),
                                      EXECUTION_FLAG,
                                      LocalDateTime.now(),
