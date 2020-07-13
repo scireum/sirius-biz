@@ -20,7 +20,6 @@ class MongoTranslationsSpec extends TranslationsSpec {
 
     private static final DESCRIPTION_FIELD = MongoTranslatableTestEntity.DESCRIPTION
 
-    private static MongoTranslation mongoTranslation
     private static MongoTranslatableTestEntity mongoTranslatable
 
     def setupSpec() {

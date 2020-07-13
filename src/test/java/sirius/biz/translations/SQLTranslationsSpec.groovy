@@ -20,7 +20,6 @@ class SQLTranslationsSpec extends TranslationsSpec {
 
     private static final DESCRIPTION_FIELD = SQLTranslatableTestEntity.DESCRIPTION
 
-    private static SQLTranslation sqlTranslation
     private static SQLTranslatableTestEntity sqlTranslatable
 
     def setupSpec() {
