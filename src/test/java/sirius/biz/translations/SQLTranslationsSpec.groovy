@@ -18,7 +18,7 @@ class SQLTranslationsSpec extends TranslationsSpec {
     @Part
     private static OMA oma
 
-    private static final DESCRIPTION_FIELD = MongoTranslatableTestEntity.DESCRIPTION
+    private static final DESCRIPTION_FIELD = SQLTranslatableTestEntity.DESCRIPTION
 
     private static SQLTranslation sqlTranslation
     private static SQLTranslatableTestEntity sqlTranslatable
