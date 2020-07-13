@@ -29,12 +29,8 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
     }
 
     @Override
-    protected void deleteAllTranslations() {
-        for (MongoTranslation t : mango.select(MongoTranslation.class)
-                                       .eq(Translation.OWNER, owner.getUniqueName())
-                                       .queryList()) {
-            mango.delete(t);
-        }
+    protected void removeTranslations() {
+        mango.select(MongoTranslation.class).eq(Translation.OWNER, owner.getUniqueName()).delete();
     }
 
     @Override

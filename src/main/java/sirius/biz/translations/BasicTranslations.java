@@ -49,7 +49,7 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * Ensures that translations are cascaded-deleted upon deletion of the owner entity.
      */
     @AfterDelete
-    protected abstract void deleteAllTranslations();
+    protected abstract void removeTranslations();
 
     /**
      * Provides a validator so translations can only be added for supported languages.

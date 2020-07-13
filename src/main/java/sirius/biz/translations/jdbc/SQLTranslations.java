@@ -29,12 +29,8 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
     }
 
     @Override
-    protected void deleteAllTranslations() {
-        for (SQLTranslation t : oma.select(SQLTranslation.class)
-                                   .eq(Translation.OWNER, owner.getUniqueName())
-                                   .queryList()) {
-            oma.delete(t);
-        }
+    protected void removeTranslations() {
+        oma.select(SQLTranslation.class).eq(Translation.OWNER, owner.getUniqueName()).delete();
     }
 
     @Override
