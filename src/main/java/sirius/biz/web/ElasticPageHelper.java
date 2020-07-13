@@ -227,7 +227,7 @@ public class ElasticPageHelper<E extends ElasticEntity>
     }
 
     private void enhanceWithAggregationCounts(Facet facet) {
-        Map<String, Integer> counters = Tuple.toMap(baseQuery.getAggregationBuckets(facet.getName()));
+        Map<String, Integer> counters = Tuple.toMap(baseQuery.getAggregation(facet.getName()).getTermCounts());
         Iterator<FacetItem> iter = facet.getAllItems().iterator();
         while (iter.hasNext()) {
             FacetItem item = iter.next();
@@ -243,9 +243,10 @@ public class ElasticPageHelper<E extends ElasticEntity>
     }
 
     private void fillWithAggregationResults(Facet facet, ValueComputer<String, String> translator) {
-        for (Tuple<String, Integer> bucket : baseQuery.getAggregationBuckets(facet.getName())) {
-            facet.addItem(bucket.getFirst(), translator.compute(bucket.getFirst()), bucket.getSecond());
-        }
+        baseQuery.getAggregation(facet.getName()).forEachBucket(bucket -> {
+            facet.addItem(bucket.getKey(), translator.compute(bucket.getKey()), bucket.getDocCount());
+        });
+
         if (facet.getItems().isEmpty()) {
             // If we didn't find any aggregation value we have to check if a filter for this
             // facet is active and artificially create an "0" item for this so that it can be
