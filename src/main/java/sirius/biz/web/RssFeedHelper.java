@@ -53,7 +53,7 @@ public class RssFeedHelper {
      *
      * @param feedUrl the URL to fetch the RSS feed from
      * @return a SyndFeed instance for the given URL
-     * @throws IOException if feed can not be read by outcall
+     * @throws IOException   if feed can not be read by outcall
      * @throws FeedException if feed can not be parsed with rome parsers
      */
     public SyndFeed processFeed(String feedUrl) throws IOException, FeedException {

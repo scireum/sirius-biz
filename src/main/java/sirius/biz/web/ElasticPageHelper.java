@@ -8,6 +8,7 @@
 
 package sirius.biz.web;
 
+import sirius.db.es.AggregationBuilder;
 import sirius.db.es.ElasticEntity;
 import sirius.db.es.ElasticQuery;
 import sirius.db.es.constraints.ElasticConstraint;
@@ -68,7 +69,7 @@ public class ElasticPageHelper<E extends ElasticEntity>
         return addTermAggregation(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
                                   field,
                                   null,
-                                  ElasticQuery.DEFAULT_TERM_AGGREGATION_BUCKET_COUNT);
+                                  AggregationBuilder.DEFAULT_TERM_AGGREGATION_BUCKET_COUNT);
     }
 
     /**
@@ -82,7 +83,7 @@ public class ElasticPageHelper<E extends ElasticEntity>
         return addTermAggregation(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
                                   field,
                                   translator,
-                                  ElasticQuery.DEFAULT_TERM_AGGREGATION_BUCKET_COUNT);
+                                  AggregationBuilder.DEFAULT_TERM_AGGREGATION_BUCKET_COUNT);
     }
 
     /**
@@ -100,7 +101,7 @@ public class ElasticPageHelper<E extends ElasticEntity>
                                                  .findFirst()
                                                  .map(Object::toString)
                                                  .orElse(value),
-                                  ElasticQuery.DEFAULT_TERM_AGGREGATION_BUCKET_COUNT);
+                                  AggregationBuilder.DEFAULT_TERM_AGGREGATION_BUCKET_COUNT);
     }
 
     /**

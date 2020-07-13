@@ -933,9 +933,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         String nextPhysicalId = keyGenerator.generateId();
         try {
             getPhysicalSpace().upload(nextPhysicalId, file);
+            blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, file.length(), filename);
             if (previousPhysicalId.isPresent()) {
-                blob.fetchVariants().forEach(BlobVariant::delete);
+                purgeBlobVariants(blob);
                 getPhysicalSpace().delete(previousPhysicalId.get());
             }
 
@@ -987,9 +988,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         String nextPhysicalId = keyGenerator.generateId();
         try {
             getPhysicalSpace().upload(nextPhysicalId, data, contentLength);
+            blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, contentLength, filename);
             if (previousPhysicalId.isPresent()) {
-                blob.fetchVariants().forEach(BlobVariant::delete);
+                purgeBlobVariants(blob);
                 getPhysicalSpace().delete(previousPhysicalId.get());
             }
 
@@ -1011,6 +1013,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                                     spaceName)
                             .handle();
         }
+    }
+
+    private void purgeBlobVariants(B blob) {
+        blob.fetchVariants().forEach(blobVariant -> {
+            blobVariant.delete();
+            blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), blobVariant.getVariantName()));
+        });
     }
 
     /**
@@ -1099,7 +1108,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     @Nullable
     protected String resolvePhysicalKey(String blobKey, String variantName, boolean nonblocking) {
-        String cacheKey = spaceName + "-" + blobKey + "-" + variantName;
+        String cacheKey = buildPhysicalKey(blobKey, variantName);
         String cachedPhysicalKey = blobKeyToPhysicalCache.get(cacheKey);
         if (Strings.isFilled(cachedPhysicalKey)) {
             return cachedPhysicalKey;
@@ -1111,6 +1120,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         return physicalKey;
+    }
+
+    private String buildPhysicalKey(String blobKey, String variantName) {
+        return spaceName + "-" + blobKey + "-" + variantName;
     }
 
     /**
