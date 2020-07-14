@@ -13,6 +13,7 @@ import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.nls.NLS;
 
 import java.time.LocalDate;
 
@@ -30,7 +31,9 @@ public abstract class AnalyticsBatchExecutor implements DistributedTaskExecutor 
     @Override
     public void executeWork(JSONObject context) throws Exception {
         String schedulerName = context.getString(AnalyticalEngine.CONTEXT_SCHEDULER_NAME);
-        LocalDate date = Value.of(context.get(AnalyticalEngine.CONTEXT_DATE)).asLocalDate(LocalDate.now());
+        LocalDate date =
+                Value.of(NLS.parseMachineString(LocalDate.class, context.getString(AnalyticalEngine.CONTEXT_DATE)))
+                     .asLocalDate(LocalDate.now());
         AnalyticsScheduler scheduler = globalContext.findPart(schedulerName, AnalyticsScheduler.class);
         scheduler.executeBatch(context, date);
     }
