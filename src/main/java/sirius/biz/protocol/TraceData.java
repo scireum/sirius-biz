@@ -105,6 +105,7 @@ public class TraceData extends Composite {
      *
      * @return an array of date ranges to create a time aggregation on the last changed date
      * @see sirius.biz.web.MongoPageHelper#addTimeAggregation(Mapping, boolean, DateRange...)
+     * @see sirius.biz.web.ElasticPageHelper#addTimeAggregation(Mapping, boolean, DateRange...)
      */
     public static DateRange[] defaultChangeFilterRanges() {
         return new DateRange[]{DateRange.today(),
