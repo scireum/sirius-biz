@@ -14,6 +14,7 @@ import sirius.db.mixing.FieldLookupCache;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.Transient;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 
@@ -70,10 +71,28 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * @param lang  language code
      * @param text  translated text for the given language
      */
-    public abstract void updateText(Mapping field, String lang, String text);
+    public void updateText(Mapping field, String lang, String text){
+        if (Strings.isEmpty(text)) {
+            deleteText(field, lang);
+            return;
+        }
+
+        T translation = findOrCreateTranslation(field, lang, text);
+
+        translation.getTranslationData().setText(text);
+
+        updateTranslation(translation);
+    }
 
     /**
-     * Deletes the translation for the given field and language
+     * Forwards updates on the given translation entity to the database in use.
+     *
+     * @param translation the translation entity to update
+     */
+    protected abstract void updateTranslation(T translation);
+
+    /**
+     * Deletes the translation for the given field and language.
      *
      * @param field {@link Mapping} of the translated field
      * @param lang  code of the language to be deleted

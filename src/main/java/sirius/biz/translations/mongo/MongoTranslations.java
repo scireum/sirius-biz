@@ -34,16 +34,7 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
     }
 
     @Override
-    public void updateText(Mapping field, String lang, String text) {
-        MongoTranslation translation = findOrCreateTranslation(field, lang, text);
-
-        if (Strings.isEmpty(text)) {
-            deleteText(field, lang);
-            return;
-        }
-
-        translation.getTranslationData().setText(text);
-
+    protected void updateTranslation(MongoTranslation translation) {
         mango.update(translation);
     }
 

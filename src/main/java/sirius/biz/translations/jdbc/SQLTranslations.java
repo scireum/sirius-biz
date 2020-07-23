@@ -34,16 +34,7 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
     }
 
     @Override
-    public void updateText(Mapping field, String lang, String text) {
-        SQLTranslation translation = findOrCreateTranslation(field, lang, text);
-
-        if (Strings.isEmpty(text)) {
-            deleteText(field, lang);
-            return;
-        }
-
-        translation.getTranslationData().setText(text);
-
+    protected void updateTranslation(SQLTranslation translation) {
         oma.update(translation);
     }
 
