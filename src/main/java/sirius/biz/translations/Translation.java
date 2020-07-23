@@ -15,16 +15,9 @@ import sirius.db.mixing.Mapping;
  */
 public interface Translation {
     /**
-     * Contains the unique name of the entity this translation belongs to.
-     */
-    Mapping OWNER = Mapping.named("owner");
-
-    /**
      * Contains a reference to the {@link sirius.db.mixing.Composite} with the actual translation data.
      */
     Mapping TRANSLATION_DATA = Mapping.named("translationData");
 
     TranslationData getTranslationData();
-
-    void setOwner(String owner);
 }

@@ -30,7 +30,7 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
 
     @Override
     protected void removeTranslations() {
-        mango.select(MongoTranslation.class).eq(Translation.OWNER, owner.getUniqueName()).delete();
+        mango.select(MongoTranslation.class).eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName()).delete();
     }
 
     @Override
@@ -71,7 +71,7 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
             return translation.get();
         } else {
             MongoTranslation mongoTranslation = new MongoTranslation();
-            mongoTranslation.setOwner(owner.getUniqueName());
+            mongoTranslation.getTranslationData().setOwner(owner.getUniqueName());
             mongoTranslation.getTranslationData().setField(field.getName());
             mongoTranslation.getTranslationData().setLang(lang);
             return mongoTranslation;
@@ -84,7 +84,7 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
             return Optional.empty();
         } else {
             return Optional.ofNullable(mango.select(MongoTranslation.class)
-                                            .eq(Translation.OWNER, owner.getUniqueName())
+                                            .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
                                             .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD),
                                                 field.getName())
                                             .eq(Translation.TRANSLATION_DATA.inner(TranslationData.LANG), lang)
@@ -98,7 +98,7 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
             return Collections.emptyList();
         } else {
             return mango.select(MongoTranslation.class)
-                        .eq(Translation.OWNER, owner.getUniqueName())
+                        .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
                         .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
                         .limit(supportedLanguages.size())
                         .queryList();

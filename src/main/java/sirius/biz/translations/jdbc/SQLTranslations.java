@@ -30,7 +30,7 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
 
     @Override
     protected void removeTranslations() {
-        oma.select(SQLTranslation.class).eq(Translation.OWNER, owner.getUniqueName()).delete();
+        oma.select(SQLTranslation.class).eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName()).delete();
     }
 
     @Override
@@ -71,7 +71,7 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
             return translation.get();
         } else {
             SQLTranslation sqlTranslation = new SQLTranslation();
-            sqlTranslation.setOwner(owner.getUniqueName());
+            sqlTranslation.getTranslationData().setOwner(owner.getUniqueName());
             sqlTranslation.getTranslationData().setField(field.getName());
             sqlTranslation.getTranslationData().setLang(lang);
             return sqlTranslation;
@@ -84,11 +84,12 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
             return Optional.empty();
         } else {
             return Optional.ofNullable(oma.select(SQLTranslation.class)
-                                          .eq(Translation.OWNER, owner.getUniqueName())
-                                          .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD),
-                                              field.getName())
-                                          .eq(Translation.TRANSLATION_DATA.inner(TranslationData.LANG), lang)
-                                          .queryFirst());
+                                            .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER),
+                                                owner.getUniqueName())
+                                            .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD),
+                                                field.getName())
+                                            .eq(Translation.TRANSLATION_DATA.inner(TranslationData.LANG), lang)
+                                            .queryFirst());
         }
     }
 
@@ -98,7 +99,7 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
             return Collections.emptyList();
         } else {
             return oma.select(SQLTranslation.class)
-                      .eq(Translation.OWNER, owner.getUniqueName())
+                      .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
                       .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
                       .limit(supportedLanguages.size())
                       .queryList();

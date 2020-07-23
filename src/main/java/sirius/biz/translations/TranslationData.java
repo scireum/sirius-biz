@@ -15,6 +15,11 @@ import sirius.db.mixing.Mapping;
  * Represents translation data
  */
 public class TranslationData extends Composite {
+    /**
+     * Contains the unique name of the entity this translation data belongs to.
+     */
+    public static final Mapping OWNER = Mapping.named("owner");
+    private String owner;
 
     /**
      * Represents the name of the translated field (e.g. "name", or "description").
@@ -56,5 +61,9 @@ public class TranslationData extends Composite {
 
     public void setField(String field) {
         this.field = field;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 }
