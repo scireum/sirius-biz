@@ -13,9 +13,8 @@ import sirius.biz.translations.Translation;
 import sirius.biz.translations.TranslationData;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
-import sirius.kernel.commons.Strings;
 
-import java.util.Collections;
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,21 +38,22 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
     }
 
     @Override
-    public void deleteText(Mapping field, String lang) {
+    public void deleteText(@Nonnull Mapping field, String lang) {
         fetchTranslation(field, lang).ifPresent(mango::delete);
     }
 
     @Override
-    public void deleteAllTexts(Mapping field) {
+    public void deleteAllTexts(@Nonnull Mapping field) {
         for (MongoTranslation translation : fetchAllTranslations(field)) {
             mango.delete(translation);
         }
     }
 
     @Override
-    protected MongoTranslation findOrCreateTranslation(Mapping field, String lang, String text) {
+    protected MongoTranslation findOrCreateTranslation(@Nonnull Mapping field, String lang, String text) {
         if (!isSupportedLanguage(lang)) {
-            return null;
+            throw new IllegalArgumentException(
+                    "lang must be a language code supported by the system (supportedLanguages)!");
         }
 
         Optional<MongoTranslation> translation = fetchTranslation(field, lang);
@@ -70,29 +70,20 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
     }
 
     @Override
-    protected Optional<MongoTranslation> fetchTranslation(Mapping field, String lang) {
-        if (field == null) {
-            return Optional.empty();
-        } else {
-            return Optional.ofNullable(mango.select(MongoTranslation.class)
-                                            .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
-                                            .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD),
-                                                field.getName())
-                                            .eq(Translation.TRANSLATION_DATA.inner(TranslationData.LANG), lang)
-                                            .queryFirst());
-        }
+    protected Optional<MongoTranslation> fetchTranslation(@Nonnull Mapping field, String lang) {
+        return mango.select(MongoTranslation.class)
+                    .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
+                    .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
+                    .eq(Translation.TRANSLATION_DATA.inner(TranslationData.LANG), lang)
+                    .first();
     }
 
     @Override
-    protected List<MongoTranslation> fetchAllTranslations(Mapping field) {
-        if (field == null) {
-            return Collections.emptyList();
-        } else {
-            return mango.select(MongoTranslation.class)
-                        .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
-                        .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
-                        .limit(supportedLanguages.size())
-                        .queryList();
-        }
+    protected List<MongoTranslation> fetchAllTranslations(@Nonnull Mapping field) {
+        return mango.select(MongoTranslation.class)
+                    .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
+                    .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
+                    .limit(supportedLanguages.size())
+                    .queryList();
     }
 }

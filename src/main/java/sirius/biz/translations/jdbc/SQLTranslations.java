@@ -13,9 +13,11 @@ import sirius.biz.translations.Translation;
 import sirius.biz.translations.TranslationData;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
-import sirius.kernel.commons.Strings;
+import sirius.db.mixing.Mixing;
+import sirius.kernel.health.Exceptions;
 
-import java.util.Collections;
+import javax.annotation.Nonnull;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,7 +32,9 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
 
     @Override
     protected void removeTranslations() {
-        oma.select(SQLTranslation.class).eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName()).delete();
+        oma.select(SQLTranslation.class)
+           .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
+           .delete();
     }
 
     @Override
@@ -39,21 +43,48 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
     }
 
     @Override
-    public void deleteText(Mapping field, String lang) {
-        fetchTranslation(field, lang).ifPresent(oma::delete);
-    }
-
-    @Override
-    public void deleteAllTexts(Mapping field) {
-        for (SQLTranslation translation : fetchAllTranslations(field)) {
-            oma.delete(translation);
+    public void deleteText(@Nonnull Mapping field, String lang) {
+        try {
+            oma.deleteStatement(SQLTranslation.class)
+               .where(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
+               .where(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
+               .where(Translation.TRANSLATION_DATA.inner(TranslationData.LANG), lang)
+               .executeUpdate();
+        } catch (SQLException e) {
+            throw Exceptions.handle()
+                            .to(Mixing.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Failed to delete a translation text for %s: %s (%s)",
+                                                    owner.getUniqueName(),
+                                                    field.getName(),
+                                                    lang)
+                            .handle();
         }
     }
 
     @Override
-    protected SQLTranslation findOrCreateTranslation(Mapping field, String lang, String text) {
+    public void deleteAllTexts(@Nonnull Mapping field) {
+        try {
+            oma.deleteStatement(SQLTranslation.class)
+               .where(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
+               .where(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
+               .executeUpdate();
+        } catch (SQLException e) {
+            throw Exceptions.handle()
+                            .to(Mixing.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Failed to delete translation texts for %s: %s",
+                                                    owner.getUniqueName(),
+                                                    field.getName())
+                            .handle();
+        }
+    }
+
+    @Override
+    protected SQLTranslation findOrCreateTranslation(@Nonnull Mapping field, String lang, String text) {
         if (!isSupportedLanguage(lang)) {
-            return null;
+            throw new IllegalArgumentException(
+                    "lang must be a language code supported by the system (supportedLanguages)!");
         }
 
         Optional<SQLTranslation> translation = fetchTranslation(field, lang);
@@ -70,30 +101,20 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
     }
 
     @Override
-    protected Optional<SQLTranslation> fetchTranslation(Mapping field, String lang) {
-        if (field == null) {
-            return Optional.empty();
-        } else {
-            return Optional.ofNullable(oma.select(SQLTranslation.class)
-                                            .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER),
-                                                owner.getUniqueName())
-                                            .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD),
-                                                field.getName())
-                                            .eq(Translation.TRANSLATION_DATA.inner(TranslationData.LANG), lang)
-                                            .queryFirst());
-        }
+    protected Optional<SQLTranslation> fetchTranslation(@Nonnull Mapping field, String lang) {
+        return oma.select(SQLTranslation.class)
+                  .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
+                  .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
+                  .eq(Translation.TRANSLATION_DATA.inner(TranslationData.LANG), lang)
+                  .first();
     }
 
     @Override
-    protected List<SQLTranslation> fetchAllTranslations(Mapping field) {
-        if (field == null) {
-            return Collections.emptyList();
-        } else {
-            return oma.select(SQLTranslation.class)
-                      .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
-                      .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
-                      .limit(supportedLanguages.size())
-                      .queryList();
-        }
+    protected List<SQLTranslation> fetchAllTranslations(@Nonnull Mapping field) {
+        return oma.select(SQLTranslation.class)
+                  .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
+                  .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
+                  .limit(supportedLanguages.size())
+                  .queryList();
     }
 }

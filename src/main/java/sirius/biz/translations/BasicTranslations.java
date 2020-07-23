@@ -18,6 +18,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +72,7 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * @param lang  language code
      * @param text  translated text for the given language
      */
-    public void updateText(Mapping field, String lang, String text){
+    public void updateText(@Nonnull Mapping field, String lang, String text) {
         if (Strings.isEmpty(text)) {
             deleteText(field, lang);
             return;
@@ -97,14 +98,14 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * @param field {@link Mapping} of the translated field
      * @param lang  code of the language to be deleted
      */
-    public abstract void deleteText(Mapping field, String lang);
+    public abstract void deleteText(@Nonnull Mapping field, String lang);
 
     /**
-     * Deletes all translations for the given field
+     * Deletes all translations for the given field.
      *
      * @param field {@link Mapping} of the translated field
      */
-    public abstract void deleteAllTexts(Mapping field);
+    public abstract void deleteAllTexts(@Nonnull Mapping field);
 
     /**
      * Checks, if the given language is supported by the system and returns the translation for the given parameters,
@@ -114,8 +115,9 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * @param lang  language code
      * @param text  translated text for the given language
      * @return the translation entity matching the database in use (Mongo or SQL), null if language not supported
+     * @throws IllegalArgumentException if lang is not supported by the system
      */
-    protected abstract T findOrCreateTranslation(Mapping field, String lang, String text);
+    protected abstract T findOrCreateTranslation(@Nonnull Mapping field, String lang, String text);
 
     /**
      * Gets the translated text for the given field and language.
@@ -123,10 +125,12 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * @param field {@link Mapping} of the translated field
      * @param lang  language code
      * @return {@link Optional} with translated text for the given language, or empty if none is found
+     * @throws IllegalArgumentException if lang is not supported by the system
      */
-    public Optional<String> getText(Mapping field, String lang) {
+    public Optional<String> getText(@Nonnull Mapping field, String lang) {
         if (!isSupportedLanguage(lang)) {
-            return Optional.empty();
+            throw new IllegalArgumentException(
+                    "lang must be a language code supported by the system (supportedLanguages)!");
         }
 
         Optional<T> translation = fetchTranslation(field, lang);
@@ -142,7 +146,7 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * @param fallbackLang language code for fallback
      * @return translated text for the given language, fallback, or the default text from owner entity
      */
-    public String getRequiredText(Mapping field, String lang, String fallbackLang) {
+    public String getRequiredText(@Nonnull Mapping field, String lang, String fallbackLang) {
         Optional<String> text = getText(field, lang);
         if (!text.isPresent()) {
             text = getText(field, fallbackLang);
@@ -154,13 +158,19 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
     }
 
     /**
-     * Fetches the default text by querying {@link sirius.db.mixing.FieldLookupCache} for the owner entity's given field.
+     * Fetches the default text by querying the owner entity for the given field. If the direct lookup fails, another
+     * attempt is started against {@link sirius.db.mixing.FieldLookupCache}.
      *
      * @param field {@link Mapping field} to fetch the the text from
-     * @return the text as String, or null if lookup was unsuccessful
+     * @return the text as String, or <tt>""</tt> if lookup was unsuccessful
      */
-    protected String fetchDefaultText(Mapping field) {
-        return fieldLookupCache.lookup(owner.getClass(), owner.getId(), field).asString();
+    protected String fetchDefaultText(@Nonnull Mapping field) {
+        String defaultText = (String) owner.getDescriptor().getProperty(field).getValue(owner);
+        if (!Strings.isEmpty(defaultText)) {
+            return defaultText;
+        } else {
+            return fieldLookupCache.lookup(owner.getClass(), owner.getId(), field).asString();
+        }
     }
 
     /**
@@ -169,7 +179,7 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * @param field {@link Mapping} of the translated field
      * @return a {@link Map} of all translated texts with corresponding language code as key, empty map if none present
      */
-    public Map<String, String> getAllTexts(Mapping field) {
+    public Map<String, String> getAllTexts(@Nonnull Mapping field) {
         Map<String, String> translatedTexts = new HashMap<>();
         for (T t : fetchAllTranslations(field)) {
             translatedTexts.put(t.getTranslationData().getLang(), t.getTranslationData().getText());
@@ -184,13 +194,13 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * @param lang  language code
      * @return the resolved translation entity wrapped as optional or an empty optional if the value couldn't be resolved
      */
-    protected abstract Optional<T> fetchTranslation(Mapping field, String lang);
+    protected abstract Optional<T> fetchTranslation(@Nonnull Mapping field, String lang);
 
     /**
-     * Looks up and returns all available {@link Translation translation} entities for the given field
+     * Looks up and returns all available {@link Translation translation} entities for the given field.
      *
      * @param field {@link Mapping} of the translated field
      * @return {@link java.util.List} of all {@link Translation translations}, or empty if none are found
      */
-    protected abstract List<T> fetchAllTranslations(Mapping field);
+    protected abstract List<T> fetchAllTranslations(@Nonnull Mapping field);
 }
