@@ -8,6 +8,8 @@
 
 package sirius.biz.translations;
 
+import sirius.biz.protocol.JournalData;
+import sirius.biz.protocol.Journaled;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.FieldLookupCache;
@@ -67,6 +69,9 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * Updates the translation for the given field and language, or adds a new translation if it does not exist.
      * <p>
      * Note that an existing translation is deleted when calling this with empty text.
+     * <p>
+     * Also note that this will emit an {@link sirius.biz.protocol.JournalEntry} to
+     * {@link sirius.biz.protocol.Journaled} owners keeping track of the changes made to their translations.
      *
      * @param field {@link Mapping} of the translated field
      * @param lang  language code
@@ -79,10 +84,16 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
         }
 
         T translation = findOrCreateTranslation(field, lang, text);
-
         translation.getTranslationData().setText(text);
-
         updateTranslation(translation);
+
+        if (owner instanceof Journaled) {
+            JournalData.addJournalEntry(owner,
+                                        String.format("Updated translated text for %s (%s): '%s'",
+                                                      field.getName(),
+                                                      lang,
+                                                      text));
+        }
     }
 
     /**
@@ -94,6 +105,9 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
 
     /**
      * Deletes the translation for the given field and language.
+     * <p>
+     * Note that this will also emit an {@link sirius.biz.protocol.JournalEntry} to
+     * {@link sirius.biz.protocol.Journaled} owners keeping track of the changes made to their translations.
      *
      * @param field {@link Mapping} of the translated field
      * @param lang  code of the language to be deleted
@@ -102,6 +116,9 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
 
     /**
      * Deletes all translations for the given field.
+     * <p>
+     * Note that this will also emit an {@link sirius.biz.protocol.JournalEntry} to
+     * {@link sirius.biz.protocol.Journaled} owners keeping track of the changes made to their translations.
      *
      * @param field {@link Mapping} of the translated field
      */

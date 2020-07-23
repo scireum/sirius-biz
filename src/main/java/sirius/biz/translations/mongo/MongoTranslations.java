@@ -8,6 +8,8 @@
 
 package sirius.biz.translations.mongo;
 
+import sirius.biz.protocol.JournalData;
+import sirius.biz.protocol.Journaled;
 import sirius.biz.translations.BasicTranslations;
 import sirius.biz.translations.Translation;
 import sirius.biz.translations.TranslationData;
@@ -29,7 +31,9 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
 
     @Override
     protected void removeTranslations() {
-        mango.select(MongoTranslation.class).eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName()).delete();
+        mango.select(MongoTranslation.class)
+             .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
+             .delete();
     }
 
     @Override
@@ -39,13 +43,22 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
 
     @Override
     public void deleteText(@Nonnull Mapping field, String lang) {
-        fetchTranslation(field, lang).ifPresent(mango::delete);
+        fetchTranslation(field, lang).ifPresent(mongoTranslation -> {
+            mango.delete(mongoTranslation);
+            if (owner instanceof Journaled) {
+                JournalData.addJournalEntry(owner,
+                                            "Deleted translated text for " + field.getName() + " (" + lang + ")");
+            }
+        });
     }
 
     @Override
     public void deleteAllTexts(@Nonnull Mapping field) {
         for (MongoTranslation translation : fetchAllTranslations(field)) {
             mango.delete(translation);
+        }
+        if (owner instanceof Journaled) {
+            JournalData.addJournalEntry(owner, "Deleted all translated texts for " + field.getName());
         }
     }
 

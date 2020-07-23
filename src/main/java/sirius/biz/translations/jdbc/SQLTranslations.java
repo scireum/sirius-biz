@@ -8,6 +8,8 @@
 
 package sirius.biz.translations.jdbc;
 
+import sirius.biz.protocol.JournalData;
+import sirius.biz.protocol.Journaled;
 import sirius.biz.translations.BasicTranslations;
 import sirius.biz.translations.Translation;
 import sirius.biz.translations.TranslationData;
@@ -50,6 +52,11 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
                .where(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
                .where(Translation.TRANSLATION_DATA.inner(TranslationData.LANG), lang)
                .executeUpdate();
+
+            if (owner instanceof Journaled) {
+                JournalData.addJournalEntry(owner,
+                                            "Deleted translated text for " + field.getName() + " (" + lang + ")");
+            }
         } catch (SQLException e) {
             throw Exceptions.handle()
                             .to(Mixing.LOG)
@@ -69,6 +76,10 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
                .where(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
                .where(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
                .executeUpdate();
+
+            if (owner instanceof Journaled) {
+                JournalData.addJournalEntry(owner, "Deleted all translated texts for " + field.getName());
+            }
         } catch (SQLException e) {
             throw Exceptions.handle()
                             .to(Mixing.LOG)
