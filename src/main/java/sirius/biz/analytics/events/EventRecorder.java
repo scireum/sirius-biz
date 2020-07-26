@@ -9,6 +9,7 @@
 package sirius.biz.analytics.events;
 
 import sirius.db.jdbc.Database;
+import sirius.db.jdbc.SQLQuery;
 import sirius.db.jdbc.batch.BatchContext;
 import sirius.db.jdbc.batch.InsertQuery;
 import sirius.db.jdbc.schema.Schema;
@@ -72,8 +73,8 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     private static final int MAX_EVENTS_PER_PROCESS = 16 * 1024;
 
     private LocalDateTime lastProcessed;
-    private AtomicInteger bufferedEvents = new AtomicInteger();
-    private Queue<Event> buffer = new ConcurrentLinkedQueue<>();
+    private final AtomicInteger bufferedEvents = new AtomicInteger();
+    private final Queue<Event> buffer = new ConcurrentLinkedQueue<>();
 
     @Part
     private Schema schema;
@@ -133,6 +134,27 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     @Nullable
     public Database getDatabase() {
         return database;
+    }
+
+    /**
+     * Directly creates a new quey on the datastore used for events.
+     * <p>
+     * This is a Clickhouse database and the given query is automatically marked as potentiall long running to
+     * suppress warnings if the query takes longer than a usual SQL query (which is kind of expected for large
+     * data warehouses).
+     *
+     * @param sql the SQL to execute. Note that this should be a constant string as parameters can later be passed in
+     *            using {@link SQLQuery#set(String, Object)}
+     * @return the given SQL as query based on the given SQL. Might be <tt>null</tt> if no database is configured.
+     * Therefore {@link #isConfigured()} should most probably be checked before using it
+     */
+    @Nullable
+    public SQLQuery createQuery(String sql) {
+        if (database == null) {
+            return null;
+        }
+
+        return getDatabase().createQuery(sql).markAsLongRunning();
     }
 
     /**
