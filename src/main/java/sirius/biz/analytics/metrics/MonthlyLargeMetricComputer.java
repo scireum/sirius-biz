@@ -13,6 +13,8 @@ import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.AutoRegister;
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
+
 /**
  * Provides a base class for monthly metric computation for each entity just like {@link MonthlyMetricComputer}.
  * <p>
@@ -28,5 +30,6 @@ import sirius.kernel.di.std.Part;
 public abstract class MonthlyLargeMetricComputer<E extends BaseEntity<?>> implements AnalyticalTask<E> {
 
     @Part
+    @Nullable
     protected Metrics metrics;
 }
