@@ -125,7 +125,6 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
         return oma.select(SQLTranslation.class)
                   .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
                   .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
-                  .limit(supportedLanguages.size())
                   .queryList();
     }
 }

@@ -96,7 +96,6 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
         return mango.select(MongoTranslation.class)
                     .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
                     .eq(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
-                    .limit(supportedLanguages.size())
                     .queryList();
     }
 }
