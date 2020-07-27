@@ -137,7 +137,7 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     }
 
     /**
-     * Directly creates a new quey on the datastore used for events.
+     * Directly creates a new query on the datastore used for events.
      * <p>
      * This is a Clickhouse database and the given query is automatically marked as potentially long running to
      * suppress warnings if the query takes longer than a usual SQL query (which is kind of expected for large
