@@ -24,6 +24,11 @@ public abstract class SimpleProcessCommand extends ProcessCommand {
 
     private static final String EXECUTE = "execute";
 
+    /**
+     * Generates the title of the process.
+     *
+     * @return the title for the process
+     */
     protected abstract String createBaseTitle();
 
     @Override
@@ -34,6 +39,11 @@ public abstract class SimpleProcessCommand extends ProcessCommand {
         return createBaseTitle() + " (Simulation)";
     }
 
+    /**
+     * Generates a short description of the command.
+     *
+     * @return the description of the command
+     */
     protected abstract String createBaseDescription();
 
     @Override
@@ -61,10 +71,22 @@ public abstract class SimpleProcessCommand extends ProcessCommand {
         }
     }
 
+    /**
+     * Determines if process runs in execute mode and if data altering parts of the command should be executed.
+     *
+     * @param context the context of the process
+     * @return true if data should be altered
+     */
     protected boolean shouldExecute(ProcessContext context) {
         return context.get(EXECUTE).isFilled();
     }
 
+    /**
+     * Determines if process runs as a simulation and data should not be altered.
+     *
+     * @param context the context of the process
+     * @return true if this process runs as a simulation
+     */
     protected boolean isSimulation(ProcessContext context) {
         return !shouldExecute(context);
     }
