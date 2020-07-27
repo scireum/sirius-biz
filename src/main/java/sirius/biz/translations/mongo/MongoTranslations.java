@@ -15,6 +15,8 @@ import sirius.biz.translations.Translation;
 import sirius.biz.translations.TranslationData;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
+import sirius.db.mongo.Mongo;
+import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -28,6 +30,9 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
     public MongoTranslations(BaseEntity<?> owner) {
         super(owner);
     }
+
+    @Part
+    private static Mongo mongo;
 
     @Override
     protected void removeTranslations() {
@@ -43,20 +48,22 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
 
     @Override
     public void deleteText(@Nonnull Mapping field, String lang) {
-        fetchTranslation(field, lang).ifPresent(mongoTranslation -> {
-            mango.delete(mongoTranslation);
-            if (owner instanceof Journaled) {
-                JournalData.addJournalEntry(owner,
-                                            "Deleted translated text for " + field.getName() + " (" + lang + ")");
-            }
-        });
+        mongo.delete()
+             .where(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
+             .where(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
+             .where(Translation.TRANSLATION_DATA.inner(TranslationData.LANG), lang)
+             .singleFrom(MongoTranslation.class);
+        if (owner instanceof Journaled) {
+            JournalData.addJournalEntry(owner, "Deleted translated text for " + field.getName() + " (" + lang + ")");
+        }
     }
 
     @Override
     public void deleteAllTexts(@Nonnull Mapping field) {
-        for (MongoTranslation translation : fetchAllTranslations(field)) {
-            mango.delete(translation);
-        }
+        mongo.delete()
+             .where(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
+             .where(Translation.TRANSLATION_DATA.inner(TranslationData.FIELD), field.getName())
+             .manyFrom(MongoTranslation.class);
         if (owner instanceof Journaled) {
             JournalData.addJournalEntry(owner, "Deleted all translated texts for " + field.getName());
         }
