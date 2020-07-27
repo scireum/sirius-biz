@@ -34,9 +34,18 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
 
     @Override
     protected void removeTranslations() {
-        oma.select(SQLTranslation.class)
-           .eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
-           .delete();
+        try {
+            oma.deleteStatement(SQLTranslation.class)
+               .where(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
+               .executeUpdate();
+        } catch (SQLException e) {
+            throw Exceptions.handle()
+                            .to(Mixing.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Failed to remove translations after deletion of %s",
+                                                    owner.getUniqueName())
+                            .handle();
+        }
     }
 
     @Override
