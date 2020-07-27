@@ -18,7 +18,8 @@ import java.util.Map;
  * Provides the baseline for a simple {@link ProcessCommand} with no arguments.
  * <p>
  * Includes boilerplate for running the command in a simulation unless told to actually execute the command.
- * Implementing classes need to wrap the actual 'real execution' (like db updates/deletes) in an if checking for {@link #shouldExecute(ProcessContext)}.
+ * Implementing classes need to wrap the actual 'real execution' (like db updates/deletes) in an if,
+ * checking for the {@code shouldExecute} method parameter of {@link #executeSimpleProcess(ProcessContext, boolean)}.
  */
 public abstract class SimpleProcessCommand extends ProcessCommand {
 
@@ -51,11 +52,17 @@ public abstract class SimpleProcessCommand extends ProcessCommand {
         return createBaseDescription() + " Only simulates unless '" + EXECUTE + "' is appended.";
     }
 
-    protected abstract void executeSimpleProcess(ProcessContext context);
+    /**
+     * Invoked within the process which is represented as the given {@link ProcessContext}.
+     *
+     * @param context       the execution context of the created process
+     * @param shouldExecute if false, no data should be altered as the process is run as a simulation
+     */
+    protected abstract void executeSimpleProcess(ProcessContext context, boolean shouldExecute);
 
     @Override
     protected void executeProcess(ProcessContext context) {
-        executeSimpleProcess(context);
+        executeSimpleProcess(context, shouldExecute(context));
         if (isSimulation(context)) {
             context.log(ProcessLog.warn()
                                   .withMessage("Process was started as simulation - to actually execute it append '"
