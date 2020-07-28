@@ -208,9 +208,7 @@ public class ProcessController extends BizController {
         processes.markCanceled(process.getId());
 
         // Give ES some time to digest the change before essentially reloading the page...
-        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> {
-            ctx.respondWith().redirectToGet("/ps/" + process.getId());
-        });
+        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> ctx.respondWith().redirectToGet("/ps/" + process.getId()));
     }
 
     /**
@@ -226,9 +224,7 @@ public class ProcessController extends BizController {
         processes.changeDebugging(process.getId(), !process.isDebugging());
 
         // Give ES some time to digest the change before essentially reloading the page...
-        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> {
-            ctx.respondWith().redirectToGet("/ps/" + process.getId());
-        });
+        delayLine.forkDelayed(Tasks.DEFAULT, 1, () -> ctx.respondWith().redirectToGet("/ps/" + process.getId()));
     }
 
     /**
