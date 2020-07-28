@@ -13,7 +13,6 @@ import sirius.biz.analytics.metrics.DailyMetricComputer;
 import sirius.biz.analytics.metrics.MetricsGuaranteedBatchExecutor;
 import sirius.biz.analytics.metrics.MetricsGuaranteedSchedulerExecutor;
 import sirius.biz.analytics.scheduler.AnalyticsBatchExecutor;
-import sirius.biz.analytics.scheduler.AnalyticsScheduler;
 import sirius.biz.analytics.scheduler.AnalyticsSchedulerExecutor;
 import sirius.biz.analytics.scheduler.SQLAnalyticalTaskScheduler;
 import sirius.biz.analytics.scheduler.ScheduleInterval;
@@ -26,7 +25,7 @@ import java.time.LocalDate;
  * Provides the executor which is responsible for scheduling {@link DailyMetricComputer} instances which refer
  * to {@link sirius.db.jdbc.SQLEntity sql entities} on a daily basis.
  */
-@Register(classes = AnalyticsScheduler.class, framework = SQLMetrics.FRAMEWORK_JDBC_METRICS)
+@Register(framework = SQLMetrics.FRAMEWORK_JDBC_METRICS)
 public class SQLGuaranteedDailyMetricScheduler extends SQLAnalyticalTaskScheduler {
 
     @Override

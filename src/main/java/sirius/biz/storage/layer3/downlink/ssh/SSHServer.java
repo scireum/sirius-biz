@@ -23,14 +23,20 @@ import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.Killable;
 import sirius.kernel.Startable;
 import sirius.kernel.Stoppable;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.ConfigValue;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Log;
 import sirius.web.security.MaintenanceInfo;
+import sirius.web.security.ScopeDetector;
+import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -58,6 +64,10 @@ public class SSHServer implements Startable, Stoppable, Killable {
     private String hostKeyFile;
 
     private SshServer server;
+
+    @Part
+    @Nullable
+    private ScopeDetector detector;
 
     @Override
     public int getPriority() {
@@ -119,6 +129,13 @@ public class SSHServer implements Startable, Stoppable, Killable {
             StorageUtils.LOG.FINE("Layer 3/SSH: Incoming auth-request: " + session);
         }
 
+        if (username.contains("\\") && detector != null) {
+            Tuple<String, String> scopeAndUsername = Strings.split(username, "\\");
+            UserContext.get().setCurrentScope(detector.findScopeByName(scopeAndUsername.getFirst()));
+            username = scopeAndUsername.getSecond();
+        }
+
+
         boolean locked =
                 UserContext.getCurrentScope().tryAs(MaintenanceInfo.class).map(MaintenanceInfo::isLocked).orElse(false);
         if (locked) {
@@ -131,6 +148,10 @@ public class SSHServer implements Startable, Stoppable, Killable {
 
         UserInfo authUser = UserContext.get().getUserManager().findUserByCredentials(null, username, password);
         ((BridgeSession) session).attachUser(authUser);
+
+        if (!ScopeInfo.DEFAULT_SCOPE.equals(UserContext.getCurrentScope())) {
+            ((BridgeSession) session).attachScope(UserContext.getCurrentScope().getScopeId());
+        }
 
         return authUser != null;
     }

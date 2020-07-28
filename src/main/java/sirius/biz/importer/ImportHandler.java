@@ -70,7 +70,7 @@ public interface ImportHandler<E extends BaseEntity<?>> {
      *
      * @param data the data used to describe the entity to find
      * @return the matching entity
-     * @throws sirius.kernel.health.HandledException if no matching enttiy was found
+     * @throws sirius.kernel.health.HandledException if no matching entity was found
      */
     E findOrFail(Context data);
 
