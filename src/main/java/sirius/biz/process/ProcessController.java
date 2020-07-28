@@ -31,7 +31,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
-import sirius.web.controller.Controller;
 import sirius.web.controller.Message;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
@@ -166,6 +165,9 @@ public class ProcessController extends BizController {
         ph.addTermAggregation(ProcessLog.TYPE, ProcessLogType.class);
         ph.addTermAggregation(ProcessLog.STATE, ProcessLogState.class);
         ph.addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
+        if (getUser().hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES)) {
+            ph.addBooleanAggregation(ProcessLog.SYSTEM_MESSAGE);
+        }
         ph.addTimeAggregation(ProcessLog.TIMESTAMP,
                               false,
                               DateRange.lastFiveMinutes(),
