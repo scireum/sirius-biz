@@ -28,6 +28,7 @@ import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -256,11 +257,19 @@ public class BizController extends BasicController {
             Property property = entity.getDescriptor().getProperty(columnProperty);
             String propertyName = property.getName();
 
+            // If the parameter is not present in the request we just skip it to prevent resetting the field to null
+            final Value parameterValue = ctx.get(propertyName);
+            if (parameterValue.isNull()) {
+                continue;
+            }
+
             try {
-                property.parseValues(entity, Values.of(ctx.getParameters(propertyName)));
+                property.parseValues(entity,
+                                     Values.of(parameterValue.get(List.class,
+                                                                  Collections.singletonList(parameterValue.get()))));
                 ensureTenantMatch(entity, property);
             } catch (HandledException e) {
-                UserContext.setFieldError(propertyName, ctx.get(propertyName));
+                UserContext.setFieldError(propertyName, parameterValue);
                 UserContext.setErrorMessage(propertyName, e.getMessage());
 
                 hasError = true;
