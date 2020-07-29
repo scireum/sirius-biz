@@ -255,9 +255,9 @@ public class BizController extends BasicController {
             Property property = entity.getDescriptor().getProperty(columnProperty);
             String propertyName = property.getName();
 
-            // If the parameter is not present in the request we just skip it to prevent resetting the field to null
             final Value parameterValue = webContext.get(propertyName);
             if (parameterValue.isNull()) {
+                // If the parameter is not present in the request we just skip it to prevent resetting the field to null
                 continue;
             }
 
