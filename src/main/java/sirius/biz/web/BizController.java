@@ -254,7 +254,7 @@ public class BizController extends BasicController {
         for (Mapping columnProperty : properties) {
             Property property = entity.getDescriptor().getProperty(columnProperty);
 
-            if (tryLoadProperty(webContext, entity, property)) {
+            if (!tryLoadProperty(webContext, entity, property)) {
                 hasError = true;
             }
         }
@@ -270,7 +270,7 @@ public class BizController extends BasicController {
         Value parameterValue = webContext.get(propertyName);
         if (parameterValue.isNull()) {
             // If the parameter is not present in the request we just skip it to prevent resetting the field to null
-            return false;
+            return true;
         }
 
         try {
@@ -281,9 +281,9 @@ public class BizController extends BasicController {
         } catch (HandledException exception) {
             UserContext.setFieldError(propertyName, parameterValue);
             UserContext.setErrorMessage(propertyName, exception.getMessage());
-            return true;
+            return false;
         }
-        return false;
+        return true;
     }
 
     private void ensureTenantMatch(BaseEntity<?> entity, Property property) {
