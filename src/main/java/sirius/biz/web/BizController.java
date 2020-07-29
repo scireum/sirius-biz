@@ -28,6 +28,7 @@ import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Hasher;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -117,11 +118,9 @@ public class BizController extends BasicController {
      * @see Tenants#assertTenant(TenantAware)
      */
     protected void assertTenant(TenantAware tenantAware) {
-        if (tenantAware == null) {
-            return;
+        if (tenantAware != null) {
+            assertTenant(tenantAware.getTenantAsString());
         }
-
-        assertTenant(tenantAware.getTenantAsString());
     }
 
     /**
@@ -177,13 +176,13 @@ public class BizController extends BasicController {
     /**
      * Ensures that the given entity is already persisted in the database.
      *
-     * @param obj the entity to check
+     * @param entity the entity to check
      * @throws sirius.kernel.health.HandledException if the entity is still new and not yet persisted in the database
      */
-    protected void assertNotNew(BaseEntity<?> obj) {
-        assertNotNull(obj);
-        if (obj.isNew()) {
-            throw entityNotNewException(obj.getClass());
+    protected void assertNotNew(BaseEntity<?> entity) {
+        assertNotNull(entity);
+        if (entity.isNew()) {
+            throw entityNotNewException(entity.getClass());
         }
     }
 
@@ -222,47 +221,40 @@ public class BizController extends BasicController {
     /**
      * Fetches all <tt>autoloaded</tt> fields of the given entity from the given request and populates the entity.
      *
-     * @param ctx    the request to read parameters from
-     * @param entity the entity to fill
+     * @param webContext the request to read parameters from
+     * @param entity     the entity to fill
      * @see Autoloaded
      */
-    protected void load(WebContext ctx, BaseEntity<?> entity) {
+    protected void load(WebContext webContext, BaseEntity<?> entity) {
         List<Mapping> columns = entity.getDescriptor()
                                       .getProperties()
                                       .stream()
-                                      .filter(property -> shouldAutoload(ctx, property))
+                                      .filter(property -> shouldAutoload(webContext, property))
                                       .map(Property::getName)
                                       .map(Mapping::named)
                                       .collect(Collectors.toList());
 
-        load(ctx, entity, columns);
+        load(webContext, entity, columns);
     }
 
     /**
      * Reads the given properties from the given request and populates the given entity.
      *
-     * @param ctx        the request to read parameters from
+     * @param webContext the request to read parameters from
      * @param entity     the entity to fill
      * @param properties the list of properties to transfer
      */
-    protected void load(WebContext ctx, BaseEntity<?> entity, Mapping... properties) {
-        load(ctx, entity, Arrays.asList(properties));
+    protected void load(WebContext webContext, BaseEntity<?> entity, Mapping... properties) {
+        load(webContext, entity, Arrays.asList(properties));
     }
 
-    protected void load(WebContext ctx, BaseEntity<?> entity, List<Mapping> properties) {
+    protected void load(WebContext webContext, BaseEntity<?> entity, List<Mapping> properties) {
         boolean hasError = false;
 
         for (Mapping columnProperty : properties) {
             Property property = entity.getDescriptor().getProperty(columnProperty);
-            String propertyName = property.getName();
 
-            try {
-                property.parseValues(entity, Values.of(ctx.getParameters(propertyName)));
-                ensureTenantMatch(entity, property);
-            } catch (HandledException e) {
-                UserContext.setFieldError(propertyName, ctx.get(propertyName));
-                UserContext.setErrorMessage(propertyName, e.getMessage());
-
+            if (!tryLoadProperty(webContext, entity, property)) {
                 hasError = true;
             }
         }
@@ -270,6 +262,28 @@ public class BizController extends BasicController {
         if (hasError) {
             throw Exceptions.createHandled().withNLSKey("BizController.illegalArgument").handle();
         }
+    }
+
+    private boolean tryLoadProperty(WebContext webContext, BaseEntity<?> entity, Property property) {
+        String propertyName = property.getName();
+
+        Value parameterValue = webContext.get(propertyName);
+        if (parameterValue.isNull()) {
+            // If the parameter is not present in the request we just skip it to prevent resetting the field to null
+            return true;
+        }
+
+        try {
+            property.parseValues(entity,
+                                 Values.of(parameterValue.get(List.class,
+                                                              Collections.singletonList(parameterValue.get()))));
+            ensureTenantMatch(entity, property);
+        } catch (HandledException exception) {
+            UserContext.setFieldError(propertyName, parameterValue);
+            UserContext.setErrorMessage(propertyName, exception.getMessage());
+            return false;
+        }
+        return true;
     }
 
     private void ensureTenantMatch(BaseEntity<?> entity, Property property) {
@@ -281,13 +295,13 @@ public class BizController extends BasicController {
         }
     }
 
-    private boolean shouldAutoload(WebContext ctx, Property property) {
+    private boolean shouldAutoload(WebContext webContext, Property property) {
         if (!isAutoloaded(property)) {
             return false;
         }
 
         // If the parameter is present in the request we're good to go
-        if (ctx.hasParameter(property.getName())) {
+        if (webContext.hasParameter(property.getName())) {
             return true;
         }
 
@@ -296,7 +310,7 @@ public class BizController extends BasicController {
         // we therefore add a hidden field which signals the presence of the
         // checkbox. The field is named "property"_marker.
         if (property instanceof BooleanProperty) {
-            return ctx.hasParameter(property.getName() + CHECKBOX_PRESENCE_MARKER);
+            return webContext.hasParameter(property.getName() + CHECKBOX_PRESENCE_MARKER);
         }
 
         return false;
@@ -310,11 +324,11 @@ public class BizController extends BasicController {
     /**
      * Creates a {@link SaveHelper} with provides a fluent API to save an entity into the database.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      * @return a helper used to configure the save process
      */
-    protected SaveHelper prepareSave(WebContext ctx) {
-        return new SaveHelper(this, ctx);
+    protected SaveHelper prepareSave(WebContext webContext) {
+        return new SaveHelper(this, webContext);
     }
 
     /**
@@ -324,12 +338,12 @@ public class BizController extends BasicController {
      * does no longer exist, this call will be ignored. If no valid POST with CSRF token is present,
      * and exception will be thrown.
      *
-     * @param ctx  the current request
-     * @param type the type of entity to delete
-     * @param id   the id of the entity to delete
+     * @param webContext the current request
+     * @param type       the type of entity to delete
+     * @param id         the id of the entity to delete
      */
-    public void deleteEntity(WebContext ctx, Class<? extends BaseEntity<?>> type, String id) {
-        deleteEntity(ctx, tryFindForTenant(type, id));
+    public void deleteEntity(WebContext webContext, Class<? extends BaseEntity<?>> type, String id) {
+        deleteEntity(webContext, tryFindForTenant(type, id));
     }
 
     /**
@@ -338,11 +352,11 @@ public class BizController extends BasicController {
      * If the given optional is empty, this call will be ignored. If no valid POST with CSRF token is present,
      * and exception will be thrown.
      *
-     * @param ctx            the current request
+     * @param webContext     the current request
      * @param optionalEntity the entity to delete (if present)
      */
-    public void deleteEntity(WebContext ctx, Optional<? extends BaseEntity<?>> optionalEntity) {
-        if (ctx.isSafePOST()) {
+    public void deleteEntity(WebContext webContext, Optional<? extends BaseEntity<?>> optionalEntity) {
+        if (webContext.isSafePOST()) {
             optionalEntity.ifPresent(entity -> {
                 if (entity.getDescriptor().isComplexDelete() && processes != null) {
                     deleteComplexEntity(entity);
@@ -385,10 +399,12 @@ public class BizController extends BasicController {
      */
     protected void validate(BaseEntity<?> entity) {
         UserContext userCtx = UserContext.get();
-        if (userCtx.getMessages().stream().noneMatch(msg -> MessageLevel.PROBLEM == msg.getType())) {
-            entity.getMapper().validate(entity).stream().findFirst().ifPresent(msg -> {
-                userCtx.addMessage(Message.warn(msg));
-            });
+        if (userCtx.getMessages().stream().noneMatch(message -> MessageLevel.PROBLEM == message.getType())) {
+            entity.getMapper()
+                  .validate(entity)
+                  .stream()
+                  .findFirst()
+                  .ifPresent(message -> userCtx.addMessage(Message.warn(message)));
         }
     }
 
@@ -408,10 +424,10 @@ public class BizController extends BasicController {
         if (BaseEntity.NEW.equals(id) && BaseEntity.class.isAssignableFrom(type)) {
             try {
                 return type.getDeclaredConstructor().newInstance();
-            } catch (Exception e) {
+            } catch (Exception exception) {
                 throw Exceptions.handle()
                                 .to(LOG)
-                                .error(e)
+                                .error(exception)
                                 .withSystemErrorMessage("Cannot create a new instance of '%s'", type.getName())
                                 .handle();
             }
@@ -550,14 +566,14 @@ public class BizController extends BasicController {
      * <p>
      * In this case, it will mark the according field as errorneous.
      *
-     * @param ex the exception to handle
+     * @param exception the exception to handle
      */
-    protected void handle(Exception ex) {
-        if (ex.getCause() instanceof InvalidFieldException) {
-            UserContext.get().signalFieldError(((InvalidFieldException) ex.getCause()).getField());
+    protected void handle(Exception exception) {
+        if (exception.getCause() instanceof InvalidFieldException) {
+            UserContext.get().signalFieldError(((InvalidFieldException) exception.getCause()).getField());
         }
 
-        UserContext.handle(ex);
+        UserContext.handle(exception);
     }
 
     /**
@@ -600,14 +616,14 @@ public class BizController extends BasicController {
      * Note that if this method returns <tt>false</tt>, the request is already handled and the controller should
      * abort further processing.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      * @return <tt>true</tt> if the link if properly signed, <tt>false</tt> otherwise. In this case a response has
      * already been sent.
      */
-    public static boolean verifySignedLink(WebContext ctx) {
-        String hash = computeURISignature(ctx.getRequestedURI());
-        if (!Strings.areEqual(hash, ctx.get("controllerAuthHash").asString())) {
-            ctx.respondWith().error(HttpResponseStatus.FORBIDDEN, "Security hash does not match!");
+    public static boolean verifySignedLink(WebContext webContext) {
+        String hash = computeURISignature(webContext.getRequestedURI());
+        if (!Strings.areEqual(hash, webContext.get("controllerAuthHash").asString())) {
+            webContext.respondWith().error(HttpResponseStatus.FORBIDDEN, "Security hash does not match!");
             return false;
         }
 
