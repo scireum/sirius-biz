@@ -253,23 +253,8 @@ public class BizController extends BasicController {
 
         for (Mapping columnProperty : properties) {
             Property property = entity.getDescriptor().getProperty(columnProperty);
-            String propertyName = property.getName();
 
-            final Value parameterValue = webContext.get(propertyName);
-            if (parameterValue.isNull()) {
-                // If the parameter is not present in the request we just skip it to prevent resetting the field to null
-                continue;
-            }
-
-            try {
-                property.parseValues(entity,
-                                     Values.of(parameterValue.get(List.class,
-                                                                  Collections.singletonList(parameterValue.get()))));
-                ensureTenantMatch(entity, property);
-            } catch (HandledException exception) {
-                UserContext.setFieldError(propertyName, parameterValue);
-                UserContext.setErrorMessage(propertyName, exception.getMessage());
-
+            if (tryLoadProperty(webContext, entity, property)) {
                 hasError = true;
             }
         }
@@ -277,6 +262,28 @@ public class BizController extends BasicController {
         if (hasError) {
             throw Exceptions.createHandled().withNLSKey("BizController.illegalArgument").handle();
         }
+    }
+
+    private boolean tryLoadProperty(WebContext webContext, BaseEntity<?> entity, Property property) {
+        String propertyName = property.getName();
+
+        Value parameterValue = webContext.get(propertyName);
+        if (parameterValue.isNull()) {
+            // If the parameter is not present in the request we just skip it to prevent resetting the field to null
+            return false;
+        }
+
+        try {
+            property.parseValues(entity,
+                                 Values.of(parameterValue.get(List.class,
+                                                              Collections.singletonList(parameterValue.get()))));
+            ensureTenantMatch(entity, property);
+        } catch (HandledException exception) {
+            UserContext.setFieldError(propertyName, parameterValue);
+            UserContext.setErrorMessage(propertyName, exception.getMessage());
+            return true;
+        }
+        return false;
     }
 
     private void ensureTenantMatch(BaseEntity<?> entity, Property property) {
