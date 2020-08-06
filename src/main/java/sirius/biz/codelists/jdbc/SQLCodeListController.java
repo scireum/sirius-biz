@@ -11,6 +11,7 @@ package sirius.biz.codelists.jdbc;
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListData;
 import sirius.biz.codelists.CodeListEntryData;
+import sirius.biz.translations.jdbc.SQLTranslations;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.SQLPageHelper;
 import sirius.kernel.di.std.Register;
@@ -19,7 +20,7 @@ import sirius.kernel.di.std.Register;
  * Provides the JDBC/SQL implementation of the {@link CodeListController}.
  */
 @Register(framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
-public class SQLCodeListController extends CodeListController<Long, SQLCodeList, SQLCodeListEntry> {
+public class SQLCodeListController extends CodeListController<Long, SQLCodeList, SQLTranslations, SQLCodeListEntry> {
 
     @Override
     protected BasePageHelper<SQLCodeList, ?, ?, ?> getListsAsPage() {

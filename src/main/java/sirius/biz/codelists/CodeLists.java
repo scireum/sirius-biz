@@ -11,6 +11,7 @@ package sirius.biz.codelists;
 import sirius.biz.codelists.jdbc.SQLCodeListEntry;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.Tenants;
+import sirius.biz.translations.BasicTranslations;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.BaseMapper;
 import sirius.db.mixing.Mixing;
@@ -51,7 +52,7 @@ import java.util.Optional;
  * @param <L> the effective entity type used to represent code lists
  * @param <E> the effective entity type used to represent code list entries
  */
-public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L>> {
+public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, T extends BasicTranslations<?>, E extends BaseEntity<I> & CodeListEntry<I, L, T>> {
 
     protected static final String CONFIG_EXTENSION_CODE_LISTS = "code-lists";
     protected static final String CONFIG_KEY_NAME = "name";
@@ -233,7 +234,9 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
         return getCurrentTenant(codeListName).flatMap(tenant -> fetchValueFromCache(tenant, codeListName, code));
     }
 
-    private Optional<Tuple<String, String>> fetchValueFromCache(@Nonnull Tenant<?> tenant, String codeListName, String code) {
+    private Optional<Tuple<String, String>> fetchValueFromCache(@Nonnull Tenant<?> tenant,
+                                                                String codeListName,
+                                                                String code) {
         return valueCache.get(tenant.getIdAsString() + codeListName + "|" + code,
                               ignored -> loadValues(codeListName, code)).asOptional();
     }
