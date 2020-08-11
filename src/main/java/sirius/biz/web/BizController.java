@@ -267,12 +267,11 @@ public class BizController extends BasicController {
     private boolean tryLoadProperty(WebContext webContext, BaseEntity<?> entity, Property property) {
         String propertyName = property.getName();
 
-        Value parameterValue = webContext.get(propertyName);
-        if (parameterValue.isNull()) {
+        if (webContext.hasParameter(propertyName)) {
             // If the parameter is not present in the request we just skip it to prevent resetting the field to null
             return true;
         }
-
+        Value parameterValue = webContext.get(propertyName);
         try {
             property.parseValues(entity,
                                  Values.of(parameterValue.get(List.class,
