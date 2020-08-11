@@ -372,15 +372,13 @@ public class BizController extends BasicController {
                                                                  "fa-trash",
                                                                  PersistencePeriod.THREE_MONTHS,
                                                                  Collections.emptyMap());
-        tasks.defaultExecutor().fork(() -> {
-            processes.execute(processId, process -> {
-                process.log(ProcessLog.info()
-                                      .withNLSKey("BizController.startDelete")
-                                      .withContext("entity", String.valueOf(entity)));
-                entity.getDescriptor().getMapper().delete(entity);
-                process.log(ProcessLog.success().withNLSKey("BizController.deleteCompleted"));
-            });
-        });
+        tasks.defaultExecutor().fork(() -> processes.execute(processId, process -> {
+            process.log(ProcessLog.info()
+                                  .withNLSKey("BizController.startDelete")
+                                  .withContext("entity", String.valueOf(entity)));
+            entity.getDescriptor().getMapper().delete(entity);
+            process.log(ProcessLog.success().withNLSKey("BizController.deleteCompleted"));
+        }));
 
         UserContext.message(Message.info(NLS.get("BizController.deletingInBackground"))
                                    .withAction("/ps/" + processId, NLS.get("BizController.deleteProcess")));
