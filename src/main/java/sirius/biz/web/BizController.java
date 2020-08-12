@@ -267,12 +267,11 @@ public class BizController extends BasicController {
     private boolean tryLoadProperty(WebContext webContext, BaseEntity<?> entity, Property property) {
         String propertyName = property.getName();
 
-        Value parameterValue = webContext.get(propertyName);
-        if (parameterValue.isNull()) {
+        if (!webContext.hasParameter(propertyName)) {
             // If the parameter is not present in the request we just skip it to prevent resetting the field to null
             return true;
         }
-
+        Value parameterValue = webContext.get(propertyName);
         try {
             property.parseValues(entity,
                                  Values.of(parameterValue.get(List.class,
@@ -376,15 +375,13 @@ public class BizController extends BasicController {
                                                                  "fa-trash",
                                                                  PersistencePeriod.THREE_MONTHS,
                                                                  Collections.emptyMap());
-        tasks.defaultExecutor().fork(() -> {
-            processes.execute(processId, process -> {
-                process.log(ProcessLog.info()
-                                      .withNLSKey("BizController.startDelete")
-                                      .withContext("entity", String.valueOf(entity)));
-                entity.getDescriptor().getMapper().delete(entity);
-                process.log(ProcessLog.success().withNLSKey("BizController.deleteCompleted"));
-            });
-        });
+        tasks.defaultExecutor().fork(() -> processes.execute(processId, process -> {
+            process.log(ProcessLog.info()
+                                  .withNLSKey("BizController.startDelete")
+                                  .withContext("entity", String.valueOf(entity)));
+            entity.getDescriptor().getMapper().delete(entity);
+            process.log(ProcessLog.success().withNLSKey("BizController.deleteCompleted"));
+        }));
 
         UserContext.message(Message.info(NLS.get("BizController.deletingInBackground"))
                                    .withAction("/ps/" + processId, NLS.get("BizController.deleteProcess")));
