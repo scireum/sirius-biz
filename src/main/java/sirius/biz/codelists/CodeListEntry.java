@@ -23,6 +23,7 @@ import sirius.kernel.commons.Explain;
  *
  * @param <I> the type of database IDs used by the concrete implementation
  * @param <L> the effective entity type used to represent code lists
+ * @param <T> the effective entity type used to represent translations
  */
 @SuppressWarnings("squid:S1214")
 @Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
