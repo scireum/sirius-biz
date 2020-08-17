@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 public class PrefixTokenizer extends Tokenizer {
 
     /**
-     * Represents a regular expression which detects all character which aren't allowed in a search prefix.
+     * Represents a regular expression which detects all characters which aren't allowed in a search prefix.
      */
     private static final Pattern SPLIT_TOKEN_LEVEL_1 = Pattern.compile("[^\\p{L}\\d_\\-.]");
 

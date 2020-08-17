@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 public abstract class PrefixSearchableEntity extends MongoEntity {
 
     /**
-     * Represents a regular expression which detects all character (except whitespace)
+     * Represents a regular expression which detects all characters (except whitespace)
      * which aren't allowed in a prefix filter.
      *
      * @see sirius.db.mongo.constraints.MongoFilterFactory#prefix(Mapping, String)
