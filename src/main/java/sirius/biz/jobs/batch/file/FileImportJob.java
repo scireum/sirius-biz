@@ -30,9 +30,9 @@ import java.util.zip.ZipInputStream;
  */
 public abstract class FileImportJob extends ImportJob {
 
-    private static final String FILE_EXTENSION_ZIP = "zip";
+    protected static final String FILE_EXTENSION_ZIP = "zip";
 
-    private FileParameter fileParameter;
+    protected FileParameter fileParameter;
 
     /**
      * Creates a new job for the given factory and process context.
@@ -104,7 +104,7 @@ public abstract class FileImportJob extends ImportJob {
         }
     }
 
-    private boolean isHiddenFile(String name) {
+    protected boolean isHiddenFile(String name) {
         String fileName = Files.getFilenameAndExtension(name);
 
         if (Strings.isEmpty(fileName)) {
