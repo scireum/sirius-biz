@@ -58,12 +58,17 @@ public abstract class ArchiveImportJob extends FileImportJob {
         }
     }
 
+    /**
+     * Imports data based on files inside the 'opened' archive.
+     *
+     * @throws Exception in case of a exception during importing
+     */
     protected abstract void importEntries() throws Exception;
 
     /**
      * Fetches an entry from the archive and returns it's input stream.
      * <p>
-     * Note, that previous opened input stream might get closed by performing this action.
+     * Note, that previously opened input stream might get closed by performing this action.
      *
      * @param fileName   the name of the file to fetch
      * @param isRequired flag if the file is required
@@ -114,12 +119,12 @@ public abstract class ArchiveImportJob extends FileImportJob {
 
     @Override
     protected final boolean canHandleFileExtension(@Nullable String fileExtension) {
-        return "zip".equalsIgnoreCase(fileExtension);
+        return FILE_EXTENSION_ZIP.equalsIgnoreCase(fileExtension);
     }
 
     @Override
     protected void executeForStream(String filename, InputStream in) throws Exception {
-        // never called in overwritten execute method
+        throw new UnsupportedOperationException();
     }
 
     @Override
