@@ -12,9 +12,7 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.FileParameter;
-import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Files;
-import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nullable;
@@ -50,30 +48,13 @@ public abstract class ArchiveImportJob extends FileImportJob {
     }
 
     @Override
-    public void execute() throws Exception {
-        VirtualFile file = process.require(fileParameter);
-
-        if (canHandleFileExtension(Value.of(file.fileExtension()).toLowerCase())) {
-            try (FileHandle fileHandle = file.download()) {
-                backupInputFile(file.name(), fileHandle);
-                executeForSingleFile(fileHandle);
-            }
-        } else if (FILE_EXTENSION_ZIP.equalsIgnoreCase(file.fileExtension())) {
-            try (FileHandle fileHandle = file.download()) {
-                backupInputFile(file.name(), fileHandle);
-                executeForArchive(fileHandle);
-            }
-        } else {
-            throw Exceptions.createHandled().withNLSKey("FileImportJob.fileNotSupported").handle();
-        }
-    }
-
-    private void executeForSingleFile(FileHandle fileHandle) throws Exception {
+    protected void executeForSingleFile(FileHandle fileHandle) throws Exception {
         entries.put(fileHandle.getFile().getName(), fileHandle.getInputStream());
         importFiles();
     }
 
-    private void executeForArchive(FileHandle fileHandle) throws Exception {
+    @Override
+    protected void executeForArchive(FileHandle fileHandle) throws Exception {
         process.log(ProcessLog.info().withNLSKey("FileImportJob.importingZipFile"));
 
         try (ZipFile zipFile = new ZipFile(fileHandle.getFile())) {
