@@ -38,24 +38,24 @@ public abstract class ArchiveExportJob extends FileExportJob {
     /**
      * Creates a new entry in the archive and returns its output stream.
      *
-     * @param filename the name of the archived file
+     * @param fileName the name of the archived file
      * @return a new output stream that points to the created entry
      * @throws IOException in case the output stream couln't be created
      */
     @Nonnull
-    protected OutputStream createNextArchiveEntry(String filename) throws IOException {
+    protected OutputStream createEntry(String fileName) throws IOException {
         if (zipOutputStream == null) {
             zipOutputStream = new ZipOutputStream(createOutputStream());
         }
 
-        ZipEntry zipEntry = new ZipEntry(filename);
+        ZipEntry zipEntry = new ZipEntry(fileName);
         zipOutputStream.putNextEntry(zipEntry);
 
         return new CloseShieldOutputStream(zipOutputStream);
     }
 
     @Override
-    protected String determineFileExtension() {
+    protected final String determineFileExtension() {
         return "zip";
     }
 
