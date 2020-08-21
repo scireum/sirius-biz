@@ -29,7 +29,7 @@ import sirius.web.templates.GlobalContextExtender;
 public class BizContextExtender implements GlobalContextExtender {
 
     @Part
-    private CodeLists<?, ?, ?> codeLists;
+    private CodeLists<?, ?, ?, ?> codeLists;
 
     @Part
     private Databases databases;

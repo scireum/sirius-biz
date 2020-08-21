@@ -9,13 +9,14 @@
 package sirius.biz.codelists.mongo;
 
 import sirius.biz.codelists.CodeLists;
+import sirius.biz.translations.mongo.MongoTranslations;
 import sirius.kernel.di.std.Register;
 
 /**
  * Provides the MongoDB implementation of {@link CodeLists}.
  */
 @Register(classes = {CodeLists.class, MongoCodeLists.class}, framework = MongoCodeLists.FRAMEWORK_CODE_LISTS_MONGO)
-public class MongoCodeLists extends CodeLists<String, MongoCodeList, MongoCodeListEntry> {
+public class MongoCodeLists extends CodeLists<String, MongoCodeList, MongoTranslations, MongoCodeListEntry> {
 
     /**
      * Names the framework which must be enabled to activate the code lists feature.

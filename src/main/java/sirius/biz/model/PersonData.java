@@ -87,7 +87,7 @@ public class PersonData extends Composite {
     private String lastname;
 
     @Part
-    private static CodeLists<?, ?, ?> codeLists;
+    private static CodeLists<?, ?, ?, ?> codeLists;
 
     /**
      * Verifies that the given salutation is part of the underlying code list.

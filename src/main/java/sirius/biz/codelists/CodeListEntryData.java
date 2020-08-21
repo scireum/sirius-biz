@@ -83,7 +83,7 @@ public class CodeListEntryData extends Composite {
     private String description;
 
     @Part
-    private static CodeLists<?, ?, ?> codeLists;
+    private static CodeLists<?, ?, ?, ?> codeLists;
 
     @Transient
     private BaseEntity<?> codeListEntry;

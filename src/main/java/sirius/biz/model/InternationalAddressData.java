@@ -41,7 +41,7 @@ public class InternationalAddressData extends AddressData {
     private static final String CODE_LIST_COUNTRIES = "countries";
 
     @Part
-    private static CodeLists<?, ?, ?> codeLists;
+    private static CodeLists<?, ?, ?, ?> codeLists;
 
     /**
      * Contains the country code.
