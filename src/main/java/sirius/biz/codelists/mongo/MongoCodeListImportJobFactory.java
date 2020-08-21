@@ -34,7 +34,21 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
     /**
      * Contains the mongo code list to import the code list entries into.
      */
-    private CodeListParameter codeListParameter = new CodeListParameter("codeList", "$CodeList").markRequired();
+    private static final CodeListParameter CODE_LIST_PARAMETER =
+            new CodeListParameter("codeList", "$CodeList").markRequired();
+    private static final LanguageParameter LANGUAGE_PARAMETER =
+            new LanguageParameter(LanguageParameter.PARAMETER_NAME, "$LocaleData.lang");
+
+    @Override
+    protected EntityImportJob<MongoCodeListEntry> createJob(ProcessContext process) {
+        return new CodeListEntryTranslationImportJob<>(fileParameter,
+                                                       getDictionary(),
+                                                       MongoCodeListEntry.class,
+                                                       process,
+                                                       CODE_LIST_PARAMETER,
+                                                       LANGUAGE_PARAMETER,
+                                                       this.getClass().getName());
+    }
 
     @Nonnull
     @Override
@@ -49,7 +63,8 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
-        parameterCollector.accept(codeListParameter);
+        parameterCollector.accept(CODE_LIST_PARAMETER);
+        parameterCollector.accept(LANGUAGE_PARAMETER);
         super.collectParameters(parameterCollector);
     }
 
@@ -65,6 +80,8 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
 
     @Override
     protected void computePresetFor(QueryString queryString, Object targetObject, Map<String, Object> preset) {
-        preset.put(codeListParameter.getName(), ((MongoCodeList) targetObject).getCodeListData().getCode());
+        preset.put(CODE_LIST_PARAMETER.getName(), ((MongoCodeList) targetObject).getCodeListData().getCode());
+        queryString.get(LANGUAGE_PARAMETER.getName())
+                   .ifFilled(value -> preset.put(LANGUAGE_PARAMETER.getName(), value));
     }
 }
