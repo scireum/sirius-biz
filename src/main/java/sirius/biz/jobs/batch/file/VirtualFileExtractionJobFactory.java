@@ -37,11 +37,10 @@ import java.util.function.Consumer;
 public class VirtualFileExtractionJobFactory extends DefaultBatchProcessFactory {
 
     public static final FileParameter SOURCE_PARAMETER = new FileParameter("sourceParameter",
-                                                                           "$VirtualFileExtractionJobFactory.sourceParameter").withAcceptedExtensionsList(
-            UnzipHelper.getSupportedFileExtensions())
-                                                                                                                       .withDescription(
-                                                                                                                               "$VirtualFileExtractionJobFactory.sourceParameter.help")
-                                                                                                                       .markRequired();
+                                                                           "$VirtualFileExtractionJobFactory.sourceParameter")
+            .withAcceptedExtensionsList(UnzipHelper.getSupportedFileExtensions())
+            .withDescription("$VirtualFileExtractionJobFactory.sourceParameter.help")
+            .markRequired();
 
     public static final FileOrDirectoryParameter DESTINATION_PARAMETER = new FileOrDirectoryParameter(
             "destinationParameter",
@@ -51,7 +50,7 @@ public class VirtualFileExtractionJobFactory extends DefaultBatchProcessFactory 
     public static final BooleanParameter OVERWRITE_EXISTING_FILES_PARAMETER = new BooleanParameter(
             "overwriteExistingFilesParameter",
             "$VirtualFileExtractionJobFactory.overwriteExistingFilesParameter").withDescription(
-            "$VirtualFileExtractionJobFactory.overwriteExistingFilesParameter.help").markRequired();
+            "$VirtualFileExtractionJobFactory.overwriteExistingFilesParameter.help");
 
     @Override
     protected void computePresetFor(@Nonnull QueryString queryString,
