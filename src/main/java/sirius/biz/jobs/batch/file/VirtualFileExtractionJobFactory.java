@@ -69,6 +69,7 @@ public class VirtualFileExtractionJobFactory extends DefaultBatchProcessFactory 
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
         parameterCollector.accept(SOURCE_PARAMETER);
         parameterCollector.accept(DESTINATION_PARAMETER);
+        parameterCollector.accept(OVERWRITE_EXISTING_FILES_PARAMETER);
     }
 
     @Override
