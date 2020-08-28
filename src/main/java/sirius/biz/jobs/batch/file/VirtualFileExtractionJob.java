@@ -88,10 +88,18 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
                                                            VirtualFile targetDirectory) {
         return fileHandle -> {
             File tempFile = fileHandle.getFile();
+            if (!TaskContext.get().isActive()) {
+                Files.delete(tempFile);
+                return;
+            }
+
             try {
                 ArchiveHelper.extract(tempFile,
                                       null,
                                       (status, data, filePath, filesProcessedSoFar, bytesProcessedSoFar, totalBytes) -> {
+                                          if (!TaskContext.get().isActive()) {
+                                              return false;
+                                          }
                                           VirtualFile targetFile =
                                                   vfs.resolve(vfs.makePath(targetDirectory.path(), filePath));
                                           if (targetFile.exists() && !shouldOverwriteExisting) {
