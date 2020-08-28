@@ -93,7 +93,7 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
                                       null,
                                       (status, data, filePath, filesProcessedSoFar, bytesProcessedSoFar, totalBytes) -> {
                                           VirtualFile targetFile =
-                                                  vfs.resolve(vfs.makePath(targetDirectory.name(), filePath));
+                                                  vfs.resolve(vfs.makePath(targetDirectory.path(), filePath));
                                           if (targetFile.exists() && !shouldOverwriteExisting) {
                                               process.log(ProcessLog.info()
                                                                     .withMessage(NLS.fmtr(
@@ -124,14 +124,14 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
         try {
             if (targetFile.exists() && shouldOverwriteExisting) {
                 process.log(ProcessLog.info()
-                                      .withMessage(NLS.fmtr("VirtualFileExtractionJob.extractingFile")
+                                      .withMessage(NLS.fmtr("VirtualFileExtractionJob.overwritingFile")
                                                       .set("filePath", filePath)
                                                       .set(TARGET_PATH, targetFile.path())
                                                       .set("fileSize", NLS.formatSize(data.size()))
                                                       .format()));
             } else {
                 process.log(ProcessLog.info()
-                                      .withMessage(NLS.fmtr("VirtualFileExtractionJob.overwritingFile")
+                                      .withMessage(NLS.fmtr("VirtualFileExtractionJob.extractingFile")
                                                       .set("filePath", filePath)
                                                       .set(TARGET_PATH, targetFile.path())
                                                       .set("fileSize", NLS.formatSize(data.size()))
