@@ -14,13 +14,16 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
+import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.FileOrDirectoryParameter;
 import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.util.ArchiveHelper;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.RateLimit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -31,6 +34,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -62,6 +66,7 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
             "overwriteExistingFilesParameter",
             "$VirtualFileExtractionJob.overwriteExistingFilesParameter").withDescription(
             "$VirtualFileExtractionJob.overwriteExistingFilesParameter.help");
+    private static final String TARGET_PATH = "targetPath";
 
     @Override
     protected void execute(ProcessContext process) throws Exception {
@@ -73,7 +78,15 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
         final VirtualFile targetDirectory =
                 destinationDirectory.orElseGet(() -> vfs.resolve(sourceFile.parent().path()));
 
-        sourceFile.tryDownload().ifPresent(fileHandle -> {
+        sourceFile.tryDownload()
+                  .ifPresent(getArchiveExtractCallback(process, shouldOverwriteExisting, targetDirectory));
+    }
+
+    @Nonnull
+    private Consumer<FileHandle> getArchiveExtractCallback(ProcessContext process,
+                                                           boolean shouldOverwriteExisting,
+                                                           VirtualFile targetDirectory) {
+        return fileHandle -> {
             File tempFile = fileHandle.getFile();
             try {
                 ArchiveHelper.extract(tempFile,
@@ -85,51 +98,14 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
                                               process.log(ProcessLog.info()
                                                                     .withMessage(NLS.fmtr(
                                                                             "VirtualFileExtractionJob.skippingOverwrite")
-                                                                                    .set("targetPath",
-                                                                                         targetFile.path())
+                                                                                    .set(TARGET_PATH, targetFile.path())
                                                                                     .format()));
                                               return false;
                                           }
 
-                                          try {
-                                              if (targetFile.exists() && shouldOverwriteExisting) {
-                                                  process.log(ProcessLog.info()
-                                                                        .withMessage(NLS.fmtr(
-                                                                                "VirtualFileExtractionJob.extractingFile")
-                                                                                        .set("filePath", filePath)
-                                                                                        .set("targetPath",
-                                                                                             targetFile.path())
-                                                                                        .set("fileSize",
-                                                                                             NLS.formatSize(data.size()))
-                                                                                        .format()));
-                                              } else {
-                                                  process.log(ProcessLog.info()
-                                                                        .withMessage(NLS.fmtr(
-                                                                                "VirtualFileExtractionJob.overwritingFile")
-                                                                                        .set("filePath", filePath)
-                                                                                        .set("targetPath",
-                                                                                             targetFile.path())
-                                                                                        .set("fileSize",
-                                                                                             NLS.formatSize(data.size()))
-                                                                                        .format()));
-                                              }
+                                          uploadFile(process, shouldOverwriteExisting, data, filePath, targetFile);
+                                          updateState(status, filesProcessedSoFar, bytesProcessedSoFar, totalBytes);
 
-                                              targetFile.consumeStream(data.openStream(), data.size());
-                                          } catch (IOException e) {
-                                              process.handle(e);
-                                          }
-
-                                          process.log(ProcessLog.info()
-                                                                .withMessage(NLS.fmtr(
-                                                                        "VirtualFileExtractionJob.progress")
-                                                                                .set("status", status)
-                                                                                .set("filesProcessedSoFar",
-                                                                                     filesProcessedSoFar)
-                                                                                .set("dataProcessedSoFar",
-                                                                                     NLS.formatSize(bytesProcessedSoFar))
-                                                                                .set("sizeTotal",
-                                                                                     NLS.formatSize(totalBytes))
-                                                                                .format()));
                                           return true;
                                       });
             } catch (IOException e) {
@@ -137,7 +113,53 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
             } finally {
                 Files.delete(tempFile);
             }
-        });
+        };
+    }
+
+    private void uploadFile(ProcessContext process,
+                            boolean shouldOverwriteExisting,
+                            com.google.common.io.ByteSource data,
+                            String filePath,
+                            VirtualFile targetFile) {
+        try {
+            if (targetFile.exists() && shouldOverwriteExisting) {
+                process.log(ProcessLog.info()
+                                      .withMessage(NLS.fmtr("VirtualFileExtractionJob.extractingFile")
+                                                      .set("filePath", filePath)
+                                                      .set(TARGET_PATH, targetFile.path())
+                                                      .set("fileSize", NLS.formatSize(data.size()))
+                                                      .format()));
+            } else {
+                process.log(ProcessLog.info()
+                                      .withMessage(NLS.fmtr("VirtualFileExtractionJob.overwritingFile")
+                                                      .set("filePath", filePath)
+                                                      .set(TARGET_PATH, targetFile.path())
+                                                      .set("fileSize", NLS.formatSize(data.size()))
+                                                      .format()));
+            }
+
+            try (InputStream inputStream = data.openStream()) {
+                targetFile.consumeStream(inputStream, data.size());
+            }
+        } catch (IOException e) {
+            process.handle(e);
+        }
+    }
+
+    private void updateState(net.sf.sevenzipjbinding.ExtractOperationResult status,
+                             long filesProcessedSoFar,
+                             long bytesProcessedSoFar,
+                             long totalBytes) {
+        TaskContext tc = TaskContext.get();
+        RateLimit stateUpdateLimiter = tc.shouldUpdateState();
+        if (stateUpdateLimiter.check()) {
+            tc.setState(NLS.fmtr("VirtualFileExtractionJob.progress")
+                           .set("status", status)
+                           .set("filesProcessedSoFar", filesProcessedSoFar)
+                           .set("dataProcessedSoFar", NLS.formatSize(bytesProcessedSoFar))
+                           .set("sizeTotal", NLS.formatSize(totalBytes))
+                           .format());
+        }
     }
 
     @Override
