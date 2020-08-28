@@ -20,6 +20,7 @@ import net.sf.sevenzipjbinding.SevenZip;
 import net.sf.sevenzipjbinding.SevenZipException;
 import net.sf.sevenzipjbinding.SevenZipNativeInitializationException;
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
 import sirius.kernel.health.Exceptions;
@@ -42,11 +43,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Utility to handle and unzip archive files like zip, 7z, tar, ...
+ * Utility to handle and extract archive files like zip, 7z, tar, ...
+ * <p>
+ * For a list of supported formats have a look at {@link ArchiveFormat#values()}.
  */
-public class UnzipHelper {
+public class ArchiveHelper {
 
-    private UnzipHelper() {
+    private ArchiveHelper() {
     }
 
     /**
@@ -75,15 +78,14 @@ public class UnzipHelper {
     /**
      * iterates over the items of an archive file
      *
-     * @param tmpFile           the archive file
-     * @param filter            will be called for each archive item. {@code unzipItemCallback} will be only called for
-     *                          this item if this filter unzipItemCallback
-     *                          returns true
-     * @param unzipItemCallback will be called for each archive item until it returns false
+     * @param tmpFile                the archive file
+     * @param filter                 will be called for each archive item. {@code unzipItemCallback} will be only called for this item if this filter unzipItemCallback returns true
+     * @param archiveExtractCallback will be called for each archive item until it returns false
      * @throws IOException on extraction failure
      */
-    public static void unzip(File tmpFile, Function<String, Boolean> filter, UnzipItemCallback unzipItemCallback)
-            throws IOException {
+    public static void extract(File tmpFile,
+                               Function<String, Boolean> filter,
+                               ArchiveExtractCallback archiveExtractCallback) throws IOException {
         try {
             initSevenZipLib();
         } catch (SevenZipNativeInitializationException e) {
@@ -95,7 +97,7 @@ public class UnzipHelper {
             try (IInArchive archive = SevenZip.openInArchive(null, inputStream)) {
                 archive.extract(getCompleteArchiveIndices(archive),
                                 false,
-                                new MyExtractCallback(archive, filter, unzipItemCallback));
+                                new LocalExtractCallback(archive, filter, archiveExtractCallback));
             }
         }
     }
@@ -119,7 +121,7 @@ public class UnzipHelper {
     /**
      * Defines a callback interface used during archive extraction.
      */
-    public interface UnzipItemCallback {
+    public interface ArchiveExtractCallback {
 
         /**
          * Defines a method called for each item being extracted from an archive.
@@ -140,11 +142,11 @@ public class UnzipHelper {
                      long totalBytes);
     }
 
-    private static class MyExtractCallback implements IArchiveExtractCallback {
+    private static class LocalExtractCallback implements IArchiveExtractCallback {
 
         private final IInArchive inArchive;
         private final Function<String, Boolean> filter;
-        private final UnzipItemCallback unzipItemCallback;
+        private final ArchiveExtractCallback archiveExtractCallback;
         private ByteArrayOutputStream buffer;
         private boolean skipExtraction;
         private boolean stop;
@@ -153,15 +155,17 @@ public class UnzipHelper {
         private long bytesProcessedSoFar;
         private long totalBytes;
 
-        MyExtractCallback(IInArchive inArchive, Function<String, Boolean> filter, UnzipItemCallback unzipItemCallback) {
+        LocalExtractCallback(IInArchive inArchive,
+                             Function<String, Boolean> filter,
+                             ArchiveExtractCallback archiveExtractCallback) {
             this.inArchive = inArchive;
             this.filter = filter;
-            this.unzipItemCallback = unzipItemCallback;
+            this.archiveExtractCallback = archiveExtractCallback;
         }
 
         @Override
         public ISequentialOutStream getStream(int index, ExtractAskMode extractAskMode) throws SevenZipException {
-            if (stop || extractAskMode != ExtractAskMode.EXTRACT) {
+            if (stop || extractAskMode != ExtractAskMode.EXTRACT || !TaskContext.get().isActive()) {
                 return null;
             }
 
@@ -296,12 +300,12 @@ public class UnzipHelper {
             }
 
             // if callback returns false -> stop
-            stop = !unzipItemCallback.call(extractOperationResult,
-                                           byteSource,
-                                           filePath,
-                                           filesProcessedSoFar,
-                                           bytesProcessedSoFar,
-                                           totalBytes);
+            stop = !archiveExtractCallback.call(extractOperationResult,
+                                                byteSource,
+                                                filePath,
+                                                filesProcessedSoFar,
+                                                bytesProcessedSoFar,
+                                                totalBytes);
         }
 
         @Override
