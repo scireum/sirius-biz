@@ -8,7 +8,9 @@
 
 package sirius.biz.util;
 
+import com.google.common.io.ByteSource;
 import net.sf.sevenzipjbinding.ArchiveFormat;
+import net.sf.sevenzipjbinding.ExtractOperationResult;
 import net.sf.sevenzipjbinding.IInArchive;
 import net.sf.sevenzipjbinding.SevenZip;
 import net.sf.sevenzipjbinding.SevenZipException;
@@ -25,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -63,14 +66,14 @@ public class ArchiveHelper {
     /**
      * Iterates over the items of an archive file
      *
-     * @param tmpFile                the archive file
-     * @param filter                 will be called for each archive item. {@code unzipItemCallback} will be only called for this item if this filter unzipItemCallback returns true
-     * @param archiveExtractCallback will be called for each archive item until it returns false
+     * @param tmpFile                 the archive file
+     * @param filter                  will be called for each archive item. {@code unzipItemCallback} will be only called for this item if this filter unzipItemCallback returns true
+     * @param progressAndStopProvider will be called for each archive item until it returns false
      * @throws IOException on extraction failure
      */
     public static void extract(File tmpFile,
                                Function<String, Boolean> filter,
-                               ArchiveExtractCallback archiveExtractCallback) throws IOException {
+                               Predicate<ExtractionProgress> progressAndStopProvider) throws IOException {
         try {
             initSevenZipLib();
         } catch (SevenZipNativeInitializationException e) {
@@ -82,7 +85,7 @@ public class ArchiveHelper {
             try (IInArchive archive = SevenZip.openInArchive(null, inputStream)) {
                 archive.extract(getCompleteArchiveIndices(archive),
                                 false,
-                                new LocalArchiveExtractCallback(archive, filter, archiveExtractCallback));
+                                new LocalArchiveExtractCallback(archive, filter, progressAndStopProvider));
             }
         }
     }
@@ -103,4 +106,64 @@ public class ArchiveHelper {
         return indices;
     }
 
+    /**
+     * Provides a progress of a extraction process.
+     */
+    public static class ExtractionProgress {
+
+        private final ExtractOperationResult extractOperationResult;
+        private final ByteSource data;
+        private final String filePath;
+        private final long filesProcessedSoFar;
+        private final long bytesProcessedSoFar;
+        private final long totalBytes;
+
+        /**
+         * Creates a new instance for progress status updates.
+         *
+         * @param extractOperationResult the extraction result of the current file
+         * @param data                   the data of the extracted file
+         * @param filePath               the temp file path to the extracted file on disk
+         * @param filesProcessedSoFar    the number of files processed so far
+         * @param bytesProcessedSoFar    the number of bytes processed so far
+         * @param totalBytes             the number of total bytes the archive has
+         */
+        public ExtractionProgress(ExtractOperationResult extractOperationResult,
+                                  ByteSource data,
+                                  String filePath,
+                                  long filesProcessedSoFar,
+                                  long bytesProcessedSoFar,
+                                  long totalBytes) {
+            this.extractOperationResult = extractOperationResult;
+            this.data = data;
+            this.filePath = filePath;
+            this.filesProcessedSoFar = filesProcessedSoFar;
+            this.bytesProcessedSoFar = bytesProcessedSoFar;
+            this.totalBytes = totalBytes;
+        }
+
+        public ExtractOperationResult getExtractOperationResult() {
+            return extractOperationResult;
+        }
+
+        public ByteSource getData() {
+            return data;
+        }
+
+        public String getFilePath() {
+            return filePath;
+        }
+
+        public long getFilesProcessedSoFar() {
+            return filesProcessedSoFar;
+        }
+
+        public long getBytesProcessedSoFar() {
+            return bytesProcessedSoFar;
+        }
+
+        public long getTotalBytes() {
+            return totalBytes;
+        }
+    }
 }

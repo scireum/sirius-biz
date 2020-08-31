@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.batch.file;
 
+import com.google.common.io.ByteSource;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
@@ -20,11 +21,9 @@ import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
-import sirius.biz.util.ArchiveExtractCallback;
 import sirius.biz.util.ArchiveHelper;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Files;
-import sirius.kernel.commons.RateLimit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -39,6 +38,7 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * Provides a job able to extract archives from the {@link VirtualFileSystem}. The following file extensions are supported: {@link ArchiveHelper#getSupportedFileExtensions()}.
@@ -79,14 +79,13 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
         final VirtualFile targetDirectory =
                 destinationDirectory.orElseGet(() -> vfs.resolve(sourceFile.parent().path()));
 
-        sourceFile.tryDownload()
-                  .ifPresent(getArchiveExtractCallback(process, shouldOverwriteExisting, targetDirectory));
+        sourceFile.tryDownload().ifPresent(handleArchiveExtraction(process, shouldOverwriteExisting, targetDirectory));
     }
 
     @Nonnull
-    private Consumer<FileHandle> getArchiveExtractCallback(ProcessContext process,
-                                                           boolean shouldOverwriteExisting,
-                                                           VirtualFile targetDirectory) {
+    private Consumer<FileHandle> handleArchiveExtraction(ProcessContext process,
+                                                         boolean shouldOverwriteExisting,
+                                                         VirtualFile targetDirectory) {
         return fileHandle -> {
             File tempFile = fileHandle.getFile();
             if (!TaskContext.get().isActive()) {
@@ -97,7 +96,7 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
             try {
                 ArchiveHelper.extract(tempFile,
                                       null,
-                                      processExtractedFile(process, shouldOverwriteExisting, targetDirectory));
+                                      handleFileInArchive(process, shouldOverwriteExisting, targetDirectory));
             } catch (IOException e) {
                 process.handle(e);
             } finally {
@@ -107,24 +106,24 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
     }
 
     @Nonnull
-    private ArchiveExtractCallback processExtractedFile(ProcessContext process,
-                                                        boolean shouldOverwriteExisting,
-                                                        VirtualFile targetDirectory) {
-        return (status, data, filePath, filesProcessedSoFar, bytesProcessedSoFar, totalBytes) -> {
+    private Predicate<ArchiveHelper.ExtractionProgress> handleFileInArchive(ProcessContext process,
+                                                                            boolean shouldOverwriteExisting,
+                                                                            VirtualFile targetDirectory) {
+        return progress -> {
             if (!TaskContext.get().isActive()) {
                 return false;
             }
-            VirtualFile targetFile = vfs.resolve(vfs.makePath(targetDirectory.path(), filePath));
+            VirtualFile targetFile = vfs.resolve(vfs.makePath(targetDirectory.path(), progress.getFilePath()));
             if (targetFile.exists() && !shouldOverwriteExisting) {
                 process.log(ProcessLog.info()
                                       .withMessage(NLS.fmtr("VirtualFileExtractionJob.skippingOverwrite")
                                                       .set(TARGET_PATH, targetFile.path())
                                                       .format()));
-                return false;
+                return true;
             }
 
-            uploadFile(process, shouldOverwriteExisting, data, filePath, targetFile);
-            updateState(status, filesProcessedSoFar, bytesProcessedSoFar, totalBytes);
+            uploadFile(process, shouldOverwriteExisting, progress, targetFile);
+            updateState(progress);
 
             return true;
         };
@@ -132,21 +131,21 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
 
     private void uploadFile(ProcessContext process,
                             boolean shouldOverwriteExisting,
-                            com.google.common.io.ByteSource data,
-                            String filePath,
+                            ArchiveHelper.ExtractionProgress extractionProgress,
                             VirtualFile targetFile) {
         try {
+            ByteSource data = extractionProgress.getData();
             if (targetFile.exists() && shouldOverwriteExisting) {
                 process.log(ProcessLog.info()
                                       .withMessage(NLS.fmtr("VirtualFileExtractionJob.overwritingFile")
-                                                      .set("filePath", filePath)
+                                                      .set("filePath", extractionProgress.getFilePath())
                                                       .set(TARGET_PATH, targetFile.path())
                                                       .set("fileSize", NLS.formatSize(data.size()))
                                                       .format()));
             } else {
                 process.log(ProcessLog.info()
                                       .withMessage(NLS.fmtr("VirtualFileExtractionJob.extractingFile")
-                                                      .set("filePath", filePath)
+                                                      .set("filePath", extractionProgress.getFilePath())
                                                       .set(TARGET_PATH, targetFile.path())
                                                       .set("fileSize", NLS.formatSize(data.size()))
                                                       .format()));
@@ -160,19 +159,16 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
         }
     }
 
-    private void updateState(net.sf.sevenzipjbinding.ExtractOperationResult status,
-                             long filesProcessedSoFar,
-                             long bytesProcessedSoFar,
-                             long totalBytes) {
-        TaskContext context = TaskContext.get();
-        RateLimit stateUpdateLimiter = context.shouldUpdateState();
-        if (stateUpdateLimiter.check()) {
-            context.setState(NLS.fmtr("VirtualFileExtractionJob.progress")
-                                .set("status", status)
-                                .set("filesProcessedSoFar", filesProcessedSoFar)
-                                .set("dataProcessedSoFar", NLS.formatSize(bytesProcessedSoFar))
-                                .set("sizeTotal", NLS.formatSize(totalBytes))
-                                .format());
+    private void updateState(ArchiveHelper.ExtractionProgress extractionProgress) {
+        if (TaskContext.get().shouldUpdateState().check()) {
+            TaskContext.get()
+                       .setState(NLS.fmtr("VirtualFileExtractionJob.progress")
+                                    .set("status", extractionProgress.getExtractOperationResult())
+                                    .set("filesProcessedSoFar", extractionProgress.getFilesProcessedSoFar())
+                                    .set("dataProcessedSoFar",
+                                         NLS.formatSize(extractionProgress.getBytesProcessedSoFar()))
+                                    .set("sizeTotal", NLS.formatSize(extractionProgress.getTotalBytes()))
+                                    .format());
         }
     }
 

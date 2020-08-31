@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Defines an implementation of the {@link IArchiveExtractCallback} to be used during archive extraction.
@@ -37,7 +38,6 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
 
     private final IInArchive inArchive;
     private final Function<String, Boolean> filter;
-    private final ArchiveExtractCallback archiveExtractCallback;
     private ByteArrayOutputStream buffer;
     private boolean skipExtraction;
     private boolean stop;
@@ -45,13 +45,14 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
     private long filesProcessedSoFar;
     private long bytesProcessedSoFar;
     private long totalBytes;
+    private final Predicate<ArchiveHelper.ExtractionProgress> progressAndStopProvider;
 
     LocalArchiveExtractCallback(IInArchive inArchive,
                                 Function<String, Boolean> filter,
-                                ArchiveExtractCallback archiveExtractCallback) {
+                                Predicate<ArchiveHelper.ExtractionProgress> progressAndStopProvider) {
         this.inArchive = inArchive;
         this.filter = filter;
-        this.archiveExtractCallback = archiveExtractCallback;
+        this.progressAndStopProvider = progressAndStopProvider;
     }
 
     @Override
@@ -191,12 +192,12 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
         }
 
         // if callback returns false -> stop
-        stop = !archiveExtractCallback.call(extractOperationResult,
-                                            byteSource,
-                                            filePath,
-                                            filesProcessedSoFar,
-                                            bytesProcessedSoFar,
-                                            totalBytes);
+        stop = !progressAndStopProvider.test(new ArchiveHelper.ExtractionProgress(extractOperationResult,
+                                                                                   byteSource,
+                                                                                   filePath,
+                                                                                   filesProcessedSoFar,
+                                                                                   bytesProcessedSoFar,
+                                                                                   totalBytes));
     }
 
     @Override
