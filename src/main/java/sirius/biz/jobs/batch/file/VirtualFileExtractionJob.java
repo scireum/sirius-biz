@@ -20,6 +20,7 @@ import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
+import sirius.biz.util.ArchiveExtractCallback;
 import sirius.biz.util.ArchiveHelper;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Files;
@@ -96,31 +97,36 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
             try {
                 ArchiveHelper.extract(tempFile,
                                       null,
-                                      (status, data, filePath, filesProcessedSoFar, bytesProcessedSoFar, totalBytes) -> {
-                                          if (!TaskContext.get().isActive()) {
-                                              return false;
-                                          }
-                                          VirtualFile targetFile =
-                                                  vfs.resolve(vfs.makePath(targetDirectory.path(), filePath));
-                                          if (targetFile.exists() && !shouldOverwriteExisting) {
-                                              process.log(ProcessLog.info()
-                                                                    .withMessage(NLS.fmtr(
-                                                                            "VirtualFileExtractionJob.skippingOverwrite")
-                                                                                    .set(TARGET_PATH, targetFile.path())
-                                                                                    .format()));
-                                              return false;
-                                          }
-
-                                          uploadFile(process, shouldOverwriteExisting, data, filePath, targetFile);
-                                          updateState(status, filesProcessedSoFar, bytesProcessedSoFar, totalBytes);
-
-                                          return true;
-                                      });
+                                      processExtractedFile(process, shouldOverwriteExisting, targetDirectory));
             } catch (IOException e) {
                 process.handle(e);
             } finally {
                 Files.delete(tempFile);
             }
+        };
+    }
+
+    @Nonnull
+    private ArchiveExtractCallback processExtractedFile(ProcessContext process,
+                                                        boolean shouldOverwriteExisting,
+                                                        VirtualFile targetDirectory) {
+        return (status, data, filePath, filesProcessedSoFar, bytesProcessedSoFar, totalBytes) -> {
+            if (!TaskContext.get().isActive()) {
+                return false;
+            }
+            VirtualFile targetFile = vfs.resolve(vfs.makePath(targetDirectory.path(), filePath));
+            if (targetFile.exists() && !shouldOverwriteExisting) {
+                process.log(ProcessLog.info()
+                                      .withMessage(NLS.fmtr("VirtualFileExtractionJob.skippingOverwrite")
+                                                      .set(TARGET_PATH, targetFile.path())
+                                                      .format()));
+                return false;
+            }
+
+            uploadFile(process, shouldOverwriteExisting, data, filePath, targetFile);
+            updateState(status, filesProcessedSoFar, bytesProcessedSoFar, totalBytes);
+
+            return true;
         };
     }
 
@@ -158,15 +164,15 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
                              long filesProcessedSoFar,
                              long bytesProcessedSoFar,
                              long totalBytes) {
-        TaskContext tc = TaskContext.get();
-        RateLimit stateUpdateLimiter = tc.shouldUpdateState();
+        TaskContext context = TaskContext.get();
+        RateLimit stateUpdateLimiter = context.shouldUpdateState();
         if (stateUpdateLimiter.check()) {
-            tc.setState(NLS.fmtr("VirtualFileExtractionJob.progress")
-                           .set("status", status)
-                           .set("filesProcessedSoFar", filesProcessedSoFar)
-                           .set("dataProcessedSoFar", NLS.formatSize(bytesProcessedSoFar))
-                           .set("sizeTotal", NLS.formatSize(totalBytes))
-                           .format());
+            context.setState(NLS.fmtr("VirtualFileExtractionJob.progress")
+                                .set("status", status)
+                                .set("filesProcessedSoFar", filesProcessedSoFar)
+                                .set("dataProcessedSoFar", NLS.formatSize(bytesProcessedSoFar))
+                                .set("sizeTotal", NLS.formatSize(totalBytes))
+                                .format());
         }
     }
 
