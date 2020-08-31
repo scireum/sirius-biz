@@ -113,6 +113,7 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
             if (!TaskContext.get().isActive()) {
                 return false;
             }
+            updateState(progress);
             VirtualFile targetFile = vfs.resolve(vfs.makePath(targetDirectory.path(), progress.getFilePath()));
             if (targetFile.exists() && !shouldOverwriteExisting) {
                 process.log(ProcessLog.info()
@@ -123,7 +124,6 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
             }
 
             uploadFile(process, shouldOverwriteExisting, progress, targetFile);
-            updateState(progress);
 
             return true;
         };
