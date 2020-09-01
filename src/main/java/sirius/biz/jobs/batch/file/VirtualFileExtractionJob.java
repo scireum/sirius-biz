@@ -164,9 +164,9 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
             TaskContext.get()
                        .setState(NLS.fmtr("VirtualFileExtractionJob.progress")
                                     .set("status", extractionProgress.getExtractOperationResult())
-                                    .set("filesProcessedSoFar", extractionProgress.getFilesProcessedSoFar())
-                                    .set("dataProcessedSoFar",
-                                         NLS.formatSize(extractionProgress.getBytesProcessedSoFar()))
+                                    .set("filesProcessed", extractionProgress.getFilesProcessed())
+                                    .set("dataProcessed",
+                                         NLS.formatSize(extractionProgress.getBytesProcessed()))
                                     .set("sizeTotal", NLS.formatSize(extractionProgress.getTotalBytes()))
                                     .format());
         }

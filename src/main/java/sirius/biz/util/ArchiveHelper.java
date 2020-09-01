@@ -114,8 +114,8 @@ public class ArchiveHelper {
         private final ExtractOperationResult extractOperationResult;
         private final ByteSource data;
         private final String filePath;
-        private final long filesProcessedSoFar;
-        private final long bytesProcessedSoFar;
+        private final long filesProcessed;
+        private final long bytesProcessed;
         private final long totalBytes;
 
         /**
@@ -124,21 +124,21 @@ public class ArchiveHelper {
          * @param extractOperationResult the extraction result of the current file
          * @param data                   the data of the extracted file
          * @param filePath               the temp file path to the extracted file on disk
-         * @param filesProcessedSoFar    the number of files processed so far
-         * @param bytesProcessedSoFar    the number of bytes processed so far
+         * @param filesProcessed         the number of files processed
+         * @param bytesProcessed         the number of bytes processed
          * @param totalBytes             the number of total bytes the archive has
          */
         public ExtractionProgress(ExtractOperationResult extractOperationResult,
                                   ByteSource data,
                                   String filePath,
-                                  long filesProcessedSoFar,
-                                  long bytesProcessedSoFar,
+                                  long filesProcessed,
+                                  long bytesProcessed,
                                   long totalBytes) {
             this.extractOperationResult = extractOperationResult;
             this.data = data;
             this.filePath = filePath;
-            this.filesProcessedSoFar = filesProcessedSoFar;
-            this.bytesProcessedSoFar = bytesProcessedSoFar;
+            this.filesProcessed = filesProcessed;
+            this.bytesProcessed = bytesProcessed;
             this.totalBytes = totalBytes;
         }
 
@@ -154,12 +154,12 @@ public class ArchiveHelper {
             return filePath;
         }
 
-        public long getFilesProcessedSoFar() {
-            return filesProcessedSoFar;
+        public long getFilesProcessed() {
+            return filesProcessed;
         }
 
-        public long getBytesProcessedSoFar() {
-            return bytesProcessedSoFar;
+        public long getBytesProcessed() {
+            return bytesProcessed;
         }
 
         public long getTotalBytes() {

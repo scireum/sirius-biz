@@ -42,8 +42,8 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
     private boolean skipExtraction;
     private boolean stop;
     private String filePath;
-    private long filesProcessedSoFar;
-    private long bytesProcessedSoFar;
+    private long filesProcessed;
+    private long bytesProcessed;
     private long totalBytes;
     private final Predicate<ArchiveHelper.ExtractionProgress> progressAndStopProvider;
 
@@ -180,7 +180,7 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
         if (stop || skipExtraction) {
             return;
         }
-        filesProcessedSoFar++;
+        filesProcessed++;
         ByteSource byteSource = null;
         if (extractOperationResult == ExtractOperationResult.OK) {
             byteSource = new ByteSource() {
@@ -193,16 +193,16 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
 
         // if callback returns false -> stop
         stop = !progressAndStopProvider.test(new ArchiveHelper.ExtractionProgress(extractOperationResult,
-                                                                                   byteSource,
-                                                                                   filePath,
-                                                                                   filesProcessedSoFar,
-                                                                                   bytesProcessedSoFar,
-                                                                                   totalBytes));
+                                                                                  byteSource,
+                                                                                  filePath,
+                                                                                  filesProcessed,
+                                                                                  bytesProcessed,
+                                                                                  totalBytes));
     }
 
     @Override
     public void setCompleted(long completeValue) throws SevenZipException {
-        bytesProcessedSoFar = completeValue;
+        bytesProcessed = completeValue;
     }
 
     @Override
