@@ -47,10 +47,10 @@ import java.util.function.Predicate;
 public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
 
     @Part
-    private static VirtualFileSystem vfs;
+    private VirtualFileSystem vfs;
 
     @Part
-    private static ArchiveHelper archiveHelper;
+    private ArchiveHelper archiveHelper;
 
     private static final FileParameter SOURCE_PARAMETER = new FileParameter("sourceParameter",
                                                                             "$VirtualFileExtractionJob.sourceParameter")
@@ -79,30 +79,32 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
         final VirtualFile targetDirectory =
                 destinationDirectory.orElseGet(() -> vfs.resolve(sourceFile.parent().path()));
 
-        sourceFile.tryDownload().ifPresent(handleArchiveExtraction(process, shouldOverwriteExisting, targetDirectory));
+        sourceFile.tryDownload()
+                  .ifPresent(handle -> handleArchiveExtraction(process,
+                                                               handle,
+                                                               shouldOverwriteExisting,
+                                                               targetDirectory));
     }
 
-    @Nonnull
-    private Consumer<FileHandle> handleArchiveExtraction(ProcessContext process,
-                                                         boolean shouldOverwriteExisting,
-                                                         VirtualFile targetDirectory) {
-        return fileHandle -> {
-            File tempFile = fileHandle.getFile();
-            if (!TaskContext.get().isActive()) {
-                Files.delete(tempFile);
-                return;
-            }
+    private void handleArchiveExtraction(ProcessContext process,
+                                         FileHandle fileHandle,
+                                         boolean shouldOverwriteExisting,
+                                         VirtualFile targetDirectory) {
+        File tempFile = fileHandle.getFile();
+        if (!TaskContext.get().isActive()) {
+            Files.delete(tempFile);
+            return;
+        }
 
-            try {
-                ArchiveHelper.extract(tempFile,
-                                      null,
-                                      handleFileInArchive(process, shouldOverwriteExisting, targetDirectory));
-            } catch (IOException e) {
-                process.handle(e);
-            } finally {
-                Files.delete(tempFile);
-            }
-        };
+        try {
+            ArchiveHelper.extract(tempFile,
+                                  null,
+                                  handleFileInArchive(process, shouldOverwriteExisting, targetDirectory));
+        } catch (IOException e) {
+            process.handle(e);
+        } finally {
+            Files.delete(tempFile);
+        }
     }
 
     @Nonnull
@@ -165,8 +167,7 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
                        .setState(NLS.fmtr("VirtualFileExtractionJob.progress")
                                     .set("status", extractionProgress.getExtractOperationResult())
                                     .set("filesProcessed", extractionProgress.getFilesProcessed())
-                                    .set("dataProcessed",
-                                         NLS.formatSize(extractionProgress.getBytesProcessed()))
+                                    .set("dataProcessed", NLS.formatSize(extractionProgress.getBytesProcessed()))
                                     .set("sizeTotal", NLS.formatSize(extractionProgress.getTotalBytes()))
                                     .format());
         }
