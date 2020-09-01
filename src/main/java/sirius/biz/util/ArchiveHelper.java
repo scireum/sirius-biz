@@ -66,12 +66,12 @@ public class ArchiveHelper {
     /**
      * Iterates over the items of an archive file
      *
-     * @param tmpFile                 the archive file
+     * @param archiveFile             the archive file to extract
      * @param filter                  will be called for each archive item. {@code unzipItemCallback} will be only called for this item if this filter unzipItemCallback returns true
      * @param progressAndStopProvider will be called for each archive item until it returns false
      * @throws IOException on extraction failure
      */
-    public static void extract(File tmpFile,
+    public static void extract(File archiveFile,
                                Function<String, Boolean> filter,
                                Predicate<ExtractionProgress> progressAndStopProvider) throws IOException {
         try {
@@ -80,7 +80,7 @@ public class ArchiveHelper {
             throw new IOException(NLS.fmtr("XMLImporter.sevenZipInitFailed").set("details", e.getMessage()).format());
         }
 
-        try (RandomAccessFile randomAccessFile = new RandomAccessFile(tmpFile, "r")) {
+        try (RandomAccessFile randomAccessFile = new RandomAccessFile(archiveFile, "r")) {
             RandomAccessFileInStream inputStream = new RandomAccessFileInStream(randomAccessFile);
             try (IInArchive archive = SevenZip.openInArchive(null, inputStream)) {
                 archive.extract(getCompleteArchiveIndices(archive),
