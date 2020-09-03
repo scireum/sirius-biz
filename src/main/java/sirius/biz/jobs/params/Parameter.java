@@ -31,7 +31,7 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
     /**
      * Provides a tri-state value indicating in which log the parameter can appear.
      */
-    private enum LogVisibility {NORMAL, SYSTEM, NONE}
+    public enum LogVisibility {NORMAL, SYSTEM, NONE}
 
     private static final String HIDDEN_TEMPLATE_NAME = "/templates/biz/jobs/params/hidden.html.pasta";
 
@@ -147,25 +147,6 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
 
         return get(context).isPresent();
     }
-
-    /**
-     * Determines if the parameter can appear in the normal log.
-     *
-     * @return <tt>true</tt> if the parameter should be logged, <tt>false</tt> otherwise
-     */
-    public boolean shouldBeNormalLogged() {
-        return this.logVisibility == LogVisibility.NORMAL;
-    }
-
-    /**
-     * Determines if the parameter should only appear in the system log.
-     *
-     * @return <tt>true</tt> if the parameter should be logged, <tt>false</tt> otherwise
-     */
-    public boolean shouldBeSystemLogged() {
-        return this.logVisibility == LogVisibility.SYSTEM;
-    }
-
 
     /**
      * Returns the name of the template used to render the parameter in the UI.
@@ -286,9 +267,18 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
     /**
      * Determines if this parameter is required.
      *
-     * @return <tt>ture</tt> if a value has to be present for this parameter, <tt>false</tt> otherwise
+     * @return <tt>true</tt> if a value has to be present for this parameter, <tt>false</tt> otherwise
      */
     public boolean isRequired() {
         return required;
+    }
+
+    /**
+     * Returns a {@link LogVisibility} value which indicates in which log this parameter should be logged.
+     *
+     * @return an enum value indicating the log behavior of this parameter
+     */
+    public LogVisibility getLogVisibility() {
+        return logVisibility;
     }
 }

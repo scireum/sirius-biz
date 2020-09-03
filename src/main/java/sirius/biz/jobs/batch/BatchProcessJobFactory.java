@@ -27,9 +27,9 @@ import sirius.web.security.UserContext;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 /**
  * Provides a base implementation for batch jobs which are executed as
@@ -218,34 +218,28 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     protected void logParameters(ProcessContext process) {
         List<Parameter<?, ?>> parameters = getParameters();
 
-        StringBuilder output = new StringBuilder();
-        output.append("Parameter:\n\n");
-        appendParameterValues(process, output, parameters, Parameter::shouldBeNormalLogged);
-        process.log(ProcessLog.info().withMessage(output.toString().trim()));
+        makeParameterLog(process, parameters, Parameter.LogVisibility.NORMAL).ifPresent(process::log);
+        makeParameterLog(process, parameters, Parameter.LogVisibility.SYSTEM).ifPresent(processLog -> process.log(
+                processLog.asSystemMessage()));
+    }
 
-        if (parameters.stream().anyMatch(Parameter::shouldBeSystemLogged)) {
-            logSystemParameters(process, parameters);
+    private Optional<ProcessLog> makeParameterLog(ProcessContext process,
+                                                  List<Parameter<?, ?>> parameters,
+                                                  Parameter.LogVisibility logVisibility) {
+        if (parameters.stream().noneMatch(parameter -> logVisibility == parameter.getLogVisibility())) {
+            return Optional.empty();
         }
-    }
-
-    private void logSystemParameters(ProcessContext process, List<Parameter<?, ?>> parameters) {
         StringBuilder output = new StringBuilder();
-        output.append("Systemparameter:\n\n");
-        appendParameterValues(process, output, parameters, Parameter::shouldBeSystemLogged);
-        process.log(ProcessLog.info().asSystemMessage().withMessage(output.toString().trim()));
-    }
+        output.append(NLS.get("ProcessLog.parameterHeading." + logVisibility.name()));
+        output.append(":\n\n");
 
-    private void appendParameterValues(ProcessContext process,
-                                       StringBuilder output,
-                                       List<Parameter<?, ?>> parameters,
-                                       Predicate<Parameter<?, ?>> logFilter) {
-
-        parameters.stream().filter(logFilter).forEach(param -> {
+        parameters.stream().filter(parameter -> logVisibility == parameter.getLogVisibility()).forEach(param -> {
             String value = process.getParameter(param).map(NLS::toUserString).orElse("");
             output.append(param.getLabel());
             output.append(": ");
             output.append(value);
             output.append("\n");
         });
+        return Optional.of(ProcessLog.info().withMessage(output.toString().trim()));
     }
 }
