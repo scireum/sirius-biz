@@ -12,6 +12,7 @@ import com.alibaba.fastjson.JSONObject;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.jobs.BasicJobFactory;
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.ProcessLink;
@@ -24,9 +25,11 @@ import sirius.kernel.nls.NLS;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Provides a base implementation for batch jobs which are executed as
@@ -213,16 +216,36 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     protected abstract BatchJob createJob(ProcessContext process) throws Exception;
 
     protected void logParameters(ProcessContext process) {
+        List<Parameter<?, ?>> parameters = getParameters();
+
         StringBuilder output = new StringBuilder();
         output.append("Parameter:\n\n");
+        appendParameterValues(process, output, parameters, Parameter::shouldBeNormalLogged);
+        process.log(ProcessLog.info().withMessage(output.toString().trim()));
 
-        getParameters().forEach(param -> {
+        if (parameters.stream().anyMatch(Parameter::shouldBeSystemLogged)) {
+            logSystemParameters(process, parameters);
+        }
+    }
+
+    private void logSystemParameters(ProcessContext process, List<Parameter<?, ?>> parameters) {
+        StringBuilder output = new StringBuilder();
+        output.append("Systemparameter:\n\n");
+        appendParameterValues(process, output, parameters, Parameter::shouldBeSystemLogged);
+        process.log(ProcessLog.info().asSystemMessage().withMessage(output.toString().trim()));
+    }
+
+    private void appendParameterValues(ProcessContext process,
+                                       StringBuilder output,
+                                       List<Parameter<?, ?>> parameters,
+                                       Predicate<Parameter<?, ?>> logFilter) {
+
+        parameters.stream().filter(logFilter).forEach(param -> {
             String value = process.getParameter(param).map(NLS::toUserString).orElse("");
             output.append(param.getLabel());
             output.append(": ");
             output.append(value);
             output.append("\n");
         });
-        process.log(ProcessLog.info().withMessage(output.toString().trim()));
     }
 }
