@@ -28,6 +28,11 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      */
     private enum Visibility {NORMAL, ONLY_WITH_VALUE, HIDDEN}
 
+    /**
+     * Provides a tri-state value indicating in which log the parameter can appear.
+     */
+    public enum LogVisibility {NORMAL, SYSTEM, NONE}
+
     private static final String HIDDEN_TEMPLATE_NAME = "/templates/biz/jobs/params/hidden.html.pasta";
 
     protected String name;
@@ -35,6 +40,7 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
     protected String description;
     protected boolean required;
     protected Visibility visibility = Visibility.NORMAL;
+    protected LogVisibility logVisibility = LogVisibility.NORMAL;
 
     /**
      * Creates a new parameter with the given name and label.
@@ -105,10 +111,30 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
     }
 
     /**
+     * Marks this parameter that it should only be logged in the system log.
+     *
+     * @return the parameter itself for fluent method calls
+     */
+    public P logInSystem() {
+        this.logVisibility = LogVisibility.SYSTEM;
+        return self();
+    }
+
+    /**
+     * Marks this parameter that it should not be logged.
+     *
+     * @return the parameter itself for fluent method calls
+     */
+    public P doNotLog() {
+        this.logVisibility = LogVisibility.NONE;
+        return self();
+    }
+
+    /**
      * Determines if the parameter is currently visible.
      *
      * @param context the context containing all parameter values
-     * @return <tt>true</tt> if the parameter is visible, <tt>false</tt> otherwsie
+     * @return <tt>true</tt> if the parameter is visible, <tt>false</tt> otherwise
      */
     public boolean isVisible(Map<String, String> context) {
         if (this.visibility == Visibility.HIDDEN) {
@@ -241,9 +267,18 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
     /**
      * Determines if this parameter is required.
      *
-     * @return <tt>ture</tt> if a value has to be present for this parameter, <tt>false</tt> otherwise
+     * @return <tt>true</tt> if a value has to be present for this parameter, <tt>false</tt> otherwise
      */
     public boolean isRequired() {
         return required;
+    }
+
+    /**
+     * Returns a {@link LogVisibility} value which indicates in which log this parameter should be logged.
+     *
+     * @return an enum value indicating the log behavior of this parameter
+     */
+    public LogVisibility getLogVisibility() {
+        return logVisibility;
     }
 }
