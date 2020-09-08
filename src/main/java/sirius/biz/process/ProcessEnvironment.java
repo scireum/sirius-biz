@@ -34,9 +34,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -51,6 +53,7 @@ class ProcessEnvironment implements ProcessContext {
     private RateLimit logLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
     private RateLimit timingLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
     private Map<String, Average> timings;
+    private Set<String> adminOnlyTimings;
 
     @Part
     private static Processes processes;
@@ -78,23 +81,42 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void addTiming(String counter, long millis) {
+        addTiming(counter, millis, false);
+    }
+
+    @Override
+    public void addTiming(String counter, long millis, boolean adminOnly) {
         getTimings().computeIfAbsent(counter, ignored -> new Average()).addValue(millis);
 
+        if (adminOnly) {
+            getAdminOnlyTimings().add(counter);
+        }
+
         if (timingLimiter.check()) {
-            processes.addTimings(processId, getTimings());
+            processes.addTimings(processId, getTimings(), getAdminOnlyTimings());
         }
     }
 
     @Override
     public void addDebugTiming(String counter, long millis) {
+        addDebugTiming(counter, millis, false);
+    }
+
+    @Override
+    public void addDebugTiming(String counter, long millis, boolean adminOnly) {
         if (isDebugging()) {
-            addTiming(counter, millis);
+            addTiming(counter, millis, adminOnly);
         }
     }
 
     @Override
     public void incCounter(String counter) {
-        addTiming(counter, -1L);
+        incCounter(counter, false);
+    }
+
+    @Override
+    public void incCounter(String counter, boolean adminOnly) {
+        addTiming(counter, -1L, adminOnly);
     }
 
     protected Map<String, Average> getTimings() {
@@ -104,6 +126,14 @@ class ProcessEnvironment implements ProcessContext {
         }
 
         return timings;
+    }
+
+    protected Set<String> getAdminOnlyTimings() {
+        if (adminOnlyTimings == null) {
+            adminOnlyTimings = new HashSet<>();
+        }
+
+        return adminOnlyTimings;
     }
 
     private void loadPreviousTimings() {
@@ -165,7 +195,7 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void markCompleted() {
-        processes.markCompleted(processId, timings);
+        processes.markCompleted(processId, timings, getAdminOnlyTimings());
     }
 
     /**
@@ -173,7 +203,7 @@ class ProcessEnvironment implements ProcessContext {
      */
     protected void flushTimings() {
         if (timings != null) {
-            processes.addTimings(processId, timings);
+            processes.addTimings(processId, getTimings(), getAdminOnlyTimings());
         }
     }
 
