@@ -482,6 +482,28 @@ public class Process extends SearchableEntity {
         return icon;
     }
 
+    /**
+     * Adds or updates the timing with the given name.
+     *
+     * @param name      the name of the timing
+     * @param average   contains the count and average time of the events
+     */
+    public void addTiming(String name, Average average) {
+        performanceCounters.put(name, (int) average.getCount());
+        timings.put(name, (int) average.getAvg());
+    }
+
+    /**
+     * Adds or updates the timing with the given name which is only visible to administrators.
+     *
+     * @param name      the name of the timing
+     * @param average   contains the count and average time of the events
+     */
+    public void addAdminTiming(String name, Average average) {
+        adminPerformanceCounters.put(name, (int) average.getCount());
+        adminTimings.put(name, (int) average.getAvg());
+    }
+
     public String getTitle() {
         return title;
     }

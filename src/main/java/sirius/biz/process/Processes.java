@@ -397,10 +397,10 @@ public class Processes {
             try {
                 elastic.tryUpdate(process);
                 process1stLevelCache.put(processId, process);
-                
+
                 // Trigger a flush of the process ID on every node so the change will be reflected
                 process2ndLevelCache.remove(processId);
-                
+
                 process2ndLevelCache.put(processId, process);
                 return true;
             } catch (OptimisticLockException e) {
@@ -472,11 +472,14 @@ public class Processes {
     /**
      * Marks a process as completed.
      *
-     * @param processId the process to update
-     * @param timings   timing which have been collected and not yet committed
+     * @param processId    the process to update
+     * @param timings      timings which have been collected and not yet committed
+     * @param adminTimings timings which have been collected and not yet committed and only administrators should see
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-    protected boolean markCompleted(String processId, @Nullable Map<String, Average> timings) {
+    protected boolean markCompleted(String processId,
+                                    @Nullable Map<String, Average> timings,
+                                    @Nullable Map<String, Average> adminTimings) {
         return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             if (process.getState() != ProcessState.STANDBY) {
                 process.setState(ProcessState.TERMINATED);
@@ -485,10 +488,11 @@ public class Processes {
             }
 
             if (timings != null) {
-                timings.forEach((key, avg) -> {
-                    process.getPerformanceCounters().put(key, (int) avg.getCount());
-                    process.getTimings().put(key, (int) avg.getAvg());
-                });
+                timings.forEach(process::addTiming);
+            }
+
+            if (adminTimings != null) {
+                adminTimings.forEach(process::addAdminTiming);
             }
         });
     }
@@ -496,17 +500,16 @@ public class Processes {
     /**
      * Updates the performance counters of the given process.
      *
-     * @param processId the process to update
-     * @param timings   the timings (label, value) to store
+     * @param processId    the process to update
+     * @param timings      the timings (label, value) to store
+     * @param adminTimings the set of timings that should only be visible to system tenant users
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-    protected boolean addTimings(String processId, Map<String, Average> timings) {
-        return modify(processId,
-                      process -> process.getState() != ProcessState.TERMINATED,
-                      process -> timings.forEach((key, avg) -> {
-                          process.getPerformanceCounters().put(key, (int) avg.getCount());
-                          process.getTimings().put(key, (int) avg.getAvg());
-                      }));
+    protected boolean addTimings(String processId, Map<String, Average> timings, Map<String, Average> adminTimings) {
+        return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
+            timings.forEach(process::addTiming);
+            adminTimings.forEach(process::addAdminTiming);
+        });
     }
 
     /**
