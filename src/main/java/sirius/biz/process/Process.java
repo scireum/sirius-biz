@@ -13,6 +13,7 @@ import sirius.biz.elastic.SearchableEntity;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.storage.layer2.BlobContainer;
+import sirius.biz.tenants.Tenant;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
@@ -27,12 +28,15 @@ import sirius.db.mixing.types.StringMap;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Average;
 import sirius.kernel.nls.NLS;
+import sirius.web.security.UserContext;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Represents recordings of a background process.
@@ -171,12 +175,28 @@ public class Process extends SearchableEntity {
     private final StringIntMap performanceCounters = new StringIntMap();
 
     /**
-     * Contains performance timiers provided by the process.
+     * Contains performance counters provided by the process that are meant for administrators.
+     * <p>
+     * Each counter contains the number of events recorded.
+     */
+    public static final Mapping ADMIN_COUNTERS = Mapping.named("adminPerformanceCounters");
+    private final StringIntMap adminPerformanceCounters = new StringIntMap();
+
+    /**
+     * Contains performance timers provided by the process.
      * <p>
      * Each timing contains the average execution time in milliseconds.
      */
     public static final Mapping TIMINGS = Mapping.named("timings");
     private final StringIntMap timings = new StringIntMap();
+
+    /**
+     * Contains performance timers provided by the process that are meant for administrators.
+     * <p>
+     * Each timing contains the average execution time in milliseconds.
+     */
+    public static final Mapping ADMIN_TIMINGS = Mapping.named("adminTimings");
+    private final StringIntMap adminTimings = new StringIntMap();
 
     /**
      * Contains the timestamp when the process was started.
@@ -398,12 +418,18 @@ public class Process extends SearchableEntity {
     }
 
     /**
-     * Returns the performance counters as list of tuples (label, value).
+     * Returns the names of counters recorded for this process that the user has access to.
      *
-     * @return the list of performance counters recorded for this process
+     * @return the names of counters recorded for this process that the user has access to
      */
     public Collection<String> getCounterList() {
-        return getPerformanceCounters().data().keySet();
+        Collection<String> collection = new HashSet<>(performanceCounters.data().keySet());
+
+        if (UserContext.getCurrentUser().hasPermission(Tenant.PERMISSION_SYSTEM_TENANT)) {
+            collection.addAll(adminPerformanceCounters.data().keySet());
+        }
+
+        return collection;
     }
 
     /**
@@ -423,7 +449,7 @@ public class Process extends SearchableEntity {
      * @return the count value of the given counter
      */
     public String getCounterValue(String name) {
-        return String.valueOf(performanceCounters.get(name).orElse(0));
+        return String.valueOf(performanceCounters.get(name).orElse(adminPerformanceCounters.get(name).orElse(0)));
     }
 
     /**
@@ -434,7 +460,9 @@ public class Process extends SearchableEntity {
      * is zero or less
      */
     public String getCounterTiming(String name) {
-        return timings.get(name).filter(value -> value > 0).map(value -> Strings.apply("%s ms", value)).orElse("");
+        Integer counter = timings.get(name).orElse(adminTimings.get(name).orElse(0));
+
+        return counter > 0 ? Strings.apply("%s ms", counter) : "";
     }
 
     /**
@@ -518,8 +546,16 @@ public class Process extends SearchableEntity {
         return performanceCounters;
     }
 
+    public StringIntMap getAdminPerformanceCounters() {
+        return adminPerformanceCounters;
+    }
+
     public StringIntMap getTimings() {
         return timings;
+    }
+
+    public StringIntMap getAdminTimings() {
+        return adminTimings;
     }
 
     public LocalDateTime getStarted() {
