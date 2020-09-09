@@ -75,11 +75,34 @@ public interface ProcessContext extends TaskContextAdapter {
     void addDebugTiming(String counter, long millis);
 
     /**
+     * Increments the given performance counter by one and supplies a loop duration in milliseconds if the current
+     * process has debugging enabled.
+     * <p>
+     * The average value will be computed for the given counter and gives the user a rough estimate what the current
+     * task is doing.
+     *
+     * @param counter   the counter to increment
+     * @param millis    the current duration for the block being counted
+     * @param adminOnly whether to show the timing only to administrators instead of all users
+     * @see Process#DEBUGGING
+     * @see Processes#changeDebugging(String, boolean)
+     */
+    void addDebugTiming(String counter, long millis, boolean adminOnly);
+
+    /**
      * Increments the given performance counter by one.
      *
      * @param counter the counter to increment
      */
     void incCounter(String counter);
+
+    /**
+     * Increments the given performance counter by one.
+     *
+     * @param counter the counter to increment
+     * @param adminOnly whether to show the timing only to administrators instead of all users
+     */
+    void incCounter(String counter, boolean adminOnly);
 
     /**
      * Handles the given exception.
