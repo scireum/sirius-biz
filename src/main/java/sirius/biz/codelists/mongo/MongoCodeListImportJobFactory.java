@@ -106,7 +106,7 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
                                                   String factoryName) {
             super(fileParameter, ignoreEmptyParameter, importModeParameter, type, dictionary, process, factoryName);
             this.codeList = process.require(codeListParameter);
-            this.language = process.getParameter(LANGUAGE_PARAMETER);
+            this.language = process.getParameter(languageParameter);
         }
 
         @Override
@@ -116,34 +116,32 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
         }
 
         /**
-         * Checks, if the code of the given CodeListEntry is already in its parent CodeList.
-         * If yes, adds a new translation for the description of the existing CodeListEntry instead of creating a new entry.
-         * Continues with normal import execution otherwise.
+         * A new {@link CodeListEntry} only has to be created, if it is not yet present in the selected {@link CodeList}.
+         * <p>
+         * If a language is selected for the import, updates {@link sirius.biz.translations.Translation Translations}
+         * for the {@link CodeListEntry}'s description.
          *
-         * @param entity
-         * @return
+         * @param entity  the entity to persist
+         * @param context the row represented as context
          */
         @Override
-        protected boolean shouldSkip(E entity) {
-            boolean shouldSkip = super.shouldSkip(entity);
-
-            if (language.isPresent()) {
-                if (codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
-                             .isPresent()) {
-                    // strip language code from text provided in LanguageParameter (e.g. "deu" from "Deutsch (deu)")
-                    String lang = language.get().split("\\(|\\)")[1];
-                    codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
-                             .ifPresent(cle -> {
-                                 cle.getTranslations()
-                                    .updateText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION),
-                                                lang,
-                                                entity.getCodeListEntryData().getDescription());
-                             });
-                    shouldSkip = true;
-                }
+        protected void createOrUpdate(E entity, Context context) {
+            if (!codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
+                          .isPresent()) {
+                super.createOrUpdate(entity, context);
             }
+            if (language.isPresent()) {
+                // strip language code from text provided in LanguageParameter (e.g. "deu" from "Deutsch (deu)")
+                String lang = language.get().split("\\(|\\)")[1];
 
-            return shouldSkip;
+                codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
+                         .ifPresent(cle -> {
+                             cle.getTranslations()
+                                .updateText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION),
+                                            lang,
+                                            entity.getCodeListEntryData().getDescription());
+                         });
+            }
         }
     }
 }
