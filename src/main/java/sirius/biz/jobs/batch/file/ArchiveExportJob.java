@@ -9,12 +9,14 @@
 package sirius.biz.jobs.batch.file;
 
 import org.apache.commons.io.output.CloseShieldOutputStream;
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer3.FileOrDirectoryParameter;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -63,6 +65,17 @@ public abstract class ArchiveExportJob extends FileExportJob {
     public void close() throws IOException {
         zipOutputStream.close();
         super.close();
+    }
+
+    /**
+     * Provides a simple factory for archive based export jobs.
+     */
+    public abstract static class ArchiveExportJobFactory extends FileExportJobFactory {
+        @Override
+        protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+            destinationParameter.withAcceptedExtensions("zip");
+            super.collectParameters(parameterCollector);
+        }
     }
 }
 
