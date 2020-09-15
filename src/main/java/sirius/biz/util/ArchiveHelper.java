@@ -67,7 +67,8 @@ public class ArchiveHelper {
      * Iterates over the items of an archive file
      *
      * @param archiveFile             the archive file to extract
-     * @param filter                  will be called for each archive item. {@code unzipItemCallback} will be only called for this item if this filter unzipItemCallback returns true
+     * @param filter                  will be called for each archive item. {@code unzipItemCallback} will be only
+     *                                called for this item if this filter unzipItemCallback returns true
      * @param progressAndStopProvider will be called for each archive item until it returns false
      * @throws IOException on extraction failure
      */

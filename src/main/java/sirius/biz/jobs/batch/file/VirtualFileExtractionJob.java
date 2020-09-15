@@ -49,9 +49,6 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
     @Part
     private VirtualFileSystem vfs;
 
-    @Part
-    private ArchiveHelper archiveHelper;
-
     private static final FileParameter SOURCE_PARAMETER = new FileParameter("sourceParameter",
                                                                             "$VirtualFileExtractionJob.sourceParameter")
             .withAcceptedExtensionsList(ArchiveHelper.getSupportedFileExtensions())
