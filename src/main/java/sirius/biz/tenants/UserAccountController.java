@@ -633,6 +633,15 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             return;
         }
 
+        // If the target user belongs to the system tenant, our current user has to have highest user management
+        // permission as otherwise we would perform an unwanted roles delegation (given the current user higher
+        // access rights - right up to the system management level...)
+        if (Strings.areEqual(tenants.getTenantUserManager().getSystemTenantId(), user.getTenant().getIdAsString())
+            && !getUser().hasPermission(PERMISSION_MANAGE_SYSTEM_USERS)) {
+            UserContext.get().addMessage(Message.error(NLS.get("UserAccountController.cannotBecomeUser")));
+            selectUserAccounts(webContext);
+            return;
+        }
         if (!getUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_AFFILIATE)) {
             assertTenant(user);
         }
