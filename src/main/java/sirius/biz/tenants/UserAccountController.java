@@ -635,7 +635,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         }
 
         // If the target user belongs to the system tenant, our current user has to have highest user management
-        // permission as otherwise we would perform an unwanted roles delegation (given the current user higher
+        // permission as otherwise we would perform an unwanted roles delegation (giving the current user higher
         // access rights - right up to the system management level...)
         if (Strings.areEqual(tenants.getTenantUserManager().getSystemTenantId(), user.getTenant().getIdAsString())
             && !getUser().hasPermission(PERMISSION_MANAGE_SYSTEM_USERS)) {
