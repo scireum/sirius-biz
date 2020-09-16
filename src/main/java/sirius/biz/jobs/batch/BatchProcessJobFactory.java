@@ -234,7 +234,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
         output.append(":\n\n");
 
         parameters.stream().filter(parameter -> logVisibility == parameter.getLogVisibility()).forEach(param -> {
-            String value = process.getParameter(param).map(NLS::toUserString).orElse("");
+            String value = process.getParameter(param).map(NLS::toUserString).orElse("-");
             output.append(param.getLabel());
             output.append(": ");
             output.append(value);
