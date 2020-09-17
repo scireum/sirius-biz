@@ -15,10 +15,10 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.StringList;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.text.Tokenizer;
-import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 /**
  * Maintains a <tt>prefixSearchField</tt> in which all fields annotated with {@link PrefixSearchContent} are indexed.
@@ -29,6 +29,14 @@ import java.util.function.Consumer;
  * example.
  */
 public abstract class PrefixSearchableEntity extends MongoEntity {
+
+    /**
+     * Represents a regular expression which detects all characters (except whitespace)
+     * which aren't allowed in a prefix filter.
+     *
+     * @see sirius.db.mongo.constraints.MongoFilterFactory#prefix(Mapping, String)
+     */
+    public static final Pattern NON_PREFIX_OR_WHITESPACE_CHARACTER = Pattern.compile("[^0-9\\p{L}_\\-@.#\\s]");
 
     /**
      * Contains manually maintained content to be added to the search field.
@@ -84,19 +92,19 @@ public abstract class PrefixSearchableEntity extends MongoEntity {
 
     /**
      * Tokenizes the given string into the given output builder.
+     * <p>
+     * Note, that most special characters will be removed as they're not allowed in a prefix filter.
      *
      * @param tokenizer the tokenizer to use
      * @param value     the value to tokenize
+     * @see sirius.db.mongo.constraints.MongoFilterFactory#prefix(Mapping, String)
      */
-    @SuppressWarnings("squid:S2259")
-    @Explain("input cannot be null due to Strings.isEmpty")
     protected void addContentAsTokens(Tokenizer tokenizer, Object value) {
-        String input = value == null ? null : String.valueOf(value);
-        if (Strings.isEmpty(input)) {
+        if (Strings.isEmpty(value)) {
             return;
         }
-
-        tokenizer.acceptPlain(input, searchPrefixes::add);
+        String normalizedValue = NON_PREFIX_OR_WHITESPACE_CHARACTER.matcher(value.toString()).replaceAll("");
+        tokenizer.acceptPlain(normalizedValue, searchPrefixes::add);
     }
 
     public StringList getSearchPrefixes() {

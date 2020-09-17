@@ -81,7 +81,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     /**
      * This flag permission is granted to <b>all users</b> which belong to the system tenant.
      * <p>
-     * The id of the system tenant can be set in the scope config. The system tenant usually is the administrative
+     * The id of the system tenant can be set in the system config. The system tenant usually is the administrative
      * company which owns / runs the system, this flag is kept when the user has taken control over another tenant,
      * but is removed if the user has taken control over another user directly.
      */
@@ -90,7 +90,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     /**
      * This flag permission is granted to <b>all users</b> which originally belong to the system tenant.
      * <p>
-     * The id of the system tenant can be set in the scope config. The system tenant usually is the administrative
+     * The id of the system tenant can be set in the system config. The system tenant usually is the administrative
      * company which owns / runs the system.
      * Unlike {@link #PERMISSION_SYSTEM_TENANT_MEMBER}, this flag is kept always,
      * even when the user either has taken control over another tenant or user account.

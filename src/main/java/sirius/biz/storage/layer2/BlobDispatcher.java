@@ -152,48 +152,25 @@ public class BlobDispatcher implements WebDispatcher {
         Values uriParts = Values.of(uri.split("/"));
         String type = uriParts.at(0).asString();
         if (Strings.areEqual(type, PHYSICAL_DELIVERY)) {
-            if (uriParts.length() == 4) {
-                // Support for legacy URLS (where the blob key is missing)
-                // TODO delete by Sept 2020 - SIRI-231
-                String filename = stripAdditionalText(uriParts.at(3).asString());
-                physicalDelivery(request,
-                                 uriParts.at(1).asString(),
-                                 uriParts.at(2).asString(),
-                                 null,
-                                 Files.getFilenameWithoutExtension(filename),
-                                 filename);
-                // End of legacy support....
-            } else {
-                String filename = stripAdditionalText(uriParts.at(4).asString());
-                physicalDelivery(request,
-                                 uriParts.at(1).asString(),
-                                 uriParts.at(2).asString(),
-                                 uriParts.at(4).asString(),
-                                 Files.getFilenameWithoutExtension(filename),
-                                 filename);
-            }
+            String filename = stripAdditionalText(uriParts.at(4).asString());
+            physicalDelivery(request,
+                             uriParts.at(1).asString(),
+                             uriParts.at(2).asString(),
+                             uriParts.at(4).asString(),
+                             Files.getFilenameWithoutExtension(filename),
+                             filename);
+
             return DispatchDecision.DONE;
         }
 
         if (Strings.areEqual(type, PHYSICAL_DOWNLOAD)) {
-            if (uriParts.length() == 5) {
-                // Support for legacy URLS (where the blob key is missing)
-                // TODO delete by Sept 2020 - SIRI-231
-                physicalDownload(request,
-                                 uriParts.at(1).asString(),
-                                 uriParts.at(2).asString(),
-                                 null,
-                                 uriParts.at(3).asString(),
-                                 stripAdditionalText(uriParts.at(4).asString()));
-                // End of legacy support....
-            } else {
-                physicalDownload(request,
-                                 uriParts.at(1).asString(),
-                                 uriParts.at(2).asString(),
-                                 uriParts.at(3).asString(),
-                                 uriParts.at(4).asString(),
-                                 stripAdditionalText(uriParts.at(5).asString()));
-            }
+            physicalDownload(request,
+                             uriParts.at(1).asString(),
+                             uriParts.at(2).asString(),
+                             uriParts.at(3).asString(),
+                             uriParts.at(4).asString(),
+                             stripAdditionalText(uriParts.at(5).asString()));
+
             return DispatchDecision.DONE;
         }
 

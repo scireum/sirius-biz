@@ -17,9 +17,9 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>dev-19.6</sirius.kernel>
-        <sirius.web>dev-29.10</sirius.web>
-        <sirius.db>dev-19.0.1</sirius.db>
+        <sirius.kernel>dev-19.10</sirius.kernel>
+        <sirius.web>dev-29.14</sirius.web>
+        <sirius.db>dev-19.5</sirius.db>
     </properties>
 
     <repositories>
@@ -135,6 +135,17 @@
             <groupId>com.rometools</groupId>
             <artifactId>rome</artifactId>
             <version>1.11.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.sf.sevenzipjbinding</groupId>
+            <artifactId>sevenzipjbinding</artifactId>
+            <version>16.02-2.01</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.sevenzipjbinding</groupId>
+            <artifactId>sevenzipjbinding-all-platforms</artifactId>
+            <version>16.02-2.01</version>
         </dependency>
     </dependencies>
 
