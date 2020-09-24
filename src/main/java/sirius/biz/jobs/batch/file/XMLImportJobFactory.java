@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 public abstract class XMLImportJobFactory extends FileImportJobFactory {
 
     protected final BooleanParameter requireValidFile =
-            new BooleanParameter("requireValidFile", "$XMLImportJobFactory.requireValidFile").hidden().logInSystem();
+            new BooleanParameter("requireValidFile", "$XMLImportJobFactory.requireValidFile").hidden();
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
