@@ -9,15 +9,34 @@
 package sirius.biz.jobs.batch.file;
 
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.logs.ProcessLog;
+import sirius.biz.storage.layer1.FileHandle;
+import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
 import sirius.kernel.xml.XMLReader;
+import sirius.web.resources.Resource;
+import sirius.web.resources.Resources;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
 import java.io.InputStream;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * Provides a base class for jobs which import XML files via a {@link XMLImportJobFactory}.
  */
 public abstract class XMLImportJob extends FileImportJob {
+
+    @Part
+    private static Resources resources;
+
+    private final boolean requireValidFile;
 
     /**
      * Creates a new job for the given factory and process.
@@ -27,6 +46,92 @@ public abstract class XMLImportJob extends FileImportJob {
      */
     protected XMLImportJob(XMLImportJobFactory factory, ProcessContext process) {
         super(factory.fileParameter, process);
+        requireValidFile = process.getParameter(factory.requireValidFile).orElse(false);
+    }
+
+    @Override
+    protected void executeForSingleFile(String fileName, FileHandle fileHandle) throws Exception {
+        if (Strings.isFilled(getXsdResourcePath())) {
+            try (InputStream in = fileHandle.getInputStream()) {
+                if (!validate(in)) {
+                    process.log(ProcessLog.error()
+                                          .withNLSKey("XMLImportJob.importCanceled")
+                                          .withContext("fileName", fileName));
+                    return;
+                }
+            }
+        }
+        try (InputStream in = fileHandle.getInputStream()) {
+            executeForStream(fileName, in);
+        }
+    }
+
+    @Override
+    protected void executeForArchive(FileHandle fileHandle) throws Exception {
+        process.log(ProcessLog.info().withNLSKey("FileImportJob.importingZipFile"));
+
+        ZipFile zipFile = new ZipFile(fileHandle.getFile());
+        int filesImported = 0;
+
+        Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
+        while (zipEntries.hasMoreElements()) {
+            ZipEntry zipEntry = zipEntries.nextElement();
+
+            if (!isHiddenFile(zipEntry.getName())
+                && canHandleFileExtension(Files.getFileExtension(zipEntry.getName()))) {
+                process.log(ProcessLog.info()
+                                      .withNLSKey("FileImportJob.importingZippedFile")
+                                      .withContext("filename", zipEntry.getName()));
+                executeForArchivedFile(zipFile, zipEntry);
+                filesImported++;
+            }
+        }
+
+        if (filesImported == 0) {
+            throw Exceptions.createHandled().withNLSKey("FileImportJob.noZippedFileFound").handle();
+        }
+    }
+
+    protected void executeForArchivedFile(ZipFile zipFile, ZipEntry zipEntry) throws Exception {
+        if (Strings.isFilled(getXsdResourcePath())) {
+            try (InputStream in = zipFile.getInputStream(zipEntry)) {
+                if (!validate(in)) {
+                    process.log(ProcessLog.error()
+                                          .withNLSKey("XMLImportJob.importCanceled")
+                                          .withContext("fileName", zipEntry.getName()));
+                    return;
+                }
+            }
+        }
+        try (InputStream in = zipFile.getInputStream(zipEntry)) {
+            executeForStream(zipEntry.getName(), in);
+        }
+    }
+
+    /**
+     * Determines if the import should continue or be aborted because the xml file has to be valid but isn't
+     *
+     * @param xmlInputStream the {@link InputStream} of an xml file which should be validated
+     * @return <tt>true</tt> if the import should continue, <tt>false</tt> otherwise
+     * @throws Exception in case of an exception during validation
+     */
+    protected boolean validate(InputStream xmlInputStream) throws Exception {
+        Source xmlSource = new StreamSource(xmlInputStream);
+        Source xsdSource = new StreamSource(getXsdResource().openStream());
+
+        SimpleXMLValidator xmlValidator = new SimpleXMLValidator(process);
+        boolean validXmlFile = xmlValidator.validate(xmlSource, xsdSource);
+
+        return validXmlFile || !requireValidFile;
+    }
+
+    @Nonnull
+    protected Resource getXsdResource() throws Exception {
+        return resources.resolve(getXsdResourcePath())
+                        .orElseThrow(() -> Exceptions.createHandled()
+                                                     .withSystemErrorMessage("Could not find XSD file '%s'",
+                                                                             getXsdResourcePath())
+                                                     .handle());
     }
 
     @Override
@@ -56,6 +161,16 @@ public abstract class XMLImportJob extends FileImportJob {
      */
     @Nullable
     protected InputStream resolveResource(String name) {
+        return null;
+    }
+
+    /**
+     * Returns the path to the XSD file if the XML file should be validated, null otherwise.
+     *
+     * @return the path to the XSD file if the XML file should be validated, null otherwise
+     */
+    @Nullable
+    protected String getXsdResourcePath() {
         return null;
     }
 }
