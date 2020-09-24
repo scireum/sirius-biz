@@ -27,9 +27,9 @@ import java.io.IOException;
 import java.util.Locale;
 
 /**
- * wra
+ * Validates an XML source against an XSD source and keeps track if any error occurred during validation.
  */
-public class SimpleXMLValidator {
+public class XMLValidator {
 
     private final ProcessContext process;
 
@@ -38,7 +38,7 @@ public class SimpleXMLValidator {
      *
      * @param process the context to log errors into
      */
-    public SimpleXMLValidator(ProcessContext process) {
+    public XMLValidator(ProcessContext process) {
         this.process = process;
     }
 

@@ -37,6 +37,7 @@ public abstract class XMLImportJob extends FileImportJob {
     private static Resources resources;
 
     private final boolean requireValidFile;
+    private final String xsdResourcePath;
 
     /**
      * Creates a new job for the given factory and process.
@@ -47,11 +48,12 @@ public abstract class XMLImportJob extends FileImportJob {
     protected XMLImportJob(XMLImportJobFactory factory, ProcessContext process) {
         super(factory.fileParameter, process);
         requireValidFile = process.getParameter(factory.requireValidFile).orElse(false);
+        xsdResourcePath = factory.getXsdResourcePath();
     }
 
     @Override
     protected void executeForSingleFile(String fileName, FileHandle fileHandle) throws Exception {
-        if (Strings.isFilled(getXsdResourcePath())) {
+        if (Strings.isFilled(xsdResourcePath)) {
             try (InputStream in = fileHandle.getInputStream()) {
                 if (!validate(in)) {
                     process.log(ProcessLog.error()
@@ -93,7 +95,7 @@ public abstract class XMLImportJob extends FileImportJob {
     }
 
     protected void executeForArchivedFile(ZipFile zipFile, ZipEntry zipEntry) throws Exception {
-        if (Strings.isFilled(getXsdResourcePath())) {
+        if (Strings.isFilled(xsdResourcePath)) {
             try (InputStream in = zipFile.getInputStream(zipEntry)) {
                 if (!validate(in)) {
                     process.log(ProcessLog.error()
@@ -119,7 +121,7 @@ public abstract class XMLImportJob extends FileImportJob {
         Source xmlSource = new StreamSource(xmlInputStream);
         Source xsdSource = new StreamSource(getXsdResource().openStream());
 
-        SimpleXMLValidator xmlValidator = new SimpleXMLValidator(process);
+        XMLValidator xmlValidator = new XMLValidator(process);
         boolean validXmlFile = xmlValidator.validate(xmlSource, xsdSource);
 
         return validXmlFile || !requireValidFile;
@@ -127,10 +129,10 @@ public abstract class XMLImportJob extends FileImportJob {
 
     @Nonnull
     protected Resource getXsdResource() throws Exception {
-        return resources.resolve(getXsdResourcePath())
+        return resources.resolve(xsdResourcePath)
                         .orElseThrow(() -> Exceptions.createHandled()
                                                      .withSystemErrorMessage("Could not find XSD file '%s'",
-                                                                             getXsdResourcePath())
+                                                                             xsdResourcePath)
                                                      .handle());
     }
 
@@ -161,16 +163,6 @@ public abstract class XMLImportJob extends FileImportJob {
      */
     @Nullable
     protected InputStream resolveResource(String name) {
-        return null;
-    }
-
-    /**
-     * Returns the path to the XSD file if the XML file should be validated, null otherwise.
-     *
-     * @return the path to the XSD file if the XML file should be validated, null otherwise
-     */
-    @Nullable
-    protected String getXsdResourcePath() {
         return null;
     }
 }

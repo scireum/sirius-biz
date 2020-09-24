@@ -12,6 +12,7 @@ import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 
+import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 /**
@@ -20,12 +21,13 @@ import java.util.function.Consumer;
 public abstract class XMLImportJobFactory extends FileImportJobFactory {
 
     protected final BooleanParameter requireValidFile =
-            new BooleanParameter("requireValidFile", "$XMLImportJobFactory.requireValidFile").hidden()
-                                                                                                       .logInSystem();
+            new BooleanParameter("requireValidFile", "$XMLImportJobFactory.requireValidFile").hidden().logInSystem();
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
-        parameterCollector.accept(requireValidFile);
+        if (getXsdResourcePath() != null) {
+            parameterCollector.accept(requireValidFile);
+        }
         super.collectParameters(parameterCollector);
     }
 
@@ -35,5 +37,15 @@ public abstract class XMLImportJobFactory extends FileImportJobFactory {
     @Override
     public String getIcon() {
         return "fa-code";
+    }
+
+    /**
+     * Returns the path to the XSD file if the XML file should be validated, null otherwise.
+     *
+     * @return the path to the XSD file if the XML file should be validated, null otherwise
+     */
+    @Nullable
+    protected String getXsdResourcePath() {
+        return null;
     }
 }
