@@ -59,7 +59,7 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
     public void codeLists(WebContext ctx) {
         BasePageHelper<L, ?, ?, ?> pageHelper = getListsAsPage();
         pageHelper.withContext(ctx);
-        setCodeListSearchFields(pageHelper);
+        applyCodeListSearchFields(pageHelper);
         ctx.respondWith().template("/templates/biz/codelists/code-lists.html.pasta", pageHelper.asPage());
     }
 
@@ -108,15 +108,15 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
     private void renderCodeList(WebContext ctx, L codeList) {
         BasePageHelper<E, ?, ?, ?> pageHelper = getEntriesAsPage(codeList);
         pageHelper.withContext(ctx);
-        setCodeListEntrySearchFields(pageHelper);
+        applyCodeListEntrySearchFields(pageHelper);
         ctx.respondWith().template("/templates/biz/codelists/code-list-entries.html.pasta", codeList, pageHelper.asPage());
     }
 
     protected abstract BasePageHelper<E, ?, ?, ?> getEntriesAsPage(L codeList);
 
-    protected abstract void setCodeListSearchFields(BasePageHelper<L, ?, ?, ?> pageHelper);
+    protected abstract void applyCodeListSearchFields(BasePageHelper<L, ?, ?, ?> pageHelper);
 
-    protected abstract void setCodeListEntrySearchFields(BasePageHelper<E, ?, ?, ?> pageHelper);
+    protected abstract void applyCodeListEntrySearchFields(BasePageHelper<E, ?, ?, ?> pageHelper);
 
     /**
      * Provides an editor for a code list entry.

@@ -42,14 +42,14 @@ public class SQLCodeListController extends CodeListController<Long, SQLCodeList,
     }
 
     @Override
-    protected void setCodeListSearchFields(@Nonnull BasePageHelper<SQLCodeList, ?, ?, ?> pageHelper) {
+    protected void applyCodeListSearchFields(@Nonnull BasePageHelper<SQLCodeList, ?, ?, ?> pageHelper) {
         pageHelper.withSearchFields(QueryField.contains(CodeList.CODE_LIST_DATA.inner(CodeListData.CODE)),
                                     QueryField.contains(CodeList.CODE_LIST_DATA.inner(CodeListData.NAME)),
                                     QueryField.contains(CodeList.CODE_LIST_DATA.inner(CodeListData.DESCRIPTION)));
     }
 
     @Override
-    protected void setCodeListEntrySearchFields(@Nonnull BasePageHelper<SQLCodeListEntry, ?, ?, ?> pageHelper) {
+    protected void applyCodeListEntrySearchFields(@Nonnull BasePageHelper<SQLCodeListEntry, ?, ?, ?> pageHelper) {
         pageHelper.withSearchFields(QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE)),
                                     QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE)),
                                     QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE)),

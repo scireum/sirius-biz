@@ -42,12 +42,12 @@ public class MongoCodeListController extends CodeListController<String, MongoCod
     }
 
     @Override
-    protected void setCodeListSearchFields(@Nonnull BasePageHelper<MongoCodeList, ?, ?, ?> pageHelper) {
+    protected void applyCodeListSearchFields(@Nonnull BasePageHelper<MongoCodeList, ?, ?, ?> pageHelper) {
         pageHelper.withSearchFields(QueryField.startsWith(PrefixSearchableEntity.SEARCH_PREFIXES));
     }
 
     @Override
-    protected void setCodeListEntrySearchFields(@Nonnull BasePageHelper<MongoCodeListEntry, ?, ?, ?> pageHelper) {
+    protected void applyCodeListEntrySearchFields(@Nonnull BasePageHelper<MongoCodeListEntry, ?, ?, ?> pageHelper) {
         pageHelper.withSearchFields(QueryField.startsWith(PrefixSearchableEntity.SEARCH_PREFIXES));
     }
 
