@@ -11,9 +11,13 @@ package sirius.biz.codelists.mongo;
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListData;
 import sirius.biz.codelists.CodeListEntryData;
+import sirius.biz.mongo.PrefixSearchableEntity;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.MongoPageHelper;
+import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Register;
+
+import javax.annotation.Nonnull;
 
 /**
  * Provides the MongoDB implementation of the {@link CodeListController}.
@@ -35,6 +39,16 @@ public class MongoCodeListController extends CodeListController<String, MongoCod
                                               .eq(MongoCodeListEntry.CODE_LIST, codeList)
                                               .orderAsc(MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.PRIORITY))
                                               .orderAsc(MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE)));
+    }
+
+    @Override
+    protected void setCodeListSearchFields(@Nonnull BasePageHelper<MongoCodeList, ?, ?, ?> pageHelper) {
+        pageHelper.withSearchFields(QueryField.startsWith(PrefixSearchableEntity.SEARCH_PREFIXES));
+    }
+
+    @Override
+    protected void setCodeListEntrySearchFields(@Nonnull BasePageHelper<MongoCodeListEntry, ?, ?, ?> pageHelper) {
+        pageHelper.withSearchFields(QueryField.startsWith(PrefixSearchableEntity.SEARCH_PREFIXES));
     }
 
     @Override
