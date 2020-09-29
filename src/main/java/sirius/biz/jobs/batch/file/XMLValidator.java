@@ -43,7 +43,7 @@ public class XMLValidator {
     }
 
     /**
-     * Determines if the  {@link Source xml source} is valid by validating it with the given {@link Source xsd source}.
+     * Determines if the {@link Source xml source} is valid by validating it with the given {@link Source xsd source}.
      *
      * @param xml the XML source to be validated
      * @param xsd the XSD source used as the schema for the validator
@@ -66,9 +66,12 @@ public class XMLValidator {
 
         try {
             validator.validate(xml);
-        } catch (SAXParseException | IOException e) {
+        } catch (SAXParseException e) {
             // Cause of the exception is already logged via validator's error handler.
             Exceptions.ignore(e);
+        } catch (IOException e) {
+            process.log(ProcessLog.error().withMessage(e.getMessage()));
+            return false;
         }
 
         return !errorHandler.errorOccurred();
