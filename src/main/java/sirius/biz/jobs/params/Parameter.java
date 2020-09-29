@@ -91,6 +91,16 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
     }
 
     /**
+     * Marks this parameter as visible.
+     *
+     * @return the parameter itself for fluent method calls
+     */
+    public P visible() {
+        this.visibility = Visibility.NORMAL;
+        return self();
+    }
+
+    /**
      * Marks this parameter as hidden.
      *
      * @return the parameter itself for fluent method calls
