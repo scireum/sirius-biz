@@ -9,6 +9,7 @@
 package sirius.biz.codelists;
 
 import sirius.biz.importer.AutoImport;
+import sirius.biz.mongo.PrefixSearchContent;
 import sirius.biz.protocol.TraceData;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
@@ -45,6 +46,7 @@ public class CodeListEntryData extends Composite {
     @Length(50)
     @Unique(within = "codeList")
     @AutoImport
+    @PrefixSearchContent
     private String code;
 
     /**
@@ -62,6 +64,7 @@ public class CodeListEntryData extends Composite {
     @Length(512)
     @NullAllowed
     @AutoImport
+    @PrefixSearchContent
     private String value;
 
     /**
@@ -71,6 +74,7 @@ public class CodeListEntryData extends Composite {
     @Length(512)
     @NullAllowed
     @AutoImport
+    @PrefixSearchContent
     private String additionalValue;
 
     /**
@@ -80,6 +84,7 @@ public class CodeListEntryData extends Composite {
     @Length(1024)
     @NullAllowed
     @AutoImport
+    @PrefixSearchContent
     private String description;
 
     @Part

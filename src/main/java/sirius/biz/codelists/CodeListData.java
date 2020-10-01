@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists;
 
+import sirius.biz.mongo.PrefixSearchContent;
 import sirius.biz.protocol.TraceData;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.BaseEntity;
@@ -44,6 +45,7 @@ public class CodeListData extends Composite {
     @Autoloaded
     @Length(50)
     @Unique(within = "tenant")
+    @PrefixSearchContent
     private String code;
 
     /**
@@ -54,6 +56,7 @@ public class CodeListData extends Composite {
     @Autoloaded
     @NullAllowed
     @Length(150)
+    @PrefixSearchContent
     private String name;
 
     /**
@@ -64,6 +67,7 @@ public class CodeListData extends Composite {
     @Autoloaded
     @NullAllowed
     @Length(1024)
+    @PrefixSearchContent
     private String description;
 
     /**

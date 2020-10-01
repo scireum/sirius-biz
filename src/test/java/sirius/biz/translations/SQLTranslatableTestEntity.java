@@ -14,7 +14,7 @@ import sirius.db.mixing.Mapping;
 
 public class SQLTranslatableTestEntity extends SQLEntity implements Translatable<SQLTranslations> {
 
-    private SQLTranslations translations = new SQLTranslations(this);
+    private final SQLTranslations translations = new SQLTranslations(this);
 
     public static final Mapping DESCRIPTION = Mapping.named("description");
 

@@ -11,11 +11,11 @@ package sirius.biz.codelists.mongo;
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListEntryData;
 import sirius.biz.importer.AutoImport;
+import sirius.biz.mongo.PrefixSearchableEntity;
 import sirius.biz.translations.mongo.MongoTranslations;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mongo.Mango;
-import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.di.std.Framework;
 
@@ -28,7 +28,7 @@ import sirius.kernel.di.std.Framework;
         columns = {"codeList", "codeListEntryData_code"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING},
         unique = true)
-public class MongoCodeListEntry extends MongoEntity implements CodeListEntry<String, MongoCodeList, MongoTranslations> {
+public class MongoCodeListEntry extends PrefixSearchableEntity implements CodeListEntry<String, MongoCodeList, MongoTranslations> {
 
     @AutoImport
     private final MongoRef<MongoCodeList> codeList =

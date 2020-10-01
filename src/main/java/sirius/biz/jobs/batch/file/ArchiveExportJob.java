@@ -63,7 +63,9 @@ public abstract class ArchiveExportJob extends FileExportJob {
 
     @Override
     public void close() throws IOException {
-        zipOutputStream.close();
+        if (zipOutputStream != null) {
+            zipOutputStream.close();
+        }
         super.close();
     }
 
