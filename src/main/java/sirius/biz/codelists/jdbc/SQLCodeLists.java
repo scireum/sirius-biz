@@ -9,14 +9,13 @@
 package sirius.biz.codelists.jdbc;
 
 import sirius.biz.codelists.CodeLists;
-import sirius.biz.translations.jdbc.SQLTranslations;
 import sirius.kernel.di.std.Register;
 
 /**
  * Provides the JDBC/SQL implementation of the {@link CodeLists}.
  */
 @Register(classes = {CodeLists.class, SQLCodeLists.class}, framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
-public class SQLCodeLists extends CodeLists<Long, SQLCodeList, SQLTranslations, SQLCodeListEntry> {
+public class SQLCodeLists extends CodeLists<Long, SQLCodeList, SQLCodeListEntry> {
 
     /**
      * Names the framework which must be enabled to activate the code lists feature.

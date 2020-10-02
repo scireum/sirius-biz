@@ -13,7 +13,6 @@ import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListData;
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListEntryData;
-import sirius.biz.translations.jdbc.SQLTranslations;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.SQLPageHelper;
 import sirius.db.mixing.query.QueryField;
@@ -25,7 +24,7 @@ import javax.annotation.Nonnull;
  * Provides the JDBC/SQL implementation of the {@link CodeListController}.
  */
 @Register(framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
-public class SQLCodeListController extends CodeListController<Long, SQLCodeList, SQLTranslations, SQLCodeListEntry> {
+public class SQLCodeListController extends CodeListController<Long, SQLCodeList, SQLCodeListEntry> {
 
     @Override
     protected BasePageHelper<SQLCodeList, ?, ?, ?> getListsAsPage() {

@@ -12,7 +12,6 @@ import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListData;
 import sirius.biz.codelists.CodeListEntryData;
 import sirius.biz.mongo.PrefixSearchableEntity;
-import sirius.biz.translations.mongo.MongoTranslations;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.MongoPageHelper;
 import sirius.db.mixing.query.QueryField;
@@ -24,8 +23,7 @@ import javax.annotation.Nonnull;
  * Provides the MongoDB implementation of the {@link CodeListController}.
  */
 @Register(framework = MongoCodeLists.FRAMEWORK_CODE_LISTS_MONGO)
-public class MongoCodeListController
-        extends CodeListController<String, MongoCodeList, MongoTranslations, MongoCodeListEntry> {
+public class MongoCodeListController extends CodeListController<String, MongoCodeList, MongoCodeListEntry> {
 
     @Override
     protected BasePageHelper<MongoCodeList, ?, ?, ?> getListsAsPage() {

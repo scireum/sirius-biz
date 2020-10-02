@@ -23,7 +23,7 @@ import java.util.Optional;
  */
 public class CodeListEntryParameter extends Parameter<CodeListEntry<?, ?, ?>, CodeListEntryParameter> {
     @Part
-    private static CodeLists<?, ?, ?, ?> codeLists;
+    private static CodeLists<?, ?, ?> codeLists;
 
     private String codelist;
 

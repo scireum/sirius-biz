@@ -8,7 +8,6 @@
 
 package sirius.biz.codelists;
 
-import sirius.biz.translations.BasicTranslations;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
@@ -29,10 +28,9 @@ import sirius.web.security.Permission;
  *
  * @param <I> the type of database IDs used by the concrete implementation
  * @param <L> the effective entity type used to represent code lists
- * @param <T> the effective entity type used to represent translations
  * @param <E> the effective entity type used to represent code list entries
  */
-public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, T extends BasicTranslations<?>, E extends BaseEntity<I> & CodeListEntry<I, L, T>>
+public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L, ?>>
         extends BizController {
 
     /**
@@ -47,7 +45,7 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
     private static final String PARAM_DESCRIPTION = "description";
 
     @Part
-    private CodeLists<I, L, T, E> codeLists;
+    private CodeLists<I, L, E> codeLists;
 
     /**
      * Provides a list of all code lists.

@@ -80,7 +80,7 @@ public class CodeListData extends Composite {
     private boolean autofill = true;
 
     @Part
-    private static CodeLists<?, ?, ?, ?> codeLists;
+    private static CodeLists<?, ?, ?> codeLists;
 
     @Transient
     private BaseEntity<?> codeList;

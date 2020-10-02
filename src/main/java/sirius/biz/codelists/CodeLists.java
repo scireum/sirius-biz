@@ -11,7 +11,6 @@ package sirius.biz.codelists;
 import sirius.biz.codelists.jdbc.SQLCodeListEntry;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.Tenants;
-import sirius.biz.translations.BasicTranslations;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.BaseMapper;
 import sirius.db.mixing.Mixing;
@@ -50,10 +49,9 @@ import java.util.Optional;
  *
  * @param <I> the type of database IDs used by the concrete implementation
  * @param <L> the effective entity type used to represent code lists
- * @param <T> the effective entity type used to represent translations
  * @param <E> the effective entity type used to represent code list entries
  */
-public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, T extends BasicTranslations<?>, E extends BaseEntity<I> & CodeListEntry<I, L, T>> {
+public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L, ?>> {
 
     protected static final String CONFIG_EXTENSION_CODE_LISTS = "code-lists";
     protected static final String CONFIG_KEY_NAME = "name";

@@ -22,7 +22,7 @@ import java.util.Optional;
 public class CodeListParameter extends Parameter<CodeList, CodeListParameter> {
 
     @Part
-    private static CodeLists<?, ?, ?, ?> codeLists;
+    private static CodeLists<?, ?, ?> codeLists;
 
     /**
      * Creates a new parameter with the given name and label.
