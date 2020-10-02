@@ -16,14 +16,14 @@ import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 /**
- * Provides a base implementation for batch jobs which import XML files using a {@link XMLImportJob}.
+ * Provides a base implementation for batch jobs which import XML files using a {@link XMLExportJob}.
  */
-public abstract class XMLImportJobFactory extends FileImportJobFactory {
+public abstract class XMLExportJobFactory extends FileExportJobFactory {
 
     protected final BooleanParameter requireValidFile =
-            new BooleanParameter("requireValidFile", "$XMLImportJobFactory.requireValidFile").hidden()
+            new BooleanParameter("requireValidFile", "$XMLExportJobFactory.requireValidFile").hidden()
                                                                                              .withDescription(
-                                                                                                     "$XMLImportJobFactory.requireValidFile.help");
+                                                                                                     "$XMLExportJobFactory.requireValidFile.help");
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
@@ -34,7 +34,7 @@ public abstract class XMLImportJobFactory extends FileImportJobFactory {
     }
 
     @Override
-    protected abstract XMLImportJob createJob(ProcessContext process);
+    protected abstract XMLExportJob createJob(ProcessContext process);
 
     @Override
     public String getIcon() {
