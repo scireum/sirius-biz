@@ -68,5 +68,6 @@ class CodeListsSpec extends BaseSpecification {
                                          NLS.getCurrentLang(), "Das ist ein Test")
         then:
         cl.getTranslatedValue("test", "testCode") == "Das ist ein Test"
+        cle.getTranslations().deleteAllTexts(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE))
     }
 }
