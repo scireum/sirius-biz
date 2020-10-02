@@ -10,14 +10,20 @@ package sirius.biz.jobs.batch.file;
 
 import sirius.biz.jobs.batch.BatchJob;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.Processes;
 import sirius.biz.storage.layer3.FileOrDirectoryParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.LocalDate;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Provides an export job which writes a file.
@@ -27,7 +33,11 @@ import java.time.LocalDate;
  */
 public abstract class FileExportJob extends BatchJob {
 
+    @Part
+    private static Processes processes;
+
     protected final VirtualFile destination;
+    private VirtualFile fileDestination;
 
     /**
      * Creates a new job which writes into the given destination.
@@ -49,12 +59,12 @@ public abstract class FileExportJob extends BatchJob {
         try {
             if (destination != null) {
                 if (shouldUseProvidedOutputFile()) {
-                    return destination.createOutputStream();
+                    fileDestination = destination;
                 } else if (shouldUseProvidedOutputDirectory()) {
-                    VirtualFile effectiveDestinationFile = createUniqueFile(destination);
-                    process.updateTitle(process.getTitle() + ": " + effectiveDestinationFile.toString());
-                    return effectiveDestinationFile.createOutputStream();
+                    fileDestination = createUniqueFile(destination);
+                    process.updateTitle(process.getTitle() + ": " + fileDestination.toString());
                 }
+                return fileDestination.createOutputStream();
             }
 
             return process.addFile(determineFilenameWithoutExtension() + "." + determineFileExtension());
@@ -146,4 +156,31 @@ public abstract class FileExportJob extends BatchJob {
      * @return the base file name to use
      */
     protected abstract String determineFilenameWithoutExtension();
+
+    /**
+     * Digests the fresh created export file.
+     * <p>
+     * Override this method in order to perform validations on the final exported file.
+     *
+     * @param digester a consumer receiving the {@link InputStream} of the exported file
+     */
+    protected void digestExportedFile(Consumer<InputStream> digester) {
+        if (fileDestination != null) {
+            processInputStream(fileDestination::createInputStream, digester);
+        } else {
+            processInputStream(() -> {
+                return processes.getFile(process.getProcessId(),
+                                         determineFilenameWithoutExtension() + "." + determineFileExtension());
+            }, digester);
+        }
+    }
+
+    private void processInputStream(@Nonnull Supplier<InputStream> inputStreamSupplier,
+                                    @Nonnull Consumer<InputStream> digester) {
+        try (InputStream inputStream = inputStreamSupplier.get()) {
+            digester.accept(inputStream);
+        } catch (IOException e) {
+            process.handle(e);
+        }
+    }
 }
