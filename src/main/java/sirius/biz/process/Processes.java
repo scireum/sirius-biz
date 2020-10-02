@@ -636,7 +636,7 @@ public class Processes {
     /**
      * Returns an input stream to a file stored in the process.
      * <p>
-     * Note that it the responsibility of the caller to close the stream upon usage.
+     * Note that it is the responsibility of the caller to close the stream upon usage.
      *
      * @param processId the process to retrieve the file from
      * @param filename  the file name to lookup
