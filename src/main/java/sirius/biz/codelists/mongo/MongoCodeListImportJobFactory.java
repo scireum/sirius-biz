@@ -23,6 +23,7 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer3.FileParameter;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.http.QueryString;
@@ -95,6 +96,7 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
             extends EntityImportJob<E> {
 
         private CodeList codeList;
+        private LanguageParameter languageParameter;
         private Optional<String> language;
 
         private CodeListEntryTranslationImportJob(FileParameter fileParameter,
@@ -106,6 +108,7 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
                                                   String factoryName) {
             super(fileParameter, ignoreEmptyParameter, importModeParameter, type, dictionary, process, factoryName);
             this.codeList = process.require(codeListParameter);
+            this.languageParameter = languageParameter;
             this.language = process.getParameter(languageParameter);
         }
 
@@ -131,16 +134,24 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
                 super.createOrUpdate(entity, context);
             }
             if (language.isPresent()) {
-                // strip language code from text provided in LanguageParameter (e.g. "deu" from "Deutsch (deu)")
-                String lang = language.get().split("\\(|\\)")[1];
+                // get language code for selected language (e.g. "de" for "Deutsch (de)")
+                Optional<Tuple<String, String>> langCode = languageParameter.getValues()
+                                                                            .stream()
+                                                                            .filter(tuple -> tuple.getSecond()
+                                                                                                  .equals(language.get()))
+                                                                            .findFirst();
 
-                codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
-                         .ifPresent(cle -> {
-                             cle.getTranslations()
-                                .updateText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION),
-                                            lang,
-                                            entity.getCodeListEntryData().getDescription());
-                         });
+                // update the translation text for the selected language
+                langCode.ifPresent(stringStringTuple -> codeLists.getEntry(codeList.getCodeListData().getCode(),
+                                                                           entity.getCodeListEntryData().getCode())
+                                                                 .ifPresent(cle -> {
+                                                                     cle.getTranslations()
+                                                                        .updateText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(
+                                                                                CodeListEntryData.DESCRIPTION),
+                                                                                    stringStringTuple.getFirst(),
+                                                                                    entity.getCodeListEntryData()
+                                                                                          .getDescription());
+                                                                 }));
             }
         }
     }
