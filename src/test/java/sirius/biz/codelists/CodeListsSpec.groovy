@@ -13,6 +13,7 @@ import sirius.biz.tenants.TenantsHelper
 import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
+import sirius.kernel.nls.NLS
 
 import java.time.Duration
 
@@ -55,4 +56,17 @@ class CodeListsSpec extends BaseSpecification {
         !cl.tryGetValue("hard-test", "unknownCode").isPresent()
     }
 
+    def "getting a value with translations works"() {
+        given:
+        TenantsHelper.installTestTenant()
+        when:
+        String value = cl.getValue("test", "testCode")
+        and:
+        CodeListEntry cle = cl.getEntry("test", "testCode").get()
+        and:
+        cle.getTranslations().updateText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE),
+                                         NLS.getCurrentLang(), "Das ist ein Test")
+        then:
+        cl.getTranslatedValue("test", "testCode") == "Das ist ein Test"
+    }
 }

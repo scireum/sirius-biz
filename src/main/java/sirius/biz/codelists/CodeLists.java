@@ -27,6 +27,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
+import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
@@ -233,29 +234,91 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
         return getCurrentTenant(codeListName).flatMap(tenant -> fetchValueFromCache(tenant, codeListName, code));
     }
 
+    /**
+     * Returns the value and the additionalValue associated with the given code in the given language.
+     *
+     * @param codeListName the code list to search in
+     * @param code         the code to lookup
+     * @param lang         the language code to lookup
+     * @return the value and the additional value in the given language associated with the given code or the code
+     * itself and <tt>null</tt> (if {@link CodeListData#AUTO_FILL} is <tt>true</tt>) or an empty optional otherwise
+     */
+    public Optional<Tuple<String, String>> tryGetValues(@Nonnull String codeListName,
+                                                        @Nullable String code,
+                                                        @Nullable String lang) {
+        if (Strings.isEmpty(code)) {
+            return Optional.empty();
+        }
+        if (Strings.isEmpty(lang)) {
+            return tryGetValues(codeListName, code);
+        }
+        return getCurrentTenant(codeListName).flatMap(tenant -> fetchValueFromCache(tenant, codeListName, code, lang));
+    }
+
     private Optional<Tuple<String, String>> fetchValueFromCache(@Nonnull Tenant<?> tenant,
                                                                 String codeListName,
                                                                 String code) {
-        return valueCache.get(tenant.getIdAsString() + codeListName + "|" + code,
+        return valueCache.get(tenant.getIdAsString() + codeListName + "|" + code + "|-",
                               ignored -> loadValues(codeListName, code)).asOptional();
+    }
+
+    private Optional<Tuple<String, String>> fetchValueFromCache(@Nonnull Tenant<?> tenant,
+                                                                String codeListName,
+                                                                String code,
+                                                                String lang) {
+        return valueCache.get(tenant.getIdAsString() + codeListName + "|" + code + "|" + lang,
+                              ignored -> loadValues(codeListName, code, lang)).asOptional();
     }
 
     @Nonnull
     private ValueHolder<Tuple<String, String>> loadValues(String codeListName, String code) {
+        E codeListEntry = loadEntry(codeListName, code);
+
+        if (codeListEntry == null) {
+            return ValueHolder.of(null);
+        }
+
+        return ValueHolder.of(Tuple.create(codeListEntry.getCodeListEntryData().getValue(),
+                                           codeListEntry.getCodeListEntryData().getAdditionalValue()));
+    }
+
+    @Nonnull
+    private ValueHolder<Tuple<String, String>> loadValues(String codeListName, String code, String lang) {
+        if (Strings.isEmpty(lang)) {
+            return loadValues(codeListName, code);
+        }
+
+        E codeListEntry = loadEntry(codeListName, code);
+        if (codeListEntry == null) {
+            return ValueHolder.of(null);
+        }
+
+        String fallbackLang = NLS.getFallbackLanguage();
+
+        return ValueHolder.of(Tuple.create(codeListEntry.getTranslations()
+                                                        .getRequiredText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(
+                                                                CodeListEntryData.VALUE), lang, fallbackLang),
+                                           codeListEntry.getTranslations()
+                                                        .getRequiredText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(
+                                                                CodeListEntryData.ADDITIONAL_VALUE),
+                                                                         lang,
+                                                                         fallbackLang)));
+    }
+
+    @Nullable
+    private E loadEntry(String codeListName, String code) {
         L orCreateCodelist = findOrCreateCodelist(codeListName);
         String effectiveCode = Strings.trim(code);
         E codeListEntry = queryEntry(orCreateCodelist, effectiveCode).queryFirst();
 
         if (codeListEntry == null) {
             if (!orCreateCodelist.getCodeListData().isAutofill()) {
-                return ValueHolder.of(null);
+                return null;
             }
             codeListEntry = createEntry(orCreateCodelist, effectiveCode);
             codeListEntry.getMapper().update(codeListEntry);
         }
-
-        return ValueHolder.of(Tuple.create(codeListEntry.getCodeListEntryData().getValue(),
-                                           codeListEntry.getCodeListEntryData().getAdditionalValue()));
+        return codeListEntry;
     }
 
     /**
@@ -270,6 +333,21 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
      */
     public Tuple<String, String> getValues(@Nonnull String codeListName, @Nonnull String code) {
         return tryGetValues(codeListName, code).orElseGet(() -> Tuple.create(code, null));
+    }
+
+    /**
+     * Returns the value and the additionalValue associated with the given code.
+     * <p>
+     * If no matching entry exists, the code itself will be returned as value and the additional value (the second of
+     * the tuple) will be <tt>null</tt>.
+     *
+     * @param codeListName the code list to search in
+     * @param code         the code to lookup
+     * @param lang         the language code to lookup
+     * @return the value and the additional value in the given language associated with the given code, wrapped as tuple
+     */
+    public Tuple<String, String> getValues(@Nonnull String codeListName, @Nonnull String code, String lang) {
+        return tryGetValues(codeListName, code, lang).orElseGet(() -> Tuple.create(code, null));
     }
 
     protected E createEntry(L codeList, String code) {
@@ -301,6 +379,27 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
     }
 
     /**
+     * Returns the value from the given code list associated with the given code in the given language.
+     *
+     * @param codeListName the code list to search in
+     * @param code         the code to lookup
+     * @param lang         the language code to lookup
+     * @return the value in the given language associated with the code or either the code itself
+     * (if {@link CodeListData#AUTO_FILL} is <tt>true</tt>) or an empty optional otherwise
+     */
+    public Optional<String> tryGetValue(@Nonnull String codeListName, @Nullable String code, @Nullable String lang) {
+        if (Strings.isEmpty(code)) {
+            return Optional.empty();
+        }
+
+        if (Strings.isEmpty(lang)) {
+            return tryGetValue(codeListName, code);
+        }
+
+        return tryGetValues(codeListName, code, lang).map(Tuple::getFirst);
+    }
+
+    /**
      * Returns the value from the given code list associated with the given code.
      * <p>
      * If no matching entry exists, the code itself will be returned.
@@ -315,6 +414,20 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
     }
 
     /**
+     * Returns the value from the given code list associated with the given code in the given language.
+     * <p>
+     * If there is no value in the given language and fallback language, the default value will be returned.
+     *
+     * @param codeListName the code list to search in
+     * @param code         the code to lookup
+     * @param lang         the language code to lookup
+     * @return the translated value in the given language associated with the code or the code itself if no value exists
+     */
+    public String getValue(@Nonnull String codeListName, @Nullable String code, @Nullable String lang) {
+        return tryGetValue(codeListName, code, lang).orElse(code);
+    }
+
+    /**
      * Returns the value translated from the given code list associated with the given code.
      * <p>
      * If no matching entry exists, the code itself will be returned.
@@ -325,7 +438,12 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
      */
     @Nullable
     public String getTranslatedValue(@Nonnull String codeListName, @Nullable String code) {
-        return Value.of(getValue(codeListName, code)).translate().getString();
+        String value = getValue(codeListName, code, NLS.getCurrentLang());
+        if (value.startsWith("$")) {
+            return Value.of(value).translate().getString();
+        } else {
+            return value;
+        }
     }
 
     /**
