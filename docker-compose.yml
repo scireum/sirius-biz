@@ -19,7 +19,7 @@ services:
       - "3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
-    hostname: mysql
+    hostname: mariadb
   clickhouse:
     image: yandex/clickhouse-server
     ports:
