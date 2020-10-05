@@ -15,6 +15,7 @@ import sirius.biz.process.logs.ProcessLogState;
 import sirius.biz.process.logs.ProcessLogType;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.protocol.JournalData;
+import sirius.biz.storage.layer2.Blob;
 import sirius.db.es.Elastic;
 import sirius.db.mixing.IntegrityConstraintFailedException;
 import sirius.db.mixing.OptimisticLockException;
@@ -40,6 +41,7 @@ import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -629,6 +631,24 @@ public class Processes {
         }
 
         return process.getFiles().findOrCreateAttachedBlobByName(filename).createOutputStream(filename);
+    }
+
+    /**
+     * Returns an input stream to a file stored in the process.
+     * <p>
+     * Note that it is the responsibility of the caller to close the stream upon usage.
+     *
+     * @param processId the process to retrieve the file from
+     * @param filename  the file name to lookup
+     * @return an {@link InputStream} to the file or <tt>null</tt> if none was found
+     */
+    public InputStream getFile(String processId, String filename) {
+        Process process = fetchProcess(processId).orElse(null);
+        if (process == null) {
+            throw new IllegalStateException(Strings.apply("The requested process (%s) isn't available.", processId));
+        }
+
+        return process.getFiles().findAttachedBlobByName(filename).map(Blob::createInputStream).orElse(null);
     }
 
     /**
