@@ -21,11 +21,13 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystem;
 import java.nio.file.LinkOption;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileAttributeView;
+import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.HashMap;
 import java.util.Map;
@@ -83,13 +85,12 @@ class BridgeFileSystemProvider extends FileSystemProvider {
 
     @Override
     public void copy(Path source, Path target, CopyOption... options) throws IOException {
-        throw new UnsupportedOperationException("copy");
+        ((BridgePath) source).getVirtualFile().transferTo(((BridgePath) target).getVirtualFile().parent()).copy();
     }
 
     @Override
     public void move(Path source, Path target, CopyOption... options) throws IOException {
-        //TODO SIRI-102 implement
-        throw new UnsupportedOperationException("move");
+        ((BridgePath) source).getVirtualFile().transferTo(((BridgePath) target).getVirtualFile().parent()).move();
     }
 
     @Override
@@ -99,7 +100,7 @@ class BridgeFileSystemProvider extends FileSystemProvider {
 
     @Override
     public boolean isHidden(Path path) throws IOException {
-        throw new UnsupportedOperationException("isHidden");
+        return false;
     }
 
     @Override
