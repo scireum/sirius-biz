@@ -87,7 +87,7 @@ public abstract class ArchiveExportJob extends FileExportJob {
     /**
      * Digests every entry of a fresh created export archive.
      * <p>
-     * Override this method in order to perform validations on contents of the final archive.
+     * Use this method in order to perform validations on contents of the final archive.
      *
      * @param digester a consumer receiving the name and the {@link InputStream} of each entry
      */

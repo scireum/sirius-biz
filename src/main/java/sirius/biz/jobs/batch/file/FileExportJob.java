@@ -160,7 +160,7 @@ public abstract class FileExportJob extends BatchJob {
     /**
      * Digests the fresh created export file.
      * <p>
-     * Override this method in order to perform validations on the final exported file.
+     * Use this method in order to perform validations on the final exported file.
      *
      * @param digester a consumer receiving the {@link InputStream} of the exported file
      */
