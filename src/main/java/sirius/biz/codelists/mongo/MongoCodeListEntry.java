@@ -12,6 +12,7 @@ import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListEntryData;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.mongo.PrefixSearchableEntity;
+import sirius.biz.translations.mongo.MongoTranslations;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mongo.Mango;
@@ -27,12 +28,13 @@ import sirius.kernel.di.std.Framework;
         columns = {"codeList", "codeListEntryData_code"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING},
         unique = true)
-public class MongoCodeListEntry extends PrefixSearchableEntity implements CodeListEntry<String, MongoCodeList> {
+public class MongoCodeListEntry extends PrefixSearchableEntity implements CodeListEntry<String, MongoCodeList, MongoTranslations> {
 
     @AutoImport
     private final MongoRef<MongoCodeList> codeList =
             MongoRef.writeOnceOn(MongoCodeList.class, MongoRef.OnDelete.CASCADE);
     private final CodeListEntryData codeListEntryData = new CodeListEntryData(this);
+    private final MongoTranslations codeListEntryTranslations = new MongoTranslations(this);
 
     @Override
     public MongoRef<MongoCodeList> getCodeList() {
@@ -42,5 +44,10 @@ public class MongoCodeListEntry extends PrefixSearchableEntity implements CodeLi
     @Override
     public CodeListEntryData getCodeListEntryData() {
         return codeListEntryData;
+    }
+
+    @Override
+    public MongoTranslations getTranslations() {
+        return codeListEntryTranslations;
     }
 }

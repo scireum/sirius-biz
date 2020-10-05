@@ -22,7 +22,6 @@ import javax.annotation.Nonnull;
 /**
  * Provides the MongoDB implementation of the {@link CodeListController}.
  */
-
 @Register(framework = MongoCodeLists.FRAMEWORK_CODE_LISTS_MONGO)
 public class MongoCodeListController extends CodeListController<String, MongoCodeList, MongoCodeListEntry> {
 

@@ -30,7 +30,7 @@ import sirius.web.security.Permission;
  * @param <L> the effective entity type used to represent code lists
  * @param <E> the effective entity type used to represent code list entries
  */
-public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L>>
+public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L, ?>>
         extends BizController {
 
     /**
