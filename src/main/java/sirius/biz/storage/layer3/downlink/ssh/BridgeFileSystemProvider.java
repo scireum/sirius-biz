@@ -73,7 +73,7 @@ class BridgeFileSystemProvider extends FileSystemProvider {
 
     @Override
     public void createDirectory(Path dir, FileAttribute<?>... attrs) throws IOException {
-        throw new UnsupportedOperationException("createDirectory");
+        ((BridgePath) dir).getVirtualFile().createAsDirectory();
     }
 
     @Override
@@ -110,6 +110,10 @@ class BridgeFileSystemProvider extends FileSystemProvider {
     @Override
     public void checkAccess(Path path, AccessMode... modes) throws IOException {
         VirtualFile file = ((BridgePath) path).getVirtualFile();
+        if (!file.exists()) {
+            throw new NoSuchFileException(path.toString());
+        }
+
         for (AccessMode mode : modes) {
             if (mode == AccessMode.READ && !(file.exists() && (file.isDirectory() || file.isReadable()))) {
                 throw new IOException(Strings.apply("Read for '%s' denied", path.toString()));

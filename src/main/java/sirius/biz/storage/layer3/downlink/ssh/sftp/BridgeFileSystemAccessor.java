@@ -43,7 +43,14 @@ class BridgeFileSystemAccessor implements SftpFileSystemAccessor {
                                         String handle,
                                         Set<? extends OpenOption> options,
                                         FileAttribute<?>... attrs) throws IOException {
-        return new BridgeSeekableByteChannel(((BridgePath) file).getVirtualFile());
+        VirtualFile virtualFile = ((BridgePath) file).getVirtualFile();
+
+        // Create as empty file if non-existent...
+        if (!virtualFile.exists()) {
+            virtualFile.createOutputStream().close();
+        }
+
+        return new BridgeSeekableByteChannel(virtualFile);
     }
 
     @Override
