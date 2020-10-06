@@ -25,6 +25,8 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 
+import javax.annotation.Nullable;
+
 /**
  * Represents an entry in a {@link CodeListData code list}.
  * <p>
@@ -88,6 +90,7 @@ public class CodeListEntryData extends Composite {
     private String description;
 
     @Part
+    @Nullable
     private static CodeLists<?, ?, ?> codeLists;
 
     @Transient

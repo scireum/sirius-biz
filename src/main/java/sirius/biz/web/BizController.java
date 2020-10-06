@@ -78,6 +78,7 @@ public class BizController extends BasicController {
     protected Elastic elastic;
 
     @Part
+    @Nullable
     private Processes processes;
 
     @Part
@@ -90,6 +91,7 @@ public class BizController extends BasicController {
      * using {@code tenants.as(SQLTenants.class)}. This also applies for {@link sirius.biz.tenants.mongo.MongoTenants}.
      */
     @Part
+    @Nullable
     protected Tenants<?, ?, ?> tenants;
 
     @ConfigValue("product.baseUrl")

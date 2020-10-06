@@ -154,6 +154,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     protected final List<String> availableLanguages;
 
     @Part
+    @Nullable
     protected static Tenants<?, ?, ?> tenants;
 
     @Part

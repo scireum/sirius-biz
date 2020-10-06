@@ -25,6 +25,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 /**
@@ -43,6 +44,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     private static Mixing mixing;
 
     @Part
+    @Nullable
     private static Tenants<?, ?, ?> rawTenants;
 
     protected final EntityDescriptor descriptor;

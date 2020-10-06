@@ -26,6 +26,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
@@ -57,6 +58,7 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
     private Set<String> effectivePermissions;
 
     @Part
+    @Nullable
     private static Tenants<?, ?, ?> tenants;
 
     @Override

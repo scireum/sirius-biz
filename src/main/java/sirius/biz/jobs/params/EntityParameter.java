@@ -24,6 +24,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
 
@@ -49,6 +50,7 @@ public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityP
     protected static Elastic elastic;
 
     @Part
+    @Nullable
     protected static Tenants<?, ?, ?> tenants;
 
     private EntityDescriptor descriptor;
