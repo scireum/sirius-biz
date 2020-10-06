@@ -768,18 +768,22 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                 return scopeSettings;
             }
 
-            return configCache.get(user.getTenant().getUniqueObjectName(), i -> {
-                Config cfg = scopeSettings.getConfig();
-                cfg = tenantConfig.withFallback(cfg);
-                return Tuple.create(new UserSettings(cfg, false), user.getTenant().getUniqueObjectName());
+            return configCache.get(user.getTenant().getUniqueObjectName(), ignored -> {
+                Config config = scopeSettings.getConfig();
+                config = tenantConfig.withFallback(config);
+                return Tuple.create(new UserSettings(config, false), user.getTenant().getUniqueObjectName());
             }).getFirst();
         }
 
-        return configCache.get(user.getUniqueName(), i -> {
-            Config cfg = scopeSettings.getConfig();
-            cfg = tenantConfig.withFallback(cfg);
-            cfg = userAccountConfig.withFallback(cfg);
-            return Tuple.create(new UserSettings(cfg, false), user.getTenant().getUniqueObjectName());
+        return configCache.get(user.getUniqueName(), ignored -> {
+            Config config = scopeSettings.getConfig();
+
+            if (tenantConfig != null) {
+                config = tenantConfig.withFallback(config);
+            }
+
+            config = userAccountConfig.withFallback(config);
+            return Tuple.create(new UserSettings(config, false), user.getTenant().getUniqueObjectName());
         }).getFirst();
     }
 
