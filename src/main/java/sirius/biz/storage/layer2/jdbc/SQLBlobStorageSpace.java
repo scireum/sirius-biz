@@ -762,7 +762,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                                  .eq(SQLBlob.SPACE_NAME, spaceName)
                                                  .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED,
                                                                        LocalDateTime.now().minusDays(retentionDays)))
-                                                 .where(OMA.FILTERS.ltOrEmpty(MongoBlob.LAST_TOUCHED,
+                                                 .where(OMA.FILTERS.ltOrEmpty(SQLBlob.LAST_TOUCHED,
                                                                               LocalDateTime.now()
                                                                                            .minusDays(retentionDays)));
             if (isTouchTracking()) {
