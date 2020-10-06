@@ -776,7 +776,11 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
         return configCache.get(user.getUniqueName(), i -> {
             Config cfg = scopeSettings.getConfig();
-            cfg = tenantConfig.withFallback(cfg);
+
+            if (tenantConfig != null) {
+                cfg = tenantConfig.withFallback(cfg);
+            }
+
             cfg = userAccountConfig.withFallback(cfg);
             return Tuple.create(new UserSettings(cfg, false), user.getTenant().getUniqueObjectName());
         }).getFirst();
