@@ -15,6 +15,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 /**
@@ -23,6 +24,7 @@ import java.util.Optional;
 public class UserAccountParameter extends Parameter<UserAccount<?, ?>, UserAccountParameter> {
 
     @Part
+    @Nullable
     private static Tenants<?, ?, ?> tenants;
 
     @Part

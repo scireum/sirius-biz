@@ -26,6 +26,8 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import javax.annotation.Nullable;
+
 /**
  * Represents all fields which are required to describe a code list.
  */
@@ -80,6 +82,7 @@ public class CodeListData extends Composite {
     private boolean autofill = true;
 
     @Part
+    @Nullable
     private static CodeLists<?, ?, ?> codeLists;
 
     @Transient

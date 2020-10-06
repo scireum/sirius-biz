@@ -13,13 +13,13 @@ services:
       - "27017"
     hostname: mongo
 
-  mysql:
-    image: mysql:5.5
+  mariadb:
+    image: mariadb:10.3.14-bionic
     ports:
       - "3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
-    hostname: mysql
+    hostname: mariadb
   clickhouse:
     image: yandex/clickhouse-server
     ports:

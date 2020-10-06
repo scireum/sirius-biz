@@ -19,7 +19,7 @@
     <properties>
         <sirius.kernel>dev-19.10</sirius.kernel>
         <sirius.web>dev-29.14</sirius.web>
-        <sirius.db>dev-19.5</sirius.db>
+        <sirius.db>dev-19.6</sirius.db>
     </properties>
 
     <repositories>
@@ -47,9 +47,9 @@
         </dependency>
 
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.48</version>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+            <version>2.2.5</version>
         </dependency>
         <dependency>
             <groupId>net.sf.jt400</groupId>

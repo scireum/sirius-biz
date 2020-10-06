@@ -69,9 +69,6 @@ public class JobsRoot extends SingularVFSRoot {
     private BlobStorage blobStorage;
 
     @Part
-    private Tenants<?, ?, ?> tenants;
-
-    @Part
     private Jobs jobs;
 
     @Part
