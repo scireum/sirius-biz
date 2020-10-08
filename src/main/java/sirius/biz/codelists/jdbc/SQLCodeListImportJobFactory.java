@@ -9,8 +9,8 @@
 package sirius.biz.codelists.jdbc;
 
 import sirius.biz.codelists.CodeListController;
-import sirius.biz.codelists.CodeListEntry;
-import sirius.biz.importer.ImportContext;
+import sirius.biz.codelists.TranslatableCodeListImportJob;
+import sirius.biz.jobs.batch.file.EntityImportJob;
 import sirius.biz.jobs.batch.file.EntityImportJobFactory;
 import sirius.biz.jobs.params.CodeListParameter;
 import sirius.biz.jobs.params.LanguageParameter;
@@ -31,11 +31,26 @@ import java.util.function.Consumer;
 @Register(framework = SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
 @Permission(CodeListController.PERMISSION_MANAGE_CODELISTS)
 public class SQLCodeListImportJobFactory extends EntityImportJobFactory {
-
+    /**
+     * Contains the SQL code list to import the code list entries into.
+     */
     private static final CodeListParameter CODE_LIST_PARAMETER =
             new CodeListParameter("codeList", "$CodeList").markRequired();
     private static final LanguageParameter LANGUAGE_PARAMETER =
             new LanguageParameter(LanguageParameter.PARAMETER_NAME, "$LocaleData.lang");
+
+    @Override
+    protected EntityImportJob<SQLCodeListEntry> createJob(ProcessContext process) {
+        return new TranslatableCodeListImportJob<>(fileParameter,
+                                                   ignoreEmptyParameter,
+                                                   importModeParameter,
+                                                   CODE_LIST_PARAMETER,
+                                                   LANGUAGE_PARAMETER,
+                                                   SQLCodeListEntry.class,
+                                                   getDictionary(),
+                                                   process,
+                                                   this.getClass().getName());
+    }
 
     @Nonnull
     @Override
@@ -53,12 +68,6 @@ public class SQLCodeListImportJobFactory extends EntityImportJobFactory {
         parameterCollector.accept(CODE_LIST_PARAMETER);
         parameterCollector.accept(LANGUAGE_PARAMETER);
         super.collectParameters(parameterCollector);
-    }
-
-    @Override
-    protected void transferParameters(ImportContext context, ProcessContext processContext) {
-        context.set(CodeListEntry.CODE_LIST, processContext.require(CODE_LIST_PARAMETER));
-        context.set(LanguageParameter.PARAMETER_NAME, LANGUAGE_PARAMETER);
     }
 
     @Override
