@@ -8,10 +8,8 @@
 
 package sirius.biz.model;
 
-import sirius.biz.codelists.mongo.MongoCodeLists;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
 import java.util.Collection;
@@ -22,8 +20,9 @@ import java.util.stream.Collectors;
  * Provides helpful constants and methods regarding language configuration data
  */
 public class LanguageConstants {
-    @Part
-    private static MongoCodeLists codeLists;
+
+    private LanguageConstants() {
+    }
 
     public static List<String> getLanguages() {
         return Sirius.getSettings().getStringList("nls.languages");
@@ -38,7 +37,7 @@ public class LanguageConstants {
     }
 
     /**
-     * Gets the translated name of the give language using the current language.
+     * Gets the translated name of the given language using the current language.
      *
      * @param code the code of the language
      * @return the translated name of the given language
