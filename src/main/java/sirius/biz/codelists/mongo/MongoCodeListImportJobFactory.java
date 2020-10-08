@@ -41,7 +41,7 @@ import java.util.function.Consumer;
 @Permission(CodeListController.PERMISSION_MANAGE_CODELISTS)
 public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
     @Part
-    private static CodeLists<?, ?, ?, ?> codeLists;
+    private static CodeLists<?, ?, ?> codeLists;
 
     /**
      * Contains the mongo code list to import the code list entries into.
@@ -142,16 +142,15 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
                                                                             .findFirst();
 
                 // update the translation text for the selected language
-                langCode.ifPresent(stringStringTuple -> codeLists.getEntry(codeList.getCodeListData().getCode(),
-                                                                           entity.getCodeListEntryData().getCode())
-                                                                 .ifPresent(cle -> {
-                                                                     cle.getTranslations()
-                                                                        .updateText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(
-                                                                                CodeListEntryData.DESCRIPTION),
-                                                                                    stringStringTuple.getFirst(),
-                                                                                    entity.getCodeListEntryData()
-                                                                                          .getDescription());
-                                                                 }));
+                langCode.ifPresent(stringStringTuple -> {
+                    codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
+                             .ifPresent(cle -> {
+                                 cle.getTranslations()
+                                    .updateText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION),
+                                                stringStringTuple.getFirst(),
+                                                entity.getCodeListEntryData().getDescription());
+                             });
+                });
             }
         }
     }
