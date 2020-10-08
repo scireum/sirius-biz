@@ -692,6 +692,8 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
             mango.select(MongoBlob.class)
                  .eq(MongoBlob.SPACE_NAME, spaceName)
                  .where(QueryBuilder.FILTERS.lt(MongoBlob.LAST_MODIFIED, LocalDateTime.now().minusDays(retentionDays)))
+                 .where(QueryBuilder.FILTERS.ltOrEmpty(MongoBlob.LAST_TOUCHED,
+                                                       LocalDateTime.now().minusDays(retentionDays)))
                  .limit(256)
                  .delete();
         } catch (Exception e) {

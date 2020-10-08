@@ -11,6 +11,7 @@ package sirius.biz.storage.layer2.jdbc;
 import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.Directory;
+import sirius.biz.storage.layer2.mongo.MongoBlob;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
@@ -760,7 +761,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
             SmartQuery<SQLBlob> deleteQuery = oma.select(SQLBlob.class)
                                                  .eq(SQLBlob.SPACE_NAME, spaceName)
                                                  .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED,
-                                                                       LocalDateTime.now().minusDays(retentionDays)));
+                                                                       LocalDateTime.now().minusDays(retentionDays)))
+                                                 .where(OMA.FILTERS.ltOrEmpty(SQLBlob.LAST_TOUCHED,
+                                                                              LocalDateTime.now()
+                                                                                           .minusDays(retentionDays)));
             if (isTouchTracking()) {
                 deleteQuery.where(OMA.FILTERS.ltOrEmpty(SQLBlob.LAST_TOUCHED,
                                                         LocalDateTime.now().minusDays(retentionDays)));

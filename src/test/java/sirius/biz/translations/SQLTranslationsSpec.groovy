@@ -30,17 +30,17 @@ class SQLTranslationsSpec extends TranslationsSpec {
     }
 
     def cleanup() {
-        List<SQLTranslation> translations = oma.select(SQLTranslation.class).queryList()
-        for (SQLTranslation t : translations) {
-            oma.delete(t)
-        }
+        oma.deleteStatement(SQLTranslation.class)
+           .where(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), sqlTranslatable.getUniqueName())
+           .executeUpdate()
     }
 
     def "translating a field of a sql entity works"() {
         given:
         sqlTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, GERMAN, GERMAN_TEXT)
         when:
-        List<SQLTranslation> translations = oma.select(SQLTranslation.class).queryList()
+        List<SQLTranslation> translations = oma.select(SQLTranslation.class).eq(Translation.TRANSLATION_DATA.inner(
+                TranslationData.OWNER), sqlTranslatable.getUniqueName()).queryList()
         then:
         translations.size() == 1
         and:
@@ -53,7 +53,8 @@ class SQLTranslationsSpec extends TranslationsSpec {
         when:
         sqlTranslatable.getTranslations().deleteText(DESCRIPTION_FIELD, GERMAN)
         and:
-        List<SQLTranslation> translations = oma.select(SQLTranslation.class).queryList()
+        List<SQLTranslation> translations = oma.select(SQLTranslation.class).eq(Translation.TRANSLATION_DATA.inner(
+                TranslationData.OWNER), sqlTranslatable.getUniqueName()).queryList()
         then:
         translations.size() == 0
     }
@@ -64,7 +65,8 @@ class SQLTranslationsSpec extends TranslationsSpec {
         when:
         sqlTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, GERMAN, "")
         and:
-        List<SQLTranslation> translations = oma.select(SQLTranslation.class).queryList()
+        List<SQLTranslation> translations = oma.select(SQLTranslation.class).eq(Translation.TRANSLATION_DATA.inner(
+                TranslationData.OWNER), sqlTranslatable.getUniqueName()).queryList()
         then:
         translations.size() == 0
     }
@@ -127,7 +129,8 @@ class SQLTranslationsSpec extends TranslationsSpec {
         when:
         oma.delete(sqlTranslatable)
         and:
-        List<SQLTranslation> translations = oma.select(SQLTranslation.class).queryList()
+        List<SQLTranslation> translations = oma.select(SQLTranslation.class).eq(Translation.TRANSLATION_DATA.inner(
+                TranslationData.OWNER), sqlTranslatable.getUniqueName()).queryList()
         then:
         translations.size() == 0
     }

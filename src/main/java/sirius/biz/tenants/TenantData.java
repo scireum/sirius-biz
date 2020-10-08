@@ -264,6 +264,7 @@ public class TenantData extends Composite implements Journaled {
     private String lang;
 
     @Part
+    @Nullable
     private static Tenants<?, ?, ?> tenants;
 
     /**

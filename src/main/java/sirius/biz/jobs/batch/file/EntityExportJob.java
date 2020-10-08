@@ -69,6 +69,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     private static Mixing mixing;
 
     @Part
+    @Nullable
     private static Tenants<?, ?, ?> tenants;
 
     protected final VirtualFile templateFile;

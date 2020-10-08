@@ -23,6 +23,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.Formatter;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -87,7 +88,8 @@ public class PersonData extends Composite {
     private String lastname;
 
     @Part
-    private static CodeLists<?, ?, ?, ?> codeLists;
+    @Nullable
+    private static CodeLists<?, ?, ?> codeLists;
 
     /**
      * Verifies that the given salutation is part of the underlying code list.

@@ -14,6 +14,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 /**
@@ -22,7 +23,8 @@ import java.util.Optional;
 public class CodeListParameter extends Parameter<CodeList, CodeListParameter> {
 
     @Part
-    private static CodeLists<?, ?, ?, ?> codeLists;
+    @Nullable
+    private static CodeLists<?, ?, ?> codeLists;
 
     /**
      * Creates a new parameter with the given name and label.

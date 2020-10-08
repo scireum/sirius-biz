@@ -12,6 +12,7 @@ import com.alibaba.fastjson.JSONObject;
 import sirius.biz.cluster.work.DistributedTaskExecutor;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.jobs.BasicJobFactory;
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.ProcessLink;
@@ -24,7 +25,9 @@ import sirius.kernel.nls.NLS;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -213,16 +216,30 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     protected abstract BatchJob createJob(ProcessContext process) throws Exception;
 
     protected void logParameters(ProcessContext process) {
-        StringBuilder output = new StringBuilder();
-        output.append("Parameter:\n\n");
+        List<Parameter<?, ?>> parameters = getParameters();
 
-        getParameters().forEach(param -> {
-            String value = process.getParameter(param).map(NLS::toUserString).orElse("");
+        makeParameterLog(process, parameters, Parameter.LogVisibility.NORMAL).ifPresent(process::log);
+        makeParameterLog(process, parameters, Parameter.LogVisibility.SYSTEM).ifPresent(processLog -> process.log(
+                processLog.asSystemMessage()));
+    }
+
+    private Optional<ProcessLog> makeParameterLog(ProcessContext process,
+                                                  List<Parameter<?, ?>> parameters,
+                                                  Parameter.LogVisibility logVisibility) {
+        if (parameters.stream().noneMatch(parameter -> logVisibility == parameter.getLogVisibility())) {
+            return Optional.empty();
+        }
+        StringBuilder output = new StringBuilder();
+        output.append(NLS.get("ProcessLog.parameterHeading." + logVisibility.name()));
+        output.append(":\n\n");
+
+        parameters.stream().filter(parameter -> logVisibility == parameter.getLogVisibility()).forEach(param -> {
+            String value = process.getParameter(param).map(NLS::toUserString).orElse("-");
             output.append(param.getLabel());
             output.append(": ");
             output.append(value);
             output.append("\n");
         });
-        process.log(ProcessLog.info().withMessage(output.toString().trim()));
+        return Optional.of(ProcessLog.info().withMessage(output.toString().trim()));
     }
 }

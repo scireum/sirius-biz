@@ -21,7 +21,6 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.properties.BaseEntityRefProperty;
-import sirius.db.mixing.properties.BooleanProperty;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
 import sirius.kernel.async.Tasks;
@@ -79,6 +78,7 @@ public class BizController extends BasicController {
     protected Elastic elastic;
 
     @Part
+    @Nullable
     private Processes processes;
 
     @Part
@@ -91,6 +91,7 @@ public class BizController extends BasicController {
      * using {@code tenants.as(SQLTenants.class)}. This also applies for {@link sirius.biz.tenants.mongo.MongoTenants}.
      */
     @Part
+    @Nullable
     protected Tenants<?, ?, ?> tenants;
 
     @ConfigValue("product.baseUrl")
@@ -267,7 +268,8 @@ public class BizController extends BasicController {
     private boolean tryLoadProperty(WebContext webContext, BaseEntity<?> entity, Property property) {
         String propertyName = property.getName();
 
-        if (!webContext.hasParameter(propertyName)) {
+        if (!webContext.hasParameter(propertyName) && !webContext.hasParameter(propertyName
+                                                                               + CHECKBOX_PRESENCE_MARKER)) {
             // If the parameter is not present in the request we just skip it to prevent resetting the field to null
             return true;
         }
@@ -304,15 +306,9 @@ public class BizController extends BasicController {
             return true;
         }
 
-        // If the property is a boolean one, it will most probably handled
-        // by a checkbox. As an unchecked checkbox will not submit any value
-        // we therefore add a hidden field which signals the presence of the
-        // checkbox. The field is named "property"_marker.
-        if (property instanceof BooleanProperty) {
-            return webContext.hasParameter(property.getName() + CHECKBOX_PRESENCE_MARKER);
-        }
-
-        return false;
+        // We look for the presence of a marker which is added when the property is handled by one or multiple checkboxes,
+        // as else we wouldn't know when to empty these fields, as empty checkboxes are not posted into the request.
+        return webContext.hasParameter(property.getName() + CHECKBOX_PRESENCE_MARKER);
     }
 
     private boolean isAutoloaded(Property property) {

@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Provides a base implementation for interactive jobs.
  * <p>
- * An interactive job is only available within the UI a provides a response or result with at most a negligible delay.
+ * An interactive job is only available within the UI and provides a response or result with at most a negligible delay.
  */
 public abstract class InteractiveJobFactory extends BasicJobFactory {
 

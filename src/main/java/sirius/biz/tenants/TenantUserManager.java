@@ -81,7 +81,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     /**
      * This flag permission is granted to <b>all users</b> which belong to the system tenant.
      * <p>
-     * The id of the system tenant can be set in the scope config. The system tenant usually is the administrative
+     * The id of the system tenant can be set in the system config. The system tenant usually is the administrative
      * company which owns / runs the system, this flag is kept when the user has taken control over another tenant,
      * but is removed if the user has taken control over another user directly.
      */
@@ -90,7 +90,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     /**
      * This flag permission is granted to <b>all users</b> which originally belong to the system tenant.
      * <p>
-     * The id of the system tenant can be set in the scope config. The system tenant usually is the administrative
+     * The id of the system tenant can be set in the system config. The system tenant usually is the administrative
      * company which owns / runs the system.
      * Unlike {@link #PERMISSION_SYSTEM_TENANT_MEMBER}, this flag is kept always,
      * even when the user either has taken control over another tenant or user account.
@@ -154,6 +154,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     protected final List<String> availableLanguages;
 
     @Part
+    @Nullable
     protected static Tenants<?, ?, ?> tenants;
 
     @Part
@@ -767,18 +768,22 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                 return scopeSettings;
             }
 
-            return configCache.get(user.getTenant().getUniqueObjectName(), i -> {
-                Config cfg = scopeSettings.getConfig();
-                cfg = tenantConfig.withFallback(cfg);
-                return Tuple.create(new UserSettings(cfg, false), user.getTenant().getUniqueObjectName());
+            return configCache.get(user.getTenant().getUniqueObjectName(), ignored -> {
+                Config config = scopeSettings.getConfig();
+                config = tenantConfig.withFallback(config);
+                return Tuple.create(new UserSettings(config, false), user.getTenant().getUniqueObjectName());
             }).getFirst();
         }
 
-        return configCache.get(user.getUniqueName(), i -> {
-            Config cfg = scopeSettings.getConfig();
-            cfg = tenantConfig.withFallback(cfg);
-            cfg = userAccountConfig.withFallback(cfg);
-            return Tuple.create(new UserSettings(cfg, false), user.getTenant().getUniqueObjectName());
+        return configCache.get(user.getUniqueName(), ignored -> {
+            Config config = scopeSettings.getConfig();
+
+            if (tenantConfig != null) {
+                config = tenantConfig.withFallback(config);
+            }
+
+            config = userAccountConfig.withFallback(config);
+            return Tuple.create(new UserSettings(config, false), user.getTenant().getUniqueObjectName());
         }).getFirst();
     }
 

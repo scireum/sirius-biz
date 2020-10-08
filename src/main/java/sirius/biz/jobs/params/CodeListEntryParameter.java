@@ -15,6 +15,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,8 +23,10 @@ import java.util.Optional;
  * Permits to select a {@link CodeListEntry} as parameter.
  */
 public class CodeListEntryParameter extends Parameter<CodeListEntry<?, ?, ?>, CodeListEntryParameter> {
+
     @Part
-    private static CodeLists<?, ?, ?, ?> codeLists;
+    @Nullable
+    private static CodeLists<?, ?, ?> codeLists;
 
     private String codelist;
 

@@ -145,11 +145,12 @@ public class ObjectStore {
                                                      .withS3Client(client)
                                                      .build();
 
-        if (Strings.isFilled(bucketSuffix) && !bucketSuffix.startsWith(".")) {
-            this.bucketSuffix = "." + bucketSuffix;
-        } else {
-            this.bucketSuffix = bucketSuffix;
+        if (Strings.isFilled(bucketSuffix) && bucketSuffix.contains(".") && !bucketSuffix.startsWith(".")) {
+            ObjectStores.LOG.WARN(
+                    "The bucketSuffix '%s' contains a '.' but does not start with one. This might lead to errors!",
+                    bucketSuffix);
         }
+        this.bucketSuffix = bucketSuffix;
     }
 
     /**

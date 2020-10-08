@@ -25,6 +25,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -55,6 +56,7 @@ public class SQLTenant extends BizEntity implements Tenant<Long> {
     private Set<String> effectivePermissions;
 
     @Part
+    @Nullable
     private static Tenants<?, ?, ?> tenants;
 
     @Override

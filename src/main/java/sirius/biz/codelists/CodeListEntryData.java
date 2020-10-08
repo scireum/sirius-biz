@@ -9,6 +9,7 @@
 package sirius.biz.codelists;
 
 import sirius.biz.importer.AutoImport;
+import sirius.biz.mongo.PrefixSearchContent;
 import sirius.biz.protocol.TraceData;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
@@ -23,6 +24,8 @@ import sirius.db.mixing.annotations.Unique;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
+
+import javax.annotation.Nullable;
 
 /**
  * Represents an entry in a {@link CodeListData code list}.
@@ -45,6 +48,7 @@ public class CodeListEntryData extends Composite {
     @Length(50)
     @Unique(within = "codeList")
     @AutoImport
+    @PrefixSearchContent
     private String code;
 
     /**
@@ -62,6 +66,7 @@ public class CodeListEntryData extends Composite {
     @Length(512)
     @NullAllowed
     @AutoImport
+    @PrefixSearchContent
     private String value;
 
     /**
@@ -71,6 +76,7 @@ public class CodeListEntryData extends Composite {
     @Length(512)
     @NullAllowed
     @AutoImport
+    @PrefixSearchContent
     private String additionalValue;
 
     /**
@@ -80,10 +86,12 @@ public class CodeListEntryData extends Composite {
     @Length(1024)
     @NullAllowed
     @AutoImport
+    @PrefixSearchContent
     private String description;
 
     @Part
-    private static CodeLists<?, ?, ?, ?> codeLists;
+    @Nullable
+    private static CodeLists<?, ?, ?> codeLists;
 
     @Transient
     private BaseEntity<?> codeListEntry;

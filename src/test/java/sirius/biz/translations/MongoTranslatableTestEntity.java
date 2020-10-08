@@ -14,7 +14,7 @@ import sirius.db.mongo.MongoEntity;
 
 public class MongoTranslatableTestEntity extends MongoEntity implements Translatable<MongoTranslations> {
 
-    private MongoTranslations translations = new MongoTranslations(this);
+    private final MongoTranslations translations = new MongoTranslations(this);
 
     public static final Mapping DESCRIPTION = Mapping.named("description");
 

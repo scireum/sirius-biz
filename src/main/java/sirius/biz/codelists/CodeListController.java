@@ -8,11 +8,9 @@
 
 package sirius.biz.codelists;
 
-import sirius.biz.translations.BasicTranslations;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
-import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.nls.Formatter;
@@ -30,10 +28,9 @@ import sirius.web.security.Permission;
  *
  * @param <I> the type of database IDs used by the concrete implementation
  * @param <L> the effective entity type used to represent code lists
- * @param <T> the effective entity type used to represent translations
  * @param <E> the effective entity type used to represent code list entries
  */
-public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, T extends BasicTranslations<?>, E extends BaseEntity<I> & CodeListEntry<I, L, T>>
+public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L, ?>>
         extends BizController {
 
     /**
@@ -48,7 +45,7 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
     private static final String PARAM_DESCRIPTION = "description";
 
     @Part
-    private CodeLists<I, L, T, E> codeLists;
+    private CodeLists<I, L, E> codeLists;
 
     /**
      * Provides a list of all code lists.
@@ -60,13 +57,10 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-lists")
     public void codeLists(WebContext ctx) {
-        BasePageHelper<L, ?, ?, ?> ph = getListsAsPage();
-        ph.withContext(ctx);
-        ph.withSearchFields(QueryField.contains(CodeList.CODE_LIST_DATA.inner(CodeListData.CODE)),
-                            QueryField.contains(CodeList.CODE_LIST_DATA.inner(CodeListData.NAME)),
-                            QueryField.contains(CodeList.CODE_LIST_DATA.inner(CodeListData.DESCRIPTION)));
-
-        ctx.respondWith().template("/templates/biz/codelists/code-lists.html.pasta", ph.asPage());
+        BasePageHelper<L, ?, ?, ?> pageHelper = getListsAsPage();
+        pageHelper.withContext(ctx);
+        applyCodeListSearchFields(pageHelper);
+        ctx.respondWith().template("/templates/biz/codelists/code-lists.html.pasta", pageHelper.asPage());
     }
 
     protected abstract BasePageHelper<L, ?, ?, ?> getListsAsPage();
@@ -112,17 +106,17 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
     }
 
     private void renderCodeList(WebContext ctx, L codeList) {
-        BasePageHelper<E, ?, ?, ?> ph = getEntriesAsPage(codeList);
-        ph.withContext(ctx);
-        ph.withSearchFields(QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE)),
-                            QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE)),
-                            QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE)),
-                            QueryField.contains(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION)));
-
-        ctx.respondWith().template("/templates/biz/codelists/code-list-entries.html.pasta", codeList, ph.asPage());
+        BasePageHelper<E, ?, ?, ?> pageHelper = getEntriesAsPage(codeList);
+        pageHelper.withContext(ctx);
+        applyCodeListEntrySearchFields(pageHelper);
+        ctx.respondWith().template("/templates/biz/codelists/code-list-entries.html.pasta", codeList, pageHelper.asPage());
     }
 
     protected abstract BasePageHelper<E, ?, ?, ?> getEntriesAsPage(L codeList);
+
+    protected abstract void applyCodeListSearchFields(BasePageHelper<L, ?, ?, ?> pageHelper);
+
+    protected abstract void applyCodeListEntrySearchFields(BasePageHelper<E, ?, ?, ?> pageHelper);
 
     /**
      * Provides an editor for a code list entry.

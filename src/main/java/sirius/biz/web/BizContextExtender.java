@@ -15,12 +15,15 @@ import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.db.jdbc.Databases;
 import sirius.db.jdbc.OMA;
+import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.Mongo;
 import sirius.db.redis.Redis;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.templates.GlobalContextExtender;
+
+import javax.annotation.Nullable;
 
 /**
  * Makes central frameworks available in Tagliatelle without any import or reference.
@@ -29,7 +32,8 @@ import sirius.web.templates.GlobalContextExtender;
 public class BizContextExtender implements GlobalContextExtender {
 
     @Part
-    private CodeLists<?, ?, ?, ?> codeLists;
+    @Nullable
+    private CodeLists<?, ?, ?> codeLists;
 
     @Part
     private Databases databases;
@@ -56,6 +60,7 @@ public class BizContextExtender implements GlobalContextExtender {
     private Isenguard isenguard;
 
     @Part
+    @Nullable
     private Tenants<?, ?, ?> tenantsHelper;
 
     @Override

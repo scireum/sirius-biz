@@ -29,7 +29,10 @@ class MongoTranslationsSpec extends TranslationsSpec {
     }
 
     def cleanup() {
-        List<MongoTranslation> translations = mango.select(MongoTranslation.class).queryList()
+        List<MongoTranslation> translations = mango.
+                select(MongoTranslation.class).
+                eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), mongoTranslatable.getUniqueName()).
+                queryList()
         for (MongoTranslation t : translations) {
             mango.delete(t)
         }
@@ -39,7 +42,10 @@ class MongoTranslationsSpec extends TranslationsSpec {
         given:
         mongoTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, GERMAN, GERMAN_TEXT)
         when:
-        List<MongoTranslation> translations = mango.select(MongoTranslation.class).queryList()
+        List<MongoTranslation> translations = mango.
+                select(MongoTranslation.class).
+                eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), mongoTranslatable.getUniqueName()).
+                queryList()
         then:
         translations.size() == 1
         and:
@@ -52,7 +58,10 @@ class MongoTranslationsSpec extends TranslationsSpec {
         when:
         mongoTranslatable.getTranslations().deleteText(DESCRIPTION_FIELD, GERMAN)
         and:
-        List<MongoTranslation> translations = mango.select(MongoTranslation.class).queryList()
+        List<MongoTranslation> translations = mango.
+                select(MongoTranslation.class).
+                eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), mongoTranslatable.getUniqueName()).
+                queryList()
         then:
         translations.size() == 0
     }
@@ -63,7 +72,10 @@ class MongoTranslationsSpec extends TranslationsSpec {
         when:
         mongoTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, GERMAN, "")
         and:
-        List<MongoTranslation> translations = mango.select(MongoTranslation.class).queryList()
+        List<MongoTranslation> translations = mango.
+                select(MongoTranslation.class).
+                eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), mongoTranslatable.getUniqueName()).
+                queryList()
         then:
         translations.size() == 0
     }
@@ -126,7 +138,10 @@ class MongoTranslationsSpec extends TranslationsSpec {
         when:
         mango.delete(mongoTranslatable)
         and:
-        List<MongoTranslation> translations = mango.select(MongoTranslation.class).queryList()
+        List<MongoTranslation> translations = mango.
+                select(MongoTranslation.class).
+                eq(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), mongoTranslatable.getUniqueName()).
+                queryList()
         then:
         translations.size() == 0
     }

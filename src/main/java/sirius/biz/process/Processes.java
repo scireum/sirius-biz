@@ -15,6 +15,7 @@ import sirius.biz.process.logs.ProcessLogState;
 import sirius.biz.process.logs.ProcessLogType;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.protocol.JournalData;
+import sirius.biz.storage.layer2.Blob;
 import sirius.db.es.Elastic;
 import sirius.db.mixing.IntegrityConstraintFailedException;
 import sirius.db.mixing.OptimisticLockException;
@@ -40,6 +41,7 @@ import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -397,10 +399,10 @@ public class Processes {
             try {
                 elastic.tryUpdate(process);
                 process1stLevelCache.put(processId, process);
-                
+
                 // Trigger a flush of the process ID on every node so the change will be reflected
                 process2ndLevelCache.remove(processId);
-                
+
                 process2ndLevelCache.put(processId, process);
                 return true;
             } catch (OptimisticLockException e) {
@@ -472,11 +474,14 @@ public class Processes {
     /**
      * Marks a process as completed.
      *
-     * @param processId the process to update
-     * @param timings   timing which have been collected and not yet committed
+     * @param processId    the process to update
+     * @param timings      timings which have been collected and not yet committed
+     * @param adminTimings timings which have been collected and not yet committed and only administrators should see
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-    protected boolean markCompleted(String processId, @Nullable Map<String, Average> timings) {
+    protected boolean markCompleted(String processId,
+                                    @Nullable Map<String, Average> timings,
+                                    @Nullable Map<String, Average> adminTimings) {
         return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             if (process.getState() != ProcessState.STANDBY) {
                 process.setState(ProcessState.TERMINATED);
@@ -485,10 +490,11 @@ public class Processes {
             }
 
             if (timings != null) {
-                timings.forEach((key, avg) -> {
-                    process.getPerformanceCounters().put(key, (int) avg.getCount());
-                    process.getTimings().put(key, (int) avg.getAvg());
-                });
+                timings.forEach(process::addTiming);
+            }
+
+            if (adminTimings != null) {
+                adminTimings.forEach(process::addAdminTiming);
             }
         });
     }
@@ -496,17 +502,16 @@ public class Processes {
     /**
      * Updates the performance counters of the given process.
      *
-     * @param processId the process to update
-     * @param timings   the timings (label, value) to store
+     * @param processId    the process to update
+     * @param timings      the timings (label, value) to store
+     * @param adminTimings the set of timings that should only be visible to system tenant users
      * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
      */
-    protected boolean addTimings(String processId, Map<String, Average> timings) {
-        return modify(processId,
-                      process -> process.getState() != ProcessState.TERMINATED,
-                      process -> timings.forEach((key, avg) -> {
-                          process.getPerformanceCounters().put(key, (int) avg.getCount());
-                          process.getTimings().put(key, (int) avg.getAvg());
-                      }));
+    protected boolean addTimings(String processId, Map<String, Average> timings, Map<String, Average> adminTimings) {
+        return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
+            timings.forEach(process::addTiming);
+            adminTimings.forEach(process::addAdminTiming);
+        });
     }
 
     /**
@@ -626,6 +631,24 @@ public class Processes {
         }
 
         return process.getFiles().findOrCreateAttachedBlobByName(filename).createOutputStream(filename);
+    }
+
+    /**
+     * Returns an input stream to a file stored in the process.
+     * <p>
+     * Note that it is the responsibility of the caller to close the stream upon usage.
+     *
+     * @param processId the process to retrieve the file from
+     * @param filename  the file name to lookup
+     * @return an {@link InputStream} to the file or <tt>null</tt> if none was found
+     */
+    public InputStream getFile(String processId, String filename) {
+        Process process = fetchProcess(processId).orElse(null);
+        if (process == null) {
+            throw new IllegalStateException(Strings.apply("The requested process (%s) isn't available.", processId));
+        }
+
+        return process.getFiles().findAttachedBlobByName(filename).map(Blob::createInputStream).orElse(null);
     }
 
     /**
