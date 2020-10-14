@@ -105,7 +105,7 @@
         </w:modal>
 
         <script type="text/javascript">
-            function selectVFSFile(initialPath) {
+            function selectVFSFile(initialPath, restictToPath) {
                 return new Promise(function (resolve, reject) {
                     var $modal = $("#select-file-modal");
 

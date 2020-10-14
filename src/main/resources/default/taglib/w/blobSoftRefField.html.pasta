@@ -1,0 +1,74 @@
+<i:arg type="sirius.biz.storage.layer2.BlobSoftRef" name="blobRef"/>
+<i:arg type="String" name="id" default="@('blob-soft-ref-' + call.generateLocalId())"/>
+<i:arg type="String" name="defaultPreview" default=""/>
+<i:arg type="boolean" name="urlAllowed" default="@blobRef.isSupportsURL()" description=""/>
+<i:arg type="boolean" name="showResetButton" default="@blobRef.isFilled()"/>
+
+<div id="@id">
+    <div>
+        <img src="@defaultPreview"
+             class="file-upload-preview-js @if(!isFilled(defaultPreview) || blobRef.isFilled()) { hide }"/>
+
+        <i class="fa fa-3x fa-file-o file-icon-js" aria-hidden="true"></i>
+
+        <p>
+            <a href="@blobRef.url().asDownload().buildURL().orElse('')" class="file-name-js"
+               style="word-wrap: break-word">
+                @blobRef.getFilename()
+            </a>
+        </p>
+    </div>
+
+    <button type="button" class="btn btn-primary btn-block btn-select-file-js">
+        @i18n("StoredObject.uploadBtn")
+    </button>
+
+    <i:if test="@urlAllowed">
+        <button type="button" class="btn btn-block" data-placement="top" data-toggle="popover">
+            @i18n("StoredObject.specifyURL")
+        </button>
+
+        <div class="popover-content hide">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>@i18n("StoredObject.URL")</label>
+                        <input type="text" class="form-control">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-block btn-primary button-apply">
+                        @i18n("NLS.ok") <i class="fa fa-check"></i>
+                    </button>
+                </div>
+
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-block button-close">
+                        @i18n("NLS.cancel") <i class="fa fa-close"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </i:if>
+
+    <button type="button" class="btn btn-block btn-reset-js @if(!showResetButton) { hide }">
+        @i18n("StoredObject.resetBtn")
+    </button>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#___id .btn-select-file-js').click(function () {
+            let blobStorageSpacePath = '/___blobRef.getSpace()';
+
+            selectVFSFile('', blobStorageSpacePath).then(function (selectedValue) {
+                $.getJSON('/dasd/blob-info-for-path/___blobRef.getSpace()', {
+                    path: selectedValue.replace(blobStorageSpacePath, '')
+                }, function (json) {
+                    alert(json.fileId);
+                });
+            });
+        });
+    });
+</script>

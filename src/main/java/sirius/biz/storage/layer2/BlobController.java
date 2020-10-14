@@ -15,7 +15,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
-import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.InputStreamHandler;
 import sirius.web.http.WebContext;
@@ -51,9 +50,9 @@ public class BlobController extends BizController {
     @Routed(value = "/dasd/upload-file/:1", preDispatchable = true, jsonCall = true)
     @LoginRequired
     public void uploadFile(final WebContext ctx,
-                                 JSONStructuredOutput out,
-                                 String spaceName,
-                                 InputStreamHandler upload) {
+                           JSONStructuredOutput out,
+                           String spaceName,
+                           InputStreamHandler upload) {
         Blob blob = blobStorage.getSpace(spaceName).createTemporaryBlob();
         try {
             try {
@@ -85,5 +84,26 @@ public class BlobController extends BizController {
                             .withSystemErrorMessage("Failed to upload a file into space '%s': %s (%s)", spaceName)
                             .handle();
         }
+    }
+
+    @Routed(value = "/dasd/blob-info-for-path/:1", jsonCall = true)
+    @LoginRequired
+    public void blobInfoForPath(final WebContext ctx, JSONStructuredOutput out, String spaceName) {
+        String path = ctx.getParameter("path");
+
+        Blob blob = blobStorage.getSpace(spaceName)
+                               .findByPath(path)
+                               .orElseThrow(() -> Exceptions.createHandled()
+                                                            .withSystemErrorMessage(
+                                                                    "Cannot find blob for path '%s' in space '%s'",
+                                                                    path,
+                                                                    spaceName)
+                                                            .handle());
+
+        out.property("fileId", blob.getBlobKey());
+        out.property("filename", blob.getFilename());
+        out.property("size", blob.getSize());
+        out.property("formattedSize", NLS.formatSize(blob.getSize()));
+        out.property("downloadUrl", blob.url().asDownload().buildURL().orElse(""));
     }
 }
