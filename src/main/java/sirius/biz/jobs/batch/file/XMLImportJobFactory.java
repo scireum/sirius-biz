@@ -29,7 +29,7 @@ public abstract class XMLImportJobFactory extends FileImportJobFactory {
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
         Map<String, String> paths = new LinkedHashMap<>();
-        getXsdResourcePaths(paths::put);
+        fillXsdResourcePaths(paths::put);
         if (!paths.isEmpty()) {
             paths.forEach((xsdPath, name) -> requireValidFile.withEntry(xsdPath, name));
             parameterCollector.accept(requireValidFile);
@@ -50,7 +50,7 @@ public abstract class XMLImportJobFactory extends FileImportJobFactory {
      * <p>
      * This allows to provide more than one XSD for validation when multiple variants of a data format are supported.
      */
-    protected void getXsdResourcePaths(BiConsumer<String, String> entryConsumer) {
+    protected void fillXsdResourcePaths(BiConsumer<String, String> entryConsumer) {
         // Nothing to do in the default implementation
     }
 }
