@@ -12,9 +12,9 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.process.ProcessContext;
 
-import javax.annotation.Nonnull;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -28,8 +28,10 @@ public abstract class XMLImportJobFactory extends FileImportJobFactory {
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
-        if (!getXsdResourcePaths().isEmpty()) {
-            getXsdResourcePaths().forEach((xsdPath, name) -> requireValidFile.withEntry(xsdPath, name));
+        Map<String, String> paths = new LinkedHashMap<>();
+        getXsdResourcePaths(paths::put);
+        if (!paths.isEmpty()) {
+            paths.forEach((xsdPath, name) -> requireValidFile.withEntry(xsdPath, name));
             parameterCollector.accept(requireValidFile);
         }
         super.collectParameters(parameterCollector);
@@ -44,14 +46,11 @@ public abstract class XMLImportJobFactory extends FileImportJobFactory {
     }
 
     /**
-     * Returns a map of paths to XSD files if the XML file should be validated, an empty map otherwise.
+     * Adds xsd schema paths to the entryConsumer if the XML file should and can be validated.
      * <p>
      * This allows to provide more than one XSD for validation when multiple variants of a data format are supported.
-     *
-     * @return a map of paths to XSD files if the XML file should be validated, an empty map otherwise
      */
-    @Nonnull
-    protected Map<String, String> getXsdResourcePaths() {
-        return new HashMap<>();
+    protected void getXsdResourcePaths(BiConsumer<String, String> entryConsumer) {
+        // Nothing to do in the default implementation
     }
 }
