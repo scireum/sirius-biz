@@ -8,11 +8,13 @@
 
 package sirius.biz.jobs.batch.file;
 
-import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.process.ProcessContext;
 
-import javax.annotation.Nullable;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -20,14 +22,16 @@ import java.util.function.Consumer;
  */
 public abstract class XMLImportJobFactory extends FileImportJobFactory {
 
-    protected final BooleanParameter requireValidFile =
-            new BooleanParameter("requireValidFile", "$XMLImportJobFactory.requireValidFile").hidden()
-                                                                                             .withDescription(
-                                                                                                     "$XMLImportJobFactory.requireValidFile.help");
+    protected final SelectStringParameter requireValidFile =
+            new SelectStringParameter("requireValidFile", "$XMLImportJobFactory.requireValidFile").withDescription(
+                    "$XMLImportJobFactory.requireValidFile.help").hidden();
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
-        if (getXsdResourcePath() != null) {
+        Map<String, String> paths = new LinkedHashMap<>();
+        fillXsdResourcePaths(paths::put);
+        if (!paths.isEmpty()) {
+            paths.forEach((xsdPath, name) -> requireValidFile.withEntry(xsdPath, name));
             parameterCollector.accept(requireValidFile);
         }
         super.collectParameters(parameterCollector);
@@ -42,12 +46,11 @@ public abstract class XMLImportJobFactory extends FileImportJobFactory {
     }
 
     /**
-     * Returns the path to the XSD file if the XML file should be validated, null otherwise.
-     *
-     * @return the path to the XSD file if the XML file should be validated, null otherwise
+     * Adds xsd schema paths to the entryConsumer if the XML file should and can be validated.
+     * <p>
+     * This allows to provide more than one XSD for validation when multiple variants of a data format are supported.
      */
-    @Nullable
-    protected String getXsdResourcePath() {
-        return null;
+    protected void fillXsdResourcePaths(BiConsumer<String, String> entryConsumer) {
+        // Nothing to do in the default implementation
     }
 }
