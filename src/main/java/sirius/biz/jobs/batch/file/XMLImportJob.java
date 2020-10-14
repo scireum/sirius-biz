@@ -51,7 +51,7 @@ public abstract class XMLImportJob extends FileImportJob {
 
     @Override
     protected void executeForSingleFile(String fileName, FileHandle fileHandle) throws Exception {
-        if (shouldValidateXsd()) {
+        if (Strings.isFilled(validationXsdPath)) {
             try (InputStream in = fileHandle.getInputStream()) {
                 if (!validate(in)) {
                     process.log(ProcessLog.error()
@@ -93,7 +93,7 @@ public abstract class XMLImportJob extends FileImportJob {
     }
 
     protected void executeForArchivedFile(ZipFile zipFile, ZipEntry zipEntry) throws Exception {
-        if (shouldValidateXsd()) {
+        if (Strings.isFilled(validationXsdPath)) {
             try (InputStream in = zipFile.getInputStream(zipEntry)) {
                 if (!validate(in)) {
                     process.log(ProcessLog.error()
@@ -106,11 +106,6 @@ public abstract class XMLImportJob extends FileImportJob {
         try (InputStream in = zipFile.getInputStream(zipEntry)) {
             executeForStream(zipEntry.getName(), in);
         }
-    }
-
-    private boolean shouldValidateXsd() {
-        return Strings.isFilled(validationXsdPath) && !Strings.areEqual(validationXsdPath,
-                                                                        XMLImportJobFactory.NO_VALIDATION_XSD);
     }
 
     /**

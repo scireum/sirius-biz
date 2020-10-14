@@ -22,14 +22,9 @@ import java.util.function.Consumer;
  */
 public abstract class XMLImportJobFactory extends FileImportJobFactory {
 
-    /**
-     * Defines the key of the {@link #requireValidFile} entry which should skip the XSD validation entirely.
-     */
-    public static final String NO_VALIDATION_XSD = "-";
-
     protected final SelectStringParameter requireValidFile =
             new SelectStringParameter("requireValidFile", "$XMLImportJobFactory.requireValidFile").withDescription(
-                    "$XMLImportJobFactory.requireValidFile.help").markRequired().hidden();
+                    "$XMLImportJobFactory.requireValidFile.help").hidden();
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
