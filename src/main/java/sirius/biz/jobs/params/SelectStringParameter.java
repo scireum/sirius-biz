@@ -67,6 +67,6 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
         if (!entries.containsKey(input.asString())) {
             return Optional.empty();
         }
-        return Optional.of(entries.get(input.asString()));
+        return Optional.of(input.asString());
     }
 }
