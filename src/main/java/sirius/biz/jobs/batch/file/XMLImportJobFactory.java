@@ -8,11 +8,13 @@
 
 package sirius.biz.jobs.batch.file;
 
-import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.process.ProcessContext;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -20,14 +22,19 @@ import java.util.function.Consumer;
  */
 public abstract class XMLImportJobFactory extends FileImportJobFactory {
 
-    protected final BooleanParameter requireValidFile =
-            new BooleanParameter("requireValidFile", "$XMLImportJobFactory.requireValidFile").hidden()
-                                                                                             .withDescription(
-                                                                                                     "$XMLImportJobFactory.requireValidFile.help");
+    /**
+     * Defines the key of the {@link #requireValidFile} entry which should skip the XSD validation entirely.
+     */
+    public static final String NO_VALIDATION_XSD = "-";
+
+    protected final SelectStringParameter requireValidFile =
+            new SelectStringParameter("requireValidFile", "$XMLImportJobFactory.requireValidFile").withDescription(
+                    "$XMLImportJobFactory.requireValidFile.help").markRequired().hidden();
 
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
-        if (getXsdResourcePath() != null) {
+        if (!getXsdResourcePaths().isEmpty()) {
+            getXsdResourcePaths().forEach((xsdPath, name) -> requireValidFile.withEntry(xsdPath, name));
             parameterCollector.accept(requireValidFile);
         }
         super.collectParameters(parameterCollector);
@@ -42,12 +49,14 @@ public abstract class XMLImportJobFactory extends FileImportJobFactory {
     }
 
     /**
-     * Returns the path to the XSD file if the XML file should be validated, null otherwise.
+     * Returns a map of paths to XSD files if the XML file should be validated, an empty map otherwise.
+     * <p>
+     * This allows to provide more than one XSD for validation when multiple variants of a data format are supported.
      *
-     * @return the path to the XSD file if the XML file should be validated, null otherwise
+     * @return a map of paths to XSD files if the XML file should be validated, an empty map otherwise
      */
-    @Nullable
-    protected String getXsdResourcePath() {
-        return null;
+    @Nonnull
+    protected Map<String, String> getXsdResourcePaths() {
+        return new HashMap<>();
     }
 }
