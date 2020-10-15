@@ -96,6 +96,19 @@ public class BlobHardRef {
     }
 
     /**
+     * Determines the path of the referenced blob.
+     *
+     * @return the path, or <tt>null</tt> if no blob is referenced
+     */
+    public String getPath() {
+        if (isEmpty() || getBlob() == null) {
+            return null;
+        }
+
+        return getBlob().getPath();
+    }
+
+    /**
      * Returns the key of the referenced blob.
      *
      * @return the key of the blob being referenced

@@ -1,0 +1,61 @@
+<i:arg type="sirius.biz.storage.layer2.BlobSoftRef" name="blobRef"/>
+<i:arg type="String" name="id" default="@('blob-soft-ref-' + call.generateLocalId())"/>
+<i:arg type="String" name="inputId"/>
+<i:arg type="String" name="defaultPreview" default=""/>
+<i:arg type="boolean" name="urlAllowed" default="@blobRef.isSupportsURL()" description=""/>
+<i:arg type="boolean" name="showResetButton" default="@blobRef.isFilled()"/>
+
+<div id="@id" class="blob-ref-field">
+    <div class="file file-js"></div>
+
+    <button type="button" class="btn btn-primary btn-block btn-select-file-js">
+        @i18n("StoredObject.uploadBtn")
+    </button>
+
+    <i:if test="@urlAllowed">
+        <button type="button" class="btn btn-block" data-placement="top" data-toggle="popover">
+            @i18n("StoredObject.specifyURL")
+        </button>
+
+        <div class="popover-content hide">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>@i18n("StoredObject.URL")</label>
+                        <input type="text" class="form-control">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-block btn-primary button-apply">
+                        <i class="fa fa-check"></i> @i18n("NLS.ok")
+                    </button>
+                </div>
+
+                <div class="col-md-6">
+                    <button type="button" class="btn btn-block button-close">
+                        @i18n("NLS.cancel")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </i:if>
+
+    <button type="button" class="btn btn-block btn-reset-js @if(!showResetButton) { hide }">
+        @i18n("StoredObject.resetBtn")
+    </button>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        const $element = $('#___id');
+        const $blobKeyField = $('#___inputId');
+        const blobStorageSpace = '___blobRef.getSpace()';
+        const url = '___blobRef.url().asDownload().buildURL().orElse("")';
+        const filename = '___blobRef.getFilename()';
+        const path = '___blobRef.getPath()';
+        const defaultPreview = '___defaultPreview';
+
+        initBlobSoftRefField($element, $blobKeyField, blobStorageSpace, url, filename, path, defaultPreview);
+    });
+</script>
