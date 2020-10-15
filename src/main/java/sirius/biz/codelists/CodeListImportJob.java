@@ -16,6 +16,7 @@ import sirius.biz.jobs.params.CodeListParameter;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.LanguageParameter;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.ProcessLink;
 import sirius.biz.storage.layer3.FileParameter;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
@@ -78,6 +79,12 @@ public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
     protected E findAndLoad(Context data) {
         data.set(CodeListEntry.CODE_LIST.getName(), codeList);
         return super.findAndLoad(data);
+    }
+
+    @Override
+    public void execute() throws Exception {
+        process.addLink(new ProcessLink().withLabel("$CodeList").withUri("/code-list/" + codeList.getIdAsString()));
+        super.execute();
     }
 
     /**
