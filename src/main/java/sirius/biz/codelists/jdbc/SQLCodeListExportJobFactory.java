@@ -10,12 +10,16 @@ package sirius.biz.codelists.jdbc;
 
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListEntry;
+import sirius.biz.codelists.CodeListExportJob;
 import sirius.biz.importer.ImportContext;
+import sirius.biz.jobs.batch.file.EntityExportJob;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.jobs.params.CodeListParameter;
+import sirius.biz.jobs.params.LanguageParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.db.jdbc.SmartQuery;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.di.std.Register;
 import sirius.web.http.QueryString;
 import sirius.web.security.Permission;
@@ -33,6 +37,8 @@ public class SQLCodeListExportJobFactory
         extends EntityExportJobFactory<SQLCodeListEntry, SmartQuery<SQLCodeListEntry>> {
 
     private CodeListParameter codeListParameter = new CodeListParameter("codeList", "$CodeList").markRequired();
+    private static final LanguageParameter LANGUAGE_PARAMETER =
+            new LanguageParameter(LanguageParameter.PARAMETER_NAME, "$LocaleData.lang");
 
     @Nonnull
     @Override
@@ -48,6 +54,7 @@ public class SQLCodeListExportJobFactory
     @Override
     protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
         parameterCollector.accept(codeListParameter);
+        parameterCollector.accept(LANGUAGE_PARAMETER);
         super.collectParameters(parameterCollector);
     }
 
@@ -59,6 +66,7 @@ public class SQLCodeListExportJobFactory
     @Override
     protected void transferParameters(ImportContext context, ProcessContext processContext) {
         context.set(CodeListEntry.CODE_LIST, processContext.require(codeListParameter));
+        context.set(LANGUAGE_PARAMETER.getName(), processContext.getParameter(LANGUAGE_PARAMETER));
     }
 
     @Override
@@ -69,5 +77,30 @@ public class SQLCodeListExportJobFactory
     @Override
     protected void computePresetFor(QueryString queryString, Object targetObject, Map<String, Object> preset) {
         preset.put(codeListParameter.getName(), ((SQLCodeList) targetObject).getCodeListData().getCode());
+        queryString.get(LANGUAGE_PARAMETER.getName())
+                   .ifFilled(value -> preset.put(LANGUAGE_PARAMETER.getName(), value));
+    }
+
+    @SuppressWarnings("squid:S2095")
+    @Explain("The job must not be closed here as it is returned and managed by the caller.")
+    @Override
+    protected EntityExportJob<SQLCodeListEntry, SmartQuery<SQLCodeListEntry>> createJob(ProcessContext process) {
+        ImportContext paramterContext = new ImportContext();
+        transferParameters(paramterContext, process);
+
+        return new CodeListExportJob<SQLCodeListEntry, SmartQuery<SQLCodeListEntry>>(templateFileParameter,
+                                                                                     destinationParameter,
+                                                                                     fileTypeParameter,
+                                                                                     getExportType(),
+                                                                                     getDictionary(),
+                                                                                     getDefaultMapping(),
+                                                                                     process,
+                                                                                     getName(),
+                                                                                     process.getParameter(
+                                                                                             LANGUAGE_PARAMETER),
+                                                                                     process.require(codeListParameter))
+                .withQueryExtender(query -> extendSelectQuery(query, process))
+                .withContextExtender(context -> context.putAll(paramterContext))
+                .withFileName(getCustomFileName());
     }
 }
