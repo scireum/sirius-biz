@@ -9,7 +9,7 @@
 package sirius.biz.codelists.jdbc;
 
 import sirius.biz.codelists.CodeListController;
-import sirius.biz.codelists.TranslatableCodeListImportJob;
+import sirius.biz.codelists.CodeListImportJob;
 import sirius.biz.jobs.batch.file.EntityImportJob;
 import sirius.biz.jobs.batch.file.EntityImportJobFactory;
 import sirius.biz.jobs.params.CodeListParameter;
@@ -41,15 +41,15 @@ public class SQLCodeListImportJobFactory extends EntityImportJobFactory {
 
     @Override
     protected EntityImportJob<SQLCodeListEntry> createJob(ProcessContext process) {
-        return new TranslatableCodeListImportJob<>(fileParameter,
-                                                   ignoreEmptyParameter,
-                                                   importModeParameter,
-                                                   CODE_LIST_PARAMETER,
-                                                   LANGUAGE_PARAMETER,
-                                                   SQLCodeListEntry.class,
-                                                   getDictionary(),
-                                                   process,
-                                                   this.getClass().getName());
+        return new CodeListImportJob<>(fileParameter,
+                                       ignoreEmptyParameter,
+                                       importModeParameter,
+                                       CODE_LIST_PARAMETER,
+                                       LANGUAGE_PARAMETER,
+                                       SQLCodeListEntry.class,
+                                       getDictionary(),
+                                       process,
+                                       this.getClass().getName());
     }
 
     @Nonnull

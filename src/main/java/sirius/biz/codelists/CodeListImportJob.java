@@ -35,13 +35,11 @@ import java.util.Optional;
  *
  * @param <E> the effective entity type used to represent code list entries
  */
-public class TranslatableCodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
-        extends EntityImportJob<E> {
+public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>> extends EntityImportJob<E> {
     @Part
     private static CodeLists<?, ?, ?> codeLists;
 
     private final CodeList codeList;
-    private final CodeListParameter codeListParameter;
     private final LanguageParameter languageParameter;
     private final Optional<String> language;
 
@@ -60,25 +58,24 @@ public class TranslatableCodeListImportJob<E extends BaseEntity<?> & CodeListEnt
      */
     @SuppressWarnings("squid:S00107")
     @Explain("We rather have 9 parameters here and keep the logic properly encapsulated")
-    public TranslatableCodeListImportJob(FileParameter fileParameter,
-                                         BooleanParameter ignoreEmptyParameter,
-                                         EnumParameter<ImportMode> importModeParameter,
-                                         CodeListParameter codeListParameter,
-                                         LanguageParameter languageParameter,
-                                         Class<E> type,
-                                         ImportDictionary dictionary,
-                                         ProcessContext process,
-                                         String factoryName) {
+    public CodeListImportJob(FileParameter fileParameter,
+                             BooleanParameter ignoreEmptyParameter,
+                             EnumParameter<ImportMode> importModeParameter,
+                             CodeListParameter codeListParameter,
+                             LanguageParameter languageParameter,
+                             Class<E> type,
+                             ImportDictionary dictionary,
+                             ProcessContext process,
+                             String factoryName) {
         super(fileParameter, ignoreEmptyParameter, importModeParameter, type, dictionary, process, factoryName);
         this.codeList = process.require(codeListParameter);
-        this.codeListParameter = codeListParameter;
         this.languageParameter = languageParameter;
         this.language = process.getParameter(languageParameter);
     }
 
     @Override
     protected E findAndLoad(Context data) {
-        data.set(CodeListEntry.CODE_LIST.getName(), process.require(codeListParameter));
+        data.set(CodeListEntry.CODE_LIST.getName(), codeList);
         return super.findAndLoad(data);
     }
 
@@ -101,12 +98,26 @@ public class TranslatableCodeListImportJob<E extends BaseEntity<?> & CodeListEnt
             // get language code for selected language (e.g. "de" for "Deutsch (de)")
             Optional<Tuple<String, String>> langCode = languageParameter.getValues()
                                                                         .stream()
-                                                                        .filter(tuple -> tuple.getSecond()
+                                                                        .filter(tuple -> tuple.getFirst()
                                                                                               .equals(language.get()))
                                                                         .findFirst();
 
-            // update the translation text for the selected language
+            // update the translation texts for the selected language
             langCode.ifPresent(tuple -> {
+                codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
+                         .ifPresent(cle -> {
+                             cle.getTranslations()
+                                .updateText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE),
+                                            tuple.getFirst(),
+                                            entity.getCodeListEntryData().getValue());
+                         });
+                codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
+                         .ifPresent(cle -> {
+                             cle.getTranslations()
+                                .updateText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE),
+                                            tuple.getFirst(),
+                                            entity.getCodeListEntryData().getAdditionalValue());
+                         });
                 codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
                          .ifPresent(cle -> {
                              cle.getTranslations()
