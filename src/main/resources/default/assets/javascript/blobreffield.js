@@ -7,7 +7,7 @@
  */
 
 /**
- * Initialize the given blobSoftRefField
+ * Initializes the given blobSoftRefField
  *
  * @@param $element         the field element
  * @@param $blobKeyField    the input field to store the blob key in

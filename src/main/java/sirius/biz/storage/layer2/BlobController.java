@@ -87,7 +87,7 @@ public class BlobController extends BizController {
     }
 
     /**
-     * Find the {@link Blob} for a given path and returns info about it.
+     * Finds the {@link Blob} for a given path and returns info about it.
      *
      * @param webContext the request to handle
      * @param out        the response to the AJAX call
