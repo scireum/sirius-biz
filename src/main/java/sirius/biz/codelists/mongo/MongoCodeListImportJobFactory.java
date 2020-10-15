@@ -9,7 +9,9 @@
 package sirius.biz.codelists.mongo;
 
 import sirius.biz.codelists.CodeListController;
+import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListImportJob;
+import sirius.biz.importer.ImportContext;
 import sirius.biz.jobs.batch.file.EntityImportJob;
 import sirius.biz.jobs.batch.file.EntityImportJobFactory;
 import sirius.biz.jobs.params.CodeListParameter;
@@ -73,6 +75,12 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
     @Override
     protected boolean hasPresetFor(QueryString queryString, Object targetObject) {
         return targetObject instanceof MongoCodeList;
+    }
+
+    @Override
+    protected void transferParameters(ImportContext context, ProcessContext processContext) {
+        context.set(CodeListEntry.CODE_LIST, processContext.require(CODE_LIST_PARAMETER));
+        context.set(LANGUAGE_PARAMETER.getName(), processContext.getParameter(LANGUAGE_PARAMETER));
     }
 
     @Override
