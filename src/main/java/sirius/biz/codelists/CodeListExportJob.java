@@ -20,6 +20,7 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.query.Query;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Strings;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -73,6 +74,7 @@ public class CodeListExportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>,
     @Override
     public void execute() throws Exception {
         process.addLink(new ProcessLink().withLabel("$CodeList").withUri("/code-list/" + codeList.getIdAsString()));
+        process.updateTitle(Strings.apply("%s - %s", process.getTitle(), codeList.getCodeListData().getName()));
         super.execute();
     }
 

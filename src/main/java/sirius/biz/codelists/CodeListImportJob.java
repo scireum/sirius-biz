@@ -21,6 +21,7 @@ import sirius.biz.storage.layer3.FileParameter;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -84,6 +85,7 @@ public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
     @Override
     public void execute() throws Exception {
         process.addLink(new ProcessLink().withLabel("$CodeList").withUri("/code-list/" + codeList.getIdAsString()));
+        process.updateTitle(Strings.apply("%s - %s", process.getTitle(), codeList.getCodeListData().getName()));
         super.execute();
     }
 
