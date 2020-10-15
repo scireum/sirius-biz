@@ -9,13 +9,13 @@
 /**
  * Initializes the given blobSoftRefField
  *
- * @@param $element         the field element
- * @@param $blobKeyField    the input field to store the blob key in
- * @@param blobStorageSpace the storage space of the referenced blob
- * @@param originalUrl      the url of the currently referenced blob
- * @@param originalFilename the filename of the currently referenced blob
- * @@param originalPath     the path of the currently referenced blob
- * @@param defaultPreview   the default preview image to display if no file is referenced
+ * @param $element         the field element
+ * @param $blobKeyField    the input field to store the blob key in
+ * @param blobStorageSpace the storage space of the referenced blob
+ * @param originalUrl      the url of the currently referenced blob
+ * @param originalFilename the filename of the currently referenced blob
+ * @param originalPath     the path of the currently referenced blob
+ * @param defaultPreview   the default preview image to display if no file is referenced
  */
 function initBlobSoftRefField($element,
                               $blobKeyField,
@@ -136,7 +136,7 @@ function initBlobSoftRefField($element,
     /**
      * Updates the image in the upload box and the url in the form.
      *
-     * @@param url the new URL
+     * @param url the new URL
      */
     const updateURL = function (url) {
         if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -152,8 +152,8 @@ function initBlobSoftRefField($element,
     /**
      * Checks if the specified URL is a valid one and disables or enables the apply button accordingly.
      *
-     * @@param url          the new URL
-     * @@param $applyButton the button to enable/disable
+     * @param url          the new URL
+     * @param $applyButton the button to enable/disable
      */
     const checkURL = function (url, $applyButton) {
         if ('undefined' === typeof url || !(url.startsWith('http://') || url.startsWith('https://'))) {
