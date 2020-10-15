@@ -13,6 +13,7 @@ import sirius.biz.jobs.batch.file.EntityExportJob;
 import sirius.biz.jobs.batch.file.ExportFileType;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.ProcessLink;
 import sirius.biz.storage.layer3.FileOrDirectoryParameter;
 import sirius.biz.storage.layer3.FileParameter;
 import sirius.db.mixing.BaseEntity;
@@ -64,15 +65,15 @@ public class CodeListExportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>,
                              Optional<String> languageParameter,
                              CodeList codeList) {
         super(templateFileParameter,
-              destinationParameter,
-              fileTypeParameter,
-              type,
-              dictionary,
-              defaultMapping,
-              process,
-              factoryName);
+              destinationParameter, fileTypeParameter, type, dictionary, defaultMapping, process, factoryName);
         this.codeList = codeList;
         this.languageParameter = languageParameter;
+    }
+
+    @Override
+    public void execute() throws Exception {
+        process.addLink(new ProcessLink().withLabel("$CodeList").withUri("/code-list/" + codeList.getIdAsString()));
+        super.execute();
     }
 
     @Nullable
