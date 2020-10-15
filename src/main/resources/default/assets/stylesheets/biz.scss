@@ -99,5 +99,9 @@
 
   .file {
     text-align: center;
+
+    a {
+      word-wrap: break-word;
+    }
   }
 }

@@ -35,7 +35,7 @@ function initBlobSoftRefField($element,
         '{{/previewImage}}' +
         '{{#url}}' +
         '    <p>' +
-        '        <a href="{{url}}" style="word-wrap: break-word">' +
+        '        <a href="{{url}}">' +
         '            {{filename}}' +
         '        </a>' +
         '    </p>' +
