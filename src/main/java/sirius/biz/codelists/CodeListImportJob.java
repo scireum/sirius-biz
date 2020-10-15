@@ -22,6 +22,7 @@ import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
 
 import java.util.Optional;
 
@@ -101,6 +102,12 @@ public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
                                                                         .filter(tuple -> tuple.getFirst()
                                                                                               .equals(language.get()))
                                                                         .findFirst();
+            if (!langCode.isPresent()) {
+                throw Exceptions.createHandled()
+                                .withNLSKey("Translations.langCodeError")
+                                .set("lang", langCode)
+                                .handle();
+            }
 
             // update the translation texts for the selected language
             langCode.ifPresent(tuple -> {
