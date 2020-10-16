@@ -13,17 +13,10 @@
  * @param blobKeyField     the input field to store the blob key in
  * @param blobStorageSpace the storage space of the referenced blob
  * @param originalUrl      the url of the currently referenced blob
- * @param originalFilename the filename of the currently referenced blob
  * @param originalPath     the path of the currently referenced blob
  * @param defaultPreview   the default preview image to display if no file is referenced
  */
-function initBlobSoftRefField(element,
-                              blobKeyField,
-                              blobStorageSpace,
-                              originalUrl,
-                              originalFilename,
-                              originalPath,
-                              defaultPreview) {
+function initBlobSoftRefField(element, blobKeyField, blobStorageSpace, originalUrl, originalPath, defaultPreview) {
     const fileTemplate =
         '{{#previewImage}}' +
         '    <img src="{{previewImage}}" alt=""/>' +
@@ -47,8 +40,6 @@ function initBlobSoftRefField(element,
     const urlButton = element.querySelector('[data-toggle=popover]');
     const resetButton = element.querySelector('.btn-reset-js');
     const fileElement = element.querySelector('.file-js');
-
-    element.setAttribute('data-path', originalPath);
 
     $(urlButton).popover({
         html: true, trigger: 'manual', content: function () {
@@ -125,7 +116,7 @@ function initBlobSoftRefField(element,
                 path: selectedValue.substring(blobStorageSpacePath.length)
             }, function (json) {
                 blobKeyField.value = json.fileId;
-                element.setAttribute('data-path', selectedValue);
+                element.setAttribute('data-path', determineParentPath(selectedValue));
 
                 updateFile(json.downloadUrl, json.filename);
                 updateResetButton();
@@ -182,7 +173,7 @@ function initBlobSoftRefField(element,
             return;
         }
 
-        filename = filename || url.substr(url.lastIndexOf("/") + 1);
+        filename = filename || determineFilename(url);
 
         if (url.startsWith('http://') || url.startsWith('https://')) {
             fileElement.innerHTML = Mustache.render(fileTemplate, {
@@ -241,5 +232,14 @@ function initBlobSoftRefField(element,
         return 'fa-file-o';
     };
 
-    updateFile(originalUrl, originalFilename);
+    const determineFilename = function (path) {
+        return path.substr(path.lastIndexOf("/") + 1);
+    };
+
+    const determineParentPath = function (path) {
+        return path.substr(0, path.lastIndexOf("/"));
+    };
+
+    element.setAttribute('data-path', determineParentPath(originalPath));
+    updateFile(originalUrl, determineFilename(originalPath));
 }

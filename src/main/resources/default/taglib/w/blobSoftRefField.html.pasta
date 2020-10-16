@@ -52,10 +52,9 @@
         const blobKeyField = document.querySelector('#___inputId');
         const blobStorageSpace = '___blobRef.getSpace()';
         const url = '___blobRef.url().asDownload().buildURL().orElse("")';
-        const filename = '___blobRef.getFilename()';
         const path = '___blobRef.getPath()';
         const defaultPreview = '___defaultPreview';
 
-        initBlobSoftRefField(element, blobKeyField, blobStorageSpace, url, filename, path, defaultPreview);
+        initBlobSoftRefField(element, blobKeyField, blobStorageSpace, url, path, defaultPreview);
     });
 </script>
