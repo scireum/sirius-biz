@@ -53,8 +53,8 @@ function initBlobSoftRefField(element, blobKeyField, blobStorageSpace, originalU
         const applyButton = popover.querySelector('.button-apply');
         const input = popover.querySelector('input');
 
-        closeButton.addEventListener('click', function (e) {
-            e.preventDefault();
+        closeButton.addEventListener('click', function (event) {
+            event.preventDefault();
             $(urlButton).popover('hide');
         });
 
@@ -66,14 +66,14 @@ function initBlobSoftRefField(element, blobKeyField, blobStorageSpace, originalU
             checkURL(input.value, applyButton);
         });
 
-        input.addEventListener('keyup', function (e) {
-            if (e.which === 13) {
+        input.addEventListener('keyup', function (event) {
+            if (event.which === 13) {
                 updateURL(input.value);
             }
         });
 
-        applyButton.addEventListener('click', function (e) {
-            e.preventDefault();
+        applyButton.addEventListener('click', function (event) {
+            event.preventDefault();
             updateURL(input.value);
         });
 
@@ -89,15 +89,15 @@ function initBlobSoftRefField(element, blobKeyField, blobStorageSpace, originalU
         checkURL(input.value, applyButton);
     });
 
-    urlButton.addEventListener('click', function (e) {
-        e.preventDefault();
+    urlButton.addEventListener('click', function (event) {
+        event.preventDefault();
         urlButton.blur();
 
         $(urlButton).popover('toggle');
     });
 
-    resetButton.addEventListener('click', function (e) {
-        e.preventDefault();
+    resetButton.addEventListener('click', function (event) {
+        event.preventDefault();
         resetButton.blur();
 
         blobKeyField.value = '';
@@ -106,8 +106,8 @@ function initBlobSoftRefField(element, blobKeyField, blobStorageSpace, originalU
         updateResetButton();
     });
 
-    selectButton.addEventListener('click', function (e) {
-        e.preventDefault();
+    selectButton.addEventListener('click', function (event) {
+        event.preventDefault();
 
         const currentPath = element.dataset.path || blobStorageSpacePath;
 
