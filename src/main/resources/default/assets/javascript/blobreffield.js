@@ -109,14 +109,14 @@ function initBlobSoftRefField(element, blobKeyField, blobStorageSpace, originalU
     selectButton.addEventListener('click', function (e) {
         e.preventDefault();
 
-        const currentPath = element.getAttribute('data-path') || blobStorageSpacePath;
+        const currentPath = element.dataset.path || blobStorageSpacePath;
 
         selectVFSFile(currentPath, blobStorageSpacePath).then(function (selectedValue) {
             $.getJSON('/dasd/blob-info-for-path/' + blobStorageSpace, {
                 path: selectedValue.substring(blobStorageSpacePath.length)
             }, function (json) {
                 blobKeyField.value = json.fileId;
-                element.setAttribute('data-path', determineParentPath(selectedValue));
+                element.dataset.path = determineParentPath(selectedValue);
 
                 updateFile(json.downloadUrl, json.filename);
                 updateResetButton();
@@ -240,6 +240,6 @@ function initBlobSoftRefField(element, blobKeyField, blobStorageSpace, originalU
         return path.substr(0, path.lastIndexOf("/"));
     };
 
-    element.setAttribute('data-path', determineParentPath(originalPath));
+    element.dataset.path = determineParentPath(originalPath);
     updateFile(originalUrl, determineFilename(originalPath));
 }
