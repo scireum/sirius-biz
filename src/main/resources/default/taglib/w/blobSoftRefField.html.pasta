@@ -48,14 +48,14 @@
 
 <script type="text/javascript">
     $(document).ready(function () {
-        const $element = $('#___id');
-        const $blobKeyField = $('#___inputId');
+        const element = document.querySelector('#___id');
+        const blobKeyField = document.querySelector('#___inputId');
         const blobStorageSpace = '___blobRef.getSpace()';
         const url = '___blobRef.url().asDownload().buildURL().orElse("")';
         const filename = '___blobRef.getFilename()';
         const path = '___blobRef.getPath()';
         const defaultPreview = '___defaultPreview';
 
-        initBlobSoftRefField($element, $blobKeyField, blobStorageSpace, url, filename, path, defaultPreview);
+        initBlobSoftRefField(element, blobKeyField, blobStorageSpace, url, filename, path, defaultPreview);
     });
 </script>

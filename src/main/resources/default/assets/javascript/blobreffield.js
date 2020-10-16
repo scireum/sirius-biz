@@ -9,16 +9,16 @@
 /**
  * Initializes the given blobSoftRefField
  *
- * @param $element         the field element
- * @param $blobKeyField    the input field to store the blob key in
+ * @param element          the field element
+ * @param blobKeyField     the input field to store the blob key in
  * @param blobStorageSpace the storage space of the referenced blob
  * @param originalUrl      the url of the currently referenced blob
  * @param originalFilename the filename of the currently referenced blob
  * @param originalPath     the path of the currently referenced blob
  * @param defaultPreview   the default preview image to display if no file is referenced
  */
-function initBlobSoftRefField($element,
-                              $blobKeyField,
+function initBlobSoftRefField(element,
+                              blobKeyField,
                               blobStorageSpace,
                               originalUrl,
                               originalFilename,
@@ -43,81 +43,89 @@ function initBlobSoftRefField($element,
 
     const blobStorageSpacePath = '/' + blobStorageSpace;
 
-    const $selectButton = $element.find('.btn-select-file-js');
-    const $urlButton = $element.find('[data-toggle=popover]');
-    const $resetButton = $element.find('.btn-reset-js');
-    const $fileElement = $element.find('.file-js');
+    const selectButton = element.querySelector('.btn-select-file-js');
+    const urlButton = element.querySelector('[data-toggle=popover]');
+    const resetButton = element.querySelector('.btn-reset-js');
+    const fileElement = element.querySelector('.file-js');
 
-    $element.data('path', originalPath);
+    element.setAttribute('data-path', originalPath);
 
-    $urlButton.popover({
+    $(urlButton).popover({
         html: true, trigger: 'manual', content: function () {
-            return $element.find('.popover-content').html();
+            return element.querySelector('.popover-content').innerHTML;
         }
     });
 
-    $urlButton.on('inserted.bs.popover', function () {
-        const $popup = $(this);
-        const $closeButton = $popup.next('.popover').find('.button-close');
-        const $applyButton = $popup.next('.popover').find('.button-apply');
-        const $input = $popup.next('.popover').find('input');
+    $(urlButton).on('inserted.bs.popover', function () {
+        const popover = urlButton.parentElement.querySelector('.popover');
+        const closeButton = popover.querySelector('.button-close');
+        const applyButton = popover.querySelector('.button-apply');
+        const input = popover.querySelector('input');
 
-        $closeButton.click(function () {
-            $popup.popover('hide');
+        closeButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            $(urlButton).popover('hide');
         });
 
-        $input.bind("input propertychange", function () {
-            checkURL($input.val(), $applyButton);
+        input.addEventListener('input', function () {
+            checkURL(input.value, applyButton);
         });
 
-        $input.keyup(function (e) {
+        input.addEventListener('paste', function () {
+            checkURL(input.value, applyButton);
+        });
+
+        input.addEventListener('keyup', function (e) {
             if (e.which === 13) {
-                updateURL($input.val());
+                updateURL(input.value);
             }
         });
 
-        $applyButton.click(function () {
-            updateURL($input.val());
+        applyButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            updateURL(input.value);
         });
-    });
 
-    $urlButton.click(function () {
-        let url = $blobKeyField.val();
+        let url = blobKeyField.value;
 
         if (!url.startsWith('http://') && !url.startsWith('https://')) {
             url = '';
         }
 
-        $(this).blur();
-        $(this).popover('toggle');
+        input.value = url;
+        input.select();
 
-        const $input = $(this).next('.popover').find('input');
-        const $applyButton = $(this).next('.popover').find('.button-apply');
-
-        $input.val(url).select();
-
-        checkURL($input.val(), $applyButton);
+        checkURL(input.value, applyButton);
     });
 
-    $resetButton.click(function (e) {
+    urlButton.addEventListener('click', function (e) {
         e.preventDefault();
-        $(this).blur();
+        urlButton.blur();
 
-        $blobKeyField.val('');
+        $(urlButton).popover('toggle');
+    });
+
+    resetButton.addEventListener('click', function (e) {
+        e.preventDefault();
+        resetButton.blur();
+
+        blobKeyField.value = '';
 
         updateFile('');
         updateResetButton();
     });
 
-    $selectButton.click(function () {
-        const currentPath = $element.data('path') || blobStorageSpacePath;
+    selectButton.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        const currentPath = element.getAttribute('data-path') || blobStorageSpacePath;
 
         selectVFSFile(currentPath, blobStorageSpacePath).then(function (selectedValue) {
             $.getJSON('/dasd/blob-info-for-path/' + blobStorageSpace, {
                 path: selectedValue.substring(blobStorageSpacePath.length)
             }, function (json) {
-                $blobKeyField.val(json.fileId);
-                $element.data('path', selectedValue);
+                blobKeyField.value = json.fileId;
+                element.setAttribute('data-path', selectedValue);
 
                 updateFile(json.downloadUrl, json.filename);
                 updateResetButton();
@@ -126,10 +134,10 @@ function initBlobSoftRefField($element,
     });
 
     const updateResetButton = function () {
-        if ($blobKeyField.val() === '') {
-            $resetButton.addClass("hide");
+        if (blobKeyField.value === '') {
+            resetButton.classList.add('hide');
         } else {
-            $resetButton.removeClass("hide");
+            resetButton.classList.remove('hide');
         }
     };
 
@@ -140,12 +148,12 @@ function initBlobSoftRefField($element,
      */
     const updateURL = function (url) {
         if (url.startsWith('http://') || url.startsWith('https://')) {
-            $blobKeyField.val(url);
+            blobKeyField.value = url;
 
             updateFile(url);
             updateResetButton();
 
-            $element.find('[data-toggle=popover]').popover('hide');
+            $(urlButton).popover('hide');
         }
     };
 
@@ -153,23 +161,23 @@ function initBlobSoftRefField($element,
      * Checks if the specified URL is a valid one and disables or enables the apply button accordingly.
      *
      * @param url          the new URL
-     * @param $applyButton the button to enable/disable
+     * @param applyButton the button to enable/disable
      */
-    const checkURL = function (url, $applyButton) {
+    const checkURL = function (url, applyButton) {
         if ('undefined' === typeof url || !(url.startsWith('http://') || url.startsWith('https://'))) {
-            $applyButton.prop('disabled', true);
+            applyButton.disabled = true;
             return;
         }
 
-        $applyButton.prop('disabled', false);
+        applyButton.disabled = false;
     };
 
     const updateFile = function (url, filename) {
         if (url.length === 0) {
-            $fileElement.html(Mustache.render(fileTemplate, {
+            fileElement.innerHTML = Mustache.render(fileTemplate, {
                 previewImage: defaultPreview,
                 icon: 'fa-file-o'
-            }));
+            });
 
             return;
         }
@@ -177,11 +185,11 @@ function initBlobSoftRefField($element,
         filename = filename || url.substr(url.lastIndexOf("/") + 1);
 
         if (url.startsWith('http://') || url.startsWith('https://')) {
-            $fileElement.html(Mustache.render(fileTemplate, {
+            fileElement.innerHTML = Mustache.render(fileTemplate, {
                 url: url,
                 filename: filename,
                 icon: 'fa-external-link'
-            }));
+            });
 
             return;
         }
@@ -189,20 +197,20 @@ function initBlobSoftRefField($element,
         const extension = url.substr(url.lastIndexOf(".") + 1).toLowerCase();
 
         if (extension === "jpg" || extension === "jpeg" || extension === "png") {
-            $fileElement.html(Mustache.render(fileTemplate, {
+            fileElement.innerHTML = Mustache.render(fileTemplate, {
                 url: url,
                 filename: filename,
                 previewImage: url
-            }));
+            });
 
             return;
         }
 
-        $fileElement.html(Mustache.render(fileTemplate, {
+        fileElement.innerHTML = Mustache.render(fileTemplate, {
             url: url,
             filename: filename,
             icon: determineIcon(extension)
-        }));
+        });
     };
 
     const determineIcon = function (extension) {
