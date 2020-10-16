@@ -57,6 +57,16 @@ public class BlobSoftRef extends BlobHardRef {
         return super.getFilename();
     }
 
+    @Override
+    @Nullable
+    public String getPath() {
+        if (isURL()) {
+            return null;
+        }
+
+        return super.getFilename();
+    }
+
     /**
      * Determines if a URL was stored instead of an object key.
      *
