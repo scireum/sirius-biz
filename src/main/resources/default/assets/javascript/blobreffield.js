@@ -67,7 +67,7 @@ function initBlobSoftRefField(element, blobKeyField, blobStorageSpace, originalU
         });
 
         input.addEventListener('keyup', function (event) {
-            if (event.which === 13) {
+            if (event.key === 'Enter') {
                 updateURL(input.value);
             }
         });
