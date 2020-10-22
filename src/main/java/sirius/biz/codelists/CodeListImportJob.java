@@ -106,6 +106,13 @@ public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
     @Override
     protected E fillAndVerify(E entity, Context context) {
         languageParameter.ifPresent(lang -> {
+            if (context.keySet()
+                       .stream()
+                       .noneMatch(key -> key.endsWith("_" + CLE_VALUE)
+                                         || key.endsWith("_" + CLE_ADDITIONAL_VALUE)
+                                         || key.endsWith("_" + CLE_DESCRIPTION))) {
+                return;
+            }
             Set<String> languagePrefixInHeader = new HashSet<>();
             // get language prefix from file header
             for (String key : context.keySet()) {
