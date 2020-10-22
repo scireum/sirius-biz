@@ -14,6 +14,7 @@ import sirius.biz.jobs.batch.DefaultBatchProcessFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EntityDescriptorParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.mongo.PrefixSearchableEntity;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
@@ -105,6 +106,10 @@ public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
                     // for traceability reasons.
                     if (entity instanceof Traced) {
                         ((Traced) entity).getTrace().setSilent(true);
+                    }
+
+                    if (entity instanceof PrefixSearchableEntity) {
+                        ((PrefixSearchableEntity) entity).forceUpdateOfSearchPrefixes();
                     }
 
                     descriptor.getMapper().update(entity);

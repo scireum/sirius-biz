@@ -15,8 +15,8 @@ import java.time.LocalDate;
 /**
  * Provides an analytical tasks which is executed on the given entity.
  * <p>
- * Subclasses (interfaces) of this need an {@link MongoAnalyticalTaskScheduler} and/or {@link SQLAnalyticalTaskScheduler}
- * which schedules the execution of this task for all matching entities.
+ * Subclasses (interfaces) of this need an {@link MongoAnalyticalTaskScheduler} and/or
+ * {@link SQLAnalyticalTaskScheduler} which schedules the execution of this task for all matching entities.
  *
  * @param <E> the entity type to be processed by this task
  */
@@ -34,6 +34,7 @@ public interface AnalyticalTask<E extends BaseEntity<?>> {
      *
      * @param date   the data for which the task is to be executed
      * @param entity the entity for which this task is to be executed
+     * @throws Exception in case of an error during the computation
      */
-    void compute(LocalDate date, E entity);
+    void compute(LocalDate date, E entity) throws Exception;
 }

@@ -15,14 +15,24 @@ import org.apache.ftpserver.ftplet.User;
 import org.apache.ftpserver.ftplet.UserManager;
 import org.apache.ftpserver.usermanager.UsernamePasswordAuthentication;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
+import sirius.kernel.di.std.Part;
 import sirius.web.security.MaintenanceInfo;
+import sirius.web.security.ScopeDetector;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
+
+import javax.annotation.Nullable;
 
 /**
  * Provides a bridge between {@link UserContext} and the FTP server.
  */
 class BridgeUserManager implements UserManager {
+
+    @Part
+    @Nullable
+    private static ScopeDetector detector;
 
     @Override
     public User getUserByName(String s) throws FtpException {
@@ -50,7 +60,7 @@ class BridgeUserManager implements UserManager {
     }
 
     @Override
-    public User authenticate(Authentication authentication) throws AuthenticationFailedException {
+    public BridgeUser authenticate(Authentication authentication) throws AuthenticationFailedException {
         if (StorageUtils.LOG.isFINE()) {
             StorageUtils.LOG.FINE("Layer 3/FTP: Incoming auth-request: " + authentication);
         }
@@ -58,17 +68,25 @@ class BridgeUserManager implements UserManager {
             StorageUtils.LOG.FINE("Layer 3/FTP: Not a UsernamePasswordAuthentication...aborting");
             throw new AuthenticationFailedException("Please use username/password to authenticate.");
         }
+
+        UsernamePasswordAuthentication auth = (UsernamePasswordAuthentication) authentication;
+        StorageUtils.LOG.FINE("Layer 3/FTP: Trying to authenticate user: " + auth.getUsername());
+
+        String username = auth.getUsername();
+        if (username.contains("\\") && detector != null) {
+            Tuple<String, String> scopeAndUsername = Strings.split(username, "\\");
+            UserContext.get().setCurrentScope(detector.findScopeByName(scopeAndUsername.getFirst()));
+            username = scopeAndUsername.getSecond();
+        }
+
         boolean locked =
                 UserContext.getCurrentScope().tryAs(MaintenanceInfo.class).map(MaintenanceInfo::isLocked).orElse(false);
         if (locked) {
             throw new AuthenticationFailedException("The system is currently locked for maintenance reasons.");
         }
 
-        UsernamePasswordAuthentication auth = (UsernamePasswordAuthentication) authentication;
-        StorageUtils.LOG.FINE("Layer 3/FTP: Trying to authenticate user: " + auth.getUsername());
-
         try {
-            String effectiveUserName = auth.getUsername().replace("_AT_", "@");
+            String effectiveUserName = username.replace("_AT_", "@");
             UserInfo authUser = UserContext.get()
                                            .getUserManager()
                                            .findUserByCredentials(null, effectiveUserName, auth.getPassword());
@@ -77,7 +95,7 @@ class BridgeUserManager implements UserManager {
                 throw new AuthenticationFailedException("Invalid credentials.");
             }
             StorageUtils.LOG.FINE("Layer 3/FTP: User is authorized...");
-            return new BridgeUser(authUser);
+            return new BridgeUser(authUser, UserContext.getCurrentScope().getScopeId());
         } catch (Exception e) {
             throw new AuthenticationFailedException(e.getMessage());
         }

@@ -1,0 +1,22 @@
+<i:arg type="String" name="title" />
+<i:arg type="String" name="parent" />
+<i:arg type="int" name="priority" default="100" />
+<i:arg type="String" name="language" />
+<i:arg type="String" name="crossReferences" default="" />
+<i:arg type="String" name="permissions"  />
+
+<k:base title="@title"
+        parent="@parent"
+        priority="@priority"
+        language="@language"
+        crossReferences="@crossReferences"
+        permissions="@permissions"
+        chapter="false">
+
+    <i:block name="description">
+        <i:render name="description" />
+    </i:block>
+
+    <i:render name="body" />
+</k:base>
+

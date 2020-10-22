@@ -135,7 +135,12 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
     public void tenant(WebContext webContext, String tenantId) {
         T tenant = find(getTenantClass(), tenantId);
 
-        SaveHelper saveHelper = prepareSave(webContext).withAfterCreateURI("/tenant/${id}");
+        SaveHelper saveHelper = prepareSave(webContext);
+        if (tenant.getTenantData().getPackageData().hasAvailablePackagesOrUpgrades()) {
+            saveHelper.withAfterCreateURI("/tenant/${id}/package");
+        } else {
+            saveHelper.withAfterCreateURI("/tenant/${id}");
+        }
         boolean requestHandled = saveHelper.saveEntity(tenant);
         if (!requestHandled) {
             validate(tenant);
@@ -173,7 +178,7 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         }
     }
 
- /**
+    /**
      * Provides an editor for updating a tenant.
      *
      * @param webContext the current request

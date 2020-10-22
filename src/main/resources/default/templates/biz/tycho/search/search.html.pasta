@@ -1,0 +1,62 @@
+<w:page title="Tycho Search">
+    <i:block name="head">
+        <script type="text/javascript" src="/assets/lib/oboe/oboe.min.js"></script>
+    </i:block>
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/tycho/search">Tycho Search</a>
+        </li>
+    </i:block>
+
+    <div class="well">
+        <div class="input-group">
+            <input type="text"
+                   name="query"
+                   id="queryField"
+                   class="form-control"
+                   value=""
+                   placeholder="@i18n('NLS.searchkey')"
+                   autofocus/>
+            <span class="input-group-addon" id="searchBtn">
+                    <i class="fa fa-search"></i>
+            </span>
+        </div>
+    </div>
+
+    <div id="results"></div>
+
+    <script type="text/javascript">
+        $('#searchBtn').click(function () {
+            const query = $('#queryField').val();
+            oboe("/tycho/search/api?query=" + encodeURIComponent(query))
+                .start(function () {
+                    $('#results').html('');
+                    $('#searchBtn i').removeClass("fa-search").addClass('fa-spin').addClass('fa-spinner');
+                })
+                .node('!', function (node) {
+                    if (node.completed) {
+                        $('#searchBtn i').removeClass('fa-spin').removeClass("fa-spinner").addClass("fa-search");
+                        return;
+                    }
+
+                    console.log(node);
+                    var category = $('#results').find("[data-label='" + node.category + "']");
+                    if (category.length === 0) {
+                        category = $(Mustache.render('<div class="category" data-category="{{category}}" data-priority="{{priority}}"><h2>{{category}}</h2><div class="items"></div>', node));
+                        var inserted = false;
+                        $('#results .category').each(function () {
+                            if ($(this).data('priority') > node.priority) {
+                                category.insertBefore($(this));
+                                inserted = true;
+                                return false;
+                            }
+                        });
+                        if (!inserted) {
+                            $('#results').append(category);
+                        }
+                    }
+                    category.find('.items').append($(Mustache.render('<div><a href="{{url}}">{{label}}</a><p class="muted">{{description}}</p></div>', node)));
+                });
+        });
+    </script>
+</w:page>

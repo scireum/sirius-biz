@@ -9,6 +9,8 @@
 package sirius.biz.tenants;
 
 import com.typesafe.config.Config;
+import sirius.biz.analytics.events.EventRecorder;
+import sirius.biz.analytics.events.UserActivityEvent;
 import sirius.biz.model.LoginData;
 import sirius.biz.protocol.AuditLog;
 import sirius.db.mixing.BaseEntity;
@@ -39,6 +41,7 @@ import sirius.web.security.UserSettings;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -159,6 +162,9 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @Part
     protected static AuditLog auditLog;
 
+    @Part
+    protected static EventRecorder eventRecorder;
+
     @Parts(AdditionalRolesProvider.class)
     private static PartCollection<AdditionalRolesProvider> additionalRolesProviders;
 
@@ -217,6 +223,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             return rootUser;
         }
 
+        checkAndUpdateLastSeen(rootUser);
+
         String spyId = ctx.getSessionValue(scope.getScopeId() + SPY_ID_SUFFIX).asString();
         if (Strings.isFilled(spyId)) {
             UserInfo spy = becomeSpyUser(spyId, rootUser);
@@ -233,6 +241,34 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return rootUser;
     }
 
+    @SuppressWarnings("unchecked")
+    private void checkAndUpdateLastSeen(UserInfo userInfo) {
+        U user = (U) userInfo.as(UserAccount.class);
+        LocalDate userLastSeen = user.getUserAccountData().getLogin().getLastSeen();
+        if (userLastSeen != null && !userLastSeen.isBefore(LocalDate.now())) {
+            return;
+        }
+
+        updateLastSeen(user);
+        flushCacheForUserAccount(user);
+        recordUserActivityEvent(userInfo);
+    }
+
+    private void recordUserActivityEvent(UserInfo rootUser) {
+        UserActivityEvent userActivityEvent = new UserActivityEvent();
+        userActivityEvent.getUserData().setTenantId(rootUser.getTenantId());
+        userActivityEvent.getUserData().setCustomUserId(rootUser.getUserId());
+        userActivityEvent.getUserData().setScopeId(ScopeInfo.DEFAULT_SCOPE.getScopeId());
+        eventRecorder.record(userActivityEvent);
+    }
+
+    /**
+     * Updates the {@link LoginData#LAST_SEEN} field of the given user.
+     *
+     * @param user the user to update
+     */
+    protected abstract void updateLastSeen(U user);
+
     /**
      * Makes the user become/switch to another user.
      * <p>
@@ -248,6 +284,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             return null;
         }
         List<String> extraRoles = new ArrayList<>();
+
         extraRoles.add(PERMISSION_SPY_USER);
         extraRoles.add(PERMISSION_SELECT_USER_ACCOUNT);
         if (rootUser.hasPermission(PERMISSION_SYSTEM_TENANT_AFFILIATE)) {
@@ -722,22 +759,25 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     @Override
     protected UserSettings getUserSettings(UserSettings scopeSettings, UserInfo userInfo) {
         U user = userInfo.getUserObject(getUserClass());
-        if (user.getUserAccountData().getPermissions().getConfig() == null) {
-            if (user.getTenant().fetchValue().getTenantData().getConfig() == null) {
+        Config userAccountConfig = user.getUserAccountData().getPermissions().getConfig();
+        Config tenantConfig = user.getTenant().fetchValue().getTenantData().getConfig();
+
+        if (userAccountConfig == null) {
+            if (tenantConfig == null) {
                 return scopeSettings;
             }
 
             return configCache.get(user.getTenant().getUniqueObjectName(), i -> {
                 Config cfg = scopeSettings.getConfig();
-                cfg = user.getTenant().fetchValue().getTenantData().getConfig().withFallback(cfg);
+                cfg = tenantConfig.withFallback(cfg);
                 return Tuple.create(new UserSettings(cfg, false), user.getTenant().getUniqueObjectName());
             }).getFirst();
         }
 
         return configCache.get(user.getUniqueName(), i -> {
             Config cfg = scopeSettings.getConfig();
-            cfg = user.getTenant().fetchValue().getTenantData().getConfig().withFallback(cfg);
-            cfg = user.getUserAccountData().getPermissions().getConfig().withFallback(cfg);
+            cfg = tenantConfig.withFallback(cfg);
+            cfg = userAccountConfig.withFallback(cfg);
             return Tuple.create(new UserSettings(cfg, false), user.getTenant().getUniqueObjectName());
         }).getFirst();
     }

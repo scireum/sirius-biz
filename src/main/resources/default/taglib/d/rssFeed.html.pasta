@@ -1,0 +1,43 @@
+<i:arg type="String" name="url" description="the full URL to the RSS feed" />
+<i:arg type="int" name="span" default="2" description="the span for md-devices" />
+<i:arg type="int" name="smallSpan" default="12" description="the span for xs-devices" />
+<i:arg type="String" name="class" default="rssFeed" description="the attribute which the class name will be extended with" />
+<i:arg type="boolean" name="showDescription" default="true" description="determines if the RSS feed description will be rendered" />
+<i:arg type="boolean" name="showHeaderImage" default="true" description="determines if the RSS header image will be rendered" />
+<i:arg type="boolean" name="showHeader" default="true" description="determines if the RSS feed will show the header information in general, such as the RSS feed title and image" />
+<i:arg type="boolean" name="useFeedTitle" default="true" description="determines if the RSS feed title will be used or ignored, headerTitleExtension will be displayed though" />
+<i:arg type="String" name="headerTitleExtension" default="" description="extends the RSS feed title by the given string" />
+
+<i:pragma
+        name="description"
+        value="Provides a template to integrate RSS feeds. WARNING - USE WITH CAUTION: This tag does integrate and render external resources which may potentially contain malicious content! Please always ensure that the source from which the contents are fetched is trustworthy!" />
+
+<i:local name="syndFeedObject" value="@user.getHelper(sirius.biz.web.RssFeedHelper.class).processFeed(url)" />
+
+<div class="@class col-md-@span col-xs-@smallSpan">
+    <i:if test="@showHeader">
+        <div class="row">
+            <i:if test="@showHeaderImage">
+                <img src="@syndFeedObject.getImage().getUrl()" />
+            </i:if>
+            <h1>
+                <i:if test="@useFeedTitle">
+                    <i:raw>@syndFeedObject.getTitle()</i:raw>
+                </i:if>
+                @headerTitleExtension
+            </h1>
+        </div>
+    </i:if>
+
+    <i:for type="com.rometools.rome.feed.synd.SyndEntry" var="entry" items="@syndFeedObject.getEntries()">
+        <div class="row">
+            <hr />
+            <i:raw><h2>@entry.getTitle()</h2></i:raw>
+            <span class="date">@formatDateTimeWithoutSeconds(entry.getPublishedDate())</span>
+
+            <i:if test="showDescription">
+                <i:raw><p>@entry.getDescription().getValue()</p></i:raw>
+            </i:if>
+        </div>
+    </i:for>
+</div>

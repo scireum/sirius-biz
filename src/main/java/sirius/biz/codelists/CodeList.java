@@ -19,7 +19,7 @@ import sirius.kernel.commons.Explain;
  * Note that all fields are represented via {@link CodeListData}.
  */
 @SuppressWarnings("squid:S1214")
-@Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real enttiy.")
+@Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
 public interface CodeList extends TenantAware {
 
     /**

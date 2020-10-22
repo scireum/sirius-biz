@@ -12,6 +12,7 @@ import sirius.biz.elastic.AutoBatchLoop;
 import sirius.db.es.Elastic;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.CallContext;
+import sirius.kernel.commons.RateLimit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.ConfigValue;
@@ -28,6 +29,7 @@ import sirius.web.security.UserContext;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
@@ -68,6 +70,12 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
 
     @ConfigValue("protocols.maxLogMessageLength")
     private int maxMessageLength;
+
+    /**
+     * To prevent overrunning Elasticsearch by logging messages, we limit the number of logged messages
+     * to 100/min.
+     */
+    private RateLimit loggedMessageLimit = RateLimit.nTimesPerInterval(1, TimeUnit.MINUTES, 100);
 
     private AtomicLong disabledUntil;
 
@@ -177,6 +185,10 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
         }
 
         if (elastic == null || !elastic.getReadyFuture().isCompleted()) {
+            return true;
+        }
+
+        if (!loggedMessageLimit.check()) {
             return true;
         }
 

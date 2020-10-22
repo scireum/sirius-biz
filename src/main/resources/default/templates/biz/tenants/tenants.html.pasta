@@ -14,6 +14,7 @@
         <i:if test="@tenants.hasFacets()">
             <div class="col-md-3">
                 <w:filterbox page="tenants" baseUrl="/tenants"/>
+                <w:jobs target="tenants"/>
                 <i:extensions target="tenants" point="sidebar" page="tenants"/>
             </div>
         </i:if>

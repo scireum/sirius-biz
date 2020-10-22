@@ -8,6 +8,8 @@
 
 package sirius.biz.tenants.mongo;
 
+import sirius.biz.analytics.flags.jdbc.SQLPerformanceData;
+import sirius.biz.analytics.flags.mongo.MongoPerformanceData;
 import sirius.biz.packages.PackageData;
 import sirius.biz.packages.Packages;
 import sirius.biz.tenants.Tenant;
@@ -59,6 +61,8 @@ public class MongoTenantController extends TenantController<String, MongoTenant,
         MongoPageHelper<MongoTenant> pageHelper = MongoPageHelper.withQuery(query).withContext(ctx);
 
         pageHelper.withSearchFields(QueryField.startsWith(MongoTenant.SEARCH_PREFIXES));
+
+        MongoPerformanceData.addFilterFacet(pageHelper);
 
         pageHelper.addTermAggregation(MongoTenant.TENANT_DATA.inner(TenantData.PACKAGE_DATA.inner(PackageData.PACKAGE_STRING)),
                                       name -> packages.getPackageName(TenantController.PACKAGE_SCOPE_TENANT, name));

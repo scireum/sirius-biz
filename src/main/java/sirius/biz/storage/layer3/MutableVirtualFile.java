@@ -41,7 +41,7 @@ public class MutableVirtualFile extends VirtualFile {
     public static final Predicate<VirtualFile> CONSTANT_FALSE = ignored -> false;
 
     /**
-     * Regular Expressions that matches any charachter that is not allowed for creating a new file.
+     * Regular Expressions that matches any character that is not allowed for creating a new file.
      * <p>
      * These chars are prohibited as they might be reserved by the file system as indicated here: https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words
      */
@@ -71,7 +71,7 @@ public class MutableVirtualFile extends VirtualFile {
      */
     public static MutableVirtualFile checkedCreate(@Nonnull VirtualFile parent, @Nonnull String name) {
         if (Strings.isEmpty(name) || Pattern.compile(REGEX_ILLEGAL_FILE_CHARS).split(name).length > 1) {
-            throw new IllegalArgumentException("A filename must be filled and must not contain illegal charachters.");
+            throw new IllegalArgumentException("A filename must be filled and must not contain illegal characters.");
         }
         return new MutableVirtualFile(parent, name);
     }

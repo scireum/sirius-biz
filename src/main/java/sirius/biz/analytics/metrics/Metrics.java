@@ -11,8 +11,6 @@ package sirius.biz.analytics.metrics;
 import sirius.db.mixing.BaseEntity;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Provides a database independent API to store and retrieve metrics.
@@ -208,168 +206,19 @@ public interface Metrics {
     void updateGlobalDailyMetric(String name, LocalDate date, int value);
 
     /**
-     * Queries a fact for the given target with the given name.
+     * Creates a query against the metrics database.
      *
-     * @param targetType the type of the object to fetch the metric for
-     * @param targetId   the id of the object to fetch the metric for
-     * @param name       the name of the metric
-     * @return the stored value or 0 of no value is present
+     * @return a query to be executed against the metrics database
      */
-    int queryFact(String targetType, String targetId, String name);
+    MetricQuery query();
 
     /**
-     * Queries a fact for the given target with the given name.
-     *
-     * @param target the object to fetch the metric for
-     * @param name   the name of the metric
-     * @return the stored value or 0 of no value is present
-     */
-    int queryFact(BaseEntity<?> target, String name);
-
-    /**
-     * Queries a global fact with the given name.
-     *
-     * @param name the name of the metric
-     * @return the stored value or 0 of no value is present
-     */
-    int queryGlobalFact(String name);
-
-    /**
-     * Queries all facts for the given target.
-     *
-     * @param targetType the type of the object to fetch the metric for
-     * @param targetId   the id of the object to fetch the metric for
-     * @return a map containing all known facts for the given target
-     */
-    Map<String, Integer> queryFacts(String targetType, String targetId);
-
-    /**
-     * Queries all facts for the given target.
-     *
-     * @param target the object to fetch the metric for
-     * @return a map containing all known facts for the given target
-     */
-    Map<String, Integer> queryFacts(BaseEntity<?> target);
-
-    /**
-     * Queries all global facts.
-     *
-     * @return a map containing all known global facts
-     */
-    Map<String, Integer> queryGlobalFacts();
-
-    /**
-     * Queries all yearly metric values for the given target, name and period.
-     *
-     * @param targetType the type of the object to fetch the metrics for
-     * @param targetId   the id of the object to fetch the metrics for
-     * @param name       the name of the metric
-     * @param from       the start of the period
-     * @param to         the end of the period
-     * @return a list of metric values for the requested period. Missing values are replaced with 0.
-     */
-    List<Integer> queryYearlyMetrics(String targetType, String targetId, String name, LocalDate from, LocalDate to);
-
-    /**
-     * Queries all yearly metric values for the given target, name and period.
+     * Fetches the label for the given metric.
      * <p>
-     * Note that this will only return up to {@link BasicMetrics#MAX_YEARLY_METRICS} values.
+     * This is boilerplate for {@code NLS.get('Metric.'+name)}
      *
-     * @param target the object to fetch the metrics for
-     * @param name   the name of the metric
-     * @param from   the start of the period
-     * @param to     the end of the period
-     * @return a list of metric values for the requested period. Missing values are replaced with 0.
+     * @param name the name of the metric to fetch the label for
+     * @return the label of the metric in the current language
      */
-    List<Integer> queryYearlyMetrics(BaseEntity<?> target, String name, LocalDate from, LocalDate to);
-
-    /**
-     * Queries all yearly metric values for the given global metric and period.
-     * <p>
-     * Note that this will only return up to {@link BasicMetrics#MAX_YEARLY_METRICS} values.
-     *
-     * @param name the name of the metric
-     * @param from the start of the period
-     * @param to   the end of the period
-     * @return a list of metric values for the requested period. Missing values are replaced with 0.
-     */
-    List<Integer> queryGlobalYearlyMetrics(String name, LocalDate from, LocalDate to);
-
-    /**
-     * Queries all monthly metric values for the given target, name and period.
-     * <p>
-     * Note that this will only return up to {@link BasicMetrics#MAX_MONTHLY_METRICS} values.
-     *
-     * @param targetType the type of the object to fetch the metrics for
-     * @param targetId   the id of the object to fetch the metrics for
-     * @param name       the name of the metric
-     * @param from       the start of the period
-     * @param to         the end of the period
-     * @return a list of metric values for the requested period. Missing values are replaced with 0.
-     */
-    List<Integer> queryMonthlyMetrics(String targetType, String targetId, String name, LocalDate from, LocalDate to);
-
-    /**
-     * Queries all monthly metric values for the given target, name and period.
-     * <p>
-     * Note that this will only return up to {@link BasicMetrics#MAX_MONTHLY_METRICS} values.
-     *
-     * @param target the object to fetch the metrics for
-     * @param name   the name of the metric
-     * @param from   the start of the period
-     * @param to     the end of the period
-     * @return a list of metric values for the requested period. Missing values are replaced with 0.
-     */
-    List<Integer> queryMonthlyMetrics(BaseEntity<?> target, String name, LocalDate from, LocalDate to);
-
-    /**
-     * Queries all monthly metric values for the given global metric and period.
-     * <p>
-     * Note that this will only return up to {@link BasicMetrics#MAX_MONTHLY_METRICS} values.
-     *
-     * @param name the name of the metric
-     * @param from the start of the period
-     * @param to   the end of the period
-     * @return a list of metric values for the requested period. Missing values are replaced with 0.
-     */
-    List<Integer> queryGlobalMonthlyMetrics(String name, LocalDate from, LocalDate to);
-
-    /**
-     * Queries all daily metric values for the given target, name and period.
-     * <p>
-     * Note that this will only return up to {@link BasicMetrics#MAX_DAILY_METRICS} values.
-     *
-     * @param targetType the type of the object to fetch the metrics for
-     * @param targetId   the id of the object to fetch the metrics for
-     * @param name       the name of the metric
-     * @param from       the start of the period
-     * @param to         the end of the period
-     * @return a list of metric values for the requested period. Missing values are replaced with 0.
-     */
-    List<Integer> queryDailyMetrics(String targetType, String targetId, String name, LocalDate from, LocalDate to);
-
-    /**
-     * Queries all daily metric values for the given target, name and period.
-     * <p>
-     * Note that this will only return up to {@link BasicMetrics#MAX_DAILY_METRICS} values.
-     *
-     * @param target the object to fetch the metrics for
-     * @param name   the name of the metric
-     * @param from   the start of the period
-     * @param to     the end of the period
-     * @return a list of metric values for the requested period. Missing values are replaced with 0.
-     */
-    List<Integer> queryDailyMetrics(BaseEntity<?> target, String name, LocalDate from, LocalDate to);
-
-    /**
-     * Queries all daily metric values for the given global metric and period.
-     * <p>
-     * Note that this will only return up to {@link BasicMetrics#MAX_DAILY_METRICS} values.
-     *
-     * @param name the name of the metric
-     * @param from the start of the period
-     * @param to   the end of the period
-     * @return a list of metric values for the requested period. Missing values are replaced with 0.
-     */
-    List<Integer> queryGlobalDailyMetrics(String name, LocalDate from, LocalDate to);
+    String fetchLabel(String name);
 }

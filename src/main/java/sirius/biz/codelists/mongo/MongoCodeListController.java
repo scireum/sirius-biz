@@ -14,7 +14,6 @@ import sirius.biz.codelists.CodeListEntryData;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.MongoPageHelper;
 import sirius.kernel.di.std.Register;
-import sirius.web.controller.Controller;
 
 /**
  * Provides the MongoDB implementation of the {@link CodeListController}.

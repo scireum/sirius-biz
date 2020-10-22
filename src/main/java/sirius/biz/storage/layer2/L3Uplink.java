@@ -22,6 +22,8 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.http.Response;
+import sirius.web.security.ScopeInfo;
+import sirius.web.security.UserContext;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -266,12 +268,20 @@ public class L3Uplink implements VFSRoot {
             return null;
         }
 
+        if (!isDefaultScope()) {
+            return null;
+        }
+
         BlobStorageSpace space = storage.getSpace(name);
         if (!space.isBrowsable()) {
             return null;
         }
 
         return wrapDirectory(parent, space.getRoot(tenants.getRequiredTenant().getIdAsString()), false);
+    }
+
+    protected boolean isDefaultScope() {
+        return ScopeInfo.DEFAULT_SCOPE.equals(UserContext.getCurrentScope());
     }
 
     /**
@@ -283,6 +293,10 @@ public class L3Uplink implements VFSRoot {
     @Override
     public void enumerate(VirtualFile parent, FileSearch search) {
         if (storage == null) {
+            return;
+        }
+
+        if (!isDefaultScope()) {
             return;
         }
 

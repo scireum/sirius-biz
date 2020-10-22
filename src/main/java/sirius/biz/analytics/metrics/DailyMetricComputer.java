@@ -10,7 +10,10 @@ package sirius.biz.analytics.metrics;
 
 import sirius.biz.analytics.scheduler.AnalyticalTask;
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.di.std.AutoRegister;
 import sirius.kernel.di.std.Part;
+
+import javax.annotation.Nullable;
 
 /**
  * Provides a base class for all metric computers which are invoked on a daily basis to compute a metric for each of
@@ -21,8 +24,10 @@ import sirius.kernel.di.std.Part;
  *
  * @param <E> the type of entities being processed by this computer
  */
+@AutoRegister
 public abstract class DailyMetricComputer<E extends BaseEntity<?>> implements AnalyticalTask<E> {
 
     @Part
+    @Nullable
     protected Metrics metrics;
 }

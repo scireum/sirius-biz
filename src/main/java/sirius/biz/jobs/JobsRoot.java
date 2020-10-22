@@ -97,6 +97,10 @@ public class JobsRoot extends SingularVFSRoot {
             return false;
         }
 
+        if (!isDefaultScope()) {
+            return false;
+        }
+
         return UserContext.getCurrentUser().hasPermission(Jobs.PERMISSION_EXECUTE_JOBS);
     }
 

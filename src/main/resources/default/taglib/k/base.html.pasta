@@ -1,0 +1,58 @@
+<i:arg type="String" name="title"/>
+<i:arg type="String" name="parent"/>
+<i:arg type="int" name="priority"/>
+<i:arg type="String" name="language"/>
+<i:arg type="String" name="crossReferences" default=""/>
+<i:arg type="String" name="permissions"/>
+<i:arg type="boolean" name="chapter"/>
+
+<i:extraBlock name="title">@title</i:extraBlock>
+<i:extraBlock name="description">
+    <i:render name="description"/>
+</i:extraBlock>
+<i:extraBlock name="lang">@language</i:extraBlock>
+<i:extraBlock name="parent">@parent</i:extraBlock>
+<i:extraBlock name="priority">@priority</i:extraBlock>
+<i:extraBlock name="crossReferences">@crossReferences</i:extraBlock>
+<i:extraBlock name="chapter">@chapter</i:extraBlock>
+<i:extraBlock name="requiredPermissions">@permissions</i:extraBlock>
+
+<i:local name="kba" value="user.getHelper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
+<i:if test="kba != null">
+    <w:page title="@kba.getTitle()">
+        <i:block name="breadcrumbs">
+            <li>
+                <a href="/tycho/kb/@kba.getLang()">KB</a>
+            </li>
+            <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="article" items="kba.queryBreadcrumbs()">
+                <li>
+                    <a href="/tycho/kba/@article.getLang()/@article.getArticleId()">@article.getTitle()</a>
+                </li>
+            </i:for>
+            <i:if test="'00000' != kba.getArticleId()">
+                <li>
+                    <a href="/tycho/kba/@kba.getLang()/@kba.getArticleId()">@kba.getTitle()</a>
+                </li>
+            </i:if>
+        </i:block>
+
+        <w:pageHeader title="@kba.getTitle()"/>
+
+        <i:render name="body"/>
+
+        <i:local name="references" value="kba.queryCrossReferences()"/>
+        <i:if test="!references.isEmpty()">
+            <h2>Siehe auch</h2>
+            <div class="well">
+                <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="article" items="references">
+                    <div>
+                        <a href="/tycho/kba/@article.getLang()/@article.getArticleId()">@article.getTitle()</a>
+                        <p class="muted">
+                            @article.getDescription()
+                        </p>
+                    </div>
+                </i:for>
+            </div>
+        </i:if>
+    </w:page>
+</i:if>

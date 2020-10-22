@@ -36,6 +36,7 @@ import sirius.kernel.settings.Extension;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,7 +45,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -296,15 +296,23 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     @Override
     public ImportDictionary getImportDictionary() {
         ImportDictionary importDictionary = new ImportDictionary();
-        getAutoImportMappings().stream()
-                               .map(descriptor::getProperty)
-                               .map(property -> property.tryAs(FieldDefinitionSupplier.class)
-                                                        .map(FieldDefinitionSupplier::get)
-                                                        .orElse(null))
-                               .filter(Objects::nonNull)
-                               .map(this::expandAliases)
-                               .sorted(Comparator.comparing(FieldDefinition::getLabel))
-                               .forEach(importDictionary::addField);
+        importDictionary.withCustomFieldLookup(this::findComputedField);
+
+        List<FieldDefinition> fields = new ArrayList<>();
+        for (Mapping mapping : getAutoImportMappings()) {
+            Property property = descriptor.findProperty(mapping.toString());
+            if (property != null) {
+                property.tryAs(FieldDefinitionSupplier.class)
+                        .map(FieldDefinitionSupplier::get)
+                        .map(this::expandAliases)
+                        .ifPresent(fields::add);
+            } else {
+                importDictionary.findField(mapping.toString()).map(this::expandAliases).ifPresent(fields::add);
+            }
+        }
+
+        fields.sort(Comparator.comparing(FieldDefinition::getLabel));
+        fields.forEach(importDictionary::addField);
 
         return importDictionary;
     }
@@ -369,16 +377,46 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     @Override
     public ImportDictionary getExportDictionary() {
         ImportDictionary exportDictionary = new ImportDictionary();
-        getExportableMappings().stream()
-                               .map(descriptor::getProperty)
-                               .map(property -> property.tryAs(FieldDefinitionSupplier.class)
-                                                        .map(FieldDefinitionSupplier::get)
-                                                        .orElse(null))
-                               .filter(Objects::nonNull)
-                               .map(this::expandAliases)
-                               .forEach(exportDictionary::addField);
+        exportDictionary.withCustomFieldLookup(this::findComputedField);
+
+        for (Mapping mapping : getExportableMappings()) {
+            Property property = descriptor.findProperty(mapping.toString());
+            if (property != null) {
+                property.tryAs(FieldDefinitionSupplier.class)
+                        .map(FieldDefinitionSupplier::get)
+                        .map(this::expandAliases)
+                        .ifPresent(exportDictionary::addField);
+            } else {
+                exportDictionary.findField(mapping.toString())
+                                .map(this::expandAliases)
+                                .ifPresent(exportDictionary::addField);
+            }
+        }
 
         return exportDictionary;
+    }
+
+    /**
+     * Resolves a field into a <tt>FieldDefinition</tt>.
+     * <p>
+     * For fields which are unknown as property of our <tt>descriptor</tt>, these come most probably from one of our
+     * <tt>EntityImportHandlerExtenders</tt>, we therefore iterate over them and hope for the best.
+     * <p>
+     * This method must be overwritten, if the import handler itself emits virtual fields, which are unknown to the
+     * descriptor or an import extender.
+     *
+     * @param field the field to resolve
+     * @return a field definition for the field or <tt>null</tt> if the field is unknown
+     */
+    @Nullable
+    protected FieldDefinition findComputedField(String field) {
+        for (EntityImportHandlerExtender entityImportHandlerExtender : extenders) {
+            FieldDefinition result = entityImportHandlerExtender.resolveCustomField(this, descriptor, field);
+            if (result != null) {
+                return result;
+            }
+        }
+        return null;
     }
 
     /**
@@ -405,8 +443,10 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
                                                                   .map(Exportable::priority)
                                                                   .orElse(0), Mapping.named(property.getName())))
                   .forEach(priorizedList::add);
+
         collectDefaultExportableMappings((prio, name) -> priorizedList.add(ComparableTuple.create(prio, name)));
         collectExportableMappings((prio, name) -> priorizedList.add(ComparableTuple.create(prio, name)));
+
         for (EntityImportHandlerExtender extender : extenders) {
             extender.collectDefaultExportableMappings(this,
                                                       descriptor,
@@ -484,9 +524,9 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @return a function which extracts the field to be exported from a given entity
      */
     @Override
-    public Function<E, Object> createExtractor(String fieldToExport) {
+    public Function<? super E, ?> createExtractor(String fieldToExport) {
         for (EntityImportHandlerExtender extender : extenders) {
-            Function<E, Object> result = extender.createExtractor(this, descriptor, context, fieldToExport);
+            Function<? super E, ?> result = extender.createExtractor(this, descriptor, context, fieldToExport);
             if (result != null) {
                 return result;
             }

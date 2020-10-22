@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.mongo;
 
+import sirius.biz.analytics.flags.PerformanceDataImportExtender;
 import sirius.biz.importer.ImportHandler;
 import sirius.biz.importer.ImportHandlerFactory;
 import sirius.biz.importer.ImporterContext;
@@ -21,8 +22,10 @@ import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Provides an import handler for {@link MongoUserAccount user accounts}.
@@ -101,7 +104,10 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
         collector.accept(210,
                          MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                            .inner(LoginData.ACCOUNT_LOCKED));
+        collector.accept(220, PerformanceDataImportExtender.PERFORMANCE_FLAGS);
         collector.accept(300,
+                         MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.LAST_SEEN));
+        collector.accept(305,
                          MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.LAST_LOGIN));
         collector.accept(310,
                          MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)

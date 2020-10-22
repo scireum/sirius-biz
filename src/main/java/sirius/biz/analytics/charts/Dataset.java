@@ -77,7 +77,7 @@ public class Dataset {
      *
      * @return a string representation of this dataset
      */
-    public String getData() {
+    public String renderData() {
         return values.stream().map(value -> {
             if (value == null) {
                 return "null";
@@ -96,12 +96,16 @@ public class Dataset {
         return Collections.unmodifiableList(values);
     }
 
+    public String getAxis() {
+        return axis;
+    }
+
     /**
      * Returns the axis to use.
      *
      * @return the axis properly encoded to be directly used in JavaScript
      */
-    public String getAxis() {
+    public String renderAxisName() {
         if (axis == null) {
             return "null";
         }

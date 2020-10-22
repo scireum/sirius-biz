@@ -125,13 +125,14 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     /**
      * Commits the import transaction by deleting all untouched entities.
      */
+    @SuppressWarnings("unchecked")
     protected void commitImportTransaction() {
         if (mode != SyncMode.SYNC) {
             return;
         }
 
         Watch watch = Watch.start();
-        importTransactionHelper.deleteUnmarked(type, this::tuneImportTransactionDeleteQuery, entity -> {
+        importTransactionHelper.deleteUnmarked(type, query -> tuneImportTransactionDeleteQuery((Q) query), entity -> {
             process.addTiming(NLS.get("EntityImportJob.entityDeleted"), watch.elapsed(TimeUnit.MILLISECONDS, true));
         });
     }

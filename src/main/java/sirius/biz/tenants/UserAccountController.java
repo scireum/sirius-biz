@@ -115,12 +115,11 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     @LoginRequired
     public void accounts(WebContext webContext) {
         assertProperUserManagementPermission();
-        Page<U> accounts = getUsersAsPage().withContext(webContext)
-                                           .addBooleanFacet(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                                                         .inner(LoginData.ACCOUNT_LOCKED)
-                                                                                         .toString(),
-                                                            NLS.get("LoginData.accountLocked"))
-                                           .asPage();
+        Page<U> accounts =
+                getUsersAsPage(webContext).addBooleanFacet(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                                        .inner(LoginData.ACCOUNT_LOCKED)
+                                                                                        .toString(),
+                                                           NLS.get("LoginData.accountLocked")).asPage();
 
         webContext.respondWith().template("/templates/biz/tenants/user-accounts.html.pasta", accounts, getUserClass());
     }
@@ -155,9 +154,10 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     /**
      * Constructs a page helper for the user accounts to view.
      *
+     * @param webContext the current request
      * @return the list of available user accounts wrapped as page helper
      */
-    protected abstract BasePageHelper<U, ?, ?, ?> getUsersAsPage();
+    protected abstract BasePageHelper<U, ?, ?, ?> getUsersAsPage(WebContext webContext);
 
     /**
      * Shows an editor for the given account.
@@ -548,7 +548,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
     @Routed("/user-accounts/autocomplete")
     public void usersAutocomplete(final WebContext webContext) {
         AutocompleteHelper.handle(webContext, (query, result) -> {
-            Page<U> accounts = getUsersAsPage().withContext(webContext).asPage();
+            Page<U> accounts = getUsersAsPage(webContext).asPage();
             accounts.getItems().forEach(userAccount -> {
                 result.accept(new AutocompleteHelper.Completion(userAccount.getUniqueName(),
                                                                 userAccount.toString(),

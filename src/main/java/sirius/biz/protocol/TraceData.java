@@ -9,6 +9,7 @@
 package sirius.biz.protocol;
 
 import sirius.db.mixing.Composite;
+import sirius.db.mixing.DateRange;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
@@ -98,6 +99,25 @@ public class TraceData extends Composite {
 
     @Transient
     private boolean silent;
+
+    /**
+     * Returns a default selection of {@link DateRange date ranges} for a time aggregation on {@link #CHANGED_AT}.
+     *
+     * @return an array of date ranges to create a time aggregation on the last changed date
+     * @see sirius.biz.web.MongoPageHelper#addTimeAggregation(Mapping, boolean, DateRange...)
+     * @see sirius.biz.web.ElasticPageHelper#addTimeAggregation(Mapping, boolean, DateRange...)
+     */
+    public static DateRange[] defaultChangeFilterRanges() {
+        return new DateRange[]{DateRange.today(),
+                               DateRange.yesterday(),
+                               DateRange.thisWeek(),
+                               DateRange.lastWeek(),
+                               DateRange.thisMonth(),
+                               DateRange.lastMonth(),
+                               DateRange.thisYear(),
+                               DateRange.lastYear(),
+                               DateRange.beforeLastYear()};
+    }
 
     @BeforeSave
     protected void update() {

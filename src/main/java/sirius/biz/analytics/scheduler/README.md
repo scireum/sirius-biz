@@ -20,4 +20,14 @@ per month and an additional **best effort** one which tries to execute the compu
 day in the current month, so that the relected values are up to date (as long as the system 
 isn't overloaded).
 
+For maintenance and troubleshooting some options are available:
+* The [AnalyticsCommand](AnalyticsCommand.java) can be used in the [System Console](https://localhost:9000/system/console)
+by calling **analytics**. This lists all active schedulers, their queue and last execution. It also permits
+to forcefully start a scheduler immediately.
+* The Logger **analytics** can be set to FINE (using the **logger** command) to observe what the framework is
+doing.
+* The [Cluster State](https://localhost:9000/system/cluster) and the [Load Info](https://localhost:9000/system/load)
+report the queue lengths in which the tasks are scheduler and also list which server is in charge of executing
+the tasks.
+
 Examples on how to use this framework can be found in [Checks](../checks) and [Metrics](../metrics).

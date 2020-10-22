@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.mongo;
 
+import sirius.biz.analytics.flags.mongo.MongoPerformanceData;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.UserAccount;
@@ -47,6 +48,7 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
     public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal = new JournalData(this);
 
+    private final MongoPerformanceData performanceData = new MongoPerformanceData(this);
     @Part
     @Nullable
     private static MongoTenants tenants;
@@ -109,5 +111,10 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
     @Override
     public String getRateLimitScope() {
         return getIdAsString();
+    }
+
+    @Override
+    public MongoPerformanceData getPerformanceData() {
+        return performanceData;
     }
 }

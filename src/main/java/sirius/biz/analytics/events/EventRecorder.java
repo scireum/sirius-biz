@@ -9,10 +9,12 @@
 package sirius.biz.analytics.events;
 
 import sirius.db.jdbc.Database;
+import sirius.db.jdbc.SQLQuery;
 import sirius.db.jdbc.batch.BatchContext;
 import sirius.db.jdbc.batch.InsertQuery;
 import sirius.db.jdbc.schema.Schema;
 import sirius.db.mixing.annotations.Realm;
+import sirius.kernel.Sirius;
 import sirius.kernel.Startable;
 import sirius.kernel.Stoppable;
 import sirius.kernel.di.std.Part;
@@ -61,13 +63,18 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     private static final Duration MAX_BUFFER_AGE = Duration.ofMinutes(5);
 
     /**
+     * Determines the max period to be used in development system.
+     */
+    private static final Duration MAX_BUFFER_AGE_DEV = Duration.ofSeconds(10);
+
+    /**
      * Determines the max number of events to process in one insertion run.
      */
     private static final int MAX_EVENTS_PER_PROCESS = 16 * 1024;
 
     private LocalDateTime lastProcessed;
-    private AtomicInteger bufferedEvents = new AtomicInteger();
-    private Queue<Event> buffer = new ConcurrentLinkedQueue<>();
+    private final AtomicInteger bufferedEvents = new AtomicInteger();
+    private final Queue<Event> buffer = new ConcurrentLinkedQueue<>();
 
     @Part
     private Schema schema;
@@ -109,14 +116,45 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
     }
 
     /**
+     * Determines if a valid database configuration is present.
+     *
+     * @return <tt>true</tt> if a valid configuration is present, <tt>false</tt> otherwise
+     */
+    public boolean isConfigured() {
+        return configured;
+    }
+
+    /**
      * Returns the database which is used to store events in.
      *
      * @return the database used to talk to the <b>Clickhouse</b> server which stores the events. Might be
-     * <tt>null</tt> if no database is configured.
+     * <tt>null</tt> if no database is configured. Therefore {@link #isConfigured()} should most probably
+     * be checked before using it
      */
     @Nullable
     public Database getDatabase() {
         return database;
+    }
+
+    /**
+     * Directly creates a new query on the datastore used for events.
+     * <p>
+     * This is a Clickhouse database and the given query is automatically marked as potentially long running to
+     * suppress warnings if the query takes longer than a usual SQL query (which is kind of expected for large
+     * data warehouses).
+     *
+     * @param sql the SQL to execute. Note that this should be a constant string as parameters can later be passed in
+     *            using {@link SQLQuery#set(String, Object)}
+     * @return the given SQL as query based on the given SQL. Might be <tt>null</tt> if no database is configured.
+     * Therefore {@link #isConfigured()} should most probably be checked before using it
+     */
+    @Nullable
+    public SQLQuery createQuery(String sql) {
+        if (database == null) {
+            return null;
+        }
+
+        return getDatabase().createQuery(sql).markAsLongRunning();
     }
 
     /**
@@ -151,18 +189,23 @@ public class EventRecorder implements Startable, Stoppable, MetricProvider {
      * Invoked periodically by the {@link EventProcessorLoop} to process events if necessary.
      * <p>
      * An insertion run will be started if there are enough events in the buffer (more than {@link #MIN_BUFFER_SIZE})
-     * or if enough time elapsed since the last insertion run (more than {@link #MAX_BUFFER_AGE}).
+     * or if enough time elapsed since the last insertion run (more than {@link #MAX_BUFFER_AGE} or
+     * {@link #MAX_BUFFER_AGE_DEV} in development systems).
      *
      * @return the number of inserted events
      */
     protected int processIfBufferIsFilled() {
         if (bufferedEvents.get() > MIN_BUFFER_SIZE
             || lastProcessed == null
-            || Duration.between(lastProcessed, LocalDateTime.now()).compareTo(MAX_BUFFER_AGE) > 0) {
+            || Duration.between(lastProcessed, LocalDateTime.now()).compareTo(getEffectiveMaxAge()) > 0) {
             return process();
         } else {
             return 0;
         }
+    }
+
+    private Duration getEffectiveMaxAge() {
+        return Sirius.isDev() ? MAX_BUFFER_AGE_DEV : MAX_BUFFER_AGE;
     }
 
     /**

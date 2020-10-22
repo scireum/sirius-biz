@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  * Base class which marks subclasses as aware of their tenant they belong to.
  */
 @SuppressWarnings("squid:S1214")
-@Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real enttiy.")
+@Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
 public interface TenantAware extends Entity {
 
     /**

@@ -14,8 +14,8 @@
                 <small class="muted">@i18n("Model.priority")</small>
             </th>
             <th>
-                @i18n("CodeListEntry.value")<br>
-                <small class="muted">@i18n("CodeListEntry.additionalValue")</small>
+                @i18n("CodeListEntryData.value")<br>
+                <small class="muted">@i18n("CodeListEntryData.additionalValue")</small>
             </th>
             <th>
                 @i18n("Model.description")
@@ -100,8 +100,8 @@
                 <fieldset>
                     <w:textfield name="code" value="" labelKey="Model.code" required="true" />
                     <w:textfield name="priority" value="" labelKey="Model.priority" />
-                    <w:textfield span="12" name="value" value="" labelKey="CodeListEntry.value" />
-                    <w:textfield span="12" name="additionalValue" value="" labelKey="CodeListEntry.additionalValue" />
+                    <w:textfield span="12" name="value" value="" labelKey="CodeListEntryData.value" />
+                    <w:textfield span="12" name="additionalValue" value="" labelKey="CodeListEntryData.additionalValue" />
                     <w:textarea span="12" rows="5" name="description" value="" labelKey="Model.description" />
                 </fieldset>
             </w:editForm>

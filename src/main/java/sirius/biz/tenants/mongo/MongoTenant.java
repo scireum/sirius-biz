@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.mongo;
 
+import sirius.biz.analytics.flags.mongo.MongoPerformanceData;
 import sirius.biz.mongo.MongoBizEntity;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.tenants.Tenant;
@@ -46,6 +47,8 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
 
     public static final Mapping TENANT_DATA = Mapping.named("tenantData");
     private final TenantData tenantData = new TenantData(this);
+
+    private final MongoPerformanceData performanceData = new MongoPerformanceData(this);
 
     /**
      * Contains the effectively enabled features / permissions for this tenant.
@@ -104,5 +107,10 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
     @Override
     public String getRateLimitScope() {
         return getIdAsString();
+    }
+
+    @Override
+    public MongoPerformanceData getPerformanceData() {
+        return performanceData;
     }
 }

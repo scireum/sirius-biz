@@ -30,9 +30,9 @@ import java.util.zip.ZipInputStream;
  */
 public abstract class FileImportJob extends ImportJob {
 
-    private static final String FILE_EXTENSION_ZIP = "zip";
+    protected static final String FILE_EXTENSION_ZIP = "zip";
 
-    private FileParameter fileParameter;
+    protected FileParameter fileParameter;
 
     /**
      * Creates a new job for the given factory and process context.
@@ -52,14 +52,12 @@ public abstract class FileImportJob extends ImportJob {
         if (canHandleFileExtension(Value.of(file.fileExtension()).toLowerCase())) {
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
-                try (InputStream in = fileHandle.getInputStream()) {
-                    executeForStream(file.name(), in);
-                }
+                executeForSingleFile(fileHandle);
             }
         } else if (FILE_EXTENSION_ZIP.equalsIgnoreCase(file.fileExtension())) {
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
-                executeForZIP(fileHandle);
+                executeForArchive(fileHandle);
             }
         } else {
             throw Exceptions.createHandled().withNLSKey("FileImportJob.fileNotSupported").handle();
@@ -78,10 +76,16 @@ public abstract class FileImportJob extends ImportJob {
         attachFile(filename, input);
     }
 
-    private void executeForZIP(FileHandle file) throws Exception {
+    protected void executeForSingleFile(FileHandle fileHandle) throws Exception {
+        try (InputStream in = fileHandle.getInputStream()) {
+            executeForStream(fileHandle.getFile().getName(), in);
+        }
+    }
+
+    protected void executeForArchive(FileHandle fileHandle) throws Exception {
         process.log(ProcessLog.info().withNLSKey("FileImportJob.importingZipFile"));
 
-        try (ZipInputStream zipInputStream = new ZipInputStream(file.getInputStream())) {
+        try (ZipInputStream zipInputStream = new ZipInputStream(fileHandle.getInputStream())) {
             ZipEntry entry = zipInputStream.getNextEntry();
 
             int filesImported = 0;
@@ -104,7 +108,7 @@ public abstract class FileImportJob extends ImportJob {
         }
     }
 
-    private boolean isHiddenFile(String name) {
+    protected boolean isHiddenFile(String name) {
         String fileName = Files.getFilenameAndExtension(name);
 
         if (Strings.isEmpty(fileName)) {

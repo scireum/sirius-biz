@@ -94,7 +94,16 @@ public class Isenguard {
      * @return <tt>true</tt> if the address has been blocked, <tt>false</tt> otherwise
      */
     public boolean isIPBlacklisted(String ipAddress) {
-        return limiter != null && limiter.isIPBLacklisted(ipAddress);
+        try {
+            return limiter != null && limiter.isIPBLacklisted(ipAddress);
+        } catch (Exception e) {
+            // In case of an error e.g. Redis might not be available,
+            // we resort to ignoring any checks and let the application run.
+            // The other option would be to block everything and essentially
+            // shut down the application, which isn't feasible either...
+            Exceptions.handle(LOG, e);
+            return false;
+        }
     }
 
     /**

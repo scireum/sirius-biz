@@ -14,9 +14,11 @@ import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.OptimisticCreate;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
+import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
+import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.commons.Strings;
@@ -34,6 +36,15 @@ import java.util.function.Predicate;
  * Note that all non trivial methods delegate to the associated {@link MongoBlobStorage}.
  */
 @Framework(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
+@Index(name = "directory_tenant_lookup",
+        columns = {"spaceName", "tenant", "deleted"},
+        columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
+@Index(name = "directory_name_lookup",
+        columns = {"spaceName", "parent", "deleted", "directoryName"},
+        columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
+@Index(name = "directory_normalized_name_lookup",
+        columns = {"spaceName", "parent", "deleted", "normalizedDirectoryName"},
+        columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 public class MongoDirectory extends MongoEntity implements Directory, OptimisticCreate {
 
     /**

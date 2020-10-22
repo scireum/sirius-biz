@@ -10,6 +10,7 @@ package sirius.biz.analytics.metrics;
 
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
 import java.time.LocalDate;
 
 /**
@@ -24,6 +25,7 @@ import java.time.LocalDate;
 public abstract class MonthlyGlobalMetricComputer {
 
     @Part
+    @Nullable
     protected Metrics metrics;
 
     /**

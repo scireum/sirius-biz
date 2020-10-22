@@ -30,6 +30,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.function.IntConsumer;
+import java.util.function.Predicate;
 
 /**
  * Provides a {@link ObjectStorageSpace} which stores all objects in a bucket in a S3 compatible store.
@@ -98,7 +99,8 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     }
 
     @Override
-    protected void storePhysicalObject(String objectKey, File file, ByteBlockTransformer transformer) throws IOException {
+    protected void storePhysicalObject(String objectKey, File file, ByteBlockTransformer transformer)
+            throws IOException {
         storePhysicalObject(objectKey, new FileInputStream(file), transformer);
     }
 
@@ -115,9 +117,9 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
 
     @Override
     protected void deliverPhysicalObject(Response response,
-                                      String objectKey,
-                                      ByteBlockTransformer transformer,
-                                      @Nullable IntConsumer failureHandler) throws IOException {
+                                         String objectKey,
+                                         ByteBlockTransformer transformer,
+                                         @Nullable IntConsumer failureHandler) throws IOException {
         response.tunnel(store.objectUrl(bucketName(), objectKey), buffer -> {
             if (buffer.isReadable()) {
                 return transformer.apply(buffer);
@@ -174,5 +176,12 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
         S3ObjectInputStream rawStream =
                 store.getClient().getObject(bucketName().getName(), objectKey).getObjectContent();
         return new TransformingInputStream(rawStream, transformer);
+    }
+
+    @Override
+    public void iterateObjects(Predicate<String> physicalKeyHandler) throws IOException {
+        store.listObjects(bucketName(), null, s3Object -> {
+            return physicalKeyHandler.test(s3Object.getKey());
+        });
     }
 }

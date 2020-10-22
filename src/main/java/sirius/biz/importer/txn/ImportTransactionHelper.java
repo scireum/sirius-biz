@@ -112,14 +112,14 @@ public class ImportTransactionHelper extends ImportHelper {
      * @param queryExtender  a consumer to further filter the query which determines which entities should be deleted
      * @param entityCallback an optional callback which is invoked for each entity to be deleted
      * @param <E>            the generic type of entities being deleted
-     * @param <Q>            the generic type of the query used to delete the entities
      */
     @SuppressWarnings("unchecked")
-    public <E extends BaseEntity<?> & ImportTransactionalEntity, Q extends Query<Q, E, ?>> void deleteUnmarked(Class<E> entityType,
-                                                                                                               Consumer<Q> queryExtender,
-                                                                                                               @Nullable
-                                                                                                                       Consumer<E> entityCallback) {
-        Q query = (Q) (Object) mixing.getDescriptor(entityType).getMapper().select(entityType);
+    public <E extends BaseEntity<?> & ImportTransactionalEntity> void deleteUnmarked(Class<E> entityType,
+                                                                                     Consumer<Query<?, E, ?>> queryExtender,
+                                                                                     @Nullable
+                                                                                             Consumer<E> entityCallback) {
+        Query<?, E, ?> query =
+                (Query<?, E, ?>) (Object) mixing.getDescriptor(entityType).getMapper().select(entityType);
         query.ne(ImportTransactionalEntity.IMPORT_TRANSACTION_DATA.inner(ImportTransactionData.TXN_ID),
                  getCurrentTransaction());
         queryExtender.accept(query);

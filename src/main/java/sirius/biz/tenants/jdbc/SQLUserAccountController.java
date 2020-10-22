@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.jdbc;
 
+import sirius.biz.analytics.flags.jdbc.SQLPerformanceData;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PersonData;
 import sirius.biz.tenants.Tenant;
@@ -23,6 +24,7 @@ import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.query.QueryField;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Controller;
+import sirius.web.http.WebContext;
 
 /**
  * Provides a GUI for managing user accounts.
@@ -31,14 +33,15 @@ import sirius.web.controller.Controller;
 public class SQLUserAccountController extends UserAccountController<Long, SQLTenant, SQLUserAccount> {
 
     @Override
-    protected BasePageHelper<SQLUserAccount, ?, ?, ?> getUsersAsPage() {
+    protected BasePageHelper<SQLUserAccount, ?, ?, ?> getUsersAsPage(WebContext webContext) {
         SmartQuery<SQLUserAccount> baseQuery = oma.select(SQLUserAccount.class)
                                                   .orderAsc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                          .inner(PersonData.LASTNAME))
                                                   .orderAsc(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                          .inner(PersonData.FIRSTNAME));
 
-        SQLPageHelper<SQLUserAccount> pageHelper = SQLPageHelper.withQuery(tenants.forCurrentTenant(baseQuery));
+        SQLPageHelper<SQLUserAccount> pageHelper =
+                SQLPageHelper.withQuery(tenants.forCurrentTenant(baseQuery)).withContext(webContext);
         pageHelper.withSearchFields(QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL)),
                                     QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                      .inner(LoginData.USERNAME)),
@@ -46,6 +49,8 @@ public class SQLUserAccountController extends UserAccountController<Long, SQLTen
                                                                                      .inner(PersonData.FIRSTNAME)),
                                     QueryField.contains(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                      .inner(PersonData.LASTNAME)));
+
+        SQLPerformanceData.addFilterFacet(pageHelper);
 
         pageHelper.applyExtenders("/user-accounts");
         pageHelper.applyExtenders("/user-accounts/*");

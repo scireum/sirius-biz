@@ -19,6 +19,7 @@ import sirius.web.security.UserInfo;
 public class BridgeSession extends ServerSessionImpl {
 
     private UserInfo user = UserInfo.NOBODY;
+    private String scopeId;
 
     protected BridgeSession(ServerFactoryManager factoryManager, IoSession ioSession) throws Exception {
         super(factoryManager, ioSession);
@@ -40,5 +41,13 @@ public class BridgeSession extends ServerSessionImpl {
      */
     public void attachUser(UserInfo user) {
         this.user = user;
+    }
+
+    public void attachScope(String scopeId) {
+        this.scopeId = scopeId;
+    }
+
+    public String getScopeId() {
+        return scopeId;
     }
 }

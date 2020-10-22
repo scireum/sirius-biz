@@ -13,6 +13,7 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.output.ChartOutput;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableOutput;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.TaskContextAdapter;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
@@ -136,6 +137,9 @@ public interface ProcessContext extends TaskContextAdapter {
 
     /**
      * Updates the "current state" message of the process.
+     * <p>
+     * Note that this doesn't perform any rate limiting etc. Therefore {@link TaskContext#shouldUpdateState()}
+     * along with {@link TaskContext#setState(String, Object...)} is most probably a better choice.
      *
      * @param state the new state message to show
      */

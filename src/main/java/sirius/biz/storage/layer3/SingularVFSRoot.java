@@ -10,6 +10,8 @@ package sirius.biz.storage.layer3;
 
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Priorized;
+import sirius.web.security.ScopeInfo;
+import sirius.web.security.UserContext;
 
 import javax.annotation.Nullable;
 
@@ -41,6 +43,10 @@ public abstract class SingularVFSRoot implements VFSRoot {
     protected String getDescription() {
         // Default implementation which provides no description...
         return null;
+    }
+
+    protected boolean isDefaultScope() {
+        return ScopeInfo.DEFAULT_SCOPE.equals(UserContext.getCurrentScope());
     }
 
     @Override

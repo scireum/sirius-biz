@@ -10,13 +10,13 @@ package sirius.biz.analytics.metrics;
 
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mixing;
+import sirius.kernel.cache.Cache;
+import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.nls.NLS;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Optional;
 
 /**
  * Base class which handles all the database independent boilerplate.
@@ -31,28 +31,11 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
      * Most of the metrics are associated to a database entity and will store their type and id as reference.
      * For global metrics we fill both fields with the value to store and retrieve them.
      */
-    private static final String GLOBAL = "global";
+    protected static final String GLOBAL = "global";
 
-    /**
-     * Specifies the maximal number of values returned by
-     * {@link #queryDailyMetrics(String, String, String, LocalDate, LocalDate)} or
-     * {@link #queryDailyMetrics(BaseEntity, String, LocalDate, LocalDate)}.
-     */
-    public static final int MAX_DAILY_METRICS = 400;
+    private static final String METRIC_NLS_PREFIX = "Metric.";
 
-    /**
-     * Specifies the maximal number of values returned by
-     * {@link #queryMonthlyMetrics(String, String, String, LocalDate, LocalDate)} or
-     * {@link #queryMonthlyMetrics(BaseEntity, String, LocalDate, LocalDate)}.
-     */
-    public static final int MAX_MONTHLY_METRICS = 100;
-
-    /**
-     * Specifies the maximal number of values returned by
-     * {@link #queryYearlyMetrics(String, String, String, LocalDate, LocalDate)} or
-     * {@link #queryYearlyMetrics(BaseEntity, String, LocalDate, LocalDate)}.
-     */
-    public static final int MAX_YEARLY_METRICS = 100;
+    private Cache<String, Integer> metricCache = CacheManager.createCoherentCache("metrics");
 
     /**
      * Returns the entity type used to store facts.
@@ -123,26 +106,6 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
                                             Integer year,
                                             Integer month,
                                             Integer day);
-
-    /**
-     * Queries the given metric.
-     *
-     * @param table      the table to query
-     * @param targetType the target type to query
-     * @param targetId   the id of the target to query for
-     * @param name       the name of the metric to query
-     * @param year       the year (if available) of the metric to query
-     * @param month      the month (if available) of the metric to query
-     * @param day        the day (if available) of the metric to query
-     * @return the value available for the given parameters
-     */
-    protected abstract int queryMetric(Class<? extends E> table,
-                                       String targetType,
-                                       String targetId,
-                                       String name,
-                                       Integer year,
-                                       Integer month,
-                                       Integer day);
 
     @Override
     public void updateGlobalFact(String name, int value) {
@@ -374,115 +337,106 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
                                               int value);
 
     @Override
-    public int queryFact(BaseEntity<?> target, String name) {
-        return queryFact(Mixing.getNameForType(target.getClass()), target.getIdAsString(), name);
+    public MetricQuery query() {
+        return new MetricQuery(this);
     }
 
     @Override
-    public int queryGlobalFact(String name) {
-        return queryFact(GLOBAL, GLOBAL, name);
+    public String fetchLabel(String name) {
+        return NLS.get(METRIC_NLS_PREFIX + name);
     }
 
-    @Override
-    public Map<String, Integer> queryFacts(BaseEntity<?> target) {
-        return queryFacts(Mixing.getNameForType(target.getClass()), target.getIdAsString());
-    }
-
-    @Override
-    public Map<String, Integer> queryGlobalFacts() {
-        return queryFacts(GLOBAL, GLOBAL);
-    }
-
-    @Override
-    public List<Integer> queryYearlyMetrics(BaseEntity<?> target, String name, LocalDate from, LocalDate to) {
-        return queryYearlyMetrics(Mixing.getNameForType(target.getClass()), target.getIdAsString(), name, from, to);
-    }
-
-    @Override
-    public List<Integer> queryGlobalYearlyMetrics(String name, LocalDate from, LocalDate to) {
-        return queryYearlyMetrics(GLOBAL, GLOBAL, name, from, to);
-    }
-
-    @Override
-    public List<Integer> queryYearlyMetrics(String targetType,
-                                            String targetId,
-                                            String name,
-                                            LocalDate from,
-                                            LocalDate to) {
-        List<Integer> result = new ArrayList<>();
-        LocalDate date = from;
-        AtomicInteger limit = new AtomicInteger(MAX_YEARLY_METRICS);
-        while (!date.isAfter(to) && limit.decrementAndGet() > 0) {
-            result.add(queryMetric(getYearlyMetricType(), targetType, targetId, name, date.getYear(), null, null));
-            date = date.plusYears(1);
-        }
-
-        return result;
-    }
-
-    @Override
-    public List<Integer> queryMonthlyMetrics(BaseEntity<?> target, String name, LocalDate from, LocalDate to) {
-        return queryMonthlyMetrics(Mixing.getNameForType(target.getClass()), target.getIdAsString(), name, from, to);
-    }
-
-    @Override
-    public List<Integer> queryGlobalMonthlyMetrics(String name, LocalDate from, LocalDate to) {
-        return queryMonthlyMetrics(GLOBAL, GLOBAL, name, from, to);
-    }
-
-    @Override
-    public List<Integer> queryMonthlyMetrics(String targetType,
+    /**
+     * Executes the query for the given metric.
+     *
+     * @param interval   the metric type to query
+     * @param targetType the target type to query
+     * @param targetId   the id of the target to query for
+     * @param name       the name of the metric to query
+     * @param year       the year of the metric to query
+     * @param month      the month of the metric to query
+     * @param day        the day of the metric to query
+     * @return the value available for the given parameters
+     */
+    protected Optional<Integer> executeQuery(MetricQuery.Interval interval,
+                                             String targetType,
                                              String targetId,
                                              String name,
-                                             LocalDate from,
-                                             LocalDate to) {
-        List<Integer> result = new ArrayList<>();
-        LocalDate date = from;
-        AtomicInteger limit = new AtomicInteger(MAX_MONTHLY_METRICS);
-        while (!date.isAfter(to) && limit.decrementAndGet() > 0) {
-            result.add(queryMetric(getMonthlyMetricType(),
-                                   targetType,
-                                   targetId,
-                                   name,
-                                   date.getYear(),
-                                   date.getMonthValue(),
-                                   null));
-            date = date.plusMonths(1);
+                                             Integer year,
+                                             Integer month,
+                                             Integer day) {
+        switch (interval) {
+            case YEARLY:
+                return queryCachedMetric(interval, getYearlyMetricType(), targetType, targetId, name, year, null, null);
+            case MONTHLY:
+                return queryCachedMetric(interval,
+                                         getMonthlyMetricType(),
+                                         targetType,
+                                         targetId,
+                                         name,
+                                         year,
+                                         month,
+                                         null);
+            case DAILY:
+                return queryCachedMetric(interval, getDailyMetricType(), targetType, targetId, name, year, month, day);
+            case FACT:
+                return queryCachedMetric(interval, getFactType(), targetType, targetId, name, null, null, null);
+            default:
+                throw new IllegalArgumentException("Unknown interval: " + interval);
+        }
+    }
+
+    private Optional<Integer> queryCachedMetric(MetricQuery.Interval interval,
+                                                Class<? extends E> table,
+                                                String targetType,
+                                                String targetId,
+                                                String name,
+                                                Integer year,
+                                                Integer month,
+                                                Integer day) {
+        String cacheKey = interval + "-" + targetType + "-" + targetId + "-" + name;
+        if (year != null) {
+            cacheKey = cacheKey + "-" + year;
+        }
+        if (month != null) {
+            cacheKey = cacheKey + "-" + month;
+        }
+        if (day != null) {
+            cacheKey = cacheKey + "-" + day;
         }
 
-        return result;
-    }
-
-    @Override
-    public List<Integer> queryDailyMetrics(BaseEntity<?> target, String name, LocalDate from, LocalDate to) {
-        return queryDailyMetrics(Mixing.getNameForType(target.getClass()), target.getIdAsString(), name, from, to);
-    }
-
-    @Override
-    public List<Integer> queryGlobalDailyMetrics(String name, LocalDate from, LocalDate to) {
-        return queryDailyMetrics(GLOBAL, GLOBAL, name, from, to);
-    }
-
-    @Override
-    public List<Integer> queryDailyMetrics(String targetType,
-                                           String targetId,
-                                           String name,
-                                           LocalDate from,
-                                           LocalDate to) {
-        List<Integer> result = new ArrayList<>();
-        LocalDate date = from;
-        AtomicInteger limit = new AtomicInteger(MAX_DAILY_METRICS);
-        while (!date.isAfter(to) && limit.decrementAndGet() > 0) {
-            result.add(queryMetric(getDailyMetricType(),
-                                   targetType,
-                                   targetId,
-                                   name,
-                                   date.getYear(),
-                                   date.getMonthValue(),
-                                   date.getDayOfMonth()));
-            date = date.plusDays(1);
+        Integer result = metricCache.get(cacheKey,
+                                         ignored -> queryMetric(table,
+                                                                targetType,
+                                                                targetId,
+                                                                name,
+                                                                year,
+                                                                month,
+                                                                day).orElse(-1));
+        if (result >= 0) {
+            return Optional.of(result);
+        } else {
+            return Optional.empty();
         }
-
-        return result;
     }
+
+    /**
+     * Queries the given metric.
+     *
+     * @param table      the table to query
+     * @param targetType the target type to query
+     * @param targetId   the id of the target to query for
+     * @param name       the name of the metric to query
+     * @param year       the year (if available) of the metric to query
+     * @param month      the month (if available) of the metric to query
+     * @param day        the day (if available) of the metric to query
+     * @return the value available for the given parameters
+     */
+    protected abstract Optional<Integer> queryMetric(Class<? extends E> table,
+                                                     String targetType,
+                                                     String targetId,
+                                                     String name,
+                                                     Integer year,
+                                                     Integer month,
+                                                     Integer day);
 }

@@ -14,6 +14,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
+import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 
 import javax.annotation.Nullable;
@@ -54,6 +55,10 @@ public class TmpRoot implements VFSRoot {
     @Override
     @Nullable
     public VirtualFile findChild(VirtualFile parent, String name) {
+        if (!ScopeInfo.DEFAULT_SCOPE.equals(UserContext.getCurrentScope())) {
+            return null;
+        }
+
         if (TMP_PATH.equals(name)) {
             MutableVirtualFile result = new MutableVirtualFile(parent, name);
             result.markAsExistingDirectory();

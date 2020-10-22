@@ -23,7 +23,7 @@ import sirius.kernel.commons.Explain;
  * @param <L> the effective entity type used to represent code lists
  */
 @SuppressWarnings("squid:S1214")
-@Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real enttiy.")
+@Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
 public interface CodeListEntry<I, L extends BaseEntity<I> & CodeList> extends Entity {
 
     /**

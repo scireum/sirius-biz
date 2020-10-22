@@ -18,10 +18,13 @@ import org.apache.ftpserver.ftplet.FtpletResult;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
+import sirius.kernel.di.std.Part;
+import sirius.web.security.ScopeDetector;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,6 +39,10 @@ class BridgeFtplet implements Ftplet {
 
     @ConfigValue("storage.layer3.downlink.ftp.maxConnectionsPerIp")
     private static int maxConnectionsPerIp;
+
+    @Part
+    @Nullable
+    private static ScopeDetector detector;
 
     @Override
     public void init(FtpletContext ftpletContext) throws FtpException {
@@ -56,6 +63,14 @@ class BridgeFtplet implements Ftplet {
         UserContext.get().setCurrentScope(ScopeInfo.DEFAULT_SCOPE);
 
         if (session.getUser() instanceof BridgeUser) {
+            String scopeId = ((BridgeUser) session.getUser()).getScopeId();
+            if (detector != null && !ScopeInfo.DEFAULT_SCOPE.getScopeId().equals(scopeId)) {
+                if (StorageUtils.LOG.isFINE()) {
+                    StorageUtils.LOG.FINE("Layer 3/FTP: Setting scope: " + scopeId);
+                }
+
+                detector.findScopeById(scopeId).ifPresent(UserContext.get()::setCurrentScope);
+            }
             if (StorageUtils.LOG.isFINE()) {
                 StorageUtils.LOG.FINE("Layer 3/FTP: Setting user: " + session.getUser().getName());
             }

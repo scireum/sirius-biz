@@ -22,9 +22,11 @@ import java.util.List;
 class BridgeUser implements User {
 
     private UserInfo authUser;
+    private String scopeId;
 
-    BridgeUser(UserInfo authUser) {
+    BridgeUser(UserInfo authUser, String scopeId) {
         this.authUser = authUser;
+        this.scopeId = scopeId;
     }
 
     @Override
@@ -69,5 +71,9 @@ class BridgeUser implements User {
 
     protected UserInfo getAuthUser() {
         return authUser;
+    }
+
+    protected String getScopeId() {
+        return scopeId;
     }
 }

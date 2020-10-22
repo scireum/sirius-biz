@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants.jdbc;
 
+import sirius.biz.analytics.flags.jdbc.SQLPerformanceData;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.jdbc.BizEntity;
 import sirius.biz.protocol.JournalData;
@@ -44,6 +45,8 @@ public class SQLTenant extends BizEntity implements Tenant<Long> {
 
     public static final Mapping TENANT_DATA = Mapping.named("tenantData");
     private final TenantData tenantData = new TenantData(this);
+
+    private final SQLPerformanceData performanceData = new SQLPerformanceData(this);
 
     /**
      * Contains the effectively enabled features / permissions for this tenant.
@@ -95,5 +98,10 @@ public class SQLTenant extends BizEntity implements Tenant<Long> {
     @Override
     public String getRateLimitScope() {
         return getIdAsString();
+    }
+
+    @Override
+    public SQLPerformanceData getPerformanceData() {
+        return performanceData;
     }
 }

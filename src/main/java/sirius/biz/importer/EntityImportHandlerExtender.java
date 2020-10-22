@@ -8,10 +8,13 @@
 
 package sirius.biz.importer;
 
+import com.google.j2objc.annotations.AutoreleasePool;
+import sirius.biz.importer.format.FieldDefinition;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Context;
+import sirius.kernel.di.std.AutoRegister;
 
 import javax.annotation.Nullable;
 import java.util.function.BiConsumer;
@@ -23,6 +26,7 @@ import java.util.function.Function;
  * This might be useful for customizations or {@link sirius.db.mixing.annotations.Mixin mixins} which need to extend the
  * import process beyond adding fields.
  */
+@AutoRegister
 public interface EntityImportHandlerExtender {
 
     /**
@@ -57,10 +61,10 @@ public interface EntityImportHandlerExtender {
      * @see BaseImportHandler#createExtractor(String)
      */
     @Nullable
-    default <E extends BaseEntity<?>> Function<E, Object> createExtractor(BaseImportHandler<E> handler,
-                                                                          EntityDescriptor descriptor,
-                                                                          ImporterContext context,
-                                                                          String fieldToExport) {
+    default <E extends BaseEntity<?>> Function<? super E, ?> createExtractor(BaseImportHandler<E> handler,
+                                                                             EntityDescriptor descriptor,
+                                                                             ImporterContext context,
+                                                                             String fieldToExport) {
         // intentionally left empty as not all extenders will customize all methods
         return null;
     }
@@ -91,5 +95,27 @@ public interface EntityImportHandlerExtender {
                                            EntityDescriptor descriptor,
                                            BiConsumer<Integer, Mapping> collector) {
         // intentionally left empty as not all extenders will customize all methods
+    }
+
+    /**
+     * Resolves a custom field into a <tt>FieldDefinition</tt>.
+     * <p>
+     * This more or less must be implemented for additional fields reported by <tt>collectExportableMappings</tt>
+     * as otherwise no description and also no column heading will be provided by them.
+     * <p>
+     * Remember that also {@link #createExtractor(BaseImportHandler, EntityDescriptor, ImporterContext, String)} should
+     * be implemented for fields recognized by this method.
+     *
+     * @param handler    the handler which can be extended
+     * @param descriptor the descriptor determining what kind of entities are processed by the given handler
+     * @param field      the field to resolve
+     * @return a field definition for the requested field or <tt>null</tt> if the field is unknown
+     */
+    @Nullable
+    default FieldDefinition resolveCustomField(BaseImportHandler<? extends BaseEntity<?>> handler,
+                                               EntityDescriptor descriptor,
+                                               String field) {
+        // intentionally left empty as not all extenders will customize all methods
+        return null;
     }
 }

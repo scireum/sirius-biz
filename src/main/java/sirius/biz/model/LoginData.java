@@ -26,6 +26,7 @@ import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -142,6 +143,16 @@ public class LoginData extends Composite {
     @NoJournal
     @NullAllowed
     private LocalDateTime lastLogin;
+
+    /**
+     * Records the timestamp when the user was last seen.
+     * <p>
+     * Note that this is only updated once per day.
+     */
+    public static final Mapping LAST_SEEN = Mapping.named("lastSeen");
+    @NoJournal
+    @NullAllowed
+    private LocalDate lastSeen;
 
     /**
      * Records the timestamp of the last login via an external system.
@@ -339,30 +350,6 @@ public class LoginData extends Composite {
         this.cleartextPassword = cleartextPassword;
     }
 
-    public String getGeneratedPassword() {
-        return generatedPassword;
-    }
-
-    public void setGeneratedPassword(String generatedPassword) {
-        this.generatedPassword = generatedPassword;
-    }
-
-    public int getNumberOfLogins() {
-        return numberOfLogins;
-    }
-
-    public LocalDateTime getLastLogin() {
-        return lastLogin;
-    }
-
-    public LocalDateTime getLastExternalLogin() {
-        return lastExternalLogin;
-    }
-
-    public LocalDateTime getLastPasswordChange() {
-        return lastPasswordChange;
-    }
-
     /**
      * Determines if the generated password should be displayed.
      *
@@ -381,6 +368,24 @@ public class LoginData extends Composite {
         }
 
         return Duration.between(lastPasswordChange, LocalDateTime.now()).compareTo(showGeneratedPasswordFor) < 0;
+    }
+
+    /**
+     * Can be used to disable auto password generation on save.
+     * <p>
+     * This only sets a flag that is not saved to database.
+     * If you want to disable it altogether for an entity containing loginData, a good option would be to implement a
+     * {@link BeforeSave beforeSaveHandler} with priority < 100 that calls this method.
+     *
+     * @see #autofill()
+     */
+    public void skipPasswordCreation() {
+        skipPasswordCreation = true;
+    }
+
+    @Override
+    public String toString() {
+        return username;
     }
 
     public boolean isAccountLocked() {
@@ -419,21 +424,32 @@ public class LoginData extends Composite {
         return passwordHash;
     }
 
-    /**
-     * Can be used to disable auto password generation on save.
-     * <p>
-     * This only sets a flag that is not saved to database.
-     * If you want to disable it altogether for an entity containing loginData, a good option would be to implement a
-     * {@link BeforeSave beforeSaveHandler} with priority < 100 that calls this method.
-     *
-     * @see #autofill()
-     */
-    public void skipPasswordCreation() {
-        skipPasswordCreation = true;
+
+    public String getGeneratedPassword() {
+        return generatedPassword;
     }
 
-    @Override
-    public String toString() {
-        return username;
+    public void setGeneratedPassword(String generatedPassword) {
+        this.generatedPassword = generatedPassword;
+    }
+
+    public int getNumberOfLogins() {
+        return numberOfLogins;
+    }
+
+    public LocalDateTime getLastLogin() {
+        return lastLogin;
+    }
+
+    public LocalDateTime getLastExternalLogin() {
+        return lastExternalLogin;
+    }
+
+    public LocalDateTime getLastPasswordChange() {
+        return lastPasswordChange;
+    }
+
+    public LocalDate getLastSeen() {
+        return lastSeen;
     }
 }

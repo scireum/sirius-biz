@@ -1,0 +1,53 @@
+<i:arg type="String" name="title"/>
+<i:arg type="String" name="parent"/>
+<i:arg type="int" name="priority"/>
+<i:arg type="String" name="language"/>
+<i:arg type="String" name="crossReferences" default=""/>
+<i:arg type="String" name="permissions"/>
+
+<k:base title="@title"
+        parent="@parent"
+        priority="@priority"
+        language="@language"
+        crossReferences="@crossReferences"
+        permissions="@permissions"
+        chapter="true">
+
+    <i:block name="description">
+        <i:render name="description" />
+    </i:block>
+
+    <i:render name="body" />
+
+    <i:local name="kba" value="user.getHelper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
+    <i:local name="childChapters" value="kba.queryChildChapters()"/>
+    <i:if test="!childChapters.isEmpty()">
+        <h2>Kapitel</h2>
+        <div class="well">
+            <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="article" items="childChapters">
+                <div>
+                    <a href="/tycho/kba/@article.getLang()/@article.getArticleId()">@article.getTitle()</a>
+                    <p class="muted">
+                        @article.getDescription()
+                    </p>
+                </div>
+            </i:for>
+        </div>
+    </i:if>
+
+    <i:local name="children" value="kba.queryChildren()"/>
+    <i:if test="!children.isEmpty()">
+        <h2>Artikel</h2>
+        <div class="well">
+            <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="article" items="children">
+                <div>
+                    <a href="/tycho/kba/@article.getLang()/@article.getArticleId()">@article.getTitle()</a>
+                    <p class="muted">
+                        @article.getDescription()
+                    </p>
+                </div>
+            </i:for>
+        </div>
+    </i:if>
+
+</k:base>

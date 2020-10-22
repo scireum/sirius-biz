@@ -21,7 +21,6 @@ import sirius.kernel.nls.NLS;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +60,7 @@ public class ImportDictionary {
     private Map<String, FieldDefinition> fields = new LinkedHashMap<>();
     private Map<String, String> aliases = new LinkedHashMap<>();
     private List<String> mappingFunction;
-    private Function<String, FieldDefinition> computedFieldLookup;
+    private List<Function<String, FieldDefinition>> computedFieldLookups = new ArrayList<>();
 
     /**
      * Adds a field to the record.
@@ -110,7 +109,7 @@ public class ImportDictionary {
      * @return the dictionary itself for fluent method calls
      */
     public ImportDictionary withCustomFieldLookup(Function<String, FieldDefinition> computedFieldLookup) {
-        this.computedFieldLookup = computedFieldLookup;
+        this.computedFieldLookups.add(computedFieldLookup);
         return this;
     }
 
@@ -560,18 +559,22 @@ public class ImportDictionary {
      */
     public Optional<FieldDefinition> findField(String name) {
         FieldDefinition result = fields.get(name);
-        if (result == null && computedFieldLookup != null) {
-            result = computedFieldLookup.apply(name);
+        if (result != null) {
+            return Optional.of(result);
         }
-        return Optional.ofNullable(result);
+
+        return resolveComputedField(name);
     }
 
     protected Optional<FieldDefinition> resolveComputedField(String name) {
-        if (computedFieldLookup == null) {
-            return Optional.empty();
+        for (Function<String, FieldDefinition> customLookup : computedFieldLookups) {
+            FieldDefinition result = customLookup.apply(name);
+            if (result != null) {
+                return Optional.of(result);
+            }
         }
 
-        return Optional.ofNullable(computedFieldLookup.apply(name));
+        return Optional.empty();
     }
 
     /**
@@ -623,7 +626,7 @@ public class ImportDictionary {
             report.addColumn("type", NLS.get("FieldDefinition.type"));
             report.addColumn("remarks", NLS.get("FieldDefinition.remarks"));
 
-            getFields().stream().sorted(Comparator.comparing(FieldDefinition::getLabel)).forEach(field -> {
+            getFields().forEach(field -> {
                 report.addCells(cells.of(field.getLabel()), cells.of(field.getType()), cells.list(field.getRemarks()));
             });
         });

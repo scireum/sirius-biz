@@ -31,7 +31,7 @@ public class ExecutionFlag extends MongoEntity {
      * Stores the effective name of an execution flag.
      */
     public static final Mapping NAME = Mapping.named("name");
-    @Length(50)
+    @Length(100)
     private String name;
 
     /**

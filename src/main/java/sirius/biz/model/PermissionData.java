@@ -22,8 +22,10 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.StringList;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.settings.Settings;
 import sirius.web.security.Permissions;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
@@ -149,7 +151,7 @@ public class PermissionData extends Composite {
     /**
      * Returns the parsed config for the associated entity.
      *
-     * @return the parsed configuration
+     * @return the parsed configuration, or <tt>null</tt> if the config is empty
      */
     @Nullable
     public Config getConfig() {
@@ -172,6 +174,22 @@ public class PermissionData extends Composite {
         }
 
         return config;
+    }
+
+    /**
+     * Returns the parsed settings for the associated entity
+     *
+     * @return the parsed configuration
+     */
+    @Nonnull
+    public Settings getSettings() {
+        Config config = getConfig();
+
+        if (config != null) {
+            return new Settings(config, false);
+        }
+
+        return new Settings(ConfigFactory.empty(), false);
     }
 
     /**
