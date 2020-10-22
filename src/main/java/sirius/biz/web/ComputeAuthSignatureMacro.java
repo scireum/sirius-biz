@@ -9,6 +9,7 @@
 package sirius.biz.web;
 
 import parsii.tokenizer.Position;
+import sirius.biz.web.BizController;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 import sirius.tagliatelle.compiler.CompilationContext;
@@ -20,12 +21,12 @@ import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
- * Signs a link which can be verified using BizController.verifySignedLink.
+ * Computes a signature which can be verified using BizController.verifySignedLink.
  *
- * This is intended to be used in GET rueqests. For POST request see {@link sirius.biz.web.ComputeAuthSignatureMacro}.
+ * This is intended to be used in POST rueqests. For GET request see {@link sirius.biz.web.SignLinkMacro}.
  */
 @Register
-public class SignLinkMacro implements Macro {
+public class ComputeAuthSignatureMacro implements Macro {
 
     @Override
     public Class<?> getType() {
@@ -46,7 +47,7 @@ public class SignLinkMacro implements Macro {
             return null;
         }
 
-        return BizController.signLink(value.toString());
+        return BizController.computeURISignature(value.toString());
     }
 
     @Override
@@ -56,12 +57,12 @@ public class SignLinkMacro implements Macro {
 
     @Override
     public String getDescription() {
-        return "Signs a link which can be verified using BizController.verifySignedLink";
+        return "Computes a signature which can be verified using BizController.verifySignedLink";
     }
 
     @Nonnull
     @Override
     public String getName() {
-        return "signLink";
+        return "computeAuthSignature";
     }
 }
