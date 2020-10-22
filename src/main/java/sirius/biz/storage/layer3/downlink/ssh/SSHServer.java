@@ -11,6 +11,7 @@ package sirius.biz.storage.layer3.downlink.ssh;
 import org.apache.sshd.common.file.FileSystemFactory;
 import org.apache.sshd.common.io.IoSession;
 import org.apache.sshd.common.session.Session;
+import org.apache.sshd.common.session.SessionContext;
 import org.apache.sshd.server.ServerFactoryManager;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
@@ -40,6 +41,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.logging.Level;
@@ -159,7 +161,12 @@ public class SSHServer implements Startable, Stoppable, Killable {
     protected void installFileSystemFactory() {
         server.setFileSystemFactory(new FileSystemFactory() {
             @Override
-            public FileSystem createFileSystem(Session session) throws IOException {
+            public Path getUserHomeDir(SessionContext sessionContext) throws IOException {
+                return null;
+            }
+
+            @Override
+            public FileSystem createFileSystem(SessionContext sessionContext) throws IOException {
                 return new BridgeFileSystem();
             }
         });

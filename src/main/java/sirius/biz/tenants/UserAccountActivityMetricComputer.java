@@ -80,6 +80,7 @@ public abstract class UserAccountActivityMetricComputer<U extends BaseEntity<?> 
                                               .set("userId", entity.getUniqueName())
                                               .set("lowerLimit", lowerLimit)
                                               .set("upperLimit", date)
+                                              .markAsLongRunning()
                                               .first()
                                               .flatMap(row -> row.getValue("numberOfDays").asOptionalInt())
                                               .orElse(0);

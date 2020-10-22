@@ -8,12 +8,17 @@
 
 package sirius.biz.storage.layer2;
 
+import com.alibaba.fastjson.JSONObject;
+import sirius.db.es.ESPropertyInfo;
+import sirius.db.es.IndexMappings;
+import sirius.db.es.annotations.IndexMode;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.schema.SQLPropertyInfo;
 import sirius.db.jdbc.schema.Table;
 import sirius.db.jdbc.schema.TableColumn;
 import sirius.db.mixing.AccessPath;
 import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.BaseMapper;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Property;
 import sirius.kernel.commons.Value;
@@ -29,7 +34,7 @@ import java.sql.Types;
  * NOTE: This implementation assumes that BlobHardRef stays the parent class for all blob reference
  * property classes, which should be valid because hard and soft references should be enough.
  */
-abstract class BlobRefProperty extends Property implements SQLPropertyInfo {
+abstract class BlobRefProperty extends Property implements SQLPropertyInfo, ESPropertyInfo {
 
     protected static final int DEFAULT_KEY_LENGTH = 64;
 
@@ -78,22 +83,12 @@ abstract class BlobRefProperty extends Property implements SQLPropertyInfo {
     }
 
     @Override
-    protected Object transformToJDBC(Object object) {
+    protected Object transformToDatasource(Class<? extends BaseMapper<?, ?, ?>> mapperType, Object object) {
         return object;
     }
 
     @Override
-    protected Object transformFromJDBC(Value object) {
-        return object.get();
-    }
-
-    @Override
-    protected Object transformToMongo(Object object) {
-        return object;
-    }
-
-    @Override
-    protected Object transformFromMongo(Value object) {
+    public Object transformFromDatasource(Class<? extends BaseMapper<?, ?, ?>> mapperType, Value object) {
         return object.get();
     }
 
@@ -122,6 +117,17 @@ abstract class BlobRefProperty extends Property implements SQLPropertyInfo {
     @Override
     public void contributeToTable(Table table) {
         table.getColumns().add(new TableColumn(this, Types.CHAR));
+    }
+
+    @Override
+    public void describeProperty(JSONObject description) {
+        description.put(IndexMappings.MAPPING_TYPE, "keyword");
+        transferOption(IndexMappings.MAPPING_STORED, getAnnotation(IndexMode.class), IndexMode::stored, description);
+        transferOption(IndexMappings.MAPPING_INDEX, getAnnotation(IndexMode.class), IndexMode::indexed, description);
+        transferOption(IndexMappings.MAPPING_DOC_VALUES,
+                       getAnnotation(IndexMode.class),
+                       IndexMode::docValues,
+                       description);
     }
 
     /**

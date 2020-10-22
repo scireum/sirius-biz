@@ -83,8 +83,6 @@ public class UpdateManager {
             lastFetch = LocalDateTime.now();
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (XPathExpressionException e) {
-            e.printStackTrace();
         }
     }
 

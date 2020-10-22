@@ -23,6 +23,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.Formatter;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -87,6 +88,7 @@ public class PersonData extends Composite {
     private String lastname;
 
     @Part
+    @Nullable
     private static CodeLists<?, ?, ?> codeLists;
 
     /**

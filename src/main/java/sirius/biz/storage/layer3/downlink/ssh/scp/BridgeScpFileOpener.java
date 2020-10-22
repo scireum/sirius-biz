@@ -16,7 +16,7 @@ import org.apache.sshd.common.session.Session;
 import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
-import sirius.biz.storage.layer3.downlink.ssh.BridgeBasicFileAttributes;
+import sirius.biz.storage.layer3.downlink.ssh.BridgePosixFileAttributes;
 import sirius.biz.storage.layer3.downlink.ssh.BridgeDirectoryStream;
 import sirius.biz.storage.layer3.downlink.ssh.BridgeFileSystem;
 import sirius.biz.storage.layer3.downlink.ssh.BridgePath;
@@ -92,14 +92,15 @@ class BridgeScpFileOpener implements ScpFileOpener {
     @Override
     public BasicFileAttributes getLocalBasicFileAttributes(Session session, Path path, LinkOption... options)
             throws IOException {
-        throw new UnsupportedOperationException("getLocalBasicFileAttributes");
+        VirtualFile virtualFile = ((BridgePath) path).getVirtualFile();
+        return new BridgePosixFileAttributes(virtualFile);
     }
 
     @Override
     public Set<PosixFilePermission> getLocalFilePermissions(Session session, Path path, LinkOption... options)
             throws IOException {
         VirtualFile virtualFile = ((BridgePath) path).getVirtualFile();
-        return new BridgeBasicFileAttributes(virtualFile).permissions();
+        return new BridgePosixFileAttributes(virtualFile).permissions();
     }
 
     @Override

@@ -11,6 +11,9 @@
 <div id="@id" class="file-upload">
     <div class="qq-upload-drop-area qq-image-area qq-upload-drop-area-js">
         <div class="file-upload-file file-upload-file-js">
+            <img src="@defaultPreview"
+                 class="file-upload-preview file-upload-preview-js @if(!isFilled(defaultPreview) || objectRef.isFilled()) { hide }"/>
+
             <i class="fa fa-3x file-upload-icon file-upload-icon-js hide" aria-hidden="true"></i>
 
             <p>

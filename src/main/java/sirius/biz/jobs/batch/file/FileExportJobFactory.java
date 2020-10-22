@@ -22,7 +22,7 @@ import java.util.function.Consumer;
  */
 public abstract class FileExportJobFactory extends ExportBatchProcessFactory {
 
-    protected final FileOrDirectoryParameter destinationParameter = createDestinationParameter();
+    protected FileOrDirectoryParameter destinationParameter = createDestinationParameter();
 
     /**
      * Creates the parameter which is used to specify the destination for the generated output file.

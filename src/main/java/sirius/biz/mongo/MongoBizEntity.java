@@ -18,6 +18,8 @@ import sirius.db.mongo.MongoEntity;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import javax.annotation.Nullable;
+
 /**
  * Provides a base class for entities managed by a {@link sirius.biz.web.BizController}.
  * <p>
@@ -26,6 +28,7 @@ import sirius.kernel.health.Exceptions;
 public abstract class MongoBizEntity extends PrefixSearchableEntity implements Traced {
 
     @Part
+    @Nullable
     protected static Sequences sequences;
 
     /**

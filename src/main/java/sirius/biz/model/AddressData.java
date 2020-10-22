@@ -111,12 +111,22 @@ public class AddressData extends Composite {
      * @throws sirius.kernel.health.HandledException in case of a partially filled address
      */
     public void verifyNonPartialAddress(@Nullable String fieldLabel) {
-        if (isAnyFieldEmpty() && !areAllFieldsEmpty()) {
+        if (isPartiallyFilled()) {
             throw Exceptions.createHandled()
                             .withNLSKey("AddressData.partialAddressRejected")
                             .set("name", determineFieldLabel(fieldLabel))
                             .handle();
         }
+    }
+
+    /**
+     * Determines if the given address is partially filled.
+     *
+     * @return <tt>true</tt> if there is at leas one field filled and at least one field left empty.
+     * <tt>false</tt> otherwise.
+     */
+    public boolean isPartiallyFilled() {
+        return isAnyFieldEmpty() && !areAllFieldsEmpty();
     }
 
     /**
@@ -129,7 +139,7 @@ public class AddressData extends Composite {
      *                                  passed into the on validate method and can simply be forwarded here.
      */
     public void validateNonPartialAddress(@Nullable String fieldLabel, Consumer<String> validationMessageConsumer) {
-        if (isAnyFieldEmpty() && !areAllFieldsEmpty()) {
+        if (isPartiallyFilled()) {
             validationMessageConsumer.accept(NLS.fmtr("AddressData.partialAddressRejected")
                                                 .set("name", determineFieldLabel(fieldLabel))
                                                 .format());

@@ -12,7 +12,7 @@ import org.apache.sshd.common.scp.ScpSourceStreamResolver;
 import org.apache.sshd.common.scp.ScpTimestamp;
 import org.apache.sshd.common.session.Session;
 import sirius.biz.storage.layer3.VirtualFile;
-import sirius.biz.storage.layer3.downlink.ssh.BridgeBasicFileAttributes;
+import sirius.biz.storage.layer3.downlink.ssh.BridgePosixFileAttributes;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,7 +47,7 @@ class BridgeScpSourceStreamResolver implements ScpSourceStreamResolver {
 
     @Override
     public Collection<PosixFilePermission> getPermissions() throws IOException {
-        return new BridgeBasicFileAttributes(virtualFile).permissions();
+        return new BridgePosixFileAttributes(virtualFile).permissions();
     }
 
     @Override

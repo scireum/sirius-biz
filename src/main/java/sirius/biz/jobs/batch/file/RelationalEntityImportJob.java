@@ -28,6 +28,7 @@ import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 import sirius.web.data.LineBasedProcessor;
 
+import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
@@ -53,6 +54,7 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     private static Mixing mixing;
 
     @Part
+    @Nullable
     private static Tenants<?, ?, ?> rawTenants;
 
     protected final EntityDescriptor descriptor;

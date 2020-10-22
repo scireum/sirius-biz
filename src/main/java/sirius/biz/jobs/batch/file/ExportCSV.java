@@ -45,4 +45,8 @@ public class ExportCSV implements LineBasedExport {
     public void close() throws IOException {
         writer.close();
     }
+
+    public CSVWriter getWriter() {
+        return writer;
+    }
 }

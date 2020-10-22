@@ -624,6 +624,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             return;
         }
 
+        // Check that the user is generally permitted to "select / become" another user...
         assertPermission(TenantUserManager.PERMISSION_SELECT_USER_ACCOUNT);
 
         U user = mixing.getDescriptor(getUserClass()).getMapper().find(getUserClass(), accountId).orElse(null);
@@ -633,6 +634,17 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
             return;
         }
 
+        // If the target user belongs to the system tenant, our current user has to have highest user management
+        // permission as otherwise we would perform an unwanted roles delegation (giving the current user higher
+        // access rights - right up to the system management level...)
+        if (Strings.areEqual(tenants.getTenantUserManager().getSystemTenantId(), user.getTenant().getIdAsString())
+            && !getUser().hasPermission(PERMISSION_MANAGE_SYSTEM_USERS)) {
+            UserContext.get().addMessage(Message.error(NLS.get("UserAccountController.cannotBecomeUser")));
+            selectUserAccounts(webContext);
+            return;
+        }
+
+        // If we're not part of the system tenant, ensure that we can only select users from the same tenant...
         if (!getUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_AFFILIATE)) {
             assertTenant(user);
         }

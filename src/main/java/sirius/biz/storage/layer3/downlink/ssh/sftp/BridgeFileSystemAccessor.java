@@ -13,6 +13,8 @@ import org.apache.sshd.server.subsystem.sftp.DirectoryHandle;
 import org.apache.sshd.server.subsystem.sftp.FileHandle;
 import org.apache.sshd.server.subsystem.sftp.SftpEventListenerManager;
 import org.apache.sshd.server.subsystem.sftp.SftpFileSystemAccessor;
+import org.apache.sshd.server.subsystem.sftp.SftpSubsystemProxy;
+import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.downlink.ssh.BridgeDirectoryStream;
 import sirius.biz.storage.layer3.downlink.ssh.BridgeFileSystem;
 import sirius.biz.storage.layer3.downlink.ssh.BridgePath;
@@ -35,18 +37,25 @@ class BridgeFileSystemAccessor implements SftpFileSystemAccessor {
 
     @Override
     public SeekableByteChannel openFile(ServerSession session,
-                                        SftpEventListenerManager subsystem,
+                                        SftpSubsystemProxy subsystem,
                                         FileHandle fileHandle,
                                         Path file,
                                         String handle,
                                         Set<? extends OpenOption> options,
                                         FileAttribute<?>... attrs) throws IOException {
-        return new BridgeSeekableByteChannel(((BridgePath) file).getVirtualFile());
+        VirtualFile virtualFile = ((BridgePath) file).getVirtualFile();
+
+        // Create as empty file if non-existent...
+        if (!virtualFile.exists()) {
+            virtualFile.createOutputStream().close();
+        }
+
+        return new BridgeSeekableByteChannel(virtualFile);
     }
 
     @Override
     public FileLock tryLock(ServerSession session,
-                            SftpEventListenerManager subsystem,
+                            SftpSubsystemProxy subsystem,
                             FileHandle fileHandle,
                             Path file,
                             String handle,
@@ -59,7 +68,7 @@ class BridgeFileSystemAccessor implements SftpFileSystemAccessor {
 
     @Override
     public void syncFileData(ServerSession session,
-                             SftpEventListenerManager subsystem,
+                             SftpSubsystemProxy subsystem,
                              FileHandle fileHandle,
                              Path file,
                              String handle,
@@ -69,7 +78,7 @@ class BridgeFileSystemAccessor implements SftpFileSystemAccessor {
 
     @Override
     public DirectoryStream<Path> openDirectory(ServerSession session,
-                                               SftpEventListenerManager subsystem,
+                                               SftpSubsystemProxy subsystem,
                                                DirectoryHandle dirHandle,
                                                Path dir,
                                                String handle) throws IOException {

@@ -105,7 +105,7 @@
         </w:modal>
 
         <script type="text/javascript">
-            function selectVFSFile(initialPath) {
+            function selectVFSFile(initialPath, restrictToPath) {
                 return new Promise(function (resolve, reject) {
                     var $modal = $("#select-file-modal");
 
@@ -115,6 +115,11 @@
                             $table.html('');
                             for (var i = 0; i < json.children.length; i++) {
                                 var child = json.children[i];
+
+                                if (restrictToPath !== undefined && !child.path.startsWith(restrictToPath)) {
+                                    continue;
+                                }
+
                                 var $tr = $('<tr>' +
                                     '<td><a class="file-link" href="#" data-dir="' + child.directory +
                                     '" data-path="' + child.path + '">' +
@@ -145,6 +150,11 @@
                             for (var i = 0; i < json.path.length; i++) {
                                 var element = json.path[i];
                                 var name = element.name === '/' ? '<i class="fa fa-home"></i>' : element.name;
+
+                                if (restrictToPath !== undefined && !element.path.startsWith(restrictToPath)) {
+                                    continue;
+                                }
+
                                 var $li = $('<li><a class="file-link" href="#" data-path="' + element.path + '">' + name + '</a></li>');
                                 $li.find('.file-link').click(function () {
                                     update($(this).data('path'));

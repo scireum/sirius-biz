@@ -8,14 +8,21 @@
 
 package sirius.biz.jobs.batch.file;
 
+
+import org.apache.commons.io.input.CloseShieldInputStream;
 import org.apache.commons.io.output.CloseShieldOutputStream;
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer3.FileOrDirectoryParameter;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 /**
@@ -61,8 +68,44 @@ public abstract class ArchiveExportJob extends FileExportJob {
 
     @Override
     public void close() throws IOException {
-        zipOutputStream.close();
+        if (zipOutputStream != null) {
+            zipOutputStream.close();
+        }
         super.close();
+    }
+
+    /**
+     * Provides a simple factory for archive based export jobs.
+     */
+    public abstract static class ArchiveExportJobFactory extends FileExportJobFactory {
+        @Override
+        protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+            destinationParameter.withAcceptedExtensions("zip");
+            super.collectParameters(parameterCollector);
+        }
+    }
+
+    /**
+     * Digests every entry of a fresh created export archive.
+     * <p>
+     * Use this method in order to perform validations on contents of the final archive.
+     *
+     * @param digester a consumer receiving the name and the {@link InputStream} of each entry
+     */
+    protected void digestExportedFile(BiConsumer<String, InputStream> digester) {
+        digestExportedFile(inputStream -> processExportedArchive(inputStream, digester));
+    }
+
+    private void processExportedArchive(InputStream inputStream, BiConsumer<String, InputStream> digester) {
+        try (ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
+            ZipEntry entry = zipInputStream.getNextEntry();
+            while (entry != null) {
+                digester.accept(entry.getName(), new CloseShieldInputStream(zipInputStream));
+                entry = zipInputStream.getNextEntry();
+            }
+        } catch (IOException e) {
+            process.handle(e);
+        }
     }
 }
 

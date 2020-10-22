@@ -15,7 +15,6 @@ import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VFSRoot;
 import sirius.biz.storage.layer3.VirtualFile;
-import sirius.biz.tenants.Tenants;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
@@ -45,9 +44,6 @@ public class L3Uplink implements VFSRoot {
 
     @Part
     private BlobStorage storage;
-
-    @Part
-    private Tenants<?, ?, ?> tenants;
 
     /**
      * Represents a non-existent file or directory which might be created by
@@ -268,6 +264,11 @@ public class L3Uplink implements VFSRoot {
             return null;
         }
 
+        String tenantId = UserContext.getCurrentUser().getTenantId();
+        if (Strings.isEmpty(tenantId)) {
+            return null;
+        }
+
         if (!isDefaultScope()) {
             return null;
         }
@@ -277,7 +278,7 @@ public class L3Uplink implements VFSRoot {
             return null;
         }
 
-        return wrapDirectory(parent, space.getRoot(tenants.getRequiredTenant().getIdAsString()), false);
+        return wrapDirectory(parent, space.getRoot(tenantId), false);
     }
 
     protected boolean isDefaultScope() {
@@ -300,8 +301,13 @@ public class L3Uplink implements VFSRoot {
             return;
         }
 
+        String tenantId = UserContext.getCurrentUser().getTenantId();
+        if (Strings.isEmpty(tenantId)) {
+            return;
+        }
+
         storage.getSpaces().filter(BlobStorageSpace::isBrowsable).map(space -> {
-            Directory directory = space.getRoot(tenants.getRequiredTenant().getIdAsString());
+            Directory directory = space.getRoot(tenantId);
             MutableVirtualFile wrappedDirectory = wrapDirectory(parent, directory, false);
             wrappedDirectory.withDescription(space.getDescription());
             return wrappedDirectory;

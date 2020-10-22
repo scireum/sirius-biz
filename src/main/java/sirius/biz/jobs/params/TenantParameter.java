@@ -11,9 +11,11 @@ package sirius.biz.jobs.params;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantController;
 import sirius.biz.tenants.Tenants;
+import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 
 /**
@@ -22,9 +24,11 @@ import java.util.Optional;
 public class TenantParameter extends Parameter<Tenant<?>, TenantParameter> {
 
     @Part
+    @Nullable
     private static Tenants<?, ?, ?> tenants;
 
     @Part
+    @Nullable
     private static TenantController<?, ?, ?> tenantController;
 
     /**

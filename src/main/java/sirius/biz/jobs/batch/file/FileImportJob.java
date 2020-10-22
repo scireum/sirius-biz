@@ -52,7 +52,7 @@ public abstract class FileImportJob extends ImportJob {
         if (canHandleFileExtension(Value.of(file.fileExtension()).toLowerCase())) {
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
-                executeForSingleFile(fileHandle);
+                executeForSingleFile(file.name(), fileHandle);
             }
         } else if (FILE_EXTENSION_ZIP.equalsIgnoreCase(file.fileExtension())) {
             try (FileHandle fileHandle = file.download()) {
@@ -76,9 +76,9 @@ public abstract class FileImportJob extends ImportJob {
         attachFile(filename, input);
     }
 
-    protected void executeForSingleFile(FileHandle fileHandle) throws Exception {
+    protected void executeForSingleFile(String fileName, FileHandle fileHandle) throws Exception {
         try (InputStream in = fileHandle.getInputStream()) {
-            executeForStream(fileHandle.getFile().getName(), in);
+            executeForStream(fileName, in);
         }
     }
 
