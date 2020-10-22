@@ -1,0 +1,7 @@
+<k:article language="de" title="KB Test" parent="HDJEK" permissions="flag-logged-in">
+    <i:block name="description">
+        This is a description.
+    </i:block>
+
+    This is a helpful text.
+</k:article>
