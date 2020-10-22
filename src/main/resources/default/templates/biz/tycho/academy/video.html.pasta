@@ -1,0 +1,100 @@
+<i:arg type="sirius.biz.tycho.academy.OnboardingVideo" name="video"/>
+<i:arg type="List" name="otherRecommendations"/>
+<i:arg type="String" name="owner"/>
+<i:arg type="String" name="accessToken"/>
+
+<w:page titleKey="OnboardingController.academy">
+
+    <script type="text/javascript">
+        oxomi_server = 'oxomi.test.scireum.com';
+
+        function createProgressMonitor() {
+
+            let lastSubmit = Date.now();
+            let submitTimer;
+            let seenInPercent = 0;
+            let lastSubmittedSeen = 0;
+            let submitRequired = false;
+
+            function submitSeen() {
+                if (lastSubmittedSeen < seenInPercent) {
+                    lastSubmittedSeen = seenInPercent;
+                    lastSubmit = Date.now();
+                    //TODO use scireum-core
+                    $.getJSON('/academy/@owner/@accessToken/update/@video.getIdAsString()',
+                        {seenInPercent: seenInPercent},
+                        function (ignored) {
+                        });
+                }
+            }
+
+            function handleProgress(played, duration) {
+                clearTimeout(submitTimer);
+
+                seenInPercent = Math.round(100 * played / duration);
+
+                // Every ten seconds we force a submit
+                if (Date.now() - lastSubmit > 10000) {
+                    submitSeen();
+                } else {
+                    // Otherwise we set a timer so that after a second after the
+                    // last update was received, we also submit...
+                    submitTimer = setTimeout(submitSeen, 1000);
+                }
+            }
+
+            return handleProgress;
+        }
+
+        function oxomi_ready() {
+            const progressMonitor = createProgressMonitor();
+
+            oxomi.init({
+                portal: 'HYPE',
+                user: '_showcase',
+                accessToken: 'e073e70443e9c974d4e1b216d07f80b7',
+                userActionHandler: function (event) {
+                    if (event.type === 'video-playing') {
+                        progressMonitor(event.data.played, event.data.duration);
+                    } else if (event.type === 'video-started') {
+                        //TODO use scireum-core
+                        $.getJSON('/academy/@owner/@accessToken/update/@video.getIdAsString()',
+                            {started: true},
+                            function (ignored) {
+                            });
+                    }
+                }
+            });
+
+            oxomi.embedVideo({
+                video: '@video.fetchAcademyVideoData().getVideoId()',
+                mode: 'in-place',
+                size: 'large',
+                target: '#video-div'
+            });
+        }
+    </script>
+    <script type="text/javascript">
+        setTimeout(function () {
+            var script = document.createElement("script");
+            script.type = "text/javascript";
+            script.src = (window.location.protocol == 'https:' ? 'https:' : 'http:') + "//" + (typeof oxomi_server == 'undefined' ? 'oxomi.com' : oxomi_server) + "/assets/frontend/oxomi.js";
+            document.getElementsByTagName("head")[0].appendChild(script);
+        }, 0);
+    </script>
+
+    <div id="video-div"></div>
+
+    @video.getIdAsString()
+
+    <w:subHeading label="Other videos"/>
+    <i:for type="sirius.biz.tycho.academy.OnboardingVideo" var="otherVideo" items="otherRecommendations">
+        <div class="well">
+            @otherVideo.fetchAcademyVideoData().getTitle()
+            @otherVideo.fetchAcademyVideoData().getDescription()
+            Watched: @otherVideo.getOnboardingVideoData().isWatched()
+            (@otherVideo.getOnboardingVideoData().getPercentWatched()%)
+            Skipped: @otherVideo.getOnboardingVideoData().isSkipped()
+        </div>
+    </i:for>
+</w:page>

@@ -1,0 +1,21 @@
+<i:arg type="List" name="recommendedTracks"/>
+<i:arg type="List" name="seenTracks"/>
+<i:arg type="String" name="owner"/>
+<i:arg type="String" name="accessToken"/>
+
+<w:page titleKey="OnboardingController.academy">
+    <w:subHeading label="Empfohlene Tracks" />
+    <i:for type="sirius.biz.tycho.academy.AcademyTrackInfo" var="track" items="recommendedTracks">
+        <div class="well">
+            @track.getTrackName()
+            @track.getNumberOfRecommendedVideos() (@track.getNumberOfVideos())
+        </div>
+    </i:for>
+    <w:subHeading label="Angesehene Tracks" />
+    <i:for type="sirius.biz.tycho.academy.AcademyTrackInfo" var="track" items="seenTracks">
+        <div class="well">
+            @track.getTrackName()
+            (@track.getNumberOfVideos())
+        </div>
+    </i:for>
+</w:page>

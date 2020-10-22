@@ -1,0 +1,17 @@
+<i:arg type="List" name="videos"/>
+<i:arg type="String" name="owner"/>
+<i:arg type="String" name="accessToken"/>
+
+<w:page titleKey="OnboardingController.academy">
+    <w:subHeading label="Videos" />
+    <i:for type="sirius.biz.tycho.academy.OnboardingVideo" var="video" items="videos">
+        <div class="well">
+            <a href="/academy/@owner/@accessToken/video/@video.getIdAsString()">
+                @video.fetchAcademyVideoData().getTitle()
+            </a>
+            @video.fetchAcademyVideoData().getDescription()
+            Watched: @video.getOnboardingVideoData().isWatched() (@video.getOnboardingVideoData().getPercentWatched()%)
+            Skipped: @video.getOnboardingVideoData().isSkipped()
+        </div>
+    </i:for>
+</w:page>
