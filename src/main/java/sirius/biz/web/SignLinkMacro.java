@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * Signs a link which can be verified using BizController.verifySignedLink.
  *
- * This is intended to be used in GET rueqests. For POST request see {@link sirius.biz.web.ComputeAuthSignatureMacro}.
+ * This is intended to be used in GET requests. For POST request see {@link sirius.biz.web.ComputeAuthSignatureMacro}.
  */
 @Register
 public class SignLinkMacro implements Macro {
