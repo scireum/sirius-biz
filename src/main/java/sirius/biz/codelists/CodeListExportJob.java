@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists;
 
+import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.batch.file.EntityExportJob;
 import sirius.biz.jobs.batch.file.ExportFileType;
@@ -19,13 +20,18 @@ import sirius.biz.storage.layer3.FileParameter;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.query.Query;
+import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
+
+import static sirius.biz.codelists.CodeListImportJob.*;
 
 /**
  * Provides a job for exporting {@link CodeList CodeLists} in a selected language.
@@ -38,6 +44,8 @@ public class CodeListExportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>,
 
     private final Optional<String> languageParameter;
     private final CodeList codeList;
+
+    private String languagePrefix;
 
     /**
      * Creates a new job for the given factory, name and process.
@@ -66,9 +74,37 @@ public class CodeListExportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>,
                              Optional<String> languageParameter,
                              CodeList codeList) {
         super(templateFileParameter,
-              destinationParameter, fileTypeParameter, type, dictionary, defaultMapping, process, factoryName);
+              destinationParameter,
+              fileTypeParameter,
+              type,
+              dictionary,
+              defaultMapping,
+              process,
+              factoryName);
         this.codeList = codeList;
         this.languageParameter = languageParameter;
+        languageParameter.ifPresent(lang -> {
+            this.languagePrefix = lang + "_";
+            this.defaultMapping.add(languagePrefix + CLE_VALUE);
+            this.defaultMapping.add(languagePrefix + CLE_ADDITIONAL_VALUE);
+            this.defaultMapping.add(languagePrefix + CLE_DESCRIPTION);
+
+            this.dictionary.addField(FieldDefinition.stringField(languagePrefix + CLE_VALUE)
+                                                    .withLabel(languagePrefix.toUpperCase() + NLS.get(
+                                                            "CodeListEntryData.value",
+                                                            lang))
+                                                    .addAlias(languagePrefix + CLE_VALUE));
+            this.dictionary.addField(FieldDefinition.stringField(languagePrefix + CLE_ADDITIONAL_VALUE)
+                                                    .withLabel(languagePrefix.toUpperCase() + NLS.get(
+                                                            "CodeListEntryData.additionalValue",
+                                                            lang))
+                                                    .addAlias(languagePrefix + CLE_ADDITIONAL_VALUE));
+            this.dictionary.addField(FieldDefinition.stringField(languagePrefix + CLE_DESCRIPTION)
+                                                    .withLabel(languagePrefix.toUpperCase() + NLS.get(
+                                                            "Model.description",
+                                                            lang))
+                                                    .addAlias(languagePrefix + CLE_DESCRIPTION));
+        });
     }
 
     @Override
@@ -81,15 +117,17 @@ public class CodeListExportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>,
     @Nullable
     @Override
     protected Function<E, Object> customFieldExtractor(String field) {
-        if (!languageParameter.isPresent()) {
+        if (!field.startsWith(languagePrefix) || !languageParameter.isPresent()) {
             return null;
         }
 
-        if (CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE).getName().equals(field)
-            || CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE).getName().equals(field)
-            || CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION).getName().equals(field)) {
+        String realField = field.replaceFirst(languagePrefix, "");
+        if (CLE_VALUE.equals(realField)
+            || CLE_ADDITIONAL_VALUE.equals(realField)
+            || CLE_DESCRIPTION.equals(realField)) {
             return codeListEntry -> codeListEntry.getTranslations()
-                                                 .getText(Mapping.named(field), languageParameter.get());
+                                                 .getText(Mapping.named(realField), languageParameter.get())
+                                                 .orElse(null);
         }
 
         return null;

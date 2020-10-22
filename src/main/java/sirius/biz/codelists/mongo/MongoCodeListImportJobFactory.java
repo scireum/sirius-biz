@@ -47,7 +47,7 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
                                        ignoreEmptyParameter,
                                        importModeParameter,
                                        CODE_LIST_PARAMETER,
-                                       LANGUAGE_PARAMETER,
+                                       process.getParameter(LANGUAGE_PARAMETER),
                                        MongoCodeListEntry.class,
                                        getDictionary(),
                                        process,

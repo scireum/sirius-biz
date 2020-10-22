@@ -8,13 +8,13 @@
 
 package sirius.biz.codelists;
 
+import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.batch.file.EntityImportJob;
 import sirius.biz.jobs.batch.file.ImportMode;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.CodeListParameter;
 import sirius.biz.jobs.params.EnumParameter;
-import sirius.biz.jobs.params.LanguageParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.ProcessLink;
 import sirius.biz.storage.layer3.FileParameter;
@@ -22,11 +22,13 @@ import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.NLS;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Provides a job for importing {@link CodeList CodeLists} in a selected language.
@@ -42,9 +44,17 @@ public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
     @Part
     private static CodeLists<?, ?, ?> codeLists;
 
+    protected static final String CLE_VALUE =
+            CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE).getName();
+    protected static final String CLE_ADDITIONAL_VALUE =
+            CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE).getName();
+    protected static final String CLE_DESCRIPTION =
+            CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION).getName();
+
+    private String languagePrefix;
+
     private final CodeList codeList;
-    private final LanguageParameter languageParameter;
-    private final Optional<String> language;
+    private final Optional<String> languageParameter;
 
     /**
      * Creates a new job for the given factory, name and process.
@@ -65,7 +75,7 @@ public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
                              BooleanParameter ignoreEmptyParameter,
                              EnumParameter<ImportMode> importModeParameter,
                              CodeListParameter codeListParameter,
-                             LanguageParameter languageParameter,
+                             Optional<String> languageParameter,
                              Class<E> type,
                              ImportDictionary dictionary,
                              ProcessContext process,
@@ -73,7 +83,50 @@ public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
         super(fileParameter, ignoreEmptyParameter, importModeParameter, type, dictionary, process, factoryName);
         this.codeList = process.require(codeListParameter);
         this.languageParameter = languageParameter;
-        this.language = process.getParameter(languageParameter);
+        languageParameter.ifPresent(lang -> {
+            this.languagePrefix = lang + "_";
+            this.dictionary.addField(FieldDefinition.stringField(languagePrefix + CLE_VALUE)
+                                                    .withLabel(languagePrefix.toUpperCase() + NLS.get(
+                                                            "CodeListEntryData.value",
+                                                            lang))
+                                                    .addAlias(languagePrefix + CLE_VALUE));
+            this.dictionary.addField(FieldDefinition.stringField(languagePrefix + CLE_ADDITIONAL_VALUE)
+                                                    .withLabel(languagePrefix.toUpperCase() + NLS.get(
+                                                            "CodeListEntryData.additionalValue",
+                                                            lang))
+                                                    .addAlias(languagePrefix + CLE_ADDITIONAL_VALUE));
+            this.dictionary.addField(FieldDefinition.stringField(languagePrefix + CLE_DESCRIPTION)
+                                                    .withLabel(languagePrefix.toUpperCase() + NLS.get(
+                                                            "Model.description",
+                                                            lang))
+                                                    .addAlias(languagePrefix + CLE_DESCRIPTION));
+        });
+    }
+
+    @Override
+    protected E fillAndVerify(E entity, Context context) {
+        languageParameter.ifPresent(lang -> {
+            Set<String> languagePrefixInHeader = new HashSet<>();
+            // get language prefix from file header
+            for (String key : context.keySet()) {
+                if (key.endsWith("_" + CLE_VALUE)) {
+                    languagePrefixInHeader.add(key.replace("_" + CLE_VALUE, ""));
+                } else if (key.endsWith("_" + CLE_ADDITIONAL_VALUE)) {
+                    languagePrefixInHeader.add(key.replace("_" + CLE_ADDITIONAL_VALUE, ""));
+                } else if (key.endsWith("_" + CLE_DESCRIPTION)) {
+                    languagePrefixInHeader.add(key.replace("_" + CLE_DESCRIPTION, ""));
+                }
+            }
+
+            // throw exception, if they don't match or multiple different languages were found
+            if (languagePrefixInHeader.size() > 1) {
+                throw Exceptions.createHandled().withNLSKey("Translations.tooManyLanguagesFound").handle();
+            } else if (!languagePrefixInHeader.contains(lang)) {
+                throw Exceptions.createHandled().withNLSKey("Translations.mismatchingLanguagesFound").handle();
+            }
+        });
+
+        return super.fillAndVerify(entity, context);
     }
 
     @Override
@@ -104,38 +157,25 @@ public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
                       .isPresent()) {
             super.createOrUpdate(entity, context);
         }
-        if (language.isPresent()) {
-            // get language code for selected language (e.g. "de" for "Deutsch (de)")
-            Optional<Tuple<String, String>> langCode = languageParameter.getValues()
-                                                                        .stream()
-                                                                        .filter(tuple -> tuple.getFirst()
-                                                                                              .equals(language.get()))
-                                                                        .findFirst();
-            if (!langCode.isPresent()) {
-                throw Exceptions.createHandled()
-                                .withNLSKey("Translations.langCodeError")
-                                .set("lang", langCode)
-                                .handle();
-            }
 
-            // update the translation texts for the selected language
-            langCode.ifPresent(tuple -> {
-                codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
-                         .ifPresent(cle -> cle.getTranslations()
-                                              .updateText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE),
-                                                          tuple.getFirst(),
-                                                          entity.getCodeListEntryData().getValue()));
-                codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
-                         .ifPresent(cle -> cle.getTranslations()
-                                              .updateText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE),
-                                                          tuple.getFirst(),
-                                                          entity.getCodeListEntryData().getAdditionalValue()));
-                codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
-                         .ifPresent(cle -> cle.getTranslations()
-                                              .updateText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION),
-                                                          tuple.getFirst(),
-                                                          entity.getCodeListEntryData().getDescription()));
-            });
-        }
+        // update the translation texts for the selected language
+        languageParameter.ifPresent(lang -> {
+            codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
+                     .ifPresent(cle -> cle.getTranslations()
+                                          .updateText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE),
+                                                      lang,
+                                                      context.getValue(languagePrefix + CLE_VALUE).asString()));
+            codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
+                     .ifPresent(cle -> cle.getTranslations()
+                                          .updateText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE),
+                                                      lang,
+                                                      context.getValue(languagePrefix + CLE_ADDITIONAL_VALUE)
+                                                             .asString()));
+            codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
+                     .ifPresent(cle -> cle.getTranslations()
+                                          .updateText(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION),
+                                                      lang,
+                                                      context.getValue(languagePrefix + CLE_DESCRIPTION).asString()));
+        });
     }
 }

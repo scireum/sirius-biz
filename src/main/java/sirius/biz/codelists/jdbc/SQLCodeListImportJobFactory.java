@@ -43,11 +43,14 @@ public class SQLCodeListImportJobFactory extends EntityImportJobFactory {
 
     @Override
     protected EntityImportJob<SQLCodeListEntry> createJob(ProcessContext process) {
+        ImportContext parameterContext = new ImportContext();
+        transferParameters(parameterContext, process);
+
         return new CodeListImportJob<>(fileParameter,
                                        ignoreEmptyParameter,
                                        importModeParameter,
                                        CODE_LIST_PARAMETER,
-                                       LANGUAGE_PARAMETER,
+                                       process.getParameter(LANGUAGE_PARAMETER),
                                        SQLCodeListEntry.class,
                                        getDictionary(),
                                        process,
