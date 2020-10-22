@@ -10,5 +10,7 @@
     <w:formBar>
         <w:tracing trace="account.getTrace()" journal="account.getJournal()"/>
     </w:formBar>
+
+    <i:extensions target="user-account-details" point="below-form" account="account"/>
 </i:invoke>
 

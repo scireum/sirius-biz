@@ -44,4 +44,6 @@
     <w:formBar>
         <w:tracing trace="tenant.getTrace()" journal="tenant.getJournal()"/>
     </w:formBar>
+
+    <i:extensions target="tenant-details" point="below-form" tenant="tenant" controller="controller"/>
 </i:invoke>
