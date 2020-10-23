@@ -40,7 +40,7 @@
                     }
 
                     console.log(node);
-                    var category = $('#results').find("[data-label='" + node.category + "']");
+                    var category = $('#results').find('[data-category="' + node.category + '"]');
                     if (category.length === 0) {
                         category = $(Mustache.render('<div class="category" data-category="{{category}}" data-priority="{{priority}}"><h2><a href="{{categoryUrl}}">{{category}}</a></h2><div class="items"></div>', node));
                         var inserted = false;
