@@ -26,9 +26,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Provides a job for importing {@link CodeList CodeLists} in a selected language.
@@ -106,33 +104,10 @@ public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
     @Override
     protected E fillAndVerify(E entity, Context context) {
         languageParameter.ifPresent(lang -> {
-            if (context.keySet()
-                       .stream()
-                       .noneMatch(key -> key.endsWith("_" + CLE_VALUE)
-                                         || key.endsWith("_" + CLE_ADDITIONAL_VALUE)
-                                         || key.endsWith("_" + CLE_DESCRIPTION))) {
-                return;
-            }
-            Set<String> languagePrefixInHeader = new HashSet<>();
-            // get language prefix from file header
-            for (String key : context.keySet()) {
-                if (key.endsWith("_" + CLE_VALUE)) {
-                    languagePrefixInHeader.add(key.replace("_" + CLE_VALUE, ""));
-                } else if (key.endsWith("_" + CLE_ADDITIONAL_VALUE)) {
-                    languagePrefixInHeader.add(key.replace("_" + CLE_ADDITIONAL_VALUE, ""));
-                } else if (key.endsWith("_" + CLE_DESCRIPTION)) {
-                    languagePrefixInHeader.add(key.replace("_" + CLE_DESCRIPTION, ""));
-                }
-            }
-
-            // throw exception, if they don't match or multiple different languages were found
-            if (languagePrefixInHeader.size() > 1) {
-                throw Exceptions.createHandled().withNLSKey("Translations.tooManyLanguagesFound").handle();
-            } else if (!languagePrefixInHeader.contains(lang)) {
-                throw Exceptions.createHandled().withNLSKey("Translations.mismatchingLanguagesFound").handle();
+            if (context.keySet().stream().noneMatch(key -> key.startsWith(languagePrefix))) {
+                throw Exceptions.createHandled().withNLSKey("Translations.importLanguageNotFound").handle();
             }
         });
-
         return super.fillAndVerify(entity, context);
     }
 
