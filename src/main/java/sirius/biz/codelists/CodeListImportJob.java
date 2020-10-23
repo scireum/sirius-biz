@@ -135,10 +135,7 @@ public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
      */
     @Override
     protected void createOrUpdate(E entity, Context context) {
-        if (!codeLists.getEntry(codeList.getCodeListData().getCode(), entity.getCodeListEntryData().getCode())
-                      .isPresent()) {
-            super.createOrUpdate(entity, context);
-        }
+        super.createOrUpdate(entity, context);
 
         // update the translation texts for the selected language
         languageParameter.ifPresent(lang -> {
