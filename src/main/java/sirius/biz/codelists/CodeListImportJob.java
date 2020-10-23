@@ -125,10 +125,8 @@ public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
     }
 
     /**
-     * A new {@link CodeListEntry} only has to be created, if it is not yet present in the selected {@link CodeList}.
-     * <p>
-     * If a language is selected for the import, updates {@link sirius.biz.translations.Translation Translations}
-     * for the {@link CodeListEntry}'s description.
+     * Updates {@link sirius.biz.translations.Translation Translations} for the {@link CodeListEntry}, if a language is
+     * selected for the import.
      *
      * @param entity  the entity to persist
      * @param context the row represented as context
