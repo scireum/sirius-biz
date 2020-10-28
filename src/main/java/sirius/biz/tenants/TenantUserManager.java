@@ -44,6 +44,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -884,6 +885,28 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         transformedRoles.removeAll(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
 
         return transformedRoles;
+    }
+
+    /**
+     * Extends the list of permissions for the given tenant with what each available {@link AdditionalRolesProvider}
+     * has to offer.
+     *
+     * @param tenant              the tenant to compute additional roles for
+     * @param readOnlyPermissions the permissions which have been fetched so far.
+     * @return the effective set of permissions for this tenant
+     */
+    public static Set<String> computeEffectiveTenantPermissions(Tenant<?> tenant, Set<String> readOnlyPermissions) {
+        Collection<AdditionalRolesProvider> parts = additionalRolesProviders.getParts();
+        if (parts.isEmpty()) {
+            return readOnlyPermissions;
+        }
+
+        Set<String> result = new TreeSet<>(readOnlyPermissions);
+        for (AdditionalRolesProvider rolesProvider : additionalRolesProviders) {
+            rolesProvider.addAdditionalTenantRoles(tenant, result::add);
+        }
+
+        return result;
     }
 
     @Override
