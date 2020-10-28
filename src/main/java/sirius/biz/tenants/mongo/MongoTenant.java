@@ -85,7 +85,7 @@ public class MongoTenant extends MongoBizEntity implements Tenant<String> {
             effectivePermissions = permissions;
 
             // and we assign again the final value after all AdditionalRolesProviders ran. Note that this is a
-            // NOOP if no AdditionalRolesProviders arep resent...
+            // NOOP if no AdditionalRolesProviders are present...
             effectivePermissions = TenantUserManager.computeEffectiveTenantPermissions(this, effectivePermissions);
         }
 
