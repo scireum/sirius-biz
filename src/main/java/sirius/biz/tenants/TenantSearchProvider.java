@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 /**
- * Provides the base implementation to mak implementations of {@link Tenant} viaible in the
+ * Provides the base implementation to make implementations of {@link Tenant} visible in the
  * {@link sirius.biz.tycho.search.OpenSearchController}.
  *
  * @param <I> the type of database IDs used by the concrete implementation

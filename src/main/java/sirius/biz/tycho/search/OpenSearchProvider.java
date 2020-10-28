@@ -31,7 +31,7 @@ public interface OpenSearchProvider extends Priorized {
     String getLabel();
 
     /**
-     * Returns the URL to be naviagated to when the user clicks on the category label.
+     * Returns the URL to be navigated to when the user clicks on the category label.
      * <p>
      * This can be left empty if there is no group or overview to navigate to.
      *

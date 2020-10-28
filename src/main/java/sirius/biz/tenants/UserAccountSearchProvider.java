@@ -25,7 +25,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
- * Provides the base implementation to mak implementations of {@link UserAccount} viaible in the
+ * Provides the base implementation to make implementations of {@link UserAccount} visible in the
  * {@link sirius.biz.tycho.search.OpenSearchController}.
  *
  * @param <I> the type of database IDs used by the concrete implementation
