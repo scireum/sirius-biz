@@ -113,7 +113,7 @@ public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
 
     @Override
     protected E findAndLoad(Context data) {
-        data.set(CodeListEntry.CODE_LIST.getName(), codeList);
+        data.set(CodeListEntry.CODE_LIST.getName(), codeList.getIdAsString());
         return super.findAndLoad(data);
     }
 
