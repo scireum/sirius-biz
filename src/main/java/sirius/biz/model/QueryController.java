@@ -101,17 +101,17 @@ public class QueryController extends BizController {
             }
 
             // We need to count before we apply a limit...
-            long numberOfEntites = baseQuery.count();
+            long numberOfEntities = baseQuery.count();
 
             // Actually perform the query...
             List<BaseEntity<?>> result = new ArrayList<>();
-            if (numberOfEntites > 0) {
+            if (numberOfEntities > 0) {
                 Watch watch = Watch.start();
                 baseQuery.limit(limit).iterateAll(result::add);
 
                 UserContext.message(Message.info(Strings.apply("Showing %s of %s results - Query took %sms",
                                                                result.size(),
-                                                               numberOfEntites,
+                                                               numberOfEntities,
                                                                watch.elapsedMillis())));
             }
 
