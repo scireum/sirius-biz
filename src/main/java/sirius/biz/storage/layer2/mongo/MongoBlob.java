@@ -47,6 +47,7 @@ import java.util.Optional;
  */
 @Framework(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
 @ComplexDelete(false)
+@Index(name = "blob_key_lookup", columns = "blobKey", columnSettings = Mango.INDEX_ASCENDING, unique = true)
 @Index(name = "blob_normalized_filename_lookup",
         columns = {"spaceName", "deleted", "normalizedFilename", "parent", "committed"},
         columnSettings = {Mango.INDEX_ASCENDING,

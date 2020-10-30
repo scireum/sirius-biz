@@ -47,6 +47,7 @@ import java.util.Optional;
  */
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 @ComplexDelete(false)
+@Index(name = "blob_key_lookup", columns = "blobKey", unique = true)
 @Index(name = "blob_normalized_filename_lookup",
         columns = {"spaceName", "deleted", "normalizedFilename", "parent", "committed"})
 @Index(name = "blob_filename_lookup", columns = {"spaceName", "deleted", "filename", "parent", "committed"})
