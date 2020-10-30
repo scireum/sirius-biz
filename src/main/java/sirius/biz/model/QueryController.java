@@ -17,6 +17,7 @@ import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.query.Query;
 import sirius.db.mixing.query.constraints.Constraint;
+import sirius.db.mongo.MongoQuery;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Watch;
@@ -29,10 +30,7 @@ import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -100,8 +98,7 @@ public class QueryController extends BizController {
                 ((ElasticQuery<?>) baseQuery).deliberatelyUnrouted();
             }
 
-            // We need to count before we apply a limit...
-            long numberOfEntities = baseQuery.count();
+            long numberOfEntities = getTotalCount(limit, baseQuery);
 
             // Actually perform the query...
             List<BaseEntity<?>> result = new ArrayList<>();
@@ -125,6 +122,20 @@ public class QueryController extends BizController {
         }
 
         return Collections.emptyList();
+    }
+
+    private <C extends Constraint, Q extends Query<Q, ?, C>> long getTotalCount(int limit, Q baseQuery) {
+        if (baseQuery instanceof MongoQuery) {
+            Optional<Long> count = ((MongoQuery<?>) baseQuery).count(false, 5000);
+
+            if (count.isPresent()) {
+                return count.get();
+            }
+            UserContext.message(Message.warn(Strings.apply("Fetching total result count timed out.")));
+            return limit;
+        }
+
+        return baseQuery.count();
     }
 
     @Nonnull
