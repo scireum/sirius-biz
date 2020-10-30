@@ -14,6 +14,7 @@ import sirius.biz.jdbc.BizEntity;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantData;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.biz.tenants.Tenants;
 import sirius.biz.web.Autoloaded;
 import sirius.db.jdbc.SQLEntityRef;
@@ -71,7 +72,12 @@ public class SQLTenant extends BizEntity implements Tenant<Long> {
                 permissions.add("tenant-" + tenantData.getAccountNumber());
             }
 
+            // We assign here, in case an AdditionalRolesProvider uses hasPermission recursively...
             effectivePermissions = permissions;
+
+            // and we assign again the final value after all AdditionalRolesProviders ran. Note that this is a
+            // NOOP if no AdditionalRolesProviders are present...
+            effectivePermissions = TenantUserManager.computeEffectiveTenantPermissions(this, effectivePermissions);
         }
 
         return effectivePermissions.contains(permission);

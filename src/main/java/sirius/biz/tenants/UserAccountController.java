@@ -131,13 +131,24 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     public static void assertProperUserManagementPermission() {
         UserInfo currentUser = UserContext.getCurrentUser();
+        currentUser.assertPermission(getUserManagementPermission());
+    }
+
+    /**
+     * Determines the permission to check for when determining if the current user can manage other users.
+     * <p>
+     * For the system tenant a user needs "permission-manage-system-users" for all others
+     * "permission-manage-user-accounts".
+     */
+    public static String getUserManagementPermission() {
+        UserInfo currentUser = UserContext.getCurrentUser();
         boolean isCurrentTenantSystemTenant = currentUser.tryAs(Tenant.class)
                                                          .map(tenant -> tenant.hasPermission(Tenant.PERMISSION_SYSTEM_TENANT))
                                                          .orElse(false);
         if (isCurrentTenantSystemTenant) {
-            currentUser.assertPermission(PERMISSION_MANAGE_SYSTEM_USERS);
+            return PERMISSION_MANAGE_SYSTEM_USERS;
         } else {
-            currentUser.assertPermission(PERMISSION_MANAGE_USER_ACCOUNTS);
+            return PERMISSION_MANAGE_USER_ACCOUNTS;
         }
     }
 
@@ -661,4 +672,5 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                                    user.getUniqueName());
         webContext.respondWith().redirectTemporarily(webContext.get("goto").asString(wondergemRoot));
     }
+
 }

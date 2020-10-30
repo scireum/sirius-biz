@@ -64,7 +64,7 @@ public class BlobSoftRef extends BlobHardRef {
             return null;
         }
 
-        return super.getFilename();
+        return super.getPath();
     }
 
     /**
