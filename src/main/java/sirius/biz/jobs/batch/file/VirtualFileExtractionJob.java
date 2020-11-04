@@ -87,20 +87,18 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
                                          FileHandle fileHandle,
                                          boolean shouldOverwriteExisting,
                                          VirtualFile targetDirectory) {
-        File tempFile = fileHandle.getFile();
+        File archiveFile = fileHandle.getFile();
+
         if (!TaskContext.get().isActive()) {
-            Files.delete(tempFile);
             return;
         }
 
         try {
-            ArchiveHelper.extract(tempFile,
+            ArchiveHelper.extract(archiveFile,
                                   null,
                                   handleFileInArchive(process, shouldOverwriteExisting, targetDirectory));
         } catch (IOException e) {
             process.handle(e);
-        } finally {
-            Files.delete(tempFile);
         }
     }
 
