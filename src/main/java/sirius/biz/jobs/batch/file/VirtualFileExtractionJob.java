@@ -76,11 +76,9 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
         final VirtualFile targetDirectory =
                 destinationDirectory.orElseGet(() -> vfs.resolve(sourceFile.parent().path()));
 
-        sourceFile.tryDownload()
-                  .ifPresent(handle -> handleArchiveExtraction(process,
-                                                               handle,
-                                                               shouldOverwriteExisting,
-                                                               targetDirectory));
+        try (FileHandle handle = sourceFile.download()) {
+            handleArchiveExtraction(process, handle, shouldOverwriteExisting, targetDirectory);
+        }
     }
 
     private void handleArchiveExtraction(ProcessContext process,
