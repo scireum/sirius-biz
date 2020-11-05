@@ -42,11 +42,10 @@ public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
     @Part
     private static CodeLists<?, ?, ?> codeLists;
 
-    protected static final String CLE_VALUE =
-            CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE).getName();
-    protected static final String CLE_ADDITIONAL_VALUE =
+    private static final String CLE_VALUE = CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE).getName();
+    private static final String CLE_ADDITIONAL_VALUE =
             CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE).getName();
-    protected static final String CLE_DESCRIPTION =
+    private static final String CLE_DESCRIPTION =
             CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.DESCRIPTION).getName();
 
     private String languagePrefix;
