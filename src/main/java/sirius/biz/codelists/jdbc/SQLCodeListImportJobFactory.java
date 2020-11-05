@@ -40,7 +40,7 @@ public class SQLCodeListImportJobFactory extends EntityImportJobFactory {
             new CodeListParameter("codeList", "$CodeList").markRequired();
     private static final LanguageParameter LANGUAGE_PARAMETER = (LanguageParameter) new LanguageParameter(
             LanguageParameter.PARAMETER_NAME,
-            "$LocaleData.lang").withDescription("$CodeList.import.lang.help");
+            "$LocaleData.lang").withDescription("$Translations.import.lang.help");
 
     @Override
     protected EntityImportJob<SQLCodeListEntry> createJob(ProcessContext process) {

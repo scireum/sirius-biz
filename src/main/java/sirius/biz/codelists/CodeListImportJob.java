@@ -104,7 +104,7 @@ public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
     protected E fillAndVerify(E entity, Context context) {
         languageParameter.ifPresent(lang -> {
             if (context.keySet().stream().noneMatch(key -> key.startsWith(languagePrefix))) {
-                throw Exceptions.createHandled().withNLSKey("Translations.importLanguageNotFound").handle();
+                throw Exceptions.createHandled().withNLSKey("Translations.import.languageNotFound").handle();
             }
         });
         return super.fillAndVerify(entity, context);

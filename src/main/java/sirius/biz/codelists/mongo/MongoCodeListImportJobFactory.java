@@ -39,7 +39,7 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
     private final CodeListParameter CODE_LIST_PARAMETER = new CodeListParameter("codeList", "$CodeList").markRequired();
     private static final LanguageParameter LANGUAGE_PARAMETER = (LanguageParameter) new LanguageParameter(
             LanguageParameter.PARAMETER_NAME,
-            "$LocaleData.lang").withDescription("$CodeList.import.lang.help");
+            "$LocaleData.lang").withDescription("$Translations.import.lang.help");
 
     @Override
     protected EntityImportJob<MongoCodeListEntry> createJob(ProcessContext process) {
