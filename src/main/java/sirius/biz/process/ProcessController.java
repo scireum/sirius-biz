@@ -96,6 +96,7 @@ public class ProcessController extends BizController {
         ElasticPageHelper<Process> pageHelper = ElasticPageHelper.withQuery(query);
         pageHelper.withContext(ctx);
         pageHelper.addTermAggregation(Process.STATE, ProcessState.class);
+        pageHelper.addBooleanAggregation(Process.ERRORNEOUS);
         pageHelper.addParameterFacet("reference",
                                      "reference-label",
                                      Process.REFERENCES,
