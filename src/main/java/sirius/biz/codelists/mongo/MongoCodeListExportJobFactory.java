@@ -38,8 +38,9 @@ public class MongoCodeListExportJobFactory
 
     private static final CodeListParameter CODE_LIST_PARAMETER =
             new CodeListParameter("codeList", "$CodeList").markRequired();
-    private static final LanguageParameter LANGUAGE_PARAMETER =
-            new LanguageParameter(LanguageParameter.PARAMETER_NAME, "$LocaleData.lang");
+    private static final LanguageParameter LANGUAGE_PARAMETER = (LanguageParameter) new LanguageParameter(
+            LanguageParameter.PARAMETER_NAME,
+            "$LocaleData.lang").withDescription("$CodeList.export.lang.help");
 
     @Nonnull
     @Override
