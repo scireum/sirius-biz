@@ -22,6 +22,7 @@ import javax.annotation.Nonnull;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Stores translations into the appropriate collections of the underlying JDBC database.
@@ -32,6 +33,17 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
         super(owner);
     }
 
+    /**
+     * Allows to specify a set of language codes to use when validating translation texts.
+     *
+     * @param owner          the entity that owns the translations
+     * @param validLanguages set of language codes to validate against
+     * @see BasicTranslations#BasicTranslations(sirius.db.mixing.BaseEntity, java.util.Set)
+     */
+    public SQLTranslations(BaseEntity<?> owner, @Nonnull Set<String> validLanguages) {
+        super(owner, validLanguages);
+    }
+
     @Override
     protected void removeTranslations() {
         try {
@@ -39,8 +51,7 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
                .where(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
                .executeUpdate();
         } catch (SQLException e) {
-            throw Exceptions.handle()
-                            .to(Mixing.LOG)
+            throw Exceptions.handle().to(Mixing.LOG)
                             .error(e)
                             .withSystemErrorMessage("Failed to remove translations after deletion of %s",
                                                     owner.getUniqueName())
@@ -102,9 +113,8 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
 
     @Override
     protected SQLTranslation findOrCreateTranslation(@Nonnull Mapping field, String lang, String text) {
-        if (!isSupportedLanguage(lang)) {
-            throw new IllegalArgumentException(
-                    "lang must be a language code supported by the system (supportedLanguages)!");
+        if (!isValidLanguage(lang, field.getName())) {
+            return null;
         }
 
         Optional<SQLTranslation> translation = fetchTranslation(field, lang);
