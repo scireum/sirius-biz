@@ -8,7 +8,7 @@
 
 package sirius.biz.jobs.params;
 
-import sirius.biz.model.Constants;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.nls.NLS;
 
@@ -33,7 +33,14 @@ public class LanguageParameter extends SelectStringParameter {
 
     @Override
     public List<Tuple<String, String>> getValues() {
-        Constants.getLanguages().forEach(language -> withEntry(language, Constants.getLanguageName(language)));
+        NLS.getSupportedLanguages().forEach(language -> withEntry(language, getLanguageName(language)));
         return super.getValues();
+    }
+
+    private String getLanguageName(String code) {
+        if (Strings.isEmpty(code)) {
+            return "";
+        }
+        return NLS.get("Language." + code);
     }
 }
