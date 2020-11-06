@@ -118,7 +118,7 @@ public class CodeListExportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>,
     @Nullable
     @Override
     protected Function<E, Object> customFieldExtractor(String field) {
-        if (!field.startsWith(languagePrefix) || !languageParameter.isPresent()) {
+        if (!languageParameter.isPresent() || languagePrefix == null || !field.startsWith(languagePrefix)) {
             return null;
         }
 
