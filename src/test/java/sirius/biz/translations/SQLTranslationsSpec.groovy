@@ -8,9 +8,11 @@
 
 package sirius.biz.translations
 
+
 import sirius.biz.translations.jdbc.SQLTranslation
 import sirius.db.jdbc.OMA
 import sirius.kernel.di.std.Part
+import sirius.kernel.health.HandledException
 
 import java.time.Duration
 
@@ -18,13 +20,13 @@ class SQLTranslationsSpec extends TranslationsSpec {
     @Part
     private static OMA oma
 
-    private static final DESCRIPTION_FIELD = SQLTranslatableTestEntity.DESCRIPTION
+    private static final DESCRIPTION_FIELD = SQLTranslatable.DESCRIPTION
 
-    private static SQLTranslatableTestEntity sqlTranslatable
+    private static SQLTranslatable sqlTranslatable
 
     def setupSpec() {
         oma.getReadyFuture().await(Duration.ofSeconds(60))
-        sqlTranslatable = new SQLTranslatableTestEntity()
+        sqlTranslatable = new SQLTranslatable()
         sqlTranslatable.setDescription(DESCRIPTION_TEXT)
         oma.update(sqlTranslatable)
     }
@@ -133,5 +135,27 @@ class SQLTranslationsSpec extends TranslationsSpec {
                 TranslationData.OWNER), sqlTranslatable.getUniqueName()).queryList()
         then:
         translations.size() == 0
+    }
+
+    def "invalid language"() {
+        given:
+        def invalidLang = "val"
+        when:
+        sqlTranslatable.getTranslations().updateText(DESCRIPTION_FIELD, invalidLang, GERMAN_TEXT)
+        then:
+        thrown(HandledException)
+    }
+
+    def "translations without specified valid languages accept all language codes"() {
+        given:
+        def invalidLang = "val"
+        when:
+        sqlTranslatable.getUnrestrictedTranslations().updateText(DESCRIPTION_FIELD, invalidLang, GERMAN_TEXT)
+        and:
+        def text = sqlTranslatable.getUnrestrictedTranslations().getText(DESCRIPTION_FIELD, invalidLang)
+        then:
+        text.isPresent()
+        and:
+        text.get() == GERMAN_TEXT
     }
 }
