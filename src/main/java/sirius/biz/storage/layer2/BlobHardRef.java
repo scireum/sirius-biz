@@ -12,6 +12,8 @@ import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
+
 /**
  * Represents a reference to a {@link Blob} which can be placed as field within an {@link BaseEntity}.
  * <p>
@@ -41,6 +43,7 @@ public class BlobHardRef {
      *
      * @return the referenced blob or <tt>null</tt> if there is no referenced blob
      */
+    @Nullable
     public Blob getBlob() {
         if (blob == null && Strings.isFilled(key)) {
             blob = storage.getSpace(space).findByBlobKey(key).orElse(null);
@@ -87,6 +90,7 @@ public class BlobHardRef {
      *
      * @return the filename, or <tt>null</tt> if either no blob or one without a filename is referenced
      */
+    @Nullable
     public String getFilename() {
         if (isEmpty() || getBlob() == null) {
             return null;
@@ -96,10 +100,25 @@ public class BlobHardRef {
     }
 
     /**
+     * Determines the path of the referenced blob.
+     *
+     * @return the path, or <tt>null</tt> if no blob is referenced
+     */
+    @Nullable
+    public String getPath() {
+        if (isEmpty() || getBlob() == null) {
+            return null;
+        }
+
+        return getBlob().getPath();
+    }
+
+    /**
      * Returns the key of the referenced blob.
      *
      * @return the key of the blob being referenced
      */
+    @Nullable
     public String getKey() {
         return key;
     }

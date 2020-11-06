@@ -44,13 +44,17 @@
 
     <script type="text/javascript">
         $(document).ready(function () {
-            $('.@localId .select-btn').click(function () {
-                var value = $('.@localId input').val();
+            $('.___localId .select-btn').click(function () {
+                let value = $('.___localId input').val();
+
                 if (value == null || value === '') {
                     value = '@basePath';
+                } else {
+                    value = value.substr(0, value.lastIndexOf("/"))
                 }
+
                 selectVFSFile(value).then(function (selectedValue) {
-                    $('.@localId input').val(selectedValue);
+                    $('.___localId input').val(selectedValue);
                 });
             });
         });

@@ -104,4 +104,6 @@
             <a class="btn btn-danger" href="/profile/changeFingerprint">@i18n("LoginData.changeFingerprint")</a>
         </div>
     </w:formBar>
+
+    <i:extensions target="profile" point="below-form" account="@userAccount"/>
 </w:page>

@@ -94,7 +94,7 @@ public class DatabaseController extends BasicController {
             String database = ctx.get("db").asString(defaultDatabase);
             Database db = determineDatabase(database);
             String sqlStatement = ctx.get("query").asString();
-            SQLQuery qry = db.createQuery(sqlStatement);
+            SQLQuery qry = db.createQuery(sqlStatement).markAsLongRunning();
 
             OMA.LOG.INFO("Executing SQL (via /system/sql, authored by %s): %s",
                          UserContext.getCurrentUser().getUserName(),

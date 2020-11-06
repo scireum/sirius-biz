@@ -11,6 +11,7 @@ package sirius.biz.storage.layer2;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Strings;
 
+import javax.annotation.Nullable;
 import java.util.regex.Pattern;
 
 /**
@@ -47,12 +48,23 @@ public class BlobSoftRef extends BlobHardRef {
     }
 
     @Override
+    @Nullable
     public String getFilename() {
         if (isURL()) {
             return Strings.splitAtLast(getKey(), "/").getSecond();
         }
 
         return super.getFilename();
+    }
+
+    @Override
+    @Nullable
+    public String getPath() {
+        if (isURL()) {
+            return null;
+        }
+
+        return super.getPath();
     }
 
     /**
