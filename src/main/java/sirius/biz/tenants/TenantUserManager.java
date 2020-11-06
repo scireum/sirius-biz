@@ -32,6 +32,7 @@ import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.http.WebContext;
 import sirius.web.security.GenericUserManager;
+import sirius.web.security.Permissions;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -905,6 +906,10 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         for (AdditionalRolesProvider rolesProvider : additionalRolesProviders) {
             rolesProvider.addAdditionalTenantRoles(tenant, result::add);
         }
+
+        // also apply profiles and revokes to additional roles
+        Permissions.applyProfiles(result);
+        result.removeAll(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
 
         return result;
     }
