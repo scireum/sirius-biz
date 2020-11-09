@@ -27,7 +27,6 @@ import sirius.biz.storage.layer3.TmpRoot;
 import sirius.biz.storage.layer3.VFSRoot;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
-import sirius.biz.tenants.Tenants;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
@@ -153,8 +152,12 @@ public class JobsRoot extends SingularVFSRoot {
             BlobStorageSpace temporaryStorageSpace = blobStorage.getSpace(TmpRoot.TMP_SPACE);
             Blob buffer = temporaryStorageSpace.createTemporaryBlob(UserContext.getCurrentUser().getTenantId());
             return buffer.createOutputStream(() -> {
-                temporaryStorageSpace.markAsUsed(buffer);
-                trigger(preset, buffer, filename);
+                if (buffer.getSize() > 0) {
+                    temporaryStorageSpace.markAsUsed(buffer);
+                    trigger(preset, buffer, filename);
+                } else {
+                    buffer.delete();
+                }
             }, filename);
         } catch (Exception e) {
             throw Exceptions.handle(e);
