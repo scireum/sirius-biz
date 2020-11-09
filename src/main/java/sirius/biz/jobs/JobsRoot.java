@@ -155,6 +155,8 @@ public class JobsRoot extends SingularVFSRoot {
                 if (buffer.getSize() > 0) {
                     temporaryStorageSpace.markAsUsed(buffer);
                     trigger(preset, buffer, filename);
+                } else {
+                    buffer.delete();
                 }
             }, filename);
         } catch (Exception e) {
