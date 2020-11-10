@@ -169,8 +169,21 @@ public class PersonData extends Composite {
      */
     @Override
     public String toString() {
+        return toTranslatedString(null);
+    }
+
+    /**
+     * Generates a string representation of the full name, tranlated corresponding to the given language code.
+     *
+     * @param langCode the language code to translate to
+     * @return the full name (if filled)
+     */
+    public String toTranslatedString(@Nullable String langCode) {
         return Formatter.create("[${salutation} ][${title} ][${firstname} ]${lastname}")
-                        .set("salutation", getTranslatedSalutation())
+                        .set("salutation",
+                             (langCode == null ?
+                              getTranslatedSalutation() :
+                              getUserSpecificTranslatedSalutation(langCode)))
                         .set("title", title)
                         .set("firstname", firstname)
                         .set("lastname", lastname)
@@ -210,6 +223,16 @@ public class PersonData extends Composite {
      */
     public String getTranslatedSalutation() {
         return codeLists.getTranslatedValue(CODE_LIST_SALUTATIONS, salutation);
+    }
+
+    /**
+     * Returns the value (by langCode specified translated name) of the salutation.
+     *
+     * @param langCode the language code to translate to
+     * @return the value for <tt>salutation</tt> from the <tt>salutations</tt> code list
+     */
+    public String getUserSpecificTranslatedSalutation(String langCode) {
+        return codeLists.getTranslatedValue(CODE_LIST_SALUTATIONS, salutation, langCode);
     }
 
     public String getTitle() {
