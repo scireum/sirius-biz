@@ -11,8 +11,11 @@ package sirius.biz.importer
 import sirius.biz.importer.format.FieldDefinition
 import sirius.biz.importer.format.ImportDictionary
 import sirius.kernel.BaseSpecification
+import sirius.kernel.commons.Context
 import sirius.kernel.commons.Tuple
 import sirius.kernel.commons.Values
+
+import java.util.concurrent.atomic.AtomicInteger
 
 class ImportDictionarySpec extends BaseSpecification {
 
@@ -127,6 +130,33 @@ class ImportDictionarySpec extends BaseSpecification {
         and:
         problems.get(0) == "Die Spalte 4 ('D') fehlt."
         problems.size() == 1
+    }
+
+    /**
+     * If a dictionary needs to be able to import the same column multiple times a custom lookup can be used
+     * and assign consecutive numbers to the columns e.g. test1, test2, test3 as seen below:
+     */
+    def "multiple columns with the same name can be aliased"() {
+        when:
+        ImportDictionary dict = new ImportDictionary()
+        AtomicInteger counter = new AtomicInteger()
+        dict.withCustomFieldLookup({ field ->
+            if (field == "test") {
+                return FieldDefinition.stringField("test" + counter.incrementAndGet())
+            } else {
+                return null
+            }
+        })
+        and:
+        dict.determineMappingFromHeadings(Values.of("ignored", "test", "test", "foo", "test"), false)
+        then:
+        dict.getMappings().size() == 5
+        when:
+        Context context = dict.load(Values.of("X", "1", "2", "X", "3"), false)
+        then:
+        context.getValue("test1").asString() == "1"
+        context.getValue("test2").asString() == "2"
+        context.getValue("test3").asString() == "3"
     }
 
 }
