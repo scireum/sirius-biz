@@ -10,6 +10,7 @@ package sirius.biz.jobs.batch.file;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
 import sirius.biz.jobs.batch.ImportJob;
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
@@ -22,6 +23,8 @@ import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
+import java.util.List;
+import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -30,31 +33,50 @@ import java.util.zip.ZipInputStream;
  */
 public abstract class FileImportJob extends ImportJob {
 
-    protected static final String FILE_EXTENSION_ZIP = "zip";
+    /**
+     * Contains the parameter which selects the file to import.
+     * <p>
+     * Note that even if another instance is used in {@link FileImportJobFactory#collectParameters(Consumer)}, this
+     * will still work out as long as the parameter names are the same. Therefore both parameters should be
+     * created using {@link #createFileParameter(List)}.
+     */
+    public static final Parameter<VirtualFile> FILE_PARAMETER = createFileParameter(null);
 
     protected FileParameter fileParameter;
 
     /**
      * Creates a new job for the given factory and process context.
      *
-     * @param fileParameter the parameter which is used to derive the import file from
-     * @param process       the process context in which the job is executed
+     * @param process the process context in which the job is executed
      */
-    protected FileImportJob(FileParameter fileParameter, ProcessContext process) {
+    protected FileImportJob(ProcessContext process) {
         super(process);
-        this.fileParameter = fileParameter;
+    }
+
+    /**
+     * Helps to create a custom fil parameter with an appropriate file extension filter.
+     *
+     * @param acceptedFileExtensions the file extensions to accept.
+     * @return the parameter used to select the import file
+     */
+    public static Parameter<VirtualFile> createFileParameter(@Nullable List<String> acceptedFileExtensions) {
+        FileParameter result = new FileParameter("file", "$FileImportJobFactory.file").withBasePath("/work");
+        if (acceptedFileExtensions != null && !acceptedFileExtensions.isEmpty()) {
+            result.withAcceptedExtensionsList(acceptedFileExtensions);
+        }
+        return result.markRequired().build();
     }
 
     @Override
     public void execute() throws Exception {
-        VirtualFile file = process.require(fileParameter);
+        VirtualFile file = process.require(FILE_PARAMETER);
 
         if (canHandleFileExtension(Value.of(file.fileExtension()).toLowerCase())) {
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
                 executeForSingleFile(file.name(), fileHandle);
             }
-        } else if (FILE_EXTENSION_ZIP.equalsIgnoreCase(file.fileExtension())) {
+        } else if ("zip".equalsIgnoreCase(file.fileExtension())) {
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
                 executeForArchive(fileHandle);
