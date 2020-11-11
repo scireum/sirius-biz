@@ -1,4 +1,4 @@
-<i:arg type="sirius.biz.jobs.params.TenantParameter" name="param"/>
+<i:arg type="sirius.biz.jobs.params.Parameter" name="param"/>
 <i:arg type="Map" name="context"/>
 
 <w:autocompleteSingleSelect span="12"

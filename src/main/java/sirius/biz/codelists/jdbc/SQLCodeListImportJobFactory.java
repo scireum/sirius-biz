@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists.jdbc;
 
+import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.importer.ImportContext;
@@ -31,7 +32,8 @@ import java.util.function.Consumer;
 @Permission(CodeListController.PERMISSION_MANAGE_CODELISTS)
 public class SQLCodeListImportJobFactory extends EntityImportJobFactory {
 
-    private CodeListParameter codeListParameter = new CodeListParameter("codeList", "$CodeList").markRequired();
+    private final Parameter<CodeList> codeListParameter =
+            new CodeListParameter("codeList", "$CodeList").markRequired().build();
 
     @Nonnull
     @Override
@@ -45,7 +47,7 @@ public class SQLCodeListImportJobFactory extends EntityImportJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(codeListParameter);
         super.collectParameters(parameterCollector);
     }

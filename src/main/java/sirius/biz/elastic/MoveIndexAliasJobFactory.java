@@ -46,9 +46,12 @@ public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
     @Part
     private IndexMappings mappings;
 
-    private EntityDescriptorParameter entityDescriptorParameter =
-            new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity).markRequired();
-    private StringParameter destinationParameter = new StringParameter("destination", "Destination").markRequired();
+    private Parameter<EntityDescriptor> entityDescriptorParameter =
+            new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity)
+                                           .markRequired()
+                                           .build();
+    private Parameter<String> destinationParameter =
+            new StringParameter("destination", "Destination").markRequired().build();
 
     @Override
     public String getLabel() {
@@ -92,7 +95,7 @@ public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(entityDescriptorParameter);
         parameterCollector.accept(destinationParameter);
     }

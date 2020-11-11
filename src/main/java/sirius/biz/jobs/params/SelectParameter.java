@@ -10,7 +10,7 @@ import java.util.List;
  * @param <V> the type of values produced by this parameter
  * @param <P> recursive type reference to support fluent method calls
  */
-public abstract class SelectParameter<V, P extends SelectParameter<V, P>> extends Parameter<V, P> {
+public abstract class SelectParameter<V, P extends SelectParameter<V, P>> extends ParameterBuilder<V, P> {
 
     /**
      * Creates a new parameter with the given name and label.

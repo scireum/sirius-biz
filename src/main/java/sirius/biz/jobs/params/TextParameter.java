@@ -16,7 +16,7 @@ import sirius.kernel.nls.NLS;
  * @param <V> the type of values produced by this parameter
  * @param <P> recursive type reference to support fluent method calls
  */
-public abstract class TextParameter<V, P extends TextParameter<V, P>> extends Parameter<V, P> {
+public abstract class TextParameter<V, P extends TextParameter<V, P>> extends ParameterBuilder<V, P> {
 
     protected String addonText;
 

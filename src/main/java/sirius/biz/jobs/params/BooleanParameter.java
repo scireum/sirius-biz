@@ -17,7 +17,7 @@ import java.util.Optional;
 /**
  * Provides a checkbox parameter.
  */
-public class BooleanParameter extends Parameter<Boolean, BooleanParameter> {
+public class BooleanParameter extends ParameterBuilder<Boolean, BooleanParameter> {
 
     private boolean nullable = false;
     private boolean defaultValue;
