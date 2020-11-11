@@ -46,7 +46,7 @@ import java.util.zip.ZipFile;
  * If the framework <tt>biz.seven-zip</tt> is enabled, this will load the native 7-ZIP bindings and support a
  * multitude of file formats like <tt>7z, tar, rar etc.</tt> otherwise "just" ZIP files are supported.
  * <p>
- * Note that using native code always bears a certain risk as an error there crashed the whole JVM. Thereore enabling
+ * Note that using native code always bears a certain risk as an error there crashed the whole JVM. Therefore enabling
  * this is only advised on clusters which have dedicated worker servers.
  * <p>
  * Also note that ZIP files are always processed using the Java APIs as this is way simpler to process (can be
@@ -129,7 +129,7 @@ public class ArchiveExtractor {
                 Exceptions.handle()
                           .to(Log.SYSTEM)
                           .error(e)
-                          .withSystemErrorMessage("Failed to inizialize 7-Zip: %s (%s)")
+                          .withSystemErrorMessage("Failed to initialize 7-Zip: %s (%s)")
                           .handle();
                 sevenZipEnabled = false;
             }
