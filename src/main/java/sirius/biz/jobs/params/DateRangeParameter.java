@@ -20,7 +20,7 @@ import java.util.Optional;
 /**
  * Defines an extension of {@link EnumParameter} for {@link DateRange}.
  */
-public class DateRangeParameter extends Parameter<DateRange, DateRangeParameter> {
+public class DateRangeParameter extends ParameterBuilder<DateRange, DateRangeParameter> {
 
     private List<DateRange> dateRanges;
     private DateRange defaultValue;
