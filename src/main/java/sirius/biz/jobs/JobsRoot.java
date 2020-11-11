@@ -123,7 +123,10 @@ public class JobsRoot extends SingularVFSRoot {
     }
 
     private boolean isFileJob(JobFactory factory) {
-        return factory.getParameters().stream().filter(parameter -> parameter instanceof FileParameter).count() == 1;
+        return factory.getParameters()
+                      .stream()
+                      .filter(parameter -> FileParameter.class.isAssignableFrom(parameter.getBuilderType()))
+                      .count() == 1;
     }
 
     private void listPresets(VirtualFile parent, FileSearch fileSearch) {
@@ -182,7 +185,7 @@ public class JobsRoot extends SingularVFSRoot {
                                         NLS.formatSize(buffer.getSize())));
         }
 
-        String parameterName = findFileParemter(preset);
+        String parameterName = findFileParameter(preset);
 
         try {
             preset.getJobConfigData().getJobFactory().startInBackground(param -> {
@@ -205,12 +208,12 @@ public class JobsRoot extends SingularVFSRoot {
         }
     }
 
-    private String findFileParemter(JobPreset preset) {
+    private String findFileParameter(JobPreset preset) {
         return preset.getJobConfigData()
                      .getJobFactory()
                      .getParameters()
                      .stream()
-                     .filter(p -> p instanceof FileParameter)
+                     .filter(p -> FileParameter.class.isAssignableFrom(p.getBuilderType()))
                      .map(Parameter::getName)
                      .findFirst()
                      .orElse(null);
