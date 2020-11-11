@@ -32,7 +32,7 @@ import java.util.function.Predicate;
  * Acts as a callback between the 7-ZIP binding and our API as defined by {@link ExtractedFile}.
  * <p>
  * Note that due to the <i>interesting</i> nature of the 7-ZIP API, this contains a whole of stateful variables which
- * are setup in each of the callbacks and processed later (mainly in {@link #setOperationResult(ExtractOperationResult)}.
+ * are set up in each of the callbacks and processed later (mainly in {@link #setOperationResult(ExtractOperationResult)}.
  */
 class SevenZipAdapter implements IArchiveExtractCallback {
 
