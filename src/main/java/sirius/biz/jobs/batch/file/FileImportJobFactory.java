@@ -30,6 +30,9 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(createFileParameter());
+        if (supportsAuxiliaryFiles()) {
+            parameterCollector.accept(FileImportJob.AUX_FILE_MODE_PARAMETER);
+        }
     }
 
     /**
@@ -53,4 +56,18 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
      * @param fileExtensionConsumer a collector to be supplied with all supported file extensions
      */
     protected abstract void collectAcceptedFileExtensions(Consumer<String> fileExtensionConsumer);
+
+    /**
+     * Determines if jobs created by this factor support handling auxiliary files.
+     * <p>
+     * These are files which reside an an archive processed by this job which cannot be handled directly.
+     * This might be an image attachment which cannot be processed by a <tt>LineBasedImportJob</tt>.
+     * <p>
+     * These files are handled by {@link FileImportJob#handleAuxiliaryFile(sirius.biz.util.ExtractedFile)}.
+     *
+     * @return <tt>true</tt> if this job supports processing auxiliary files, <tt>false</tt> otherwise
+     */
+    protected boolean supportsAuxiliaryFiles() {
+        return false;
+    }
 }
