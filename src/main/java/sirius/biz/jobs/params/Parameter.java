@@ -9,6 +9,7 @@
 package sirius.biz.jobs.params;
 
 import sirius.kernel.commons.Value;
+import sirius.kernel.di.transformers.Composable;
 import sirius.kernel.nls.NLS;
 
 import java.util.Map;
@@ -22,7 +23,7 @@ import java.util.Optional;
  *
  * @param <V> the type of values produced by this parameter
  */
-public class Parameter<V> {
+public class Parameter<V> extends Composable {
 
     /**
      * Provides a tri-state value indicating in which log the parameter can appear.
@@ -33,6 +34,7 @@ public class Parameter<V> {
 
     protected Parameter(ParameterBuilder<V, ?> delegate) {
         this.delegate = delegate;
+        attach(delegate);
     }
 
     /**
