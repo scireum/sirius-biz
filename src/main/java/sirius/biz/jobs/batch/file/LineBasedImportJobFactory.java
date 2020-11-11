@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.batch.file;
 
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 
 import java.util.Arrays;
@@ -37,5 +38,11 @@ public abstract class LineBasedImportJobFactory extends FileImportJobFactory {
     @Override
     public String getIcon() {
         return "fa-file-excel-o";
+    }
+
+    @Override
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
+        super.collectParameters(parameterCollector);
+        parameterCollector.accept(LineBasedImportJob.IMPORT_ALL_SHEETS_PARAMETER);
     }
 }
