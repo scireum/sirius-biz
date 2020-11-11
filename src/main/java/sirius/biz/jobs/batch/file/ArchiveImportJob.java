@@ -33,15 +33,21 @@ import java.util.zip.ZipFile;
  */
 public abstract class ArchiveImportJob extends FileImportJob {
 
-    public static final Parameter<VirtualFile>
-            ZIP_FILE_PARAMETER = FileImportJob.createFileParameter(Collections.singletonList("zip"));
+    private static final String ZIP_FILE_EXTENSION = "zip";
+
+    /**
+     * Contains a customized parameter which should be used in {@link FileImportJobFactory#createFileParameter()}
+     * in its factory.
+     */
+    public static final Parameter<VirtualFile> ZIP_FILE_PARAMETER =
+            FileImportJob.createFileParameter(Collections.singletonList(ZIP_FILE_EXTENSION));
 
     private ZipFile zipFile;
 
     /**
      * Creates a new job for the given process context.
      *
-     * @param process       the process context in which the job is executed
+     * @param process the process context in which the job is executed
      */
     protected ArchiveImportJob(ProcessContext process) {
         super(process);
@@ -52,6 +58,10 @@ public abstract class ArchiveImportJob extends FileImportJob {
         VirtualFile file = process.require(FileImportJob.FILE_PARAMETER);
 
         if (canHandleFileExtension(file.fileExtension())) {
+            process.log(ProcessLog.info()
+                                  .withNLSKey("FileImportJob.downloadingFile")
+                                  .withContext("file", file.name())
+                                  .withContext("size", NLS.formatSize(file.size())));
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
                 zipFile = new ZipFile(fileHandle.getFile());
@@ -123,11 +133,11 @@ public abstract class ArchiveImportJob extends FileImportJob {
 
     @Override
     protected final boolean canHandleFileExtension(@Nullable String fileExtension) {
-        return "zip".equalsIgnoreCase(fileExtension);
+        return ZIP_FILE_EXTENSION.equalsIgnoreCase(fileExtension);
     }
 
     @Override
-    protected void executeForStream(String filename, InputStream in) throws Exception {
+    protected void executeForStream(String filename, Producer<InputStream> in) throws Exception {
         throw new UnsupportedOperationException();
     }
 
