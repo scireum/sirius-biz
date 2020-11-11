@@ -54,9 +54,9 @@ public abstract class FileImportJob extends ImportJob {
     }
 
     /**
-     * Helps to create a custom fil parameter with an appropriate file extension filter.
+     * Helps to create a custom file parameter with an appropriate file extension filter.
      *
-     * @param acceptedFileExtensions the file extensions to accept.
+     * @param acceptedFileExtensions the file extensions to accept
      * @return the parameter used to select the import file
      */
     public static Parameter<VirtualFile> createFileParameter(@Nullable List<String> acceptedFileExtensions) {

@@ -36,7 +36,7 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
      * Can be overwritten to create a custom parameter to select the input file.
      * <p>
      * Note that this should use {@link FileImportJob#createFileParameter(List)} to ensure that the custom
-     * parameter and the one use to retrieve the value match properly.
+     * parameter and the one used to retrieve the value match properly.
      *
      * @return the effective parameter to select the import file
      */

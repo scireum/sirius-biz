@@ -18,7 +18,7 @@ import java.util.Optional;
 /**
  * Provides a mutable instance which can be used to build {@link Parameter parameters}.
  * <p>
- * A parameter is setup using sublasses of this class which are eventually converted using {@link #build()}.
+ * A parameter is set up using subclasses of this class which are eventually converted using {@link #build()}.
  * This yields an immutable parameter object which can safely made visible (i.e. as constant) to be shared
  * across jobs.
  *
@@ -60,7 +60,7 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
     /**
      * Creates an immutable parameter from this builder.
      * <p>
-     * Once the parameter is build, the builder itself should no longer be used.
+     * Once the parameter is built, the builder itself should no longer be used.
      *
      * @return the immutable parameter to be used in {@link sirius.biz.jobs.JobFactory jobs}
      */
