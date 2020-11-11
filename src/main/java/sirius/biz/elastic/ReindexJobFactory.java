@@ -13,6 +13,7 @@ import sirius.biz.jobs.batch.DefaultBatchProcessFactory;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.EntityDescriptorParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.ParameterBuilder;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.TenantUserManager;
@@ -45,8 +46,10 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     @Part
     private IndexMappings mappings;
 
-    private EntityDescriptorParameter entityDescriptorParameter =
-            new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity).markRequired();
+    private Parameter<EntityDescriptor> entityDescriptorParameter =
+            new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity)
+                                           .markRequired()
+                                           .build();
 
     @Override
     public String getLabel() {
@@ -113,7 +116,7 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(entityDescriptorParameter);
     }
 

@@ -216,7 +216,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     protected abstract BatchJob createJob(ProcessContext process) throws Exception;
 
     protected void logParameters(ProcessContext process) {
-        List<Parameter<?, ?>> parameters = getParameters();
+        List<Parameter<?>> parameters = getParameters();
 
         makeParameterLog(process, parameters, Parameter.LogVisibility.NORMAL).ifPresent(process::log);
         makeParameterLog(process, parameters, Parameter.LogVisibility.SYSTEM).ifPresent(processLog -> process.log(
@@ -224,7 +224,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     }
 
     private Optional<ProcessLog> makeParameterLog(ProcessContext process,
-                                                  List<Parameter<?, ?>> parameters,
+                                                  List<Parameter<?>> parameters,
                                                   Parameter.LogVisibility logVisibility) {
         if (parameters.stream().noneMatch(parameter -> logVisibility == parameter.getLogVisibility())) {
             return Optional.empty();
@@ -240,6 +240,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
             output.append(value);
             output.append("\n");
         });
+
         return Optional.of(ProcessLog.info().withMessage(output.toString().trim()));
     }
 }

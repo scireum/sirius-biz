@@ -50,11 +50,12 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
      */
     public static final String TIMING_DELETED_ITEMS = "Deleted Items";
 
-    protected static final TenantParameter TENANT_PARAMETER = new TenantParameter("tenant", "$Model.tenant").markRequired();
+    protected static final Parameter<Tenant<?>> TENANT_PARAMETER =
+            new TenantParameter("tenant", "$Model.tenant").markRequired().build();
 
-    protected static final BooleanParameter TAKE_ACTION_PARAMETER =
+    protected static final Parameter<Boolean> TAKE_ACTION_PARAMETER =
             new BooleanParameter("takeAction", "$DeleteTenantJobFactory.takeAction").withDescription(
-                    "$DeleteTenantJobFactory.takeAction.help");
+                    "$DeleteTenantJobFactory.takeAction.help").build();
 
     @Part
     private Tenants<?, ?, ?> tenants;
@@ -114,7 +115,7 @@ public class DeleteTenantJobFactory extends SimpleBatchProcessJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(TENANT_PARAMETER);
         parameterCollector.accept(TAKE_ACTION_PARAMETER);
     }
