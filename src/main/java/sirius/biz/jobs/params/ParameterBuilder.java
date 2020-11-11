@@ -192,9 +192,8 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      * Checks and transforms the given value.
      *
      * @param input the input wrapped as <tt>Value</tt>
-     *              * @return a serialized string version of the given input which can later be resolved using
-     *              * {@link #resolveFromString(Value)}
-     * @return the value represented as string
+     * @return a serialized string version of the given input which can later be resolved using
+     *         {@link #resolveFromString(Value)}
      * @throws IllegalArgumentException in case of invalid data
      */
     protected abstract String checkAndTransformValue(Value input);
