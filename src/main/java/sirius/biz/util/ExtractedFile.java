@@ -51,7 +51,8 @@ public interface ExtractedFile {
     /**
      * Returns the progress in percent based on the number of files processed.
      *
-     * @return the ration between the number of processed files and the total number of files in the archive
+     * @return the ratio between the number of processed files and the total number of files in the archive in percent
+     * (ranging from 0 to 100).
      */
     Amount getProgressInPercent();
 }

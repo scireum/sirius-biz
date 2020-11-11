@@ -254,7 +254,7 @@ public class ArchiveExtractor {
     }
 
     /**
-     * XIterates over all items of an archive file.
+     * Iterates over all items of an archive file.
      *
      * @param filename              the filename of the archive to extract
      * @param archiveFile           the archive file to extract
