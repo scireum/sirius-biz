@@ -8,6 +8,8 @@
 
 package sirius.biz.jobs.params;
 
+import sirius.biz.jobs.JobFactory;
+import sirius.biz.process.ProcessContext;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.transformers.Composable;
 import sirius.kernel.nls.NLS;
@@ -16,10 +18,16 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Defines a parameter which can be rendered in the UI and verify and extract a value from a context.
+ * Defines a parameter which queries a value for a {@link JobFactory} as parameter.
  * <p>
  * A new parameter is created via one of the subclasses of {@link ParameterBuilder}. These are mainly separated so
  * that a resulting parameter is immutable and can be safely shared as a global constant.
+ * <p>
+ * The parameters for a job are returned in {@link JobFactory#getParameters()} and are most probably collected via
+ * {@link sirius.biz.jobs.BasicJobFactory#collectParameters(Consumer)}.
+ * <p>
+ * The value can either be fetched via {@link #get(Map)} or with a helper like
+ * {@link ProcessContext#getParameter(Parameter)} or {@link ProcessContext#require(Parameter)}.
  *
  * @param <V> the type of values produced by this parameter
  */
