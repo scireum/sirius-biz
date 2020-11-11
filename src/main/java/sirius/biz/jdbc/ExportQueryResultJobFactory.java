@@ -35,8 +35,8 @@ import java.util.function.Consumer;
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ExportQueryResultJobFactory extends LineBasedExportJobFactory {
 
-    private DatabaseParameter databaseParameter = new DatabaseParameter().markRequired();
-    private TextareaParameter sqlParameter = new TextareaParameter("query", "Query").markRequired();
+    private Parameter<Database> databaseParameter = new DatabaseParameter().markRequired().build();
+    private Parameter<String> sqlParameter = new TextareaParameter("query", "Query").markRequired().build();
 
     private class ExportQueryResultJob extends LineBasedExportJob {
 
@@ -44,7 +44,7 @@ public class ExportQueryResultJobFactory extends LineBasedExportJobFactory {
         private final String query;
 
         private ExportQueryResultJob(ProcessContext process) {
-            super(destinationParameter, fileTypeParameter, process);
+            super(process);
             this.db = process.require(databaseParameter);
             this.query = process.require(sqlParameter);
         }
@@ -74,7 +74,7 @@ public class ExportQueryResultJobFactory extends LineBasedExportJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(databaseParameter);
         parameterCollector.accept(sqlParameter);
 

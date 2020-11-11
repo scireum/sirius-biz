@@ -99,7 +99,7 @@ public interface JobFactory extends Named, Priorized {
      *
      * @return the list of parameters of this job
      */
-    List<Parameter<?, ?>> getParameters();
+    List<Parameter<?>> getParameters();
 
     /**
      * Determines if there are visible parameters in this job.

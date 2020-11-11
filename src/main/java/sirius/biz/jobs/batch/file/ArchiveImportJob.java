@@ -8,13 +8,15 @@
 
 package sirius.biz.jobs.batch.file;
 
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
-import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.VirtualFile;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -31,23 +33,30 @@ import java.util.zip.ZipFile;
  */
 public abstract class ArchiveImportJob extends FileImportJob {
 
+    public static final Parameter<VirtualFile>
+            ZIP_FILE_PARAMETER = FileImportJob.createFileParameter(Collections.singletonList("zip"));
+
     private ZipFile zipFile;
 
     /**
      * Creates a new job for the given process context.
      *
-     * @param fileParameter the parameter which is used to derive the import file from
      * @param process       the process context in which the job is executed
      */
-    protected ArchiveImportJob(FileParameter fileParameter, ProcessContext process) {
-        super(fileParameter, process);
+    protected ArchiveImportJob(ProcessContext process) {
+        super(process);
     }
 
     @Override
     public void execute() throws Exception {
-        VirtualFile file = process.require(fileParameter);
+        VirtualFile file = process.require(FileImportJob.FILE_PARAMETER);
 
         if (canHandleFileExtension(file.fileExtension())) {
+            process.log(ProcessLog.info()
+                                  .withNLSKey("FileImportJob.downloadingFile")
+                                  .withContext("file", file.name())
+                                  .withContext("size", NLS.formatSize(file.size())));
+
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
                 zipFile = new ZipFile(fileHandle.getFile());
@@ -119,11 +128,11 @@ public abstract class ArchiveImportJob extends FileImportJob {
 
     @Override
     protected final boolean canHandleFileExtension(@Nullable String fileExtension) {
-        return FILE_EXTENSION_ZIP.equalsIgnoreCase(fileExtension);
+        return "zip".equalsIgnoreCase(fileExtension);
     }
 
     @Override
-    protected void executeForStream(String filename, InputStream in) throws Exception {
+    protected void executeForStream(String filename, Producer<InputStream> in) throws Exception {
         throw new UnsupportedOperationException();
     }
 

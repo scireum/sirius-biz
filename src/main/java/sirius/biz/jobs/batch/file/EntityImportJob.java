@@ -9,11 +9,10 @@
 package sirius.biz.jobs.batch.file;
 
 import sirius.biz.importer.format.ImportDictionary;
-import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer1.FileHandle;
-import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.tenants.Tenants;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
@@ -40,6 +39,14 @@ import java.util.function.Consumer;
  */
 public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImportJob {
 
+    public static Parameter<ImportMode> IMPORT_MODE_PARAMETER =
+            new EnumParameter<>("importMode", "$EntityImportJobFactory.importMode", ImportMode.class).withDefault(
+                    ImportMode.NEW_AND_UPDATES)
+                                                                                                     .markRequired()
+                                                                                                     .withDescription(
+                                                                                                             "$EntityImportJobFactory.importMode.help")
+                                                                                                     .build();
+
     @Part
     private static Mixing mixing;
 
@@ -55,24 +62,15 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
     /**
      * Creates a new job for the given factory, name and process.
      *
-     * @param fileParameter        the parameter which is used to derive the import file from
-     * @param ignoreEmptyParameter the parameter which is used to determine if empty values should be ignored
-     * @param importModeParameter  the parameter which is used to determine the {@link ImportMode} to use
-     * @param type                 the type of entities being imported
-     * @param dictionary           the import dictionary to use
-     * @param process              the process context itself
-     * @param factoryName          the name of the factory which created this job
+     * @param type                     the type of entities being imported
+     * @param dictionary               the import dictionary to use
+     * @param process                  the process context itself
+     * @param factoryName              the name of the factory which created this job
      */
-    public EntityImportJob(FileParameter fileParameter,
-                           BooleanParameter ignoreEmptyParameter,
-                           EnumParameter<ImportMode> importModeParameter,
-                           Class<E> type,
-                           ImportDictionary dictionary,
-                           ProcessContext process,
-                           String factoryName) {
-        super(fileParameter, ignoreEmptyParameter, dictionary, process);
+    public EntityImportJob(Class<E> type, ImportDictionary dictionary, ProcessContext process, String factoryName) {
+        super(dictionary, process);
         importer.setFactoryName(factoryName);
-        this.mode = process.getParameter(importModeParameter).orElse(ImportMode.NEW_AND_UPDATES);
+        this.mode = process.getParameter(IMPORT_MODE_PARAMETER).orElse(ImportMode.NEW_AND_UPDATES);
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);
     }

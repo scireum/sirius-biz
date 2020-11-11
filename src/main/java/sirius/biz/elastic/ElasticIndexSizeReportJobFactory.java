@@ -117,7 +117,7 @@ public class ElasticIndexSizeReportJobFactory extends ReportJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         // No parameters required...
     }
 

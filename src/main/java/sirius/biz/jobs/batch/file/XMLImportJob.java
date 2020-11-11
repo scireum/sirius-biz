@@ -8,10 +8,11 @@
 
 package sirius.biz.jobs.batch.file;
 
+import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
-import sirius.biz.storage.layer1.FileHandle;
-import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -24,14 +25,15 @@ import javax.annotation.Nullable;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import java.io.InputStream;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 /**
  * Provides a base class for jobs which import XML files via a {@link XMLImportJobFactory}.
  */
 public abstract class XMLImportJob extends FileImportJob {
+
+    public static final Parameter<String> XSD_SCHEMA_PARAMETER =
+            new SelectStringParameter("xsdSchema", "$XMLImportJobFactory.xsdSchema").withDescription(
+                    "$XMLImportJobFactory.xsdSchema.help").build();
 
     @Part
     private static Resources resources;
@@ -41,87 +43,46 @@ public abstract class XMLImportJob extends FileImportJob {
     /**
      * Creates a new job for the given factory and process.
      *
-     * @param factory the factory of the surrounding import job
      * @param process the process context itself
      */
-    protected XMLImportJob(XMLImportJobFactory factory, ProcessContext process) {
-        super(factory.fileParameter, process);
-        validationXsdPath = process.getParameter(factory.requireValidFile).orElse(null);
+    protected XMLImportJob(ProcessContext process) {
+        super(process);
+        validationXsdPath = process.getParameter(XSD_SCHEMA_PARAMETER).orElse(null);
     }
 
     @Override
-    protected void executeForSingleFile(String fileName, FileHandle fileHandle) throws Exception {
-        if (Strings.isFilled(validationXsdPath)) {
-            try (InputStream in = fileHandle.getInputStream()) {
-                if (!validate(in)) {
-                    process.log(ProcessLog.error()
-                                          .withNLSKey("XMLImportJob.importCanceled")
-                                          .withContext("fileName", fileName));
-                    return;
-                }
+    protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
+        if (isValid(inputSupplier)) {
+            try (InputStream inputStream = inputSupplier.create()) {
+                executeForValidStream(inputStream);
             }
-        }
-        try (InputStream in = fileHandle.getInputStream()) {
-            executeForStream(fileName, in);
-        }
-    }
-
-    @Override
-    protected void executeForArchive(FileHandle fileHandle) throws Exception {
-        process.log(ProcessLog.info().withNLSKey("FileImportJob.importingZipFile"));
-
-        ZipFile zipFile = new ZipFile(fileHandle.getFile());
-        int filesImported = 0;
-
-        Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
-        while (zipEntries.hasMoreElements()) {
-            ZipEntry zipEntry = zipEntries.nextElement();
-
-            if (!isHiddenFile(zipEntry.getName())
-                && canHandleFileExtension(Files.getFileExtension(zipEntry.getName()))) {
-                process.log(ProcessLog.info()
-                                      .withNLSKey("FileImportJob.importingZippedFile")
-                                      .withContext("filename", zipEntry.getName()));
-                executeForArchivedFile(zipFile, zipEntry);
-                filesImported++;
-            }
-        }
-
-        if (filesImported == 0) {
-            throw Exceptions.createHandled().withNLSKey("FileImportJob.noZippedFileFound").handle();
-        }
-    }
-
-    protected void executeForArchivedFile(ZipFile zipFile, ZipEntry zipEntry) throws Exception {
-        if (Strings.isFilled(validationXsdPath)) {
-            try (InputStream in = zipFile.getInputStream(zipEntry)) {
-                if (!validate(in)) {
-                    process.log(ProcessLog.error()
-                                          .withNLSKey("XMLImportJob.importCanceled")
-                                          .withContext("fileName", zipEntry.getName()));
-                    return;
-                }
-            }
-        }
-        try (InputStream in = zipFile.getInputStream(zipEntry)) {
-            executeForStream(zipEntry.getName(), in);
+        } else {
+            process.log(ProcessLog.error()
+                                  .withNLSKey("XMLImportJob.invalidXMLDetected")
+                                  .withContext("fileName", filename));
         }
     }
 
     /**
      * Determines if the import should continue or be aborted because the xml file has to be valid but isn't
      *
-     * @param xmlInputStream the {@link InputStream} of an xml file which should be validated
+     * @param inputSupplier the {@link InputStream} of an xml file which should be validated
      * @return <tt>true</tt> if the import should continue, <tt>false</tt> otherwise
      * @throws Exception in case of an exception during validation
      */
-    protected boolean validate(InputStream xmlInputStream) throws Exception {
-        Source xmlSource = new StreamSource(xmlInputStream);
-        Source xsdSource = new StreamSource(getXsdResource().openStream());
+    protected boolean isValid(Producer<InputStream> inputSupplier) throws Exception {
+        if (Strings.isEmpty(validationXsdPath)) {
+            return true;
+        }
 
-        XMLValidator xmlValidator = new XMLValidator(process);
+        try (InputStream in = inputSupplier.create()) {
+            Source xmlSource = new StreamSource(in);
+            Source xsdSource = new StreamSource(getXsdResource().openStream());
 
-        return xmlValidator.validate(xmlSource, xsdSource);
+            XMLValidator xmlValidator = new XMLValidator(process);
+
+            return xmlValidator.validate(xmlSource, xsdSource);
+        }
     }
 
     @Nonnull
@@ -133,8 +94,7 @@ public abstract class XMLImportJob extends FileImportJob {
                                                      .handle());
     }
 
-    @Override
-    protected void executeForStream(String filename, InputStream in) throws Exception {
+    protected void executeForValidStream(InputStream in) throws Exception {
         XMLReader reader = new XMLReader();
         registerHandlers(reader);
         reader.parse(in, this::resolveResource);

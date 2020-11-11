@@ -39,13 +39,11 @@ public abstract class XMLExportJob extends ArchiveExportJob {
     /**
      * Creates a new job for the given process context.
      *
-     * @param destinationParameter the parameter used to select the destination for the file being written
      * @param process              the context in which the process will be executed
      */
     protected XMLExportJob(@Nonnull XMLExportJobFactory factory,
-                           FileOrDirectoryParameter destinationParameter,
                            ProcessContext process) {
-        super(destinationParameter, process);
+        super(process);
         requireValidFile = process.getParameter(factory.requireValidFile).orElse(false);
         xsdResourcePath = factory.getXsdResourcePath();
     }

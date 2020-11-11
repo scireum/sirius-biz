@@ -11,10 +11,11 @@ package sirius.biz.jobs.batch.file;
 import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.params.BooleanParameter;
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
-import sirius.biz.storage.layer3.FileParameter;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Values;
 import sirius.kernel.commons.Watch;
@@ -32,23 +33,25 @@ import java.io.InputStream;
  */
 public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
 
+    /**
+     * Contains the parameter which is used to determine if empty values should be ignored.
+     */
+    public static final Parameter<Boolean> IGNORE_EMPTY_PARAMETER =
+            new BooleanParameter("ignoreEmpty", "$DictionaryBasedImportJobFactory.ignoreEmpty").withDescription(
+                    "$DictionaryBasedImportJobFactory.ignoreEmpty.help").build();
+
     protected boolean ignoreEmptyValues;
     protected final ImportDictionary dictionary;
 
     /**
      * Creates a new job for the given factory, name and process.
      *
-     * @param fileParameter        the parameter which is used to derive the import file from
-     * @param ignoreEmptyParameter the parameter which is used to determine if empty values should be ignored
-     * @param dictionary           the import dictionary to use
-     * @param process              the process context itself
+     * @param dictionary the import dictionary to use
+     * @param process    the process context itself
      */
-    protected DictionaryBasedImportJob(FileParameter fileParameter,
-                                       BooleanParameter ignoreEmptyParameter,
-                                       ImportDictionary dictionary,
-                                       ProcessContext process) {
-        super(fileParameter, process);
-        this.ignoreEmptyValues = process.getParameter(ignoreEmptyParameter).orElse(false);
+    protected DictionaryBasedImportJob(ImportDictionary dictionary, ProcessContext process) {
+        super(process);
+        this.ignoreEmptyValues = process.getParameter(IGNORE_EMPTY_PARAMETER).orElse(false);
         this.dictionary = dictionary.withCustomFieldLookup(this::customFieldLookup);
     }
 
@@ -58,9 +61,9 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
     }
 
     @Override
-    protected void executeForStream(String filename, InputStream in) throws Exception {
+    protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
         dictionary.resetMappings();
-        super.executeForStream(filename, in);
+        super.executeForStream(filename, inputSupplier);
     }
 
     @Override
@@ -116,8 +119,8 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
     /**
      * Handles a single row of the import.
      *
-     * @param index the index of the row being processed
-     * @param context   the row represented as context
+     * @param index   the index of the row being processed
+     * @param context the row represented as context
      */
     protected abstract void handleRow(int index, Context context);
 }

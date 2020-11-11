@@ -104,7 +104,7 @@
         </div>
         <w:subHeading labelKey="SchedulderController.parameters"/>
         <div class="row">
-            <i:for type="sirius.biz.jobs.params.Parameter" var="param"
+            <i:for type="sirius.biz.jobs.params.ParameterBuilder" var="param"
                    items="entry.getJobConfigData().getJobFactory().getParameters()">
                 <i:dynamicInvoke template="@param.getEffectiveTemplateName(entry.getJobConfigData().getConfigMap())"
                                  param="@param"

@@ -8,10 +8,7 @@
 
 package sirius.biz.jobs.batch.file;
 
-import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.process.ProcessContext;
-import sirius.biz.storage.layer3.FileOrDirectoryParameter;
-import sirius.biz.storage.layer3.FileParameter;
 import sirius.kernel.commons.Values;
 
 import java.io.Closeable;
@@ -30,17 +27,11 @@ public abstract class LineBasedImportExportJob extends LineBasedImportJob {
     /**
      * Creates a new job for the given factory, name and process.
      *
-     * @param inputFileParameter   the parameter which is used to derive the import file from
-     * @param destinationParameter the parameter used to select the destination for the file being written
-     * @param fileTypeParameter    the file type to use when writing the line based data
-     * @param process              the process context itself
+     * @param process the process context itself
      */
-    protected LineBasedImportExportJob(FileParameter inputFileParameter,
-                                       FileOrDirectoryParameter destinationParameter,
-                                       EnumParameter<ExportFileType> fileTypeParameter,
-                                       ProcessContext process) {
-        super(inputFileParameter, process);
-        this.exportJob = new LineBasedExportJob(destinationParameter, fileTypeParameter, process) {
+    protected LineBasedImportExportJob(ProcessContext process) {
+        super(process);
+        this.exportJob = new LineBasedExportJob(process) {
             @Override
             protected void executeIntoExport() throws Exception {
                 // ignored

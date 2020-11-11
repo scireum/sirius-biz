@@ -1,4 +1,4 @@
-<i:arg name="param" type="sirius.biz.jobs.params.Parameter"/>
+<i:arg name="param" type="sirius.biz.jobs.params.ParameterBuilder"/>
 <i:arg name="context" type="Map"/>
 
 <w:singleSelect span="12"

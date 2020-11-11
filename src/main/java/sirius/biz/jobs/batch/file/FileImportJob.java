@@ -8,15 +8,19 @@
 
 package sirius.biz.jobs.batch.file;
 
-import org.apache.commons.io.input.CloseShieldInputStream;
 import sirius.biz.jobs.batch.ImportJob;
+import sirius.biz.jobs.params.EnumParameter;
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
+import sirius.biz.util.ArchiveExtractor;
+import sirius.biz.util.ExtractedFile;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.ValueHolder;
@@ -28,48 +32,93 @@ import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
-import java.time.Instant;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Provides an import job which reads and imports a file.
  */
 public abstract class FileImportJob extends ImportJob {
 
-    protected static final String FILE_EXTENSION_ZIP = "zip";
+    public static final Parameter<VirtualFile> FILE_PARAMETER = createFileParameter(null);
 
-    protected FileParameter fileParameter;
+    public static final Parameter<AuxiliaryFileMode> AUX_FILE_MODE_PARAMETER = new EnumParameter<>("auxFileMode",
+                                                                                                   "$FileImportJobFactory.auxFileMode",
+                                                                                                   AuxiliaryFileMode.class)
+            .withDefault(AuxiliaryFileMode.UPDATE_ON_CHANGE)
+            .markRequired()
+            .build();
 
     @Part
     private static VirtualFileSystem vfs;
 
+    @Part
+    private static ArchiveExtractor extractor;
+
     protected ValueHolder<VirtualFile> unusedFilesDestination;
+    protected AuxiliaryFileMode auxiliaryFileMode;
+
+    public enum AuxiliaryFileMode {
+        IGNORE(ArchiveExtractor.OverrideMode.NEVER), ALWAYS_UPDATE(ArchiveExtractor.OverrideMode.ALWAYS),
+        UPDATE_ON_CHANGE(ArchiveExtractor.OverrideMode.ON_CHANGE), NEVER_UPDATE(ArchiveExtractor.OverrideMode.NEVER);
+
+        private final ArchiveExtractor.OverrideMode overrideMode;
+
+        AuxiliaryFileMode(ArchiveExtractor.OverrideMode overrideMode) {
+            this.overrideMode = overrideMode;
+        }
+
+        ArchiveExtractor.OverrideMode getOverrideMode() {
+            return overrideMode;
+        }
+
+        @Override
+        public String toString() {
+            return NLS.get(getClass().getSimpleName() + "." + name());
+        }
+    }
 
     /**
      * Creates a new job for the given factory and process context.
      *
-     * @param fileParameter the parameter which is used to derive the import file from
-     * @param process       the process context in which the job is executed
+     * @param process the process context in which the job is executed
      */
-    protected FileImportJob(FileParameter fileParameter, ProcessContext process) {
+    protected FileImportJob(ProcessContext process) {
         super(process);
-        this.fileParameter = fileParameter;
+    }
+
+    public static Parameter<VirtualFile> createFileParameter(@Nullable List<String> acceptedFileExtensions) {
+        FileParameter result = new FileParameter("file", "$FileImportJobFactory.file").withBasePath("/work");
+        if (acceptedFileExtensions != null && !acceptedFileExtensions.isEmpty()) {
+            result.withAcceptedExtensionsList(acceptedFileExtensions);
+        }
+        return result.markRequired().build();
     }
 
     @Override
     public void execute() throws Exception {
-        VirtualFile file = process.require(fileParameter);
+        VirtualFile file = process.require(FILE_PARAMETER);
+        auxiliaryFileMode = process.getParameter(AUX_FILE_MODE_PARAMETER).orElse(AuxiliaryFileMode.IGNORE);
 
         if (canHandleFileExtension(Value.of(file.fileExtension()).toLowerCase())) {
+            process.log(ProcessLog.info()
+                                  .withNLSKey("FileImportJob.downloadingFile")
+                                  .withContext("file", file.name())
+                                  .withContext("size", NLS.formatSize(file.size())));
+
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
-                executeForSingleFile(file.name(), fileHandle);
+                executeForStream(file.name(), () -> fileHandle.getInputStream());
             }
-        } else if (FILE_EXTENSION_ZIP.equalsIgnoreCase(file.fileExtension())) {
+        } else if (extractor.isArchiveFile(file.fileExtension())) {
+            process.log(ProcessLog.info()
+                                  .withNLSKey("FileImportJob.downloadingFile")
+                                  .withContext("file", file.name())
+                                  .withContext("size", NLS.formatSize(file.size())));
+
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
-                executeForArchive(fileHandle);
+                executeForArchive(file.name(), fileHandle);
             }
         } else {
             throw Exceptions.createHandled().withNLSKey("FileImportJob.fileNotSupported").handle();
@@ -88,50 +137,32 @@ public abstract class FileImportJob extends ImportJob {
         attachFile(filename, input);
     }
 
-    protected void executeForSingleFile(String fileName, FileHandle fileHandle) throws Exception {
-        try (InputStream in = fileHandle.getInputStream()) {
-            executeForStream(fileName, in);
-        }
-    }
-
-    protected void executeForArchive(FileHandle fileHandle) throws Exception {
+    protected void executeForArchive(String filename, FileHandle fileHandle) throws Exception {
         process.log(ProcessLog.info().withNLSKey("FileImportJob.importingZipFile"));
 
-        try (ZipInputStream zipInputStream = new ZipInputStream(fileHandle.getInputStream())) {
-            ZipEntry entry = zipInputStream.getNextEntry();
-
-            int filesImported = 0;
-            while (entry != null) {
-                if (executeForEntry(zipInputStream, entry)) {
-                    filesImported++;
-                }
-
-                entry = zipInputStream.getNextEntry();
+        AtomicInteger filesImported = new AtomicInteger();
+        extractor.extractAll(filename, fileHandle.getFile(), null, file -> {
+            if (executeForEntry(file)) {
+                filesImported.incrementAndGet();
             }
+        });
 
-            if (filesImported == 0) {
-                throw Exceptions.createHandled().withNLSKey("FileImportJob.noZippedFileFound").handle();
-            }
+        if (filesImported.get() == 0) {
+            throw Exceptions.createHandled().withNLSKey("FileImportJob.noZippedFileFound").handle();
         }
     }
 
-    private boolean executeForEntry(ZipInputStream zipInputStream, ZipEntry entry) throws Exception {
-        if (isHiddenFile(entry.getName())) {
-            return false;
-        }
-
-        if (canHandleFileExtension(Files.getFileExtension(entry.getName()))) {
+    private boolean executeForEntry(ExtractedFile extractedFile) throws Exception {
+        if (canHandleFileExtension(Files.getFileExtension(extractedFile.getFilePath()))) {
             process.log(ProcessLog.info()
                                   .withNLSKey("FileImportJob.importingZippedFile")
-                                  .withContext("filename", entry.getName()));
-
-            executeForStream(entry.getName(), new CloseShieldInputStream(zipInputStream));
+                                  .withContext("filename", extractedFile.getFilePath()));
+            executeForStream(extractedFile.getFilePath(), extractedFile::openInputStream);
             return true;
+        } else if (auxiliaryFileMode != AuxiliaryFileMode.IGNORE) {
+            return handleUnsupportedFile(extractedFile);
         } else {
-            return handleUnsupportedFile(entry.getName(),
-                                         entry.getSize(),
-                                         entry.getLastModifiedTime().toInstant(),
-                                         new CloseShieldInputStream(zipInputStream));
+            return false;
         }
     }
 
@@ -144,12 +175,9 @@ public abstract class FileImportJob extends ImportJob {
      * By default this is attempted if the {@link #determineAuxiliaryFilesDirectory()} returns a non-null result.
      * Otherwise these files are simply ignored.
      *
-     * @param name    the name of the file
-     * @param size    the (uncompressed) size in bytes
-     * @param instant the last modificaion timestamp of the file
-     * @param data    the contents of the file
+     * @param extractedFile the extracted file which cannot be handled by the job itself
      */
-    protected boolean handleUnsupportedFile(String name, long size, Instant instant, InputStream data) {
+    protected boolean handleUnsupportedFile(ExtractedFile extractedFile) {
         try {
             Watch watch = Watch.start();
             VirtualFile basePath = determineAuxiliaryFilesBasePath();
@@ -157,15 +185,21 @@ public abstract class FileImportJob extends ImportJob {
                 return false;
             }
 
-            basePath.resolve(name).consumeStream(data, size);
-            process.addTiming(NLS.get("FileImportJob.auxiliaryFilesCopied"), watch.elapsedMillis());
+            VirtualFile targetFile = basePath.resolve(extractedFile.getFilePath());
+            if (extractor.updateFile(extractedFile, targetFile, auxiliaryFileMode.overrideMode)
+                != ArchiveExtractor.UpdateResult.SKIPPED) {
+                process.addTiming(NLS.get("FileImportJob.auxiliaryFileCopied"), watch.elapsedMillis());
+            } else {
+                process.addTiming(NLS.get("FileImportJob.auxiliaryFileSkipped"), watch.elapsedMillis());
+            }
+
             return true;
         } catch (Exception e) {
             process.handle(Exceptions.handle()
                                      .error(e)
                                      .to(Log.BACKGROUND)
                                      .withNLSKey("FileImportJob.copyAuxiliaryFileFailed")
-                                     .set("file", name)
+                                     .set("file", extractedFile.getFilePath())
                                      .handle());
             return false;
         }
@@ -202,16 +236,6 @@ public abstract class FileImportJob extends ImportJob {
         return null;
     }
 
-    protected boolean isHiddenFile(String name) {
-        String fileName = Files.getFilenameAndExtension(name);
-
-        if (Strings.isEmpty(fileName)) {
-            return false;
-        }
-
-        return fileName.startsWith(".");
-    }
-
     /**
      * Actually performs the import for the given input stream.
      *
@@ -219,7 +243,7 @@ public abstract class FileImportJob extends ImportJob {
      * @param in       the data to import
      * @throws Exception in case of an error during the import
      */
-    protected abstract void executeForStream(String filename, InputStream in) throws Exception;
+    protected abstract void executeForStream(String filename, Producer<InputStream> in) throws Exception;
 
     /**
      * Determines if the given file extension can be handled by the import job.

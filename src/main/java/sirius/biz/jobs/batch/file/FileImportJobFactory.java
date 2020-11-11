@@ -10,9 +10,12 @@ package sirius.biz.jobs.batch.file;
 
 import sirius.biz.jobs.batch.ImportBatchProcessFactory;
 import sirius.biz.jobs.params.Parameter;
-import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.VirtualFile;
+import sirius.biz.util.ArchiveExtractor;
+import sirius.kernel.di.std.Part;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -21,31 +24,35 @@ import java.util.function.Consumer;
  */
 public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
 
-    /**
-     * Contains the parameter which is used to select the file (as <tt>VirtualFile</tt>).
-     */
-    protected final FileParameter fileParameter = createInputFileParameter();
-
-    /**
-     * Creates the parameter which is used to specify the input file.
-     * <p>
-     * This is provided as a helper method so that other / similar jobs can re-use it.
-     * We do not re-use the same parameter, as a parameter isn't immutable, so a global constant could
-     * be easily set into an inconsistent state.
-     *
-     * @return the completely initialized parameter.
-     */
-    public static FileParameter createInputFileParameter() {
-        return new FileParameter("file", "$FileImportJobFactory.file").withBasePath("/work").markRequired();
-    }
+    @Part
+    protected ArchiveExtractor extractor;
 
     @Override
     protected String createProcessTitle(Map<String, String> context) {
-        return getLabel() + ": " + fileParameter.get(context).map(VirtualFile::name).orElse("-");
+        return getLabel() + ": " + FileImportJob.FILE_PARAMETER.get(context).map(VirtualFile::name).orElse("-");
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
-        parameterCollector.accept(fileParameter);
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
+        parameterCollector.accept(createFileParameter());
+        if (supportsAuxiliaryFiles()) {
+            parameterCollector.accept(FileImportJob.AUX_FILE_MODE_PARAMETER);
+        }
     }
+
+    protected Parameter<VirtualFile> createFileParameter() {
+        List<String> fileExtensions = new ArrayList<>();
+        collectAcceptedFileExtensions(fileExtensions::add);
+        fileExtensions.addAll(extractor.getSupportedFileExtensions());
+
+        return FileImportJob.createFileParameter(fileExtensions);
+    }
+
+    protected abstract void collectAcceptedFileExtensions(Consumer<String> fileExtensionConsumer);
+
+    protected boolean supportsAuxiliaryFiles() {
+        return false;
+    }
+
+
 }

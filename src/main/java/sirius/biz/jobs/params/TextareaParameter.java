@@ -16,7 +16,7 @@ import java.util.Optional;
 /**
  * Represents a plain string parameter which is rendered as multi-line textarea.
  */
-public class TextareaParameter extends Parameter<String, TextareaParameter> {
+public class TextareaParameter extends ParameterBuilder<String, TextareaParameter> {
 
     /**
      * Creates a new parameter with the given name and label.

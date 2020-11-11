@@ -8,9 +8,9 @@
 
 package sirius.biz.jobs.batch.file;
 
-import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.storage.layer3.VirtualFile;
 
 import java.util.function.Consumer;
 
@@ -19,30 +19,19 @@ import java.util.function.Consumer;
  */
 public abstract class LineBasedExportJobFactory extends FileExportJobFactory {
 
-    protected final EnumParameter<ExportFileType> fileTypeParameter = createFileTypeParameter();
-
-    /**
-     * Creates the parameter which determines the output file type to generate.
-     * <p>
-     * This is provided as a helper method so that other / similar jobs can re-use it.
-     * We do not re-use the same parameter, as a parameter isn't immutable, so a global constant could
-     * be easily set into an inconsistent state.
-     *
-     * @return the completely initialized parameter.
-     */
-    protected static EnumParameter<ExportFileType> createFileTypeParameter() {
-        return new EnumParameter<>("fileType", "$LineBasedExportJobFactory.fileType", ExportFileType.class).withDefault(
-                ExportFileType.XLSX).withDescription("$LineBasedExportJobFactory.fileType.help").markRequired();
-    }
-
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         super.collectParameters(parameterCollector);
-        parameterCollector.accept(fileTypeParameter);
+        parameterCollector.accept(LineBasedExportJob.FILE_TYPE_PARAMETER);
     }
 
     @Override
     protected abstract LineBasedExportJob createJob(ProcessContext process);
+
+    @Override
+    protected Parameter<VirtualFile> getDestinationParameter() {
+        return FileExportJob.createDestinationParameter(LineBasedImportJobFactory.SUPPORTED_FILE_EXTENSIONS);
+    }
 
     @Override
     public String getIcon() {
