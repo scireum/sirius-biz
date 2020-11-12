@@ -203,7 +203,7 @@ public class ArchiveExtractor {
                         @Nullable Predicate<String> filter,
                         Processor<ExtractedFile, Boolean> extractedFileConsumer) {
         try {
-            if (isZipFile(Files.getFileExtension(filename))) {
+            if (isZipFile(Files.getFileExtension(filename)) || !isSevenZipEnabled()) {
                 extractZip(archiveFile, enhanceFileFilter(filter), extractedFileConsumer);
             } else {
                 extract7z(archiveFile, enhanceFileFilter(filter), extractedFileConsumer);
