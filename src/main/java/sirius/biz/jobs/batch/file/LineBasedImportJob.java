@@ -8,8 +8,10 @@
 
 package sirius.biz.jobs.batch.file;
 
+import sirius.biz.jobs.params.BooleanParameter;
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
-import sirius.biz.storage.layer3.FileParameter;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.web.data.LineBasedProcessor;
@@ -25,11 +27,10 @@ public abstract class LineBasedImportJob extends FileImportJob implements RowPro
     /**
      * Creates a new job for the given factory, name and process.
      *
-     * @param fileParameter the parameter which is used to derive the import file from
-     * @param process       the process context itself
+     * @param process the process context itself
      */
-    protected LineBasedImportJob(FileParameter fileParameter, ProcessContext process) {
-        super(fileParameter, process);
+    protected LineBasedImportJob(ProcessContext process) {
+        super(process);
     }
 
     @Override

@@ -22,7 +22,7 @@ import java.util.Optional;
 /**
  * Permits to select a {@link CodeListEntry} as parameter.
  */
-public class CodeListEntryParameter extends Parameter<CodeListEntry<?, ?, ?>, CodeListEntryParameter> {
+public class CodeListEntryParameter extends ParameterBuilder<CodeListEntry<?, ?, ?>, CodeListEntryParameter> {
 
     @Part
     @Nullable

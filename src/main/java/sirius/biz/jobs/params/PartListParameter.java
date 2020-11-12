@@ -22,7 +22,7 @@ import java.util.Optional;
  *
  * @param <E> the common {@link sirius.kernel.di.std.Register registered} superclass
  */
-public class PartListParameter<E> extends Parameter<E, PartListParameter<E>> {
+public class PartListParameter<E> extends ParameterBuilder<E, PartListParameter<E>> {
 
     @Part
     protected static GlobalContext globalContext;
