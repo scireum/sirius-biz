@@ -150,6 +150,12 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
         return self();
     }
 
+    /**
+     * Determines if the parameter is currently visible.
+     *
+     * @param context the context containing all parameter values
+     * @return <tt>true</tt> if the parameter is visible, <tt>false</tt> otherwise
+     */
     protected boolean isVisible(Map<String, String> context) {
         if (this.visibility == Visibility.HIDDEN) {
             return false;
@@ -162,6 +168,15 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
         return get(context).isPresent();
     }
 
+    /**
+     * Returns the name of the template used to render the parameter in the UI.
+     * <p>
+     * Similar to {@link #getTemplateName()}, but this method considers the visibility
+     * of the parameter and delivers an alternative template in case the parameter should be hidden.
+     *
+     * @param context the context containing all parameter values
+     * @return the name or path of the template used to render the parameter
+     */
     protected String getEffectiveTemplateName(Map<String, String> context) {
         if (!isVisible(context)) {
             return HIDDEN_TEMPLATE_NAME;
@@ -176,6 +191,13 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      */
     protected abstract String getTemplateName();
 
+    /**
+     * Verifies the value given for this parameter
+     *
+     * @param input the input wrapped as <tt>Value</tt>
+     * @return a serialized string version of the given input which can later be resolved using
+     * {@link ParameterBuilder#resolveFromString(Value)}
+     */
     protected String checkAndTransform(Value input) {
         try {
             return checkAndTransformValue(input);
@@ -208,10 +230,25 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      */
     protected abstract Optional<V> resolveFromString(Value input);
 
+    /**
+     * Reads and resolves the value for this parameter from the given context.
+     *
+     * @param context the context to read the parameter value from
+     * @return the resolved value wrapped as optional or an empty optional if there is no value available
+     */
     protected Optional<V> get(Map<String, String> context) {
         return resolveFromString(Value.of(context.get(getName())));
     }
 
+    /**
+     * Reads and resolves the value for this parameter from the given context.
+     * <p>
+     * Fails if no value could be resolved from the given context.
+     *
+     * @param context the context to read the parameter value from
+     * @return the resolved value
+     * @throws sirius.kernel.health.HandledException if no value for this parameter is available in the given context
+     */
     protected V require(Map<String, String> context) {
         return get(context).orElseThrow(() -> Exceptions.createHandled()
                                                         .withNLSKey("Parameter.required")
@@ -219,22 +256,47 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
                                                         .handle());
     }
 
+    /**
+     * Returns the name of the parameter.
+     *
+     * @return the name of the parameter
+     */
     protected String getName() {
         return name;
     }
 
+    /**
+     * Returns the label of the parameter
+     *
+     * @return the {@link NLS#smartGet(String) auto translated} label of the parameter
+     */
     protected String getLabel() {
         return NLS.smartGet(label);
     }
 
+    /**
+     * Returns the description of the parameter
+     *
+     * @return the {@link NLS#smartGet(String) auto translated} description of the parameter
+     */
     protected String getDescription() {
         return NLS.smartGet(description);
     }
 
+    /**
+     * Determines if this parameter is required.
+     *
+     * @return <tt>true</tt> if a value has to be present for this parameter, <tt>false</tt> otherwise
+     */
     protected boolean isRequired() {
         return required;
     }
 
+    /**
+     * Returns a {@link Parameter.LogVisibility} value which indicates in which log this parameter should be logged.
+     *
+     * @return an enum value indicating the log behavior of this parameter
+     */
     protected Parameter.LogVisibility getLogVisibility() {
         return logVisibility;
     }
