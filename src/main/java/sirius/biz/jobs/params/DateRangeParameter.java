@@ -45,14 +45,14 @@ public class DateRangeParameter extends ParameterBuilder<DateRange, DateRangePar
      */
     public DateRangeParameter(String name, String label) {
         super(name, label);
-        this.dateRanges = Arrays.asList(DateRange.today(),
-                                        DateRange.yesterday(),
-                                        DateRange.thisWeek(),
-                                        DateRange.lastWeek(),
-                                        DateRange.thisMonth(),
-                                        DateRange.lastMonth(),
-                                        DateRange.thisYear(),
-                                        DateRange.lastYear());
+        this.dateRanges = Arrays.asList(DateRange.TODAY,
+                                        DateRange.YESTERDAY,
+                                        DateRange.THIS_WEEK,
+                                        DateRange.LAST_WEEK,
+                                        DateRange.THIS_MONTH,
+                                        DateRange.LAST_MONTH,
+                                        DateRange.THIS_YEAR,
+                                        DateRange.LAST_YEAR);
     }
 
     /**

@@ -31,7 +31,7 @@
     <script type="text/javascript">
         $(function () {
             $('#upload-@param.getName()').on('change', function (event) {
-                uploadFile(event, $('[name=@param.getName()]'), "@param.getBucketName()");
+                uploadFile(event, $('[name=@param.getName()]'), "@param.as(sirius.biz.storage.legacy.VirtualObjectParameter.class).getBucketName()");
             });
         });
     </script>
