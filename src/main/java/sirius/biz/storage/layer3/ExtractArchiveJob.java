@@ -48,7 +48,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     @Part
     private ArchiveExtractor extractor;
 
-    private final Parameter<VirtualFile> sourceParamter;
+    private final Parameter<VirtualFile> sourceParameter;
     private final Parameter<VirtualFile> destinationParameter;
     private final Parameter<ArchiveExtractor.OverrideMode> overwriteExistingFilesParameter;
     private final Parameter<Boolean> deleteArchiveParameter;
@@ -59,13 +59,13 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
      * This constructor is primarily used to make the parameter instantiation more readable.
      */
     public ExtractArchiveJob() {
-        this.sourceParamter = new FileParameter("source",
-                                                "$ExtractArchiveJob.sourceParameter").withAcceptedExtensionsList(new ArrayList<>(
+        this.sourceParameter = new FileParameter("source",
+                                                 "$ExtractArchiveJob.sourceParameter").withAcceptedExtensionsList(new ArrayList<>(
                 extractor.getSupportedFileExtensions()))
-                                                                                     .withDescription(
-                                                                                             "$ExtractArchiveJob.sourceParameter.help")
-                                                                                     .markRequired()
-                                                                                     .build();
+                                                                                      .withDescription(
+                                                                                              "$ExtractArchiveJob.sourceParameter.help")
+                                                                                      .markRequired()
+                                                                                      .build();
 
         this.destinationParameter =
                 new DirectoryParameter("destination", "$ExtractArchiveJob.destinationParameter").withDescription(
@@ -86,7 +86,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
 
     @Override
     protected void execute(ProcessContext process) throws Exception {
-        VirtualFile sourceFile = process.require(sourceParamter);
+        VirtualFile sourceFile = process.require(sourceParameter);
         VirtualFile targetDirectory = process.require(destinationParameter);
         ArchiveExtractor.OverrideMode overrideMode = process.require(overwriteExistingFilesParameter);
 
@@ -160,7 +160,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     protected void computePresetFor(@Nonnull QueryString queryString,
                                     @Nullable Object targetObject,
                                     Map<String, Object> preset) {
-        preset.put(sourceParamter.getName(), ((VirtualFile) targetObject).path());
+        preset.put(sourceParameter.getName(), ((VirtualFile) targetObject).path());
     }
 
     @Override
@@ -171,7 +171,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
 
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
-        parameterCollector.accept(sourceParamter);
+        parameterCollector.accept(sourceParameter);
         parameterCollector.accept(destinationParameter);
         parameterCollector.accept(overwriteExistingFilesParameter);
         parameterCollector.accept(deleteArchiveParameter);
@@ -184,7 +184,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
 
     @Override
     protected String createProcessTitle(Map<String, String> context) {
-        return Strings.apply("%s (%s)", getLabel(), sourceParamter.require(context).name());
+        return Strings.apply("%s (%s)", getLabel(), sourceParameter.require(context).name());
     }
 
     @Override
