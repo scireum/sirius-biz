@@ -186,12 +186,17 @@ public class ArchiveExtractor {
 
     /**
      * Iterates over the items of an archive file.
+     * <p>
+     * Note that we use the filename as extra parameter instead of taking it from the given file, as this might
+     * be completely random as it is most probably a temporary file created by
+     * {@link sirius.biz.storage.layer1.FileHandle}.
      *
      * @param filename              the filename of the archive to extract
      * @param archiveFile           the archive file to extract
      * @param filter                determines which files will be processed
      * @param extractedFileConsumer invoked for each extracted file. May return <tt>false</tt> to abort processing or
      *                              <tt>true</tt> to continue
+     * @see #extractAll(String, File, Predicate, Callback)
      */
     public void extract(String filename,
                         File archiveFile,
@@ -281,11 +286,16 @@ public class ArchiveExtractor {
 
     /**
      * Iterates over all items of an archive file.
+     * <p>
+     * Note that we use the filename as extra parameter instead of taking it from the given file, as this might
+     * be completely random as it is most probably a temporary file created by
+     * {@link sirius.biz.storage.layer1.FileHandle}.
      *
      * @param filename              the filename of the archive to extract
      * @param archiveFile           the archive file to extract
      * @param filter                determines which files will be processed
      * @param extractedFileConsumer invoked for each extracted file
+     * @see #extract(String, File, Predicate, Processor)
      */
     public void extractAll(String filename,
                            File archiveFile,
