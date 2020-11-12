@@ -76,31 +76,27 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
         final VirtualFile targetDirectory =
                 destinationDirectory.orElseGet(() -> vfs.resolve(sourceFile.parent().path()));
 
-        sourceFile.tryDownload()
-                  .ifPresent(handle -> handleArchiveExtraction(process,
-                                                               handle,
-                                                               shouldOverwriteExisting,
-                                                               targetDirectory));
+        try (FileHandle handle = sourceFile.download()) {
+            handleArchiveExtraction(process, handle, shouldOverwriteExisting, targetDirectory);
+        }
     }
 
     private void handleArchiveExtraction(ProcessContext process,
                                          FileHandle fileHandle,
                                          boolean shouldOverwriteExisting,
                                          VirtualFile targetDirectory) {
-        File tempFile = fileHandle.getFile();
+        File archiveFile = fileHandle.getFile();
+
         if (!TaskContext.get().isActive()) {
-            Files.delete(tempFile);
             return;
         }
 
         try {
-            ArchiveHelper.extract(tempFile,
+            ArchiveHelper.extract(archiveFile,
                                   null,
                                   handleFileInArchive(process, shouldOverwriteExisting, targetDirectory));
         } catch (IOException e) {
             process.handle(e);
-        } finally {
-            Files.delete(tempFile);
         }
     }
 
