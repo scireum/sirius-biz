@@ -8,7 +8,6 @@
 
 package sirius.biz.translations
 
-
 import sirius.biz.translations.jdbc.SQLTranslation
 import sirius.db.jdbc.OMA
 import sirius.kernel.di.std.Part

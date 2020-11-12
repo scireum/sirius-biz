@@ -8,7 +8,6 @@
 
 package sirius.biz.translations
 
-
 import sirius.kernel.BaseSpecification
 
 /**

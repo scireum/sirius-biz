@@ -51,7 +51,8 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
                .where(Translation.TRANSLATION_DATA.inner(TranslationData.OWNER), owner.getUniqueName())
                .executeUpdate();
         } catch (SQLException e) {
-            throw Exceptions.handle().to(Mixing.LOG)
+            throw Exceptions.handle()
+                            .to(Mixing.LOG)
                             .error(e)
                             .withSystemErrorMessage("Failed to remove translations after deletion of %s",
                                                     owner.getUniqueName())
