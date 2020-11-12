@@ -154,7 +154,7 @@ public class ArchiveExtractor {
      * @param fileExtension the file extension of the file to check
      * @return <tt>true</tt> if the given file is a ZIP file, <tt>false</tt> otherwise
      */
-    public boolean isZIPFile(@Nullable String fileExtension) {
+    public boolean isZipFile(@Nullable String fileExtension) {
         return ZIP_EXTENSION.equalsIgnoreCase(fileExtension);
     }
 
@@ -172,8 +172,8 @@ public class ArchiveExtractor {
                         @Nullable Predicate<String> filter,
                         Processor<ExtractedFile, Boolean> extractedFileConsumer) {
         try {
-            if (isZIPFile(Files.getFileExtension(filename))) {
-                extractZIP(archiveFile, enhanceFileFilter(filter), extractedFileConsumer);
+            if (isZipFile(Files.getFileExtension(filename))) {
+                extractZip(archiveFile, enhanceFileFilter(filter), extractedFileConsumer);
             } else {
                 extract7z(archiveFile, enhanceFileFilter(filter), extractedFileConsumer);
             }
@@ -199,11 +199,11 @@ public class ArchiveExtractor {
         return !filename.startsWith(".") && !filename.startsWith("__MACOSX");
     }
 
-    private void extractZIP(File archiveFile,
+    private void extractZip(File archiveFile,
                             Predicate<String> filter,
                             Processor<ExtractedFile, Boolean> extractedFileConsumer) throws Exception {
         try (ZipFile zipFile = new ZipFile(archiveFile)) {
-            extractZIPEntriesFromZipFile(filter, extractedFileConsumer, zipFile);
+            extractZipEntriesFromZipFile(filter, extractedFileConsumer, zipFile);
         } catch (ZipException zipException) {
             // This is most probably an error indicating an inconsistent ZIP archive. We therefore directly throw
             // a handled exception to avoid jamming the syslog...
@@ -214,7 +214,7 @@ public class ArchiveExtractor {
         }
     }
 
-    private void extractZIPEntriesFromZipFile(Predicate<String> filter,
+    private void extractZipEntriesFromZipFile(Predicate<String> filter,
                                               Processor<ExtractedFile, Boolean> extractedFileConsumer,
                                               ZipFile zipFile) throws Exception {
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
