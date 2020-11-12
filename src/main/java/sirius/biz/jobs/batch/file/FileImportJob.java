@@ -74,8 +74,31 @@ public abstract class FileImportJob extends ImportJob {
      * Defines the modes in which an auxiliary file in an archive can be handled.
      */
     enum AuxiliaryFileMode {
-        IGNORE(ArchiveExtractor.OverrideMode.NEVER), ALWAYS_UPDATE(ArchiveExtractor.OverrideMode.ALWAYS),
-        UPDATE_ON_CHANGE(ArchiveExtractor.OverrideMode.ON_CHANGE), NEVER_UPDATE(ArchiveExtractor.OverrideMode.NEVER);
+        /**
+         * All auxiliary files will be ignored.
+         */
+        IGNORE(ArchiveExtractor.OverrideMode.NEVER),
+
+        /**
+         * Enforce an update of auxiliary files.
+         *
+         * @see sirius.biz.util.ArchiveExtractor.OverrideMode#ALWAYS
+         */
+        ALWAYS_UPDATE(ArchiveExtractor.OverrideMode.ALWAYS),
+
+        /**
+         * Perform an update of auxiliary files if they changed.
+         *
+         * @see sirius.biz.util.ArchiveExtractor.OverrideMode#ON_CHANGE
+         */
+        UPDATE_ON_CHANGE(ArchiveExtractor.OverrideMode.ON_CHANGE),
+
+        /**
+         * Never update auxiliary files.
+         *
+         * @see sirius.biz.util.ArchiveExtractor.OverrideMode#NEVER
+         */
+        NEVER_UPDATE(ArchiveExtractor.OverrideMode.NEVER);
 
         private final ArchiveExtractor.OverrideMode overrideMode;
 
