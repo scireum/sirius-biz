@@ -61,7 +61,7 @@ public abstract class FileImportJob extends ImportJob {
             .build();
 
     @Part
-    private static VirtualFileSystem vfs;
+    private static VirtualFileSystem virtualFileSystem;
 
     @Part
     private static ArchiveExtractor extractor;
@@ -256,7 +256,7 @@ public abstract class FileImportJob extends ImportJob {
             if (Strings.isEmpty(unusedFilesPath)) {
                 auxFilesDestination = ValueHolder.of(null);
             } else {
-                VirtualFile destination = vfs.resolve(unusedFilesPath);
+                VirtualFile destination = virtualFileSystem.resolve(unusedFilesPath);
                 if (destination.exists() && destination.isDirectory()) {
                     auxFilesDestination = ValueHolder.of(destination);
                 } else {
