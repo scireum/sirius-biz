@@ -72,7 +72,20 @@ public class ArchiveExtractor {
      * @see #updateFile(ExtractedFile, VirtualFile, OverrideMode)
      */
     public enum OverrideMode {
-        ON_CHANGE, ALWAYS, NEVER;
+        /**
+         * Overrides files if they changed (different size or newer "last modified")
+         */
+        ON_CHANGE,
+
+        /**
+         * Always overrides files.
+         */
+        ALWAYS,
+
+        /**
+         * Never overrides files.
+         */
+        NEVER;
 
         @Override
         public String toString() {
@@ -86,7 +99,20 @@ public class ArchiveExtractor {
      * @see #updateFile(ExtractedFile, VirtualFile, OverrideMode)
      */
     public enum UpdateResult {
-        CREATED, UPDATED, SKIPPED
+        /**
+         * The file did not exist before and was created.
+         */
+        CREATED,
+
+        /**
+         * An existing file has been overridden.
+         */
+        UPDATED,
+
+        /**
+         * The existing file was not overridden due to the selected {@link OverrideMode}.
+         */
+        SKIPPED
     }
 
     /**
@@ -154,26 +180,31 @@ public class ArchiveExtractor {
      * @param fileExtension the file extension of the file to check
      * @return <tt>true</tt> if the given file is a ZIP file, <tt>false</tt> otherwise
      */
-    public boolean isZIPFile(@Nullable String fileExtension) {
+    public boolean isZipFile(@Nullable String fileExtension) {
         return ZIP_EXTENSION.equalsIgnoreCase(fileExtension);
     }
 
     /**
      * Iterates over the items of an archive file.
+     * <p>
+     * Note that we use the filename as extra parameter instead of taking it from the given file, as this might
+     * be completely random as it is most probably a temporary file created by
+     * {@link sirius.biz.storage.layer1.FileHandle}.
      *
      * @param filename              the filename of the archive to extract
      * @param archiveFile           the archive file to extract
      * @param filter                determines which files will be processed
      * @param extractedFileConsumer invoked for each extracted file. May return <tt>false</tt> to abort processing or
      *                              <tt>true</tt> to continue
+     * @see #extractAll(String, File, Predicate, Callback)
      */
     public void extract(String filename,
                         File archiveFile,
                         @Nullable Predicate<String> filter,
                         Processor<ExtractedFile, Boolean> extractedFileConsumer) {
         try {
-            if (isZIPFile(Files.getFileExtension(filename))) {
-                extractZIP(archiveFile, enhanceFileFilter(filter), extractedFileConsumer);
+            if (isZipFile(Files.getFileExtension(filename)) || !isSevenZipEnabled()) {
+                extractZip(archiveFile, enhanceFileFilter(filter), extractedFileConsumer);
             } else {
                 extract7z(archiveFile, enhanceFileFilter(filter), extractedFileConsumer);
             }
@@ -199,11 +230,11 @@ public class ArchiveExtractor {
         return !filename.startsWith(".") && !filename.startsWith("__MACOSX");
     }
 
-    private void extractZIP(File archiveFile,
+    private void extractZip(File archiveFile,
                             Predicate<String> filter,
                             Processor<ExtractedFile, Boolean> extractedFileConsumer) throws Exception {
         try (ZipFile zipFile = new ZipFile(archiveFile)) {
-            extractZIPEntriesFromZipFile(filter, extractedFileConsumer, zipFile);
+            extractZipEntriesFromZipFile(filter, extractedFileConsumer, zipFile);
         } catch (ZipException zipException) {
             // This is most probably an error indicating an inconsistent ZIP archive. We therefore directly throw
             // a handled exception to avoid jamming the syslog...
@@ -214,7 +245,7 @@ public class ArchiveExtractor {
         }
     }
 
-    private void extractZIPEntriesFromZipFile(Predicate<String> filter,
+    private void extractZipEntriesFromZipFile(Predicate<String> filter,
                                               Processor<ExtractedFile, Boolean> extractedFileConsumer,
                                               ZipFile zipFile) throws Exception {
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
@@ -255,11 +286,16 @@ public class ArchiveExtractor {
 
     /**
      * Iterates over all items of an archive file.
+     * <p>
+     * Note that we use the filename as extra parameter instead of taking it from the given file, as this might
+     * be completely random as it is most probably a temporary file created by
+     * {@link sirius.biz.storage.layer1.FileHandle}.
      *
      * @param filename              the filename of the archive to extract
      * @param archiveFile           the archive file to extract
      * @param filter                determines which files will be processed
      * @param extractedFileConsumer invoked for each extracted file
+     * @see #extract(String, File, Predicate, Processor)
      */
     public void extractAll(String filename,
                            File archiveFile,

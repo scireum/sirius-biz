@@ -28,6 +28,10 @@ import java.util.Optional;
  * <p>
  * The value can either be fetched via {@link #get(Map)} or with a helper like
  * {@link ProcessContext#getParameter(Parameter)} or {@link ProcessContext#require(Parameter)}.
+ * <p>
+ * Note that the underlying builder can be accessed using {@code parameter.as(ParameterBuilderClass.class)}. However,
+ * this must only be used in templates to invoke non-mutating methods when rendering the parameter template. A
+ * <tt>Parameter</tt> itself should remain immutable once created.
  *
  * @param <V> the type of values produced by this parameter
  */
