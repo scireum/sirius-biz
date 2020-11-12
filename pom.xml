@@ -18,8 +18,8 @@
 
     <properties>
         <sirius.kernel>dev-19.11</sirius.kernel>
-        <sirius.web>dev-29.20</sirius.web>
-        <sirius.db>dev-20.1</sirius.db>
+        <sirius.web>dev-29.21</sirius.web>
+        <sirius.db>dev-20.2</sirius.db>
     </properties>
 
     <repositories>

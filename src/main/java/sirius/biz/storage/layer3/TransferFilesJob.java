@@ -66,15 +66,17 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
         }
     }
 
-    private FileOrDirectoryParameter sourceParameter =
-            new FileOrDirectoryParameter(SOURCE_PARAMETER_NAME, "$TransferFilesJob.source").markRequired();
-    private FileOrDirectoryParameter destinationParameter =
-            new FileOrDirectoryParameter(DESTINATION_PARAMETER_NAME, "$TransferFilesJob.destination").markRequired();
-    private EnumParameter<TransferMode> modeParameter =
+    private Parameter<VirtualFile> sourceParameter =
+            new FileOrDirectoryParameter(SOURCE_PARAMETER_NAME, "$TransferFilesJob.source").markRequired().build();
+    private Parameter<VirtualFile> destinationParameter =
+            new FileOrDirectoryParameter(DESTINATION_PARAMETER_NAME, "$TransferFilesJob.destination").markRequired()
+                                                                                                     .build();
+    private Parameter<TransferMode> modeParameter =
             new EnumParameter<>(MODE_PARAMETER_NAME, "$TransferFilesJob.mode", TransferMode.class).withDefault(
-                    TransferMode.COPY).markRequired();
-    private BooleanParameter smartTransferParameter =
-            new BooleanParameter(SMART_TRANSFER_PARAMETER_NAME, "$TransferFilesJob.smartTransfer").withDefaultTrue();
+                    TransferMode.COPY).markRequired().build();
+    private Parameter<Boolean> smartTransferParameter =
+            new BooleanParameter(SMART_TRANSFER_PARAMETER_NAME, "$TransferFilesJob.smartTransfer").withDefaultTrue()
+                                                                                                  .build();
 
     @Part
     private VirtualFileSystem virtualFileSystem;
@@ -130,7 +132,7 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(sourceParameter);
         parameterCollector.accept(destinationParameter);
         parameterCollector.accept(modeParameter);

@@ -50,23 +50,18 @@ import java.util.function.Consumer;
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
 
-    private EntityDescriptorParameter descriptorParameter = new EntityDescriptorParameter().markRequired();
-    private BooleanParameter executeSaveParameter;
-    private BooleanParameter performValidationParameter;
+    private Parameter<EntityDescriptor> descriptorParameter = new EntityDescriptorParameter().markRequired().build();
 
-    /**
-     * Creates a new instance of the job factory.
-     */
-    public ResaveEntitiesJobFactory() {
-        this.executeSaveParameter = new BooleanParameter("executeSave", "Execute Save");
-        this.executeSaveParameter.withDefaultTrue();
-        this.executeSaveParameter.withDescription(
-                "Determines if the update method of the underlying mapper should be invoked so that all BeforeSave handlers are executed.");
-
-        this.performValidationParameter = new BooleanParameter("performValidation", "Perform Validation");
-        this.performValidationParameter.withDefaultTrue();
-        this.performValidationParameter.withDescription("Determines if all OnValidate handlers should be invoked.");
-    }
+    private Parameter<Boolean> executeSaveParameter =
+            new BooleanParameter("executeSave", "Execute Save").withDefaultTrue()
+                                                               .withDescription(
+                                                                       "Determines if the update method of the underlying mapper should be invoked so that all BeforeSave handlers are executed.")
+                                                               .build();
+    private Parameter<Boolean> performValidationParameter =
+            new BooleanParameter("performValidation", "Perform Validation").withDefaultTrue()
+                                                                           .withDescription(
+                                                                                   "Determines if all OnValidate handlers should be invoked.")
+                                                                           .build();
 
     @Override
     protected BatchJob createJob(ProcessContext process) throws Exception {
@@ -148,7 +143,7 @@ public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(descriptorParameter);
         parameterCollector.accept(executeSaveParameter);
         parameterCollector.accept(performValidationParameter);

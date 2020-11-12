@@ -8,10 +8,13 @@
 
 package sirius.biz.jobs.batch.file;
 
+import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -33,6 +36,10 @@ import java.util.zip.ZipFile;
  */
 public abstract class XMLImportJob extends FileImportJob {
 
+    public static final Parameter<String> XSD_SCHEMA_PARAMETER =
+            new SelectStringParameter("xsdSchema", "$XMLImportJobFactory.xsdSchema").withDescription(
+                    "$XMLImportJobFactory.xsdSchema.help").build();
+
     @Part
     private static Resources resources;
 
@@ -41,12 +48,11 @@ public abstract class XMLImportJob extends FileImportJob {
     /**
      * Creates a new job for the given factory and process.
      *
-     * @param factory the factory of the surrounding import job
      * @param process the process context itself
      */
-    protected XMLImportJob(XMLImportJobFactory factory, ProcessContext process) {
-        super(factory.fileParameter, process);
-        validationXsdPath = process.getParameter(factory.requireValidFile).orElse(null);
+    protected XMLImportJob( ProcessContext process) {
+        super(process);
+        validationXsdPath = process.getParameter(XSD_SCHEMA_PARAMETER).orElse(null);
     }
 
     @Override
@@ -133,8 +139,7 @@ public abstract class XMLImportJob extends FileImportJob {
                                                      .handle());
     }
 
-    @Override
-    protected void executeForStream(String filename, InputStream in) throws Exception {
+    protected void executeForValidStream(InputStream in) throws Exception {
         XMLReader reader = new XMLReader();
         registerHandlers(reader);
         reader.parse(in, this::resolveResource);

@@ -46,7 +46,7 @@ public class BlockedIPsReportJobFactory extends ReportJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         // This job has no parameters...
     }
 

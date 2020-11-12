@@ -33,33 +33,34 @@ public abstract class TimeseriesChartJobFactory extends LinearChartJobFactory im
     /**
      * Determines the start of the timeseries.
      */
-    public static final LocalDateParameter PARAM_START =
+    public static final Parameter<LocalDate> PARAM_START =
             new LocalDateParameter("start", "$TimeseriesDataProvider.start").withDefault(() -> LocalDate.now()
-                                                                                                        .minusDays(30));
+                                                                                                        .minusDays(30))
+                                                                            .build();
 
     /**
      * Determines the end of the timeseries.
      */
-    public static final LocalDateParameter PARAM_END =
-            new LocalDateParameter("end", "$TimeseriesDataProvider.end").withDefault(() -> LocalDate.now()
-                                                                                                    .minusDays(1));
+    public static final Parameter<LocalDate> PARAM_END =
+            new LocalDateParameter("end", "$TimeseriesDataProvider.end").withDefault(() -> LocalDate.now().minusDays(1))
+                                                                        .build();
 
     /**
      * Determines the desired unit or resolution of the timeseries.
      */
-    public static final EnumParameter<Unit> PARAM_UNIT =
-            new EnumParameter<>("unit", "$TimeseriesDataProvider.unit", Unit.class);
+    public static final Parameter<Unit> PARAM_UNIT =
+            new EnumParameter<>("unit", "$TimeseriesDataProvider.unit", Unit.class).build();
 
     /**
      * Determines the desirec compariso period for the timeseries.
      */
-    public static final EnumParameter<ComparisonPeriod> PARAM_COMPARISON_PERIOD =
-            new EnumParameter<>("comparisonPeriod",
-                                "$TimeseriesChartJobFactory.comparisonPeriod",
-                                ComparisonPeriod.class);
+    public static final Parameter<ComparisonPeriod> PARAM_COMPARISON_PERIOD = new EnumParameter<>("comparisonPeriod",
+                                                                                                  "$TimeseriesChartJobFactory.comparisonPeriod",
+                                                                                                  ComparisonPeriod.class)
+            .build();
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(PARAM_START);
         parameterCollector.accept(PARAM_END);
         parameterCollector.accept(PARAM_UNIT);

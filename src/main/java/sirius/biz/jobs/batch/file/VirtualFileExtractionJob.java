@@ -49,21 +49,22 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
     @Part
     private VirtualFileSystem vfs;
 
-    private static final FileParameter SOURCE_PARAMETER = new FileParameter("sourceParameter",
-                                                                            "$VirtualFileExtractionJob.sourceParameter")
+    private static final Parameter<VirtualFile> SOURCE_PARAMETER = new FileParameter("sourceParameter",
+                                                                                     "$VirtualFileExtractionJob.sourceParameter")
             .withAcceptedExtensionsList(ArchiveHelper.getSupportedFileExtensions())
             .withDescription("$VirtualFileExtractionJob.sourceParameter.help")
-            .markRequired();
+            .markRequired()
+            .build();
 
-    private static final FileOrDirectoryParameter DESTINATION_PARAMETER = new FileOrDirectoryParameter(
+    private static final Parameter<VirtualFile> DESTINATION_PARAMETER = new FileOrDirectoryParameter(
             "destinationParameter",
             "$VirtualFileExtractionJob.destinationParameter").withDescription(
-            "$VirtualFileExtractionJob.destinationParameter.help");
+            "$VirtualFileExtractionJob.destinationParameter.help").build();
 
-    private static final BooleanParameter OVERWRITE_EXISTING_FILES_PARAMETER = new BooleanParameter(
+    private static final Parameter<Boolean> OVERWRITE_EXISTING_FILES_PARAMETER = new BooleanParameter(
             "overwriteExistingFilesParameter",
             "$VirtualFileExtractionJob.overwriteExistingFilesParameter").withDescription(
-            "$VirtualFileExtractionJob.overwriteExistingFilesParameter.help");
+            "$VirtualFileExtractionJob.overwriteExistingFilesParameter.help").build();
     private static final String TARGET_PATH = "targetPath";
 
     @Override
@@ -180,7 +181,7 @@ public class VirtualFileExtractionJob extends SimpleBatchProcessJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(SOURCE_PARAMETER);
         parameterCollector.accept(DESTINATION_PARAMETER);
         parameterCollector.accept(OVERWRITE_EXISTING_FILES_PARAMETER);

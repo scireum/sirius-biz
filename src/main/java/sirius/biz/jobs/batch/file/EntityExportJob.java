@@ -11,10 +11,9 @@ package sirius.biz.jobs.batch.file;
 import sirius.biz.importer.Importer;
 import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.ImportDictionary;
-import sirius.biz.jobs.params.EnumParameter;
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
-import sirius.biz.storage.layer3.FileOrDirectoryParameter;
 import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.tenants.Tenants;
@@ -65,6 +64,17 @@ import java.util.stream.Collectors;
  */
 public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> extends LineBasedExportJob {
 
+    /**
+     * Contains the parameter which selects the template file to use when exporting data.
+     */
+    public static final Parameter<VirtualFile> TEMPLATE_FILE_PARAMETER =
+            new FileParameter("templateFile", "$EntityExportJobFactory.templateFile").withDescription(
+                    "$EntityExportJobFactory.templateFile.help")
+                                                                                     .withBasePath("/work")
+                                                                                     .withAcceptedExtensionsList(
+                                                                                             LineBasedImportJobFactory.SUPPORTED_FILE_EXTENSIONS)
+                                                                                     .build();
+
     @Part
     private static Mixing mixing;
 
@@ -86,28 +96,22 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     /**
      * Creates a new job for the given factory, name and process.
      *
-     * @param templateFileParameter the parameter which is used to select the template file to use
-     * @param destinationParameter  the parameter used to select the destination for the file being written
-     * @param fileTypeParameter     the file type to use when writing the line based data
-     * @param type                  the type of entities being imported
-     * @param dictionary            the export dictionary to use
-     * @param defaultMapping        the default mapping (default column order) to use
-     * @param process               the process context itself
-     * @param factoryName           the name of the factory which created this job
+     * @param type           the type of entities being imported
+     * @param dictionary     the export dictionary to use
+     * @param defaultMapping the default mapping (default column order) to use
+     * @param process        the process context itself
+     * @param factoryName    the name of the factory which created this job
      */
     @SuppressWarnings("squid:S00107")
     @Explain("We rather have 8 parameters here and keep the logic properly encapsulated")
-    public EntityExportJob(FileParameter templateFileParameter,
-                           FileOrDirectoryParameter destinationParameter,
-                           EnumParameter<ExportFileType> fileTypeParameter,
-                           Class<E> type,
+    public EntityExportJob(Class<E> type,
                            ImportDictionary dictionary,
                            List<String> defaultMapping,
                            ProcessContext process,
                            String factoryName) {
-        super(destinationParameter, fileTypeParameter, process);
+        super(process);
         this.defaultMapping = new ArrayList<>(defaultMapping);
-        this.templateFile = process.getParameter(templateFileParameter).orElse(null);
+        this.templateFile = process.getParameter(TEMPLATE_FILE_PARAMETER).orElse(null);
         this.dictionary = dictionary.withCustomFieldLookup(this::customFieldLookup);
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);
