@@ -72,7 +72,20 @@ public class ArchiveExtractor {
      * @see #updateFile(ExtractedFile, VirtualFile, OverrideMode)
      */
     public enum OverrideMode {
-        ON_CHANGE, ALWAYS, NEVER;
+        /**
+         * Overrides files if they changed (different size or newer "last modified")
+         */
+        ON_CHANGE,
+
+        /**
+         * Always overrides files.
+         */
+        ALWAYS,
+
+        /**
+         * Never overrides files.
+         */
+        NEVER;
 
         @Override
         public String toString() {
@@ -86,7 +99,20 @@ public class ArchiveExtractor {
      * @see #updateFile(ExtractedFile, VirtualFile, OverrideMode)
      */
     public enum UpdateResult {
-        CREATED, UPDATED, SKIPPED
+        /**
+         * The file did not exist before and was created.
+         */
+        CREATED,
+
+        /**
+         * An existing file has been overridden.
+         */
+        UPDATED,
+
+        /**
+         * The existing file was not overridden due to the selected {@link OverrideMode}.
+         */
+        SKIPPED
     }
 
     /**
