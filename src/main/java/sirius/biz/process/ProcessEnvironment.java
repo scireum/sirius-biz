@@ -276,12 +276,12 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
-    public <V, P extends Parameter<V, P>> Optional<V> getParameter(Parameter<V, P> parameter) {
+    public <V> Optional<V> getParameter(Parameter<V> parameter) {
         return parameter.get(getContext());
     }
 
     @Override
-    public <V, P extends Parameter<V, P>> V require(Parameter<V, P> parameter) {
+    public <V> V require(Parameter<V> parameter) {
         return parameter.require(getContext());
     }
 

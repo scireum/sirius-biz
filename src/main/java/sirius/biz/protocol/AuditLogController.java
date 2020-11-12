@@ -62,13 +62,13 @@ public class AuditLogController extends BizController {
         ph.withPageSize(100);
         ph.addTimeAggregation(AuditLogEntry.TIMESTAMP,
                               false,
-                              DateRange.lastFiveMinutes(),
-                              DateRange.lastFiveteenMinutes(),
-                              DateRange.lastTwoHours(),
-                              DateRange.today(),
-                              DateRange.yesterday(),
-                              DateRange.thisWeek(),
-                              DateRange.lastWeek());
+                              DateRange.LAST_FIVE_MINUTES,
+                              DateRange.LAST_FIFTEEN_MINUTES,
+                              DateRange.LAST_TWO_HOURS,
+                              DateRange.TODAY,
+                              DateRange.YESTERDAY,
+                              DateRange.THIS_WEEK,
+                              DateRange.LAST_WEEK);
         ph.withSearchFields(QueryField.contains(AuditLogEntry.SEARCH_FIELD));
 
         ctx.respondWith().template("/templates/biz/protocol/audit_logs.html.pasta", ph.asPage());

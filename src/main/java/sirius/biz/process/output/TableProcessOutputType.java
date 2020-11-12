@@ -98,9 +98,9 @@ public class TableProcessOutputType implements ProcessOutputType {
         ph.withContext(ctx);
         ph.addTimeAggregation(ProcessLog.TIMESTAMP,
                               false,
-                              DateRange.lastFiveMinutes(),
-                              DateRange.lastFiveteenMinutes(),
-                              DateRange.lastTwoHours());
+                              DateRange.LAST_FIVE_MINUTES,
+                              DateRange.LAST_FIFTEEN_MINUTES,
+                              DateRange.LAST_TWO_HOURS);
         ph.addTermAggregation(ProcessLog.NODE);
         ph.addTermAggregation(ProcessLog.MESSAGE_TYPE, NLS::smartGet);
         ph.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));

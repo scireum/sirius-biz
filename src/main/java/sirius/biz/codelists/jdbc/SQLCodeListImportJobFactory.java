@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists.jdbc;
 
+import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListImportJob;
@@ -36,8 +37,8 @@ public class SQLCodeListImportJobFactory extends EntityImportJobFactory {
     /**
      * Contains the SQL code list to import the code list entries into.
      */
-    private static final CodeListParameter CODE_LIST_PARAMETER =
-            new CodeListParameter("codeList", "$CodeList").markRequired();
+    private static final Parameter<CodeList> CODE_LIST_PARAMETER =
+            new CodeListParameter("codeList", "$CodeList").markRequired().build();
     private static final LanguageParameter LANGUAGE_PARAMETER = (LanguageParameter) new LanguageParameter(
             LanguageParameter.PARAMETER_NAME,
             "$LocaleData.lang").withDescription("$Translations.import.lang.help");
@@ -67,7 +68,7 @@ public class SQLCodeListImportJobFactory extends EntityImportJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(CODE_LIST_PARAMETER);
         parameterCollector.accept(LANGUAGE_PARAMETER);
         super.collectParameters(parameterCollector);

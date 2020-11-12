@@ -87,3 +87,21 @@
   }
 
 }
+
+.blob-ref-field {
+  .popover {
+    min-width: 300px;
+  }
+
+  .btn-block {
+    margin-top: 5px;
+  }
+
+  .file {
+    text-align: center;
+
+    a {
+      word-wrap: break-word;
+    }
+  }
+}

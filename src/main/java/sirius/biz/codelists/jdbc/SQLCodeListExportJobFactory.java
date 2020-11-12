@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists.jdbc;
 
+import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListExportJob;
@@ -37,7 +38,7 @@ public class SQLCodeListExportJobFactory
         extends EntityExportJobFactory<SQLCodeListEntry, SmartQuery<SQLCodeListEntry>> {
 
     private static final CodeListParameter CODE_LIST_PARAMETER =
-            new CodeListParameter("codeList", "$CodeList").markRequired();
+            new CodeListParameter("codeList", "$CodeList").markRequired().build();
     private static final LanguageParameter LANGUAGE_PARAMETER = (LanguageParameter) new LanguageParameter(
             LanguageParameter.PARAMETER_NAME,
             "$LocaleData.lang").withDescription("$Translations.export.lang.help");
@@ -54,7 +55,7 @@ public class SQLCodeListExportJobFactory
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(CODE_LIST_PARAMETER);
         parameterCollector.accept(LANGUAGE_PARAMETER);
         super.collectParameters(parameterCollector);

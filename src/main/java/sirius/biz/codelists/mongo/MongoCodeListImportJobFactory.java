@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists.mongo;
 
+import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListImportJob;
@@ -33,10 +34,12 @@ import java.util.function.Consumer;
 @Register(framework = MongoCodeLists.FRAMEWORK_CODE_LISTS_MONGO)
 @Permission(CodeListController.PERMISSION_MANAGE_CODELISTS)
 public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
+
     /**
      * Contains the mongo code list to import the code list entries into.
      */
-    private final CodeListParameter CODE_LIST_PARAMETER = new CodeListParameter("codeList", "$CodeList").markRequired();
+    private final Parameter<CodeList> CODE_LIST_PARAMETER =
+            new CodeListParameter("codeList", "$CodeList").markRequired().build();
     private static final LanguageParameter LANGUAGE_PARAMETER = (LanguageParameter) new LanguageParameter(
             LanguageParameter.PARAMETER_NAME,
             "$LocaleData.lang").withDescription("$Translations.import.lang.help");
@@ -66,7 +69,7 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(CODE_LIST_PARAMETER);
         parameterCollector.accept(LANGUAGE_PARAMETER);
         super.collectParameters(parameterCollector);

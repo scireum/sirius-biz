@@ -12,6 +12,7 @@ import sirius.biz.storage.layer2.variants.ConversionEngine;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 
 import javax.annotation.Nullable;
@@ -359,8 +360,12 @@ public class URLBuilder {
     }
 
     private String determineEffectiveFileExtension() {
-        String result = Optional.ofNullable(Files.getFileExtension(determineEffectiveFilename()))
-                                .orElseGet(() -> conversionEngine.determineTargetFileExension(variant));
+        String result = Value.of(variant)
+                             .ignore(VARIANT_RAW)
+                             .asOptionalString()
+                             .map(conversionEngine::determineTargetFileExension)
+                             .orElseGet(() -> Files.getFileExtension(determineEffectiveFilename()));
+
         if (Strings.isFilled(result)) {
             return "." + Strings.urlEncode(result);
         } else {

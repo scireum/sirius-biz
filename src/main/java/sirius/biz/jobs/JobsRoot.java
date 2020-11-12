@@ -27,7 +27,6 @@ import sirius.biz.storage.layer3.TmpRoot;
 import sirius.biz.storage.layer3.VFSRoot;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
-import sirius.biz.tenants.Tenants;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
@@ -124,7 +123,10 @@ public class JobsRoot extends SingularVFSRoot {
     }
 
     private boolean isFileJob(JobFactory factory) {
-        return factory.getParameters().stream().filter(parameter -> parameter instanceof FileParameter).count() == 1;
+        return factory.getParameters()
+                      .stream()
+                      .filter(parameter -> FileParameter.class.isAssignableFrom(parameter.getBuilderType()))
+                      .count() == 1;
     }
 
     private void listPresets(VirtualFile parent, FileSearch fileSearch) {
@@ -153,8 +155,12 @@ public class JobsRoot extends SingularVFSRoot {
             BlobStorageSpace temporaryStorageSpace = blobStorage.getSpace(TmpRoot.TMP_SPACE);
             Blob buffer = temporaryStorageSpace.createTemporaryBlob(UserContext.getCurrentUser().getTenantId());
             return buffer.createOutputStream(() -> {
-                temporaryStorageSpace.markAsUsed(buffer);
-                trigger(preset, buffer, filename);
+                if (buffer.getSize() > 0) {
+                    temporaryStorageSpace.markAsUsed(buffer);
+                    trigger(preset, buffer, filename);
+                } else {
+                    buffer.delete();
+                }
             }, filename);
         } catch (Exception e) {
             throw Exceptions.handle(e);
@@ -179,7 +185,7 @@ public class JobsRoot extends SingularVFSRoot {
                                         NLS.formatSize(buffer.getSize())));
         }
 
-        String parameterName = findFileParemter(preset);
+        String parameterName = findFileParameter(preset);
 
         try {
             preset.getJobConfigData().getJobFactory().startInBackground(param -> {
@@ -202,12 +208,12 @@ public class JobsRoot extends SingularVFSRoot {
         }
     }
 
-    private String findFileParemter(JobPreset preset) {
+    private String findFileParameter(JobPreset preset) {
         return preset.getJobConfigData()
                      .getJobFactory()
                      .getParameters()
                      .stream()
-                     .filter(p -> p instanceof FileParameter)
+                     .filter(p -> FileParameter.class.isAssignableFrom(p.getBuilderType()))
                      .map(Parameter::getName)
                      .findFirst()
                      .orElse(null);
