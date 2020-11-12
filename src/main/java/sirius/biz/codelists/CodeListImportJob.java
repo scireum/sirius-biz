@@ -11,16 +11,11 @@ package sirius.biz.codelists;
 import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.batch.file.EntityImportJob;
-import sirius.biz.jobs.batch.file.ImportMode;
-import sirius.biz.jobs.params.BooleanParameter;
-import sirius.biz.jobs.params.CodeListParameter;
-import sirius.biz.jobs.params.EnumParameter;
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.ProcessLink;
-import sirius.biz.storage.layer3.FileParameter;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Context;
-import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -56,28 +51,20 @@ public class CodeListImportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>>
     /**
      * Creates a new job for the given factory, name and process.
      *
-     * @param fileParameter        the parameter which is used to derive the import file from
-     * @param ignoreEmptyParameter the parameter which is used to determine if empty values should be ignored
-     * @param importModeParameter  the parameter which is used to determine the {@link ImportMode} to use
-     * @param codeListParameter    the parameter which specifies the target CodeList
-     * @param languageParameter    the parameter which specifies the language for which the CodeList should be imported
-     * @param type                 the type of entities being imported
-     * @param dictionary           the import dictionary to use
-     * @param process              the process context itself
-     * @param factoryName          the name of the factory which created this job
+     * @param codeListParameter the parameter which specifies the target CodeList
+     * @param languageParameter the parameter which specifies the language for which the CodeList should be imported
+     * @param type              the type of entities being imported
+     * @param dictionary        the import dictionary to use
+     * @param process           the process context itself
+     * @param factoryName       the name of the factory which created this job
      */
-    @SuppressWarnings("squid:S00107")
-    @Explain("We rather have 9 parameters here and keep the logic properly encapsulated")
-    public CodeListImportJob(FileParameter fileParameter,
-                             BooleanParameter ignoreEmptyParameter,
-                             EnumParameter<ImportMode> importModeParameter,
-                             CodeListParameter codeListParameter,
+    public CodeListImportJob(Parameter<CodeList> codeListParameter,
                              Optional<String> languageParameter,
                              Class<E> type,
                              ImportDictionary dictionary,
                              ProcessContext process,
                              String factoryName) {
-        super(fileParameter, ignoreEmptyParameter, importModeParameter, type, dictionary, process, factoryName);
+        super(type, dictionary, process, factoryName);
         this.codeList = process.require(codeListParameter);
         this.languageParameter = languageParameter;
         languageParameter.ifPresent(lang -> {

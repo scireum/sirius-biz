@@ -18,6 +18,7 @@ import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.jobs.params.CodeListParameter;
 import sirius.biz.jobs.params.LanguageParameter;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.SelectParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.db.jdbc.SmartQuery;
 import sirius.kernel.commons.Explain;
@@ -37,11 +38,11 @@ import java.util.function.Consumer;
 public class SQLCodeListExportJobFactory
         extends EntityExportJobFactory<SQLCodeListEntry, SmartQuery<SQLCodeListEntry>> {
 
-    private static final CodeListParameter CODE_LIST_PARAMETER =
+    private static final Parameter<CodeList> CODE_LIST_PARAMETER =
             new CodeListParameter("codeList", "$CodeList").markRequired().build();
-    private static final LanguageParameter LANGUAGE_PARAMETER = (LanguageParameter) new LanguageParameter(
-            LanguageParameter.PARAMETER_NAME,
-            "$LocaleData.lang").withDescription("$Translations.export.lang.help");
+    private static final Parameter<String> LANGUAGE_PARAMETER =
+            new LanguageParameter(LanguageParameter.PARAMETER_NAME, "$LocaleData.lang").withDescription(
+                    "$Translations.export.lang.help").build();
 
     @Nonnull
     @Override
@@ -58,6 +59,7 @@ public class SQLCodeListExportJobFactory
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(CODE_LIST_PARAMETER);
         parameterCollector.accept(LANGUAGE_PARAMETER);
+        LANGUAGE_PARAMETER.as(SelectParameter.class);
         super.collectParameters(parameterCollector);
     }
 
@@ -91,10 +93,7 @@ public class SQLCodeListExportJobFactory
         ImportContext parameterContext = new ImportContext();
         transferParameters(parameterContext, process);
 
-        return new CodeListExportJob<SQLCodeListEntry, SmartQuery<SQLCodeListEntry>>(templateFileParameter,
-                                                                                     destinationParameter,
-                                                                                     fileTypeParameter,
-                                                                                     getExportType(),
+        return new CodeListExportJob<SQLCodeListEntry, SmartQuery<SQLCodeListEntry>>(getExportType(),
                                                                                      getDictionary(),
                                                                                      getDefaultMapping(),
                                                                                      process,

@@ -39,9 +39,9 @@ public class MongoCodeListExportJobFactory
 
     private static final Parameter<CodeList> CODE_LIST_PARAMETER =
             new CodeListParameter("codeList", "$CodeList").markRequired().build();
-    private static final LanguageParameter LANGUAGE_PARAMETER = (LanguageParameter) new LanguageParameter(
-            LanguageParameter.PARAMETER_NAME,
-            "$LocaleData.lang").withDescription("$Translations.export.lang.help");
+    private static final Parameter<String> LANGUAGE_PARAMETER =
+            new LanguageParameter(LanguageParameter.PARAMETER_NAME, "$LocaleData.lang").withDescription(
+                    "$Translations.export.lang.help").build();
 
     @Nonnull
     @Override
@@ -91,10 +91,7 @@ public class MongoCodeListExportJobFactory
         ImportContext parameterContext = new ImportContext();
         transferParameters(parameterContext, process);
 
-        return new CodeListExportJob<MongoCodeListEntry, MongoQuery<MongoCodeListEntry>>(templateFileParameter,
-                                                                                         destinationParameter,
-                                                                                         fileTypeParameter,
-                                                                                         getExportType(),
+        return new CodeListExportJob<MongoCodeListEntry, MongoQuery<MongoCodeListEntry>>(getExportType(),
                                                                                          getDictionary(),
                                                                                          getDefaultMapping(),
                                                                                          process,

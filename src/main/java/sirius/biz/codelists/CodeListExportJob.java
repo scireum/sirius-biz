@@ -11,16 +11,11 @@ package sirius.biz.codelists;
 import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.batch.file.EntityExportJob;
-import sirius.biz.jobs.batch.file.ExportFileType;
-import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.ProcessLink;
-import sirius.biz.storage.layer3.FileOrDirectoryParameter;
-import sirius.biz.storage.layer3.FileParameter;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.query.Query;
-import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.nls.NLS;
 
@@ -51,37 +46,22 @@ public class CodeListExportJob<E extends BaseEntity<?> & CodeListEntry<?, ?, ?>,
     /**
      * Creates a new job for the given factory, name and process.
      *
-     * @param templateFileParameter the parameter which is used to select the template file to use
-     * @param destinationParameter  the parameter used to select the destination for the file being written
-     * @param fileTypeParameter     the file type to use when writing the line based data
-     * @param type                  the type of entities being imported
-     * @param dictionary            the export dictionary to use
-     * @param defaultMapping        the default mapping (default column order) to use
-     * @param process               the process context itself
-     * @param factoryName           the name of the factory which created this job
-     * @param languageParameter     the parameter which specifies the language for which the CodeList should be exported
-     * @param codeList              the target CodeList
+     * @param type              the type of entities being imported
+     * @param dictionary        the export dictionary to use
+     * @param defaultMapping    the default mapping (default column order) to use
+     * @param process           the process context itself
+     * @param factoryName       the name of the factory which created this job
+     * @param languageParameter the parameter which specifies the language for which the CodeList should be exported
+     * @param codeList          the target CodeList
      */
-    @SuppressWarnings("squid:S00107")
-    @Explain("We rather have 9 parameters here and keep the logic properly encapsulated")
-    public CodeListExportJob(FileParameter templateFileParameter,
-                             FileOrDirectoryParameter destinationParameter,
-                             EnumParameter<ExportFileType> fileTypeParameter,
-                             Class<E> type,
+    public CodeListExportJob(Class<E> type,
                              ImportDictionary dictionary,
                              List<String> defaultMapping,
                              ProcessContext process,
                              String factoryName,
                              Optional<String> languageParameter,
                              CodeList codeList) {
-        super(templateFileParameter,
-              destinationParameter,
-              fileTypeParameter,
-              type,
-              dictionary,
-              defaultMapping,
-              process,
-              factoryName);
+        super(type, dictionary, defaultMapping, process, factoryName);
         this.codeList = codeList;
         this.languageParameter = languageParameter;
         languageParameter.ifPresent(lang -> {

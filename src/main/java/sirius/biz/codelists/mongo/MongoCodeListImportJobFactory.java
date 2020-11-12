@@ -34,22 +34,18 @@ import java.util.function.Consumer;
 @Register(framework = MongoCodeLists.FRAMEWORK_CODE_LISTS_MONGO)
 @Permission(CodeListController.PERMISSION_MANAGE_CODELISTS)
 public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
-
     /**
      * Contains the mongo code list to import the code list entries into.
      */
-    private final Parameter<CodeList> CODE_LIST_PARAMETER =
+    private static final Parameter<CodeList> CODE_LIST_PARAMETER =
             new CodeListParameter("codeList", "$CodeList").markRequired().build();
-    private static final LanguageParameter LANGUAGE_PARAMETER = (LanguageParameter) new LanguageParameter(
-            LanguageParameter.PARAMETER_NAME,
-            "$LocaleData.lang").withDescription("$Translations.import.lang.help");
+    private static final Parameter<String> LANGUAGE_PARAMETER =
+            new LanguageParameter(LanguageParameter.PARAMETER_NAME, "$LocaleData.lang").withDescription(
+                    "$Translations.import.lang.help").build();
 
     @Override
     protected EntityImportJob<MongoCodeListEntry> createJob(ProcessContext process) {
-        return new CodeListImportJob<>(fileParameter,
-                                       ignoreEmptyParameter,
-                                       importModeParameter,
-                                       CODE_LIST_PARAMETER,
+        return new CodeListImportJob<>(CODE_LIST_PARAMETER,
                                        process.getParameter(LANGUAGE_PARAMETER),
                                        MongoCodeListEntry.class,
                                        getDictionary(),

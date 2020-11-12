@@ -39,16 +39,16 @@ public class SQLCodeListImportJobFactory extends EntityImportJobFactory {
      */
     private static final Parameter<CodeList> CODE_LIST_PARAMETER =
             new CodeListParameter("codeList", "$CodeList").markRequired().build();
-    private static final LanguageParameter LANGUAGE_PARAMETER = (LanguageParameter) new LanguageParameter(
-            LanguageParameter.PARAMETER_NAME,
-            "$LocaleData.lang").withDescription("$Translations.import.lang.help");
+    private static final Parameter<String> LANGUAGE_PARAMETER =
+            new LanguageParameter(LanguageParameter.PARAMETER_NAME, "$LocaleData.lang").withDescription(
+                    "$Translations.import.lang.help").build();
 
     @Override
     protected EntityImportJob<SQLCodeListEntry> createJob(ProcessContext process) {
         ImportContext parameterContext = new ImportContext();
         transferParameters(parameterContext, process);
 
-        return new CodeListImportJob<>(fileParameter, ignoreEmptyParameter, importModeParameter, CODE_LIST_PARAMETER,
+        return new CodeListImportJob<>(CODE_LIST_PARAMETER,
                                        process.getParameter(LANGUAGE_PARAMETER),
                                        SQLCodeListEntry.class,
                                        getDictionary(),
