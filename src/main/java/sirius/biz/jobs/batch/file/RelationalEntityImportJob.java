@@ -121,12 +121,14 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     }
 
     @Override
-    protected void executeForStream(String filename, InputStream in) throws Exception {
+    protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
         importTransactionHelper.start();
-        LineBasedProcessor.create(filename, in).run(this, error -> {
-            process.handle(error);
-            return true;
-        });
+        try (InputStream in = inputSupplier.create()) {
+            LineBasedProcessor.create(filename, in).run(this, error -> {
+                process.handle(error);
+                return true;
+            });
+        }
         commitImportTransaction();
     }
 
