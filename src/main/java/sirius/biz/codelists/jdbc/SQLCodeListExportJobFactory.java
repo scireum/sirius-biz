@@ -18,7 +18,6 @@ import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.jobs.params.CodeListParameter;
 import sirius.biz.jobs.params.LanguageParameter;
 import sirius.biz.jobs.params.Parameter;
-import sirius.biz.jobs.params.SelectParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.db.jdbc.SmartQuery;
 import sirius.kernel.commons.Explain;
@@ -59,7 +58,6 @@ public class SQLCodeListExportJobFactory
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(CODE_LIST_PARAMETER);
         parameterCollector.accept(LANGUAGE_PARAMETER);
-        LANGUAGE_PARAMETER.as(SelectParameter.class);
         super.collectParameters(parameterCollector);
     }
 
