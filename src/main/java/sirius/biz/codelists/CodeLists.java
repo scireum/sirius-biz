@@ -454,7 +454,7 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
     public String getTranslatedValue(@Nonnull String codeListName, @Nullable String code, String langCode) {
         String value = getValue(codeListName, code, langCode);
         if (value != null && value.startsWith("$")) {
-            return Value.of(value).translate().getString();
+            return Value.of(value).translate(langCode).getString();
         } else {
             return value;
         }

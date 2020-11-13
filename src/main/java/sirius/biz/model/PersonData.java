@@ -183,7 +183,7 @@ public class PersonData extends Composite {
                         .set("salutation",
                              (langCode == null ?
                               getTranslatedSalutation() :
-                              getUserSpecificTranslatedSalutation(langCode)))
+                              getTranslatedSalutation(langCode)))
                         .set("title", title)
                         .set("firstname", firstname)
                         .set("lastname", lastname)
@@ -231,7 +231,7 @@ public class PersonData extends Composite {
      * @param langCode the language code to translate to
      * @return the value for <tt>salutation</tt> from the <tt>salutations</tt> code list
      */
-    public String getUserSpecificTranslatedSalutation(String langCode) {
+    public String getTranslatedSalutation(String langCode) {
         return codeLists.getTranslatedValue(CODE_LIST_SALUTATIONS, salutation, langCode);
     }
 
