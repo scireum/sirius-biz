@@ -46,7 +46,11 @@ public class Parameter<V> extends Composable {
 
     protected Parameter(ParameterBuilder<V, ?> delegate) {
         this.delegate = delegate;
-        attach(delegate);
+        Class<?> delegateClass = delegate.getClass();
+        while (delegateClass != null && delegateClass != ParameterBuilder.class) {
+            attach(delegateClass, delegate);
+            delegateClass = delegateClass.getSuperclass();
+        }
     }
 
     /**
