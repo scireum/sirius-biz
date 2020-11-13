@@ -428,7 +428,7 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
     }
 
     /**
-     * Returns the value translated from the given code list associated with the given code.
+     * Returns the value translated from the given code list associated with the given code for the current language.
      * <p>
      * If no matching entry exists, the code itself will be returned.
      *
@@ -438,9 +438,23 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
      */
     @Nullable
     public String getTranslatedValue(@Nonnull String codeListName, @Nullable String code) {
-        String value = getValue(codeListName, code, NLS.getCurrentLang());
+        return getTranslatedValue(codeListName, code, NLS.getCurrentLang());
+    }
+
+    /**
+     * Returns the value translated from the given code list associated with the given code and language code.
+     * <p>
+     * If no matching entry exists, the code itself will be returned.
+     *
+     * @param codeListName the code list to search in
+     * @param code         the code to lookup
+     * @param langCode     the language code to translate into
+     * @return the translated value associated with the code or the code itself if no value exists
+     */
+    public String getTranslatedValue(@Nonnull String codeListName, @Nullable String code, String langCode) {
+        String value = getValue(codeListName, code, langCode);
         if (value != null && value.startsWith("$")) {
-            return Value.of(value).translate().getString();
+            return Value.of(value).translate(langCode).getString();
         } else {
             return value;
         }
