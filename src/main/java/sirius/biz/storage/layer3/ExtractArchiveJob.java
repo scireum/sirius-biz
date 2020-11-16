@@ -76,7 +76,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                         "$ExtractArchiveJob.deleteArchiveParameter.help").withDefaultTrue().build();
     }
 
-    private Parameter<VirtualFile> getSourceParameter() {
+    private Parameter<VirtualFile> fetchOrCreateSourceParameter() {
         if (sourceParameter == null) {
             sourceParameter = new FileParameter("source", "$ExtractArchiveJob.sourceParameter").withAcceptedExtensionsList(new ArrayList<>(
                     extractor.getSupportedFileExtensions()))
@@ -91,7 +91,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
 
     @Override
     protected void execute(ProcessContext process) throws Exception {
-        VirtualFile sourceFile = process.require(getSourceParameter());
+        VirtualFile sourceFile = process.require(fetchOrCreateSourceParameter());
         VirtualFile targetDirectory = process.require(destinationParameter);
         ArchiveExtractor.OverrideMode overrideMode = process.require(overwriteExistingFilesParameter);
 
@@ -165,7 +165,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     protected void computePresetFor(@Nonnull QueryString queryString,
                                     @Nullable Object targetObject,
                                     Map<String, Object> preset) {
-        preset.put(getSourceParameter().getName(), ((VirtualFile) targetObject).path());
+        preset.put(fetchOrCreateSourceParameter().getName(), ((VirtualFile) targetObject).path());
     }
 
     @Override
@@ -176,7 +176,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
 
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
-        parameterCollector.accept(getSourceParameter());
+        parameterCollector.accept(fetchOrCreateSourceParameter());
         parameterCollector.accept(destinationParameter);
         parameterCollector.accept(overwriteExistingFilesParameter);
         parameterCollector.accept(deleteArchiveParameter);
@@ -189,7 +189,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
 
     @Override
     protected String createProcessTitle(Map<String, String> context) {
-        return Strings.apply("%s (%s)", getLabel(), getSourceParameter().require(context).name());
+        return Strings.apply("%s (%s)", getLabel(), fetchOrCreateSourceParameter().require(context).name());
     }
 
     @Override
