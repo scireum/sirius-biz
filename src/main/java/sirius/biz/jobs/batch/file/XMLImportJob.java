@@ -8,7 +8,6 @@
 
 package sirius.biz.jobs.batch.file;
 
-import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
@@ -31,9 +30,9 @@ import java.io.InputStream;
  */
 public abstract class XMLImportJob extends FileImportJob {
 
-    public static final Parameter<String> XSD_SCHEMA_PARAMETER =
+    protected static final SelectStringParameter XSD_SCHEMA_PARAMETER_BUILDER =
             new SelectStringParameter("xsdSchema", "$XMLImportJobFactory.xsdSchema").withDescription(
-                    "$XMLImportJobFactory.xsdSchema.help").build();
+                    "$XMLImportJobFactory.xsdSchema.help");
 
     @Part
     private static Resources resources;
@@ -47,7 +46,7 @@ public abstract class XMLImportJob extends FileImportJob {
      */
     protected XMLImportJob(ProcessContext process) {
         super(process);
-        validationXsdPath = process.getParameter(XSD_SCHEMA_PARAMETER).orElse(null);
+        validationXsdPath = process.get(XSD_SCHEMA_PARAMETER_BUILDER.getName()).asString();
     }
 
     @Override

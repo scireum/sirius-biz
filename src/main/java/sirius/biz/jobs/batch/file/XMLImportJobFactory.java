@@ -29,9 +29,7 @@ public abstract class XMLImportJobFactory extends FileImportJobFactory {
         Map<String, String> paths = new LinkedHashMap<>();
         collectXsdResourcePaths(paths::put);
         if (!paths.isEmpty()) {
-            SelectStringParameter schemaParameter =
-                    new SelectStringParameter("xsdSchema", "$XMLImportJobFactory.xsdSchema").withDescription(
-                            "$XMLImportJobFactory.xsdSchema.help");
+            SelectStringParameter schemaParameter = XMLImportJob.XSD_SCHEMA_PARAMETER_BUILDER;
             paths.forEach(schemaParameter::withEntry);
             parameterCollector.accept(schemaParameter.build());
         }
