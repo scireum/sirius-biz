@@ -30,9 +30,7 @@ import java.io.InputStream;
  */
 public abstract class XMLImportJob extends FileImportJob {
 
-    protected static final SelectStringParameter XSD_SCHEMA_PARAMETER_BUILDER =
-            new SelectStringParameter("xsdSchema", "$XMLImportJobFactory.xsdSchema").withDescription(
-                    "$XMLImportJobFactory.xsdSchema.help");
+    protected static final String XSD_SCHEMA_PARAMETER_NAME = "xsdSchema";
 
     @Part
     private static Resources resources;
@@ -46,7 +44,12 @@ public abstract class XMLImportJob extends FileImportJob {
      */
     protected XMLImportJob(ProcessContext process) {
         super(process);
-        validationXsdPath = process.get(XSD_SCHEMA_PARAMETER_BUILDER.getName()).asString();
+        validationXsdPath = process.get(XSD_SCHEMA_PARAMETER_NAME).asString();
+    }
+
+    protected static SelectStringParameter createSchemaParameter() {
+        return new SelectStringParameter(XSD_SCHEMA_PARAMETER_NAME, "$XMLImportJobFactory.xsdSchema").withDescription(
+                "$XMLImportJobFactory.xsdSchema.help");
     }
 
     @Override

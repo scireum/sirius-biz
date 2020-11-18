@@ -42,7 +42,7 @@ public abstract class XMLExportJob extends ArchiveExportJob {
      */
     protected XMLExportJob(@Nonnull XMLExportJobFactory factory, ProcessContext process) {
         super(process);
-        requireValidFile = process.get(factory.requireValidFileBuilder.getName()).asBoolean();
+        requireValidFile = process.get(XMLExportJobFactory.VALID_FILE_PARAMETER_NAME).asBoolean();
         xsdResourcePath = factory.getXsdResourcePath();
     }
 

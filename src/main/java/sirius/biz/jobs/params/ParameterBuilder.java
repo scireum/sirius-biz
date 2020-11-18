@@ -261,7 +261,7 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      *
      * @return the name of the parameter
      */
-    public String getName() {
+    protected String getName() {
         return name;
     }
 
