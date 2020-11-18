@@ -11,6 +11,8 @@ package sirius.biz.jobs.batch.file;
 import sirius.biz.jobs.batch.ImportBatchProcessFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.storage.layer3.VirtualFile;
+import sirius.biz.util.ArchiveExtractor;
+import sirius.kernel.di.std.Part;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +23,9 @@ import java.util.function.Consumer;
  * Provides a base implementation for batch jobs which import files.
  */
 public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
+
+    @Part
+    private ArchiveExtractor archiveExtractor;
 
     @Override
     protected String createProcessTitle(Map<String, String> context) {
@@ -46,6 +51,7 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
     protected Parameter<VirtualFile> createFileParameter() {
         List<String> fileExtensions = new ArrayList<>();
         collectAcceptedFileExtensions(fileExtensions::add);
+        fileExtensions.addAll(archiveExtractor.getSupportedFileExtensions());
 
         return FileImportJob.createFileParameter(fileExtensions);
     }
