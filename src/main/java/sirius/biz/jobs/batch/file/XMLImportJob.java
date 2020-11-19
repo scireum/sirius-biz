@@ -45,9 +45,9 @@ public abstract class XMLImportJob extends FileImportJob {
     private final String validationXsdPath;
 
     /**
-     * Creates a new job for the given factory and process.
+     * Creates a new job for the given process context.
      *
-     * @param process the process context itself
+     * @param process the context in which the process will be executed
      */
     protected XMLImportJob(ProcessContext process) {
         super(process);
