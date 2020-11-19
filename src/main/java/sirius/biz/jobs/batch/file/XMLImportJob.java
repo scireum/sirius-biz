@@ -51,7 +51,7 @@ public abstract class XMLImportJob extends FileImportJob {
      */
     protected XMLImportJob(ProcessContext process) {
         super(process);
-        validationXsdPath = process.require(XSD_SCHEMA_PARAMETER);
+        validationXsdPath = process.getParameter(XSD_SCHEMA_PARAMETER).orElse(null);
     }
 
     protected static Parameter<String> createSchemaParameter(Map<String, String> paths) {
