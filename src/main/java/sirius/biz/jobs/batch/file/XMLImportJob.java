@@ -67,9 +67,9 @@ public abstract class XMLImportJob extends FileImportJob {
     @Override
     protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
         if (isValid(inputSupplier)) {
-            for (Consumer<BiConsumer<String, NodeHandler>> handlerConsumer : fetchHandlersList()) {
+            for (Consumer<BiConsumer<String, NodeHandler>> handlerConsumer : fetchStages()) {
                 try (InputStream inputStream = inputSupplier.create()) {
-                    executeForValidStream(inputStream, handlerConsumer);
+                    executeProcessingStage(inputStream, handlerConsumer);
                 }
             }
         } else {
@@ -110,22 +110,22 @@ public abstract class XMLImportJob extends FileImportJob {
                                                      .handle());
     }
 
-    protected void executeForValidStream(InputStream in, Consumer<BiConsumer<String, NodeHandler>> handlerConsumer)
+    protected void executeProcessingStage(InputStream in, Consumer<BiConsumer<String, NodeHandler>> stage)
             throws Exception {
         XMLReader reader = new XMLReader();
-        handlerConsumer.accept(reader::addHandler);
+        stage.accept(reader::addHandler);
         reader.parse(in, this::resolveResource);
     }
 
     /**
-     * Provides a list of handlers to use when parsing the xml file.
+     * Provides a list of stages (or passes) to be performed over an xml file.
      * <p>
-     * The xml file will be streamed from beginning for each entry provided. Override this method if
-     * and add more handlers if the xml cannot be processed in a single pass due to the physical order of elements.
+     * The xml file will be streamed from beginning for each entry provided. The contents of the list
+     * defines a consumer responsible to feed the required handlers for each pass.
      *
      * @return list of handler consumers. Defaults to {@link #registerHandlers(BiConsumer)}
      */
-    protected List<Consumer<BiConsumer<String, NodeHandler>>> fetchHandlersList() {
+    protected List<Consumer<BiConsumer<String, NodeHandler>>> fetchStages() {
         return Collections.singletonList(this::registerHandlers);
     }
 
