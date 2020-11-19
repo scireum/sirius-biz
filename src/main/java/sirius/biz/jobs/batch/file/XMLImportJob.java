@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.batch.file;
 
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
@@ -27,6 +28,7 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -35,7 +37,7 @@ import java.util.function.Consumer;
  */
 public abstract class XMLImportJob extends FileImportJob {
 
-    protected static final String XSD_SCHEMA_PARAMETER_NAME = "xsdSchema";
+    protected static final Parameter<String> XSD_SCHEMA_PARAMETER = createSchemaParameter(null);
 
     @Part
     private static Resources resources;
@@ -49,12 +51,17 @@ public abstract class XMLImportJob extends FileImportJob {
      */
     protected XMLImportJob(ProcessContext process) {
         super(process);
-        validationXsdPath = process.get(XSD_SCHEMA_PARAMETER_NAME).asString();
+        validationXsdPath = process.require(XSD_SCHEMA_PARAMETER);
     }
 
-    protected static SelectStringParameter createSchemaParameter() {
-        return new SelectStringParameter(XSD_SCHEMA_PARAMETER_NAME, "$XMLImportJobFactory.xsdSchema").withDescription(
-                "$XMLImportJobFactory.xsdSchema.help");
+    protected static Parameter<String> createSchemaParameter(Map<String, String> paths) {
+        SelectStringParameter parameter =
+                new SelectStringParameter("xsdSchema", "$XMLImportJobFactory.xsdSchema").withDescription(
+                        "$XMLImportJobFactory.xsdSchema.help");
+        if (paths != null) {
+            paths.forEach(parameter::withEntry);
+        }
+        return parameter.build();
     }
 
     @Override

@@ -12,6 +12,7 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.process.ProcessContext;
 
+import javax.xml.stream.XMLInputFactory;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -29,9 +30,7 @@ public abstract class XMLImportJobFactory extends FileImportJobFactory {
         Map<String, String> paths = new LinkedHashMap<>();
         collectXsdResourcePaths(paths::put);
         if (!paths.isEmpty()) {
-            SelectStringParameter schemaParameter = XMLImportJob.createSchemaParameter();
-            paths.forEach(schemaParameter::withEntry);
-            parameterCollector.accept(schemaParameter.build());
+            parameterCollector.accept(XMLImportJob.createSchemaParameter(paths));
         }
     }
 
