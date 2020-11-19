@@ -25,7 +25,10 @@ import javax.annotation.Nullable;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Provides a base class for jobs which import XML files via a {@link XMLImportJobFactory}.
@@ -38,7 +41,6 @@ public abstract class XMLImportJob extends FileImportJob {
     private static Resources resources;
 
     private final String validationXsdPath;
-    private int passes = 1;
 
     /**
      * Creates a new job for the given factory and process.
@@ -50,19 +52,6 @@ public abstract class XMLImportJob extends FileImportJob {
         validationXsdPath = process.get(XSD_SCHEMA_PARAMETER_NAME).asString();
     }
 
-    /**
-     * Sets how many passes should be executed over the input xml file.
-     * <p>
-     * This is useful in some xml structures which needs different handles for each pass
-     *
-     * @param passes the amount of passes to perform. Default = 1
-     * @return the job itself for fluent calls
-     */
-    public XMLImportJob withPasses(int passes) {
-        this.passes = passes;
-        return this;
-    }
-
     protected static SelectStringParameter createSchemaParameter() {
         return new SelectStringParameter(XSD_SCHEMA_PARAMETER_NAME, "$XMLImportJobFactory.xsdSchema").withDescription(
                 "$XMLImportJobFactory.xsdSchema.help");
@@ -71,9 +60,9 @@ public abstract class XMLImportJob extends FileImportJob {
     @Override
     protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
         if (isValid(inputSupplier)) {
-            for (int currentPass = 1; currentPass <= passes; currentPass++) {
+            for (Consumer<BiConsumer<String, NodeHandler>> handlerConsumer : fetchHandlersList()) {
                 try (InputStream inputStream = inputSupplier.create()) {
-                    executeForValidStream(inputStream, currentPass);
+                    executeForValidStream(inputStream, handlerConsumer);
                 }
             }
         } else {
@@ -114,10 +103,23 @@ public abstract class XMLImportJob extends FileImportJob {
                                                      .handle());
     }
 
-    protected void executeForValidStream(InputStream in, int currentPass) throws Exception {
+    protected void executeForValidStream(InputStream in, Consumer<BiConsumer<String, NodeHandler>> handlerConsumer)
+            throws Exception {
         XMLReader reader = new XMLReader();
-        registerHandlers(currentPass, reader::addHandler);
+        handlerConsumer.accept(reader::addHandler);
         reader.parse(in, this::resolveResource);
+    }
+
+    /**
+     * Provides a list of handlers to use when parsing the xml file.
+     * <p>
+     * The xml file will be streamed from beginning for each entry provided. Override this method if
+     * and add more handlers if the xml cannot be processed in a single pass due to the physical order of elements.
+     *
+     * @return list of handler consumers. Defaults to {@link #registerHandlers(BiConsumer)}
+     */
+    protected List<Consumer<BiConsumer<String, NodeHandler>>> fetchHandlersList() {
+        return Collections.singletonList(this::registerHandlers);
     }
 
     @Override
@@ -128,10 +130,9 @@ public abstract class XMLImportJob extends FileImportJob {
     /**
      * Registers handlers which are invoked for each appropriate node or sub tree parsed by the reader.
      *
-     * @param pass    the current pass being made over the xml file
      * @param handler the handler to register
      */
-    protected abstract void registerHandlers(int pass, BiConsumer<String, NodeHandler> handler);
+    protected abstract void registerHandlers(BiConsumer<String, NodeHandler> handler);
 
     /**
      * Responsible for resolving resources (DTD, schema) referenced in the XML file.
