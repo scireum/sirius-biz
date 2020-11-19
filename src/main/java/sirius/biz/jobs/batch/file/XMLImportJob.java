@@ -16,6 +16,7 @@ import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.xml.NodeHandler;
 import sirius.kernel.xml.XMLReader;
 import sirius.web.resources.Resource;
 import sirius.web.resources.Resources;
@@ -25,15 +26,18 @@ import javax.annotation.Nullable;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Provides a base class for jobs which import XML files via a {@link XMLImportJobFactory}.
  */
 public abstract class XMLImportJob extends FileImportJob {
 
-    public static final Parameter<String> XSD_SCHEMA_PARAMETER =
-            new SelectStringParameter("xsdSchema", "$XMLImportJobFactory.xsdSchema").withDescription(
-                    "$XMLImportJobFactory.xsdSchema.help").build();
+    protected static final Parameter<String> XSD_SCHEMA_PARAMETER = createSchemaParameter(null);
 
     @Part
     private static Resources resources;
@@ -41,20 +45,32 @@ public abstract class XMLImportJob extends FileImportJob {
     private final String validationXsdPath;
 
     /**
-     * Creates a new job for the given factory and process.
+     * Creates a new job for the given process context.
      *
-     * @param process the process context itself
+     * @param process the context in which the process will be executed
      */
     protected XMLImportJob(ProcessContext process) {
         super(process);
         validationXsdPath = process.getParameter(XSD_SCHEMA_PARAMETER).orElse(null);
     }
 
+    protected static Parameter<String> createSchemaParameter(Map<String, String> paths) {
+        SelectStringParameter parameter =
+                new SelectStringParameter("xsdSchema", "$XMLImportJobFactory.xsdSchema").withDescription(
+                        "$XMLImportJobFactory.xsdSchema.help");
+        if (paths != null) {
+            paths.forEach(parameter::withEntry);
+        }
+        return parameter.build();
+    }
+
     @Override
     protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
         if (isValid(inputSupplier)) {
-            try (InputStream inputStream = inputSupplier.create()) {
-                executeForValidStream(inputStream);
+            for (Consumer<BiConsumer<String, NodeHandler>> handlerConsumer : fetchStages()) {
+                try (InputStream inputStream = inputSupplier.create()) {
+                    executeProcessingStage(inputStream, handlerConsumer);
+                }
             }
         } else {
             process.log(ProcessLog.error()
@@ -94,10 +110,23 @@ public abstract class XMLImportJob extends FileImportJob {
                                                      .handle());
     }
 
-    protected void executeForValidStream(InputStream in) throws Exception {
+    protected void executeProcessingStage(InputStream in, Consumer<BiConsumer<String, NodeHandler>> stage)
+            throws Exception {
         XMLReader reader = new XMLReader();
-        registerHandlers(reader);
+        stage.accept(reader::addHandler);
         reader.parse(in, this::resolveResource);
+    }
+
+    /**
+     * Provides a list of stages (or passes) to be performed over an xml file.
+     * <p>
+     * The xml file will be streamed from beginning for each entry provided. The contents of the list
+     * defines a consumer responsible to feed the required handlers for each pass.
+     *
+     * @return list of handler consumers. Defaults to {@link #registerHandlers(BiConsumer)}
+     */
+    protected List<Consumer<BiConsumer<String, NodeHandler>>> fetchStages() {
+        return Collections.singletonList(this::registerHandlers);
     }
 
     @Override
@@ -108,9 +137,9 @@ public abstract class XMLImportJob extends FileImportJob {
     /**
      * Registers handlers which are invoked for each appropriate node or sub tree parsed by the reader.
      *
-     * @param reader the reader to enhance with handlers
+     * @param handler the handler to register
      */
-    protected abstract void registerHandlers(XMLReader reader);
+    protected abstract void registerHandlers(BiConsumer<String, NodeHandler> handler);
 
     /**
      * Responsible for resolving resources (DTD, schema) referenced in the XML file.
