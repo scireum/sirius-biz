@@ -614,10 +614,18 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
-    protected MongoVariant findVariant(MongoBlob blob, String variantName) {
+    protected MongoVariant findCompletedVariant(MongoBlob blob, String variantName) {
         return mango.select(MongoVariant.class)
                     .eq(MongoVariant.BLOB, blob)
                     .ne(MongoVariant.PHYSICAL_OBJECT_KEY, null)
+                    .eq(MongoVariant.VARIANT_NAME, variantName)
+                    .queryFirst();
+    }
+
+    @Override
+    protected MongoVariant findAnyVariant(MongoBlob blob, String variantName) {
+        return mango.select(MongoVariant.class)
+                    .eq(MongoVariant.BLOB, blob)
                     .eq(MongoVariant.VARIANT_NAME, variantName)
                     .queryFirst();
     }
