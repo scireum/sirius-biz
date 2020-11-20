@@ -310,7 +310,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Override
     public Optional<BlobVariant> findVariant(String name) {
-        return Optional.ofNullable(getStorageSpace().findVariant(this, name));
+        return Optional.ofNullable(getStorageSpace().findCompletedVariant(this, name));
     }
 
     @Override
