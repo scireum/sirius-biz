@@ -11,7 +11,6 @@ package sirius.biz.storage.layer2.jdbc;
 import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.Directory;
-import sirius.biz.storage.layer2.mongo.MongoBlob;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
@@ -685,10 +684,18 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
-    protected SQLVariant findVariant(SQLBlob blob, String variantName) {
+    protected SQLVariant findCompletedVariant(SQLBlob blob, String variantName) {
         return oma.select(SQLVariant.class)
                   .eq(SQLVariant.SOURCE_BLOB, blob)
                   .ne(SQLVariant.PHYSICAL_OBJECT_KEY, null)
+                  .eq(SQLVariant.VARIANT_NAME, variantName)
+                  .queryFirst();
+    }
+
+    @Override
+    protected SQLVariant findAnyVariant(SQLBlob blob, String variantName) {
+        return oma.select(SQLVariant.class)
+                  .eq(SQLVariant.SOURCE_BLOB, blob)
                   .eq(SQLVariant.VARIANT_NAME, variantName)
                   .queryFirst();
     }
