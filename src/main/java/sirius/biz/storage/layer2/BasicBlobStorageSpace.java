@@ -1207,7 +1207,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     @Nullable
     private V attemptToFindOrCreateVariant(B blob, String variantName, boolean nonblocking, int retries)
             throws Exception {
-        V variant = findVariant(blob, variantName);
+        V variant = findAnyVariant(blob, variantName);
         if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
             // We hit the nail on the head - we found a variant which has successfully been converted already.
             // -> use it
@@ -1248,8 +1248,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 invokeConversionPipelineAsync(blob, variant);
             }
 
-            // ...and no we wait on either our or another conversion task to finish so that we can use
-            // the result
+            // ...and now we wait on either our or another conversion task to finish so that we can use the result
             return retryToFindOrCreateVariant(blob, variantName, retries);
         }
 
@@ -1276,14 +1275,26 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
-     * Tries to find the requeted variant in the database.
+     * Tries to find the requested and converted variant in the database.
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
      * @return the variant or <tt>null</tt> if no matching variant exists
      */
     @Nullable
-    protected abstract V findVariant(B blob, String variantName);
+    protected abstract V findCompletedVariant(B blob, String variantName);
+
+    /**
+     * Tries to find the requested variant in the database.
+     * <p>
+     * Note: This will also return variants where the conversion is not completed yet.
+     *
+     * @param blob        the blob for which the variant is to be resolved
+     * @param variantName the variant of the blob to find
+     * @return the variant or <tt>null</tt> if no matching variant exists
+     */
+    @Nullable
+    protected abstract V findAnyVariant(B blob, String variantName);
 
     /**
      * Marks the variant as queued for conversion.

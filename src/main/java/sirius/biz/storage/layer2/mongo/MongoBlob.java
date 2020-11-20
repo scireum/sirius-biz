@@ -313,7 +313,7 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     @Override
     public Optional<BlobVariant> findVariant(String name) {
-        return Optional.ofNullable(getStorageSpace().findVariant(this, name));
+        return Optional.ofNullable(getStorageSpace().findCompletedVariant(this, name));
     }
 
     @Override
