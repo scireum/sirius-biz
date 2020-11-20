@@ -20,6 +20,7 @@ import sirius.kernel.commons.Callback;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Processor;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
@@ -227,7 +228,7 @@ public class ArchiveExtractor {
 
     private boolean ignoreHiddenFiles(String path) {
         String filename = Files.getFilenameAndExtension(path);
-        return !filename.startsWith(".") && !filename.startsWith("__MACOSX");
+        return Strings.isFilled(filename) && !filename.startsWith(".") && !filename.startsWith("__MACOSX");
     }
 
     private void extractZip(File archiveFile,
@@ -254,7 +255,7 @@ public class ArchiveExtractor {
             ZipEntry entry = entries.nextElement();
             numberOfFiles++;
 
-            if (filter.test(entry.getName())) {
+            if (!entry.isDirectory() && filter.test(entry.getName())) {
                 Amount progress = Amount.of(numberOfFiles).divideBy(Amount.of(zipFile.size()));
                 boolean shouldContinue = extractedFileConsumer.apply(new ExtractedZipFile(entry,
                                                                                           zipFile.getInputStream(entry),
