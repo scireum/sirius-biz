@@ -1066,11 +1066,24 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     public void deliver(String blobKey, String variant, Response response) {
         touch(blobKey);
 
-        String physicalKey = resolvePhysicalKey(blobKey, variant, true);
-        if (physicalKey != null) {
-            getPhysicalSpace().deliver(response, physicalKey);
-        } else {
-            deliverAsync(blobKey, variant, response);
+        try {
+            String physicalKey = resolvePhysicalKey(blobKey, variant, true);
+            if (physicalKey != null) {
+                getPhysicalSpace().deliver(response, physicalKey);
+            } else {
+                deliverAsync(blobKey, variant, response);
+            }
+        } catch (IllegalArgumentException e) {
+            response.notCached().error(HttpResponseStatus.BAD_REQUEST, e.getMessage());
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .error(e)
+                      .to(StorageUtils.LOG)
+                      .withSystemErrorMessage("Layer2: Failed to perform conversion of %s for %s: %s (%s)",
+                                              blobKey,
+                                              variant)
+                      .handle();
+            response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -1148,7 +1161,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         if (!conversionEngine.isKnownVariant(variantName)) {
-            return null;
+            throw new IllegalArgumentException(Strings.apply("Unknown variant type: %s", variantName));
         }
 
         V variant = findOrCreateVariant(blob, variantName, nonblocking);
@@ -1212,6 +1225,19 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             // We hit the nail on the head - we found a variant which has successfully been converted already.
             // -> use it
             return variant;
+        if (variant != null) {
+            if (Strings.isFilled(variant.getPhysicalObjectKey())) {
+                // We hit the nail on the head - we found a variant which has successfully been converted already.
+                // -> use it
+                return variant;
+            }
+            if (!variant.isQueuedForConversion() && retryLimitReached(variant)) {
+                // The conversion has failed - signal that the to client. We use a handled exception here, as the problem
+                // has already been logged...
+                throw Exceptions.createHandled()
+                                .withSystemErrorMessage("Failed to create the requested variant from the given image.")
+                                .handle();
+            }
         }
 
         if (nonblocking) {
@@ -1232,7 +1258,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 return retryToFindOrCreateVariant(blob, variantName, retries);
             } else {
                 // No variant is present and no conversion is possible -> give up
-                return null;
+                throw Exceptions.handle()
+                                .to(StorageUtils.LOG)
+                                .withSystemErrorMessage(
+                                        "Layer 2: Failed to create a conversion for %s to %s: Conversion is disabled on this node!",
+                                        blob.getBlobKey(),
+                                        variantName)
+                                .handle();
             }
         }
 
@@ -1320,17 +1352,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 markConversionSuccess(variant, physicalKey, automaticHandle.getFile().length());
             }
         }).onFailure(e -> {
-            Exceptions.handle()
-                      .error(e)
-                      .to(StorageUtils.LOG)
-                      .withSystemErrorMessage("Layer 2/Conversion: Failed to create %s (%s) of %s (%s): %s (%s)",
-                                              variant.getVariantName(),
-                                              variant.getIdAsString(),
-                                              blob.getBlobKey(),
-                                              blob.getFilename())
-                      .handle();
-
             markConversionFailure(variant);
+
+            throw Exceptions.handle()
+                            .error(e)
+                            .to(StorageUtils.LOG)
+                            .withSystemErrorMessage("Layer 2/Conversion: Failed to create %s (%s) of %s (%s): %s (%s)",
+                                                    variant.getVariantName(),
+                                                    variant.getIdAsString(),
+                                                    blob.getBlobKey(),
+                                                    blob.getFilename())
+                            .handle();
         });
     }
 
