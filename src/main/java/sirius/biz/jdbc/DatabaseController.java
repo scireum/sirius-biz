@@ -125,7 +125,7 @@ public class DatabaseController extends BasicController {
         } catch (SQLException exception) {
             // In case of an invalid query, we do not want to log this into the syslog but
             // rather just directly output the message to the user....
-            throw Exceptions.createHandled().error(exception).withSystemErrorMessage("%s").handle();
+            throw Exceptions.createHandled().error(exception).withDirectMessage(exception.getMessage()).handle();
         }
     }
 
