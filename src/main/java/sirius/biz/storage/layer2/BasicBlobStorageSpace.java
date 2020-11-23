@@ -21,6 +21,7 @@ import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Callback;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Processor;
 import sirius.kernel.commons.Producer;
@@ -64,6 +65,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Specifies the total number of attempts for the optimistic locking strategies used by this class.
      */
     private static final int NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS = 5;
+
+    /**
+     * Specifies the total number of attempts to wait for a conversion result.
+     */
+    private static final int NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION = 3;
+
+    /**
+     * Specifies the number of milliseconds to wait for a conversion (note that we do this up to
+     * NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION times).
+     */
+    private static final int TIMEOUT_FOR_WAITING_FOR_CONVERSION_RESULT_MILLIS = 500;
 
     /**
      * Specifies the interval (in minutes) after which a conversion is retried for a given blob variant.
@@ -273,7 +285,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                     return result;
                 }
 
-                Wait.randomMillis(50, 250);
+                Wait.randomMillis(0, 250);
             }
 
             throw errorHandler.apply(new IllegalStateException(Strings.apply(
@@ -1066,11 +1078,24 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     public void deliver(String blobKey, String variant, Response response) {
         touch(blobKey);
 
-        String physicalKey = resolvePhysicalKey(blobKey, variant, true);
-        if (physicalKey != null) {
-            getPhysicalSpace().deliver(response, physicalKey);
-        } else {
-            deliverAsync(blobKey, variant, response);
+        try {
+            String physicalKey = resolvePhysicalKey(blobKey, variant, true);
+            if (physicalKey != null) {
+                getPhysicalSpace().deliver(response, physicalKey);
+            } else {
+                deliverAsync(blobKey, variant, response);
+            }
+        } catch (IllegalArgumentException e) {
+            response.notCached().error(HttpResponseStatus.BAD_REQUEST, e.getMessage());
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .error(e)
+                      .to(StorageUtils.LOG)
+                      .withSystemErrorMessage("Layer2: Failed to perform conversion of %s for %s: %s (%s)",
+                                              blobKey,
+                                              variant)
+                      .handle();
+            response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -1148,7 +1173,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         if (!conversionEngine.isKnownVariant(variantName)) {
-            return null;
+            throw new IllegalArgumentException(Strings.apply("Unknown variant type: %s", variantName));
         }
 
         V variant = findOrCreateVariant(blob, variantName, nonblocking);
@@ -1165,7 +1190,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * <p>
      * Note that there this is an recursive optimistic locking algorithm at work where
      * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)} and
-     * {@link #retryToFindOrCreateVariant(Blob, String, int)} build the "loop".
+     * {@link #awaitConversionResultAndRetryToFindVariant(Blob, String, int)} build the "loop".
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
@@ -1205,13 +1230,24 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @throws Exception in case of an error while searching or creating the variant
      */
     @Nullable
+    @SuppressWarnings("java:S3776")
+    @Explain("This is a complex beast but we rather keep the whole logik in one place.")
     private V attemptToFindOrCreateVariant(B blob, String variantName, boolean nonblocking, int retries)
             throws Exception {
         V variant = findAnyVariant(blob, variantName);
-        if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
-            // We hit the nail on the head - we found a variant which has successfully been converted already.
-            // -> use it
-            return variant;
+        if (variant != null) {
+            if (Strings.isFilled(variant.getPhysicalObjectKey())) {
+                // We hit the nail on the head - we found a variant which has successfully been converted already.
+                // -> use it
+                return variant;
+            }
+            if (!variant.isQueuedForConversion() && retryLimitReached(variant)) {
+                // The conversion has failed - signal that the to client. We use a handled exception here, as the problem
+                // has already been logged...
+                throw Exceptions.createHandled()
+                                .withSystemErrorMessage("Failed to create the requested variant from the given image.")
+                                .handle();
+            }
         }
 
         if (nonblocking) {
@@ -1224,21 +1260,29 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             if (conversionEnabled) {
                 // No variant is present, therefore we spawn a thread which will create it and start a conversion
                 // pipeline
-                tryCreateVariantAsync(blob, variantName);
-
-                // In parallel we park this thread and then retry if we can already use this variant. As this is
-                // an optimistic locking algorithm anyway which can wait on another node / thread to create the variant
-                // we can also use the same approach if we ourself triggered the conversion task....
-                return retryToFindOrCreateVariant(blob, variantName, retries);
+                if (tryCreateVariantAsync(blob, variantName)) {
+                    // We sucessfully created a variant and forked a conversion... Await its result...
+                    return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
+                } else {
+                    // An optimistic lock error occured (another thread or node attempted the same). So we backup,
+                    // wait a short and random amount of time and retry...
+                    return retryFindVariant(blob, variantName, retries);
+                }
             } else {
                 // No variant is present and no conversion is possible -> give up
-                return null;
+                throw Exceptions.handle()
+                                .to(StorageUtils.LOG)
+                                .withSystemErrorMessage(
+                                        "Layer 2: Failed to create a conversion for %s to %s: Conversion is disabled on this node!",
+                                        blob.getBlobKey(),
+                                        variantName)
+                                .handle();
             }
         }
 
         if (!shouldRetryConversion(variant)) {
             // A variant exists but didn't yield a useable result yet - try to wait and retry...
-            return retryToFindOrCreateVariant(blob, variantName, retries);
+            return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
         }
 
         if (conversionEnabled && !retryLimitReached(variant)) {
@@ -1246,19 +1290,25 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             if (markConversionAttempt(variant)) {
                 // We successfully marked this as "in conversion" -> fork a conversion task in parallel
                 invokeConversionPipelineAsync(blob, variant);
+                return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
+            } else {
+                // An optimistic lock error occured (another thread or node attempted the same). So we backup,
+                // wait a short and random amount of time and retry...
+                return retryFindVariant(blob, variantName, retries);
             }
-
-            // ...and now we wait on either our or another conversion task to finish so that we can use the result
-            return retryToFindOrCreateVariant(blob, variantName, retries);
         }
 
-        // A variant exists but we either gave up on trying to create the actual physical object or we're simply
-        // not capable of doing so...
+        // The variant is still being queued for conversion but didn't finish in time. We return null here,
+        // so that we send an appropriate response to the client so that the browser might perform a retry...
+        //
+        // Note the check for "no conversion queued and also no result present" aka "conversion failed permanently"
+        // is handled in the beginning of this method...
         return null;
     }
 
     /**
-     * Handles the retry path of {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)}.
+     * Handles the retry (after an optimistic lock error) path of
+     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)}.
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
@@ -1266,12 +1316,35 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @return either the result of the next attempt or <tt>null</tt> if we ran out of retries
      * @throws Exception if case of any error when performing the next attempt
      */
-    private V retryToFindOrCreateVariant(B blob, String variantName, int retries) throws Exception {
+    private V retryFindVariant(B blob, String variantName, int retries) throws Exception {
+        // An optimistic lock error occured (another thread or node attempted the same). So we backup,
+        // wait a short and random amount of time and retry...
+        Wait.randomMillis(0, 150);
+        return attemptToFindOrCreateVariant(blob, variantName, false, retries - 1);
+    }
+
+    /**
+     * Handles the retry (when waiting for a conversion result) path of
+     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)}.
+     *
+     * @param blob        the blob for which the variant is to be resolved
+     * @param variantName the variant of the blob to find
+     * @param retries     the number of retries left
+     * @return either the result of the next attempt or <tt>null</tt> if we ran out of retries
+     * @throws Exception if case of any error when performing the next attempt
+     */
+    private V awaitConversionResultAndRetryToFindVariant(B blob, String variantName, int retries) throws Exception {
         if (retries == 0) {
             return null;
         }
-        Wait.randomMillis(100, 500);
-        return attemptToFindOrCreateVariant(blob, variantName, false, retries - 1);
+
+        // Give the conversion pipeline some time to perform the conversion. Note that we fix the number of retries
+        // here as no more optimistic lock problems can occur - we simply have to wait for the conversion to finish..
+        Wait.millis(TIMEOUT_FOR_WAITING_FOR_CONVERSION_RESULT_MILLIS);
+        return attemptToFindOrCreateVariant(blob,
+                                            variantName,
+                                            false,
+                                            Math.min(retries - 1, NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION - 1));
     }
 
     /**
@@ -1320,17 +1393,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                 markConversionSuccess(variant, physicalKey, automaticHandle.getFile().length());
             }
         }).onFailure(e -> {
-            Exceptions.handle()
-                      .error(e)
-                      .to(StorageUtils.LOG)
-                      .withSystemErrorMessage("Layer 2/Conversion: Failed to create %s (%s) of %s (%s): %s (%s)",
-                                              variant.getVariantName(),
-                                              variant.getIdAsString(),
-                                              blob.getBlobKey(),
-                                              blob.getFilename())
-                      .handle();
-
             markConversionFailure(variant);
+
+            throw Exceptions.handle()
+                            .error(e)
+                            .to(StorageUtils.LOG)
+                            .withSystemErrorMessage("Layer 2/Conversion: Failed to create %s (%s) of %s (%s): %s (%s)",
+                                                    variant.getVariantName(),
+                                                    variant.getIdAsString(),
+                                                    blob.getBlobKey(),
+                                                    blob.getFilename())
+                            .handle();
         });
     }
 
@@ -1378,12 +1451,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      *
      * @param blob        the blob for which the variant is to be created
      * @param variantName the variant to generate
+     * @return <tt>true</tt> if the variant was created and a conversion has been forked, <tt>false</tt>
+     * if the variant existed already...
      */
-    private void tryCreateVariantAsync(B blob, String variantName) {
+    private boolean tryCreateVariantAsync(B blob, String variantName) {
         V variant = createVariant(blob, variantName);
 
-        if (!detectAndRemoveDuplicateVariant(variant, blob, variantName)) {
+        if (detectAndRemoveDuplicateVariant(variant, blob, variantName)) {
+            return false;
+        } else {
             invokeConversionPipelineAsync(blob, variant);
+            return true;
         }
     }
 
@@ -1421,14 +1499,25 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     private void deliverAsync(String blobKey, String variant, Response response) {
         tasks.executor(EXECUTOR_STORAGE_CONVERSION_DELIVERY)
-             .dropOnOverload(() -> response.error(HttpResponseStatus.TOO_MANY_REQUESTS))
+             .dropOnOverload(() -> response.notCached().error(HttpResponseStatus.TOO_MANY_REQUESTS))
              .fork(() -> {
                  if (conversionEnabled) {
-                     String physicalKey = resolvePhysicalKey(blobKey, variant, false);
-                     if (physicalKey != null) {
-                         getPhysicalSpace().deliver(response, physicalKey);
-                     } else {
-                         response.error(HttpResponseStatus.NOT_FOUND);
+                     try {
+                         String physicalKey = resolvePhysicalKey(blobKey, variant, false);
+                         if (physicalKey == null) {
+                             response.notCached().error(HttpResponseStatus.SERVICE_UNAVAILABLE);
+                         } else {
+                             getPhysicalSpace().deliver(response, physicalKey);
+                         }
+                     } catch (Exception e) {
+                         Exceptions.handle()
+                                   .error(e)
+                                   .to(StorageUtils.LOG)
+                                   .withSystemErrorMessage("Layer2: Failed to perform conversion of %s for %s: %s (%s)",
+                                                           blobKey,
+                                                           variant)
+                                   .handle();
+                         response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                      }
                  } else {
                      delegateConversion(blobKey, variant, response);
