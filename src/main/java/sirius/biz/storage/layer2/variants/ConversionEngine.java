@@ -14,6 +14,7 @@ import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.Promise;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -180,7 +181,17 @@ public class ConversionEngine {
                                     .handle();
                 }
 
-                result.success(converter.performConversion(blob));
+                FileHandle convertedFile = converter.performConversion(blob);
+                if (!convertedFile.getFile().exists() || convertedFile.getFile().length() == 0) {
+                    convertedFile.close();
+                    throw new IllegalArgumentException(Strings.apply(
+                            "The conversion engine created an empty result for variant %s of %s (%s)",
+                            variant,
+                            blob.getFilename(),
+                            blob.getBlobKey()));
+                }
+
+                result.success(convertedFile);
             } catch (Exception e) {
                 result.fail(e);
             }
