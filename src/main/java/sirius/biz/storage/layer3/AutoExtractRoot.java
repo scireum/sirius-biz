@@ -37,10 +37,10 @@ public abstract class AutoExtractRoot extends JobStartingRoot {
 
     @Override
     protected void populateRoot(MutableVirtualFile rootDirectory) {
-        rootDirectory.withChildren(new FindOnlyProvider(this::createUnzipJob));
+        rootDirectory.withChildren(new FindOnlyProvider(this::createExtractJob));
     }
 
-    protected VirtualFile createUnzipJob(VirtualFile parent, String name) {
+    protected VirtualFile createExtractJob(VirtualFile parent, String name) {
         MutableVirtualFile result = MutableVirtualFile.checkedCreate(parent, name);
 
         Optional<? extends JobPreset> preset = Optional.ofNullable(presets)

@@ -1295,7 +1295,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             }
         } catch (IOException e) {
             processContext.log(ProcessLog.error()
-                                         .withNLSKey("#<N          XXCS  XM")
+                                         .withNLSKey("VirtualFile.downloadFailed")
                                          .withContext("url", url.toString()));
         }
     }

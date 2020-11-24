@@ -108,15 +108,15 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
                                   Function<String, Value> parameterProvider,
                                   Blob buffer,
                                   String filename,
-                                  ProcessContext ctx) {
-        if (ctx.isDebugging()) {
-            ctx.debug(ProcessLog.info()
-                                .withFormattedMessage(
-                                        "Starting job '%s' for user '%s' using the uploaded file '%s' (%s')",
-                                        jobToRun.getLabel(),
-                                        UserContext.getCurrentUser().getUserName(),
-                                        buffer.getFilename(),
-                                        NLS.formatSize(buffer.getSize())));
+                                  ProcessContext processContext) {
+        if (processContext.isDebugging()) {
+            processContext.debug(ProcessLog.info()
+                                           .withFormattedMessage(
+                                                   "Starting job '%s' for user '%s' using the uploaded file '%s' (%s')",
+                                                   jobToRun.getLabel(),
+                                                   UserContext.getCurrentUser().getUserName(),
+                                                   buffer.getFilename(),
+                                                   NLS.formatSize(buffer.getSize())));
         }
 
         String parameterName = findFileParameter(jobToRun);
@@ -130,14 +130,14 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
                 }
             });
         } catch (HandledException exception) {
-            ctx.log(ProcessLog.error()
-                              .withFormattedMessage(
-                                      "Failed to start job '%s' for user '%s' using the uploaded file '%s' (%s'): %s",
-                                      jobToRun.getLabel(),
-                                      UserContext.getCurrentUser().getUserName(),
-                                      buffer.getFilename(),
-                                      NLS.formatSize(buffer.getSize()),
-                                      exception.getMessage()));
+            processContext.log(ProcessLog.error()
+                                         .withFormattedMessage(
+                                                 "Failed to start job '%s' for user '%s' using the uploaded file '%s' (%s'): %s",
+                                                 jobToRun.getLabel(),
+                                                 UserContext.getCurrentUser().getUserName(),
+                                                 buffer.getFilename(),
+                                                 NLS.formatSize(buffer.getSize()),
+                                                 exception.getMessage()));
         }
     }
 

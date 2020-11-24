@@ -138,6 +138,6 @@ public class JobsRoot extends JobStartingRoot {
 
     @Override
     protected String getStandbyProcessDescription() {
-        return "/jobs Uploads";
+        return NLS.get("JobsRoot.processLabel");
     }
 }
