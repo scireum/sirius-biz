@@ -51,17 +51,17 @@ public class RedisController extends BizController {
     /**
      * Executes the given Redis query.
      *
-     * @param ctx the current request
+     * @param webContext the current request
      * @param out the JSON response
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed(value = "/system/redis/api/execute", jsonCall = true)
-    public void executeQuery(WebContext ctx, JSONStructuredOutput out) {
+    public void executeQuery(WebContext webContext, JSONStructuredOutput out) {
         Watch watch = Watch.start();
 
-        String database = ctx.get("pool").asString(Redis.POOL_SYSTEM);
+        String database = webContext.get("pool").asString(Redis.POOL_SYSTEM);
         RedisDB pool = redis.getPool(database);
-        String query = ctx.get("query").asString();
+        String query = webContext.get("query").asString();
 
         Object result = pool.query(() -> "Executing query via /system/redis", db -> {
             try {
