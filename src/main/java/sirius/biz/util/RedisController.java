@@ -81,23 +81,23 @@ public class RedisController extends BizController {
         out.property("duration", watch.duration());
     }
 
-    private void renderResult(Object result, String offset, StringBuilder sb) {
+    private void renderResult(Object result, String offset, StringBuilder resultBuilder) {
         if (result instanceof List) {
             List<?> results = (List<?>) result;
             for (int i = 0; i < results.size(); i++) {
                 if (i > 0) {
-                    sb.append(offset);
+                    resultBuilder.append(offset);
                 }
-                sb.append(Strings.apply("%2d", i + 1));
-                sb.append(") ");
-                renderResult(results.get(i), offset + "    ", sb);
+                resultBuilder.append(Strings.apply("%2d", i + 1));
+                resultBuilder.append(") ");
+                renderResult(results.get(i), offset + "    ", resultBuilder);
             }
         } else if (result instanceof byte[]) {
-            sb.append(SafeEncoder.encode((byte[]) result));
-            sb.append("\n");
+            resultBuilder.append(SafeEncoder.encode((byte[]) result));
+            resultBuilder.append("\n");
         } else {
-            sb.append(NLS.toUserString(result));
-            sb.append("\n");
+            resultBuilder.append(NLS.toUserString(result));
+            resultBuilder.append("\n");
         }
     }
 }
