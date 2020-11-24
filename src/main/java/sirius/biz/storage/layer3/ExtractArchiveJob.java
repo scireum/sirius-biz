@@ -51,6 +51,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     private Parameter<VirtualFile> sourceParameter;
     private final Parameter<VirtualFile> destinationParameter;
     private final Parameter<ArchiveExtractor.OverrideMode> overwriteExistingFilesParameter;
+    private final Parameter<Boolean> flattenDirectoriesParameter;
     private final Parameter<Boolean> deleteArchiveParameter;
 
     /**
@@ -74,16 +75,20 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         this.deleteArchiveParameter =
                 new BooleanParameter("deleteArchive", "$ExtractArchiveJob.deleteArchiveParameter").withDescription(
                         "$ExtractArchiveJob.deleteArchiveParameter.help").withDefaultTrue().build();
+        this.flattenDirectoriesParameter = new BooleanParameter("flattenDirectories",
+                                                                "$ExtractArchiveJob.flattenDirectoriesParameter").withDescription(
+                "$ExtractArchiveJob.flattenDirectoriesParameter.help").build();
     }
 
     private Parameter<VirtualFile> fetchOrCreateSourceParameter() {
         if (sourceParameter == null) {
-            sourceParameter = new FileParameter("source", "$ExtractArchiveJob.sourceParameter").withAcceptedExtensionsList(new ArrayList<>(
+            sourceParameter = new FileParameter("source",
+                                                "$ExtractArchiveJob.sourceParameter").withAcceptedExtensionsList(new ArrayList<>(
                     extractor.getSupportedFileExtensions()))
-                                                                                               .withDescription(
-                                                                                                       "$ExtractArchiveJob.sourceParameter.help")
-                                                                                               .markRequired()
-                                                                                               .build();
+                                                                                     .withDescription(
+                                                                                             "$ExtractArchiveJob.sourceParameter.help")
+                                                                                     .markRequired()
+                                                                                     .build();
         }
 
         return sourceParameter;
@@ -93,6 +98,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     protected void execute(ProcessContext process) throws Exception {
         VirtualFile sourceFile = process.require(fetchOrCreateSourceParameter());
         VirtualFile targetDirectory = process.require(destinationParameter);
+        boolean flattenDirs = process.getParameter(flattenDirectoriesParameter).orElse(false);
         ArchiveExtractor.OverrideMode overrideMode = process.require(overwriteExistingFilesParameter);
 
         process.log(ProcessLog.info()
@@ -104,7 +110,11 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
             extractor.extractAll(sourceFile.name(),
                                  archive.getFile(),
                                  null,
-                                 file -> handleExtractedFile(file, process, overrideMode, targetDirectory));
+                                 file -> handleExtractedFile(file,
+                                                             process,
+                                                             overrideMode,
+                                                             targetDirectory,
+                                                             flattenDirs));
         }
 
         process.setState(NLS.get("ExtractArchiveJob.completed"));
@@ -118,11 +128,13 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     private void handleExtractedFile(ExtractedFile extractedFile,
                                      ProcessContext process,
                                      ArchiveExtractor.OverrideMode overrideMode,
-                                     VirtualFile targetDirectory) throws Exception {
+                                     VirtualFile targetDirectory,
+                                     boolean flattenDirectory) throws Exception {
         updateState(extractedFile);
 
         Watch watch = Watch.start();
-        VirtualFile targetFile = targetDirectory.resolve(extractedFile.getFilePath());
+        String targetPath = getTargetPath(extractedFile, flattenDirectory);
+        VirtualFile targetFile = targetDirectory.resolve(targetPath);
         ArchiveExtractor.UpdateResult result = extractor.updateFile(extractedFile, targetFile, overrideMode);
         switch (result) {
             case CREATED:
@@ -139,6 +151,17 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         }
 
         log(process, extractedFile, targetFile, result.name());
+    }
+
+    private String getTargetPath(ExtractedFile extractedFile, boolean flattenDirectory) {
+        String targetPath = extractedFile.getFilePath();
+        if (flattenDirectory) {
+            int lastIndex = targetPath.lastIndexOf("/");
+            if (lastIndex > -1) {
+                return targetPath.substring(lastIndex);
+            }
+        }
+        return targetPath;
     }
 
     private void log(ProcessContext process, ExtractedFile extractedFile, VirtualFile targetFile, String result) {
@@ -180,6 +203,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         parameterCollector.accept(destinationParameter);
         parameterCollector.accept(overwriteExistingFilesParameter);
         parameterCollector.accept(deleteArchiveParameter);
+        parameterCollector.accept(flattenDirectoriesParameter);
     }
 
     @Override
