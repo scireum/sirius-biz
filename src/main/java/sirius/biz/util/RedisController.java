@@ -75,9 +75,9 @@ public class RedisController extends BizController {
                 throw Exceptions.createHandled().error(e).withDirectMessage(e.getMessage()).handle();
             }
         });
-        StringBuilder sb = new StringBuilder();
-        renderResult(result, "", sb);
-        out.property("result", sb.toString());
+        StringBuilder resultBuilder = new StringBuilder();
+        renderResult(result, "", resultBuilder);
+        out.property("result", resultBuilder.toString());
         out.property("duration", watch.duration());
     }
 
