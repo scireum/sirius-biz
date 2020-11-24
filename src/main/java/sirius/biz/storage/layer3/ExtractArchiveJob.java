@@ -156,12 +156,10 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     private String getTargetPath(ExtractedFile extractedFile, boolean flattenDirectory) {
         String targetPath = extractedFile.getFilePath();
         if (flattenDirectory) {
-            int lastIndex = targetPath.lastIndexOf("/");
-            if (lastIndex > -1) {
-                return targetPath.substring(lastIndex);
-            }
+            return Files.getFilenameAndExtension(targetPath);
+        } else {
+            return targetPath;
         }
-        return targetPath;
     }
 
     private void log(ProcessContext process, ExtractedFile extractedFile, VirtualFile targetFile, String result) {
