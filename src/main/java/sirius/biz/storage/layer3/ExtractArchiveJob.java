@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer3;
 
+import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
@@ -39,8 +40,28 @@ import java.util.function.Consumer;
  * This uses the {@link ArchiveExtractor} so depending if 7-ZIP is enabled this supports either a whole bunch
  * of formats (rar, 7z, tar etc.) or "just" ZIP files using the Java API.
  */
-@Register
+@Register(classes = {JobFactory.class, ExtractArchiveJob.class})
 public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
+
+    /**
+     * Contains the name of the parameter which is used to set the destination for the extracted files.
+     */
+    public static final String DESTINATION_PARAMETER_NAME = "destination";
+
+    /**
+     * Determines if existing files should be overwritten.
+     */
+    public static final String OVERWRITE_EXISTING_FILES_PARAMETER_NAME = "overwriteExistingFiles";
+
+    /**
+     * Determines if archives should be deleted once they are processed.
+     */
+    public static final String DELETE_ARCHIVE_PARAMETER_NAME = "deleteArchive";
+
+    /**
+     * Determines if paths should be skipped when extracting files.
+     */
+    public static final String FLATTEN_DIRECTORIES_PARAMETER_NAME = "flattenDirectories";
 
     @Part
     private VirtualFileSystem vfs;
@@ -60,11 +81,11 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
      * This constructor is primarily used to make the parameter instantiation more readable.
      */
     public ExtractArchiveJob() {
-        this.destinationParameter =
-                new DirectoryParameter("destination", "$ExtractArchiveJob.destinationParameter").withDescription(
-                        "$ExtractArchiveJob.destinationParameter.help").markRequired().build();
+        this.destinationParameter = new DirectoryParameter(DESTINATION_PARAMETER_NAME,
+                                                           "$ExtractArchiveJob.destinationParameter").withDescription(
+                "$ExtractArchiveJob.destinationParameter.help").markRequired().build();
 
-        this.overwriteExistingFilesParameter = new EnumParameter<>("overwriteExistingFiles",
+        this.overwriteExistingFilesParameter = new EnumParameter<>(OVERWRITE_EXISTING_FILES_PARAMETER_NAME,
                                                                    "$ExtractArchiveJob.overwriteExistingFilesParameter",
                                                                    ArchiveExtractor.OverrideMode.class).withDescription(
                 "$ExtractArchiveJob.overwriteExistingFilesParameter.help")
@@ -72,10 +93,10 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                                                                                                                ArchiveExtractor.OverrideMode.ON_CHANGE)
                                                                                                        .build();
 
-        this.deleteArchiveParameter =
-                new BooleanParameter("deleteArchive", "$ExtractArchiveJob.deleteArchiveParameter").withDescription(
-                        "$ExtractArchiveJob.deleteArchiveParameter.help").withDefaultTrue().build();
-        this.flattenDirectoriesParameter = new BooleanParameter("flattenDirectories",
+        this.deleteArchiveParameter = new BooleanParameter(DELETE_ARCHIVE_PARAMETER_NAME,
+                                                           "$ExtractArchiveJob.deleteArchiveParameter").withDescription(
+                "$ExtractArchiveJob.deleteArchiveParameter.help").withDefaultTrue().build();
+        this.flattenDirectoriesParameter = new BooleanParameter(FLATTEN_DIRECTORIES_PARAMETER_NAME,
                                                                 "$ExtractArchiveJob.flattenDirectoriesParameter").withDescription(
                 "$ExtractArchiveJob.flattenDirectoriesParameter.help").build();
     }
