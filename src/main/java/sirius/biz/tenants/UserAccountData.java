@@ -20,9 +20,11 @@ import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.AfterSave;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
+import sirius.db.mixing.types.StringList;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -76,6 +78,18 @@ public class UserAccountData extends Composite implements MessageProvider {
      */
     public static final Mapping PERMISSIONS = Mapping.named("permissions");
     private final PermissionData permissions;
+
+    /**
+     * Contains all sub scopes to user is restricted to.
+     * <p>
+     * If this field is empty, the user has access to <b>ALL</b> sub scopes as this is the common case.
+     */
+    public static final Mapping SUB_SCOPES = Mapping.named("subScopes");
+    @Autoloaded
+    @NullAllowed
+    @AutoImport
+    @Lob
+    private final StringList subScopes = new StringList();
 
     /**
      * Determines if an external login is required from time to time.
@@ -353,5 +367,9 @@ public class UserAccountData extends Composite implements MessageProvider {
 
     public void setLang(String lang) {
         this.lang = lang;
+    }
+
+    public StringList getSubScopes() {
+        return subScopes;
     }
 }
