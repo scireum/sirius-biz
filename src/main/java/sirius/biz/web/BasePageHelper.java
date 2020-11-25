@@ -413,7 +413,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
             result.withHasMore(true);
             items.remove(items.size() - 1);
         }
-        if (fetchTotalCount && (originalSize > pageSize || result.getStart() > 1)) {
+        if (fetchTotalCount && (originalSize > pageSize || result.getStart() > pageSize)) {
             result.withTotalItems((int) baseQuery.count());
         } else {
             result.withTotalItems(items.size());
