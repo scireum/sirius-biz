@@ -411,9 +411,9 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
         if (items.size() > pageSize) {
             result.withHasMore(true);
             items.remove(items.size() - 1);
-            if (fetchTotalCount) {
-                result.withTotalItems((int) baseQuery.count());
-            }
+        }
+        if (fetchTotalCount) {
+            result.withTotalItems((int) baseQuery.count());
         } else {
             result.withTotalItems(items.size());
         }
