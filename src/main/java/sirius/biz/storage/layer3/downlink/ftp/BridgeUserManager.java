@@ -97,7 +97,7 @@ class BridgeUserManager implements UserManager {
             }
 
             if (!authUser.isSubScopeEnabled(VirtualFileSystem.SUB_SCOPE_VFS)) {
-                throw new AuthenticationFailedException("The required sub scope is not enabled for this use.");
+                throw new AuthenticationFailedException("The required sub scope is not enabled for this user.");
             }
 
             StorageUtils.LOG.FINE("Layer 3/FTP: User is authorized...");
