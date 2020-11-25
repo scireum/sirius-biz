@@ -49,7 +49,9 @@ import java.util.Optional;
 @ComplexDelete(false)
 @Index(name = "blob_key_lookup", columns = "blobKey", unique = true)
 @Index(name = "blob_normalized_filename_lookup",
-        columns = {"spaceName", "deleted", "normalizedFilename", "parent", "committed"})
+        columns = {"spaceName", "deleted", "parent", "normalizedFilename", "committed"})
+@Index(name = "blob_sort_by_last_modified",
+        columns = {"spaceName", "deleted", "parent", "lastModified"})
 @Index(name = "blob_filename_lookup", columns = {"spaceName", "deleted", "filename", "parent", "committed"})
 @Index(name = "blob_reference_lookup", columns = {"spaceName", "deleted", "reference", "referenceDesignator"})
 public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {

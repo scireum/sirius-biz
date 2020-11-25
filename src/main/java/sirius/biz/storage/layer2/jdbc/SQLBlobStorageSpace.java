@@ -566,6 +566,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                              .ignoreEmpty()
                              .build())
            .limit(maxResults)
+           .orderAsc(SQLDirectory.NORMALIZED_DIRECTORY_NAME)
            .iterate(childProcessor::test);
     }
 
@@ -665,14 +666,24 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                   Set<String> fileTypes,
                                   int maxResults,
                                   Predicate<? super Blob> childProcessor) {
-        oma.select(SQLBlob.class)
-           .eq(SQLBlob.SPACE_NAME, spaceName)
-           .eq(SQLBlob.PARENT, parent)
-           .eq(SQLBlob.DELETED, false)
-           .where(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME).startsWith(prefixFilter).ignoreEmpty().build())
-           .where(OMA.FILTERS.containsOne(SQLBlob.FILE_EXTENSION, fileTypes.toArray()).build())
-           .limit(maxResults)
-           .iterate(childProcessor::test);
+        SmartQuery<SQLBlob> query = oma.select(SQLBlob.class)
+                                       .eq(SQLBlob.SPACE_NAME, spaceName)
+                                       .eq(SQLBlob.PARENT, parent)
+                                       .eq(SQLBlob.DELETED, false)
+                                       .where(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME)
+                                                         .startsWith(prefixFilter)
+                                                         .ignoreEmpty()
+                                                         .build())
+                                       .where(OMA.FILTERS.containsOne(SQLBlob.FILE_EXTENSION, fileTypes.toArray())
+                                                         .build())
+                                       .limit(maxResults);
+        if (sortByLastModified) {
+            query.orderDesc(SQLBlob.LAST_MODIFIED);
+        } else {
+            query.orderAsc(SQLBlob.NORMALIZED_FILENAME);
+        }
+
+        query.iterate(childProcessor::test);
     }
 
     protected List<? extends BlobVariant> fetchVariants(SQLBlob blob) {
