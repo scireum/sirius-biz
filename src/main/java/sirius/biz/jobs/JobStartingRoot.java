@@ -87,7 +87,7 @@ public abstract class JobStartingRoot extends SingularVFSRoot {
     /**
      * Returns the type for the standby process which is used to start the job.
      * <p>
-     * Starting jobs happens in a standy process so that we can log any problems and provide some debiggung capabilities.
+     * Starting jobs happens in a standby process so that we can log any problems and provide some debugging capabilities.
      *
      * @return the type to be used in
      * {@link Processes#executeInStandbyProcessForCurrentTenant(String, Supplier, Consumer)}
