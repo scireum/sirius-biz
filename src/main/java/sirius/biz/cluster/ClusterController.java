@@ -23,7 +23,7 @@ import sirius.kernel.health.HandledException;
 import sirius.kernel.health.metrics.Metric;
 import sirius.kernel.health.metrics.Metrics;
 import sirius.kernel.nls.NLS;
-import sirius.web.controller.Controller;
+import sirius.web.controller.BasicController;
 import sirius.web.controller.Routed;
 import sirius.web.health.Cluster;
 import sirius.web.http.WebContext;
@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
  * Also this is resonsible for rendering the <tt>/system/cluster</tt> view.
  */
 @Register
-public class ClusterController implements Controller {
+public class ClusterController extends BasicController {
 
     /**
      * Names the permissions required to view and manage the cluster state.

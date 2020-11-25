@@ -38,6 +38,7 @@ import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 import sirius.web.services.JSONStructuredOutput;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -89,6 +90,9 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
 
     @ConfigValue("security.roles")
     protected List<String> roles;
+
+    @ConfigValue("security.subScopes")
+    protected List<String> subScopes;
 
     @Part
     protected AuditLog auditLog;
@@ -306,6 +310,14 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     public String getRoleDescription(String role) {
         return Permissions.getPermissionDescription(role);
+    }
+
+    public List<String> getSubScopes() {
+        return Collections.unmodifiableList(subScopes);
+    }
+
+    public String getSubScopeName(String scope) {
+        return NLS.get("SubScope." + scope + ".name");
     }
 
     /**
@@ -672,5 +684,4 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                                    user.getUniqueName());
         webContext.respondWith().redirectTemporarily(webContext.get("goto").asString(wondergemRoot));
     }
-
 }

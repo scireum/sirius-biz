@@ -29,6 +29,12 @@ import java.util.List;
 @Register(classes = VirtualFileSystem.class)
 public class VirtualFileSystem {
 
+    /**
+     * Defines the name of the sub scope used by the {@link sirius.biz.storage.layer3.downlink.ftp.FTPServer} and
+     * {@link sirius.biz.storage.layer3.downlink.ssh.SSHServer} which grants access per FTP, SFTP or SCP.
+     */
+    public static final String SUB_SCOPE_VFS = "vfs";
+
     private VirtualFile root;
 
     @PriorityParts(VFSRoot.class)
