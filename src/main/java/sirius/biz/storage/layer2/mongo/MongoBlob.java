@@ -57,11 +57,7 @@ import java.util.Optional;
                           Mango.INDEX_ASCENDING})
 @Index(name = "blob_sort_by_last_modified",
         columns = {"spaceName", "deleted", "parent", "lastModified"},
-        columnSettings = {Mango.INDEX_ASCENDING,
-                          Mango.INDEX_ASCENDING,
-                          Mango.INDEX_ASCENDING,
-                          Mango.INDEX_ASCENDING,
-                          Mango.INDEX_ASCENDING})
+        columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 @Index(name = "blob_filename_lookup",
         columns = {"spaceName", "deleted", "parent", "filename", "committed"},
         columnSettings = {Mango.INDEX_ASCENDING,
