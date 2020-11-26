@@ -10,6 +10,8 @@ package sirius.biz.storage.layer2.mongo;
 
 import sirius.kernel.di.std.Priorized;
 
+import javax.annotation.Nonnull;
+
 /**
  * Defines handlers to process created or modified {@link MongoBlob blobs}.
  *
@@ -21,5 +23,5 @@ public interface MongoBlobChangeHandler extends Priorized {
      *
      * @param blob the modified blob
      */
-    void execute(MongoBlob blob);
+    void execute(@Nonnull MongoBlob blob);
 }
