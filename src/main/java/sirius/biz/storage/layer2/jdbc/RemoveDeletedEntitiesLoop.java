@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Register(framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class RemoveDeletedEntitiesLoop extends BackgroundLoop {
 
-    private static final double FREQUENCY_EVERY_FIVE_MINUTES = 1 / 320d;
+    private static final double FREQUENCY_EVERY_FIFTHEEN_SECONDS = 1 / 15d;
 
     @Part
     private OMA oma;
@@ -40,7 +40,7 @@ public class RemoveDeletedEntitiesLoop extends BackgroundLoop {
 
     @Override
     public double maxCallFrequency() {
-        return FREQUENCY_EVERY_FIVE_MINUTES;
+        return FREQUENCY_EVERY_FIFTHEEN_SECONDS;
     }
 
     @Nullable
