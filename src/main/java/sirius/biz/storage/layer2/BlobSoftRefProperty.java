@@ -139,8 +139,6 @@ public class BlobSoftRefProperty extends BlobRefProperty {
                 }
 
                 getReferencedDescriptors().forEach(entityDescriptor -> entityDescriptor.addCascadeDeleteHandler(this::onDeleteSetNull));
-            } else if (deleteHandler == BaseEntityRef.OnDelete.REJECT) {
-                throw new IllegalArgumentException("BlobSoftRef references do not accept REJECT as deleteHandler.");
             }
         } catch (Exception e) {
             Mixing.LOG.WARN("Error when linking property %s of %s: %s (%s)",

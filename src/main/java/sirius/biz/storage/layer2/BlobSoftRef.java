@@ -38,6 +38,9 @@ public class BlobSoftRef extends BlobHardRef {
      */
     public BlobSoftRef(String space, BaseEntityRef.OnDelete deleteHandler, boolean supportsURL) {
         super(space);
+        if (BaseEntityRef.OnDelete.REJECT == deleteHandler) {
+            throw new IllegalArgumentException("BlobSoftRef references do not accept REJECT as deleteHandler.");
+        }
         this.deleteHandler = deleteHandler;
         this.supportsURL = supportsURL;
     }
