@@ -8,18 +8,31 @@
 
 package sirius.biz.storage.layer2;
 
+import sirius.biz.storage.layer2.jdbc.SQLBlob;
+import sirius.biz.storage.layer2.mongo.MongoBlob;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
 import sirius.db.mixing.AccessPath;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
+import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.PropertyFactory;
+import sirius.db.mixing.types.BaseEntityRef;
+import sirius.kernel.async.TaskContext;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Watch;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -27,10 +40,20 @@ import java.util.function.Consumer;
  */
 public class BlobSoftRefProperty extends BlobRefProperty {
 
+    @Part
+    protected static Mixing mixing;
+
     /**
      * Contains the field length to use if URLs are also supported for this field.
      */
     protected static final int URL_COMPATIBLE_LENGTH = 512;
+
+    private static final String PARAM_TYPE = "type";
+    private static final String PARAM_OWNER = "owner";
+    private static final String PARAM_FIELD = "field";
+
+    private BlobSoftRef blobSoftRef;
+    protected List<EntityDescriptor> referencedDescriptors = new ArrayList<>();
 
     /**
      * Factory for generating properties based on their field type
@@ -62,6 +85,122 @@ public class BlobSoftRefProperty extends BlobRefProperty {
                                 @Nonnull AccessPath accessPath,
                                 @Nonnull Field field) {
         super(descriptor, accessPath, field);
+    }
+
+    /**
+     * Returns the {@link EntityDescriptor} of the referenced entity.
+     *
+     * @return the referenced entity descriptor
+     */
+    public List<EntityDescriptor> getReferencedDescriptors() {
+        if (referencedDescriptors == null) {
+            if (blobSoftRef == null) {
+                throw new IllegalStateException("Schema not linked!");
+            }
+            referencedDescriptors.add(mixing.getDescriptor(MongoBlob.class));
+            referencedDescriptors.add(mixing.getDescriptor(SQLBlob.class));
+        }
+
+        return Collections.unmodifiableList(referencedDescriptors);
+    }
+
+    private BlobSoftRef getBlobSoftRef() {
+        if (blobSoftRef == null) {
+            try {
+                this.blobSoftRef = (BlobSoftRef) field.get(accessPath.apply(descriptor.getReferenceInstance()));
+            } catch (Exception e) {
+                throw Exceptions.handle()
+                                .to(Mixing.LOG)
+                                .error(e)
+                                .withSystemErrorMessage(
+                                        "Unable to obtain a BlobSoftRef object from entity ref field ('%s' in '%s'): %s (%s)",
+                                        getName(),
+                                        descriptor.getType().getName())
+                                .handle();
+            }
+        }
+
+        return blobSoftRef;
+    }
+
+    @Override
+    protected void link() {
+        super.link();
+
+        try {
+            BaseEntityRef.OnDelete deleteHandler = getBlobSoftRef().getDeleteHandler();
+
+            if (deleteHandler == BaseEntityRef.OnDelete.CASCADE) {
+                getReferencedDescriptors().forEach(entityDescriptor -> entityDescriptor.addCascadeDeleteHandler(this::onDeleteCascade));
+            } else if (deleteHandler == BaseEntityRef.OnDelete.SET_NULL) {
+                if (!isNullable()) {
+                    Mixing.LOG.WARN("Error in property %s of %s: The field is not marked as NullAllowed,"
+                                    + " therefore SET_NULL is not a valid delete handler!", this, getDescriptor());
+                }
+
+                getReferencedDescriptors().forEach(entityDescriptor -> entityDescriptor.addCascadeDeleteHandler(this::onDeleteSetNull));
+            } else if (deleteHandler == BaseEntityRef.OnDelete.REJECT) {
+                throw new IllegalArgumentException("BlobSoftRef references do not accept REJECT as deleteHandler.");
+            }
+        } catch (Exception e) {
+            Mixing.LOG.WARN("Error when linking property %s of %s: %s (%s)",
+                            this,
+                            getDescriptor(),
+                            e.getMessage(),
+                            e.getClass().getSimpleName());
+        }
+    }
+
+    protected void onDeleteCascade(Object entity) {
+        TaskContext taskContext = TaskContext.get();
+
+        taskContext.smartLogLimited(() -> NLS.fmtr("BaseEntityRefProperty.cascadeDelete")
+                                             .set(PARAM_TYPE, getDescriptor().getPluralLabel())
+                                             .set(PARAM_OWNER, Strings.limit(entity, 30))
+                                             .set(PARAM_FIELD, getLabel())
+                                             .format());
+
+        processReferenceInstances(entity, reference -> cascadeDelete(taskContext, reference));
+    }
+
+    private void cascadeDelete(TaskContext taskContext, BaseEntity<?> other) {
+        Watch watch = Watch.start();
+        other.getMapper().delete(other);
+        taskContext.addTiming(NLS.get("BaseEntityRefProperty.cascadedDelete"), watch.elapsedMillis(), true);
+    }
+
+    protected void onDeleteSetNull(Object entity) {
+        TaskContext taskContext = TaskContext.get();
+        taskContext.smartLogLimited(() -> NLS.fmtr("BaseEntityRefProperty.cascadeSetNull")
+                                             .set(PARAM_TYPE, getDescriptor().getPluralLabel())
+                                             .set(PARAM_OWNER, Strings.limit(entity, 30))
+                                             .set(PARAM_FIELD, getLabel())
+                                             .format());
+
+        processReferenceInstances(entity, reference -> cascadeSetNull(taskContext, reference));
+    }
+
+    private void processReferenceInstances(Object entity, Consumer<BaseEntity<?>> handler) {
+        BaseEntity<?> referenceInstance = (BaseEntity<?>) getDescriptor().getReferenceInstance();
+        if (entity instanceof MongoBlob) {
+            referenceInstance.getMapper()
+                             .select(referenceInstance.getClass())
+                             .eq(nameAsMapping, ((MongoBlob) entity).getBlobKey())
+                             .iterateAll(handler);
+        }
+        if (entity instanceof SQLBlob) {
+            referenceInstance.getMapper()
+                             .select(referenceInstance.getClass())
+                             .eq(nameAsMapping, ((SQLBlob) entity).getBlobKey())
+                             .iterateAll(handler);
+        }
+    }
+
+    private void cascadeSetNull(TaskContext taskContext, BaseEntity<?> other) {
+        Watch watch = Watch.start();
+        setValue(other, "");
+        other.getMapper().update(other);
+        taskContext.addTiming(NLS.get("BaseEntityRefProperty.cascadedSetNull"), watch.elapsedMillis());
     }
 
     @Override
