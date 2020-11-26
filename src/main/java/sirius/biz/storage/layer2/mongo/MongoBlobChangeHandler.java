@@ -13,7 +13,7 @@ import sirius.kernel.di.std.Priorized;
 /**
  * Defines handlers to process created or modified {@link MongoBlob blobs}.
  *
- * @see ProcessChangedEntitiesLoop
+ * @see ProcessChangedBlobsLoop
  */
 public interface MongoBlobChangeHandler extends Priorized {
     /**

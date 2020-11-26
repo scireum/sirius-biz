@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * The actual processing is performed by the predefined {@link MongoBlobChangeHandler handlers}
  */
 @Register(framework = MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
-public class ProcessChangedEntitiesLoop extends BackgroundLoop {
+public class ProcessChangedBlobsLoop extends BackgroundLoop {
 
     private static final double FREQUENCY_EVERY_FIFTEEN_SECONDS = 1 / 15d;
 
@@ -45,7 +45,7 @@ public class ProcessChangedEntitiesLoop extends BackgroundLoop {
     @Nonnull
     @Override
     public String getName() {
-        return "storage-layer2-change";
+        return "storage-layer2-blob-change";
     }
 
     @Override
