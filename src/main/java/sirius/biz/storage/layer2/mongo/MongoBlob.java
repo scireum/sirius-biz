@@ -191,6 +191,12 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     private boolean deleted;
 
     /**
+     * Stores if the blob was marked as changed.
+     */
+    public static final Mapping CHANGED = Mapping.named("changed");
+    private boolean changed;
+
+    /**
      * Stores if the blob was marked as hidden.
      */
     public static final Mapping HIDDEN = Mapping.named("hidden");
@@ -209,6 +215,14 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
         }
 
         updateFilenameFields();
+
+        if (isNew() || isChanged(FILENAME, NORMALIZED_FILENAME, FILE_EXTENSION)) {
+            changed = true;
+        }
+
+        if (deleted) {
+            changed = false;
+        }
     }
 
     protected void updateFilenameFields() {
@@ -427,6 +441,10 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     public boolean isDeleted() {
         return deleted;
+    }
+
+    public boolean isChanged() {
+        return changed;
     }
 
     public boolean isHidden() {
