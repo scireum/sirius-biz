@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer2;
 
 import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Strings;
 
 import javax.annotation.Nullable;
@@ -24,27 +25,31 @@ import java.util.regex.Pattern;
 public class BlobSoftRef extends BlobHardRef {
 
     private final boolean supportsURL;
+    private final BaseEntityRef.OnDelete deleteHandler;
 
     private static final Pattern URL_PATTERN = Pattern.compile("^https?://", Pattern.CASE_INSENSITIVE);
 
     /**
      * Creates a new reference for the given space.
      *
-     * @param space       the space to place referenced objects in
-     * @param supportsURL if <tt>true</tt> a URL can also be used instead of an object key
+     * @param space         the space to place referenced objects in
+     * @param deleteHandler determines what happens if the referenced entity is deleted
+     * @param supportsURL   if <tt>true</tt> a URL can also be used instead of an object key
      */
-    public BlobSoftRef(String space, boolean supportsURL) {
+    public BlobSoftRef(String space, BaseEntityRef.OnDelete deleteHandler, boolean supportsURL) {
         super(space);
+        this.deleteHandler = deleteHandler;
         this.supportsURL = supportsURL;
     }
 
     /**
      * Creates a new reference for the given space.
      *
-     * @param space the space to place referenced objects in
+     * @param space         the space to place referenced objects in
+     * @param deleteHandler determines what happens if the referenced entity is deleted
      */
-    public BlobSoftRef(String space) {
-        this(space, false);
+    public BlobSoftRef(String space, BaseEntityRef.OnDelete deleteHandler) {
+        this(space, deleteHandler, false);
     }
 
     @Override
@@ -96,5 +101,9 @@ public class BlobSoftRef extends BlobHardRef {
             return new ExternalURLBuilder(key);
         }
         return super.url();
+    }
+
+    public BaseEntityRef.OnDelete getDeleteHandler() {
+        return deleteHandler;
     }
 }
