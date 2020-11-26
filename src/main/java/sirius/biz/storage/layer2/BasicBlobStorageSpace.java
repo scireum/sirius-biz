@@ -133,6 +133,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static final String CONFIG_KEY_TOUCH_TRACKING = "touchTracking";
 
     /**
+     * Determines if we should sort by the last modification date instead of "by name".
+     */
+    private static final String CONFIG_KEY_SORT_BY_LAST_MODIFIED = "sortByLastModified";
+
+    /**
      * Contains the name of the executor in which requests are moved which might be blocked while waiting for
      * a conversion to happen. We do not want to jam our main executor of the web server for this, therefore
      * a separator one is used.
@@ -199,6 +204,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected boolean useNormalizedNames;
     protected int retentionDays;
     protected boolean touchTracking;
+    protected boolean sortByLastModified;
     protected ObjectStorageSpace objectStorageSpace;
 
     /**
@@ -217,6 +223,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         this.description = config.get(CONFIG_KEY_DESCRIPTION).getString();
         this.retentionDays = config.get(CONFIG_KEY_RETENTION_DAYS).asInt(0);
         this.touchTracking = config.get(CONFIG_KEY_TOUCH_TRACKING).asBoolean();
+        this.sortByLastModified = config.get(CONFIG_KEY_SORT_BY_LAST_MODIFIED).asBoolean();
     }
 
     @Override

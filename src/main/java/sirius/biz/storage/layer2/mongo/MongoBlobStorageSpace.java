@@ -11,6 +11,7 @@ package sirius.biz.storage.layer2.mongo;
 import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.Directory;
+import sirius.biz.storage.layer2.jdbc.SQLBlob;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.mixing.Mapping;
@@ -492,6 +493,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .eq(MongoDirectory.DELETED, false)
              .where(QueryBuilder.FILTERS.prefix(MongoDirectory.NORMALIZED_DIRECTORY_NAME, prefixFilter))
              .limit(maxResults)
+             .orderAsc(MongoDirectory.NORMALIZED_DIRECTORY_NAME)
              .iterate(childProcessor::test);
     }
 
@@ -602,6 +604,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .where(QueryBuilder.FILTERS.prefix(MongoBlob.NORMALIZED_FILENAME, prefixFilter))
              .where(QueryBuilder.FILTERS.containsOne(MongoBlob.FILE_EXTENSION, fileTypes.toArray()).build())
              .limit(maxResults)
+             .orderAsc(sortByLastModified ? MongoBlob.LAST_MODIFIED : MongoBlob.NORMALIZED_FILENAME)
              .iterate(childProcessor::test);
     }
 
