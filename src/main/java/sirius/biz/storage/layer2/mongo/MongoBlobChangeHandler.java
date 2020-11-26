@@ -1,0 +1,25 @@
+/*
+ * Made with all the love in the world
+ * by scireum in Remshalden, Germany
+ *
+ * Copyright by scireum GmbH
+ * http://www.scireum.de - info@scireum.de
+ */
+
+package sirius.biz.storage.layer2.mongo;
+
+import sirius.kernel.di.std.Priorized;
+
+/**
+ * Defines handlers to process created or modified {@link MongoBlob blobs}.
+ *
+ * @see ProcessChangedEntitiesLoop
+ */
+public interface MongoBlobChangeHandler extends Priorized {
+    /**
+     * Method executed when a blob is inserted or some of its metadata (such as file name) is modified.
+     *
+     * @param blob the modified blob
+     */
+    void execute(MongoBlob blob);
+}
