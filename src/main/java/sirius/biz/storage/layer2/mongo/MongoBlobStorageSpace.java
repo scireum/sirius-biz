@@ -11,7 +11,6 @@ package sirius.biz.storage.layer2.mongo;
 import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.Directory;
-import sirius.biz.storage.layer2.jdbc.SQLBlob;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.mixing.Mapping;
@@ -597,15 +596,23 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                                   Set<String> fileTypes,
                                   int maxResults,
                                   Predicate<? super Blob> childProcessor) {
-        mango.select(MongoBlob.class)
-             .eq(MongoBlob.SPACE_NAME, spaceName)
-             .eq(MongoBlob.PARENT, parent)
-             .eq(MongoBlob.DELETED, false)
-             .where(QueryBuilder.FILTERS.prefix(MongoBlob.NORMALIZED_FILENAME, prefixFilter))
-             .where(QueryBuilder.FILTERS.containsOne(MongoBlob.FILE_EXTENSION, fileTypes.toArray()).build())
-             .limit(maxResults)
-             .orderAsc(sortByLastModified ? MongoBlob.LAST_MODIFIED : MongoBlob.NORMALIZED_FILENAME)
-             .iterate(childProcessor::test);
+        MongoQuery<MongoBlob> blobsQuery = mango.select(MongoBlob.class)
+                                                .eq(MongoBlob.SPACE_NAME, spaceName)
+                                                .eq(MongoBlob.PARENT, parent)
+                                                .eq(MongoBlob.DELETED, false)
+                                                .where(QueryBuilder.FILTERS.prefix(MongoBlob.NORMALIZED_FILENAME,
+                                                                                   prefixFilter))
+                                                .where(QueryBuilder.FILTERS.containsOne(MongoBlob.FILE_EXTENSION,
+                                                                                        fileTypes.toArray()).build())
+                                                .limit(maxResults);
+        
+        if (sortByLastModified) {
+            blobsQuery.orderDesc(MongoBlob.LAST_MODIFIED);
+        } else {
+            blobsQuery.orderAsc(MongoBlob.NORMALIZED_FILENAME);
+        }
+
+        blobsQuery.iterate(childProcessor::test);
     }
 
     protected List<? extends BlobVariant> fetchVariants(MongoBlob blob) {
