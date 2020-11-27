@@ -480,8 +480,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                               this::rollbackBlob,
                                               error -> Exceptions.handle()
                                                                  .to(StorageUtils.LOG)
+                                                                 .error(error)
                                                                  .withSystemErrorMessage(
-                                                                         "Layer 2: Failed to create the attached blob for space '%s' and reference '%s' with filename '%s%'.",
+                                                                         "Layer 2: Failed to create the attached blob for space '%s' and reference '%s' with filename '%s': %s (%s)",
                                                                          spaceName,
                                                                          referencingEntity,
                                                                          filename)
@@ -560,8 +561,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                               this::rollbackDirectory,
                                               error -> Exceptions.handle()
                                                                  .to(StorageUtils.LOG)
+                                                                 .error(error)
                                                                  .withSystemErrorMessage(
-                                                                         "Layer 2: Failed to create the child directory for space '%s' and parent directory '%s' with name '%s%'.",
+                                                                         "Layer 2: Failed to create the child directory for space '%s' and parent directory '%s' with name '%s': %s (%s)",
                                                                          spaceName,
                                                                          parent,
                                                                          childName)
@@ -619,8 +621,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                               this::rollbackBlob,
                                               error -> Exceptions.handle()
                                                                  .to(StorageUtils.LOG)
+                                                                 .error(error)
                                                                  .withSystemErrorMessage(
-                                                                         "Layer 2: Failed to create the child blob for space '%s' and parent directory '%s' with name '%s%'.",
+                                                                         "Layer 2: Failed to create the child blob for space '%s' and parent directory '%s' with name '%s': %s (%s)",
                                                                          spaceName,
                                                                          parent,
                                                                          childName)
