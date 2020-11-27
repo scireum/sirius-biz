@@ -16,7 +16,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Implements processing actions on {@link MongoDirectory directories} and {@link MongoBlob blobs}.
@@ -33,25 +32,20 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
     private Mongo mongo;
 
     @Override
-    protected AtomicInteger deleteBlobs() {
-        AtomicInteger numBlobs = new AtomicInteger();
+    protected void deleteBlobs(Runnable counter) {
         mango.select(MongoBlob.class).eq(MongoBlob.DELETED, true).limit(256).iterateAll(blob -> {
             try {
                 deletePhysicalObject(blob);
-
+                counter.run();
                 mango.delete(blob);
-                numBlobs.incrementAndGet();
             } catch (Exception e) {
                 handleBlobDeletionException(blob, e);
             }
         });
-
-        return numBlobs;
     }
 
     @Override
-    protected AtomicInteger deleteDirectories() {
-        AtomicInteger numDirectories = new AtomicInteger();
+    protected void deleteDirectories(Runnable counter) {
         mango.select(MongoDirectory.class).eq(MongoDirectory.DELETED, true).limit(256).iterateAll(dir -> {
             try {
                 propagateDelete(dir);
@@ -59,24 +53,20 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
             } catch (Exception e) {
                 handleDirectoryDeletionException(dir, e);
             }
-            numDirectories.incrementAndGet();
+            counter.run();
         });
-
-        return numDirectories;
     }
 
     @Override
-    protected AtomicInteger processCreatedOrRenamedBlobs() {
-        AtomicInteger numBlobs = new AtomicInteger();
+    protected void processCreatedOrRenamedBlobs(Runnable counter) {
         mango.select(MongoBlob.class).eq(MongoBlob.CREATED_OR_RENAMED, true).limit(256).iterateAll(blob -> {
             invokeChangedOrDeletedHandlers(blob);
             mongo.update()
                  .set(MongoBlob.CREATED_OR_RENAMED, false)
                  .where(MongoBlob.ID, blob.getId())
                  .executeFor(MongoBlob.class);
+            counter.run();
         });
-
-        return numBlobs;
     }
 
     @Override

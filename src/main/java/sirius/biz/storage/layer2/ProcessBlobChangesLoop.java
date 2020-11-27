@@ -43,9 +43,13 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
     @Nullable
     @Override
     protected String doWork() throws Exception {
-        AtomicInteger deletedDirectories = deleteDirectories();
-        AtomicInteger deletedBlobs = deleteBlobs();
-        AtomicInteger createdRenamedBlobs = processCreatedOrRenamedBlobs();
+        AtomicInteger deletedDirectories = new AtomicInteger();
+        AtomicInteger deletedBlobs = new AtomicInteger();
+        AtomicInteger createdRenamedBlobs = new AtomicInteger();
+
+        deleteDirectories(deletedDirectories::incrementAndGet);
+        deleteBlobs(deletedBlobs::incrementAndGet);
+        processCreatedOrRenamedBlobs(createdRenamedBlobs::incrementAndGet);
 
         if (deletedDirectories.get() == 0 && deletedBlobs.get() == 0 && createdRenamedBlobs.get() == 0) {
             return null;
@@ -100,25 +104,25 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
     /**
      * Queries and physically delete all {@link Blob blobs} marked as deleted.
      *
-     * @return the number of blobs deleted
+     * @param counter a {@link Runnable} to be called for each {@link Blob blob} deleted
      */
-    protected abstract AtomicInteger deleteBlobs();
+    protected abstract void deleteBlobs(Runnable counter);
 
     /**
      * Queries and physically delete all {@link Directory directories} marked as deleted.
      *
-     * @return the number of directories deleted
+     * @param counter a {@link Runnable} to be called for each {@link Directory directory} deleted
      */
-    protected abstract AtomicInteger deleteDirectories();
+    protected abstract void deleteDirectories(Runnable counter);
 
     /**
      * Queries and processes {@link Blob blobs} marked as created or had the file name renamed.
      * <p>
      * The processing is performed by the registered {@link BlobCreatedRenamedHandler handlers}
      *
-     * @return the number of directories deleted
+     * @param counter a {@link Runnable} to be called for each {@link Blob blob} processed
      */
-    protected abstract AtomicInteger processCreatedOrRenamedBlobs();
+    protected abstract void processCreatedOrRenamedBlobs(Runnable counter);
 
     /**
      * Marks children items of a given  {@link Directory directory} as deleted.

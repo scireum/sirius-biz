@@ -15,7 +15,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 import java.sql.SQLException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Implements processing actions on {@link SQLDirectory directories} and {@link SQLBlob blobs}.
@@ -27,25 +26,20 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
     private OMA oma;
 
     @Override
-    protected AtomicInteger deleteBlobs() {
-        AtomicInteger numBlobs = new AtomicInteger();
+    protected void deleteBlobs(Runnable counter) {
         oma.select(SQLBlob.class).eq(SQLBlob.DELETED, true).limit(256).iterateAll(blob -> {
             try {
                 deletePhysicalObject(blob);
-
                 oma.delete(blob);
-                numBlobs.incrementAndGet();
+                counter.run();
             } catch (Exception e) {
                 handleBlobDeletionException(blob, e);
             }
         });
-
-        return numBlobs;
     }
 
     @Override
-    protected AtomicInteger deleteDirectories() {
-        AtomicInteger numDirectories = new AtomicInteger();
+    protected void deleteDirectories(Runnable counter) {
         oma.select(SQLDirectory.class).eq(SQLDirectory.DELETED, true).limit(256).iterateAll(dir -> {
             try {
                 propagateDelete(dir);
@@ -53,18 +47,14 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
             } catch (Exception e) {
                 handleDirectoryDeletionException(dir, e);
             }
-            numDirectories.incrementAndGet();
+            counter.run();
         });
-
-        return numDirectories;
     }
 
     @Override
-    protected AtomicInteger processCreatedOrRenamedBlobs() {
-        AtomicInteger numBlobs = new AtomicInteger();
+    protected void processCreatedOrRenamedBlobs(Runnable counter) {
         oma.select(SQLBlob.class).eq(SQLBlob.CREATED_OR_RENAMED, true).limit(256).iterateAll(blob -> {
             invokeChangedOrDeletedHandlers(blob);
-            numBlobs.incrementAndGet();
             try {
                 oma.updateStatement(SQLBlob.class)
                    .set(SQLBlob.CREATED_OR_RENAMED, false)
@@ -77,9 +67,8 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                         blob.getFilename(),
                         blob.getSpaceName()).handle();
             }
+            counter.run();
         });
-
-        return numBlobs;
     }
 
     @Override
