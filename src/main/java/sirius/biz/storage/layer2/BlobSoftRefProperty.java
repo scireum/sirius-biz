@@ -33,9 +33,6 @@ import sirius.kernel.nls.NLS;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -56,7 +53,6 @@ public class BlobSoftRefProperty extends BlobRefProperty {
     private static final String PARAM_FIELD = "field";
 
     private BlobSoftRef blobSoftRef;
-    protected List<EntityDescriptor> referencedDescriptors = new ArrayList<>();
 
     /**
      * Factory for generating properties based on their field type
@@ -88,22 +84,6 @@ public class BlobSoftRefProperty extends BlobRefProperty {
                                 @Nonnull AccessPath accessPath,
                                 @Nonnull Field field) {
         super(descriptor, accessPath, field);
-    }
-
-    /**
-     * Returns the {@link EntityDescriptor} of the referenced entity.
-     *
-     * @return the referenced entity descriptor
-     */
-    public List<EntityDescriptor> getReferencedDescriptors() {
-        if (referencedDescriptors.isEmpty()) {
-            if (blobSoftRef == null) {
-                throw new IllegalStateException("Schema not linked!");
-            }
-            forEachBlobType(referencedDescriptors::add);
-        }
-
-        return Collections.unmodifiableList(referencedDescriptors);
     }
 
     private void forEachBlobType(Consumer<EntityDescriptor> callback) {
@@ -142,14 +122,14 @@ public class BlobSoftRefProperty extends BlobRefProperty {
             BaseEntityRef.OnDelete deleteHandler = getBlobSoftRef().getDeleteHandler();
 
             if (deleteHandler == BaseEntityRef.OnDelete.CASCADE) {
-                getReferencedDescriptors().forEach(entityDescriptor -> entityDescriptor.addCascadeDeleteHandler(this::onDeleteCascade));
+                forEachBlobType(entityDescriptor -> entityDescriptor.addCascadeDeleteHandler(this::onDeleteCascade));
             } else if (deleteHandler == BaseEntityRef.OnDelete.SET_NULL) {
                 if (!isNullable()) {
                     Mixing.LOG.WARN("Error in property %s of %s: The field is not marked as NullAllowed,"
                                     + " therefore SET_NULL is not a valid delete handler!", this, getDescriptor());
                 }
 
-                getReferencedDescriptors().forEach(entityDescriptor -> entityDescriptor.addCascadeDeleteHandler(this::onDeleteSetNull));
+                forEachBlobType(entityDescriptor -> entityDescriptor.addCascadeDeleteHandler(this::onDeleteSetNull));
             }
         } catch (Exception e) {
             Mixing.LOG.WARN("Error when linking property %s of %s: %s (%s)",
