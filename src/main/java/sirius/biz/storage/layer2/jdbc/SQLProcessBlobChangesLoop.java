@@ -9,7 +9,7 @@
 package sirius.biz.storage.layer2.jdbc;
 
 import sirius.biz.storage.layer2.Directory;
-import sirius.biz.storage.layer2.ProcessBlobsLoop;
+import sirius.biz.storage.layer2.ProcessBlobChangesLoop;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.commons.Strings;
@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Implements processing actions on {@link SQLDirectory directories} and {@link SQLBlob blobs}.
  */
 @Register(framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
-public class SQLProcessBlobsLoop extends ProcessBlobsLoop {
+public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Part
     private OMA oma;

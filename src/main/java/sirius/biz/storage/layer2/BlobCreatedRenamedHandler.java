@@ -15,7 +15,7 @@ import javax.annotation.Nonnull;
 /**
  * Defines handlers to process created or modified {@link sirius.biz.storage.layer2.Blob blobs}.
  *
- * @see ProcessBlobsLoop
+ * @see ProcessBlobChangesLoop
  */
 public interface BlobCreatedRenamedHandler extends Priorized {
     /**

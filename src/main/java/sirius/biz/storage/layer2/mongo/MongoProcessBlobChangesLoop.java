@@ -9,7 +9,7 @@
 package sirius.biz.storage.layer2.mongo;
 
 import sirius.biz.storage.layer2.Directory;
-import sirius.biz.storage.layer2.ProcessBlobsLoop;
+import sirius.biz.storage.layer2.ProcessBlobChangesLoop;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.Mongo;
@@ -23,10 +23,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Implements processing actions on {@link MongoDirectory directories} and {@link MongoBlob blobs}.
  *
- * @see ProcessBlobsLoop
+ * @see ProcessBlobChangesLoop
  */
 @Register(framework = MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
-public class MongoProcessBlobsLoop extends ProcessBlobsLoop {
+public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Part
     private Mango mango;
