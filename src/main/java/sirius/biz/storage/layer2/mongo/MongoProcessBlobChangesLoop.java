@@ -17,6 +17,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 
+import javax.annotation.Nonnull;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -110,8 +111,8 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
     }
 
     @Override
-    protected void propagateDelete(Directory dir) {
-        String directoryId = ((MongoDirectory) dir).getId();
+    protected void propagateDelete(@Nonnull Directory dir) {
+        String directoryId = dir.getIdAsString();
         mongo.update()
              .set(MongoDirectory.DELETED, true)
              .where(MongoDirectory.PARENT, directoryId)
