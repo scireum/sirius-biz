@@ -33,7 +33,10 @@ public class BlobSoftRef extends BlobHardRef {
      * Creates a new reference for the given space.
      *
      * @param space         the space to place referenced objects in
-     * @param deleteHandler determines what happens if the referenced entity is deleted
+     * @param deleteHandler determines the action to take if the blob is deleted. Valid options are:
+     *                      {@link BaseEntityRef.OnDelete#CASCADE CASCADE},
+     *                      {@link BaseEntityRef.OnDelete#SET_NULL SET_NULL},
+     *                      {@link BaseEntityRef.OnDelete#IGNORE IGNORE})
      * @param supportsURL   if <tt>true</tt> a URL can also be used instead of an object key
      */
     public BlobSoftRef(String space, BaseEntityRef.OnDelete deleteHandler, boolean supportsURL) {
