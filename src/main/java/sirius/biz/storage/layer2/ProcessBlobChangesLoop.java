@@ -8,9 +8,11 @@
 
 package sirius.biz.storage.layer2;
 
+import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.async.BackgroundLoop;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.PriorityParts;
+import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -25,7 +27,7 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
     private static final double FREQUENCY_EVERY_FIFTEEN_SECONDS = 1 / 15d;
 
     @PriorityParts(BlobCreatedRenamedHandler.class)
-    protected List<BlobCreatedRenamedHandler> createdOrRenamedHandlers;
+    private List<BlobCreatedRenamedHandler> createdOrRenamedHandlers;
 
     @Nonnull
     @Override
@@ -59,6 +61,40 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
         if (Strings.isFilled(blob.getPhysicalObjectKey())) {
             blob.getStorageSpace().getPhysicalSpace().delete(blob.getPhysicalObjectKey());
         }
+    }
+
+    protected void invokeChangedOrDeletedHandlers(Blob blob) {
+        createdOrRenamedHandlers.forEach(handler -> {
+            try {
+                handler.execute(blob);
+            } catch (Exception e) {
+                buildStorageException(e).withSystemErrorMessage(
+                        "Layer 2: %s failed to process the changed blob %s (%s) in %s: (%s)",
+                        handler.getClass().getSimpleName(),
+                        blob.getBlobKey(),
+                        blob.getFilename(),
+                        blob.getSpaceName()).handle();
+            }
+        });
+    }
+
+    protected void handleBlobDeletionException(@Nonnull Blob blob, Exception e) {
+        buildStorageException(e).withSystemErrorMessage("Layer 2: Failed to finally delete the blob %s (%s) in %s: (%s)",
+                                                        blob.getBlobKey(),
+                                                        blob.getFilename(),
+                                                        blob.getSpaceName()).handle();
+    }
+
+    protected void handleDirectoryDeletionException(@Nonnull Directory dir, Exception e) {
+        buildStorageException(e).withSystemErrorMessage(
+                "Layer 2: Failed to finally delete the directory %s (%s) in %s: (%s)",
+                dir.getIdAsString(),
+                dir.getName(),
+                dir.getSpaceName()).handle();
+    }
+
+    protected Exceptions.ErrorHandler buildStorageException(Exception e) {
+        return Exceptions.handle().to(StorageUtils.LOG).error(e);
     }
 
     /**

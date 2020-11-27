@@ -10,11 +10,9 @@ package sirius.biz.storage.layer2.jdbc;
 
 import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.ProcessBlobChangesLoop;
-import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.health.Exceptions;
 
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,14 +36,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                 oma.delete(blob);
                 numBlobs.incrementAndGet();
             } catch (Exception e) {
-                Exceptions.handle()
-                          .to(StorageUtils.LOG)
-                          .error(e)
-                          .withSystemErrorMessage("Layer 2/SQL: Failed to finally delete the blob %s (%s) in %s: (%s)",
-                                                  blob.getBlobKey(),
-                                                  blob.getFilename(),
-                                                  blob.getSpaceName())
-                          .handle();
+                handleBlobDeletionException(blob, e);
             }
         });
 
@@ -60,15 +51,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                 propagateDelete(dir);
                 oma.delete(dir);
             } catch (Exception e) {
-                Exceptions.handle()
-                          .to(StorageUtils.LOG)
-                          .error(e)
-                          .withSystemErrorMessage(
-                                  "Layer 2/SQL: Failed to finally delete the directory %s (%s) in %s: (%s)",
-                                  dir.getId(),
-                                  dir.getName(),
-                                  dir.getSpaceName())
-                          .handle();
+                handleDirectoryDeletionException(dir, e);
             }
             numDirectories.incrementAndGet();
         });
@@ -80,35 +63,19 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
     protected AtomicInteger processCreatedOrRenamedBlobs() {
         AtomicInteger numBlobs = new AtomicInteger();
         oma.select(SQLBlob.class).eq(SQLBlob.CREATED_OR_RENAMED, true).limit(256).iterateAll(blob -> {
+            invokeChangedOrDeletedHandlers(blob);
+            numBlobs.incrementAndGet();
             try {
-                createdOrRenamedHandlers.forEach(handler -> handler.execute(blob));
-                numBlobs.incrementAndGet();
-            } catch (Exception e) {
-                Exceptions.handle()
-                          .to(StorageUtils.LOG)
-                          .error(e)
-                          .withSystemErrorMessage("Layer 2/SQL: Failed to process the blob %s (%s) in %s: (%s)",
-                                                  blob.getBlobKey(),
-                                                  blob.getFilename(),
-                                                  blob.getSpaceName())
-                          .handle();
-            } finally {
-                try {
-                    oma.updateStatement(SQLBlob.class)
-                       .set(SQLBlob.CREATED_OR_RENAMED, false)
-                       .where(SQLBlob.ID, blob.getId())
-                       .executeUpdate();
-                } catch (SQLException e) {
-                    Exceptions.handle()
-                              .to(StorageUtils.LOG)
-                              .error(e)
-                              .withSystemErrorMessage(
-                                      "Layer 2/SQL: Failed to reset blob %s (%s) in %s as not changed: (%s)",
-                                      blob.getBlobKey(),
-                                      blob.getFilename(),
-                                      blob.getSpaceName())
-                              .handle();
-                }
+                oma.updateStatement(SQLBlob.class)
+                   .set(SQLBlob.CREATED_OR_RENAMED, false)
+                   .where(SQLBlob.ID, blob.getId())
+                   .executeUpdate();
+            } catch (SQLException e) {
+                buildStorageException(e).withSystemErrorMessage(
+                        "Layer 2: Failed to reset blob %s (%s) in %s as not changed: (%s)",
+                        blob.getBlobKey(),
+                        blob.getFilename(),
+                        blob.getSpaceName()).handle();
             }
         });
 
@@ -128,15 +95,11 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                .where(SQLBlob.PARENT, directoryId)
                .executeUpdate();
         } catch (SQLException e) {
-            Exceptions.handle()
-                      .to(StorageUtils.LOG)
-                      .error(e)
-                      .withSystemErrorMessage(
-                              "Layer 2/SQL: Failed to propagate deletion for directory %s (%s) in %s: (%s)",
-                              directoryId,
-                              dir.getName(),
-                              dir.getSpaceName())
-                      .handle();
+            buildStorageException(e).withSystemErrorMessage(
+                    "Layer 2: Failed to propagate deletion for directory %s (%s) in %s: (%s)",
+                    directoryId,
+                    dir.getName(),
+                    dir.getSpaceName()).handle();
         }
     }
 }

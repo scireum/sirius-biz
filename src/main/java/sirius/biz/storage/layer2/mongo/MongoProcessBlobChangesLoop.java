@@ -10,12 +10,10 @@ package sirius.biz.storage.layer2.mongo;
 
 import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.ProcessBlobChangesLoop;
-import sirius.biz.storage.util.StorageUtils;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.Mongo;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nonnull;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,14 +42,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                 mango.delete(blob);
                 numBlobs.incrementAndGet();
             } catch (Exception e) {
-                Exceptions.handle()
-                          .to(StorageUtils.LOG)
-                          .error(e)
-                          .withSystemErrorMessage("Layer 2/Mongo: Failed to finally delete the blob %s (%s) in %s: (%s)",
-                                                  blob.getBlobKey(),
-                                                  blob.getFilename(),
-                                                  blob.getSpaceName())
-                          .handle();
+                handleBlobDeletionException(blob, e);
             }
         });
 
@@ -66,15 +57,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                 propagateDelete(dir);
                 mango.delete(dir);
             } catch (Exception e) {
-                Exceptions.handle()
-                          .to(StorageUtils.LOG)
-                          .error(e)
-                          .withSystemErrorMessage(
-                                  "Layer 2/Mongo: Failed to finally delete the directory %s (%s) in %s: (%s)",
-                                  dir.getId(),
-                                  dir.getName(),
-                                  dir.getSpaceName())
-                          .handle();
+                handleDirectoryDeletionException(dir, e);
             }
             numDirectories.incrementAndGet();
         });
@@ -86,25 +69,11 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
     protected AtomicInteger processCreatedOrRenamedBlobs() {
         AtomicInteger numBlobs = new AtomicInteger();
         mango.select(MongoBlob.class).eq(MongoBlob.CREATED_OR_RENAMED, true).limit(256).iterateAll(blob -> {
-            try {
-                createdOrRenamedHandlers.forEach(handler -> handler.execute(blob));
-                numBlobs.incrementAndGet();
-            } catch (Exception e) {
-                Exceptions.handle()
-                          .to(StorageUtils.LOG)
-                          .error(e)
-                          .withSystemErrorMessage(
-                                  "Layer 2/Mongo: Failed to process the changed blob %s (%s) in %s: %s (%s)",
-                                  blob.getBlobKey(),
-                                  blob.getFilename(),
-                                  blob.getSpaceName())
-                          .handle();
-            } finally {
-                mongo.update()
-                     .set(MongoBlob.CREATED_OR_RENAMED, false)
-                     .where(MongoBlob.ID, blob.getId())
-                     .executeFor(MongoBlob.class);
-            }
+            invokeChangedOrDeletedHandlers(blob);
+            mongo.update()
+                 .set(MongoBlob.CREATED_OR_RENAMED, false)
+                 .where(MongoBlob.ID, blob.getId())
+                 .executeFor(MongoBlob.class);
         });
 
         return numBlobs;
