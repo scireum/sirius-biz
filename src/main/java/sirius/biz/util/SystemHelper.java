@@ -25,7 +25,7 @@ public class SystemHelper {
 
     /**
      * This environment variable is defined in the docker-compose.yaml.erb template file and will alway be "prod",
-     * "staging" or "test", as our node namings are fixes to that environment definitions.
+     * "staging" or "test", as our node namings are fixed to that environment definitions.
      */
     private static final String ENVIRONMENT = "ENVIRONMENT";
 
