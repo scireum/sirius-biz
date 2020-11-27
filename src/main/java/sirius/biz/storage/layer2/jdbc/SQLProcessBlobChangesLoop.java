@@ -12,7 +12,6 @@ import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.ProcessBlobChangesLoop;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -34,9 +33,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
         AtomicInteger numBlobs = new AtomicInteger();
         oma.select(SQLBlob.class).eq(SQLBlob.DELETED, true).limit(256).iterateAll(blob -> {
             try {
-                if (Strings.isFilled(blob.getPhysicalObjectKey())) {
-                    blob.getStorageSpace().getPhysicalSpace().delete(blob.getPhysicalObjectKey());
-                }
+                deletePhysicalObject(blob);
 
                 oma.delete(blob);
                 numBlobs.incrementAndGet();

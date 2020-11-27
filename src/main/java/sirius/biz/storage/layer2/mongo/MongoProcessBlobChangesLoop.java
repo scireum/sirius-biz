@@ -13,7 +13,6 @@ import sirius.biz.storage.layer2.ProcessBlobChangesLoop;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.Mongo;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
@@ -39,9 +38,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
         AtomicInteger numBlobs = new AtomicInteger();
         mango.select(MongoBlob.class).eq(MongoBlob.DELETED, true).limit(256).iterateAll(blob -> {
             try {
-                if (Strings.isFilled(blob.getPhysicalObjectKey())) {
-                    blob.getStorageSpace().getPhysicalSpace().delete(blob.getPhysicalObjectKey());
-                }
+                deletePhysicalObject(blob);
 
                 mango.delete(blob);
                 numBlobs.incrementAndGet();

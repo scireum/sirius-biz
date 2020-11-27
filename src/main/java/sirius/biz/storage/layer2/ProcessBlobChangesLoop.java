@@ -55,6 +55,12 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
                              createdRenamedBlobs.get());
     }
 
+    protected void deletePhysicalObject(@Nonnull Blob blob) {
+        if (Strings.isFilled(blob.getPhysicalObjectKey())) {
+            blob.getStorageSpace().getPhysicalSpace().delete(blob.getPhysicalObjectKey());
+        }
+    }
+
     /**
      * Queries and physically delete all {@link Blob blobs} marked as deleted.
      *
