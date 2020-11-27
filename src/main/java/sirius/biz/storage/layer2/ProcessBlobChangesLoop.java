@@ -55,11 +55,31 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
                              createdRenamedBlobs.get());
     }
 
+    /**
+     * Queries and physically delete all {@link Blob blobs} marked as deleted.
+     *
+     * @return the number of blobs deleted
+     */
     protected abstract AtomicInteger deleteBlobs();
 
+    /**
+     * Queries and physically delete all {@link Directory directories} marked as deleted.
+     *
+     * @return the number of directories deleted
+     */
     protected abstract AtomicInteger deleteDirectories();
 
+    /**
+     * Queries and processes {@link Blob blobs} marked as created or had the file name renamed.
+     * <p>
+     * The processing is performed by the registered {@link BlobCreatedRenamedHandler handlers}
+     *
+     * @return the number of directories deleted
+     */
     protected abstract AtomicInteger processCreatedOrRenamedBlobs();
 
+    /**
+     * Marks children items of a given  {@link Directory directory} as deleted.
+     */
     protected abstract void propagateDelete(Directory dir);
 }
