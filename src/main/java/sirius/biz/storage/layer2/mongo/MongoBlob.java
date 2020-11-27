@@ -68,9 +68,8 @@ import java.util.Optional;
 @Index(name = "blob_reference_lookup",
         columns = {"spaceName", "deleted", "reference", "referenceDesignator"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
-@Index(name = "blob_created_renamed_lookup",
-        columns = {"spaceName", "createdOrRenamed"},
-        columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
+@Index(name = "blob_created_renamed_loop", columns = "createdOrRenamed", columnSettings = Mango.INDEX_ASCENDING)
+@Index(name = "blob_deleted_loop", columns = "deleted", columnSettings = Mango.INDEX_ASCENDING)
 public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     @Transient

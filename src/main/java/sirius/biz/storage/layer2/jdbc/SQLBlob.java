@@ -53,7 +53,8 @@ import java.util.Optional;
 @Index(name = "blob_sort_by_last_modified", columns = {"spaceName", "deleted", "parent", "lastModified"})
 @Index(name = "blob_filename_lookup", columns = {"spaceName", "deleted", "filename", "parent", "committed"})
 @Index(name = "blob_reference_lookup", columns = {"spaceName", "deleted", "reference", "referenceDesignator"})
-@Index(name = "blob_created_renamed_lookup", columns = {"spaceName", "createdOrRenamed"})
+@Index(name = "blob_created_renamed_loop", columns = "createdOrRenamed")
+@Index(name = "blob_deleted_loop", columns = "deleted")
 public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Transient
