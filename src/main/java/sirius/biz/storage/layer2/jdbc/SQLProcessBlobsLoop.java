@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Implements processing actions on {@link SQLDirectory directories} and {@link SQLBlob blobs}.
  */
 @Register(framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
-public class SQLDeletedBlobsLoop extends ProcessBlobsLoop {
+public class SQLProcessBlobsLoop extends ProcessBlobsLoop {
 
     @Part
     private OMA oma;
