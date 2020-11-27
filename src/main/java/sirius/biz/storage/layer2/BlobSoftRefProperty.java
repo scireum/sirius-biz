@@ -9,7 +9,9 @@
 package sirius.biz.storage.layer2;
 
 import sirius.biz.storage.layer2.jdbc.SQLBlob;
+import sirius.biz.storage.layer2.jdbc.SQLBlobStorage;
 import sirius.biz.storage.layer2.mongo.MongoBlob;
+import sirius.biz.storage.layer2.mongo.MongoBlobStorage;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
 import sirius.db.mixing.AccessPath;
@@ -19,6 +21,7 @@ import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.PropertyFactory;
 import sirius.db.mixing.types.BaseEntityRef;
+import sirius.kernel.Sirius;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Watch;
@@ -97,11 +100,19 @@ public class BlobSoftRefProperty extends BlobRefProperty {
             if (blobSoftRef == null) {
                 throw new IllegalStateException("Schema not linked!");
             }
-            referencedDescriptors.add(mixing.getDescriptor(MongoBlob.class));
-            referencedDescriptors.add(mixing.getDescriptor(SQLBlob.class));
+            forEachBlobType(referencedDescriptors::add);
         }
 
         return Collections.unmodifiableList(referencedDescriptors);
+    }
+
+    private void forEachBlobType(Consumer<EntityDescriptor> callback) {
+        if (Sirius.isFrameworkEnabled(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)) {
+            callback.accept(mixing.getDescriptor(SQLBlob.class));
+        }
+        if (Sirius.isFrameworkEnabled(MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)) {
+            callback.accept(mixing.getDescriptor(MongoBlob.class));
+        }
     }
 
     private BlobSoftRef getBlobSoftRef() {
@@ -180,18 +191,10 @@ public class BlobSoftRefProperty extends BlobRefProperty {
 
     private void processReferenceInstances(Object entity, Consumer<BaseEntity<?>> handler) {
         BaseEntity<?> referenceInstance = (BaseEntity<?>) getDescriptor().getReferenceInstance();
-        if (entity instanceof MongoBlob) {
-            referenceInstance.getMapper()
-                             .select(referenceInstance.getClass())
-                             .eq(nameAsMapping, ((MongoBlob) entity).getBlobKey())
-                             .iterateAll(handler);
-        }
-        if (entity instanceof SQLBlob) {
-            referenceInstance.getMapper()
-                             .select(referenceInstance.getClass())
-                             .eq(nameAsMapping, ((SQLBlob) entity).getBlobKey())
-                             .iterateAll(handler);
-        }
+        referenceInstance.getMapper()
+                         .select(referenceInstance.getClass())
+                         .eq(nameAsMapping, ((Blob) entity).getBlobKey())
+                         .iterateAll(handler);
     }
 
     private void cascadeSetNull(TaskContext taskContext, BaseEntity<?> other) {
