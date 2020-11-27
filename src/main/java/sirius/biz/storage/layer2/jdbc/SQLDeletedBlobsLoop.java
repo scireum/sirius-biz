@@ -21,7 +21,7 @@ import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Finally deletes {@link SQLDirectory directories} and {@link SQLBlob blobs} which have been marked as deleted.
+ * Implements processing actions on {@link SQLDirectory directories} and {@link SQLBlob blobs}.
  */
 @Register(framework = SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 public class SQLDeletedBlobsLoop extends ProcessBlobsLoop {

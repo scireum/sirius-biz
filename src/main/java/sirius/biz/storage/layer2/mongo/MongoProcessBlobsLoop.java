@@ -21,7 +21,9 @@ import sirius.kernel.health.Exceptions;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Finally deletes {@link MongoDirectory directories} and {@link MongoBlob blobs} which have been marked as deleted.
+ * Implements processing actions on {@link MongoDirectory directories} and {@link MongoBlob blobs}.
+ *
+ * @see ProcessBlobsLoop
  */
 @Register(framework = MongoBlobStorage.FRAMEWORK_MONGO_BLOB_STORAGE)
 public class MongoProcessBlobsLoop extends ProcessBlobsLoop {

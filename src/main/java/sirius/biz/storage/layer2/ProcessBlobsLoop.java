@@ -18,8 +18,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Defines a loop to process created or renamed {@link Blob blobs}.
- */
+ * Defines a loop to process creation, renaming and deletion of {@link Blob blobs} and deletion of {@link Directory directories}.
+ *
+ * @see ProcessBlobsLoop
+ **/
 public abstract class ProcessBlobsLoop extends BackgroundLoop {
 
     private static final double FREQUENCY_EVERY_FIFTEEN_SECONDS = 1 / 15d;

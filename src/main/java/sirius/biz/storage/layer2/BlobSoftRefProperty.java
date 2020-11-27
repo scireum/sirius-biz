@@ -96,7 +96,7 @@ public class BlobSoftRefProperty extends BlobRefProperty {
      * @return the referenced entity descriptor
      */
     public List<EntityDescriptor> getReferencedDescriptors() {
-        if (referencedDescriptors == null) {
+        if (referencedDescriptors.isEmpty()) {
             if (blobSoftRef == null) {
                 throw new IllegalStateException("Schema not linked!");
             }
