@@ -98,8 +98,8 @@ public class ObjectStore {
 
     private class MonitoringProgressListener implements S3ProgressListener {
 
-        private Watch w = Watch.start();
-        private boolean upload;
+        private final Watch watch = Watch.start();
+        private final boolean upload;
 
         MonitoringProgressListener(boolean upload) {
             this.upload = upload;
@@ -113,15 +113,15 @@ public class ObjectStore {
         @Override
         public void progressChanged(ProgressEvent progressEvent) {
             if (progressEvent.getEventType() == ProgressEventType.TRANSFER_STARTED_EVENT) {
-                w.reset();
+                watch.reset();
             }
 
             if (progressEvent.getEventType() == ProgressEventType.TRANSFER_COMPLETED_EVENT) {
                 if (upload) {
-                    stores.uploads.addValue(w.elapsedMillis());
+                    stores.uploads.addValue(watch.elapsedMillis());
                     stores.uploadedBytes.add(progressEvent.getBytesTransferred());
                 } else {
-                    stores.downloads.addValue(w.elapsedMillis());
+                    stores.downloads.addValue(watch.elapsedMillis());
                     stores.downloadedBytes.add(progressEvent.getBytesTransferred());
                 }
             }

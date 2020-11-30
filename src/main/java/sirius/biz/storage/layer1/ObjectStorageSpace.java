@@ -23,6 +23,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Counter;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 import sirius.web.http.Response;
@@ -56,6 +57,14 @@ public abstract class ObjectStorageSpace {
 
     @Part
     private static GlobalContext globalContext;
+
+    private static final Counter UPLOADS = new Counter();
+    private static final Counter DOWNLOADS = new Counter();
+    private static final Counter STREAMS = new Counter();
+    private static final Counter DELIVERIES = new Counter();
+    private static final Counter FALLBACKS = new Counter();
+    private static final Counter DELIVERY_CLIENT_FAILURES = new Counter();
+    private static final Counter DELIVERY_SERVER_FAILURES = new Counter();
 
     /**
      * Creates a new instance with the given name and configuration.
@@ -186,6 +195,7 @@ public abstract class ObjectStorageSpace {
      */
     public void upload(String objectId, File file) {
         try {
+            UPLOADS.inc();
             if (hasTransformer()) {
                 storePhysicalObject(objectId, file, createWriteTransformer());
             } else {
@@ -233,6 +243,7 @@ public abstract class ObjectStorageSpace {
      */
     public void upload(String objectId, InputStream inputStream, long contentLength) {
         try {
+            UPLOADS.inc();
             if (hasTransformer()) {
                 storePhysicalObject(objectId, inputStream, createWriteTransformer());
             } else {
@@ -282,6 +293,7 @@ public abstract class ObjectStorageSpace {
             if (Strings.isEmpty(objectId)) {
                 return Optional.empty();
             }
+            DOWNLOADS.inc();
             if (hasTransformer()) {
                 return Optional.ofNullable(getData(objectId, createReadTransformer()));
             } else {
@@ -330,6 +342,8 @@ public abstract class ObjectStorageSpace {
             if (Strings.isEmpty(objectId)) {
                 return Optional.empty();
             }
+
+            STREAMS.inc();
             if (hasTransformer()) {
                 return Optional.ofNullable(getAsStream(objectId, createReadTransformer()));
             } else {
@@ -378,6 +392,8 @@ public abstract class ObjectStorageSpace {
      */
     public void deliver(Response response, String objectId) {
         try {
+            DELIVERIES.inc();
+
             if (hasTransformer()) {
                 deliverPhysicalObject(response,
                                       objectId,
@@ -400,10 +416,15 @@ public abstract class ObjectStorageSpace {
 
     private void handleHttpError(Response response, String objectId, int status) {
         if (replicationSpace != null) {
-            //TODO bump stats + record event
+            FALLBACKS.inc();
             replicationSpace.deliver(response, objectId);
         } else {
-            //TODO bump stats + record event
+            if (status >= 500) {
+                DELIVERY_SERVER_FAILURES.inc();
+            } else if (status >= 400) {
+                DELIVERY_CLIENT_FAILURES.inc();
+            }
+
             response.error(HttpResponseStatus.valueOf(status));
         }
     }
@@ -522,5 +543,82 @@ public abstract class ObjectStorageSpace {
      */
     public boolean hasReplicationSpace() {
         return replicationSpace != null;
+    }
+
+    /**
+     * Counts the number of uploads performed on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the number of uploads on this node
+     */
+    public static long getUploads() {
+        return UPLOADS.getCount();
+    }
+
+    /**
+     * Counts the number of downloads performed on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the number of downloads on this node
+     */
+    public static long getDownloads() {
+        return DOWNLOADS.getCount();
+    }
+
+    /**
+     * Counts the number of stream fetches performed on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the number of stream fetches on this node
+     */
+    public static long getStreams() {
+        return STREAMS.getCount();
+    }
+
+    /**
+     * Counts the number of deliveries performed on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the number of deliveries on this node
+     */
+    public static long getDeliveries() {
+        return DELIVERIES.getCount();
+    }
+
+    /**
+     * Counts the number of deliveries which had to use the fallback repository on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the number of fallbacks on this node
+     */
+    public static long getFallbacks() {
+        return FALLBACKS.getCount();
+    }
+
+    /**
+     * Counts the number of client errors during deliveries on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the number of client errors on this node
+     */
+    public static long getDeliveryClientFailures() {
+        return DELIVERY_CLIENT_FAILURES.getCount();
+    }
+
+    /**
+     * Counts the number of server errors during deliveries on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the number of server errors on this node
+     */
+    public static long getDeliveryServerFailures() {
+        return DELIVERY_SERVER_FAILURES.getCount();
     }
 }

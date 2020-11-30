@@ -15,9 +15,11 @@ import sirius.kernel.Sirius;
 import sirius.kernel.async.Promise;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Watch;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Average;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
@@ -49,6 +51,8 @@ public class ConversionEngine {
     private static final String CONFIG_KEY_CONVERTERS = "storage.layer2.conversion.converters";
     private static final String EXECUTOR_STORAGE_CONVERSION = "storage-conversion";
     private static final String CONFIG_KEY_TYPE = "type";
+
+    private Average conversionDuration = new Average();
 
     @Part
     private Tasks tasks;
@@ -172,6 +176,7 @@ public class ConversionEngine {
             result.fail(new IllegalStateException("Conversion subsystem overloaded!"));
         }).fork(() -> {
             try {
+                Watch watch = Watch.start();
                 Converter converter = fetchConverter(variant);
                 if (converter == null) {
                     // We use a handled exception here as the error has already been reported and we do not want to jam
@@ -191,13 +196,24 @@ public class ConversionEngine {
                             blob.getBlobKey()));
                 }
 
+                conversionDuration.addValue(watch.elapsedMillis());
                 result.success(convertedFile);
             } catch (Exception e) {
                 result.fail(e);
             }
-            //TODO metics
         });
 
         return result;
+    }
+
+    /**
+     * Exposes the metric which records the conversion performed on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the average which records the conversion duration for this node
+     */
+    public Average getConversionDuration() {
+        return conversionDuration;
     }
 }
