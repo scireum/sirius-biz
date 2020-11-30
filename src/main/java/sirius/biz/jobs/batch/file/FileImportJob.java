@@ -9,6 +9,7 @@
 package sirius.biz.jobs.batch.file;
 
 import sirius.biz.jobs.batch.ImportJob;
+import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
@@ -60,6 +61,14 @@ public abstract class FileImportJob extends ImportJob {
             .markRequired()
             .build();
 
+    /**
+     * Determines if auxiliary files are extracted including directories (if this job supports it).
+     */
+    public static final Parameter<Boolean> AUX_FILE_FLATTEN_DIRS_PARAMETER = new BooleanParameter("auxFileFlattenDirs",
+                                                                                                  "$FileImportJobFactory.auxFileFlattenDirectoriesParameter")
+            .withDescription("$FileImportJobFactory.auxFileFlattenDirectoriesParameter.help")
+            .build();
+
     @Part
     private static VirtualFileSystem virtualFileSystem;
 
@@ -69,6 +78,7 @@ public abstract class FileImportJob extends ImportJob {
     protected FileParameter fileParameter;
     protected ValueHolder<VirtualFile> auxFilesDestination;
     protected AuxiliaryFileMode auxiliaryFileMode;
+    protected boolean flattenAuxiliaryFileDirs;
 
     /**
      * Defines the modes in which an auxiliary file in an archive can be handled.
@@ -143,6 +153,7 @@ public abstract class FileImportJob extends ImportJob {
     public void execute() throws Exception {
         VirtualFile file = process.require(FILE_PARAMETER);
         auxiliaryFileMode = process.getParameter(AUX_FILE_MODE_PARAMETER).orElse(AuxiliaryFileMode.IGNORE);
+        flattenAuxiliaryFileDirs = process.getParameter(AUX_FILE_FLATTEN_DIRS_PARAMETER).orElse(false);
 
         if (canHandleFileExtension(Value.of(file.fileExtension()).toLowerCase())) {
             process.log(ProcessLog.info()
@@ -229,7 +240,7 @@ public abstract class FileImportJob extends ImportJob {
                 return false;
             }
 
-            VirtualFile targetFile = basePath.resolve(extractedFile.getFilePath());
+            VirtualFile targetFile = basePath.resolve(getTargetPath(extractedFile));
             if (extractor.updateFile(extractedFile, targetFile, auxiliaryFileMode.overrideMode)
                 != ArchiveExtractor.UpdateResult.SKIPPED) {
                 process.addTiming(NLS.get("FileImportJob.auxiliaryFileCopied"), watch.elapsedMillis());
@@ -246,6 +257,15 @@ public abstract class FileImportJob extends ImportJob {
                                      .set("file", extractedFile.getFilePath())
                                      .handle());
             return false;
+        }
+    }
+
+    private String getTargetPath(ExtractedFile extractedFile) {
+        String targetPath = extractedFile.getFilePath();
+        if (flattenAuxiliaryFileDirs) {
+            return Files.getFilenameAndExtension(targetPath);
+        } else {
+            return targetPath;
         }
     }
 
