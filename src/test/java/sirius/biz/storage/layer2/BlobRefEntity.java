@@ -12,6 +12,7 @@ import sirius.biz.web.Autoloaded;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.types.BaseEntityRef;
 
 public class BlobRefEntity extends SQLEntity {
 
@@ -22,7 +23,7 @@ public class BlobRefEntity extends SQLEntity {
 
     public static final Mapping BLOB_SOFT_REF = Mapping.named("blobSoftRef");
     @NullAllowed
-    private final BlobSoftRef blobSoftRef = new BlobSoftRef("blob-files");
+    private final BlobSoftRef blobSoftRef = new BlobSoftRef("blob-files", BaseEntityRef.OnDelete.IGNORE);
 
     public BlobHardRef getBlobHardRef() {
         return blobHardRef;

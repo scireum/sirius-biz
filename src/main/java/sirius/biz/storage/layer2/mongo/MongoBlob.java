@@ -68,6 +68,8 @@ import java.util.Optional;
 @Index(name = "blob_reference_lookup",
         columns = {"spaceName", "deleted", "reference", "referenceDesignator"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
+@Index(name = "blob_created_renamed_loop", columns = "createdOrRenamed", columnSettings = Mango.INDEX_ASCENDING)
+@Index(name = "blob_deleted_loop", columns = "deleted", columnSettings = Mango.INDEX_ASCENDING)
 public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     @Transient
@@ -191,6 +193,12 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     private boolean deleted;
 
     /**
+     * Stores if the blob was inserted or renamed.
+     */
+    public static final Mapping CREATED_OR_RENAMED = Mapping.named("createdOrRenamed");
+    private boolean createdOrRenamed;
+
+    /**
      * Stores if the blob was marked as hidden.
      */
     public static final Mapping HIDDEN = Mapping.named("hidden");
@@ -209,6 +217,14 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
         }
 
         updateFilenameFields();
+
+        if (isNew() || isChanged(FILENAME, NORMALIZED_FILENAME, FILE_EXTENSION)) {
+            createdOrRenamed = true;
+        }
+
+        if (deleted) {
+            createdOrRenamed = false;
+        }
     }
 
     protected void updateFilenameFields() {
@@ -427,6 +443,10 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     public boolean isDeleted() {
         return deleted;
+    }
+
+    public boolean isCreatedOrRenamed() {
+        return createdOrRenamed;
     }
 
     public boolean isHidden() {

@@ -50,10 +50,11 @@ import java.util.Optional;
 @Index(name = "blob_key_lookup", columns = "blobKey", unique = true)
 @Index(name = "blob_normalized_filename_lookup",
         columns = {"spaceName", "deleted", "parent", "normalizedFilename", "committed"})
-@Index(name = "blob_sort_by_last_modified",
-        columns = {"spaceName", "deleted", "parent", "lastModified"})
+@Index(name = "blob_sort_by_last_modified", columns = {"spaceName", "deleted", "parent", "lastModified"})
 @Index(name = "blob_filename_lookup", columns = {"spaceName", "deleted", "filename", "parent", "committed"})
 @Index(name = "blob_reference_lookup", columns = {"spaceName", "deleted", "reference", "referenceDesignator"})
+@Index(name = "blob_created_renamed_loop", columns = "createdOrRenamed")
+@Index(name = "blob_deleted_loop", columns = "deleted")
 public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Transient
@@ -187,6 +188,12 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     private boolean deleted;
 
     /**
+     * Stores if the blob was inserted or renamed.
+     */
+    public static final Mapping CREATED_OR_RENAMED = Mapping.named("createdOrRenamed");
+    private boolean createdOrRenamed;
+
+    /**
      * Stores if the blob was marked as hidden.
      */
     public static final Mapping HIDDEN = Mapping.named("hidden");
@@ -205,6 +212,14 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
         }
 
         updateFilenameFields();
+
+        if (isNew() || isChanged(FILENAME, NORMALIZED_FILENAME, FILE_EXTENSION)) {
+            createdOrRenamed = true;
+        }
+
+        if (deleted) {
+            createdOrRenamed = false;
+        }
     }
 
     protected void updateFilenameFields() {
@@ -427,6 +442,10 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     public boolean isDeleted() {
         return deleted;
+    }
+
+    public boolean isCreatedOrRenamed() {
+        return createdOrRenamed;
     }
 
     public boolean isHidden() {
