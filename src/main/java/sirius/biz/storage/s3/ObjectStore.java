@@ -594,6 +594,7 @@ public class ObjectStore {
      * @param inputStream the data to upload
      */
     public void upload(BucketName bucket, String objectId, InputStream inputStream) {
+        ensureBucketExists(bucket);
         InitiateMultipartUploadResult multipartUpload =
                 getClient().initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket.getName(), objectId));
         try {
