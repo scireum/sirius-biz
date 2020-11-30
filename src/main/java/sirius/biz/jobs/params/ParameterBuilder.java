@@ -236,7 +236,7 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      * @param context the context to read the parameter value from
      * @return the resolved value wrapped as optional or an empty optional if there is no value available
      */
-    protected Optional<V> get(Map<String, String> context) {
+    public Optional<V> get(Map<String, String> context) {
         return resolveFromString(Value.of(context.get(getName())));
     }
 
@@ -261,7 +261,7 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      *
      * @return the name of the parameter
      */
-    protected String getName() {
+    public String getName() {
         return name;
     }
 
@@ -270,7 +270,7 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      *
      * @return the {@link NLS#smartGet(String) auto translated} label of the parameter
      */
-    protected String getLabel() {
+    public String getLabel() {
         return NLS.smartGet(label);
     }
 
@@ -279,7 +279,7 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      *
      * @return the {@link NLS#smartGet(String) auto translated} description of the parameter
      */
-    protected String getDescription() {
+    public String getDescription() {
         return NLS.smartGet(description);
     }
 
@@ -288,7 +288,7 @@ public abstract class ParameterBuilder<V, P extends ParameterBuilder<V, P>> {
      *
      * @return <tt>true</tt> if a value has to be present for this parameter, <tt>false</tt> otherwise
      */
-    protected boolean isRequired() {
+    public boolean isRequired() {
         return required;
     }
 
