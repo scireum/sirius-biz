@@ -98,7 +98,7 @@ public class BlobSoftRefProperty extends BlobRefProperty {
     private BlobSoftRef getBlobSoftRef() {
         if (blobSoftRef == null) {
             try {
-                this.blobSoftRef = (BlobSoftRef) field.get(accessPath.apply(descriptor.getReferenceInstance()));
+                blobSoftRef = (BlobSoftRef) field.get(accessPath.apply(descriptor.getReferenceInstance()));
             } catch (Exception e) {
                 throw Exceptions.handle()
                                 .to(Mixing.LOG)
