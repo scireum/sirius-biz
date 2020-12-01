@@ -10,13 +10,12 @@ package sirius.biz.util;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
 import sirius.kernel.commons.Amount;
-import sirius.kernel.commons.Streams;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 
 /**
@@ -25,18 +24,18 @@ import java.util.zip.ZipEntry;
 class ExtractedZipFile implements ExtractedFile {
 
     private final ZipEntry entry;
-    private final InputStream zipInputStream;
+    private final Supplier<InputStream> inputStreamSupplier;
     private final Amount progress;
 
-    ExtractedZipFile(ZipEntry entry, InputStream zipInputStream, Amount progress) {
+    ExtractedZipFile(ZipEntry entry, Supplier<InputStream> inputStreamSupplier, Amount progress) {
         this.entry = entry;
-        this.zipInputStream = zipInputStream;
+        this.inputStreamSupplier = inputStreamSupplier;
         this.progress = progress;
     }
 
     @Override
     public InputStream openInputStream() throws IOException {
-        return new CloseShieldInputStream(zipInputStream);
+        return new CloseShieldInputStream(inputStreamSupplier.get());
     }
 
     @Override

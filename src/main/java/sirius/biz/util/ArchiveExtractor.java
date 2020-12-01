@@ -257,9 +257,16 @@ public class ArchiveExtractor {
 
             if (!entry.isDirectory() && filter.test(entry.getName())) {
                 Amount progress = Amount.of(numberOfFiles).divideBy(Amount.of(zipFile.size()));
-                boolean shouldContinue = extractedFileConsumer.apply(new ExtractedZipFile(entry,
-                                                                                          zipFile.getInputStream(entry),
-                                                                                          progress));
+                boolean shouldContinue = extractedFileConsumer.apply(new ExtractedZipFile(entry, () -> {
+                    try {
+                        return zipFile.getInputStream(entry);
+                    } catch (IOException e) {
+                        throw Exceptions.createHandled()
+                                        .error(e)
+                                        .withSystemErrorMessage("Failed to unzip file from an archive: %s (%s)")
+                                        .handle();
+                    }
+                }, progress));
                 if (!shouldContinue) {
                     return;
                 }
