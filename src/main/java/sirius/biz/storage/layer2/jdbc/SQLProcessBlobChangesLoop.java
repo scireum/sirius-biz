@@ -91,4 +91,61 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                     dir.getSpaceName()).handle();
         }
     }
+
+    @Override
+    protected void processRenamedDirectories(Runnable counter) {
+        oma.select(SQLDirectory.class).eq(SQLDirectory.RENAMED, true).limit(256).iterateAll(dir -> {
+            try {
+                propagateRename(dir);
+                oma.updateStatement(SQLDirectory.class)
+                   .set(SQLDirectory.RENAMED, false)
+                   .where(SQLDirectory.PARENT, dir.getId())
+                   .executeUpdate();
+            } catch (Exception e) {
+                handleDirectoryDeletionException(dir, e);
+            }
+            counter.run();
+        });
+    }
+
+    @Override
+    protected void propagateRename(Directory dir) {
+        Long directoryId = ((SQLDirectory) dir).getId();
+        try {
+            oma.updateStatement(SQLDirectory.class)
+               .set(SQLDirectory.RENAMED, true)
+               .where(SQLDirectory.PARENT, directoryId)
+               .executeUpdate();
+            oma.updateStatement(SQLBlob.class)
+               .set(SQLBlob.PARENT_CHANGED, true)
+               .where(SQLBlob.PARENT, directoryId)
+               .executeUpdate();
+        } catch (SQLException e) {
+            buildStorageException(e).withSystemErrorMessage(
+                    "Layer 2: Failed to propagate rename for directory %s (%s) in %s: (%s)",
+                    directoryId,
+                    dir.getName(),
+                    dir.getSpaceName()).handle();
+        }
+    }
+
+    @Override
+    protected void processParentChangedBlobs(Runnable counter) {
+        oma.select(SQLBlob.class).eq(SQLBlob.PARENT_CHANGED, true).limit(256).iterateAll(blob -> {
+            invokeParentChangedHandlers(blob);
+            try {
+                oma.updateStatement(SQLBlob.class)
+                   .set(SQLBlob.PARENT_CHANGED, false)
+                   .where(SQLBlob.ID, blob.getId())
+                   .executeUpdate();
+            } catch (SQLException e) {
+                buildStorageException(e).withSystemErrorMessage(
+                        "Layer 2: Failed to reset blob %s (%s) in %s as parent not changed: (%s)",
+                        blob.getBlobKey(),
+                        blob.getFilename(),
+                        blob.getSpaceName()).handle();
+            }
+            counter.run();
+        });
+    }
 }
