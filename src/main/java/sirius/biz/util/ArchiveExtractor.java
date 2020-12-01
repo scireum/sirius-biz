@@ -258,7 +258,8 @@ public class ArchiveExtractor {
             if (!entry.isDirectory() && filter.test(entry.getName())) {
                 Amount progress = Amount.of(numberOfFiles).divideBy(Amount.of(zipFile.size()));
                 boolean shouldContinue = extractedFileConsumer.apply(new ExtractedZipFile(entry,
-                                                                                          zipFile.getInputStream(entry),
+                                                                                          () -> zipFile.getInputStream(
+                                                                                                  entry),
                                                                                           progress));
                 if (!shouldContinue) {
                     return;
