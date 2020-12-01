@@ -99,7 +99,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                 propagateRename(dir);
                 oma.updateStatement(SQLDirectory.class)
                    .set(SQLDirectory.RENAMED, false)
-                   .where(SQLDirectory.PARENT, dir.getId())
+                   .where(SQLDirectory.ID, dir.getId())
                    .executeUpdate();
             } catch (Exception e) {
                 handleDirectoryDeletionException(dir, e);
