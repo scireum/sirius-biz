@@ -10,12 +10,13 @@ package sirius.biz.util;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
 import sirius.kernel.commons.Amount;
+import sirius.kernel.commons.Producer;
+import sirius.kernel.health.Exceptions;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 
 /**
@@ -24,18 +25,27 @@ import java.util.zip.ZipEntry;
 class ExtractedZipFile implements ExtractedFile {
 
     private final ZipEntry entry;
-    private final Supplier<InputStream> inputStreamSupplier;
+    private final Producer<InputStream> inputStreamSupplier;
     private final Amount progress;
 
-    ExtractedZipFile(ZipEntry entry, Supplier<InputStream> inputStreamSupplier, Amount progress) {
+    ExtractedZipFile(ZipEntry entry, Producer<InputStream> inputStreamProducer, Amount progress) {
         this.entry = entry;
-        this.inputStreamSupplier = inputStreamSupplier;
+        this.inputStreamSupplier = inputStreamProducer;
         this.progress = progress;
     }
 
     @Override
     public InputStream openInputStream() throws IOException {
-        return new CloseShieldInputStream(inputStreamSupplier.get());
+        try {
+            return new CloseShieldInputStream(inputStreamSupplier.create());
+        } catch (IOException ioException) {
+            throw ioException;
+        } catch (Exception e) {
+            throw Exceptions.handle()
+                            .error(e)
+                            .withSystemErrorMessage("Failed to unzip file from an archive: %s (%s)")
+                            .handle();
+        }
     }
 
     @Override
