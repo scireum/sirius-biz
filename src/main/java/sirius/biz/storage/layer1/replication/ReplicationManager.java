@@ -12,8 +12,10 @@ import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Average;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
@@ -44,6 +46,8 @@ public class ReplicationManager {
     @Part
     @Nullable
     private ReplicationTaskStorage taskStorage;
+
+    private Average replicationExecutionDuration = new Average();
 
     /**
      * Initializes the replication relations on the given set (map) of spaces.
@@ -151,6 +155,7 @@ public class ReplicationManager {
             return;
         }
 
+        Watch watch = Watch.start();
         if (performDelete) {
             primarySpace.getReplicationSpace().delete(objectId);
         } else {
@@ -159,6 +164,7 @@ public class ReplicationManager {
                 primarySpace.getReplicationSpace().upload(objectId, in, 0L);
             }
         }
+        replicationExecutionDuration.addValue(watch.elapsedMillis());
     }
 
     /**
@@ -168,5 +174,16 @@ public class ReplicationManager {
      */
     public Optional<ReplicationTaskStorage> getReplicationTaskStorage() {
         return Optional.ofNullable(taskStorage);
+    }
+
+    /**
+     * Exposes the metric which records the replication tasks performed on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the average which records the duration of the replication tasks executed by this node
+     */
+    public Average getReplicationExecutionDuration() {
+        return replicationExecutionDuration;
     }
 }
