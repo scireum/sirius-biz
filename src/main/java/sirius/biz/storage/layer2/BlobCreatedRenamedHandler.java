@@ -19,7 +19,7 @@ import javax.annotation.Nonnull;
  */
 public interface BlobCreatedRenamedHandler extends Priorized {
     /**
-     * Method executed when a blob is inserted or some of its metadata (such as file name) is modified.
+     * Executed when a blob is inserted or some of its metadata (such as file name) is modified.
      *
      * @param blob the modified blob
      */

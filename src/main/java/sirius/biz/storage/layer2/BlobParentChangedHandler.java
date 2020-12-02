@@ -19,7 +19,7 @@ import javax.annotation.Nonnull;
  */
 public interface BlobParentChangedHandler extends Priorized {
     /**
-     * Method executed when a blob has its parent {@link Directory} changed.
+     * Executed when a blob has its parent {@link Directory} changed.
      *
      * @param blob the modified blob
      */
