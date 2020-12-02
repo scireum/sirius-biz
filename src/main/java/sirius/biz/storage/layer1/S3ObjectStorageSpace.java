@@ -42,8 +42,15 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
      */
     public static final String CONFIG_KEY_LAYER1_STORE = "store";
 
+    /**
+     * Contains the bucket name within the S3 store to use. By default the name of the space will
+     * be used.
+     */
+    private static final String CONFIG_KEY_LAYER1_BUCKET_NAME = "bucketName";
+
     @Part
     private static ObjectStores objectStores;
+    private final String bucketName;
 
     private ObjectStore store;
 
@@ -56,6 +63,7 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     protected S3ObjectStorageSpace(String name, Extension extension) throws Exception {
         super(name, extension);
         this.store = resolveObjectStore(extension);
+        this.bucketName = extension.get(CONFIG_KEY_LAYER1_BUCKET_NAME).replaceEmptyWithNull().asString(name);
     }
 
     private ObjectStore resolveObjectStore(Extension extension) {
@@ -73,7 +81,7 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     }
 
     private BucketName bucketName() {
-        return store.getBucketName(name);
+        return store.getBucketName(bucketName);
     }
 
     @Override
