@@ -24,10 +24,18 @@ import java.util.concurrent.atomic.AtomicInteger;
  **/
 public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
 
+    /**
+     * Defines the block size used for queries to propagate and handle various change flags.
+     */
+    protected static final int CURSOR_LIMIT = 1024;
+
     private static final double FREQUENCY_EVERY_FIFTEEN_SECONDS = 1 / 15d;
 
     @PriorityParts(BlobCreatedRenamedHandler.class)
     private List<BlobCreatedRenamedHandler> createdOrRenamedHandlers;
+
+    @PriorityParts(BlobParentChangedHandler.class)
+    private List<BlobParentChangedHandler> parentChangedHandlers;
 
     @Nonnull
     @Override
@@ -44,21 +52,32 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
     @Override
     protected String doWork() throws Exception {
         AtomicInteger deletedDirectories = new AtomicInteger();
+        AtomicInteger renamedDirectories = new AtomicInteger();
         AtomicInteger deletedBlobs = new AtomicInteger();
         AtomicInteger createdRenamedBlobs = new AtomicInteger();
+        AtomicInteger parentChangedBlobs = new AtomicInteger();
 
         deleteDirectories(deletedDirectories::incrementAndGet);
+        processRenamedDirectories(renamedDirectories::incrementAndGet);
         deleteBlobs(deletedBlobs::incrementAndGet);
+        processParentChangedBlobs(parentChangedBlobs::incrementAndGet);
         processCreatedOrRenamedBlobs(createdRenamedBlobs::incrementAndGet);
 
-        if (deletedDirectories.get() == 0 && deletedBlobs.get() == 0 && createdRenamedBlobs.get() == 0) {
+        if (deletedDirectories.get()
+            + renamedDirectories.get()
+            + deletedBlobs.get()
+            + createdRenamedBlobs.get()
+            + parentChangedBlobs.get() == 0) {
             return null;
         }
 
-        return Strings.apply("Deleted %s directories and %s blobs. Processed %s new or renamed blobs.",
-                             deletedDirectories.get(),
-                             deletedBlobs.get(),
-                             createdRenamedBlobs.get());
+        return Strings.apply(
+                "Directories: deleted (%s), renamed (%s). Blobs: deleted (%s), created/renamed (%s), moved (%s)",
+                deletedDirectories.get(),
+                renamedDirectories.get(),
+                deletedBlobs.get(),
+                createdRenamedBlobs.get(),
+                parentChangedBlobs.get());
     }
 
     protected void deletePhysicalObject(@Nonnull Blob blob) {
@@ -82,6 +101,21 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
         });
     }
 
+    protected void invokeParentChangedHandlers(Blob blob) {
+        parentChangedHandlers.forEach(handler -> {
+            try {
+                handler.execute(blob);
+            } catch (Exception e) {
+                buildStorageException(e).withSystemErrorMessage(
+                        "Layer 2: %s failed to process parent change for blob %s (%s) in %s: (%s)",
+                        handler.getClass().getSimpleName(),
+                        blob.getBlobKey(),
+                        blob.getFilename(),
+                        blob.getSpaceName()).handle();
+            }
+        });
+    }
+
     protected void handleBlobDeletionException(@Nonnull Blob blob, Exception e) {
         buildStorageException(e).withSystemErrorMessage("Layer 2: Failed to finally delete the blob %s (%s) in %s: (%s)",
                                                         blob.getBlobKey(),
@@ -92,6 +126,14 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
     protected void handleDirectoryDeletionException(@Nonnull Directory dir, Exception e) {
         buildStorageException(e).withSystemErrorMessage(
                 "Layer 2: Failed to finally delete the directory %s (%s) in %s: (%s)",
+                dir.getIdAsString(),
+                dir.getName(),
+                dir.getSpaceName()).handle();
+    }
+
+    protected void handleDirectoryRenameException(@Nonnull Directory dir, Exception e) {
+        buildStorageException(e).withSystemErrorMessage(
+                "Layer 2: Failed to process rename of directory %s (%s) in %s: (%s)",
                 dir.getIdAsString(),
                 dir.getName(),
                 dir.getSpaceName()).handle();
@@ -110,6 +152,8 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
 
     /**
      * Queries and physically delete all {@link Directory directories} marked as deleted.
+     * <p>
+     * Each directory is then processed by {@link #propagateDelete(Directory)}
      *
      * @param counter a {@link Runnable} to be called for each {@link Directory directory} deleted
      */
@@ -125,7 +169,34 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
     protected abstract void processCreatedOrRenamedBlobs(Runnable counter);
 
     /**
-     * Marks children items of a given  {@link Directory directory} as deleted.
+     * Marks children items of a given {@link Directory directory} as deleted.
+     *
+     * @param dir the parent {@link Directory} of the items to mark
      */
     protected abstract void propagateDelete(Directory dir);
+
+    /**
+     * Queries and processes {@link Directory directories} marked as renamed.
+     * <p>
+     * Each directory is then processed by {@link #propagateRename(Directory)}
+     *
+     * @param counter a {@link Runnable} to be called for each {@link Blob blob} processed
+     */
+    protected abstract void processRenamedDirectories(Runnable counter);
+
+    /**
+     * Notifies children items of a given {@link Directory directories} that its parent has been renamed.
+     *
+     * @param dir the parent {@link Directory} of the items to notify
+     */
+    protected abstract void propagateRename(Directory dir);
+
+    /**
+     * Queries and processes {@link Blob blobs} moved between {@link Directory directories}.
+     * <p>
+     * The processing is performed by the registered {@link BlobParentChangedHandler handlers}
+     *
+     * @param counter a {@link Runnable} to be called for each {@link Blob blob} processed
+     */
+    protected abstract void processParentChangedBlobs(Runnable counter);
 }

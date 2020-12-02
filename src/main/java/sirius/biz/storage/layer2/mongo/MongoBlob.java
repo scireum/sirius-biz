@@ -70,6 +70,7 @@ import java.util.Optional;
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
 @Index(name = "blob_created_renamed_loop", columns = "createdOrRenamed", columnSettings = Mango.INDEX_ASCENDING)
 @Index(name = "blob_deleted_loop", columns = "deleted", columnSettings = Mango.INDEX_ASCENDING)
+@Index(name = "blob_parent_changed_loop", columns = "parentChanged", columnSettings = Mango.INDEX_ASCENDING)
 public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     @Transient
@@ -153,6 +154,12 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     private final MongoRef<MongoDirectory> parent = MongoRef.on(MongoDirectory.class, BaseEntityRef.OnDelete.IGNORE);
 
     /**
+     * Stores if the blob was moved into another folder.
+     */
+    public static final Mapping PARENT_CHANGED = Mapping.named("parentChanged");
+    private boolean parentChanged;
+
+    /**
      * Stores if the blob was (is still) marked as temporary.
      */
     public static final Mapping TEMPORARY = Mapping.named("temporary");
@@ -222,8 +229,13 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
             createdOrRenamed = true;
         }
 
+        if (!isNew() && isChanged(PARENT)) {
+            parentChanged = true;
+        }
+
         if (deleted) {
             createdOrRenamed = false;
+            parentChanged = false;
         }
     }
 
@@ -447,6 +459,10 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
 
     public boolean isCreatedOrRenamed() {
         return createdOrRenamed;
+    }
+
+    public boolean isParentChanged() {
+        return parentChanged;
     }
 
     public boolean isHidden() {

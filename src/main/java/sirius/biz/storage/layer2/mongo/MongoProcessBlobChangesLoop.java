@@ -33,7 +33,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void deleteBlobs(Runnable counter) {
-        mango.select(MongoBlob.class).eq(MongoBlob.DELETED, true).limit(256).iterateAll(blob -> {
+        mango.select(MongoBlob.class).eq(MongoBlob.DELETED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
             try {
                 deletePhysicalObject(blob);
                 counter.run();
@@ -46,7 +46,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void deleteDirectories(Runnable counter) {
-        mango.select(MongoDirectory.class).eq(MongoDirectory.DELETED, true).limit(256).iterateAll(dir -> {
+        mango.select(MongoDirectory.class).eq(MongoDirectory.DELETED, true).limit(CURSOR_LIMIT).iterateAll(dir -> {
             try {
                 propagateDelete(dir);
                 mango.delete(dir);
@@ -59,7 +59,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processCreatedOrRenamedBlobs(Runnable counter) {
-        mango.select(MongoBlob.class).eq(MongoBlob.CREATED_OR_RENAMED, true).limit(256).iterateAll(blob -> {
+        mango.select(MongoBlob.class).eq(MongoBlob.CREATED_OR_RENAMED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
             invokeChangedOrDeletedHandlers(blob);
             mongo.update()
                  .set(MongoBlob.CREATED_OR_RENAMED, false)
@@ -77,5 +77,46 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
              .where(MongoDirectory.PARENT, directoryId)
              .executeFor(MongoDirectory.class);
         mongo.update().set(MongoBlob.DELETED, true).where(MongoBlob.PARENT, directoryId).executeFor(MongoBlob.class);
+    }
+
+    @Override
+    protected void processRenamedDirectories(Runnable counter) {
+        mango.select(MongoDirectory.class).eq(MongoDirectory.RENAMED, true).limit(CURSOR_LIMIT).iterateAll(dir -> {
+            try {
+                propagateRename(dir);
+                mongo.update()
+                     .set(MongoDirectory.RENAMED, false)
+                     .where(MongoDirectory.ID, dir.getId())
+                     .executeFor(MongoDirectory.class);
+            } catch (Exception e) {
+                handleDirectoryRenameException(dir, e);
+            }
+            counter.run();
+        });
+    }
+
+    @Override
+    protected void propagateRename(@Nonnull Directory dir) {
+        String directoryId = dir.getIdAsString();
+        mongo.update()
+             .set(MongoDirectory.RENAMED, true)
+             .where(MongoDirectory.PARENT, directoryId)
+             .executeFor(MongoDirectory.class);
+        mongo.update()
+             .set(MongoBlob.PARENT_CHANGED, true)
+             .where(MongoBlob.PARENT, directoryId)
+             .executeFor(MongoBlob.class);
+    }
+
+    @Override
+    protected void processParentChangedBlobs(Runnable counter) {
+        mango.select(MongoBlob.class).eq(MongoBlob.PARENT_CHANGED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
+            invokeParentChangedHandlers(blob);
+            mongo.update()
+                 .set(MongoBlob.PARENT_CHANGED, false)
+                 .where(MongoBlob.ID, blob.getId())
+                 .executeFor(MongoBlob.class);
+            counter.run();
+        });
     }
 }

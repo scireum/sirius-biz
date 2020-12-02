@@ -13,13 +13,13 @@ import sirius.kernel.di.std.Priorized;
 import javax.annotation.Nonnull;
 
 /**
- * Defines handlers to process created or modified {@link sirius.biz.storage.layer2.Blob blobs}.
+ * Defines handlers to process {@link Blob blobs} which parent have been moved between {@link Directory directories}.
  *
  * @see ProcessBlobChangesLoop
  */
-public interface BlobCreatedRenamedHandler extends Priorized {
+public interface BlobParentChangedHandler extends Priorized {
     /**
-     * Executed when a blob is inserted or some of its metadata (such as file name) is modified.
+     * Executed when a blob has its parent {@link Directory} changed.
      *
      * @param blob the modified blob
      */
