@@ -24,8 +24,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  **/
 public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
 
-    private static final double FREQUENCY_EVERY_FIFTEEN_SECONDS = 1 / 15d;
+    /**
+     * Defines the block size used for queries to propagate and handle various change flags.
+     */
     protected static final int CURSOR_LIMIT = 1024;
+
+    private static final double FREQUENCY_EVERY_FIFTEEN_SECONDS = 1 / 15d;
 
     @PriorityParts(BlobCreatedRenamedHandler.class)
     private List<BlobCreatedRenamedHandler> createdOrRenamedHandlers;
