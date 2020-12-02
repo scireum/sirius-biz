@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
 
     private static final double FREQUENCY_EVERY_FIFTEEN_SECONDS = 1 / 15d;
+    protected static final int CURSOR_LIMIT = 1024;
 
     @PriorityParts(BlobCreatedRenamedHandler.class)
     private List<BlobCreatedRenamedHandler> createdOrRenamedHandlers;

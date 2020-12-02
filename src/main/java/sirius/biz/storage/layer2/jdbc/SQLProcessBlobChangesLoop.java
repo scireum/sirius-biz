@@ -27,7 +27,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void deleteBlobs(Runnable counter) {
-        oma.select(SQLBlob.class).eq(SQLBlob.DELETED, true).limit(256).iterateAll(blob -> {
+        oma.select(SQLBlob.class).eq(SQLBlob.DELETED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
             try {
                 deletePhysicalObject(blob);
                 oma.delete(blob);
@@ -40,7 +40,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void deleteDirectories(Runnable counter) {
-        oma.select(SQLDirectory.class).eq(SQLDirectory.DELETED, true).limit(256).iterateAll(dir -> {
+        oma.select(SQLDirectory.class).eq(SQLDirectory.DELETED, true).limit(CURSOR_LIMIT).iterateAll(dir -> {
             try {
                 propagateDelete(dir);
                 oma.delete(dir);
@@ -53,7 +53,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processCreatedOrRenamedBlobs(Runnable counter) {
-        oma.select(SQLBlob.class).eq(SQLBlob.CREATED_OR_RENAMED, true).limit(256).iterateAll(blob -> {
+        oma.select(SQLBlob.class).eq(SQLBlob.CREATED_OR_RENAMED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
             invokeChangedOrDeletedHandlers(blob);
             try {
                 oma.updateStatement(SQLBlob.class)
@@ -94,7 +94,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processRenamedDirectories(Runnable counter) {
-        oma.select(SQLDirectory.class).eq(SQLDirectory.RENAMED, true).limit(256).iterateAll(dir -> {
+        oma.select(SQLDirectory.class).eq(SQLDirectory.RENAMED, true).limit(CURSOR_LIMIT).iterateAll(dir -> {
             try {
                 propagateRename(dir);
                 oma.updateStatement(SQLDirectory.class)
@@ -131,7 +131,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processParentChangedBlobs(Runnable counter) {
-        oma.select(SQLBlob.class).eq(SQLBlob.PARENT_CHANGED, true).limit(256).iterateAll(blob -> {
+        oma.select(SQLBlob.class).eq(SQLBlob.PARENT_CHANGED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
             invokeParentChangedHandlers(blob);
             try {
                 oma.updateStatement(SQLBlob.class)

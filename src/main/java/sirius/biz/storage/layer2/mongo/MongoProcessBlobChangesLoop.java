@@ -33,7 +33,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void deleteBlobs(Runnable counter) {
-        mango.select(MongoBlob.class).eq(MongoBlob.DELETED, true).limit(256).iterateAll(blob -> {
+        mango.select(MongoBlob.class).eq(MongoBlob.DELETED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
             try {
                 deletePhysicalObject(blob);
                 counter.run();
@@ -46,7 +46,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void deleteDirectories(Runnable counter) {
-        mango.select(MongoDirectory.class).eq(MongoDirectory.DELETED, true).limit(256).iterateAll(dir -> {
+        mango.select(MongoDirectory.class).eq(MongoDirectory.DELETED, true).limit(CURSOR_LIMIT).iterateAll(dir -> {
             try {
                 propagateDelete(dir);
                 mango.delete(dir);
@@ -59,7 +59,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processCreatedOrRenamedBlobs(Runnable counter) {
-        mango.select(MongoBlob.class).eq(MongoBlob.CREATED_OR_RENAMED, true).limit(256).iterateAll(blob -> {
+        mango.select(MongoBlob.class).eq(MongoBlob.CREATED_OR_RENAMED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
             invokeChangedOrDeletedHandlers(blob);
             mongo.update()
                  .set(MongoBlob.CREATED_OR_RENAMED, false)
@@ -81,7 +81,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processRenamedDirectories(Runnable counter) {
-        mango.select(MongoDirectory.class).eq(MongoDirectory.RENAMED, true).limit(256).iterateAll(dir -> {
+        mango.select(MongoDirectory.class).eq(MongoDirectory.RENAMED, true).limit(CURSOR_LIMIT).iterateAll(dir -> {
             try {
                 propagateRename(dir);
                 mongo.update()
@@ -110,7 +110,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
 
     @Override
     protected void processParentChangedBlobs(Runnable counter) {
-        mango.select(MongoBlob.class).eq(MongoBlob.PARENT_CHANGED, true).limit(256).iterateAll(blob -> {
+        mango.select(MongoBlob.class).eq(MongoBlob.PARENT_CHANGED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
             invokeParentChangedHandlers(blob);
             mongo.update()
                  .set(MongoBlob.PARENT_CHANGED, false)
