@@ -28,8 +28,8 @@ public abstract class LineBasedImportJob extends FileImportJob implements RowPro
      * Contains the parameter which is used to determine if empty values should be ignored).
      */
     public static final Parameter<Boolean> IMPORT_ALL_SHEETS_PARAMETER =
-            new BooleanParameter("importAllSheets", "LineBasedImportJobFactory.importAllSheets").withDescription(
-                    "LineBasedImportJobFactory.importAllSheets.help").build();
+            new BooleanParameter("importAllSheets", "$LineBasedImportJobFactory.importAllSheets").withDescription(
+                    "$LineBasedImportJobFactory.importAllSheets.help").build();
 
     /**
      * Creates a new job for the given factory, name and process.
