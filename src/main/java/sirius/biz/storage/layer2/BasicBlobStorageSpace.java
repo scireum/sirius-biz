@@ -71,7 +71,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Specifies the total number of attempts to wait for a conversion result.
      */
-    private static final int NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION = 3;
+    private static final int NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION = 4;
 
     /**
      * Specifies the number of milliseconds to wait for a conversion (note that we do this up to
