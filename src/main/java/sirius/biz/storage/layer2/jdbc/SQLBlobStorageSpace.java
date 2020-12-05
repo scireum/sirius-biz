@@ -757,10 +757,11 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
-    protected void markConversionSuccess(SQLVariant variant, String physicalKey, long size) {
+    protected void markConversionSuccess(SQLVariant variant, String physicalKey, long size, long durationMillis) {
         variant.setQueuedForConversion(false);
         variant.setSize(size);
         variant.setPhysicalObjectKey(physicalKey);
+        variant.setConversionDuration(durationMillis);
         oma.update(variant);
     }
 

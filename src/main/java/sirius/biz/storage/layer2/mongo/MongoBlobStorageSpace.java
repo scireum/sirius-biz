@@ -605,7 +605,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                                                 .where(QueryBuilder.FILTERS.containsOne(MongoBlob.FILE_EXTENSION,
                                                                                         fileTypes.toArray()).build())
                                                 .limit(maxResults);
-        
+
         if (sortByLastModified) {
             blobsQuery.orderDesc(MongoBlob.LAST_MODIFIED);
         } else {
@@ -688,10 +688,11 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
-    protected void markConversionSuccess(MongoVariant variant, String physicalKey, long size) {
+    protected void markConversionSuccess(MongoVariant variant, String physicalKey, long size, long durationMillis) {
         variant.setQueuedForConversion(false);
         variant.setSize(size);
         variant.setPhysicalObjectKey(physicalKey);
+        variant.setConversionDuration(durationMillis);
         mango.update(variant);
     }
 
