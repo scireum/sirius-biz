@@ -178,6 +178,9 @@ public class StorageUtils {
 
     /**
      * Sanitizes the given path.
+     * <p>
+     * This will replace backslashes with forward slashes, and remove successive slashes. Trailing slashes are removed
+     * from directory paths, and absolute paths are made relative by removing leading slashes.
      *
      * @param path the path to cleanup
      * @return the sanitized path without backslashes, successive slashes, and without leading and trailing slashes
