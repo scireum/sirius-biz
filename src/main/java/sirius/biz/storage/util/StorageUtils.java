@@ -31,6 +31,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Collection;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 /**
  * Provides various helpers for the storage framework.
@@ -49,6 +50,11 @@ public class StorageUtils {
      * Represents the central logger for the whole storage framework.
      */
     public static final Log LOG = Log.get("storage");
+
+    /**
+     * Pattern for cleaning up consecutive slashes and removing backslashes.
+     */
+    public static final Pattern SANITIZE_SLASHES = Pattern.compile("[/\\\\]+");
 
     /**
      * Lists the layers which are placed in the config as <tt>storage.layer1.spaces</tt> etc. Each of
@@ -193,13 +199,7 @@ public class StorageUtils {
             return "";
         }
 
-        if (path.contains("\\")) {
-            path = path.replace("\\", "/");
-        }
-
-        if (path.contains("//")) {
-            path = path.replaceAll("/+", "/");
-        }
+        path = SANITIZE_SLASHES.matcher(path).replaceAll("/");
 
         if (path.startsWith("/")) {
             path = path.substring(1);
