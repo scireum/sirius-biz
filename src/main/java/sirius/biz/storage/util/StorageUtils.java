@@ -157,32 +157,6 @@ public class StorageUtils {
     }
 
     /**
-     * Normalizes the given path.
-     *
-     * @param path the path to cleanup
-     * @return the normalized path without \ or // or " "
-     * @deprecated use {@link #sanitizePath(String)} instead
-     */
-    @Nullable
-    @Deprecated
-    public static String normalizePath(@Nullable String path) {
-        if (Strings.isEmpty(path)) {
-            return null;
-        }
-
-        String normalizedPath = path.trim().replace(" ", "").replace("\\", "/").replaceAll("/+", "/").toLowerCase();
-        if (normalizedPath.length() == 0) {
-            return null;
-        }
-
-        if (!normalizedPath.startsWith("/")) {
-            normalizedPath = "/" + normalizedPath;
-        }
-
-        return normalizedPath;
-    }
-
-    /**
      * Sanitizes the given path.
      * <p>
      * This will replace backslashes with forward slashes, and remove successive slashes. Trailing slashes are removed
