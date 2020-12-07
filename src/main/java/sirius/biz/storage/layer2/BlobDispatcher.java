@@ -355,6 +355,11 @@ public class BlobDispatcher implements WebDispatcher {
             return;
         }
 
+        // As we might first need to create the variant using the ConversionEngine, this call might take a
+        // bit longer than expected. As we already monitor the conversion time, we remove this from the
+        // internal web server statistics to prevent false alarms if many blobs need to be converted...
+        request.markAsLongCall();
+
         BlobStorageSpace storageSpace = blobStorage.getSpace(space);
         Response response = request.respondWith();
         if (cachable) {
