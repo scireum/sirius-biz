@@ -1090,7 +1090,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     @Override
-    public void deliver(String blobKey, String variant, Response response) {
+    public void deliver(String blobKey, String variant, Response response, Runnable markAsLongRunning) {
         touch(blobKey);
 
         try {
@@ -1100,6 +1100,10 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                    Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "lookup");
                 getPhysicalSpace().deliver(response, physicalKey.getFirst());
             } else {
+                if (markAsLongRunning != null) {
+                    markAsLongRunning.run();
+                }
+
                 deliverAsync(blobKey, variant, response);
             }
         } catch (IllegalArgumentException e) {
