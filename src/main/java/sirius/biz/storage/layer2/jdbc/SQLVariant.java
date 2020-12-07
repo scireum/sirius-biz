@@ -35,7 +35,8 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
      * References the raw blob from which this variant was derived.
      */
     public static final Mapping SOURCE_BLOB = Mapping.named("sourceBlob");
-    private final SQLEntityRef<SQLBlob> sourceBlob = SQLEntityRef.writeOnceOn(SQLBlob.class, BaseEntityRef.OnDelete.CASCADE);
+    private final SQLEntityRef<SQLBlob> sourceBlob =
+            SQLEntityRef.writeOnceOn(SQLBlob.class, BaseEntityRef.OnDelete.CASCADE);
 
     /**
      * Contains the name / type of this variant.
@@ -77,6 +78,12 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
      */
     public static final Mapping QUEUED_FOR_CONVERSION = Mapping.named("queuedForConversion");
     private boolean queuedForConversion;
+
+    /**
+     * Stores how long the conversion took (in millis).
+     */
+    public static final Mapping CONVERSION_DURATION = Mapping.named("conversionDuration");
+    private long conversionDuration;
 
     /**
      * Stores the node name on which the last conversion was attempted.
@@ -166,5 +173,13 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
 
     public void setPhysicalObjectKey(String physicalObjectKey) {
         this.physicalObjectKey = physicalObjectKey;
+    }
+
+    public long getConversionDuration() {
+        return conversionDuration;
+    }
+
+    public void setConversionDuration(long conversionDuration) {
+        this.conversionDuration = conversionDuration;
     }
 }

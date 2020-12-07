@@ -26,7 +26,9 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Processor;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Wait;
+import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -69,7 +71,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Specifies the total number of attempts to wait for a conversion result.
      */
-    private static final int NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION = 3;
+    private static final int NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION = 4;
 
     /**
      * Specifies the number of milliseconds to wait for a conversion (note that we do this up to
@@ -143,6 +145,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * a separator one is used.
      */
     private static final String EXECUTOR_STORAGE_CONVERSION_DELIVERY = "storage-conversion-delivery";
+
+    private static final String HEADER_VARIANT_SOURCE = "X-VariantSource";
+    private static final String HEADER_VARIANT_COMPUTER = "X-VariantComputer";
 
     @Part
     protected static ObjectStorage objectStorage;
@@ -1085,14 +1090,20 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     @Override
-    public void deliver(String blobKey, String variant, Response response) {
+    public void deliver(String blobKey, String variant, Response response, Runnable markAsLongRunning) {
         touch(blobKey);
 
         try {
-            String physicalKey = resolvePhysicalKey(blobKey, variant, true);
+            Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, true);
             if (physicalKey != null) {
-                getPhysicalSpace().deliver(response, physicalKey);
+                response.addHeader(HEADER_VARIANT_SOURCE,
+                                   Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "lookup");
+                getPhysicalSpace().deliver(response, physicalKey.getFirst());
             } else {
+                if (markAsLongRunning != null) {
+                    markAsLongRunning.run();
+                }
+
                 deliverAsync(blobKey, variant, response);
             }
         } catch (IllegalArgumentException e) {
@@ -1139,22 +1150,24 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param variantName the variant of the blob to find
      * @param nonblocking <tt>true</tt> to directly respond and rather return <tt>null</tt> instead of generating the
      *                    requested variant on demand, <tt>false</tt> to generate the variant if possible.
-     * @return the physical key or <tt>null</tt> if the appropriate variant wasn't found
+     * @return the physical key or <tt>null</tt> if the appropriate variant wasn't found. We also return an indicator
+     * if the key was read from the internal cache or if a lookup was required.
      */
     @Nullable
-    protected String resolvePhysicalKey(String blobKey, String variantName, boolean nonblocking) {
+    protected Tuple<String, Boolean> resolvePhysicalKey(String blobKey, String variantName, boolean nonblocking) {
         String cacheKey = buildPhysicalKey(blobKey, variantName);
         String cachedPhysicalKey = blobKeyToPhysicalCache.get(cacheKey);
         if (Strings.isFilled(cachedPhysicalKey)) {
-            return cachedPhysicalKey;
+            return Tuple.create(cachedPhysicalKey, true);
         }
 
         String physicalKey = lookupPhysicalKey(blobKey, variantName, nonblocking);
         if (physicalKey != null) {
             blobKeyToPhysicalCache.put(cacheKey, physicalKey);
+            return Tuple.create(physicalKey, false);
+        } else {
+            return null;
         }
-
-        return physicalKey;
     }
 
     private String buildPhysicalKey(String blobKey, String variantName) {
@@ -1396,11 +1409,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param variant the variant to generate
      */
     private void invokeConversionPipelineAsync(B blob, V variant) {
+        Watch watch = Watch.start();
         conversionEngine.performConversion(blob, variant.getVariantName()).onSuccess(handle -> {
             try (FileHandle automaticHandle = handle) {
                 String physicalKey = keyGenerator.generateId();
                 getPhysicalSpace().upload(physicalKey, automaticHandle.getFile());
-                markConversionSuccess(variant, physicalKey, automaticHandle.getFile().length());
+                markConversionSuccess(variant, physicalKey, automaticHandle.getFile().length(), watch.elapsedMillis());
             }
         }).onFailure(e -> {
             markConversionFailure(variant);
@@ -1420,11 +1434,12 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Marks the variant as successfully generated by supplying a physical object which contains the result.
      *
-     * @param variant     the variant to update
-     * @param physicalKey the physical object which contains the new data
-     * @param size        the size of the data sored in the physical object
+     * @param variant        the variant to update
+     * @param physicalKey    the physical object which contains the new data
+     * @param size           the size of the data sored in the physical object
+     * @param durationMillis the duration of the conversion in milliseconds
      */
-    protected abstract void markConversionSuccess(V variant, String physicalKey, long size);
+    protected abstract void markConversionSuccess(V variant, String physicalKey, long size, long durationMillis);
 
     /**
      * Records a failed conversion attempt for the given variant.
@@ -1513,11 +1528,13 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
              .fork(() -> {
                  if (conversionEnabled) {
                      try {
-                         String physicalKey = resolvePhysicalKey(blobKey, variant, false);
+                         Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, false);
                          if (physicalKey == null) {
                              response.notCached().error(HttpResponseStatus.SERVICE_UNAVAILABLE);
                          } else {
-                             getPhysicalSpace().deliver(response, physicalKey);
+                             response.addHeader(HEADER_VARIANT_SOURCE,
+                                                Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "computed");
+                             getPhysicalSpace().deliver(response, physicalKey.getFirst());
                          }
                      } catch (Exception e) {
                          Exceptions.handle()
@@ -1569,6 +1586,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                + "/"
                                + blobKey;
 
+        response.addHeader(HEADER_VARIANT_SOURCE, "delegated");
+        response.addHeader(HEADER_VARIANT_COMPUTER, conversionHost);
         response.tunnel(conversionUrl);
     }
 

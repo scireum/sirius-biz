@@ -81,6 +81,12 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
     public static final Mapping NODE = Mapping.named("node");
     private String node;
 
+    /**
+     * Stores how long the conversion took (in millis).
+     */
+    public static final Mapping CONVERSION_DURATION = Mapping.named("conversionDuration");
+    private long conversionDuration;
+
     @AfterDelete
     protected void onDelete() {
         if (Strings.isFilled(physicalObjectKey)) {
@@ -162,5 +168,13 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
 
     public void setPhysicalObjectKey(String physicalObjectKey) {
         this.physicalObjectKey = physicalObjectKey;
+    }
+
+    public long getConversionDuration() {
+        return conversionDuration;
+    }
+
+    public void setConversionDuration(long conversionDuration) {
+        this.conversionDuration = conversionDuration;
     }
 }
