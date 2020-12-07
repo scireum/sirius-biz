@@ -18,6 +18,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.kernel.settings.Extension;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -154,8 +155,10 @@ public class StorageUtils {
      *
      * @param path the path to cleanup
      * @return the normalized path without \ or // or " "
+     * @deprecated use {@link #sanitizePath(String)} instead
      */
     @Nullable
+    @Deprecated
     public static String normalizePath(@Nullable String path) {
         if (Strings.isEmpty(path)) {
             return null;
@@ -171,6 +174,39 @@ public class StorageUtils {
         }
 
         return normalizedPath;
+    }
+
+    /**
+     * Sanitizes the given path.
+     *
+     * @param path the path to cleanup
+     * @return the sanitized path without backslashes, successive slashes, and without leading and trailing slashes
+     */
+    @Nonnull
+    public String sanitizePath(@Nullable String path) {
+        path = Strings.trim(path);
+
+        if (Strings.isEmpty(path)) {
+            return "";
+        }
+
+        if (path.contains("\\")) {
+            path = path.replace("\\", "/");
+        }
+
+        if (path.contains("//")) {
+            path = path.replaceAll("/+", "/");
+        }
+
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+
+        return path;
     }
 
     /**
