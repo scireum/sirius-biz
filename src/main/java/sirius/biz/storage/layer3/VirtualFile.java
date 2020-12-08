@@ -544,27 +544,19 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      */
     @Nonnull
     public VirtualFile resolve(String relativePath) {
-        String effectivePath = ensureRelativePath(relativePath);
+        String sanitizedPath = utils.sanitizePath(relativePath);
 
-        if (Strings.isEmpty(effectivePath)) {
-            throw new IllegalArgumentException("Invalid path: " + effectivePath);
+        if (Strings.isEmpty(sanitizedPath)) {
+            throw new IllegalArgumentException("Invalid path: " + sanitizedPath);
         }
 
-        Tuple<String, String> nameAndRest = Strings.split(effectivePath, "/");
+        Tuple<String, String> nameAndRest = Strings.split(sanitizedPath, "/");
         VirtualFile child = findChild(nameAndRest.getFirst());
         if (Strings.isFilled(nameAndRest.getSecond())) {
             return child.resolve(nameAndRest.getSecond());
         }
 
         return child;
-    }
-
-    private String ensureRelativePath(String relativePath) {
-        if (relativePath != null && relativePath.startsWith("/")) {
-            return relativePath.substring(1);
-        } else {
-            return relativePath;
-        }
     }
 
     /**

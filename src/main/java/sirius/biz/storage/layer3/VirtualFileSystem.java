@@ -8,7 +8,9 @@
 
 package sirius.biz.storage.layer3;
 
+import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.PriorityParts;
 import sirius.kernel.di.std.Register;
 
@@ -34,6 +36,9 @@ public class VirtualFileSystem {
      * {@link sirius.biz.storage.layer3.downlink.ssh.SSHServer} which grants access per FTP, SFTP or SCP.
      */
     public static final String SUB_SCOPE_VFS = "vfs";
+
+    @Part
+    private StorageUtils utils;
 
     private VirtualFile root;
 
@@ -88,20 +93,18 @@ public class VirtualFileSystem {
      * <p>
      * Note that the resolved file may not exist (yet).
      *
-     * @param path the path to resolve. It has to start with a "/".
+     * @param path the path to resolve.
      * @return the resolved file
      */
     @Nonnull
     public VirtualFile resolve(String path) {
-        if (Strings.isEmpty(path) || Strings.areEqual(path, "/")) {
+        String sanitizedPath = utils.sanitizePath(path);
+
+        if (Strings.isEmpty(sanitizedPath)) {
             return root();
         }
 
-        if (path.startsWith("/")) {
-            return root().resolve(path.substring(1));
-        } else {
-            return root().resolve(path);
-        }
+        return root().resolve(sanitizedPath);
     }
 
     /**

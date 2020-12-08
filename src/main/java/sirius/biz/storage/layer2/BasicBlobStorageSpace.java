@@ -349,21 +349,23 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     @Override
     public Optional<? extends Blob> findByPath(String tenantId, String path) {
-        if (Strings.isEmpty(path)) {
+        String sanitizedPath = utils.sanitizePath(path);
+
+        if (Strings.isEmpty(sanitizedPath)) {
             return Optional.empty();
         }
 
-        return Optional.ofNullable(blobByPathCache.get(determinePathCacheKey(tenantId, path),
-                                                       ignored -> fetchByPath(tenantId, path)));
+        return Optional.ofNullable(blobByPathCache.get(determinePathCacheKey(tenantId, sanitizedPath),
+                                                       ignored -> fetchByPath(tenantId, sanitizedPath)));
     }
 
     @Nonnull
     private String determinePathCacheKey(String tenantId, String path) {
-        return spaceName + "-" + tenantId + "-" + ensureRelativePath(path);
+        return spaceName + "-" + tenantId + "-" + path;
     }
 
     protected Blob fetchByPath(String tenantId, @Nonnull String path) {
-        String[] parts = ensureRelativePath(path).split("/");
+        String[] parts = path.split("/");
         Directory currentDirectory = getRoot(tenantId);
         int index = 0;
         while (currentDirectory != null && index < parts.length - 1) {
@@ -378,14 +380,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
     }
 
-    protected String ensureRelativePath(String path) {
-        if (path.startsWith("/")) {
-            return path.substring(1);
-        }
-
-        return path;
-    }
-
     @Override
     public Optional<? extends Blob> findByPath(String path) {
         return findByPath(UserContext.getCurrentUser().getTenantId(), path);
@@ -393,21 +387,26 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     @Override
     public Blob findOrCreateByPath(String tenantId, String path) {
-        if (Strings.isEmpty(path)) {
+        String sanitizedPath = utils.sanitizePath(path);
+
+        if (Strings.isEmpty(sanitizedPath)) {
             throw new IllegalArgumentException("An empty path was provided!");
         }
 
-        String key = determinePathCacheKey(tenantId, path);
+        String key = determinePathCacheKey(tenantId, sanitizedPath);
         Blob blob = blobByPathCache.get(key);
         if (blob == null) {
+            // Ensure the cache entry is invalidated on all nodes
             blobByPathCache.remove(key);
-            blob = fetchOrCreateByPath(tenantId, path);
+
+            blob = fetchOrCreateByPath(tenantId, sanitizedPath);
+            blobByPathCache.put(key, blob);
         }
         return blob;
     }
 
     protected Blob fetchOrCreateByPath(String tenantId, @Nonnull String path) {
-        String[] parts = ensureRelativePath(path).split("/");
+        String[] parts = path.split("/");
         Directory currentDirectory = getRoot(tenantId);
         int index = 0;
         while (index < parts.length - 1) {
