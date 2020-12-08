@@ -391,6 +391,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         String key = determinePathCacheKey(tenantId, sanitizedPath);
         Blob blob = blobByPathCache.get(key);
         if (blob == null) {
+            // Ensure the cache entry is invalidated on all nodes
+            blobByPathCache.remove(key);
+
             blob = fetchOrCreateByPath(tenantId, sanitizedPath);
             blobByPathCache.put(key, blob);
         }
