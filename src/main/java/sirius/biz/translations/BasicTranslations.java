@@ -77,6 +77,7 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * @param lang  the language code in question
      * @param field the name of the field to be translated
      * @return true if language is supported by the system, false otherwise
+     * @throws sirius.kernel.health.HandledException if lang is not supported by the system
      */
     protected boolean isValidLanguage(String lang, String field) {
         boolean isSupported = validLanguages.isEmpty() || validLanguages.contains(lang);
@@ -111,15 +112,23 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
         }
 
         T translation = findOrCreateTranslation(field, lang, text);
-        translation.getTranslationData().setText(text);
-        updateTranslation(translation);
-
-        if (owner instanceof Journaled) {
+        if (translation != null) {
+            translation.getTranslationData().setText(text);
+            updateTranslation(translation);
+            if (owner instanceof Journaled) {
+                JournalData.addJournalEntry(owner,
+                                            String.format("Updated translated text for %s (%s): '%s'",
+                                                          field.getName(),
+                                                          lang,
+                                                          text));
+            }
+        } else if (owner instanceof Journaled) {
             JournalData.addJournalEntry(owner,
-                                        String.format("Updated translated text for %s (%s): '%s'",
-                                                      field.getName(),
-                                                      lang,
-                                                      text));
+                                        String.format(
+                                                "Invalid language detected while updating translated text for %s (%s): '%s'",
+                                                field.getName(),
+                                                lang,
+                                                text));
         }
     }
 
@@ -171,10 +180,6 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * @return {@link Optional} with translated text for the given language, or empty if none is found
      */
     public Optional<String> getText(@Nonnull Mapping field, String lang) {
-        if (!isValidLanguage(lang, field.getName())) {
-            return Optional.empty();
-        }
-
         Optional<T> translation = fetchTranslation(field, lang);
         return translation.map(t -> t.getTranslationData().getText());
     }
