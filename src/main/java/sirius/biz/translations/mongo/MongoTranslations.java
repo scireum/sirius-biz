@@ -83,9 +83,7 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
 
     @Override
     protected MongoTranslation findOrCreateTranslation(@Nonnull Mapping field, String lang, String text) {
-        if (!isValidLanguage(lang, field.getName())) {
-            return null;
-        }
+        ensureValidLanguage(lang, field.getName());
 
         Optional<MongoTranslation> translation = fetchTranslation(field, lang);
 

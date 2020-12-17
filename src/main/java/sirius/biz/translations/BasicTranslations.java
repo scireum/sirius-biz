@@ -21,7 +21,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -76,10 +75,10 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      *
      * @param lang  the language code in question
      * @param field the name of the field to be translated
-     * @return true if language is supported by the system, false otherwise
+     * @return true if language is supported by the system
      * @throws sirius.kernel.health.HandledException if lang is not supported by the system
      */
-    protected boolean isValidLanguage(String lang, String field) {
+    protected boolean ensureValidLanguage(String lang, String field) {
         boolean isSupported = validLanguages.isEmpty() || validLanguages.contains(lang);
 
         if (!isSupported) {
@@ -159,9 +158,8 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * @param field {@link Mapping} of the translated field
      * @param lang  language code
      * @param text  translated text for the given language
-     * @return the translation entity matching the database in use (Mongo or SQL), null if language not supported
+     * @return the translation entity matching the database in use (Mongo or SQL)
      */
-    @Nullable
     protected abstract T findOrCreateTranslation(@Nonnull Mapping field, String lang, String text);
 
     /**

@@ -114,9 +114,7 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
 
     @Override
     protected SQLTranslation findOrCreateTranslation(@Nonnull Mapping field, String lang, String text) {
-        if (!isValidLanguage(lang, field.getName())) {
-            return null;
-        }
+        ensureValidLanguage(lang, field.getName());
 
         Optional<SQLTranslation> translation = fetchTranslation(field, lang);
 
