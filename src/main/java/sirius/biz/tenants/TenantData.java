@@ -251,7 +251,6 @@ public class TenantData extends Composite implements Journaled {
     /**
      * Used to record changes on fields of the tenant.
      */
-    public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal;
 
     /**

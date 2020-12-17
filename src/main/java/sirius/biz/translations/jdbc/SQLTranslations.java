@@ -22,6 +22,7 @@ import javax.annotation.Nonnull;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Stores translations into the appropriate collections of the underlying JDBC database.
@@ -30,6 +31,17 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
 
     public SQLTranslations(BaseEntity<?> owner) {
         super(owner);
+    }
+
+    /**
+     * Allows to specify a set of language codes to use when validating translation texts.
+     *
+     * @param owner          the entity that owns the translations
+     * @param validLanguages set of language codes to validate against
+     * @see BasicTranslations#BasicTranslations(sirius.db.mixing.BaseEntity, java.util.Set)
+     */
+    public SQLTranslations(BaseEntity<?> owner, @Nonnull Set<String> validLanguages) {
+        super(owner, validLanguages);
     }
 
     @Override
@@ -102,10 +114,7 @@ public class SQLTranslations extends BasicTranslations<SQLTranslation> {
 
     @Override
     protected SQLTranslation findOrCreateTranslation(@Nonnull Mapping field, String lang, String text) {
-        if (!isSupportedLanguage(lang)) {
-            throw new IllegalArgumentException(
-                    "lang must be a language code supported by the system (supportedLanguages)!");
-        }
+        assertValidLanguage(lang, field.getName());
 
         Optional<SQLTranslation> translation = fetchTranslation(field, lang);
 

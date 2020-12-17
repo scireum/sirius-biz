@@ -144,8 +144,20 @@ public class BridgePath implements Path {
             return this;
         }
 
+        if (Strings.isFilled(other) && other.endsWith("/.")) {
+            other = other.substring(0, other.length() - 1);
+        }
+
         if (Strings.isFilled(other) && other.startsWith("/")) {
-            return new BridgePath(vfs.resolve(other), fileSystem);
+            if (other.endsWith("..")) {
+                return new BridgePath(vfs.resolve(other.substring(0, other.length() - 3)).parent(), fileSystem);
+            } else {
+                return new BridgePath(vfs.resolve(other), fileSystem);
+            }
+        }
+
+        if ("..".equals(other)) {
+            return new BridgePath(virtualFile.parent(), fileSystem);
         }
 
         return new BridgePath(virtualFile.resolve(other), fileSystem);

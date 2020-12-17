@@ -9,7 +9,6 @@
 package sirius.biz.jobs.batch.file;
 
 import sirius.biz.jobs.params.Parameter;
-import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.process.ProcessContext;
 
 import java.util.LinkedHashMap;
@@ -29,11 +28,7 @@ public abstract class XMLImportJobFactory extends FileImportJobFactory {
         Map<String, String> paths = new LinkedHashMap<>();
         collectXsdResourcePaths(paths::put);
         if (!paths.isEmpty()) {
-            SelectStringParameter schemaParameter =
-                    new SelectStringParameter("xsdSchema", "$XMLImportJobFactory.xsdSchema").withDescription(
-                            "$XMLImportJobFactory.xsdSchema.help");
-            paths.forEach(schemaParameter::withEntry);
-            parameterCollector.accept(schemaParameter.build());
+            parameterCollector.accept(XMLImportJob.createSchemaParameter(paths));
         }
     }
 

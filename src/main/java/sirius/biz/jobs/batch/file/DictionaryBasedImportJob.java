@@ -61,7 +61,7 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
     }
 
     @Override
-    protected void executeForStream(String filename, InputStream in) throws Exception {
+    protected void executeForStream(String filename, Producer<InputStream> in) throws Exception {
         dictionary.resetMappings();
         super.executeForStream(filename, in);
     }

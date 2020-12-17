@@ -25,6 +25,13 @@ import java.io.InputStream;
 public abstract class LineBasedImportJob extends FileImportJob implements RowProcessor {
 
     /**
+     * Contains the parameter which is used to determine if empty values should be ignored).
+     */
+    public static final Parameter<Boolean> IMPORT_ALL_SHEETS_PARAMETER =
+            new BooleanParameter("importAllSheets", "$LineBasedImportJobFactory.importAllSheets").withDescription(
+                    "$LineBasedImportJobFactory.importAllSheets.help").build();
+
+    /**
      * Creates a new job for the given factory, name and process.
      *
      * @param process the process context itself
@@ -34,11 +41,14 @@ public abstract class LineBasedImportJob extends FileImportJob implements RowPro
     }
 
     @Override
-    protected void executeForStream(String filename, InputStream in) throws Exception {
-        LineBasedProcessor.create(filename, in).run(this, error -> {
-            process.handle(error);
-            return true;
-        });
+    protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
+        try (InputStream in = inputSupplier.create()) {
+            LineBasedProcessor.create(filename, in, process.getParameter(IMPORT_ALL_SHEETS_PARAMETER).orElse(false))
+                              .run(this, error -> {
+                                  process.handle(error);
+                                  return true;
+                              });
+        }
     }
 
     @Override
@@ -47,6 +57,6 @@ public abstract class LineBasedImportJob extends FileImportJob implements RowPro
             return false;
         }
 
-        return Value.of(fileExtension).in("xls", "xlsx", "csv");
+        return Value.of(fileExtension).lowerCase().in(LineBasedImportJobFactory.SUPPORTED_FILE_EXTENSIONS.toArray());
     }
 }

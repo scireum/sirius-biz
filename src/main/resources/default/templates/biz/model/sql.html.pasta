@@ -37,12 +37,6 @@
     </p>
 
     <script type="text/javascript">
-
-
-        $('#db').on('change', function() {
-            console.log($('[name=db]').val());
-        });
-
         function execute() {
             clearMessages();
             var $columns = $('#columns');

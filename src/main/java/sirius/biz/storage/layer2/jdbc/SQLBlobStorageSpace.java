@@ -11,7 +11,6 @@ package sirius.biz.storage.layer2.jdbc;
 import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.Directory;
-import sirius.biz.storage.layer2.mongo.MongoBlob;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
@@ -567,6 +566,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                              .ignoreEmpty()
                              .build())
            .limit(maxResults)
+           .orderAsc(SQLDirectory.NORMALIZED_DIRECTORY_NAME)
            .iterate(childProcessor::test);
     }
 
@@ -666,14 +666,24 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                   Set<String> fileTypes,
                                   int maxResults,
                                   Predicate<? super Blob> childProcessor) {
-        oma.select(SQLBlob.class)
-           .eq(SQLBlob.SPACE_NAME, spaceName)
-           .eq(SQLBlob.PARENT, parent)
-           .eq(SQLBlob.DELETED, false)
-           .where(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME).startsWith(prefixFilter).ignoreEmpty().build())
-           .where(OMA.FILTERS.containsOne(SQLBlob.FILE_EXTENSION, fileTypes.toArray()).build())
-           .limit(maxResults)
-           .iterate(childProcessor::test);
+        SmartQuery<SQLBlob> query = oma.select(SQLBlob.class)
+                                       .eq(SQLBlob.SPACE_NAME, spaceName)
+                                       .eq(SQLBlob.PARENT, parent)
+                                       .eq(SQLBlob.DELETED, false)
+                                       .where(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME)
+                                                         .startsWith(prefixFilter)
+                                                         .ignoreEmpty()
+                                                         .build())
+                                       .where(OMA.FILTERS.containsOne(SQLBlob.FILE_EXTENSION, fileTypes.toArray())
+                                                         .build())
+                                       .limit(maxResults);
+        if (sortByLastModified) {
+            query.orderDesc(SQLBlob.LAST_MODIFIED);
+        } else {
+            query.orderAsc(SQLBlob.NORMALIZED_FILENAME);
+        }
+
+        query.iterate(childProcessor::test);
     }
 
     protected List<? extends BlobVariant> fetchVariants(SQLBlob blob) {
@@ -685,10 +695,18 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
-    protected SQLVariant findVariant(SQLBlob blob, String variantName) {
+    protected SQLVariant findCompletedVariant(SQLBlob blob, String variantName) {
         return oma.select(SQLVariant.class)
                   .eq(SQLVariant.SOURCE_BLOB, blob)
                   .ne(SQLVariant.PHYSICAL_OBJECT_KEY, null)
+                  .eq(SQLVariant.VARIANT_NAME, variantName)
+                  .queryFirst();
+    }
+
+    @Override
+    protected SQLVariant findAnyVariant(SQLBlob blob, String variantName) {
+        return oma.select(SQLVariant.class)
+                  .eq(SQLVariant.SOURCE_BLOB, blob)
                   .eq(SQLVariant.VARIANT_NAME, variantName)
                   .queryFirst();
     }
@@ -739,10 +757,11 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
-    protected void markConversionSuccess(SQLVariant variant, String physicalKey, long size) {
+    protected void markConversionSuccess(SQLVariant variant, String physicalKey, long size, long durationMillis) {
         variant.setQueuedForConversion(false);
         variant.setSize(size);
         variant.setPhysicalObjectKey(physicalKey);
+        variant.setConversionDuration(durationMillis);
         oma.update(variant);
     }
 

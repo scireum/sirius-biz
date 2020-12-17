@@ -492,6 +492,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .eq(MongoDirectory.DELETED, false)
              .where(QueryBuilder.FILTERS.prefix(MongoDirectory.NORMALIZED_DIRECTORY_NAME, prefixFilter))
              .limit(maxResults)
+             .orderAsc(MongoDirectory.NORMALIZED_DIRECTORY_NAME)
              .iterate(childProcessor::test);
     }
 
@@ -595,14 +596,23 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                                   Set<String> fileTypes,
                                   int maxResults,
                                   Predicate<? super Blob> childProcessor) {
-        mango.select(MongoBlob.class)
-             .eq(MongoBlob.SPACE_NAME, spaceName)
-             .eq(MongoBlob.PARENT, parent)
-             .eq(MongoBlob.DELETED, false)
-             .where(QueryBuilder.FILTERS.prefix(MongoBlob.NORMALIZED_FILENAME, prefixFilter))
-             .where(QueryBuilder.FILTERS.containsOne(MongoBlob.FILE_EXTENSION, fileTypes.toArray()).build())
-             .limit(maxResults)
-             .iterate(childProcessor::test);
+        MongoQuery<MongoBlob> blobsQuery = mango.select(MongoBlob.class)
+                                                .eq(MongoBlob.SPACE_NAME, spaceName)
+                                                .eq(MongoBlob.PARENT, parent)
+                                                .eq(MongoBlob.DELETED, false)
+                                                .where(QueryBuilder.FILTERS.prefix(MongoBlob.NORMALIZED_FILENAME,
+                                                                                   prefixFilter))
+                                                .where(QueryBuilder.FILTERS.containsOne(MongoBlob.FILE_EXTENSION,
+                                                                                        fileTypes.toArray()).build())
+                                                .limit(maxResults);
+
+        if (sortByLastModified) {
+            blobsQuery.orderDesc(MongoBlob.LAST_MODIFIED);
+        } else {
+            blobsQuery.orderAsc(MongoBlob.NORMALIZED_FILENAME);
+        }
+
+        blobsQuery.iterate(childProcessor::test);
     }
 
     protected List<? extends BlobVariant> fetchVariants(MongoBlob blob) {
@@ -614,10 +624,18 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
-    protected MongoVariant findVariant(MongoBlob blob, String variantName) {
+    protected MongoVariant findCompletedVariant(MongoBlob blob, String variantName) {
         return mango.select(MongoVariant.class)
                     .eq(MongoVariant.BLOB, blob)
                     .ne(MongoVariant.PHYSICAL_OBJECT_KEY, null)
+                    .eq(MongoVariant.VARIANT_NAME, variantName)
+                    .queryFirst();
+    }
+
+    @Override
+    protected MongoVariant findAnyVariant(MongoBlob blob, String variantName) {
+        return mango.select(MongoVariant.class)
+                    .eq(MongoVariant.BLOB, blob)
                     .eq(MongoVariant.VARIANT_NAME, variantName)
                     .queryFirst();
     }
@@ -670,10 +688,11 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
-    protected void markConversionSuccess(MongoVariant variant, String physicalKey, long size) {
+    protected void markConversionSuccess(MongoVariant variant, String physicalKey, long size, long durationMillis) {
         variant.setQueuedForConversion(false);
         variant.setSize(size);
         variant.setPhysicalObjectKey(physicalKey);
+        variant.setConversionDuration(durationMillis);
         mango.update(variant);
     }
 

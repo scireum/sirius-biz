@@ -594,10 +594,21 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                                .withTenantName(account.getTenant().fetchValue().getTenantData().getName())
                                .withLang(computeLang(null, account.getUniqueName()))
                                .withPermissions(roles)
-                               .withSettingsSupplier(ui -> getUserSettings(getScopeSettings(), ui))
-                               .withUserSupplier(u -> account)
+                               .withSettingsSupplier(user -> getUserSettings(getScopeSettings(), user))
+                               .withUserSupplier(ignored -> account)
                                .withNameAppendixSupplier(appendixSupplier)
+                               .withSubScopeCheck(this::checkSubScope)
                                .build();
+    }
+
+    @Override
+    protected boolean checkSubScope(UserInfo user, String scope) {
+        if (!user.isLoggedIn()) {
+            return true;
+        }
+
+        UserAccountData userAccountData = user.getUserObject(UserAccount.class).getUserAccountData();
+        return userAccountData.getSubScopes().isEmpty() || userAccountData.getSubScopes().contains(scope);
     }
 
     @Override

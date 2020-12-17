@@ -45,7 +45,6 @@ public class MongoUserAccount extends MongoTenantAware implements UserAccount<St
     /**
      * Used to record changes on fields of the user.
      */
-    public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal = new JournalData(this);
 
     private final MongoPerformanceData performanceData = new MongoPerformanceData(this);
