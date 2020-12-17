@@ -112,23 +112,15 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
         }
 
         T translation = findOrCreateTranslation(field, lang, text);
-        if (translation != null) {
-            translation.getTranslationData().setText(text);
-            updateTranslation(translation);
-            if (owner instanceof Journaled) {
-                JournalData.addJournalEntry(owner,
-                                            String.format("Updated translated text for %s (%s): '%s'",
-                                                          field.getName(),
-                                                          lang,
-                                                          text));
-            }
-        } else if (owner instanceof Journaled) {
+        translation.getTranslationData().setText(text);
+        updateTranslation(translation);
+
+        if (owner instanceof Journaled) {
             JournalData.addJournalEntry(owner,
-                                        String.format(
-                                                "Invalid language detected while updating translated text for %s (%s): '%s'",
-                                                field.getName(),
-                                                lang,
-                                                text));
+                                        String.format("Updated translated text for %s (%s): '%s'",
+                                                      field.getName(),
+                                                      lang,
+                                                      text));
         }
     }
 
