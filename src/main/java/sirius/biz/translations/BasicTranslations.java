@@ -75,21 +75,16 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      *
      * @param lang  the language code in question
      * @param field the name of the field to be translated
-     * @return true if language is supported by the system
      * @throws sirius.kernel.health.HandledException if lang is not supported by the system
      */
-    protected boolean ensureValidLanguage(String lang, String field) {
-        boolean isSupported = validLanguages.isEmpty() || validLanguages.contains(lang);
-
-        if (!isSupported) {
+    protected void assertValidLanguage(String lang, String field) {
+        if (!validLanguages.isEmpty() && !validLanguages.contains(lang)) {
             throw Exceptions.createHandled()
                             .withNLSKey("Translations.invalidLanguage")
                             .set("language", lang)
                             .set("field", field)
                             .handle();
         }
-
-        return isSupported;
     }
 
     /**
