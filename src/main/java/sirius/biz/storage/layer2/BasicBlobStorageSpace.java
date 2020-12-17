@@ -28,7 +28,6 @@ import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Wait;
-import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -1408,12 +1407,14 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param variant the variant to generate
      */
     private void invokeConversionPipelineAsync(B blob, V variant) {
-        Watch watch = Watch.start();
-        conversionEngine.performConversion(blob, variant.getVariantName()).onSuccess(handle -> {
-            try (FileHandle automaticHandle = handle) {
+        conversionEngine.performConversion(blob, variant.getVariantName()).onSuccess(handleAndWatch -> {
+            try (FileHandle automaticHandle = handleAndWatch.getFirst()) {
                 String physicalKey = keyGenerator.generateId();
                 getPhysicalSpace().upload(physicalKey, automaticHandle.getFile());
-                markConversionSuccess(variant, physicalKey, automaticHandle.getFile().length(), watch.elapsedMillis());
+                markConversionSuccess(variant,
+                                      physicalKey,
+                                      automaticHandle.getFile().length(),
+                                      handleAndWatch.getSecond().elapsedMillis());
             }
         }).onFailure(e -> {
             markConversionFailure(variant);
