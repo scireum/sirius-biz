@@ -17,6 +17,7 @@ import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.di.std.Framework;
+import sirius.kernel.nls.NLS;
 
 /**
  * Provides the JDBC/SQL implementation of {@link CodeListEntry}.
@@ -32,7 +33,7 @@ public class SQLCodeListEntry extends SQLEntity implements CodeListEntry<Long, S
 
     private final CodeListEntryData codeListEntryData = new CodeListEntryData(this);
 
-    private final SQLTranslations codeListEntryTranslations = new SQLTranslations(this);
+    private final SQLTranslations codeListEntryTranslations = new SQLTranslations(this, NLS.getSupportedLanguages());
 
     @Override
     public SQLEntityRef<SQLCodeList> getCodeList() {

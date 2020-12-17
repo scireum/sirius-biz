@@ -18,6 +18,7 @@ import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.di.std.Framework;
+import sirius.kernel.nls.NLS;
 
 /**
  * Provides the MongoDB implementation of {@link CodeListEntry}.
@@ -34,7 +35,8 @@ public class MongoCodeListEntry extends PrefixSearchableEntity implements CodeLi
     private final MongoRef<MongoCodeList> codeList =
             MongoRef.writeOnceOn(MongoCodeList.class, MongoRef.OnDelete.CASCADE);
     private final CodeListEntryData codeListEntryData = new CodeListEntryData(this);
-    private final MongoTranslations codeListEntryTranslations = new MongoTranslations(this);
+    private final MongoTranslations codeListEntryTranslations =
+            new MongoTranslations(this, NLS.getSupportedLanguages());
 
     @Override
     public MongoRef<MongoCodeList> getCodeList() {
