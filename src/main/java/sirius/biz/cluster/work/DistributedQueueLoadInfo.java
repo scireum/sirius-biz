@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 /**
  * Provides {@link LoadInfo load infos} for all distributed task queues.
  */
-@Register(classes = LoadInfoProvider.class)
+@Register
 public class DistributedQueueLoadInfo extends CachingLoadInfoProvider {
 
     @Part
