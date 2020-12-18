@@ -1,5 +1,5 @@
 <i:arg type="sirius.biz.storage.layer2.BlobSoftRef" name="blobRef"/>
-<i:arg type="String" name="id" default="@('blob-soft-ref-' + call.generateLocalId())"/>
+<i:arg type="String" name="id" default="@generateId('blob-soft-ref--%s')"/>
 <i:arg type="String" name="inputId"/>
 <i:arg type="String" name="defaultPreview" default=""/>
 <i:arg type="boolean" name="urlAllowed" default="@blobRef.isSupportsURL()" description=""/>
