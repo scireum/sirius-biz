@@ -166,7 +166,7 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
     public int countNumberOfExecutableTasks() {
         return (int) oma.select(SQLReplicationTask.class)
                         .eq(SQLReplicationTask.FAILED, false)
-                        .where(OMA.FILTERS.gt(SQLReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
+                        .where(OMA.FILTERS.lt(SQLReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
                         .count();
     }
 

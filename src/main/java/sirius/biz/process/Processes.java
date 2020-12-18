@@ -484,6 +484,7 @@ public class Processes {
                                     @Nullable Map<String, Average> adminTimings) {
         return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             if (process.getState() != ProcessState.STANDBY) {
+                process.setErrorneous(process.isErrorneous() || !TaskContext.get().isActive());
                 process.setState(ProcessState.TERMINATED);
                 process.setCompleted(LocalDateTime.now());
                 process.setExpires(process.getPersistencePeriod().plus(LocalDate.now()));

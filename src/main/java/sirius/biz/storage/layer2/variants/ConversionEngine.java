@@ -15,6 +15,7 @@ import sirius.kernel.Sirius;
 import sirius.kernel.async.Promise;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
@@ -169,8 +170,8 @@ public class ConversionEngine {
      * @return a promise which will either be fullfilled with the generated file or be failed with an appropriate
      * error message
      */
-    public Promise<FileHandle> performConversion(Blob blob, String variant) {
-        Promise<FileHandle> result = new Promise<>();
+    public Promise<Tuple<FileHandle, Watch>> performConversion(Blob blob, String variant) {
+        Promise<Tuple<FileHandle, Watch>> result = new Promise<>();
 
         tasks.executor(EXECUTOR_STORAGE_CONVERSION).dropOnOverload(() -> {
             result.fail(new IllegalStateException("Conversion subsystem overloaded!"));
@@ -197,7 +198,7 @@ public class ConversionEngine {
                 }
 
                 conversionDuration.addValue(watch.elapsedMillis());
-                result.success(convertedFile);
+                result.success(Tuple.create(convertedFile, watch));
             } catch (Exception e) {
                 result.fail(e);
             }
