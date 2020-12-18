@@ -30,6 +30,9 @@ import sirius.pasta.tagliatelle.ClassAliasProvider;
 
 import java.util.function.BiConsumer;
 
+/**
+ * Provides some class aliases which are commonly used within scripts targeting the components of sirius-biz.
+ */
 @Register
 public class BizClassAliasProvider implements ClassAliasProvider {
 
@@ -54,17 +57,16 @@ public class BizClassAliasProvider implements ClassAliasProvider {
         consumer.accept("Processes", Processes.class);
         consumer.accept("Tenants", Tenants.class);
         consumer.accept("Isenguard", Isenguard.class);
-
     }
 
     private void autoImportMixins(BiConsumer<String, Class<?>> consumer) {
-        for(Object mixin : Injector.context().getParts(Mixin.class)) {
+        for (Object mixin : Injector.context().getParts(Mixin.class)) {
             consumer.accept(mixin.getClass().getSimpleName(), mixin.getClass());
         }
     }
 
     private void autoImportEntities(BiConsumer<String, Class<?>> consumer) {
-        for(EntityDescriptor descriptor : mixing.getDescriptors()) {
+        for (EntityDescriptor descriptor : mixing.getDescriptors()) {
             consumer.accept(descriptor.getType().getSimpleName(), descriptor.getType());
         }
     }
