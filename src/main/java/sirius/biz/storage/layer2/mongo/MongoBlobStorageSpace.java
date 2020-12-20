@@ -12,6 +12,7 @@ import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.variants.BlobVariant;
+import sirius.biz.storage.layer2.variants.ConversionProcess;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
@@ -688,11 +689,16 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
-    protected void markConversionSuccess(MongoVariant variant, String physicalKey, long size, long durationMillis) {
+    protected void markConversionSuccess(MongoVariant variant,
+                                         String physicalKey,
+                                         ConversionProcess conversionProcess) {
         variant.setQueuedForConversion(false);
-        variant.setSize(size);
+        variant.setSize(conversionProcess.getResultFileHandle().getFile().length());
         variant.setPhysicalObjectKey(physicalKey);
-        variant.setConversionDuration(durationMillis);
+        variant.setConversionDuration(conversionProcess.getConversionDuration());
+        variant.setQueueDuration(conversionProcess.getQueueDuration());
+        variant.setTransferDuration(conversionProcess.getTransferDuration());
+
         mango.update(variant);
     }
 

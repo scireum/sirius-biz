@@ -9,7 +9,7 @@
 package sirius.biz.storage.layer2.variants;
 
 import sirius.biz.storage.layer1.FileHandle;
-import sirius.biz.storage.layer2.Blob;
+import sirius.kernel.commons.Producer;
 
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -25,10 +25,14 @@ public interface Converter {
 
     /**
      * Performs the generation of the requested variant.
+     * <p>
+     * Note that {@link ConversionProcess#withConversionResult(FileHandle)} has to be used and that
+     * {@link ConversionProcess#recordConversionDuration(long)} and {@link ConversionProcess#download(Producer)}
+     * should be used to provide proper conversion metrics.
      *
-     * @param blob the blob which provides the raw data (or another variant as base data).
-     * @return the generated file wrapped as {@link FileHandle}. Note that this file must exist and be non empty.
+     * @param conversionProcess used to obtain the input parameter and also to return the resulting file and some
+     *                          statistics.
      * @throws Exception in case of a conversion error
      */
-    FileHandle performConversion(Blob blob) throws Exception;
+    void performConversion(ConversionProcess conversionProcess) throws Exception;
 }

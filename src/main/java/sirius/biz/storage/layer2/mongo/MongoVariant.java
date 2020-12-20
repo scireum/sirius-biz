@@ -87,6 +87,18 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
     public static final Mapping CONVERSION_DURATION = Mapping.named("conversionDuration");
     private long conversionDuration;
 
+    /**
+     * Stores how long the the conversion waited in the queue (in millis).
+     */
+    public static final Mapping QUEUE_DURATION = Mapping.named("queueDuration");
+    private long queueDuration;
+
+    /**
+     * Stores how long the the download and upload from and to the storage took (in millis).
+     */
+    public static final Mapping TRANSFER_DURATION = Mapping.named("transferDuration");
+    private long transferDuration;
+
     @AfterDelete
     protected void onDelete() {
         if (Strings.isFilled(physicalObjectKey)) {
@@ -176,5 +188,21 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
 
     public void setConversionDuration(long conversionDuration) {
         this.conversionDuration = conversionDuration;
+    }
+
+    public long getQueueDuration() {
+        return queueDuration;
+    }
+
+    public void setQueueDuration(long queueDuration) {
+        this.queueDuration = queueDuration;
+    }
+
+    public long getTransferDuration() {
+        return transferDuration;
+    }
+
+    public void setTransferDuration(long transferDuration) {
+        this.transferDuration = transferDuration;
     }
 }

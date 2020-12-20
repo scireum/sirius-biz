@@ -12,6 +12,7 @@ import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.variants.BlobVariant;
+import sirius.biz.storage.layer2.variants.ConversionProcess;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.Operator;
@@ -757,11 +758,14 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
-    protected void markConversionSuccess(SQLVariant variant, String physicalKey, long size, long durationMillis) {
+    protected void markConversionSuccess(SQLVariant variant,
+                                         String physicalKey, ConversionProcess conversionProcess) {
         variant.setQueuedForConversion(false);
-        variant.setSize(size);
+        variant.setSize(conversionProcess.getResultFileHandle().getFile().length());
         variant.setPhysicalObjectKey(physicalKey);
-        variant.setConversionDuration(durationMillis);
+        variant.setConversionDuration(conversionProcess.getConversionDuration());
+        variant.setQueueDuration(conversionProcess.getQueueDuration());
+        variant.setTransferDuration(conversionProcess.getTransferDuration());
         oma.update(variant);
     }
 
