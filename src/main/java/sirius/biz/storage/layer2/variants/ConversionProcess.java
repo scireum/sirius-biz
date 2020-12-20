@@ -95,7 +95,7 @@ public class ConversionProcess {
      *
      * @param task the upload task to monitor
      */
-    protected void upload(Runnable task) {
+    public void upload(Runnable task) {
         Watch transferWatch = Watch.start();
         try {
             task.run();
