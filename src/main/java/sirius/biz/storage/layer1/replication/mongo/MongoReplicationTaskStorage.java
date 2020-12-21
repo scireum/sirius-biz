@@ -138,7 +138,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
                                                  batch.getString(MongoEntityBatchEmitter.START_ID)))
                  .where(QueryBuilder.FILTERS.lte(MongoReplicationTask.ID,
                                                  batch.getString(MongoEntityBatchEmitter.END_ID)))
-                 .executeFor(MongoReplicationTask.class);
+                 .executeForMany(MongoReplicationTask.class);
         } catch (Exception e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)

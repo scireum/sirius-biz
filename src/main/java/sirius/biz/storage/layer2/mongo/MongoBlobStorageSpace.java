@@ -205,7 +205,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .where(MongoBlob.SPACE_NAME, spaceName)
              .where(MongoBlob.REFERENCE, referencingEntity)
              .where(MongoBlob.REFERENCE_DESIGNATOR, null)
-             .executeFor(MongoBlob.class);
+             .executeForMany(MongoBlob.class);
     }
 
     @Override
@@ -230,7 +230,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
             updater.where(QueryBuilder.FILTERS.ne(MongoBlob.BLOB_KEY, excludedBlobKey));
         }
 
-        updater.executeFor(MongoBlob.class);
+        updater.executeForMany(MongoBlob.class);
     }
 
     @Override
@@ -257,7 +257,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .where(MongoBlob.TEMPORARY, false)
              .where(MongoBlob.COMMITTED, true)
              .where(MongoBlob.DELETED, false)
-             .executeFor(MongoBlob.class);
+             .executeForMany(MongoBlob.class);
 
         // Place new reference...
         long numChanges = mongo.update()

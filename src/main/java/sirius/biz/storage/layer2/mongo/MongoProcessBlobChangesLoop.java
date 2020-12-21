@@ -75,8 +75,11 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
         mongo.update()
              .set(MongoDirectory.DELETED, true)
              .where(MongoDirectory.PARENT, directoryId)
-             .executeFor(MongoDirectory.class);
-        mongo.update().set(MongoBlob.DELETED, true).where(MongoBlob.PARENT, directoryId).executeFor(MongoBlob.class);
+             .executeForMany(MongoDirectory.class);
+        mongo.update()
+             .set(MongoBlob.DELETED, true)
+             .where(MongoBlob.PARENT, directoryId)
+             .executeForMany(MongoBlob.class);
     }
 
     @Override
@@ -101,11 +104,11 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
         mongo.update()
              .set(MongoDirectory.RENAMED, true)
              .where(MongoDirectory.PARENT, directoryId)
-             .executeFor(MongoDirectory.class);
+             .executeForMany(MongoDirectory.class);
         mongo.update()
              .set(MongoBlob.PARENT_CHANGED, true)
              .where(MongoBlob.PARENT, directoryId)
-             .executeFor(MongoBlob.class);
+             .executeForMany(MongoBlob.class);
     }
 
     @Override
