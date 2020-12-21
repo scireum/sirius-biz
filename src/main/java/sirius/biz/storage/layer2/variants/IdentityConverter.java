@@ -9,7 +9,6 @@
 package sirius.biz.storage.layer2.variants;
 
 import sirius.biz.storage.layer1.FileHandle;
-import sirius.biz.storage.layer2.Blob;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.settings.Extension;
 
@@ -43,7 +42,11 @@ public class IdentityConverter implements Converter {
     }
 
     @Override
-    public FileHandle performConversion(Blob blob) throws Exception {
-        return blob.download().orElseThrow(() -> new IllegalArgumentException("Blob does not contain any data."));
+    public void performConversion(ConversionProcess conversionProcess) throws Exception {
+        FileHandle originalFile = conversionProcess.download(() -> conversionProcess.getBlobToConvert()
+                                                                                    .download()
+                                                                                    .orElseThrow(() -> new IllegalArgumentException(
+                                                                                            "Blob does not contain any data.")));
+        conversionProcess.withConversionResult(originalFile);
     }
 }

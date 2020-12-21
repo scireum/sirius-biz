@@ -9,13 +9,11 @@
 package sirius.biz.storage.layer2.variants;
 
 import sirius.biz.storage.layer1.FileHandle;
-import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.Sirius;
-import sirius.kernel.async.Promise;
+import sirius.kernel.async.Future;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
@@ -165,40 +163,45 @@ public class ConversionEngine {
     /**
      * Invokes the {@link Converter} which has been configured for the given variant to perform the actual conversion.
      *
-     * @param blob    the blob to convert
-     * @param variant the variant to generate
-     * @return a promise which will either be fullfilled with the generated file or be failed with an appropriate
-     * error message
+     * @param conversionProcess the conversion to perform
+     * @return a future which is fulfilled once the conversion is completed
      */
-    public Promise<Tuple<FileHandle, Watch>> performConversion(Blob blob, String variant) {
-        Promise<Tuple<FileHandle, Watch>> result = new Promise<>();
+    public Future performConversion(ConversionProcess conversionProcess) {
+        Future result = new Future();
 
+        Watch queueWatch = Watch.start();
         tasks.executor(EXECUTOR_STORAGE_CONVERSION).dropOnOverload(() -> {
             result.fail(new IllegalStateException("Conversion subsystem overloaded!"));
         }).fork(() -> {
             try {
-                Watch watch = Watch.start();
-                Converter converter = fetchConverter(variant);
+                conversionProcess.recordQueueDuration(queueWatch.elapsedMillis());
+                Converter converter = fetchConverter(conversionProcess.getVariantName());
                 if (converter == null) {
                     // We use a handled exception here as the error has already been reported and we do not want to jam
                     // the logs with additional error reports for the same problem.
                     throw Exceptions.createHandled()
-                                    .withSystemErrorMessage("A configuration problem is present for: %s", variant)
+                                    .withSystemErrorMessage("A configuration problem is present for: %s",
+                                                            conversionProcess.getVariantName())
                                     .handle();
                 }
 
-                FileHandle convertedFile = converter.performConversion(blob);
-                if (!convertedFile.getFile().exists() || convertedFile.getFile().length() == 0) {
-                    convertedFile.close();
+                converter.performConversion(conversionProcess);
+                FileHandle resultFileHandle = conversionProcess.getResultFileHandle();
+                if (resultFileHandle == null
+                    || !resultFileHandle.exists()
+                    || resultFileHandle.getFile().length() == 0) {
+                    if (resultFileHandle != null) {
+                        resultFileHandle.close();
+                    }
                     throw new IllegalArgumentException(Strings.apply(
                             "The conversion engine created an empty result for variant %s of %s (%s)",
-                            variant,
-                            blob.getFilename(),
-                            blob.getBlobKey()));
+                            conversionProcess.getVariantName(),
+                            conversionProcess.getBlobToConvert().getFilename(),
+                            conversionProcess.getBlobToConvert().getBlobKey()));
                 }
 
-                conversionDuration.addValue(watch.elapsedMillis());
-                result.success(Tuple.create(convertedFile, watch));
+                conversionDuration.addValue(conversionProcess.getConversionDuration());
+                result.success();
             } catch (Exception e) {
                 result.fail(e);
             }
