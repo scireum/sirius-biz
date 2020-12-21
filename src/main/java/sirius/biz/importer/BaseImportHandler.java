@@ -367,7 +367,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
                                       alias);
                 }
 
-                field.addAlias(alias);
+                field.addTranslatedAliases(alias);
             });
         }
 
