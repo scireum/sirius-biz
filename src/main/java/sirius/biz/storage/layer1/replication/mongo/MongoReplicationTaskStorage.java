@@ -209,7 +209,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
                               .handle();
                 }
 
-                updater.executeFor(MongoReplicationTask.class);
+                updater.executeForOne(MongoReplicationTask.class);
             } catch (Exception e) {
                 Exceptions.handle(StorageUtils.LOG, e);
             }

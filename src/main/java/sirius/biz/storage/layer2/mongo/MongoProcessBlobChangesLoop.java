@@ -64,7 +64,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
             mongo.update()
                  .set(MongoBlob.CREATED_OR_RENAMED, false)
                  .where(MongoBlob.ID, blob.getId())
-                 .executeFor(MongoBlob.class);
+                 .executeForOne(MongoBlob.class);
             counter.run();
         });
     }
@@ -87,7 +87,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                 mongo.update()
                      .set(MongoDirectory.RENAMED, false)
                      .where(MongoDirectory.ID, dir.getId())
-                     .executeFor(MongoDirectory.class);
+                     .executeForOne(MongoDirectory.class);
             } catch (Exception e) {
                 handleDirectoryRenameException(dir, e);
             }
@@ -115,7 +115,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
             mongo.update()
                  .set(MongoBlob.PARENT_CHANGED, false)
                  .where(MongoBlob.ID, blob.getId())
-                 .executeFor(MongoBlob.class);
+                 .executeForOne(MongoBlob.class);
             counter.run();
         });
     }
