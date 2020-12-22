@@ -71,22 +71,22 @@ public class StorageMetrics extends CachingLoadInfoProvider implements MetricPro
                                             ObjectStorageSpace.getDeliveryServerFailures(),
                                             "/min");
 
-        metricsCollector.differentialMetric("storage_replication_tasks",
-                                            "storage-replication-tasks",
-                                            "Storage Replication Tasks",
-                                            replicationManager.getReplicationExecutionDuration().getCount(),
-                                            "/min");
+        metricsCollector.metric("storage_replication_tasks",
+                                "storage-replication-tasks",
+                                "Storage Replication Tasks",
+                                replicationManager.getReplicationExecutionDuration().getCount(),
+                                "/min");
         metricsCollector.metric("storage_replication_duration",
                                 "storage-replication-duration",
                                 "Storage Replication Duration",
                                 replicationManager.getReplicationExecutionDuration().getAndClear(),
                                 "ms");
 
-        metricsCollector.differentialMetric("storage_conversions",
-                                            "storage-conversions",
-                                            "Storage Conversions",
-                                            conversionEngine.getConversionDuration().getCount(),
-                                            "/min");
+        metricsCollector.metric("storage_conversions",
+                                "storage-conversions",
+                                "Storage Conversions",
+                                conversionEngine.getConversionDuration().getCount(),
+                                "/min");
         metricsCollector.metric("storage_conversion_duration",
                                 "storage-conversion-duration",
                                 "Storage Conversion Duration",
