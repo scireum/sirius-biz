@@ -175,7 +175,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
     public int countNumberOfExecutableTasks() {
         return (int) mango.select(MongoReplicationTask.class)
                           .eq(MongoReplicationTask.FAILED, false)
-                          .where(QueryBuilder.FILTERS.gt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
+                          .where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
                           .count();
     }
 
