@@ -12,6 +12,7 @@ import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.BackgroundLoop;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
@@ -27,7 +28,10 @@ import javax.annotation.Nullable;
 public class ReplicationBackgroundLoop extends BackgroundLoop {
 
     private static final double EVERY_TWO_SECONDS = 1d / 2;
-    private static final double EVERY_MINUTE = 1d / 60;
+    private static final double EVERY_THIRTY_SECONDS = 1d / 30;
+
+    @ConfigValue("storage.layer1.replication.minBatches")
+    private int minBatches;
 
     @Part
     private DistributedTasks distributedTasks;
@@ -44,7 +48,7 @@ public class ReplicationBackgroundLoop extends BackgroundLoop {
 
     @Override
     public double maxCallFrequency() {
-        return Sirius.isStartedAsTest() ? EVERY_TWO_SECONDS : EVERY_MINUTE;
+        return Sirius.isStartedAsTest() ? EVERY_TWO_SECONDS : EVERY_THIRTY_SECONDS;
     }
 
     @Nullable
@@ -53,7 +57,7 @@ public class ReplicationBackgroundLoop extends BackgroundLoop {
         if (taskStorage == null) {
             return null;
         }
-        if (distributedTasks.getQueueLength(ReplicationTaskExecutor.REPLICATION_TASK_QUEUE) > 0) {
+        if (distributedTasks.getQueueLength(ReplicationTaskExecutor.REPLICATION_TASK_QUEUE) > minBatches) {
             return null;
         }
 

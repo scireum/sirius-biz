@@ -131,7 +131,9 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
     private void markTasksAsScheduled(JSONObject batch) {
         try {
             mongo.update()
+                 .many()
                  .set(MongoReplicationTask.SCHEDULED, LocalDateTime.now())
+                 .where(MongoReplicationTask.FAILED, false)
                  .where(MongoReplicationTask.SCHEDULED, null)
                  .where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
                  .where(QueryBuilder.FILTERS.gte(MongoReplicationTask.ID,
