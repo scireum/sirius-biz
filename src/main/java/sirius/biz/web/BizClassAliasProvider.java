@@ -26,7 +26,7 @@ import sirius.db.redis.Redis;
 import sirius.kernel.di.Injector;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.pasta.tagliatelle.ClassAliasProvider;
+import sirius.pasta.noodle.ClassAliasProvider;
 
 import java.util.function.BiConsumer;
 

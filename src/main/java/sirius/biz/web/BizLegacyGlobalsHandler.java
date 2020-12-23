@@ -30,9 +30,8 @@ public class BizLegacyGlobalsHandler extends LegacyGlobalsHandler {
                 return "part(Isenguard.class)";
             case "appBaseUrl":
                 return "BizController.getBaseUrl()";
+            default:
+                return null;
         }
-
-        return null;
     }
-
 }
