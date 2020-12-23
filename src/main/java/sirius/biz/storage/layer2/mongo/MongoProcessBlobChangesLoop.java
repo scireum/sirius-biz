@@ -64,7 +64,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
             mongo.update()
                  .set(MongoBlob.CREATED_OR_RENAMED, false)
                  .where(MongoBlob.ID, blob.getId())
-                 .executeFor(MongoBlob.class);
+                 .executeForOne(MongoBlob.class);
             counter.run();
         });
     }
@@ -75,8 +75,11 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
         mongo.update()
              .set(MongoDirectory.DELETED, true)
              .where(MongoDirectory.PARENT, directoryId)
-             .executeFor(MongoDirectory.class);
-        mongo.update().set(MongoBlob.DELETED, true).where(MongoBlob.PARENT, directoryId).executeFor(MongoBlob.class);
+             .executeForMany(MongoDirectory.class);
+        mongo.update()
+             .set(MongoBlob.DELETED, true)
+             .where(MongoBlob.PARENT, directoryId)
+             .executeForMany(MongoBlob.class);
     }
 
     @Override
@@ -87,7 +90,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
                 mongo.update()
                      .set(MongoDirectory.RENAMED, false)
                      .where(MongoDirectory.ID, dir.getId())
-                     .executeFor(MongoDirectory.class);
+                     .executeForOne(MongoDirectory.class);
             } catch (Exception e) {
                 handleDirectoryRenameException(dir, e);
             }
@@ -101,11 +104,11 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
         mongo.update()
              .set(MongoDirectory.RENAMED, true)
              .where(MongoDirectory.PARENT, directoryId)
-             .executeFor(MongoDirectory.class);
+             .executeForMany(MongoDirectory.class);
         mongo.update()
              .set(MongoBlob.PARENT_CHANGED, true)
              .where(MongoBlob.PARENT, directoryId)
-             .executeFor(MongoBlob.class);
+             .executeForMany(MongoBlob.class);
     }
 
     @Override
@@ -115,7 +118,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
             mongo.update()
                  .set(MongoBlob.PARENT_CHANGED, false)
                  .where(MongoBlob.ID, blob.getId())
-                 .executeFor(MongoBlob.class);
+                 .executeForOne(MongoBlob.class);
             counter.run();
         });
     }

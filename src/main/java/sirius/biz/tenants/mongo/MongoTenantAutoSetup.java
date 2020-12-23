@@ -45,7 +45,7 @@ public class MongoTenantAutoSetup implements AutoSetupRule {
 
         // Fix the ID of the system tenant to be "1" - This should normally be avoided
         // at all cost, but in this case it greatly simplifies the system config...
-        mongo.update().where(MongoEntity.ID, tenant.getId()).set(MongoEntity.ID, "1").executeFor(MongoTenant.class);
+        mongo.update().where(MongoEntity.ID, tenant.getId()).set(MongoEntity.ID, "1").executeForOne(MongoTenant.class);
         tenant = mango.find(MongoTenant.class, "1")
                       .orElseThrow(() -> new IllegalStateException(
                               "Failed to resolve the system tenant after changing its ID!"));

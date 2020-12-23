@@ -99,7 +99,7 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
                                    .whereIgnoreNull(MonthlyMetric.MONTH, month)
                                    .whereIgnoreNull(DailyMetric.DAY, day);
 
-        return updateQuery.set(Fact.VALUE, value).executeFor(type).getMatchedCount() > 0;
+        return updateQuery.set(Fact.VALUE, value).executeForOne(type).getMatchedCount() > 0;
     }
 
     @Override
