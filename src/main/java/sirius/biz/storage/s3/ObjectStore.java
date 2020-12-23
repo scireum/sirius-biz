@@ -543,7 +543,7 @@ public class ObjectStore {
      * @param bucket        the bucket to upload the file to
      * @param objectId      the object id to use
      * @param inputStream   the data to upload
-     * @param contentLength the total number of bytes to upload
+     * @param contentLength the total number of bytes to upload or 0 to indicate that the length is unknown
      */
     public void upload(BucketName bucket, String objectId, InputStream inputStream, long contentLength) {
         upload(bucket, objectId, inputStream, contentLength, null);
@@ -555,7 +555,7 @@ public class ObjectStore {
      * @param bucket        the bucket to upload the file to
      * @param objectId      the object id to use
      * @param inputStream   the data to upload
-     * @param contentLength the total number of bytes to upload
+     * @param contentLength the total number of bytes to upload or 0 to indicate that the length is unknown
      * @param metadata      the metadata for the object
      */
     public void upload(BucketName bucket,
@@ -564,7 +564,7 @@ public class ObjectStore {
                        long contentLength,
                        @Nullable ObjectMetadata metadata) {
         try {
-            if (contentLength >= MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE) {
+            if (contentLength == 0 || contentLength >= MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE) {
                 upload(bucket, objectId, inputStream);
             } else {
                 uploadAsync(bucket, objectId, inputStream, contentLength, metadata).waitForUploadResult();
