@@ -17,7 +17,7 @@
 <i:arg name="id" type="String" default=""/>
 <i:arg name="placeholder" type="String" default=""/>
 <i:arg name="tabIndex" type="String" default=""/>
-<i:local name="localId" value="@('filefield' + call.generateLocalId())"/>
+<i:local name="localId" value="@generateId('filefield-%s')"/>
 
 <i:pragma name="description"
           value="Renders a text input field along with a select file button within a Wondergem template"/>

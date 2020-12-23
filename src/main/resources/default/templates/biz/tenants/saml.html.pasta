@@ -21,7 +21,7 @@
         <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants">
             <tr>
                 <td>
-                    <i:local name="id" value="call.generateLocalId()"/>
+                    <i:local name="id" value="@generateId()"/>
                     <form class="samlForm" id="@id" method="post" action="@tenant.getTenantData().getSamlIssuerUrl()">
                         <input type="hidden" name="SAMLRequest"
                                value="@saml.generateAuthenticationRequest(tenant.getTenantData().getSamlRequestIssuerName(), tenant.getTenantData().getSamlIssuerIndex())"/>

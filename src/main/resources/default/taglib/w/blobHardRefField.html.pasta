@@ -1,5 +1,5 @@
 <i:arg type="sirius.biz.storage.layer2.BlobHardRef" name="objectRef"/>
-<i:arg type="String" name="id" default="@('file-upload' + call.generateLocalId())"/>
+<i:arg type="String" name="id" default="@generateId('file-upload-%s')"/>
 <i:arg type="String" name="inputId" default=""/>
 <i:arg type="String" name="defaultPreview" default=""/>
 <i:arg type="String" name="allowedExtensions" default=""/>

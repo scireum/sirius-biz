@@ -17,14 +17,13 @@ import sirius.kernel.health.metrics.MetricProvider;
 import sirius.kernel.health.metrics.MetricsCollector;
 import sirius.web.health.CachingLoadInfoProvider;
 import sirius.web.health.LoadInfo;
-import sirius.web.health.LoadInfoProvider;
 
 import java.util.function.Consumer;
 
 /**
  * Provides some metrics and load infos for the storage system.
  */
-@Register(classes = {MetricProvider.class, LoadInfoProvider.class}, framework = StorageUtils.FRAMEWORK_STORAGE)
+@Register(framework = StorageUtils.FRAMEWORK_STORAGE)
 public class StorageMetrics extends CachingLoadInfoProvider implements MetricProvider {
 
     @Part
