@@ -89,7 +89,7 @@
                         </td>
                         <td class="align-right">
                             <w:dropdown titleKey="VFSController.actions" icon="fa-gears">
-                                <i:local name="jobs" value="@jobsService.getMatchingInteractiveJobs(call.getRequest().uri(), child)"/>
+                                <i:local name="jobs" value="@part(Jobs.class).getMatchingInteractiveJobs(CallContext.getCurrent().get(WebContext.class).getRequest().uri(), child)"/>
                                 <i:if test="child.canRename()">
                                     <li class="dropdown-item">
                                         <a href="javascript:renameFile('@child.path()', '@child.name()')">
@@ -142,7 +142,7 @@
             <w:modalBody>
                 <fieldset>
                     <input type="hidden" id="rename-path" name="path"/>
-                    <input name="CSRFToken" value="@csrf.getCSRFToken(call)" type="hidden"/>
+                    <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()" type="hidden"/>
                     <w:textfield span="12" id="rename-name" name="name" value="" labelKey="Model.name" required="true"/>
                 </fieldset>
             </w:modalBody>
@@ -152,14 +152,14 @@
     <form id="move-file-form" method="post" action="/fs/move">
         <input type="hidden" name="path" value=""/>
         <input type="hidden" name="newParent" value=""/>
-        <input name="CSRFToken" value="@csrf.getCSRFToken(call)" type="hidden"/>
+        <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()" type="hidden"/>
     </form>
     <w:modal name="create-directory-modal" titleKey="VFSController.createDirectory">
         <form id="create-directory-form" method="post" action="/fs/createDirectory">
             <w:modalBody>
                 <fieldset>
                     <input type="hidden" name="parent" value="@dir.path()"/>
-                    <input name="CSRFToken" value="@csrf.getCSRFToken(call)" type="hidden"/>
+                    <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()" type="hidden"/>
                     <w:textfield span="12" id="directory-name" name="name" value="" labelKey="Model.name"
                                  required="true"/>
                 </fieldset>
@@ -172,7 +172,7 @@
             <w:modalBody>
                 <fieldset>
                     <input type="hidden" name="parent" value="@dir.path()"/>
-                    <input name="CSRFToken" value="@csrf.getCSRFToken(call)" type="hidden"/>
+                    <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()" type="hidden"/>
                     <w:textfield span="12" id="file-name" name="name" value="" labelKey="Model.name" required="true"/>
                 </fieldset>
             </w:modalBody>

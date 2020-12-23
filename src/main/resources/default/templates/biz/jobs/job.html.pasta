@@ -153,7 +153,7 @@
         }
 
         function deletePreset(id) {
-            $.post('/jobs/preset/delete', {preset: id, csrfToken: '@csrf.getCSRFToken(call)'},
+            $.post('/jobs/preset/delete', {preset: id, csrfToken: '@part(sirius.web.http.CSRFHelper.class).getCSRFToken()'},
                 function (response) {
                     $('#updateOnly').val('true');
                     $('#editForm').submit();
@@ -163,6 +163,6 @@
     </script>
     <form action="@apply('/job/%s', job.getName())" method="post" id="loadForm">
         <input type="hidden" name="updateOnly" value="true"/>
-        <input type="hidden" name="CSRFToken" value="@csrf.getCSRFToken(call)"/>
+        <input type="hidden" name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"/>
     </form>
 </w:page>

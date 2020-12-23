@@ -3,12 +3,12 @@
 <w:page titleKey="DisasterController.title">
     <i:block name="breadcrumbs">
         <li>
-            <a href="@call.getRequestedURI()">@i18n("DisasterController.title")</a>
+            <a href="@CallContext.getCurrent().get(WebContext.class).getRequestedURI()">@i18n("DisasterController.title")</a>
         </li>
     </i:block>
 
     <w:pageHeader titleKey="DisasterController.title"/>
-    <w:editForm url="@call.getRequestedURI()">
+    <w:editForm url="@CallContext.getCurrent().get(WebContext.class).getRequestedURI()">
         <w:subHeading labelKey="DisasterController.maintenanceMessage"/>
         <div class="row">
             <w:textfield name="previewMessage"

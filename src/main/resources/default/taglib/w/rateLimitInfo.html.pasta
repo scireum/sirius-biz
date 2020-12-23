@@ -7,6 +7,7 @@
 
 <i:pragma name="description" value="Outputs the current value and the limit for the given realm and scope. Emits no output, if no limit is applied." />
 
+<i:local name="isenguard" value="Injector.context().getPart(Isenguard.class)" />
 <i:if test="isenguard != null">
     <i:local name="info" value="@isenguard.getRateLimitInfo(scope, realm, explicitLimit)"/>
     <i:if test="info != null">
