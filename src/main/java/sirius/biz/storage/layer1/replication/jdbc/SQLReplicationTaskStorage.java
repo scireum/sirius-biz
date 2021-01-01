@@ -187,6 +187,7 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
                 task.setLastExecution(LocalDateTime.now());
                 task.setEarliestExecution(LocalDateTime.now().plus(retryReplicationDelay));
                 task.setFailureCounter(task.getFailureCounter() + 1);
+                task.setScheduled(null);
                 if (task.getFailureCounter() > maxReplicationAttempts) {
                     task.setFailed(true);
                     Exceptions.handle()
