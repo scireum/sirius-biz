@@ -57,6 +57,7 @@ public class BizClassAliasProvider implements ClassAliasProvider {
         consumer.accept("Processes", Processes.class);
         consumer.accept("Tenants", Tenants.class);
         consumer.accept("Isenguard", Isenguard.class);
+        consumer.accept("BizController", BizController.class);
     }
 
     private void autoImportMixins(BiConsumer<String, Class<?>> consumer) {
