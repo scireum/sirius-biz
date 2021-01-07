@@ -1,5 +1,5 @@
 <i:arg type="sirius.biz.codelists.CodeList" name="codeList" />
-<i:arg type="Page" name="entries" />
+<i:arg type="sirius.web.controller.Page" name="entries" />
 
 <i:invoke template="/templates/biz/codelists/code-list.html.pasta" codeList="codeList" page="entries" >
     <w:tableSearchHeader page="entries" baseUrl="@apply('/code-list/%s', codeList.getIdAsString())">

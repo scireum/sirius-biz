@@ -1,4 +1,4 @@
-<i:arg type="Page" name="entries"/>
+<i:arg type="sirius.web.controller.Page" name="entries"/>
 
 <w:page titleKey="SchedulerEntry.plural">
     <i:block name="breadcrumbs">

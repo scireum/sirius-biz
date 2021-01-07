@@ -1,4 +1,4 @@
-<i:arg type="Page" name="errors"/>
+<i:arg type="sirius.web.controller.Page" name="errors"/>
 <i:arg type="int" name="total"/>
 
 <w:page titleKey="StoredIncident.plural">

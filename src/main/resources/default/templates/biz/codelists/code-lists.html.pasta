@@ -1,4 +1,4 @@
-<i:arg type="Page" name="lists"/>
+<i:arg type="sirius.web.controller.Page" name="lists"/>
 <w:page titleKey="CodeList.plural">
     <i:block name="breadcrumbs">
         <li>

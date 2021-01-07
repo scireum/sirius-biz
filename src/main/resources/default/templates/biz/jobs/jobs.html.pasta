@@ -1,4 +1,4 @@
-<i:arg type="Page" name="jobs"/>
+<i:arg type="sirius.web.controller.Page" name="jobs"/>
 
 <w:page titleKey="JobFactory.plural">
     <i:block name="head">
