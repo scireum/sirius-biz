@@ -1,6 +1,6 @@
 <i:arg type="sirius.biz.analytics.reports.Cells" name="cells"/>
 <i:arg type="sirius.biz.process.Process" name="process"/>
-<i:arg type="Page" name="rows"/>
+<i:arg type="sirius.web.controller.Page" name="rows"/>
 <i:arg type="String" name="name"/>
 <i:arg type="List" name="columns"/>
 <i:arg type="List" name="labels"/>

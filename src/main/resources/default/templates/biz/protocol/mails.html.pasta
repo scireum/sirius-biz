@@ -1,4 +1,4 @@
-<i:arg type="Page" name="mails"/>
+<i:arg type="sirius.web.controller.Page" name="mails"/>
 
 <w:page titleKey="MailProtocol.plural">
     <i:block name="breadcrumbs">

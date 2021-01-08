@@ -1,6 +1,6 @@
 <i:arg type="sirius.biz.storage.layer3.VirtualFile" name="dir"/>
 <i:arg type="List" name="path"/>
-<i:arg type="Page" name="children"/>
+<i:arg type="sirius.web.controller.Page" name="children"/>
 
 <w:page title="@dir.name()">
     <i:block name="breadcrumbs">

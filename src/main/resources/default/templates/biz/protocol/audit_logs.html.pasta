@@ -1,4 +1,4 @@
-<i:arg type="Page" name="messages"/>
+<i:arg type="sirius.web.controller.Page" name="messages"/>
 <w:page titleKey="AuditLogEntry.plural">
     <i:block name="breadcrumbs">
         <li><a href="/audit-log">@i18n("AuditLogEntry.plural")</a></li>

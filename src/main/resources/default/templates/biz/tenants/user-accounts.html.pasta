@@ -1,4 +1,4 @@
-<i:arg type="Page" name="accounts"/>
+<i:arg type="sirius.web.controller.Page" name="accounts"/>
 <i:arg type="java.lang.Class" name="accountType"/>
 
 <w:page titleKey="UserAccount.plural">

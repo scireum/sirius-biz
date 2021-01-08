@@ -1,6 +1,6 @@
 <i:arg type="sirius.biz.process.output.ChartProcessOutputType" name="chartOutput"/>
 <i:arg type="sirius.biz.process.Process" name="process"/>
-<i:arg type="Page" name="charts"/>
+<i:arg type="sirius.web.controller.Page" name="charts"/>
 <i:arg type="String" name="name"/>
 
 <i:invoke template="/templates/biz/process/process.html.pasta"

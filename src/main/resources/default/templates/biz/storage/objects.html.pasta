@@ -1,5 +1,5 @@
 <i:arg type="sirius.biz.storage.legacy.BucketInfo" name="bucket"/>
-<i:arg type="Page" name="objects"/>
+<i:arg type="sirius.web.controller.Page" name="objects"/>
 
 <w:page title="@bucket.getName()">
     <i:block name="breadcrumbs">

@@ -1,5 +1,5 @@
 <i:arg type="sirius.biz.process.Process" name="process"/>
-<i:arg type="Page" name="logs"/>
+<i:arg type="sirius.web.controller.Page" name="logs"/>
 
 <i:invoke template="/templates/biz/process/process.html.pasta"
           process="process"

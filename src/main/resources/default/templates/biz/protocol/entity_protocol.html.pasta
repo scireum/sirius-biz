@@ -1,6 +1,6 @@
 <i:arg type="String" name="type"/>
 <i:arg type="String" name="id"/>
-<i:arg type="Page" name="protocol"/>
+<i:arg type="sirius.web.controller.Page" name="protocol"/>
 <w:page titleKey="JournalEntry.plural">
     <i:block name="breadcrumbs">
         <li>
