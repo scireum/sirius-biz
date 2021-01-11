@@ -40,6 +40,11 @@ public class BizClassAliasProvider implements ClassAliasProvider {
     private Mixing mixing;
 
     @Override
+    public int getPriority() {
+        return 20;
+    }
+
+    @Override
     public void collectAliases(BiConsumer<String, Class<?>> consumer) {
         consumer.accept("Databases", Databases.class);
         consumer.accept("OMA", OMA.class);
@@ -48,8 +53,6 @@ public class BizClassAliasProvider implements ClassAliasProvider {
         consumer.accept("Elastic", Elastic.class);
         consumer.accept("Redis", Redis.class);
         consumer.accept("Mixing", Mixing.class);
-        autoImportEntities(consumer);
-        autoImportMixins(consumer);
 
         consumer.accept("CodeLists", CodeLists.class);
         consumer.accept("VirtualFileSystem", VirtualFileSystem.class);
@@ -58,6 +61,12 @@ public class BizClassAliasProvider implements ClassAliasProvider {
         consumer.accept("Tenants", Tenants.class);
         consumer.accept("Isenguard", Isenguard.class);
         consumer.accept("BizController", BizController.class);
+    }
+
+    @Override
+    public void collectOptionalAliases(BiConsumer<String, Class<?>> consumer) {
+        autoImportEntities(consumer);
+        autoImportMixins(consumer);
     }
 
     private void autoImportMixins(BiConsumer<String, Class<?>> consumer) {
