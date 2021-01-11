@@ -15,7 +15,6 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.kernel.commons.Context;
-import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Values;
 import sirius.kernel.commons.Watch;
@@ -25,7 +24,6 @@ import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
-import java.io.InputStream;
 
 /**
  * Provides a job for importing line based files (CSV, Excel) which utilizes a {@link ImportDictionary} to map colums
@@ -61,13 +59,11 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
     }
 
     @Override
-    protected void executeForStream(String filename, Producer<InputStream> in) throws Exception {
-        dictionary.resetMappings();
-        super.executeForStream(filename, in);
-    }
-
-    @Override
     public void handleRow(int index, Values row) {
+        if (index == 1) {
+            dictionary.resetMappings();
+        }
+
         if (row.length() == 0) {
             return;
         }
