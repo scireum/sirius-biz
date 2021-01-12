@@ -64,6 +64,6 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
 
     @Override
     protected Optional<String> resolveFromString(@Nonnull Value input) {
-        return Optional.of(input.asString());
+        return input.asOptionalString();
     }
 }
