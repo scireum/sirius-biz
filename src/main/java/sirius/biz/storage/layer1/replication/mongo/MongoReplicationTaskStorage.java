@@ -95,7 +95,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
     }
 
     @Override
-    public void notifyAboutUpdate(String primarySpace, String objectId) {
+    public void notifyAboutUpdate(String primarySpace, String objectId, long contentLength) {
         mango.select(MongoReplicationTask.class)
              .eq(MongoReplicationTask.PRIMARY_SPACE, primarySpace)
              .eq(MongoReplicationTask.OBJECT_KEY, objectId)
@@ -104,6 +104,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
         MongoReplicationTask task = new MongoReplicationTask();
         task.setPrimarySpace(primarySpace);
         task.setObjectKey(objectId);
+        task.setContentLength(contentLength);
         task.setPerformDelete(false);
         task.setEarliestExecution(LocalDateTime.now().plus(replicateUpdateDelay));
         mango.update(task);
@@ -187,6 +188,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
         try {
             replicationManager.executeReplicationTask(task.getPrimarySpace(),
                                                       task.getObjectKey(),
+                                                      task.getContentLength(),
                                                       task.isPerformDelete());
             mango.delete(task);
         } catch (Exception ex) {

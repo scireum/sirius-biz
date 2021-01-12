@@ -46,6 +46,14 @@ public class MongoReplicationTask extends MongoEntity {
     private String objectKey;
 
     /**
+     * Contains the expected content length in case of an update.
+     * <p>
+     * This will be set to 0 if the length is unknown (if a transformer is used).
+     */
+    public static final Mapping CONTENT_LENGTH = Mapping.named("contentLength");
+    private long contentLength = 0;
+
+    /**
      * Determines the earliest expected execution of this task.
      */
     public static final Mapping EARLIEST_EXECUTION = Mapping.named("earliestExecution");
@@ -145,5 +153,13 @@ public class MongoReplicationTask extends MongoEntity {
 
     public void setFailed(boolean failed) {
         this.failed = failed;
+    }
+
+    public long getContentLength() {
+        return contentLength;
+    }
+
+    public void setContentLength(long contentLength) {
+        this.contentLength = contentLength;
     }
 }

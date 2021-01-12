@@ -198,10 +198,11 @@ public abstract class ObjectStorageSpace {
             UPLOADS.inc();
             if (hasTransformer()) {
                 storePhysicalObject(objectId, file, createWriteTransformer());
+                replicationManager.notifyAboutUpdate(this, objectId, 0);
             } else {
                 storePhysicalObject(objectId, file);
+                replicationManager.notifyAboutUpdate(this, objectId, file.length());
             }
-            replicationManager.notifyAboutUpdate(this, objectId);
         } catch (IOException e) {
             throw Exceptions.handle()
                             .error(e)
@@ -239,17 +240,18 @@ public abstract class ObjectStorageSpace {
      *
      * @param objectId      the physical storage key (a key is always only used once)
      * @param inputStream   the data to store
-     * @param contentLength the byte length of the data
+     * @param contentLength the byte length of the data or 0 to indicate that the length is unknown
      */
     public void upload(String objectId, InputStream inputStream, long contentLength) {
         try {
             UPLOADS.inc();
             if (hasTransformer()) {
                 storePhysicalObject(objectId, inputStream, createWriteTransformer());
+                replicationManager.notifyAboutUpdate(this, objectId, 0);
             } else {
                 storePhysicalObject(objectId, inputStream, contentLength);
+                replicationManager.notifyAboutUpdate(this, objectId, contentLength);
             }
-            replicationManager.notifyAboutUpdate(this, objectId);
         } catch (IOException e) {
             throw Exceptions.handle()
                             .error(e)
@@ -266,7 +268,7 @@ public abstract class ObjectStorageSpace {
      *
      * @param objectKey the physical storage key (a key is always only used once)
      * @param data      the data to store
-     * @param size      the byte length of the data
+     * @param size      the byte length of the data or 0 to indicate that the length is unknown
      * @throws IOException in case of an IO error
      */
     protected abstract void storePhysicalObject(String objectKey, InputStream data, long size) throws IOException;

@@ -47,7 +47,7 @@ public class ReplicationManager {
     @Nullable
     private ReplicationTaskStorage taskStorage;
 
-    private Average replicationExecutionDuration = new Average();
+    private final Average replicationExecutionDuration = new Average();
 
     /**
      * Initializes the replication relations on the given set (map) of spaces.
@@ -126,12 +126,13 @@ public class ReplicationManager {
     /**
      * Notifies the replication system about the modification of an object.
      *
-     * @param primarySpace the space of the object being modified
-     * @param objectId     the id of the object being modified
+     * @param primarySpace  the space of the object being modified
+     * @param objectId      the id of the object being modified
+     * @param contentLength the expected content length
      */
-    public void notifyAboutUpdate(ObjectStorageSpace primarySpace, String objectId) {
+    public void notifyAboutUpdate(ObjectStorageSpace primarySpace, String objectId, long contentLength) {
         if (taskStorage != null && primarySpace.hasReplicationSpace()) {
-            taskStorage.notifyAboutUpdate(primarySpace.getName(), objectId);
+            taskStorage.notifyAboutUpdate(primarySpace.getName(), objectId, contentLength);
         }
     }
 
@@ -142,10 +143,12 @@ public class ReplicationManager {
      *
      * @param space         the primary space of the object to replicate
      * @param objectId      the id of the object to replicate
+     * @param contentLength the expected content length to transfer
      * @param performDelete <tt>true</tt> to replicate a delete, <tt>false</tt> to replicate a modification
      * @throws Exception in case of an error when replicating the changes performed on the specified object
      */
-    public void executeReplicationTask(String space, String objectId, boolean performDelete) throws Exception {
+    public void executeReplicationTask(String space, String objectId, long contentLength, boolean performDelete)
+            throws Exception {
         if (taskStorage == null) {
             throw new IllegalStateException("Cannot execute replication tasks without a storage!");
         }
@@ -161,7 +164,7 @@ public class ReplicationManager {
         } else {
             try (InputStream in = primarySpace.getInputStream(objectId)
                                               .orElseThrow(() -> new IllegalStateException("No InputStream is available"))) {
-                primarySpace.getReplicationSpace().upload(objectId, in, 0L);
+                primarySpace.getReplicationSpace().upload(objectId, in, contentLength);
             }
         }
         replicationExecutionDuration.addValue(watch.elapsedMillis());
