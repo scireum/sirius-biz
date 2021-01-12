@@ -18,7 +18,7 @@
                 readonly="@readonly" adminOnly="@adminOnly">
     <i:for var="entry"
            type="sirius.biz.codelists.CodeListEntry"
-           items="@part(CodeLists.class).getEntries(list)">
+           items="@Injector.context().getPart(CodeLists.class).getEntries(list)">
         <option value="@entry.getCodeListEntryData().getCode()"
                 @selected="value.contains(entry.getCodeListEntryData().getCode())">
             @entry.getCodeListEntryData().getTranslatedValue()
