@@ -22,6 +22,7 @@ public class PrefixSearchableTestEntity extends PrefixSearchableEntity {
     private final StringMap map = new StringMap();
 
     @PrefixSearchContent
+    @NullAllowed
     private final MultiLanguageString multiLanguageText = new MultiLanguageString();
 
     @PrefixSearchContent
