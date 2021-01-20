@@ -15,6 +15,7 @@ import sirius.db.es.annotations.IndexMode;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.health.Log;
+import sirius.web.security.UserInfo;
 
 import java.time.LocalDateTime;
 
@@ -63,7 +64,7 @@ public class LoggedMessage extends SearchableEntity {
      */
     public static final Mapping USER = Mapping.named("user");
     @SearchContent
-    private String user;
+    private String user = UserInfo.NOBODY.getUserName();
 
     /**
      * Computes an appropriate CSS class used to render the message.
