@@ -113,13 +113,15 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
             }
 
             fillAndVerify(entity, context);
+            boolean isNew = entity.isNew();
+
             if (mode == ImportMode.CHECK_ONLY) {
                 enforceSaveConstraints(entity, context);
             } else {
                 createOrUpdate(entity, context);
             }
 
-            if (entity.isNew()) {
+            if (isNew) {
                 process.addTiming(NLS.get("EntityImportJob.entityCreated"), watch.elapsedMillis());
             } else {
                 process.addTiming(NLS.get("EntityImportJob.entityUpdated"), watch.elapsedMillis());
