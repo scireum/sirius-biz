@@ -183,6 +183,7 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
             }
 
             fillAndVerify(entity, context);
+            createOrUpdate(entity, context);
             if (entity.isNew()) {
                 process.addTiming(NLS.get("EntityImportJob.entityCreated"), watch.elapsedMillis());
             } else {
