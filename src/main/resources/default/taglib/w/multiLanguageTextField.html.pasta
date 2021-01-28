@@ -65,31 +65,75 @@
 <script>
     let $modal = $("#___modalName");
     let langObject = JSON.parse(<i:raw>'___value.getAsJSON()'</i:raw>);
+    // todo use NLS available languages
+    let languages = ['de', 'fr', 'en'];
 
+    // todo flag emojis cannot be used as flags don't represent languages! we need to find another solution!
     function getFlagEmoji(langCode) {
-        //todo 'fallback'
-        langCode.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397)); // todo: make IE compatible
+        if (langCode === 'fallback') {
+            // globe icon
+            return String.fromCodePoint(127758);
+        } else {
+            return langCode.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397)); // todo: make IE compatible
+        }
+    }
+
+    function getLanguageName(lang) {
+        let languages = '@config("nls.languages")'.replace(/[\[\]]/,'').split(',');
+        // todo resolve language codes
+        return lang;
     }
 
     // render modal body
     $(function () {
         let $insert = $modal.find('.insert-point');
         for (lang in langObject) {
-            $insert.append($(document.createElement('span')).addClass('language-flag').text(getFlagEmoji(lang))); //todo picker /input on click
-            $insert.append($('<input>', {
+            let $inputGroup = $('<div/>', {'class' : 'input-group'});
+            let $inputText = $('<input>', {
                 'type': 'text',
                 'data-lang': lang,
+                'class': 'form-control input-group-text',
                 'value': langObject[lang]
-            }));
-            $insert.append($(document.createElement('button')).text('-')); //todo implement remove row
-            $insert.append($(document.createElement('br')));
+            });
+            let $pickerAddon = $(document.createElement('span')).addClass('input-group-addon language-flag').text(getLanguageName(lang));
+            $pickerAddon.on('click', function (e) { alert('todo picker modal for ' + e.target)}); //todo picker /input on click, translated language name also?
+            let $removeButton = $(document.createElement('button')).addClass('btn btn-secondary remove-language').text('-');
+            $removeButton.off('click').on('click', function(e) { removeLanguageRow(lang); })
+            $inputGroup.append($inputText).append($pickerAddon).append($removeButton).appendTo($insert);
         }
-        $insert.append($(document.createElement('button')).text('+')); //todo implement add row
-        updateHiddenFields()
+        $insert.append($(document.createElement('button')).addClass('btn btn-secondary add-language').off('click').on('click', addLanguageRow()).text('+'));
+        updateHiddenFields();
     });
 
+    // todo implement add row
+    function addLanguageRow() {
+        // todo picker
+        // todo check if there's already a language entry for lang
+        let lang = 'fallback';
+        let $insert = $modal.find('.insert-point');
+        let $inputGroup = $('<div/>', {'class' : 'input-group'});
+        let $inputText = $('<input>', {
+            'type': 'text',
+            'data-lang': 'fallback',
+            'class': 'form-control input-group-text',
+            'value': langObject['fallback']
+        });
+        let $pickerAddon = $(document.createElement('span')).addClass('input-group-addon language-flag').text(getLanguageName(lang));
+        $pickerAddon.off('click').on('click', function (e) { alert('todo picker modal for ' + e.target)}); //todo picker /input on click, translated language name also?
+        let $removeButton = $(document.createElement('button')).addClass('btn btn-secondary remove-language').text('-');
+        $removeButton.off('click').on('click', function(e) { removeLanguageRow(lang); });
+        $inputGroup.append($inputText).append($pickerAddon).append($removeButton).before($('.add-language'));
+        //$insert.after('.input-group-text').append($(document.createElement('span')).addClass('language-flag').text('Weiteren Eintrag anlegen'));
+    }
+
+    // todo implement remove row
+    function removeLanguageRow(lang) {
+        $modal.find('input[data-lang="${lang}"]').remove();
+        updateHiddenFields();
+    }
+
     function updateHiddenFields() {
-        let $hiddenInputs = $('#hidden-inputs-___fieldName')
+        let $hiddenInputs = $('#hidden-inputs-___fieldName');
         $hiddenInputs.empty();
         $modal.find('input[data-lang]').each(function () {
             $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName').text($(this).data('lang') + '|||' + $(this).val()));
@@ -97,10 +141,11 @@
     }
 
     // add/remove and fill hidden fields
-    $modal.find('.ok-btn').off('click').click(function () {
+    $modal.find('.ok-btn').off('click').on('click', function () {
         $modal.modal('hide');
         updateHiddenFields();
-        //todo also update main field
+        // todo also update main field
+        $('#___fieldName').val(langObject['fallback']);
     });
 
     function ___functionName () {
