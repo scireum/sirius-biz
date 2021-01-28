@@ -58,7 +58,7 @@
 
         </div>
         <w:modalFooter cancelKey="NLS.cancel">
-            <button class="btn btn-primary ok-btn">@i18n("NLS.ok")</button>
+            <a class="btn btn-primary ok-btn">@i18n("NLS.ok")</a>
         </w:modalFooter>
     </w:modalBody>
 </w:modal>
@@ -66,7 +66,7 @@
     let $modal = $("#___modalName");
     let langObject = JSON.parse(<i:raw>'___value.getAsJSON()'</i:raw>);
     // todo use NLS available languages
-    let languages = ['de', 'fr', 'en'];
+    let languages = '@config("nls.languages")'.replace(/[\[\]]/,'').split(',');
 
     // todo flag emojis cannot be used as flags don't represent languages! we need to find another solution!
     function getFlagEmoji(langCode) {
@@ -79,7 +79,6 @@
     }
 
     function getLanguageName(lang) {
-        let languages = '@config("nls.languages")'.replace(/[\[\]]/,'').split(',');
         // todo resolve language codes
         return lang;
     }
@@ -98,20 +97,18 @@
             let $pickerAddon = $(document.createElement('span')).addClass('input-group-addon language-flag').text(getLanguageName(lang));
             $pickerAddon.on('click', function (e) {
                 //todo picker /input on click, translated language name also?
-                e.stopPropagation();
                 alert('todo picker modal for ' + e.target);
             });
             let $removeButtonGroup = $(document.createElement('span')).addClass('input-group-btn');
-            let $removeButton = $(document.createElement('button')).addClass('btn btn-secondary remove-language').text('-');
+            let $removeButton = $(document.createElement('a')).addClass('btn btn-danger button-danger-ask guarded-link remove-language').html('<i class="fa fa-trash"></i>');
             $removeButton.off('click').on('click', function(e) {
-                e.stopPropagation();
                 removeLanguageRow(lang);
             });
             $removeButton.appendTo($removeButtonGroup);
             $inputGroup.append($pickerAddon).append($inputText).append($removeButtonGroup).appendTo($insert);
+            $insert.append($(document.createElement('br')));
         }
-        $insert.append($(document.createElement('button')).addClass('btn btn-secondary add-language').off('click').on('click', function(e){
-            e.stopPropagation();
+        $insert.append($(document.createElement('a')).addClass('btn btn-secondary add-language').off('click').on('click', function(e){
             addLanguageRow();
         }).text('+'));
         updateHiddenFields();
@@ -133,18 +130,17 @@
         let $pickerAddon = $(document.createElement('span')).addClass('input-group-addon language-flag').text(getLanguageName(lang));
         $pickerAddon.off('click').on('click', function (e) {
             //todo picker /input on click, translated language name also?
-            e.stopPropagation();
+            //e.stopPropagation();
             alert('todo picker modal for ' + e.target);
         });
-        let $removeButton = $(document.createElement('button')).addClass('btn btn-secondary remove-language').html('<i class="fa fa-trash"></i>');
+        let $removeButton = $(document.createElement('a')).addClass('btn btn-danger button-danger-ask guarded-link remove-language').html('<i class="fa fa-trash"></i>');
         let $removeButtonGroup = $(document.createElement('span')).addClass('input-group-btn');
         $removeButton.off('click').on('click', function(e) {
-            e.stopPropagation();
             removeLanguageRow(lang);
         });
         $removeButton.appendTo($removeButtonGroup);
         $inputGroup.append($pickerAddon).append($inputText).append($removeButton).before($('.add-language'));
-        //$insert.after('.input-group-text').append($(document.createElement('span')).addClass('language-flag').text('Weiteren Eintrag anlegen'));
+        $insert.append($(document.createElement('br')));
     }
 
     // todo implement remove row
@@ -163,7 +159,6 @@
 
     // add/remove and fill hidden fields
     $modal.find('.ok-btn').off('click').on('click', function (e) {
-        e.stopPropagation();
         $modal.modal('hide');
         updateHiddenFields();
         // todo also update main field
@@ -171,7 +166,6 @@
     });
 
     function ___functionName () {
-        $modal.addClass('modal-lg');
         $modal.modal({backdrop: 'static', keyboard: false}).show();
     }
 </script>
