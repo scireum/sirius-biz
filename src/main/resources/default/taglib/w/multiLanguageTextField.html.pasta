@@ -87,7 +87,7 @@
     $(function () {
         let $insert = $modal.find('.insert-point');
         for (lang in langObject) {
-            let $inputGroup = $('<div/>', {'class' : 'input-group'});
+            let $inputGroup = $('<div/>', {'data-lang': lang, 'class' : 'input-group'});
             let $inputText = $('<input>', {
                 'type': 'text',
                 'data-lang': lang,
@@ -101,14 +101,14 @@
             });
             let $removeButtonGroup = $(document.createElement('span')).addClass('input-group-btn');
             let $removeButton = $(document.createElement('a')).addClass('btn btn-danger button-danger-ask guarded-link remove-language').html('<i class="fa fa-trash"></i>');
-            $removeButton.off('click').on('click', function(e) {
-                removeLanguageRow(lang);
+            $removeButton.on('click', function(e) {
+                removeLanguageRow($inputGroup);
             });
             $removeButton.appendTo($removeButtonGroup);
             $inputGroup.append($pickerAddon).append($inputText).append($removeButtonGroup).appendTo($insert);
             $insert.append($(document.createElement('br')));
         }
-        $insert.append($(document.createElement('a')).addClass('btn btn-secondary add-language').off('click').on('click', function(e){
+        $insert.append($(document.createElement('a')).addClass('btn btn-secondary add-language').on('click', function(e){
             addLanguageRow();
         }).text('+'));
         updateHiddenFields();
@@ -120,32 +120,34 @@
         // todo check if there's already a language entry for lang
         let lang = 'fallback';
         let $insert = $modal.find('.insert-point');
-        let $inputGroup = $('<div/>', {'class' : 'input-group'});
+        let $inputGroup = $('<div/>', {'data-lang': lang, 'class' : 'input-group'});
         let $inputText = $('<input>', {
             'type': 'text',
-            'data-lang': 'fallback',
+            'data-lang': lang,
             'class': 'form-control input-group-text',
             'value': langObject['fallback']
         });
         let $pickerAddon = $(document.createElement('span')).addClass('input-group-addon language-flag').text(getLanguageName(lang));
-        $pickerAddon.off('click').on('click', function (e) {
+        $pickerAddon.on('click', function (e) {
             //todo picker /input on click, translated language name also?
             //e.stopPropagation();
             alert('todo picker modal for ' + e.target);
         });
-        let $removeButton = $(document.createElement('a')).addClass('btn btn-danger button-danger-ask guarded-link remove-language').html('<i class="fa fa-trash"></i>');
         let $removeButtonGroup = $(document.createElement('span')).addClass('input-group-btn');
-        $removeButton.off('click').on('click', function(e) {
-            removeLanguageRow(lang);
+        let $removeButton = $(document.createElement('a')).addClass('btn btn-danger button-danger-ask guarded-link remove-language').html('<i class="fa fa-trash"></i>');
+        $removeButton.on('click', function(e) {
+            removeLanguageRow($inputGroup);
         });
         $removeButton.appendTo($removeButtonGroup);
-        $inputGroup.append($pickerAddon).append($inputText).append($removeButton).before($('.add-language'));
-        $insert.append($(document.createElement('br')));
+        let row = $inputGroup.append($pickerAddon).append($inputText).append($removeButtonGroup).insertBefore($('.add-language'));
+        $(document.createElement('br')).insertBefore($('.add-language'));
     }
 
-    // todo implement remove row
-    function removeLanguageRow(lang) {
-        $modal.find('input[data-lang="${lang}"]').remove();
+    function removeLanguageRow(row) {
+        let inputGroup = $(row);
+        let spacer = inputGroup.next('br');
+        inputGroup.remove();
+        spacer.remove();
         updateHiddenFields();
     }
 
@@ -158,7 +160,7 @@
     }
 
     // add/remove and fill hidden fields
-    $modal.find('.ok-btn').off('click').on('click', function (e) {
+    $modal.find('.ok-btn').on('click', function (e) {
         $modal.modal('hide');
         updateHiddenFields();
         // todo also update main field
