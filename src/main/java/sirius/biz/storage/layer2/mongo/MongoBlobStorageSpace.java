@@ -602,10 +602,13 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                                                 .eq(MongoBlob.PARENT, parent)
                                                 .eq(MongoBlob.DELETED, false)
                                                 .where(QueryBuilder.FILTERS.prefix(MongoBlob.NORMALIZED_FILENAME,
-                                                                                   prefixFilter))
-                                                .where(QueryBuilder.FILTERS.containsOne(MongoBlob.FILE_EXTENSION,
-                                                                                        fileTypes.toArray()).build())
-                                                .limit(maxResults);
+                                                                                   prefixFilter));
+
+        if (fileTypes != null && !fileTypes.isEmpty()) {
+            blobsQuery.where(QueryBuilder.FILTERS.containsOne(MongoBlob.FILE_EXTENSION, fileTypes.toArray()).build());
+        }
+
+        blobsQuery.limit(maxResults);
 
         if (sortByLastModified) {
             blobsQuery.orderDesc(MongoBlob.LAST_MODIFIED);
