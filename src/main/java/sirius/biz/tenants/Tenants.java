@@ -189,7 +189,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @param tenantId the id to be checked
      */
     @SuppressWarnings("squid:S1612")
-    @Explain("Using a method reference here leads to a BootstrapMethod error due to a JDK bug " 
+    @Explain("Using a method reference here leads to a BootstrapMethod error due to a JDK bug "
              + "see https://bugs.openjdk.java.net/browse/JDK-8058112 (seems to be also present in OracleJDK)")
     public void assertTenant(@Nullable String tenantId) {
         String currentTenantId = getCurrentTenant().map(tenant -> tenant.getIdAsString()).orElse(null);
@@ -213,11 +213,11 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
 
         String currentTenantId = getCurrentTenant().map(tenant -> tenant.getIdAsString()).orElse(null);
         if (!Strings.areEqual(tenantAware.getTenantAsString(), currentTenantId)
-                && !Objects.equals(tenantAware.getTenantAsString(),
-                getCurrentTenant().map(tenant -> tenant.getParent())
-                        .filter(BaseEntityRef::isFilled)
-                        .map(entityRef -> entityRef.getIdAsString())
-                        .orElse(null))) {
+            && !Objects.equals(tenantAware.getTenantAsString(),
+                               getCurrentTenant().map(tenant -> tenant.getParent())
+                                                 .filter(BaseEntityRef::isFilled)
+                                                 .map(entityRef -> entityRef.getIdAsString())
+                                                 .orElse(null))) {
             throw Exceptions.createHandled().withNLSKey("Tenants.invalidTenant").handle();
         }
     }

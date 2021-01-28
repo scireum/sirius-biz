@@ -155,8 +155,8 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         }
 
         try {
-            String value =
-                    redis.query(() -> "Check if " + name + " is enabled", db -> db.get(name + EXECUTION_ENABLED_SUFFIX));
+            String value = redis.query(() -> "Check if " + name + " is enabled",
+                                       db -> db.get(name + EXECUTION_ENABLED_SUFFIX));
 
             return !STATE_DISABLED.equals(value);
         } catch (Exception e) {
