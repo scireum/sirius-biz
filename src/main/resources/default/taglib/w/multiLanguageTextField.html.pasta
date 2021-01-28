@@ -149,6 +149,6 @@
     });
 
     function ___functionName () {
-        $modal.modal('show');
+        $modal.modal({backdrop: 'static', keyboard: false}).show();
     }
 </script>
