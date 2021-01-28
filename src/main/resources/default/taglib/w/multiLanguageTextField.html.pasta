@@ -96,12 +96,24 @@
                 'value': langObject[lang]
             });
             let $pickerAddon = $(document.createElement('span')).addClass('input-group-addon language-flag').text(getLanguageName(lang));
-            $pickerAddon.on('click', function (e) { alert('todo picker modal for ' + e.target)}); //todo picker /input on click, translated language name also?
+            $pickerAddon.on('click', function (e) {
+                //todo picker /input on click, translated language name also?
+                e.stopPropagation();
+                alert('todo picker modal for ' + e.target);
+            });
+            let $removeButtonGroup = $(document.createElement('span')).addClass('input-group-btn');
             let $removeButton = $(document.createElement('button')).addClass('btn btn-secondary remove-language').text('-');
-            $removeButton.off('click').on('click', function(e) { removeLanguageRow(lang); })
-            $inputGroup.append($inputText).append($pickerAddon).append($removeButton).appendTo($insert);
+            $removeButton.off('click').on('click', function(e) {
+                e.stopPropagation();
+                removeLanguageRow(lang);
+            });
+            $removeButton.appendTo($removeButtonGroup);
+            $inputGroup.append($pickerAddon).append($inputText).append($removeButtonGroup).appendTo($insert);
         }
-        $insert.append($(document.createElement('button')).addClass('btn btn-secondary add-language').off('click').on('click', addLanguageRow()).text('+'));
+        $insert.append($(document.createElement('button')).addClass('btn btn-secondary add-language').off('click').on('click', function(e){
+            e.stopPropagation();
+            addLanguageRow();
+        }).text('+'));
         updateHiddenFields();
     });
 
@@ -119,10 +131,19 @@
             'value': langObject['fallback']
         });
         let $pickerAddon = $(document.createElement('span')).addClass('input-group-addon language-flag').text(getLanguageName(lang));
-        $pickerAddon.off('click').on('click', function (e) { alert('todo picker modal for ' + e.target)}); //todo picker /input on click, translated language name also?
-        let $removeButton = $(document.createElement('button')).addClass('btn btn-secondary remove-language').text('-');
-        $removeButton.off('click').on('click', function(e) { removeLanguageRow(lang); });
-        $inputGroup.append($inputText).append($pickerAddon).append($removeButton).before($('.add-language'));
+        $pickerAddon.off('click').on('click', function (e) {
+            //todo picker /input on click, translated language name also?
+            e.stopPropagation();
+            alert('todo picker modal for ' + e.target);
+        });
+        let $removeButton = $(document.createElement('button')).addClass('btn btn-secondary remove-language').html('<i class="fa fa-trash"></i>');
+        let $removeButtonGroup = $(document.createElement('span')).addClass('input-group-btn');
+        $removeButton.off('click').on('click', function(e) {
+            e.stopPropagation();
+            removeLanguageRow(lang);
+        });
+        $removeButton.appendTo($removeButtonGroup);
+        $inputGroup.append($pickerAddon).append($inputText).append($removeButton).before($('.add-language'));
         //$insert.after('.input-group-text').append($(document.createElement('span')).addClass('language-flag').text('Weiteren Eintrag anlegen'));
     }
 
@@ -141,7 +162,8 @@
     }
 
     // add/remove and fill hidden fields
-    $modal.find('.ok-btn').off('click').on('click', function () {
+    $modal.find('.ok-btn').off('click').on('click', function (e) {
+        e.stopPropagation();
         $modal.modal('hide');
         updateHiddenFields();
         // todo also update main field
@@ -149,6 +171,7 @@
     });
 
     function ___functionName () {
+        $modal.addClass('modal-lg');
         $modal.modal({backdrop: 'static', keyboard: false}).show();
     }
 </script>
