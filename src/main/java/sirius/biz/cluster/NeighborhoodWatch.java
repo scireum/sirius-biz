@@ -426,7 +426,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
     public List<BackgroundInfo> getClusterBackgroundInfo() {
         List<BackgroundInfo> result = new ArrayList<>();
         result.add(getLocalBackgroundInfo());
-        clusterManager.callEachNode("/system/cluster/background")
+        clusterManager.callEachNode("/system/cluster/background/" + clusterManager.getClusterAPIToken())
                       .map(this::parseBackgroundInfos)
                       .collect(Lambdas.into(result));
 

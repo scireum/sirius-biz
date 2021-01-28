@@ -15,8 +15,6 @@ import sirius.kernel.Sirius;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.DelayLine;
 import sirius.kernel.async.Tasks;
-import sirius.kernel.commons.Strings;
-import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.HandledException;
@@ -71,9 +69,6 @@ public class ClusterController extends BasicController {
     public static final String FLAG_ENABLE = "enable";
     public static final String FLAG_DISABLE = "disable";
 
-    @ConfigValue("sirius.clusterToken")
-    private String clusterAPIToken;
-
     @Part
     private Cluster cluster;
 
@@ -103,11 +98,17 @@ public class ClusterController extends BasicController {
     /**
      * Reports all metrics of this node as JSON.
      *
-     * @param ctx the request to handle
-     * @param out the output to write the JSON to
+     * @param ctx   the request to handle
+     * @param out   the output to write the JSON to
+     * @param token the cluster authentication token
      */
-    @Routed(value = "/system/cluster/state", jsonCall = true)
-    public void nodeInfo(WebContext ctx, JSONStructuredOutput out) {
+    @Routed(value = "/system/cluster/state/:1", jsonCall = true)
+    public void nodeInfo(WebContext ctx, JSONStructuredOutput out, String token) {
+        if (!clusterManager.isClusterAPIToken(token)) {
+            ctx.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+            return;
+        }
+
         out.property(RESPONSE_NAME, CallContext.getNodeName());
         out.property(RESPONSE_NODE_STATE, cluster.getNodeState().toString());
         out.property(RESPONSE_UPTIME, NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false));
@@ -130,9 +131,15 @@ public class ClusterController extends BasicController {
      *
      * @param ctx the request to handle
      * @param out the output to write the JSON to
+     * @param token the cluster authentication token
      */
-    @Routed(value = "/system/cluster/background", jsonCall = true)
-    public void backgroundInfo(WebContext ctx, JSONStructuredOutput out) {
+    @Routed(value = "/system/cluster/background/:1", jsonCall = true)
+    public void backgroundInfo(WebContext ctx, JSONStructuredOutput out, String token) {
+        if (!clusterManager.isClusterAPIToken(token)) {
+            ctx.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+            return;
+        }
+
         out.property(RESPONSE_NAME, CallContext.getNodeName());
         out.property(RESPONSE_NODE_STATE, cluster.getNodeState().toString());
         out.property(RESPONSE_UPTIME, NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false));
@@ -217,12 +224,12 @@ public class ClusterController extends BasicController {
      * @param ctx     the request to handle
      * @param setting either "enable" or "disable" to control what to do
      * @param node    the node to change the setting for
-     * @param token   the security token (verified against {@link #clusterAPIToken})
+     * @param token   the security token (verified against {@link InterconnectClusterManager#getClusterAPIToken()})
      * @see NeighborhoodWatch#changeBleeding(String, boolean)
      */
     @Routed("/system/cluster/bleed/:1/:2/:3")
     public void apiBleed(WebContext ctx, String setting, String node, String token) {
-        if (!Strings.areEqual(token, clusterAPIToken) || Strings.isEmpty(clusterAPIToken)) {
+        if (!clusterManager.isClusterAPIToken(token)) {
             ctx.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
             return;
         }
