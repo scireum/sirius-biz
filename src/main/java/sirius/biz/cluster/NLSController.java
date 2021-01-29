@@ -22,7 +22,7 @@ import sirius.web.services.JSONStructuredOutput;
 /**
  * Provides services to fetch unused or autocreated NLS keys.
  * <p>
- * This is mainly used by {@link sirius.biz.util.ReportUnusedNLSKeysJob} to identify NLS keys which are unused accross
+ * This is mainly used by {@link sirius.biz.util.ReportUnusedNLSKeysJob} to identify NLS keys which are unused across
  * the cluster.
  */
 @Register
