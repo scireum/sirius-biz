@@ -43,7 +43,7 @@ import java.util.List;
  * This is mainly used for administrative tasks. Being cluster aware, we can run a script and forward
  * its output to other nodes, so that the UI can easily be updated.
  * <p>
- * Note however, that this commonication is performed via our central interconnect and thus shouldn't
+ * Note however, that this communication is performed via our central interconnect and thus shouldn't
  * be used to heavy (like outputting 1000s of lines per second).
  */
 @Register(classes = {Scripting.class, InterconnectHandler.class})
