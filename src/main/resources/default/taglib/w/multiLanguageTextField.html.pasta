@@ -130,7 +130,6 @@
         let $pickerAddon = $(document.createElement('span')).addClass('input-group-addon language-flag').text(getLanguageName(lang));
         $pickerAddon.on('click', function (e) {
             //todo picker /input on click, translated language name also?
-            //e.stopPropagation();
             alert('todo picker modal for ' + e.target);
         });
         let $removeButtonGroup = $(document.createElement('span')).addClass('input-group-btn');
@@ -155,7 +154,7 @@
         let $hiddenInputs = $('#hidden-inputs-___fieldName');
         $hiddenInputs.empty();
         $modal.find('input[data-lang]').each(function () {
-            $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName').text($(this).data('lang') + '|||' + $(this).val()));
+            $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName-'+$(this).data('lang')).text($(this).val()));
         });
     }
 
