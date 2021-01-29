@@ -154,7 +154,7 @@
         let $hiddenInputs = $('#hidden-inputs-___fieldName');
         $hiddenInputs.empty();
         $modal.find('input[data-lang]').each(function () {
-            $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName-'+$(this).data('lang')).text($(this).val()));
+            $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName-' + $(this).data('lang')).val($(this).val()));
         });
     }
 
