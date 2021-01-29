@@ -674,10 +674,13 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                                        .where(OMA.FILTERS.like(SQLBlob.NORMALIZED_FILENAME)
                                                          .startsWith(prefixFilter)
                                                          .ignoreEmpty()
-                                                         .build())
-                                       .where(OMA.FILTERS.containsOne(SQLBlob.FILE_EXTENSION, fileTypes.toArray())
-                                                         .build())
-                                       .limit(maxResults);
+                                                         .build());
+        if (fileTypes != null && !fileTypes.isEmpty()) {
+            query.where(OMA.FILTERS.containsOne(SQLBlob.FILE_EXTENSION, fileTypes.toArray()).build());
+        }
+
+        query.limit(maxResults);
+
         if (sortByLastModified) {
             query.orderDesc(SQLBlob.LAST_MODIFIED);
         } else {
@@ -758,8 +761,7 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
     }
 
     @Override
-    protected void markConversionSuccess(SQLVariant variant,
-                                         String physicalKey, ConversionProcess conversionProcess) {
+    protected void markConversionSuccess(SQLVariant variant, String physicalKey, ConversionProcess conversionProcess) {
         variant.setQueuedForConversion(false);
         variant.setSize(conversionProcess.getResultFileHandle().getFile().length());
         variant.setPhysicalObjectKey(physicalKey);

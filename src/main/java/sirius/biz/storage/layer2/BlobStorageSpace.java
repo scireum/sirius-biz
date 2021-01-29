@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer2;
 
 import sirius.biz.storage.layer1.ObjectStorageSpace;
+import sirius.biz.tenants.Tenants;
 import sirius.web.http.Response;
 
 import javax.annotation.Nonnull;
@@ -57,6 +58,9 @@ public interface BlobStorageSpace {
 
     /**
      * Returns the root directory for the given tenant.
+     * <p>
+     * Note that {@link Tenants#getSystemTenantId()} can be used for system related files (as long as the
+     * <tt>tenants</tt> framework is used.
      *
      * @param tenantId the tenant to determine the directory for
      * @return the root directory for the given tenant
@@ -66,6 +70,9 @@ public interface BlobStorageSpace {
 
     /**
      * Resolves the given path into a blob.
+     * <p>
+     * Note that {@link Tenants#getSystemTenantId()} can be used for system related files (as long as the
+     * <tt>tenants</tt> framework is used.
      *
      * @param tenantId the tenant which owns the directory structure to search in
      * @param path     the path to resolve (may start with a "/" but not with the space name itself)
@@ -85,6 +92,9 @@ public interface BlobStorageSpace {
      * Resolves or creates the blob with the given path.
      * <p>
      * Note that all intermediate directories will be auto-created.
+     * <p>
+     * Note that {@link Tenants#getSystemTenantId()} can be used for system related files (as long as the
+     * <tt>tenants</tt> framework is used.
      *
      * @param tenantId the tenant which owns the directory structure to search in
      * @param path     the path to resolve (may start with a "/" but not with the space name itself)
