@@ -83,6 +83,9 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
      * @return the cluster token to use
      */
     public String getClusterAPIToken() {
+        if (Strings.isEmpty(clusterAPIToken)) {
+            clusterAPIToken = Strings.generateCode(32);
+        }
         return clusterAPIToken;
     }
 
