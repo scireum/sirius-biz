@@ -47,6 +47,7 @@ import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -267,17 +268,27 @@ public class BizController extends BasicController {
 
     private boolean tryLoadProperty(WebContext webContext, BaseEntity<?> entity, Property property) {
         String propertyName = property.getName();
+        List<String> mlsFieldNames = property.computeAdditionalFieldNames(entity);
 
-        if (!webContext.hasParameter(propertyName) && !webContext.hasParameter(propertyName
+        if (!webContext.hasParameter(propertyName) && mlsFieldNames.isEmpty() && !webContext.hasParameter(propertyName
                                                                                + CHECKBOX_PRESENCE_MARKER)) {
             // If the parameter is not present in the request we just skip it to prevent resetting the field to null
             return true;
         }
         Value parameterValue = webContext.get(propertyName);
         try {
-            property.parseValues(entity,
-                                 Values.of(parameterValue.get(List.class,
-                                                              Collections.singletonList(parameterValue.get()))));
+            if(!mlsFieldNames.isEmpty()) {
+                Map<String, Value> mlsValues = webContext.getParameterNames()
+                                                        .stream()
+                                                        .filter(param -> mlsFieldNames.contains(param))
+                                                        .collect(Collectors.toMap(param -> param,
+                                                                                  param -> webContext.get(param)));
+                property.parseComplexValues(entity, mlsValues);
+            } else {
+                property.parseValues(entity,
+                                     Values.of(parameterValue.get(List.class,
+                                                                  Collections.singletonList(parameterValue.get()))));
+            }
             ensureTenantMatch(entity, property);
         } catch (HandledException exception) {
             UserContext.setFieldError(propertyName, parameterValue);
@@ -303,6 +314,13 @@ public class BizController extends BasicController {
 
         // If the parameter is present in the request we're good to go
         if (webContext.hasParameter(property.getName())) {
+            return true;
+        }
+
+        // If the parameter is part of a MLS string we're good to go
+        if (webContext.getParameterNames()
+                      .stream()
+                      .anyMatch(param -> param.matches(property.getName() + "-([a-z][a-z]|fallback)"))) {
             return true;
         }
 
