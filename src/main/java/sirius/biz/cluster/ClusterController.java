@@ -91,21 +91,21 @@ public class ClusterController extends BasicController {
     private DistributedTasks distributedTasks;
 
     @Override
-    public void onError(WebContext ctx, HandledException error) {
-        ctx.respondWith().error(HttpResponseStatus.INTERNAL_SERVER_ERROR, error);
+    public void onError(WebContext webContext, HandledException error) {
+        webContext.respondWith().error(HttpResponseStatus.INTERNAL_SERVER_ERROR, error);
     }
 
     /**
      * Reports all metrics of this node as JSON.
      *
-     * @param ctx   the request to handle
+     * @param webContext   the request to handle
      * @param out   the output to write the JSON to
      * @param token the cluster authentication token
      */
     @Routed(value = "/system/cluster/state/:1", jsonCall = true)
-    public void nodeInfo(WebContext ctx, JSONStructuredOutput out, String token) {
+    public void nodeInfo(WebContext webContext, JSONStructuredOutput out, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
-            ctx.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+            webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
             return;
         }
 
@@ -129,14 +129,14 @@ public class ClusterController extends BasicController {
     /**
      * Reports all background activities of this node as JSON.
      *
-     * @param ctx the request to handle
+     * @param webContext the request to handle
      * @param out the output to write the JSON to
      * @param token the cluster authentication token
      */
     @Routed(value = "/system/cluster/background/:1", jsonCall = true)
-    public void backgroundInfo(WebContext ctx, JSONStructuredOutput out, String token) {
+    public void backgroundInfo(WebContext webContext, JSONStructuredOutput out, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
-            ctx.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+            webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
             return;
         }
 
@@ -162,11 +162,11 @@ public class ClusterController extends BasicController {
     /**
      * Provides an overview of the cluster, its members and their background activities.
      *
-     * @param ctx the request to handle
+     * @param webContext the request to handle
      */
     @Routed("/system/cluster")
     @Permission(PERMISSION_SYSTEM_CLUSTER)
-    public void cluster(WebContext ctx) {
+    public void cluster(WebContext webContext) {
         List<BackgroundInfo> clusterInfo = neighborhoodWatch.getClusterBackgroundInfo();
         List<String> jobKeys = clusterInfo.stream()
                                           .flatMap(node -> node.getJobs().keySet().stream())
@@ -178,7 +178,7 @@ public class ClusterController extends BasicController {
                                                       .collect(Collectors.toMap(Map.Entry::getKey,
                                                                                 e -> e.getValue().getDescription(),
                                                                                 (a, b) -> a));
-        ctx.respondWith()
+        webContext.respondWith()
            .template("/templates/biz/cluster/cluster.html.pasta", jobKeys, descriptions, clusterInfo, locks);
     }
 
@@ -188,54 +188,54 @@ public class ClusterController extends BasicController {
      * Note that this should only be used to remove a non-existing node as an active node will be re-discovered
      * almost instantly.
      *
-     * @param ctx  the request to handle
+     * @param webContext  the request to handle
      * @param node the node to remove
      */
     @Routed("/system/cluster/kill/:1")
     @Permission(PERMISSION_SYSTEM_CLUSTER)
-    public void kill(WebContext ctx, String node) {
+    public void kill(WebContext webContext, String node) {
         clusterManager.killNode(node);
-        waitAndRedirectToClusterUI(ctx);
+        waitAndRedirectToClusterUI(webContext);
     }
 
-    protected void waitAndRedirectToClusterUI(WebContext ctx) {
-        ctx.markAsLongCall();
-        delayLine.callDelayed(Tasks.DEFAULT, 2, () -> ctx.respondWith().redirectToGet("/system/cluster"));
+    protected void waitAndRedirectToClusterUI(WebContext webContext) {
+        webContext.markAsLongCall();
+        delayLine.callDelayed(Tasks.DEFAULT, 2, () -> webContext.respondWith().redirectToGet("/system/cluster"));
     }
 
     /**
      * Enables or disables bleeding out a node (disabling all upcoming background activities).
      *
-     * @param ctx     the request to handle
+     * @param webContext     the request to handle
      * @param setting either "enable" or "disable" to control what to do
      * @param node    the node to change the setting for
      * @see NeighborhoodWatch#changeBleeding(String, boolean)
      */
     @Routed("/system/cluster/bleed/:1/:2")
     @Permission(PERMISSION_SYSTEM_CLUSTER)
-    public void bleed(WebContext ctx, String setting, String node) {
+    public void bleed(WebContext webContext, String setting, String node) {
         neighborhoodWatch.changeBleeding(node, FLAG_ENABLE.equals(setting));
-        waitAndRedirectToClusterUI(ctx);
+        waitAndRedirectToClusterUI(webContext);
     }
 
     /**
      * Provides an API to enable or disable bleeding out a node (disabling all upcoming background activities).
      *
-     * @param ctx     the request to handle
+     * @param webContext     the request to handle
      * @param setting either "enable" or "disable" to control what to do
      * @param node    the node to change the setting for
      * @param token   the security token (verified against {@link InterconnectClusterManager#getClusterAPIToken()})
      * @see NeighborhoodWatch#changeBleeding(String, boolean)
      */
     @Routed("/system/cluster/bleed/:1/:2/:3")
-    public void apiBleed(WebContext ctx, String setting, String node, String token) {
+    public void apiBleed(WebContext webContext, String setting, String node, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
-            ctx.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+            webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
             return;
         }
 
         neighborhoodWatch.changeBleeding(node, FLAG_ENABLE.equals(setting));
-        waitAndRedirectToClusterUI(ctx);
+        waitAndRedirectToClusterUI(webContext);
     }
 
     /**
@@ -263,15 +263,15 @@ public class ClusterController extends BasicController {
      * <p>
      * Returns a 200 OK if the system can (most probably) be restarted or a 417 EXPECTATION FAILED otherwise.
      *
-     * @param ctx the request to handle
+     * @param webContext the request to handle
      * @see NeighborhoodWatch#changeBleeding(String, boolean)
      */
     @Routed("/system/cluster/halted")
-    public void halted(WebContext ctx) {
+    public void halted(WebContext webContext) {
         if (!Sirius.isRunning() || (neighborhoodWatch.isBleeding() && distributedTasks.getNumberOfActiveTasks() == 0)) {
-            ctx.respondWith().direct(HttpResponseStatus.OK, "OK");
+            webContext.respondWith().direct(HttpResponseStatus.OK, "OK");
         } else {
-            ctx.respondWith()
+            webContext.respondWith()
                .direct(HttpResponseStatus.EXPECTATION_FAILED,
                        "Tasks running: " + distributedTasks.getNumberOfActiveTasks());
         }
@@ -280,29 +280,29 @@ public class ClusterController extends BasicController {
     /**
      * Enables or disables a background job globally.
      *
-     * @param ctx     the request to handle
+     * @param webContext     the request to handle
      * @param setting either "enable" or "disable" to control what to do
      * @param jobKey  the jobKey to change
      */
     @Routed("/system/cluster/global/:1/:2")
     @Permission(PERMISSION_SYSTEM_CLUSTER)
-    public void globalSwitch(WebContext ctx, String setting, String jobKey) {
+    public void globalSwitch(WebContext webContext, String setting, String jobKey) {
         neighborhoodWatch.changeGlobalEnabledFlag(jobKey, FLAG_ENABLE.equals(setting));
-        waitAndRedirectToClusterUI(ctx);
+        waitAndRedirectToClusterUI(webContext);
     }
 
     /**
      * Enables or disables a background job globally.
      *
-     * @param ctx     the request to handle
+     * @param webContext     the request to handle
      * @param setting either "enable" or "disable" to control what to do
      * @param node    the node to change the setting for
      * @param jobKey  the jobKey to change
      */
     @Routed("/system/cluster/local/:1/:2/:3")
     @Permission(PERMISSION_SYSTEM_CLUSTER)
-    public void localSwitch(WebContext ctx, String setting, String node, String jobKey) {
+    public void localSwitch(WebContext webContext, String setting, String node, String jobKey) {
         neighborhoodWatch.changeLocalOverwrite(node, jobKey, FLAG_DISABLE.equals(setting));
-        waitAndRedirectToClusterUI(ctx);
+        waitAndRedirectToClusterUI(webContext);
     }
 }

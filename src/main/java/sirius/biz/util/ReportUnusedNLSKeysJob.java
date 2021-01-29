@@ -11,6 +11,7 @@ package sirius.biz.util;
 import sirius.biz.cluster.InterconnectClusterManager;
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.Parameter;
+import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.TenantUserManager;
@@ -52,6 +53,11 @@ public class ReportUnusedNLSKeysJob extends SimpleBatchProcessJobFactory {
     }
 
     @Override
+    protected PersistencePeriod getPersistencePeriod() {
+        return PersistencePeriod.FOURTEEN_DAYS;
+    }
+
+    @Override
     public String getLabel() {
         return "Export all unused NLS keys";
     }
@@ -66,7 +72,7 @@ public class ReportUnusedNLSKeysJob extends SimpleBatchProcessJobFactory {
     protected void execute(ProcessContext process) throws Exception {
         process.log("Fetching unused keys from all nodes...");
         Set<String> missingKeys = new HashSet<>();
-        Monoflop mf = Monoflop.create();
+        Monoflop fillOrIntersect = Monoflop.create();
         clusterManager.callEachNode("/system/nls.unused/" + clusterManager.getClusterAPIToken())
                       .forEach(missingKeysOfNode -> {
                           Set<String> keysOfNode = missingKeysOfNode.getJSONArray("unused")
@@ -80,7 +86,7 @@ public class ReportUnusedNLSKeysJob extends SimpleBatchProcessJobFactory {
                                                                       missingKeysOfNode.getString(
                                                                               InterconnectClusterManager.RESPONSE_NODE_NAME)));
 
-                          if (mf.firstCall()) {
+                          if (fillOrIntersect.firstCall()) {
                               missingKeys.addAll(keysOfNode);
                           } else {
                               missingKeys.retainAll(keysOfNode);

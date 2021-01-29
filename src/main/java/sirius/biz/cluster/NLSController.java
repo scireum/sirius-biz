@@ -36,21 +36,21 @@ public class NLSController extends BasicController {
     private InterconnectClusterManager clusterManager;
 
     @Override
-    public void onError(WebContext ctx, HandledException error) {
-        ctx.respondWith().error(HttpResponseStatus.INTERNAL_SERVER_ERROR, error);
+    public void onError(WebContext webContext, HandledException error) {
+        webContext.respondWith().error(HttpResponseStatus.INTERNAL_SERVER_ERROR, error);
     }
 
     /**
      * Reports all unused NLS keys.
      *
-     * @param ctx the request to handle
+     * @param webContext the request to handle
      * @param out the output to write the JSON to
      * @param token the cluster authentication token
      */
     @Routed(value = "/system/nls/unused/:1", jsonCall = true)
-    public void unused(WebContext ctx, JSONStructuredOutput out, String token) {
+    public void unused(WebContext webContext, JSONStructuredOutput out, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
-            ctx.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+            webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
             return;
         }
 
@@ -65,14 +65,14 @@ public class NLSController extends BasicController {
     /**
      * Reports all autocreated NLS keys.
      *
-     * @param ctx   the request to handle
+     * @param webContext   the request to handle
      * @param out   the output to write the JSON to
      * @param token the cluster authentication token
      */
     @Routed(value = "/system/nls/autocreated/:1", jsonCall = true)
-    public void autocreated(WebContext ctx, JSONStructuredOutput out, String token) {
+    public void autocreated(WebContext webContext, JSONStructuredOutput out, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
-            ctx.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
+            webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
             return;
         }
 
