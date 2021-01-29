@@ -16,6 +16,8 @@
 <i:arg name="id" type="String" default=""/>
 <i:arg name="placeholder" type="String" default=""/>
 <i:arg name="tabIndex" type="String" default=""/>
+<i:arg name="defaultLanguage" type="String" default="@NLS.getCurrentLang()"/>
+<i:arg name="validLanguages" type="Set" default="@value.getValidLanguages()"/>
 
 <i:pragma name="description" value="Renders a multi language text input field within a Wondergem template"/>
 
@@ -33,7 +35,7 @@
     <div class="input-group" id="@('insert-point-' + fieldName)">
         <input @if(isFilled(id)) { id="@id" }
                type="@type"
-               value="@value.fetchTextOrFallback()"
+               value="@value.fetchTextOrFallback(defaultLanguage)"
                class="form-control input-block-level"
                @if (isFilled(placeholder)) { placeholder="@placeholder" }
                @if (readonly) { readonly } @if (autofocus) { autofocus }
@@ -66,7 +68,8 @@
     let $modal = $("#___modalName");
     let langObject = JSON.parse(<i:raw>'___value.getAsJSON()'</i:raw>);
     // todo use NLS available languages
-    let languages = '@config("nls.languages")'.replace(/[\[\]]/,'').split(',');
+    //let languages = '@config("nls.languages")'.replace(/[\[\]]/,'').split(',');
+    let languages = [<i:for type="String" var="lang" items="validLanguages"><i:for type="Set" var="lang" items="validLanguages">'@lang',</i:for></i:for>]
 
     // todo flag emojis cannot be used as flags don't represent languages! we need to find another solution!
     function getFlagEmoji(langCode) {
