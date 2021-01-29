@@ -30,7 +30,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
- * Collects all unused NLS keys accross all cluster nodes and reports the intersection as text file.
+ * Collects all unused NLS keys across all cluster nodes and reports the intersection as text file.
  * <p>
  * We build the intersection here to determine the truly unused keys, as maybe some nodes have specific tasks
  * and will not use all keys.
