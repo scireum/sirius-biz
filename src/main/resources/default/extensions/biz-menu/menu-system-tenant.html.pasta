@@ -26,6 +26,8 @@
                         permission="flag-system-administrator"/>
             <w:menuItem title="Cluster" icon="fa-sitemap" url="/system/cluster"
                         permission="permission-system-cluster"/>
+            <w:menuItem title="Scripting" icon="fa-terminal" url="/system/scripting"
+                        permission="permission-sytem-scripting"/>
         </w:menuSection>
     </i:block>
 </i:switch>
