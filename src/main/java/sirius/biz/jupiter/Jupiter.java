@@ -110,10 +110,22 @@ public class Jupiter {
         }
     }
 
+    /**
+     * Extracts a string from a Jedis multi object bulk response.
+     *
+     * @param value the value to extract the string out of
+     * @return the extracted string.
+     */
     public static String readString(Value value) {
         return SafeEncoder.encode((byte[]) value.get());
     }
 
+    /**
+     * Reads an inner array from a Jedis multi object bulk response.
+     *
+     * @param object the object to handle as array.
+     * @return the array wrapped as <tt>Values</tt>. Note that the inner values will not be converted.
+     */
     public static Values readArray(Object object) {
         if (object instanceof List) {
             return Values.of((List<?>) object);
@@ -122,12 +134,25 @@ public class Jupiter {
         }
     }
 
+    /**
+     * Extracts a RFC-3339 date from a given Jedis multi object bulk response.
+     *
+     * @param value the value to parse
+     * @return the extracted timestamp
+     */
     public static LocalDateTime readLocalDateTime(Value value) {
         return OffsetDateTime.parse(readString(value), RFC_3339_DATE_TIME_FORMATTER)
                              .atZoneSameInstant(ZoneId.systemDefault())
                              .toLocalDateTime();
     }
 
+    /**
+     * Converts the given object into the proper Java representation when reading a given Jedis multi object bulk
+     * response.
+     *
+     * @param obj the object to transform
+     * @return the transformed object (where all inner objects are also transformed).
+     */
     public static Object read(Object obj) {
         if (obj instanceof byte[]) {
             return SafeEncoder.encode((byte[]) obj);
