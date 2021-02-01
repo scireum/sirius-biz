@@ -13,7 +13,7 @@
 <i:arg name="adminOnly" type="boolean" default="false"/>
 <i:arg name="autofocus" type="boolean" default="false"/>
 <i:arg name="type" type="String" default="text"/>
-<i:arg name="id" type="String" default=""/>
+<i:arg name="id" type="String" default="@('mls-field-' + fieldName)"/>
 <i:arg name="placeholder" type="String" default=""/>
 <i:arg name="tabIndex" type="String" default=""/>
 <i:arg name="defaultLanguage" type="String" default="@NLS.getCurrentLang()"/>
@@ -157,7 +157,12 @@
         let $hiddenInputs = $('#hidden-inputs-___fieldName');
         $hiddenInputs.empty();
         $modal.find('input[data-lang]').each(function () {
-            $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName-' + $(this).data('lang')).val($(this).val()));
+            let lang = $(this).data('lang');
+            $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName-' + lang).val($(this).val()));
+            if(lang === 'fallback') {
+                // also update main field
+                <i:raw>___("$('#mls-field-" + fieldName + "')").val($(this).val());</i:raw>
+            }
         });
     }
 
@@ -165,8 +170,6 @@
     $modal.find('.ok-btn').on('click', function (e) {
         $modal.modal('hide');
         updateHiddenFields();
-        // todo also update main field
-        $('#___fieldName').val(langObject['fallback']);
     });
 
     function ___functionName () {
