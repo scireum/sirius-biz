@@ -282,7 +282,6 @@ public class BizController extends BasicController {
                 UserContext.setErrorMessage(propertyName, exception.getMessage());
                 return false;
             }
-            return true;
         }
 
         if (!webContext.hasParameter(propertyName) && !webContext.hasParameter(propertyName
