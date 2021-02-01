@@ -158,10 +158,12 @@
         $hiddenInputs.empty();
         $modal.find('input[data-lang]').each(function () {
             let lang = $(this).data('lang');
-            $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName-' + lang).val($(this).val()));
             if(lang === 'fallback') {
                 // also update main field
                 <i:raw>___("$('#mls-field-" + fieldName + "')").val($(this).val());</i:raw>
+                $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName').val($(this).val()));
+            } else {
+                $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName-' + lang).val($(this).val()));
             }
         });
     }
