@@ -47,7 +47,6 @@ import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -268,22 +267,20 @@ public class BizController extends BasicController {
 
     private boolean tryLoadProperty(WebContext webContext, BaseEntity<?> entity, Property property) {
         String propertyName = property.getName();
-        List<String> mlsFieldNames = property.computeAdditionalFieldNames(entity);
+        List<String> additionalFieldNames = property.computeAdditionalFieldNames(entity);
 
-        if (!webContext.hasParameter(propertyName) && mlsFieldNames.isEmpty() && !webContext.hasParameter(propertyName
-                                                                               + CHECKBOX_PRESENCE_MARKER)) {
+        if (!webContext.hasParameter(propertyName) && additionalFieldNames.isEmpty() && !webContext.hasParameter(
+                propertyName + CHECKBOX_PRESENCE_MARKER)) {
             // If the parameter is not present in the request we just skip it to prevent resetting the field to null
             return true;
         }
         Value parameterValue = webContext.get(propertyName);
         try {
-            if(!mlsFieldNames.isEmpty()) {
-                Map<String, Value> mlsValues = webContext.getParameterNames()
-                                                        .stream()
-                                                        .filter(param -> mlsFieldNames.contains(param))
-                                                        .collect(Collectors.toMap(param -> param,
-                                                                                  param -> webContext.get(param)));
-                property.parseComplexValues(entity, mlsValues);
+            if (!additionalFieldNames.isEmpty()) {
+                property.parseComplexValues(entity,
+                                            additionalFieldNames.stream()
+                                                                .collect(Collectors.toMap(param -> param,
+                                                                                          param -> webContext.get(param))));
             } else {
                 property.parseValues(entity,
                                      Values.of(parameterValue.get(List.class,
@@ -314,13 +311,6 @@ public class BizController extends BasicController {
 
         // If the parameter is present in the request we're good to go
         if (webContext.hasParameter(property.getName())) {
-            return true;
-        }
-
-        // If the parameter is part of a MLS string we're good to go
-        if (webContext.getParameterNames()
-                      .stream()
-                      .anyMatch(param -> param.matches(property.getName() + "-([a-z][a-z]|fallback)"))) {
             return true;
         }
 

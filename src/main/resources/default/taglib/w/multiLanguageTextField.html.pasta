@@ -33,7 +33,8 @@
         </label>
     </i:if>
     <div class="input-group" id="@('insert-point-' + fieldName)">
-        <input @if(isFilled(id)) { id="@id" }
+        <input id="@id"
+               name="@fieldName"
                type="@type"
                value="@value.fetchTextOrFallback(defaultLanguage)"
                class="form-control input-block-level"
@@ -160,7 +161,7 @@
             let lang = $(this).data('lang');
             if(lang === 'fallback') {
                 // also update main field
-                <i:raw>___("$('#mls-field-" + fieldName + "')").val($(this).val());</i:raw>
+                <i:raw>___("$('#" + id + "')").val($(this).val());</i:raw>
                 $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName').val($(this).val()));
             } else {
                 $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName-' + lang).val($(this).val()));
