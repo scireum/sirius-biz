@@ -38,7 +38,7 @@ public class JupiterConnector {
     /**
      * If a failover is performed, we keep using the fallback instance for a certain amount of time to prevent
      * constant switching back and forth in case of network problems (etc). This constant determines the interval
-     * before a failback is attempted.
+     * before a failover back to the main instance is attempted.
      */
     private static final int FAILOVER_TRIGGER_REARM_INTERVAL = 60_000;
 
