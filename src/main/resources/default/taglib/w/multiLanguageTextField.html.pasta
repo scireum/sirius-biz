@@ -4,7 +4,7 @@
 <i:arg name="fieldName" type="String" default="@name"/>
 <i:arg name="value" type="sirius.db.mixing.types.MultiLanguageString"/>
 <i:arg name="labelKey" type="String" default=""/>
-<i:arg name="label" type="String" default="@i18n('MultiLanguageEditor.title')"/>
+<i:arg name="label" type="String" default="@i18n(labelKey)"/>
 <i:arg name="forceLabel" type="boolean" default="false"/>
 <i:arg name="helpKey" type="String" default=""/>
 <i:arg name="help" type="String" default="@i18n(helpKey)"/>
@@ -84,7 +84,7 @@
     }
 
     function getLanguageName(lang) {
-        return languages[lang].name;
+        return languages.find(object => object.code === lang).name;
     }
 
     $(document).ready(function() {
@@ -100,13 +100,13 @@
                 'class': 'form-control',
                 'value': langObject[lang]
             }).appendTo($inputColumn);
-            $row.append($flagAndLanguageColumn).append($inputColumn).appendTo($insert);
+            $row.append($flagAndLanguageColumn).append($inputColumn).append($('br')).appendTo($insert);
         }
 
         <i:if test="manageLanguages">
             $insert.append($(document.createElement('a')).addClass('btn btn-secondary add-language').on('click', function (e) {
             addLanguageRow();
-        }).text('+'));
+        }).text('@i18n("MultiLanguageEditor.addLanguage")'));
         </i:if>
         updateHiddenFields();
 
@@ -120,22 +120,24 @@
     // todo implement add row
     function addLanguageRow() {
         // todo check if there's already a language entry for lang
+        let $insert = $modal.find('.insert-point');
         let $row = $('<div/>', {'class': 'row'});
         var $languageSelector = $("<select></select>");
         $languageSelector.on('change', function(){setLanguage()})
         $.each(languages, function(index, language){
-            $languageSelector.append($("<option></option>").attr("value", language.code).text(languages[language].name));
+            $languageSelector.append($("<option></option>").attr("value", language.code).text(language.name));
         });
         let $languageColumn = $(document.createElement('div')).addClass('col-md-3 language-flag');
         $languageSelector.appendTo($languageColumn);
         let $inputColumn = $(document.createElement('div')).addClass('col-md-9');
+        // todo sync dropdown language with input text's data-lang attr on change
         let $inputText = $('<input>', {
             'type': 'text',
             'data-lang': lang,
             'class': 'form-control',
             'value': undefined
         }).appendTo($inputColumn);
-        $row.append($languageColumn).append($inputColumn).appendTo($insert);
+        $row.append($languageColumn).append($inputColumn).append($('br')).appendTo($insert);
         $row.insertBefore($('.add-language'));
     }
 
