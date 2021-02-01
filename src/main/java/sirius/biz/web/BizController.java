@@ -44,6 +44,7 @@ import sirius.web.util.LinkBuilder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -159,7 +160,9 @@ public class BizController extends BasicController {
      * @throws sirius.kernel.health.HandledException if the entities do no match
      * @see BaseEntityRef#hasWriteOnceSemantics
      */
-    protected <I, E extends BaseEntity<I>> void setOrVerify(BaseEntity<?> owner, BaseEntityRef<I, E> ref, E target) {
+    protected <I extends Serializable, E extends BaseEntity<I>> void setOrVerify(BaseEntity<?> owner,
+                                                                                 BaseEntityRef<I, E> ref,
+                                                                                 E target) {
         if (!Objects.equals(ref.getId(), target.getId())) {
             if (owner.isNew()) {
                 ref.setValue(target);

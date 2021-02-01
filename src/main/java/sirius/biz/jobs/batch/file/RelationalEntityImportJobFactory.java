@@ -44,7 +44,7 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
 
     @SuppressWarnings("squid:S2095")
     @Explain("The job must not be closed here as it is returned and managed by the caller.")
-    protected RelationalEntityImportJob createImportJob(ProcessContext process, ImportContext parameterContext) {
+    protected RelationalEntityImportJob<E, Q> createImportJob(ProcessContext process, ImportContext parameterContext) {
         return new RelationalEntityImportJob<E, Q>(getImportType(),
                                                    getDictionary(),
                                                    process,

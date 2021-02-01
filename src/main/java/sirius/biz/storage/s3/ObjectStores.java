@@ -19,6 +19,7 @@ import com.amazonaws.util.AwsHostNameUtils;
 import sirius.kernel.Sirius;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Average;
@@ -188,7 +189,7 @@ public class ObjectStores {
 
         return new URL(endpoint.getProtocol(),
                        hostAndPort.getFirst(),
-                       hostAndPort.getSecond(),
+                       Integer.valueOf(defaultPort).equals(hostAndPort.getSecond()) ? -1 : hostAndPort.getSecond(),
                        endpoint.getFile()).toString();
     }
 }
