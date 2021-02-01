@@ -14,10 +14,10 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.Tenants;
+import sirius.db.es.Elastic;
 import sirius.kernel.Sirius;
 import sirius.kernel.Startable;
 import sirius.kernel.async.Tasks;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -36,11 +36,14 @@ import java.util.Map;
 /**
  * In charge of updating the configuration and the repository of attached Jupiter instances.
  */
-@Register(framework = Jupiter.FRAMEWORK_JUITER, classes = {JupiterSync.class, Startable.class, EveryDay.class})
+@Register(framework = Jupiter.FRAMEWORK_JUPITER, classes = {JupiterSync.class, Startable.class, EveryDay.class})
 public class JupiterSync implements Startable, EveryDay {
 
     @ConfigValue("jupiter.updateConfig")
     private List<String> updateConfig;
+
+    @ConfigValue("jupiter.automaticUpdate")
+    private boolean automaticUpdate;
 
     @Parts(JupiterConfigUpdater.class)
     private PartCollection<JupiterConfigUpdater> updaters;
@@ -58,6 +61,9 @@ public class JupiterSync implements Startable, EveryDay {
     @Part
     private Tasks tasks;
 
+    @Part
+    private Elastic elastic;
+
     @Override
     public int getPriority() {
         return 900;
@@ -70,12 +76,16 @@ public class JupiterSync implements Startable, EveryDay {
 
     @Override
     public void runTimer() throws Exception {
-        tasks.defaultExecutor().start(this::performSync);
+        if (automaticUpdate) {
+            tasks.defaultExecutor().start(this::performSync);
+        }
     }
 
     @Override
     public void started() {
-        performSync();
+        if (automaticUpdate) {
+            elastic.getReadyFuture().onSuccess(this::performSync);
+        }
     }
 
     protected void performSync() {
@@ -92,7 +102,11 @@ public class JupiterSync implements Startable, EveryDay {
      * @param processContext the process used for logging and reporting
      */
     public void performSyncInProcess(ProcessContext processContext) {
-        syncConfigs(processContext);
+        try {
+            syncConfigs(processContext);
+        } catch (Exception e) {
+            processContext.handle(e);
+        }
     }
 
     private void syncConfigs(ProcessContext processContext) {
@@ -116,7 +130,7 @@ public class JupiterSync implements Startable, EveryDay {
         }
     }
 
-    public void updateJupiterConfig(ProcessContext processContext, JupiterConnector connection) {
+    private void updateJupiterConfig(ProcessContext processContext, JupiterConnector connection) {
         try {
             processContext.debug(ProcessLog.info()
                                            .withFormattedMessage("Updating config for %s...", connection.getName()));
@@ -141,12 +155,6 @@ public class JupiterSync implements Startable, EveryDay {
                                                                     connection.getName())
                                             .handle());
         }
-    }
-
-    private String determineConfigBasePath(JupiterConnector connection) {
-        return Strings.areEqual(connection.getName(), Jupiter.DEFAULT_NAME) ?
-               "jupiter" :
-               "jupiter." + connection.getName();
     }
 
     private String asYaml(Map<String, Object> config) {

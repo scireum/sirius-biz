@@ -41,13 +41,13 @@ import java.util.stream.Collectors;
  * The config is provided via <tt>redis.pools.jupiter</tt> as well as the <tt>jupiter.settings.[name]</tt> section in
  * the config.
  */
-@Register(classes = Jupiter.class, framework = Jupiter.FRAMEWORK_JUITER)
+@Register(classes = Jupiter.class, framework = Jupiter.FRAMEWORK_JUPITER)
 public class Jupiter {
 
     /**
      * Specifies the framework to enable when using Jupiter.
      */
-    public static final String FRAMEWORK_JUITER = "jupiter";
+    public static final String FRAMEWORK_JUPITER = "jupiter";
 
     /**
      * Determines the name of the logger used for all Jupiter related logging.

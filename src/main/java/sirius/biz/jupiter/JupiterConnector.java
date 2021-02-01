@@ -35,6 +35,18 @@ public class JupiterConnector {
 
     private static final JupiterCommand CMD_SET_CONFIG = new JupiterCommand("SYS.SET_CONFIG");
 
+    /**
+     * If a failover is performed, we keep using the fallback instance for a certain amount of time to prevent
+     * constant switching back and forth in case of network problems (etc). This constant determines the interval
+     * before a failback is attempted.
+     */
+    private static final int FAILOVER_TRIGGER_REARM_INTERVAL = 60_000;
+
+    /**
+     * Provides an upper bound of the expected runtime of a Jupiter command for monitoring purposes.
+     */
+    private static final Duration EXPECTED_JUPITER_COMMAND_RUNTIME = Duration.ofSeconds(10);
+
     private final String instanceName;
     private final RedisDB redis;
     private final RedisDB fallbackRedis;
@@ -94,7 +106,7 @@ public class JupiterConnector {
             });
         } else {
             return performWithFailover(description, task, redis, fallbackRedis, () -> {
-                fallbackActiveUntil = System.currentTimeMillis() + 60_000;
+                fallbackActiveUntil = System.currentTimeMillis() + FAILOVER_TRIGGER_REARM_INTERVAL;
                 Jupiter.LOG.WARN("Performing a failover from the main instance to the fallback for %s", getName());
             });
         }
@@ -105,7 +117,7 @@ public class JupiterConnector {
                                       RedisDB main,
                                       RedisDB fallback,
                                       Runnable executeOnFailover) {
-        try (Operation op = new Operation(description, Duration.ofSeconds(10)); Jedis jedis = main.getConnection()) {
+        try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME); Jedis jedis = main.getConnection()) {
             return perform(description, jedis, task);
         } catch (JedisConnectionException ignored) {
             executeOnFailover.run();
@@ -116,7 +128,7 @@ public class JupiterConnector {
     }
 
     private <T> T performWithoutFailover(Supplier<String> description, Function<Client, T> task, RedisDB redis) {
-        try (Operation op = new Operation(description, Duration.ofSeconds(10)); Jedis jedis = redis.getConnection()) {
+        try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME); Jedis jedis = redis.getConnection()) {
             return perform(description, jedis, task);
         } catch (Exception e) {
             throw Exceptions.handle(Jupiter.LOG, e);
@@ -151,7 +163,7 @@ public class JupiterConnector {
      * @return a result computed by <tt>task</tt>
      */
     public <T> T queryDirect(Supplier<String> description, Function<Client, T> task) {
-        try (Operation op = new Operation(description, Duration.ofSeconds(10)); Jedis jedis = redis.getConnection()) {
+        try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME); Jedis jedis = redis.getConnection()) {
             return perform(description, jedis, task);
         } catch (Exception e) {
             throw Exceptions.handle(Jupiter.LOG, e);
