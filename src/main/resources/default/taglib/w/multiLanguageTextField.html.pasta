@@ -9,7 +9,6 @@
 <i:arg name="helpKey" type="String" default=""/>
 <i:arg name="help" type="String" default="@i18n(helpKey)"/>
 <i:arg name="required" type="boolean" default="false"/>
-<i:arg name="readonly" type="boolean" default="false"/>
 <i:arg name="adminOnly" type="boolean" default="false"/>
 <i:arg name="autofocus" type="boolean" default="false"/>
 <i:arg name="type" type="String" default="text"/>
@@ -18,10 +17,11 @@
 <i:arg name="tabIndex" type="String" default=""/>
 <i:arg name="defaultLanguage" type="String" default="@NLS.getCurrentLang()"/>
 <i:arg name="validLanguages" type="Set" default="@value.getValidLanguages()"/>
+<i:arg name="manageLanguages" type="boolean" default="false"/>
 
 <i:pragma name="description" value="Renders a multi language text input field within a Wondergem template"/>
 
-<i:local name="functionName" value="@('openMultiLanguageModal' + 'fieldName')"/>
+<i:local name="functionName" value="@('openMultiLanguageModal' + fieldName)"/>
 <i:local name="modalName" value="@('mls-modal-' + fieldName)"/>
 
 <div class="col-xs-@smallSpan col-md-@span form-group @UserContext.get().signalFieldError(fieldName)">
@@ -38,11 +38,11 @@
                type="@type"
                value="@value.fetchTextOrFallback(defaultLanguage)"
                class="form-control input-block-level"
+               readonly
                @if (isFilled(placeholder)) { placeholder="@placeholder" }
-               @if (readonly) { readonly } @if (autofocus) { autofocus }
+               @if (autofocus) { autofocus }
                @if (isFilled(tabIndex)) { tabindex="@tabIndex" }/>
-
-        <span class="input-group-addon" onclick="@(functionName+ '()')"><span class="fa fa-globe"></span></span>
+        <span class="input-group-addon" onclick="@(functionName + '()')"><span class="fa fa-globe"></span></span>
         <div id="@('hidden-inputs-' + fieldName)">
         </div>
     </div>
@@ -68,54 +68,52 @@
 <script>
     let $modal = $("#___modalName");
     let langObject = JSON.parse(<i:raw>'___value.getAsJSON()'</i:raw>);
-    // todo use NLS available languages
-    //let languages = '@config("nls.languages")'.replace(/[\[\]]/,'').split(',');
-    let languages = [<i:for type="String" var="lang" items="validLanguages"><i:for type="Set" var="lang" items="validLanguages">'@lang',</i:for></i:for>]
+    let languages = new Map();
+    <i:for type="Set" var="lang" items="validLanguages">
+        languages.set('@lang', '@i18n("Language." + lang)');
+    </i:for>
 
-    // todo flag emojis cannot be used as flags don't represent languages! we need to find another solution!
-    function getFlagEmoji(langCode) {
+    function getFlagImage(langCode) {
         if (langCode === 'fallback') {
             // globe icon
             return String.fromCodePoint(127758);
         } else {
-            return langCode.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397)); // todo: make IE compatible
+            return '<img src=\'/assets/images/flags/' + lang + '.png\' alt=\'' + lang + ' \'/>';
         }
     }
 
     function getLanguageName(lang) {
-        // todo resolve language codes
-        return lang;
+        return languages.get(lang);
     }
 
-    // render modal body
-    $(function () {
+    $(document).ready(function() {
+        // render modal body
         let $insert = $modal.find('.insert-point');
         for (lang in langObject) {
-            let $inputGroup = $('<div/>', {'data-lang': lang, 'class' : 'input-group'});
+            let $row = $('<div/>', {'class': 'row'});
+            let $flagAndLanguageColumn = $(document.createElement('div')).addClass('col-md-2 language-flag').html(getFlagImage(lang) + ' ' + getLanguageName(lang));
+            let $inputColumn = $(document.createElement('div')).addClass('col-md-10');
             let $inputText = $('<input>', {
                 'type': 'text',
                 'data-lang': lang,
-                'class': 'form-control input-group-text',
+                'class': 'form-control',
                 'value': langObject[lang]
-            });
-            let $pickerAddon = $(document.createElement('span')).addClass('input-group-addon language-flag').text(getLanguageName(lang));
-            $pickerAddon.on('click', function (e) {
-                //todo picker /input on click, translated language name also?
-                alert('todo picker modal for ' + e.target);
-            });
-            let $removeButtonGroup = $(document.createElement('span')).addClass('input-group-btn');
-            let $removeButton = $(document.createElement('a')).addClass('btn btn-danger button-danger-ask guarded-link remove-language').html('<i class="fa fa-trash"></i>');
-            $removeButton.on('click', function(e) {
-                removeLanguageRow($inputGroup);
-            });
-            $removeButton.appendTo($removeButtonGroup);
-            $inputGroup.append($pickerAddon).append($inputText).append($removeButtonGroup).appendTo($insert);
-            $insert.append($(document.createElement('br')));
+            }).appendTo($inputColumn);
+            $row.append($flagAndLanguageColumn).append($inputColumn).appendTo($insert);
         }
-        $insert.append($(document.createElement('a')).addClass('btn btn-secondary add-language').on('click', function(e){
+
+        <i:if test="manageLanguages">
+            $insert.append($(document.createElement('a')).addClass('btn btn-secondary add-language').on('click', function (e) {
             addLanguageRow();
         }).text('+'));
+        </i:if>
         updateHiddenFields();
+
+        // add/remove and fill hidden fields
+        $modal.find('.ok-btn').on('click', function (e) {
+            $modal.modal('hide');
+            updateHiddenFields();
+        });
     });
 
     // todo implement add row
@@ -124,25 +122,16 @@
         // todo check if there's already a language entry for lang
         let lang = 'fallback';
         let $insert = $modal.find('.insert-point');
-        let $inputGroup = $('<div/>', {'data-lang': lang, 'class' : 'input-group'});
+        let $inputGroup = $('<div/>', {'data-lang': lang, 'class': 'input-group'});
         let $inputText = $('<input>', {
             'type': 'text',
             'data-lang': lang,
             'class': 'form-control input-group-text',
             'value': langObject['fallback']
         });
-        let $pickerAddon = $(document.createElement('span')).addClass('input-group-addon language-flag').text(getLanguageName(lang));
-        $pickerAddon.on('click', function (e) {
-            //todo picker /input on click, translated language name also?
-            alert('todo picker modal for ' + e.target);
-        });
-        let $removeButtonGroup = $(document.createElement('span')).addClass('input-group-btn');
-        let $removeButton = $(document.createElement('a')).addClass('btn btn-danger button-danger-ask guarded-link remove-language').html('<i class="fa fa-trash"></i>');
-        $removeButton.on('click', function(e) {
-            removeLanguageRow($inputGroup);
-        });
-        $removeButton.appendTo($removeButtonGroup);
-        let row = $inputGroup.append($pickerAddon).append($inputText).append($removeButtonGroup).insertBefore($('.add-language'));
+        let $pickerAddon = $(document.createElement('span')).addClass('input-group-addon language-flag').html(getFlagImage(lang) + ' ' + getLanguageName(lang));
+
+        let row = $inputGroup.append($pickerAddon).append($inputText).insertBefore($('.add-language'));
         $(document.createElement('br')).insertBefore($('.add-language'));
     }
 
@@ -159,7 +148,7 @@
         $hiddenInputs.empty();
         $modal.find('input[data-lang]').each(function () {
             let lang = $(this).data('lang');
-            if(lang === 'fallback') {
+            if (lang === 'fallback') {
                 // also update main field
                 <i:raw>___("$('#" + id + "')").val($(this).val());</i:raw>
                 $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName').val($(this).val()));
@@ -168,12 +157,6 @@
             }
         });
     }
-
-    // add/remove and fill hidden fields
-    $modal.find('.ok-btn').on('click', function (e) {
-        $modal.modal('hide');
-        updateHiddenFields();
-    });
 
     function ___functionName () {
         $modal.modal({backdrop: 'static', keyboard: false}).show();
