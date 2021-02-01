@@ -21,6 +21,8 @@ import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
 
+import java.io.Serializable;
+
 /**
  * Provides the database independent controller for code lists.
  * <p>
@@ -30,7 +32,7 @@ import sirius.web.security.Permission;
  * @param <L> the effective entity type used to represent code lists
  * @param <E> the effective entity type used to represent code list entries
  */
-public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L, ?>>
+public abstract class CodeListController<I extends Serializable, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L, ?>>
         extends BizController {
 
     /**
@@ -109,7 +111,8 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
         BasePageHelper<E, ?, ?, ?> pageHelper = getEntriesAsPage(codeList);
         pageHelper.withContext(ctx);
         applyCodeListEntrySearchFields(pageHelper);
-        ctx.respondWith().template("/templates/biz/codelists/code-list-entries.html.pasta", codeList, pageHelper.asPage());
+        ctx.respondWith()
+           .template("/templates/biz/codelists/code-list-entries.html.pasta", codeList, pageHelper.asPage());
     }
 
     protected abstract BasePageHelper<E, ?, ?, ?> getEntriesAsPage(L codeList);
