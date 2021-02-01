@@ -42,7 +42,7 @@
                @if (readonly) { readonly } @if (autofocus) { autofocus }
                @if (isFilled(tabIndex)) { tabindex="@tabIndex" }/>
 
-        <span class="input-group-addon"><span class="fa fa-globe" onclick="@(functionName+ '()')"></span></span>
+        <span class="input-group-addon" onclick="@(functionName+ '()')"><span class="fa fa-globe"></span></span>
         <div id="@('hidden-inputs-' + fieldName)">
         </div>
     </div>
