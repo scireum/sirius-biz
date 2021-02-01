@@ -110,7 +110,7 @@ public class JupiterSync implements Startable, EveryDay {
             } else {
                 processContext.log(ProcessLog.info()
                                              .withFormattedMessage(
-                                                     "Not updating Jupiter config of %s as not connection configuration is present!",
+                                                     "Not updating Jupiter config of %s as no connection configuration is present!",
                                                      instance));
             }
         }

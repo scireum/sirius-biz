@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  * Provides a facility to connect to one or more <a href="https://github.com/scireum/jupiter">Jupiter</a> instances.
  * <p>
  * As Jupiter speaks the RESP protocol as defined by Redis, we actually use the connection handling as provided
- * ba {@link Redis}. However, since Jupiter is commonly "stateless" we permit to define a fallback connection
+ * by {@link Redis}. However, since Jupiter is commonly "stateless" we permit to define a fallback connection
  * in case the main host goes down.
  * <p>
  * The config is provided via <tt>redis.pools.jupiter</tt> as well as the <tt>jupiter.settings.[name]</tt> section in

@@ -21,9 +21,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 /**
- * Permits to manually force the update of the config and repository of all attaches Jupiter instances.
+ * Permits to manually force the update of the config and repository of all attached Jupiter instances.
  */
-@Register(framework = Jupiter.FRAMEWORK_JUITER)
+@Register(framework = Jupiter.FRAMEWORK_JUPITER)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class JupiterSyncJob extends SimpleBatchProcessJobFactory {
 

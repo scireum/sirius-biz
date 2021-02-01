@@ -177,7 +177,7 @@ public class JupiterConnector {
     /**
      * Executes one or more Jupiter commands without any return value.
      * <p>
-     * If the main connection pool isn't available, this will not perform a failover but abort immediatelly.
+     * If the main connection pool isn't available, this will not perform a failover but abort immediately.
      * This can be used to execute administrative commands, which have to be executed on the target instance.
      *
      * @param description a description of the actions performed used for debugging and tracing

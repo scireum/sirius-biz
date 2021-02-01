@@ -31,7 +31,7 @@ public class JupiterCommand implements ProtocolCommand {
     }
 
     @SuppressWarnings("AssignmentOrReturnOfFieldWithMutableType")
-    @Explain("For performance reasonst, we do not clone the array here and trust the Jedis client to behave.")
+    @Explain("For performance reasons, we do not clone the array here and trust the Jedis client to behave.")
     @Override
     public byte[] getRaw() {
         return rawCommand;
