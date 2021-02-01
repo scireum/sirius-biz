@@ -69,6 +69,7 @@
     let $modal = $("#___modalName");
     let langObject = JSON.parse(<i:raw>'___value.getAsJSON()'</i:raw>);
     let languages = new Map();
+    languages.set('fallback', '@i18n("Language.fallback")');
     <i:for type="Set" var="lang" items="validLanguages">
         languages.set('@lang', '@i18n("Language." + lang)');
     </i:for>
@@ -91,8 +92,8 @@
         let $insert = $modal.find('.insert-point');
         for (lang in langObject) {
             let $row = $('<div/>', {'class': 'row'});
-            let $flagAndLanguageColumn = $(document.createElement('div')).addClass('col-md-2 language-flag').html(getFlagImage(lang) + ' ' + getLanguageName(lang));
-            let $inputColumn = $(document.createElement('div')).addClass('col-md-10');
+            let $flagAndLanguageColumn = $(document.createElement('div')).addClass('col-md-3 language-flag').html(getFlagImage(lang) + ' ' + getLanguageName(lang));
+            let $inputColumn = $(document.createElement('div')).addClass('col-md-9');
             let $inputText = $('<input>', {
                 'type': 'text',
                 'data-lang': lang,
