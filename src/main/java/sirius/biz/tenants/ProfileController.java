@@ -21,6 +21,8 @@ import sirius.web.security.LoginRequired;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserManager;
 
+import java.io.Serializable;
+
 /**
  * Provides functionality to modify accounts.
  *
@@ -29,7 +31,7 @@ import sirius.web.security.UserManager;
  * @param <U> specifies the effective entity type used to represent UserAccounts
  */
 @Register(framework = Tenants.FRAMEWORK_TENANTS)
-public class ProfileController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+public class ProfileController<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {
 
     private static final String PARAM_OLD_PASSWORD = "oldPassword";
