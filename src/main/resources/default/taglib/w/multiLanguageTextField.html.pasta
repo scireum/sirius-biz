@@ -32,7 +32,7 @@
         </span>
         </label>
     </i:if>
-    <div class="input-group" id="@('insert-point-' + fieldName)">
+    <div class="input-group" id="@('insert-point-' + fieldName)" data-toggle="modal" data-target="#___modalName">
         <input id="@id"
                name="@fieldName"
                type="@type"
@@ -42,8 +42,7 @@
                @if (isFilled(placeholder)) { placeholder="@placeholder" }
                @if (autofocus) { autofocus }
                @if (isFilled(tabIndex)) { tabindex="@tabIndex" }/>
-        <span class="input-group-addon" data-toggle="modal" data-target="#___modalName"><span
-                class="fa fa-globe"></span></span>
+        <span class="input-group-addon"><span class="fa fa-globe"></span></span>
     </div>
     <div id="@('hidden-inputs-' + fieldName)">
     </div>
