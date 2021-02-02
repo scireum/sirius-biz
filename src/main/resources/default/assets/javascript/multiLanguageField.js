@@ -20,7 +20,7 @@ function MultiLanguageField(options) {
 
     this.validLanguages = {};
     if (this.hasFallback) {
-        this.validLanguages.fallback = fallbackLabel;
+        this.validLanguages.fallback = this.fallbackLabel;
     }
     for (let langCode in options.validLanguages) {
         this.validLanguages[langCode] = options.validLanguages[langCode];
@@ -50,9 +50,14 @@ MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
     let _labelColumn = document.createElement('div');
     _labelColumn.classList.add('col-md-3');
     _labelColumn.classList.add('mls-language-label');
-    // TODO hacky
-    _labelColumn.innerHTML = this.getFlagImage(langCode) + ' ' + langName;
     _row.appendChild(_labelColumn);
+    
+    const _flag = this.renderFlag(langCode);
+    _labelColumn.appendChild(_flag);
+    
+    const _name = document.createElement('span');
+    _name.textContent = langName;
+    _labelColumn.appendChild(_name);
 
     let _inputColumn = document.createElement('div');
     _inputColumn.classList.add('col-md-9');
@@ -154,11 +159,19 @@ MultiLanguageField.prototype.getLanguageName = function (langCode) {
     return this.validLanguages[langCode];
 }
 
-MultiLanguageField.prototype.getFlagImage = function (langCode) {
+MultiLanguageField.prototype.renderFlag = function (langCode) {
     if (langCode === this.FALLBACK_CODE) {
         // globe icon
-        return String.fromCodePoint(127758);
+        _globe = document.createElement('span');
+        _globe.classList.add('mls-language-flag');
+        _globe.classList.add('mls-language-globe');
+        _globe.textContent = String.fromCodePoint(127758);
+        return _globe;
     } else {
-        return '<img class="mls-language-flag" src=\'/assets/images/flags/' + langCode + '.png\' alt=\'' + langCode + ' \'/>';
+        const _flag = document.createElement('img');
+        _flag.classList.add('mls-language-flag');
+        _flag.src = '/assets/images/flags/' + langCode + '.png';
+        _flag.alt = langCode;
+        return _flag;
     }
 }

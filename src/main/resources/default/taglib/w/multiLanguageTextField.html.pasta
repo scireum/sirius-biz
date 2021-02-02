@@ -84,7 +84,7 @@
 
         let field = new MultiLanguageField({
             fieldName: '___fieldName',
-            hasFallback: ___value.hasFallback(),
+            hasFallback: ___value.isWithFallback(),
             fallbackLabel: '@i18n("Language.fallback")',
             wrapperId: '___fieldId',
             modalId: '___modalId',
