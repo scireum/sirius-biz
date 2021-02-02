@@ -38,12 +38,12 @@
                name="@fieldId"
                type="@type"
                value="@value.fetchTextOrFallback(defaultLanguage)"
-               class="form-control input-block-level mls-input"
+               class="form-control input-block-level mls-input pointer"
                readonly
                @if (isFilled(placeholder)) { placeholder="@placeholder" }
                @if (autofocus) { autofocus }
                @if (isFilled(tabIndex)) { tabindex="@tabIndex" }/>
-        <span class="input-group-addon"><span class="fa fa-globe"></span></span>
+        <span class="input-group-addon pointer"><span class="fa fa-globe"></span></span>
     </div>
     <div id="@('hidden-inputs-' + fieldName)" class="mls-hidden-inputs">
     </div>
