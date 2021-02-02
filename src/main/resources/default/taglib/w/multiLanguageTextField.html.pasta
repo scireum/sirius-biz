@@ -162,6 +162,7 @@
     }
 
     function ___functionName () {
+        $modal.classList.add('modal-dialog-scrollable');
         $modal.modal({backdrop: 'static', keyboard: false}).show();
     }
 </script>
