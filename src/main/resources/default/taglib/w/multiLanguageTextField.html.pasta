@@ -85,18 +85,19 @@
             // globe icon
             return String.fromCodePoint(127758);
         } else {
-            return '<img src=\'/assets/images/flags/' + lang + '.png\' alt=\'' + lang + ' \'/>';
+            return '<img src=\'/assets/images/flags/' + langCode + '.png\' alt=\'' + langCode + ' \'/>';
         }
     }
 
-    function getLanguageName(lang) {
-        return validLanguages.find(object => object.code === lang).name;
+    function getLanguageName(langCode) {
+        return validLanguages.find(object => object.code === langCode).name;
     }
 
     $(document).ready(function() {
         // render modal body
         let $insert = $modal.find('.insert-point');
-        for (lang in validLanguages) {
+        for(let langIndex = 0; langIndex < validLanguages.length; langIndex++) {
+            let lang = validLanguages[langIndex];
             let $row = $('<div/>', {'class': 'row form-group'});
             let $flagAndLanguageColumn = $(document.createElement('div')).addClass('col-md-3 language-flag').html(getFlagImage(lang.code) + ' ' + getLanguageName(lang.code));
             let $inputColumn = $(document.createElement('div')).addClass('col-md-9');
