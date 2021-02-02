@@ -16,7 +16,7 @@
 <i:arg name="placeholder" type="String" default=""/>
 <i:arg name="tabIndex" type="String" default=""/>
 <i:arg name="defaultLanguage" type="String" default="@NLS.getCurrentLang()"/>
-<i:arg name="validLanguages" type="Set" default="@value.getValidLanguages()"/>
+<i:arg name="validLanguages" type="List" default="@value.getValidLanguages()"/>
 <i:arg name="manageLanguages" type="boolean" default="false"/>
 
 <i:pragma name="description" value="Renders a multi language text input field within a Wondergem template"/>
@@ -76,7 +76,7 @@
     if(hasFallback) {
         validLanguages.push({ 'code' : 'fallback', 'name' : '@i18n("Language.fallback")' });
     }
-    <i:for type="Set" var="lang" items="validLanguages">
+    <i:for type="List" var="lang" items="validLanguages">
         validLanguages.push({'code' : '@lang', 'name' : '@i18n("Language." + lang)' });
     </i:for>
 
