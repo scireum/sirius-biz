@@ -48,7 +48,7 @@ MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
 
     let _labelColumn = document.createElement('div');
     _labelColumn.classList.add('col-md-3');
-    _labelColumn.classList.add('language-flag');
+    _labelColumn.classList.add('mls-language-label');
     // TODO hacky
     _labelColumn.innerHTML = this.getFlagImage(langCode) + ' ' + langName;
     _row.appendChild(_labelColumn);
@@ -133,7 +133,6 @@ MultiLanguageField.prototype.getFlagImage = function (langCode) {
         // globe icon
         return String.fromCodePoint(127758);
     } else {
-        // TODO apply baseUrl
-        return '<img src=\'/assets/images/flags/' + langCode + '.png\' alt=\'' + langCode + ' \'/>';
+        return '<img class="mls-language-flag" src=\'/assets/images/flags/' + langCode + '.png\' alt=\'' + langCode + ' \'/>';
     }
 }

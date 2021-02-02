@@ -105,3 +105,13 @@
     }
   }
 }
+
+.mls-modal-inputs .mls-language-label {
+  display: flex;
+  height: 34px;
+  align-items: center;
+  
+  .mls-language-flag {
+    margin-right: 8px;
+  }
+}
