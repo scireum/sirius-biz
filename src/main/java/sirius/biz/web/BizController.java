@@ -21,6 +21,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.properties.BaseEntityRefProperty;
+import sirius.db.mixing.properties.MultiLanguageStringProperty;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
 import sirius.kernel.async.Tasks;
@@ -268,11 +269,20 @@ public class BizController extends BasicController {
         }
     }
 
+    private boolean shouldSkipComplexValues(BaseEntity<?> entity, Property property) {
+        if (property instanceof MultiLanguageStringProperty) {
+            String i18nPermission =
+                    ((MultiLanguageStringProperty) property).getMultiLanguageString(entity).getI18nPermission();
+            return Strings.isEmpty(i18nPermission) || tenants.getRequiredTenant().hasPermission(i18nPermission);
+        }
+        return false;
+    }
+
     private boolean tryLoadProperty(WebContext webContext, BaseEntity<?> entity, Property property) {
         String propertyName = property.getName();
 
         List<String> additionalFieldNames = property.computeAdditionalFieldNames(entity);
-        if (!additionalFieldNames.isEmpty()) {
+        if (!additionalFieldNames.isEmpty() && !shouldSkipComplexValues(entity, property)) {
             try {
                 property.parseComplexValues(entity,
                                             additionalFieldNames.stream()
