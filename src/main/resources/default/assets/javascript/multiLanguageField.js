@@ -39,6 +39,7 @@ function MultiLanguageField(options) {
 
     this.renderModalBody();
     this.updateHiddenFields();
+    this.updateLanguageManagementOptions();
 }
 
 MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
@@ -83,16 +84,17 @@ MultiLanguageField.prototype.renderModalBody = function () {
         let _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
 
         for (let langCode in this.validLanguages) {
-            // TODO intersection between existing languages in langObject and validLanguages
             let _language = document.createElement('li');
             _language.classList.add('pointer');
+            _language.dataset.lang = langCode;
             let _link = document.createElement('a');
             _link.textContent = this.validLanguages[langCode];
-            
+
             let me = this;
             _link.addEventListener('click', function () {
                 let _row = me.renderLanguageRow(langCode, me.validLanguages[langCode]);
                 _inputs.appendChild(_row);
+                me.updateLanguageManagementOptions();
             });
             _language.appendChild(_link);
             _addLanguageOptions.appendChild(_language);
@@ -122,6 +124,30 @@ MultiLanguageField.prototype.updateHiddenFields = function () {
 
         me._hiddenInputs.appendChild(_hiddenInput);
     })
+}
+
+MultiLanguageField.prototype.updateLanguageManagementOptions = function () {
+    if (!this.languageManagementEnabled) {
+        return;
+    }
+
+    let _addLanguageButton = this._modal.querySelector('.mls-add-language-button');
+
+    let _inputs = this._modal.querySelector('.mls-modal-inputs');
+    let _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
+    
+    _inputs.querySelectorAll('.row').forEach(function (_row) {
+        let lang = _row.querySelector('input').dataset.lang;
+        let _langOption = _addLanguageOptions.querySelector('li[data-lang="' + lang + '"]');
+        if (_langOption) {
+            _langOption.classList.add('hidden');
+        }
+    });
+    
+    let _selectableOption = _addLanguageOptions.querySelector('li:not(.hidden)');
+    if (!_selectableOption) {
+        _addLanguageButton.classList.add('hidden');
+    }
 }
 
 MultiLanguageField.prototype.getLanguageName = function (langCode) {
