@@ -41,86 +41,62 @@ function MultiLanguageField(options) {
     this.updateHiddenFields();
 }
 
+MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
+    let _row = document.createElement('div');
+    _row.classList.add('row');
+    _row.classList.add('form-group');
+
+    let _labelColumn = document.createElement('div');
+    _labelColumn.classList.add('col-md-3');
+    _labelColumn.classList.add('language-flag');
+    // TODO hacky
+    _labelColumn.innerHTML = this.getFlagImage(langCode) + ' ' + langName;
+    _row.appendChild(_labelColumn);
+
+    let _inputColumn = document.createElement('div');
+    _inputColumn.classList.add('col-md-9');
+    _row.appendChild(_inputColumn);
+
+    let _textInput = document.createElement('input');
+    _textInput.classList.add('form-control');
+    _textInput.type = 'text';
+    _textInput.dataset.lang = langCode;
+    _textInput.value = this.values[langCode] || '';
+    _inputColumn.appendChild(_textInput);
+
+    return _row;
+};
 MultiLanguageField.prototype.renderModalBody = function () {
     let _inputs = this._modal.querySelector('.mls-modal-inputs');
 
     for (let langCode in this.validLanguages) {
         let langName = this.validLanguages[langCode];
 
-        let _row = document.createElement('div');
-        _row.classList.add('row');
-        _row.classList.add('form-group');
+        let _row = this.renderLanguageRow(langCode, langName);
         _inputs.appendChild(_row);
-
-        let _labelColumn = document.createElement('div');
-        _labelColumn.classList.add('col-md-3');
-        _labelColumn.classList.add('language-flag');
-        // TODO hacky
-        _labelColumn.innerHTML = this.getFlagImage(langCode) + ' ' + langName;
-        _row.appendChild(_labelColumn);
-
-        let _inputColumn = document.createElement('div');
-        _inputColumn.classList.add('col-md-9');
-        _row.appendChild(_inputColumn);
-
-        let _textInput = document.createElement('input');
-        _textInput.classList.add('form-control');
-        _textInput.type = 'text';
-        _textInput.dataset.lang = langCode;
-        _textInput.value = this.values[langCode] || '';
-        _inputColumn.appendChild(_textInput);
     }
 
     if (this.languageManagementEnabled) {
-        let _addLanguageContainer = document.createElement('div');
-        _addLanguageContainer.classList.add('row');
-        _inputs.appendChild(_addLanguageContainer);
-        
-        let _addLanguageLink = document.createElement('a');
-        _addLanguageLink.classList.add('add-language');
-        // TODO hacky
-        _addLanguageLink.innerHTML = '<i class="fa fa-plus"></i> ' + this.addLanguageLabel;
-        
-        let me = this;
-        _addLanguageLink.addEventListener('click', function () {
-            let _row = document.createElement('div');
-            _row.classList.add('row');
-            _row.classList.add('form-group');
-            _inputs.appendChild(_row);
-            
-            let _languageColumn = document.createElement('div');
-            _languageColumn.classList.add('col-md-3');
-            _languageColumn.classList.add('language-flag');
-            _row.appendChild(_languageColumn);
-            
-            let _languageSelector = document.createElement('select');
-            _languageSelector.classList.add('form-control');
-            _languageSelector.addEventListener('change', function () {
-                let selectedLanguage = _languageSelector.value;
-                if (selectedLanguage !== '') {
-                    let _textInput = document.createElement('input');
-                    _textInput.classList.add('form-control');
-                    _textInput.type = 'text';
-                    _textInput.dataset.lang = selectedLanguage;
-                    _inputColumn.appendChild(_textInput);
-                }
-            });
-            _languageColumn.appendChild(_languageSelector);
+        let _addLanguageButton = this._modal.querySelector('.mls-add-language-button');
+        _addLanguageButton.classList.remove('hidden');
 
-            for (let langCode in me.validLanguages) {
-                // TODO intersection between existing languages in langObject and validLanguages
-                let _option = document.createElement('option');
-                _option.value = langCode;
-                _option.text = me.validLanguages[langCode];
-                _languageSelector.appendChild(+_option);
-            }
+        let _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
+
+        for (let langCode in this.validLanguages) {
+            // TODO intersection between existing languages in langObject and validLanguages
+            let _language = document.createElement('li');
+            _language.classList.add('pointer');
+            let _link = document.createElement('a');
+            _link.textContent = this.validLanguages[langCode];
             
-            let _inputColumn = document.createElement('div');
-            _inputColumn.classList.add('col-md-9');
-            _row.appendChild(_inputColumn);
-        });
-        
-        _addLanguageContainer.appendChild(_addLanguageLink);
+            let me = this;
+            _link.addEventListener('click', function () {
+                let _row = me.renderLanguageRow(langCode, me.validLanguages[langCode]);
+                _inputs.appendChild(_row);
+            });
+            _language.appendChild(_link);
+            _addLanguageOptions.appendChild(_language);
+        }
     }
 }
 

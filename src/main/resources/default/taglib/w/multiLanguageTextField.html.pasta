@@ -62,6 +62,14 @@
 
         </div>
         <w:modalFooter cancelKey="NLS.cancel">
+            <div class="mls-add-language-button btn-group dropup pull-left hidden">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-plus"></i> @i18n("MultiLanguageEditor.addLanguage")
+                </button>
+                <ul class="dropdown-menu"></ul>
+            </div>
+
             <a class="btn btn-primary ok-btn">@i18n("MultiLanguageEditor.apply")</a>
         </w:modalFooter>
     </w:modalBody>
