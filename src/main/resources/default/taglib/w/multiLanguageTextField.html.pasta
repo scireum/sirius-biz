@@ -68,12 +68,16 @@
     </w:modalBody>
 </w:modal>
 <script>
+    let hasFallback = ___value.hasFallback();
+    let manageLanguages = @manageLanguages;
     let $modal = $("#___modalName");
     let langObject = JSON.parse(<i:raw>'___value.getAsJSON()'</i:raw>);
-    let languages = [];
-    languages.push({ 'code' : 'fallback', 'name' : '@i18n("Language.fallback")' });
+    let validLanguages = [];
+    if(hasFallback) {
+        validLanguages.push({ 'code' : 'fallback', 'name' : '@i18n("Language.fallback")' });
+    }
     <i:for type="Set" var="lang" items="validLanguages">
-        languages.push({'code' : '@lang', 'name' : '@i18n("Language." + lang)' });
+        validLanguages.push({'code' : '@lang', 'name' : '@i18n("Language." + lang)' });
     </i:for>
 
     function getFlagImage(langCode) {
@@ -86,34 +90,58 @@
     }
 
     function getLanguageName(lang) {
-        return languages.find(object => object.code === lang).name;
+        return validLanguages.find(object => object.code === lang).name;
     }
 
     $(document).ready(function() {
         // render modal body
         let $insert = $modal.find('.insert-point');
-        for (lang in langObject) {
+        for (lang in validLanguages) {
             let $row = $('<div/>', {'class': 'row form-group'});
-            let $flagAndLanguageColumn = $(document.createElement('div')).addClass('col-md-3 language-flag').html(getFlagImage(lang) + ' ' + getLanguageName(lang));
+            let $flagAndLanguageColumn = $(document.createElement('div')).addClass('col-md-3 language-flag').html(getFlagImage(lang.code) + ' ' + getLanguageName(lang.code));
             let $inputColumn = $(document.createElement('div')).addClass('col-md-9');
             let $inputText = $('<input>', {
                 'type': 'text',
                 'data-lang': lang,
+                'placeholder' : '@i18n("MultiLanguageEditor.translation")',
                 'class': 'form-control',
                 'value': langObject[lang]
             }).appendTo($inputColumn);
             $row.append($flagAndLanguageColumn).append($inputColumn).appendTo($insert);
         }
 
-        <i:if test="manageLanguages">
+        if(manageLanguages) {
             let $addLanguageContainer = $('<div/>', {'class': 'row'});
             let $addLanguageLink = $(document.createElement('a')).addClass('add-language').html('<i class="fas fa-plus"></i> @i18n("MultiLanguageEditor.addLanguage")');
             $addLanguageLink.on('click', function (e) {
-                addLanguageRow();
+                let $insert = $modal.find('.insert-point');
+                let $row = $('<div/>', {'class': 'row form-group'});
+                let $languageSelector = $("<select></select>").addClass('form-control');
+                $languageSelector.append($('<option></option>').attr('value', '').text('@i18n("MultiLanguageEditor.pleaseSelect")'));
+                // todo intersection between existing languages in langObject and validLanguages
+                $.each(validLanguages, function(index, language) {
+                    $languageSelector.append($("<option></option>").attr('value', language.code).text(language.name));
+                });
+                let $languageColumn = $(document.createElement('div')).addClass('col-md-3 language-flag');
+                $languageSelector.appendTo($languageColumn);
+                let $inputColumn = $(document.createElement('div')).addClass('col-md-9');
+                $languageSelector.on('change', function() {
+                    let selectedLanguage = $languageSelector.val();
+                    if(selectedLanguage !== '') {
+                        let $inputText = $('<input>', {
+                            'type': 'text',
+                            'data-lang': selectedLanguage,
+                            'placeholder' : '@i18n("MultiLanguageEditor.translation")',
+                            'class': 'form-control'
+                        }).appendTo($inputColumn);
+                    }
+                })
+                $row.append($languageColumn).append($inputColumn).appendTo($insert);
+                $row.insertBefore($('.add-language'));
             })
             $addLanguageLink.appendTo($addLanguageContainer);
             $insert.append($addLanguageContainer);
-        </i:if>
+        }
         updateHiddenFields();
 
         // add/remove and fill hidden fields
@@ -123,42 +151,12 @@
         });
     });
 
-    // todo implement add row
-    function addLanguageRow() {
-        // todo check if there's already a language entry for lang
-        let $insert = $modal.find('.insert-point');
-        let $row = $('<div/>', {'class': 'row form-group'});
-        var $languageSelector = $("<select></select>");
-        $languageSelector.on('change', function(){setLanguage()})
-        $languageSelector.append($('<option></option>').attr('value', '').text('@i18n("MultiLanguageEditor.pleaseSelect")'));
-        $.each(languages, function(index, language){
-            $languageSelector.append($("<option></option>").attr("value", language.code).text(language.name));
-        });
-        let $languageColumn = $(document.createElement('div')).addClass('col-md-3 language-flag');
-        $languageSelector.appendTo($languageColumn);
-        let $inputColumn = $(document.createElement('div')).addClass('col-md-9');
-        // todo sync dropdown language with input text's data-lang attr on change
-        let $inputText = $('<input>', {
-            'type': 'text',
-            'data-lang': lang,
-            'class': 'form-control',
-            'value': undefined
-        }).appendTo($inputColumn);
-        $row.append($languageColumn).append($inputColumn).appendTo($insert);
-        $row.insertBefore($('.add-language'));
-    }
-
-    // todo set Language
-    function setLanguage() {
-
-    }
-
     function updateHiddenFields() {
         let $hiddenInputs = $('#hidden-inputs-___fieldName');
         $hiddenInputs.empty();
         $modal.find('input[data-lang]').each(function () {
             let lang = $(this).data('lang');
-            if (lang === 'fallback') {
+            if (hasFallback && lang === 'fallback') {
                 // also update main field
                 <i:raw>___("$('#" + id + "')").val($(this).val());</i:raw>
                 $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName').val($(this).val()));
