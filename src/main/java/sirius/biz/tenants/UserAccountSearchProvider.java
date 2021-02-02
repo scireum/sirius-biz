@@ -21,6 +21,7 @@ import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -32,7 +33,7 @@ import java.util.function.Consumer;
  * @param <T> specifies the effective entity type used to represent Tenants
  * @param <U> specifies the effective entity type used to represent UserAccounts
  */
-public abstract class UserAccountSearchProvider<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+public abstract class UserAccountSearchProvider<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         implements OpenSearchProvider {
 
     @Part
