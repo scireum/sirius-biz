@@ -23,6 +23,7 @@
 
 <i:local name="functionName" value="@('openMultiLanguageModal' + fieldName)"/>
 <i:local name="modalName" value="@('mls-modal-' + fieldName)"/>
+<i:local name="modalTitle" value="@NLS.fmtr('MultiLanguageEditor.title').set('labelKey', NLS.get(labelKey)).format()"/>
 
 <div class="col-xs-@smallSpan col-md-@span form-group @UserContext.get().signalFieldError(fieldName)">
     <i:if test="isFilled(label) || forceLabel">
@@ -55,7 +56,7 @@
     </i:if>
 </div>
 
-<w:modal name="@modalName" title="@label">
+<w:modal name="@modalName" title="@modalTitle" scrollable="true">
     <w:modalBody>
         <div class="insert-point">
 
@@ -91,7 +92,7 @@
         // render modal body
         let $insert = $modal.find('.insert-point');
         for (lang in langObject) {
-            let $row = $('<div/>', {'class': 'row'});
+            let $row = $('<div/>', {'class': 'row form-group'});
             let $flagAndLanguageColumn = $(document.createElement('div')).addClass('col-md-3 language-flag').html(getFlagImage(lang) + ' ' + getLanguageName(lang));
             let $inputColumn = $(document.createElement('div')).addClass('col-md-9');
             let $inputText = $('<input>', {
@@ -100,13 +101,17 @@
                 'class': 'form-control',
                 'value': langObject[lang]
             }).appendTo($inputColumn);
-            $row.append($flagAndLanguageColumn).append($inputColumn).append($('br')).appendTo($insert);
+            $row.append($flagAndLanguageColumn).append($inputColumn).appendTo($insert);
         }
 
         <i:if test="manageLanguages">
-            $insert.append($(document.createElement('a')).addClass('btn btn-secondary add-language').on('click', function (e) {
-            addLanguageRow();
-        }).text('@i18n("MultiLanguageEditor.addLanguage")'));
+            let $addLanguageContainer = $('<div/>', {'class': 'row'});
+            let $addLanguageLink = $(document.createElement('a')).addClass('add-language').html('<i class="fas fa-plus"></i> @i18n("MultiLanguageEditor.addLanguage")');
+            $addLanguageLink.on('click', function (e) {
+                addLanguageRow();
+            })
+            $addLanguageLink.appendTo($addLanguageContainer);
+            $insert.append($addLanguageContainer);
         </i:if>
         updateHiddenFields();
 
@@ -121,9 +126,10 @@
     function addLanguageRow() {
         // todo check if there's already a language entry for lang
         let $insert = $modal.find('.insert-point');
-        let $row = $('<div/>', {'class': 'row'});
+        let $row = $('<div/>', {'class': 'row form-group'});
         var $languageSelector = $("<select></select>");
         $languageSelector.on('change', function(){setLanguage()})
+        $languageSelector.append($('<option></option>').attr('value', '').text('@i18n("MultiLanguageEditor.pleaseSelect")'));
         $.each(languages, function(index, language){
             $languageSelector.append($("<option></option>").attr("value", language.code).text(language.name));
         });
@@ -137,7 +143,7 @@
             'class': 'form-control',
             'value': undefined
         }).appendTo($inputColumn);
-        $row.append($languageColumn).append($inputColumn).append($('br')).appendTo($insert);
+        $row.append($languageColumn).append($inputColumn).appendTo($insert);
         $row.insertBefore($('.add-language'));
     }
 
@@ -162,7 +168,6 @@
     }
 
     function ___functionName () {
-        $modal.classList.add('modal-dialog-scrollable');
         $modal.modal({backdrop: 'static', keyboard: false}).show();
     }
 </script>
