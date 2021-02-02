@@ -102,10 +102,10 @@
             let $inputColumn = $(document.createElement('div')).addClass('col-md-9');
             let $inputText = $('<input>', {
                 'type': 'text',
-                'data-lang': lang,
+                'data-lang': lang.code,
                 'placeholder' : '@i18n("MultiLanguageEditor.translation")',
                 'class': 'form-control',
-                'value': langObject[lang]
+                'value': langObject[lang.code]
             }).appendTo($inputColumn);
             $row.append($flagAndLanguageColumn).append($inputColumn).appendTo($insert);
         }
