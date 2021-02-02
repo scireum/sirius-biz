@@ -43,9 +43,10 @@
                @if (isFilled(placeholder)) { placeholder="@placeholder" }
                @if (autofocus) { autofocus }
                @if (isFilled(tabIndex)) { tabindex="@tabIndex" }/>
-        <span class="input-group-addon" onclick="@(functionName + '()')"><span class="fa fa-globe"></span></span>
-        <div id="@('hidden-inputs-' + fieldName)">
-        </div>
+        <span class="input-group-addon" data-toggle="modal" data-target="#___modalName"><span
+                class="fa fa-globe"></span></span>
+    </div>
+    <div id="@('hidden-inputs-' + fieldName)">
     </div>
 
     <i:if test="isFilled(help)">
@@ -165,9 +166,5 @@
                 $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName-' + lang).val($(this).val()));
             }
         });
-    }
-
-    function ___functionName () {
-        $modal.modal({backdrop: 'static', keyboard: false}).show();
     }
 </script>
