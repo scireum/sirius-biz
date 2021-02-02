@@ -23,7 +23,6 @@
 
 <i:local name="functionName" value="@('openMultiLanguageModal' + fieldName)"/>
 <i:local name="modalName" value="@('mls-modal-' + fieldName)"/>
-<i:local name="modalTitle" value="@NLS.fmtr('MultiLanguageEditor.title').set('labelKey', NLS.get(labelKey)).format()"/>
 
 <div class="col-xs-@smallSpan col-md-@span form-group @UserContext.get().signalFieldError(fieldName)">
     <i:if test="isFilled(label) || forceLabel">
@@ -57,7 +56,7 @@
     </i:if>
 </div>
 
-<w:modal name="@modalName" title="@modalTitle" scrollable="true">
+<w:modal name="@modalName" title="@label" scrollable="true">
     <w:modalBody>
         <div class="insert-point">
 
@@ -113,7 +112,7 @@
 
         if(manageLanguages) {
             let $addLanguageContainer = $('<div/>', {'class': 'row'});
-            let $addLanguageLink = $(document.createElement('a')).addClass('add-language').html('<i class="fas fa-plus"></i> @i18n("MultiLanguageEditor.addLanguage")');
+            let $addLanguageLink = $(document.createElement('a')).addClass('add-language').html('<i class="fa fa-plus"></i> @i18n("MultiLanguageEditor.addLanguage")');
             $addLanguageLink.on('click', function (e) {
                 let $insert = $modal.find('.insert-point');
                 let $row = $('<div/>', {'class': 'row form-group'});
