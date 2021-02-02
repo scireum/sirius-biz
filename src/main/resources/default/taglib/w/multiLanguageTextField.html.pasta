@@ -12,7 +12,7 @@
 <i:arg name="adminOnly" type="boolean" default="false"/>
 <i:arg name="autofocus" type="boolean" default="false"/>
 <i:arg name="type" type="String" default="text"/>
-<i:arg name="id" type="String" default="@('mls-field-' + fieldName)"/>
+<i:arg name="id" type="String" default="@generateId()"/>
 <i:arg name="placeholder" type="String" default=""/>
 <i:arg name="tabIndex" type="String" default=""/>
 <i:arg name="defaultLanguage" type="String" default="@NLS.getCurrentLang()"/>
@@ -22,9 +22,10 @@
 <i:pragma name="description" value="Renders a multi language text input field within a Wondergem template"/>
 
 <i:local name="functionName" value="@('openMultiLanguageModal' + fieldName)"/>
-<i:local name="modalName" value="@('mls-modal-' + fieldName)"/>
+<i:local name="fieldId" value="@('mls-field-' + id)"/>
+<i:local name="modalId" value="@('mls-modal-' + id)"/>
 
-<div class="col-xs-@smallSpan col-md-@span form-group @UserContext.get().signalFieldError(fieldName)">
+<div id="@fieldId" class="col-xs-@smallSpan col-md-@span form-group @UserContext.get().signalFieldError(fieldName)">
     <i:if test="isFilled(label) || forceLabel">
         <label>
         <span class="@if (required) { input-required } @if (adminOnly) { admin-link }">
@@ -32,19 +33,19 @@
         </span>
         </label>
     </i:if>
-    <div class="input-group" id="@('insert-point-' + fieldName)" data-toggle="modal" data-target="#___modalName">
-        <input id="@id"
-               name="@fieldName"
+    <div class="input-group" id="@('insert-point-' + fieldName)" data-toggle="modal" data-target="#___modalId">
+        <input id="@fieldId"
+               name="@fieldId"
                type="@type"
                value="@value.fetchTextOrFallback(defaultLanguage)"
-               class="form-control input-block-level"
+               class="form-control input-block-level mls-input"
                readonly
                @if (isFilled(placeholder)) { placeholder="@placeholder" }
                @if (autofocus) { autofocus }
                @if (isFilled(tabIndex)) { tabindex="@tabIndex" }/>
         <span class="input-group-addon"><span class="fa fa-globe"></span></span>
     </div>
-    <div id="@('hidden-inputs-' + fieldName)">
+    <div id="@('hidden-inputs-' + fieldName)" class="mls-hidden-inputs">
     </div>
 
     <i:if test="isFilled(help)">
@@ -55,9 +56,9 @@
     </i:if>
 </div>
 
-<w:modal name="@modalName" title="@label" scrollable="true">
+<w:modal name="@modalId" title="@label" scrollable="true">
     <w:modalBody>
-        <div class="insert-point">
+        <div class="mls-modal-inputs">
 
         </div>
         <w:modalFooter cancelKey="NLS.cancel">
@@ -65,103 +66,24 @@
         </w:modalFooter>
     </w:modalBody>
 </w:modal>
+
 <script>
-    let hasFallback = ___value.hasFallback();
-    let manageLanguages = @manageLanguages;
-    let $modal = $("#___modalName");
-    let langObject = JSON.parse(<i:raw>'___value.getAsJSON()'</i:raw>);
-    let validLanguages = [];
-    if(hasFallback) {
-        validLanguages.push({ 'code' : 'fallback', 'name' : '@i18n("Language.fallback")' });
-    }
-    <i:for type="List" var="lang" items="validLanguages">
-        validLanguages.push({'code' : '@lang', 'name' : '@i18n("Language." + lang)' });
-    </i:for>
+    $(document).ready(function () {
+        let validLanguages = {};
+        <i:for type="List" var="lang" items="validLanguages">
+            validLanguages['@lang'] = '@i18n("Language." + lang)';
+        </i:for>
 
-    function getFlagImage(langCode) {
-        if (langCode === 'fallback') {
-            // globe icon
-            return String.fromCodePoint(127758);
-        } else {
-            return '<img src=\'/assets/images/flags/' + langCode + '.png\' alt=\'' + langCode + ' \'/>';
-        }
-    }
-
-    function getLanguageName(langCode) {
-        return validLanguages.find(object => object.code === langCode).name;
-    }
-
-    $(document).ready(function() {
-        // render modal body
-        let $insert = $modal.find('.insert-point');
-        for(let langIndex = 0; langIndex < validLanguages.length; langIndex++) {
-            let lang = validLanguages[langIndex];
-            let $row = $('<div/>', {'class': 'row form-group'});
-            let $flagAndLanguageColumn = $(document.createElement('div')).addClass('col-md-3 language-flag').html(getFlagImage(lang.code) + ' ' + getLanguageName(lang.code));
-            let $inputColumn = $(document.createElement('div')).addClass('col-md-9');
-            let $inputText = $('<input>', {
-                'type': 'text',
-                'data-lang': lang.code,
-                'placeholder' : '@i18n("MultiLanguageEditor.translation")',
-                'class': 'form-control',
-                'value': langObject[lang.code]
-            }).appendTo($inputColumn);
-            $row.append($flagAndLanguageColumn).append($inputColumn).appendTo($insert);
-        }
-
-        if(manageLanguages) {
-            let $addLanguageContainer = $('<div/>', {'class': 'row'});
-            let $addLanguageLink = $(document.createElement('a')).addClass('add-language').html('<i class="fa fa-plus"></i> @i18n("MultiLanguageEditor.addLanguage")');
-            $addLanguageLink.on('click', function (e) {
-                let $insert = $modal.find('.insert-point');
-                let $row = $('<div/>', {'class': 'row form-group'});
-                let $languageSelector = $("<select></select>").addClass('form-control');
-                $languageSelector.append($('<option></option>').attr('value', '').text('@i18n("MultiLanguageEditor.pleaseSelect")'));
-                // todo intersection between existing languages in langObject and validLanguages
-                $.each(validLanguages, function(index, language) {
-                    $languageSelector.append($("<option></option>").attr('value', language.code).text(language.name));
-                });
-                let $languageColumn = $(document.createElement('div')).addClass('col-md-3 language-flag');
-                $languageSelector.appendTo($languageColumn);
-                let $inputColumn = $(document.createElement('div')).addClass('col-md-9');
-                $languageSelector.on('change', function() {
-                    let selectedLanguage = $languageSelector.val();
-                    if(selectedLanguage !== '') {
-                        let $inputText = $('<input>', {
-                            'type': 'text',
-                            'data-lang': selectedLanguage,
-                            'placeholder' : '@i18n("MultiLanguageEditor.translation")',
-                            'class': 'form-control'
-                        }).appendTo($inputColumn);
-                    }
-                })
-                $row.append($languageColumn).append($inputColumn).appendTo($insert);
-                $row.insertBefore($('.add-language'));
-            })
-            $addLanguageLink.appendTo($addLanguageContainer);
-            $insert.append($addLanguageContainer);
-        }
-        updateHiddenFields();
-
-        // add/remove and fill hidden fields
-        $modal.find('.ok-btn').on('click', function (e) {
-            $modal.modal('hide');
-            updateHiddenFields();
+        let field = new MultiLanguageField({
+            fieldName: '___fieldName',
+            hasFallback: ___value.hasFallback(),
+            fallbackLabel: '@i18n("Language.fallback")',
+            wrapperId: '___fieldId',
+            modalId: '___modalId',
+            values: JSON.parse(<i:raw>'___value.getAsJSON()'</i:raw>),
+            validLanguages: validLanguages,
+            languageManagementEnabled: ___manageLanguages,
+            addLanguageLabel: '@i18n("MultiLanguageEditor.addLanguage")'
         });
     });
-
-    function updateHiddenFields() {
-        let $hiddenInputs = $('#hidden-inputs-___fieldName');
-        $hiddenInputs.empty();
-        $modal.find('input[data-lang]').each(function () {
-            let lang = $(this).data('lang');
-            if (hasFallback && lang === 'fallback') {
-                // also update main field
-                <i:raw>___("$('#" + id + "')").val($(this).val());</i:raw>
-                $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName').val($(this).val()));
-            } else {
-                $hiddenInputs.append($(document.createElement('input')).attr('type', 'hidden').attr('name', '___fieldName-' + lang).val($(this).val()));
-            }
-        });
-    }
 </script>
