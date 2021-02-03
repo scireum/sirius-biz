@@ -17,6 +17,7 @@ import sirius.kernel.di.std.Register;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -49,5 +50,16 @@ public class JupiterSyncJob extends SimpleBatchProcessJobFactory {
     @Override
     public String getName() {
         return "jupiter-sync";
+    }
+
+    @Override
+    public String getLabel() {
+        return "Synchronize Jupiter Instances";
+    }
+
+    @Nullable
+    @Override
+    public String getDescription() {
+        return "Pushes the configuration and repository contents into all attached Jupiter instances. Note that this will also be done every night and during system startup.";
     }
 }
