@@ -56,7 +56,7 @@
     </i:if>
 </div>
 
-<w:modal name="@modalId" title="@label" scrollable="true">
+<w:modal name="@modalId" title="@label">
     <w:modalBody>
         <div class="mls-modal-inputs">
 
