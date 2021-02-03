@@ -16,7 +16,6 @@ function MultiLanguageField(options) {
     this.modalId = options.modalId;
     this.values = options.values;
     this.languageManagementEnabled = options.languageManagementEnabled;
-    this.addLanguageLabel = options.addLanguageLabel;
 
     this.validLanguages = {};
     if (this.hasFallback) {

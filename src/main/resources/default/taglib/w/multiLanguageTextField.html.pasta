@@ -17,11 +17,10 @@
 <i:arg name="tabIndex" type="String" default=""/>
 <i:arg name="defaultLanguage" type="String" default="@NLS.getCurrentLang()"/>
 <i:arg name="validLanguages" type="List" default="@value.getValidLanguages()"/>
-<i:arg name="manageLanguages" type="boolean" default="false"/>
+<i:arg name="languageManagementEnabled" type="boolean" default="false"/>
 
 <i:pragma name="description" value="Renders a multi language text input field within a Wondergem template"/>
 
-<i:local name="functionName" value="@('openMultiLanguageModal' + fieldName)"/>
 <i:local name="fieldId" value="@('mls-field-' + id)"/>
 <i:local name="modalId" value="@('mls-modal-' + id)"/>
 
@@ -33,7 +32,7 @@
         </span>
         </label>
     </i:if>
-    <div class="input-group" id="@('insert-point-' + fieldName)" data-toggle="modal" data-target="#___modalId">
+    <div class="input-group" data-toggle="modal" data-target="#___modalId">
         <input id="@fieldId"
                name="@fieldId"
                type="@type"
@@ -94,7 +93,6 @@
             values: JSON.parse(<i:raw>'___value.getAsJSON()'</i:raw>),
             validLanguages: validLanguages,
             languageManagementEnabled: ___manageLanguages,
-            addLanguageLabel: '@i18n("MultiLanguageEditor.addLanguage")'
         });
     });
 </script>
