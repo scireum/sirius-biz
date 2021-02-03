@@ -36,7 +36,7 @@
         <input id="@fieldId"
                name="@fieldId"
                type="@type"
-               value="@value.fetchTextOrFallback(defaultLanguage)"
+               value="@value.fetchText(defaultLanguage, 'fallback')"
                class="form-control input-block-level mls-input pointer"
                readonly
                @if (isFilled(placeholder)) { placeholder="@placeholder" }
