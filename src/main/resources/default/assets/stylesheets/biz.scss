@@ -110,25 +110,32 @@ input.form-control.mls-input {
   background-color: #ffffff;
 }
 
-.mls-modal .modal-body {
-  max-height: calc(100vh - 182px);
-  overflow: auto;
-}
-
-.mls-modal-inputs .mls-language-label {
-  display: flex;
-  height: 34px;
-  align-items: center;
-  
-  .mls-language-flag {
-    margin-right: 8px;
+.mls-modal {
+  .modal-body {
+    max-height: calc(100vh - 182px);
+    overflow: auto;
   }
-  
-  .mls-language-flag {
-    margin-right: 8px;
-    width: 12px;
-    height: 8px;
-    font-size: 10px;
-    line-height: 10px;
+
+  .mls-add-language-button .dropdown-menu {
+    max-height: 140px;
+    overflow: auto;
+  }
+
+  .mls-modal-inputs .mls-language-label {
+    display: flex;
+    height: 34px;
+    align-items: center;
+
+    .mls-language-flag {
+      margin-right: 8px;
+    }
+
+    .mls-language-flag {
+      margin-right: 8px;
+      width: 12px;
+      height: 8px;
+      font-size: 10px;
+      line-height: 10px;
+    }
   }
 }
