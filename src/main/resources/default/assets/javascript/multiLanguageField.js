@@ -80,7 +80,7 @@ MultiLanguageField.prototype.renderModalBody = function () {
     for (let langCode in this.validLanguages) {
         let langName = this.validLanguages[langCode];
 
-        if (!this.languageManagementEnabled || this.values[langCode]) {
+        if (!this.languageManagementEnabled || langCode === this.FALLBACK_CODE || this.values[langCode]) {
             let _row = this.renderLanguageRow(langCode, langName);
             this._modalInputs.appendChild(_row);
             rowsAdded = true;
