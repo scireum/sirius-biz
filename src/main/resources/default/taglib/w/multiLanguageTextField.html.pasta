@@ -92,7 +92,7 @@
             modalId: '___modalId',
             values: JSON.parse(<i:raw>'___value.getAsJSON()'</i:raw>),
             validLanguages: validLanguages,
-            languageManagementEnabled: ___manageLanguages,
+            languageManagementEnabled: ___languageManagementEnabled,
         });
     });
 </script>
