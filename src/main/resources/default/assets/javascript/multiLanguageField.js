@@ -183,6 +183,7 @@ MultiLanguageField.prototype.renderFlag = function (langCode) {
         _flag.classList.add('mls-language-flag');
         _flag.src = '/assets/images/flags/' + langCode + '.png';
         _flag.alt = langCode;
+        _flag.title = langCode;
         return _flag;
     }
 }
