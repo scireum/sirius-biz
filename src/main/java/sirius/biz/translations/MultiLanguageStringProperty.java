@@ -10,6 +10,7 @@ package sirius.biz.translations;
 
 import com.alibaba.fastjson.JSONObject;
 import org.bson.Document;
+import sirius.biz.web.ComplexLoadProperty;
 import sirius.db.es.ESPropertyInfo;
 import sirius.db.es.IndexMappings;
 import sirius.db.es.annotations.IndexMode;
@@ -27,16 +28,18 @@ import sirius.kernel.commons.Values;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
+import sirius.web.http.WebContext;
+import sirius.web.security.UserContext;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * Represents a {@link MultiLanguageString} field in a {@link sirius.db.mongo.MongoEntity}.
@@ -44,7 +47,7 @@ import java.util.stream.Collectors;
  * Multi-Language Strings are stored as a list of nested objects which contain a
  * <tt>lang</tt> and a <tt>text</tt> property.
  */
-public class MultiLanguageStringProperty extends BaseMapProperty implements ESPropertyInfo {
+public class MultiLanguageStringProperty extends BaseMapProperty implements ESPropertyInfo, ComplexLoadProperty {
 
     private static final String LANGUAGE_PROPERTY = "lang";
     private static final String TEXT_PROPERTY = "text";
@@ -228,35 +231,33 @@ public class MultiLanguageStringProperty extends BaseMapProperty implements ESPr
         return true;
     }
 
+    @Override
+    public boolean loadFromWebContext(WebContext webContext, BaseEntity<?> entity) {
+        MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
+        if (multiLanguageString.isWithFallback()) {
+            if (webContext.hasParameter(getPropertyName())) {
+                multiLanguageString.setFallback(webContext.getParameter(getPropertyName()));
+            }
+        }
+
+        if (UserContext.getCurrentUser().hasPermission(multiLanguageString.getI18nPermission())) {
+            Collection<String> languagesToLoad = multiLanguageString.getValidLanguages().isEmpty() ?
+                                                 NLS.getSupportedLanguages() :
+                                                 multiLanguageString.getValidLanguages();
+            languagesToLoad.forEach(code -> {
+                String parameterName = getPropertyName() + "-" + code;
+                if (webContext.hasParameter(parameterName)) {
+                    multiLanguageString.addText(code, webContext.getParameter(parameterName));
+                }
+            });
+        }
+
+        return true;
+    }
 
     @Override
     public void parseValues(Object entity, Values values) {
         MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
-        if (!multiLanguageString.isWithFallback()) {
-            return;
-        }
-        Map<String, String> mlsMap = new HashMap<>(multiLanguageString.data());
-        mlsMap.put(MultiLanguageString.FALLBACK_KEY, values.at(0).getString());
-        setValue(entity, mlsMap);
-    }
-
-
-    @Override
-    public void parseComplexValues(Object entity, Map<String, Value> values) {
-        setValue(entity,
-                 values.entrySet()
-                       .stream()
-                       .collect(Collectors.toMap(entry -> Strings.split(entry.getKey(), "-").getSecond(),
-                                                 entry -> entry.getValue().asString())));
-    }
-
-    @Override
-    public List<String> computeAdditionalFieldNames(BaseEntity<?> entity) {
-        MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
-        List<String> validLanguages = multiLanguageString.getValidLanguages();
-        if (validLanguages.isEmpty()) {
-            validLanguages = new ArrayList<>(NLS.getSupportedLanguages());
-        }
-        return validLanguages.stream().map(language -> getName() + "-" + language).collect(Collectors.toList());
+        multiLanguageString.setFallback(values.at(0).getString());
     }
 }
