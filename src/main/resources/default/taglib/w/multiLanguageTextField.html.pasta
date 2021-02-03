@@ -61,7 +61,7 @@
         <div class="mls-modal-inputs">
 
         </div>
-        <w:modalFooter cancelKey="NLS.cancel">
+        <w:modalFooter>
             <div class="mls-add-language-button btn-group dropup pull-left hidden">
                 <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">
@@ -70,7 +70,7 @@
                 <ul class="dropdown-menu"></ul>
             </div>
 
-            <a class="btn btn-primary ok-btn">@i18n("MultiLanguageEditor.apply")</a>
+            <a class="btn btn-primary ok-btn">@i18n("NLS.close")</a>
         </w:modalFooter>
     </w:modalBody>
 </w:modal>
