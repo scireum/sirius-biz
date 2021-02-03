@@ -15,6 +15,7 @@ import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -24,16 +25,19 @@ import java.util.stream.Collectors;
 /**
  * Provides a language-text map as property value.
  *
- * @see sirius.db.mixing.properties.MultiLanguageStringProperty
+ * @see MultiLanguageStringProperty
  */
 public class MultiLanguageString extends SafeMap<String, String> {
 
+    /**
+     * Represents tha fake language code used to store the fallback value.
+     * <p>
+     * This value is used if a concrete translation is missing (if {@link #isWithFallback()} is <tt>true</tt>).
+     */
     public static final String FALLBACK_KEY = "fallback";
 
     private List<String> validLanguages = Collections.emptyList();
-
     private String i18nPermission;
-
     private boolean withFallback;
 
     /**
@@ -77,7 +81,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
     @Deprecated
     public MultiLanguageString(boolean withFallback, @Nonnull List<String> validLanguages) {
         this.withFallback = withFallback;
-        this.validLanguages = Collections.unmodifiableList(validLanguages);
+        this.validLanguages = new ArrayList<>(validLanguages);
     }
 
     /**
@@ -113,7 +117,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
     }
 
     public List<String> getValidLanguages() {
-        return validLanguages;
+        return Collections.unmodifiableList(validLanguages);
     }
 
     public String getI18nPermission() {
@@ -166,13 +170,38 @@ public class MultiLanguageString extends SafeMap<String, String> {
      * @param text the text to be used as fallback
      * @return the object itself for fluent method calls
      * @throws IllegalStateException if this field does not support fallbacks
+     * @deprecated use <tt>setFallback</tt>
      */
+    @Deprecated
     public MultiLanguageString addFallback(String text) {
-        if (!withFallback) {
+        return setFallback(text);
+    }
+
+    /**
+     * Adds the given text as a fallback to the map.
+     * <p>
+     * If a null text is given it will be ignored, if the list already contains an entry it will be removed.
+     *
+     * @param text the text to be used as fallback
+     * @return the object itself for fluent method calls
+     * @throws IllegalStateException if this field does not support fallbacks
+     */
+    public MultiLanguageString setFallback(String text) {
+        if (!withFallback && Strings.isFilled(text)) {
             throw new IllegalStateException(
                     "Can not call addFallback on a MultiLanguageString without fallback enabled.");
         }
         return addText(FALLBACK_KEY, text);
+    }
+
+    /**
+     * Returns the fallback value.
+     *
+     * @return the fallback value or <tt>null</tt> if there is none.
+     */
+    @Nullable
+    public String getFallback() {
+        return data().get(FALLBACK_KEY);
     }
 
     /**
