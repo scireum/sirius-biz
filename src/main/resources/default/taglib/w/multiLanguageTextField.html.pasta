@@ -58,6 +58,9 @@
 
 <w:modal name="@modalId" title="@label">
     <w:modalBody>
+        <div class="mls-modal-placeholder hidden">
+            @i18n("MultiLanguageEditor.placeholder")
+        </div>
         <div class="mls-modal-inputs">
 
         </div>

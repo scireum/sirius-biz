@@ -31,6 +31,9 @@ function MultiLanguageField(options) {
     this._hiddenInputs = this._wrapper.querySelector('.mls-hidden-inputs');
     this._modal = document.getElementById(this.modalId);
 
+    this._modalInputs = this._modal.querySelector('.mls-modal-inputs');
+    this._modalPlaceholder = this._modal.querySelector('.mls-modal-placeholder')
+
     const me = this;
 
     $(me._modal).on('hidden.bs.modal', function () {
@@ -73,16 +76,22 @@ MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
     return _row;
 };
 MultiLanguageField.prototype.renderModalBody = function () {
-    const _inputs = this._modal.querySelector('.mls-modal-inputs');
-
+    let rowsAdded = false;
     for (let langCode in this.validLanguages) {
         let langName = this.validLanguages[langCode];
 
-        let _row = this.renderLanguageRow(langCode, langName);
-        _inputs.appendChild(_row);
+        if (!this.languageManagementEnabled || this.values[langCode]) {
+            let _row = this.renderLanguageRow(langCode, langName);
+            this._modalInputs.appendChild(_row);
+            rowsAdded = true;
+        }
     }
 
     if (this.languageManagementEnabled) {
+        if (!rowsAdded) {
+            this._modalPlaceholder.classList.remove('hidden');
+        }
+
         const _addLanguageButton = this._modal.querySelector('.mls-add-language-button');
         _addLanguageButton.classList.remove('hidden');
 
@@ -98,7 +107,8 @@ MultiLanguageField.prototype.renderModalBody = function () {
             let me = this;
             _link.addEventListener('click', function () {
                 let _row = me.renderLanguageRow(langCode, me.validLanguages[langCode]);
-                _inputs.appendChild(_row);
+                me._modalInputs.appendChild(_row);
+                me._modalPlaceholder.classList.add('hidden');
                 me.updateLanguageManagementOptions();
             });
             _language.appendChild(_link);
@@ -138,10 +148,9 @@ MultiLanguageField.prototype.updateLanguageManagementOptions = function () {
 
     const _addLanguageButton = this._modal.querySelector('.mls-add-language-button');
 
-    const _inputs = this._modal.querySelector('.mls-modal-inputs');
     const _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
 
-    _inputs.querySelectorAll('.row').forEach(function (_row) {
+    this._modalInputs.querySelectorAll('.row').forEach(function (_row) {
         let lang = _row.querySelector('input').dataset.lang;
         let _langOption = _addLanguageOptions.querySelector('li[data-lang="' + lang + '"]');
         if (_langOption) {
