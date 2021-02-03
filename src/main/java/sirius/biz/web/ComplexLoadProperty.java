@@ -13,7 +13,7 @@ import sirius.web.http.WebContext;
 
 /**
  * Marks {@link sirius.db.mixing.Property properties} which are aware of {@link WebContext web contexts} and handle
- * their save logik themselves.
+ * their save logic themselves.
  * <p>
  * This is used by <tt>BizController#tryLoadProperty(WebContext, BaseEntity, Property)</tt> to delegate loading
  * to the property itself.
