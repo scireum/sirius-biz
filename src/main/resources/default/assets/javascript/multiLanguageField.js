@@ -32,10 +32,10 @@ function MultiLanguageField(options) {
     this._modal = document.getElementById(this.modalId);
 
     const me = this;
-    this._modal.querySelector('.ok-btn').addEventListener('click', function () {
-        $(me._modal).modal('hide');
+
+    $(me._modal).on('hidden.bs.modal', function () {
         me.updateHiddenFields();
-    });
+    })
 
     this.renderModalBody();
     this.updateHiddenFields();
