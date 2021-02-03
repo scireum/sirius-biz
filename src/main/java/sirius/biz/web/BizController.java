@@ -269,41 +269,29 @@ public class BizController extends BasicController {
     }
 
     private boolean tryLoadProperty(WebContext webContext, BaseEntity<?> entity, Property property) {
-        String propertyName = property.getName();
-
-        List<String> additionalFieldNames = property.computeAdditionalFieldNames(entity);
-        if (!additionalFieldNames.isEmpty()) {
+        if (property instanceof ComplexLoadProperty) {
+            return ((ComplexLoadProperty) property).loadFromWebContext(webContext, entity);
+        } else {
+            String propertyName = property.getName();
+            if (!webContext.hasParameter(propertyName) && !webContext.hasParameter(propertyName
+                                                                                   + CHECKBOX_PRESENCE_MARKER)) {
+                // If the parameter is not present in the request we just skip it to prevent resetting the field to null
+                return true;
+            }
+            Value parameterValue = webContext.get(propertyName);
             try {
-                property.parseComplexValues(entity,
-                                            additionalFieldNames.stream()
-                                                                .collect(Collectors.toMap(param -> param,
-                                                                                          param -> webContext.get(param))));
+                property.parseValues(entity,
+                                     Values.of(parameterValue.get(List.class,
+                                                                  Collections.singletonList(parameterValue.get()))));
                 ensureTenantMatch(entity, property);
             } catch (HandledException exception) {
-                // todo SIRI-266 which value to set here in case of an error? several values may be delivered as a map.
-                UserContext.setFieldError(propertyName, "");
+                UserContext.setFieldError(propertyName, parameterValue);
                 UserContext.setErrorMessage(propertyName, exception.getMessage());
                 return false;
             }
-        }
 
-        if (!webContext.hasParameter(propertyName) && !webContext.hasParameter(propertyName
-                                                                               + CHECKBOX_PRESENCE_MARKER)) {
-            // If the parameter is not present in the request we just skip it to prevent resetting the field to null
             return true;
         }
-        Value parameterValue = webContext.get(propertyName);
-        try {
-            property.parseValues(entity,
-                                 Values.of(parameterValue.get(List.class,
-                                                              Collections.singletonList(parameterValue.get()))));
-            ensureTenantMatch(entity, property);
-        } catch (HandledException exception) {
-            UserContext.setFieldError(propertyName, parameterValue);
-            UserContext.setErrorMessage(propertyName, exception.getMessage());
-            return false;
-        }
-        return true;
     }
 
     private void ensureTenantMatch(BaseEntity<?> entity, Property property) {
