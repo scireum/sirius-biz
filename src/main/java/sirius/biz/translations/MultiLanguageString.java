@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 public class MultiLanguageString extends SafeMap<String, String> {
 
     /**
-     * Represents tha fake language code used to store the fallback value.
+     * Represents the fake language code used to store the fallback value.
      * <p>
      * This value is used if a concrete translation is missing (if {@link #isWithFallback()} is <tt>true</tt>).
      */
