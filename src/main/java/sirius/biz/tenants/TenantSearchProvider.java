@@ -20,6 +20,7 @@ import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.function.Consumer;
 
 /**
@@ -29,7 +30,8 @@ import java.util.function.Consumer;
  * @param <I> the type of database IDs used by the concrete implementation
  * @param <T> specifies the effective entity type used to represent Tenants
  */
-public abstract class TenantSearchProvider<I, T extends BaseEntity<I> & Tenant<I>> implements OpenSearchProvider {
+public abstract class TenantSearchProvider<I extends Serializable, T extends BaseEntity<I> & Tenant<I>>
+        implements OpenSearchProvider {
 
     @Part
     private Tenants<I, T, ?> tenants;

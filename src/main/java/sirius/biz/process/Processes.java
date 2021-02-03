@@ -16,6 +16,7 @@ import sirius.biz.process.logs.ProcessLogType;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.storage.layer2.Blob;
+import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.db.mixing.IntegrityConstraintFailedException;
 import sirius.db.mixing.OptimisticLockException;
@@ -220,6 +221,9 @@ public class Processes {
      * Executes the given task in the standby process of the given type, for the given tenant.
      * <p>
      * If no matching standby process exists, one will be created.
+     * <p>
+     * Note that {@link Tenants#getSystemTenantId()} and {@link Tenants#getSystemTenantName()} can be used for
+     * system tasks.
      *
      * @param type               the type of the standby process to find or create
      * @param titleSupplier      a supplier which generates a title if the process has to be created

@@ -155,8 +155,8 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         }
 
         try {
-            String value =
-                    redis.query(() -> "Check if " + name + " is enabled", db -> db.get(name + EXECUTION_ENABLED_SUFFIX));
+            String value = redis.query(() -> "Check if " + name + " is enabled",
+                                       db -> db.get(name + EXECUTION_ENABLED_SUFFIX));
 
             return !STATE_DISABLED.equals(value);
         } catch (Exception e) {
@@ -426,7 +426,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
     public List<BackgroundInfo> getClusterBackgroundInfo() {
         List<BackgroundInfo> result = new ArrayList<>();
         result.add(getLocalBackgroundInfo());
-        clusterManager.callEachNode("/system/cluster/background")
+        clusterManager.callEachNode("/system/cluster/background/" + clusterManager.getClusterAPIToken())
                       .map(this::parseBackgroundInfos)
                       .collect(Lambdas.into(result));
 
