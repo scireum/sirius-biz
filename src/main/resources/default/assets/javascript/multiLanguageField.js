@@ -31,7 +31,7 @@ function MultiLanguageField(options) {
     this._hiddenInputs = this._wrapper.querySelector('.mls-hidden-inputs');
     this._modal = document.getElementById(this.modalId);
 
-    let me = this;
+    const me = this;
     this._modal.querySelector('.ok-btn').addEventListener('click', function () {
         $(me._modal).modal('hide');
         me.updateHiddenFields();
@@ -43,27 +43,27 @@ function MultiLanguageField(options) {
 }
 
 MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
-    let _row = document.createElement('div');
+    const _row = document.createElement('div');
     _row.classList.add('row');
     _row.classList.add('form-group');
 
-    let _labelColumn = document.createElement('div');
+    const _labelColumn = document.createElement('div');
     _labelColumn.classList.add('col-md-3');
     _labelColumn.classList.add('mls-language-label');
     _row.appendChild(_labelColumn);
-    
+
     const _flag = this.renderFlag(langCode);
     _labelColumn.appendChild(_flag);
-    
+
     const _name = document.createElement('span');
     _name.textContent = langName;
     _labelColumn.appendChild(_name);
 
-    let _inputColumn = document.createElement('div');
+    const _inputColumn = document.createElement('div');
     _inputColumn.classList.add('col-md-9');
     _row.appendChild(_inputColumn);
 
-    let _textInput = document.createElement('input');
+    const _textInput = document.createElement('input');
     _textInput.classList.add('form-control');
     _textInput.type = 'text';
     _textInput.dataset.lang = langCode;
@@ -73,7 +73,7 @@ MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
     return _row;
 };
 MultiLanguageField.prototype.renderModalBody = function () {
-    let _inputs = this._modal.querySelector('.mls-modal-inputs');
+    const _inputs = this._modal.querySelector('.mls-modal-inputs');
 
     for (let langCode in this.validLanguages) {
         let langName = this.validLanguages[langCode];
@@ -83,10 +83,10 @@ MultiLanguageField.prototype.renderModalBody = function () {
     }
 
     if (this.languageManagementEnabled) {
-        let _addLanguageButton = this._modal.querySelector('.mls-add-language-button');
+        const _addLanguageButton = this._modal.querySelector('.mls-add-language-button');
         _addLanguageButton.classList.remove('hidden');
 
-        let _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
+        const _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
 
         for (let langCode in this.validLanguages) {
             let _language = document.createElement('li');
@@ -110,7 +110,7 @@ MultiLanguageField.prototype.renderModalBody = function () {
 MultiLanguageField.prototype.updateHiddenFields = function () {
     this._hiddenInputs.textContent = '';
 
-    let me = this;
+    const me = this;
     this._modal.querySelectorAll('input[data-lang]').forEach(function (input) {
         let lang = input.dataset.lang;
 
@@ -136,11 +136,11 @@ MultiLanguageField.prototype.updateLanguageManagementOptions = function () {
         return;
     }
 
-    let _addLanguageButton = this._modal.querySelector('.mls-add-language-button');
+    const _addLanguageButton = this._modal.querySelector('.mls-add-language-button');
 
-    let _inputs = this._modal.querySelector('.mls-modal-inputs');
-    let _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
-    
+    const _inputs = this._modal.querySelector('.mls-modal-inputs');
+    const _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
+
     _inputs.querySelectorAll('.row').forEach(function (_row) {
         let lang = _row.querySelector('input').dataset.lang;
         let _langOption = _addLanguageOptions.querySelector('li[data-lang="' + lang + '"]');
@@ -148,8 +148,8 @@ MultiLanguageField.prototype.updateLanguageManagementOptions = function () {
             _langOption.classList.add('hidden');
         }
     });
-    
-    let _selectableOption = _addLanguageOptions.querySelector('li:not(.hidden)');
+
+    const _selectableOption = _addLanguageOptions.querySelector('li:not(.hidden)');
     if (!_selectableOption) {
         _addLanguageButton.classList.add('hidden');
     }
@@ -162,7 +162,7 @@ MultiLanguageField.prototype.getLanguageName = function (langCode) {
 MultiLanguageField.prototype.renderFlag = function (langCode) {
     if (langCode === this.FALLBACK_CODE) {
         // globe icon
-        _globe = document.createElement('span');
+        const _globe = document.createElement('span');
         _globe.classList.add('mls-language-flag');
         _globe.classList.add('mls-language-globe');
         _globe.textContent = String.fromCodePoint(127758);
