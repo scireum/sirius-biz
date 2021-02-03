@@ -44,7 +44,7 @@ import java.util.List;
  * its output to other nodes, so that the UI can easily be updated.
  * <p>
  * Note however, that this commonication is performed via our central interconnect and thus shouldn't
- * be used to heavy (like outputting 1000s of lines per second).
+ * be used too heavy (like outputting 1000s of lines per second).
  */
 @Register(classes = {Scripting.class, InterconnectHandler.class})
 public class Scripting implements InterconnectHandler {
@@ -59,7 +59,16 @@ public class Scripting implements InterconnectHandler {
     private static final String TASK_TIMESTAMP = "timestamp";
     private static final String TASK_MESSAGE = "message";
     private static final String TASK_TYPE_MSG = "msg";
-    private static final String ALL_NODES = "*";
+
+    /**
+     * Represents a special node name which identifies "this node".
+     */
+    public static final String LOCAL_NODE = "-";
+
+    /**
+     * Represents a special node name which represents "all nodes".
+     */
+    public static final String ALL_NODES = "*";
 
     private final List<TranscriptMessage> messages = new ArrayList<>();
 
@@ -101,7 +110,7 @@ public class Scripting implements InterconnectHandler {
         NoodleCompiler compiler = new NoodleCompiler(compilationContext);
         compiler.compileScript();
 
-        if (Strings.isEmpty(targetNode)) {
+        if (Scripting.LOCAL_NODE.equals(targetNode)) {
             targetNode = CallContext.getNodeName();
         }
 
@@ -112,7 +121,7 @@ public class Scripting implements InterconnectHandler {
                                  .toHexString()
                                  .substring(0, 6);
 
-        // For audit and tracing purposes we also log this to into the system logs...
+        // For audit and tracing purposes we also log this into the system logs...
         Cluster.LOG.INFO("Executing administrative script %s for %s on '%s':%n%s",
                          jobNumber,
                          UserContext.getCurrentUser().getUserName(),
@@ -174,7 +183,7 @@ public class Scripting implements InterconnectHandler {
         }
 
         Watch watch = Watch.start();
-        logInTranscript(jobNumber, Strings.apply("Executing %s on %s", jobNumber, CallContext.getNodeName()));
+        logInTranscript(jobNumber, Strings.apply("Starting execution on %s", CallContext.getNodeName()));
         try {
             Callable callable = compileScript(event);
 

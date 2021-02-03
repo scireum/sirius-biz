@@ -72,8 +72,8 @@ public class ScriptingController extends BizController {
                                                    .map(name -> Tuple.create(name, name))
                                                    .collect(Collectors.toList());
 
-        nodes.add(0, Tuple.create("Current Machine", "-"));
-        nodes.add(Tuple.create("All Machines", "*"));
+        nodes.add(0, Tuple.create("Current Machine", Scripting.LOCAL_NODE));
+        nodes.add(Tuple.create("All Machines", Scripting.ALL_NODES));
 
         webContext.respondWith().template("/templates/biz/ide/scripting.html.pasta", nodes);
     }
@@ -115,7 +115,7 @@ public class ScriptingController extends BizController {
     public void submit(WebContext webContext, JSONStructuredOutput output) throws Exception {
         try {
             String script = webContext.get(PARAM_SCRIPT).asString();
-            String targetNode = webContext.get(PARAM_NODE).ignore("-").asString();
+            String targetNode = webContext.get(PARAM_NODE).asString();
 
             CompilationContext compilationContext = new CompilationContext(SourceCodeInfo.forInlineCode(script));
             NoodleCompiler compiler = new NoodleCompiler(compilationContext);

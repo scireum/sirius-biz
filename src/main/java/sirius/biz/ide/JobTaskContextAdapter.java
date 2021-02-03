@@ -43,6 +43,7 @@ class JobTaskContextAdapter implements TaskContextAdapter {
 
     @Override
     public void setState(String message) {
+        // unsupported by this adapter.
     }
 
     @Override
@@ -61,22 +62,22 @@ class JobTaskContextAdapter implements TaskContextAdapter {
 
     @Override
     public void addTiming(String counter, long millis) {
-
+        // unsupported by this adapter.
     }
 
     @Override
     public void addTiming(String counter, long millis, boolean adminOnly) {
-
+        // unsupported by this adapter.
     }
 
     @Override
     public void markErroneous() {
-
+        // unsupported by this adapter.
     }
 
     @Override
     public void cancel() {
-
+        // unsupported by this adapter.
     }
 
     @Override
