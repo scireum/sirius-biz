@@ -76,6 +76,8 @@ MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
     return _row;
 };
 MultiLanguageField.prototype.renderModalBody = function () {
+    this._modal.classList.add('mls-modal');
+    
     let rowsAdded = false;
     for (let langCode in this.validLanguages) {
         let langName = this.validLanguages[langCode];
