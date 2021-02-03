@@ -2,7 +2,7 @@
 <i:arg name="smallSpan" type="int" default="12" description="Defines the span for mobile devices"/>
 <i:arg name="name" type="String" default=""/>
 <i:arg name="fieldName" type="String" default="@name"/>
-<i:arg name="value" type="sirius.db.mixing.types.MultiLanguageString"/>
+<i:arg name="value" type="sirius.biz.translations.MultiLanguageString"/>
 <i:arg name="labelKey" type="String" default=""/>
 <i:arg name="label" type="String" default="@i18n(labelKey)"/>
 <i:arg name="forceLabel" type="boolean" default="false"/>
