@@ -15,9 +15,10 @@ import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.TenantUserManager;
-import sirius.kernel.commons.Monoflop;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.nls.NLS;
+import sirius.kernel.nls.Translation;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
@@ -71,9 +72,12 @@ public class ReportUnusedNLSKeysJob extends SimpleBatchProcessJobFactory {
     @Override
     protected void execute(ProcessContext process) throws Exception {
         process.log("Fetching unused keys from all nodes...");
+
+        // Fill keys with locally missing keys (this is also required, if no cluster nodes at all are present
         Set<String> missingKeys = new HashSet<>();
-        Monoflop fillOrIntersect = Monoflop.create();
-        clusterManager.callEachNode("/system/nls.unused/" + clusterManager.getClusterAPIToken())
+        NLS.getTranslationEngine().getUnusedTranslations().map(Translation::getKey).forEach(missingKeys::add);
+
+        clusterManager.callEachNode("/system/nls/unused/" + clusterManager.getClusterAPIToken())
                       .forEach(missingKeysOfNode -> {
                           Set<String> keysOfNode = missingKeysOfNode.getJSONArray("unused")
                                                                     .stream()
@@ -85,12 +89,7 @@ public class ReportUnusedNLSKeysJob extends SimpleBatchProcessJobFactory {
                                                                       keysOfNode.size(),
                                                                       missingKeysOfNode.getString(
                                                                               InterconnectClusterManager.RESPONSE_NODE_NAME)));
-
-                          if (fillOrIntersect.firstCall()) {
-                              missingKeys.addAll(keysOfNode);
-                          } else {
-                              missingKeys.retainAll(keysOfNode);
-                          }
+                          missingKeys.retainAll(keysOfNode);
                       });
 
         if (missingKeys.isEmpty()) {

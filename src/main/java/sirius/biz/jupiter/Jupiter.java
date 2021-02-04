@@ -12,12 +12,15 @@ import redis.clients.jedis.util.SafeEncoder;
 import sirius.db.redis.Redis;
 import sirius.db.redis.RedisDB;
 import sirius.kernel.Sirius;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Average;
 import sirius.kernel.health.Log;
+import sirius.kernel.health.metrics.MetricProvider;
+import sirius.kernel.health.metrics.MetricsCollector;
 
 import javax.annotation.Nullable;
 import java.time.LocalDateTime;
@@ -41,8 +44,8 @@ import java.util.stream.Collectors;
  * The config is provided via <tt>redis.pools.jupiter</tt> as well as the <tt>jupiter.settings.[name]</tt> section in
  * the config.
  */
-@Register(classes = Jupiter.class, framework = Jupiter.FRAMEWORK_JUPITER)
-public class Jupiter {
+@Register(classes = {Jupiter.class, MetricProvider.class}, framework = Jupiter.FRAMEWORK_JUPITER)
+public class Jupiter implements MetricProvider {
 
     /**
      * Specifies the framework to enable when using Jupiter.
@@ -52,6 +55,8 @@ public class Jupiter {
     /**
      * Determines the name of the logger used for all Jupiter related logging.
      */
+    @SuppressWarnings("java:S1192")
+    @Explain("These constants are semantically different and thus repeated.")
     public static final Log LOG = Log.get("jupiter");
 
     /**
@@ -162,5 +167,19 @@ public class Jupiter {
         }
 
         return obj;
+    }
+
+    @Override
+    public void gather(MetricsCollector metricsCollector) {
+        metricsCollector.metric("jupiter_calls",
+                                "jupiter-calls",
+                                "Jupiter Calls",
+                                callDuration.getCount(),
+                                "/min");
+        metricsCollector.metric("jupiter_call_duration",
+                                "jupiter-call-duration",
+                                "Jupiter Call Duration",
+                                callDuration.getAndClear(),
+                                "ms");
     }
 }

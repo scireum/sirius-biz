@@ -155,6 +155,8 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
 
     /**
      * Invokes the URI on each cluster member and returns the received JSON.
+     * <p>
+     * Note that this will not include the local node.
      *
      * @param uri the uri to invoke
      * @return the JSON per node as stream
