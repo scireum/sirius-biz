@@ -73,7 +73,7 @@ public class ReportUnusedNLSKeysJob extends SimpleBatchProcessJobFactory {
         process.log("Fetching unused keys from all nodes...");
         Set<String> missingKeys = new HashSet<>();
         Monoflop fillOrIntersect = Monoflop.create();
-        clusterManager.callEachNode("/system/nls.unused/" + clusterManager.getClusterAPIToken())
+        clusterManager.callEachNode("/system/nls/unused/" + clusterManager.getClusterAPIToken())
                       .forEach(missingKeysOfNode -> {
                           Set<String> keysOfNode = missingKeysOfNode.getJSONArray("unused")
                                                                     .stream()
