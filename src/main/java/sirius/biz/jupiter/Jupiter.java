@@ -52,6 +52,8 @@ public class Jupiter {
     /**
      * Determines the name of the logger used for all Jupiter related logging.
      */
+    @SuppressWarnings("java:S1192")
+    @Explain("These constants are semantically different and thus repeated.")
     public static final Log LOG = Log.get("jupiter");
 
     /**
