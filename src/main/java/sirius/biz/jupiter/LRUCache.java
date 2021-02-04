@@ -126,6 +126,9 @@ public class LRUCache {
 
         // The values was not found in the cache (not even a stale one => we have to compute now)...
         if (!cacheResult.isActive() && !cacheResult.isRefresh()) {
+            if (Jupiter.LOG.isFINE()) {
+                Jupiter.LOG.FINE("LRU.EXTENDED_GET in %s for %s returned no value - computing now!", cache, key);
+            }
             String value = valueComputer.get();
             put(key, value);
 
@@ -133,12 +136,19 @@ public class LRUCache {
         }
 
         if (cacheResult.isRefresh()) {
+            if (Jupiter.LOG.isFINE()) {
+                Jupiter.LOG.FINE("LRU.EXTENDED_GET in %s for %s returned a refreshable value - computing async!",
+                                 cache,
+                                 key);
+            }
             tasks.executor("jupiter-lru-computer").dropOnOverload(() -> {
                 Jupiter.LOG.INFO("Dropping computation of %s in cache %s", key, cache);
             }).fork(() -> {
                 String value = valueComputer.get();
                 put(key, value);
             });
+        } else if (Jupiter.LOG.isFINE()) {
+            Jupiter.LOG.FINE("LRU.EXTENDED_GET in %s for %s returned a valid value!", cache, key);
         }
 
         return cacheResult.getValue();
