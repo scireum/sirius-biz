@@ -26,7 +26,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.settings.Extension;
-import sirius.kernel.timer.EveryDay;
+import sirius.kernel.timer.EndOfDayTask;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -36,8 +36,8 @@ import java.util.Map;
 /**
  * In charge of updating the configuration and the repository of attached Jupiter instances.
  */
-@Register(framework = Jupiter.FRAMEWORK_JUPITER, classes = {JupiterSync.class, Startable.class, EveryDay.class})
-public class JupiterSync implements Startable, EveryDay {
+@Register(framework = Jupiter.FRAMEWORK_JUPITER, classes = {JupiterSync.class, Startable.class, EndOfDayTask.class})
+public class JupiterSync implements Startable, EndOfDayTask {
 
     @ConfigValue("jupiter.updateConfig")
     private List<String> updateConfig;
@@ -70,12 +70,12 @@ public class JupiterSync implements Startable, EveryDay {
     }
 
     @Override
-    public String getConfigKeyName() {
-        return "jupiter-sync";
+    public String getName() {
+        return "Jupiter Sync";
     }
 
     @Override
-    public void runTimer() throws Exception {
+    public void execute() throws Exception {
         if (automaticUpdate) {
             tasks.defaultExecutor().start(this::performSync);
         }
