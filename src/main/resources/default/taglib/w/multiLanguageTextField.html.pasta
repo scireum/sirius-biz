@@ -36,7 +36,6 @@
         <input id="@fieldId"
                name="@fieldId"
                type="@type"
-               value="@value.fetchText(defaultLanguage, 'fallback')"
                class="form-control input-block-level mls-input pointer"
                readonly
                @if (isFilled(placeholder)) { placeholder="@placeholder" }
@@ -91,6 +90,7 @@
             wrapperId: '___fieldId',
             modalId: '___modalId',
             values: JSON.parse(<i:raw>'___value.getAsJSON()'</i:raw>),
+            defaultLanguage: '___defaultLanguage',
             validLanguages: validLanguages,
             languageManagementEnabled: ___languageManagementEnabled,
         });
