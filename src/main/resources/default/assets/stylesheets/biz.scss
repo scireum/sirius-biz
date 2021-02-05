@@ -130,12 +130,10 @@ input.form-control.mls-input {
       margin-right: 8px;
     }
 
-    .mls-language-flag {
-      margin-right: 8px;
+    .mls-language-globe {
+      height: 12px;
       width: 12px;
-      height: 8px;
-      font-size: 10px;
-      line-height: 10px;
+      object-fit: cover;
     }
   }
 }

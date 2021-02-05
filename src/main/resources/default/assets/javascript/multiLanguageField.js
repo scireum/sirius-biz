@@ -76,7 +76,7 @@ MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
 };
 MultiLanguageField.prototype.renderModalBody = function () {
     this._modal.classList.add('mls-modal');
-    
+
     let rowsAdded = false;
     for (let langCode in this.validLanguages) {
         let langName = this.validLanguages[langCode];
@@ -172,10 +172,10 @@ MultiLanguageField.prototype.getLanguageName = function (langCode) {
 MultiLanguageField.prototype.renderFlag = function (langCode) {
     if (langCode === this.FALLBACK_CODE) {
         // globe icon
-        const _globe = document.createElement('span');
+        const _globe = document.createElement('img');
         _globe.classList.add('mls-language-flag');
         _globe.classList.add('mls-language-globe');
-        _globe.innerHTML = '&#127757;';
+        _globe.src = '/assets/images/flags/globe.png';
         return _globe;
     } else {
         const _flag = document.createElement('img');
