@@ -9,6 +9,7 @@
 function MultiLanguageField(options) {
     this.FALLBACK_CODE = 'fallback';
 
+    this.defaultLanguage = options.defaultLanguage;
     this.fieldName = options.fieldName;
     this.hasFallback = options.hasFallback || false;
     this.fallbackLabel = options.fallbackLabel;
@@ -31,16 +32,18 @@ function MultiLanguageField(options) {
     this._modal = document.getElementById(this.modalId);
 
     this._modalInputs = this._modal.querySelector('.mls-modal-inputs');
-    this._modalPlaceholder = this._modal.querySelector('.mls-modal-placeholder')
+    this._modalPlaceholder = this._modal.querySelector('.mls-modal-placeholder');
 
     const me = this;
 
     $(me._modal).on('hidden.bs.modal', function () {
         me.updateHiddenFields();
+        me.updateOuterInputField();
     })
 
     this.renderModalBody();
     this.updateHiddenFields();
+    this.updateOuterInputField();
     this.updateLanguageManagementOptions();
 }
 
@@ -118,6 +121,19 @@ MultiLanguageField.prototype.renderModalBody = function () {
     }
 }
 
+MultiLanguageField.prototype.updateOuterInputField = function () {
+    const _fallbackInput = this._modal.querySelector('input[data-lang="fallback"]');
+    const _defaultLanguageInput = this._modal.querySelector('input[data-lang="' + this.defaultLanguage + '"]');
+    let text;
+    if (_defaultLanguageInput) {
+        text = _defaultLanguageInput.value;
+    }
+    if (!text && _fallbackInput) {
+        text = _fallbackInput.value;
+    }
+    this._input.value = text || "";
+}
+
 MultiLanguageField.prototype.updateHiddenFields = function () {
     this._hiddenInputs.textContent = '';
 
@@ -130,12 +146,8 @@ MultiLanguageField.prototype.updateHiddenFields = function () {
         _hiddenInput.value = input.value;
         _hiddenInput.name = me.fieldName;
 
-        if (me.hasFallback && lang === me.FALLBACK_CODE) {
-            // also update main field
-            me._input.value = input.value;
-        } else {
+        if (lang !== me.FALLBACK_CODE) {
             _hiddenInput.name += '-' + lang;
-
         }
 
         me._hiddenInputs.appendChild(_hiddenInput);
