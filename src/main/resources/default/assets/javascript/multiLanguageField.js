@@ -175,7 +175,7 @@ MultiLanguageField.prototype.renderFlag = function (langCode) {
         const _globe = document.createElement('span');
         _globe.classList.add('mls-language-flag');
         _globe.classList.add('mls-language-globe');
-        _globe.textContent = String.fromCodePoint(127758);
+        _globe.innerHTML = '&#127757;';
         return _globe;
     } else {
         const _flag = document.createElement('img');
