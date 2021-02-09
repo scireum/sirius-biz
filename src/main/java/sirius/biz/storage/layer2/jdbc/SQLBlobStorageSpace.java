@@ -783,19 +783,13 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         }
 
         try {
-            SmartQuery<SQLBlob> deleteQuery = oma.select(SQLBlob.class)
-                                                 .eq(SQLBlob.SPACE_NAME, spaceName)
-                                                 .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED,
-                                                                       LocalDateTime.now().minusDays(retentionDays)))
-                                                 .where(OMA.FILTERS.ltOrEmpty(SQLBlob.LAST_TOUCHED,
-                                                                              LocalDateTime.now()
-                                                                                           .minusDays(retentionDays)));
-            if (isTouchTracking()) {
-                deleteQuery.where(OMA.FILTERS.ltOrEmpty(SQLBlob.LAST_TOUCHED,
-                                                        LocalDateTime.now().minusDays(retentionDays)));
-            }
-
-            deleteQuery.limit(256).delete();
+            oma.select(SQLBlob.class)
+               .eq(SQLBlob.SPACE_NAME, spaceName)
+               .eq(SQLBlob.DELETED, false)
+               .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED, LocalDateTime.now().minusDays(retentionDays)))
+               .where(OMA.FILTERS.ltOrEmpty(SQLBlob.LAST_TOUCHED, LocalDateTime.now().minusDays(retentionDays)))
+               .limit(256)
+               .iterateAll(this::markBlobAsDeleted);
         } catch (Exception e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
@@ -809,10 +803,11 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         try {
             oma.select(SQLBlob.class)
                .eq(SQLBlob.SPACE_NAME, spaceName)
+               .eq(SQLBlob.DELETED, false)
                .eq(SQLBlob.TEMPORARY, true)
                .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED, LocalDateTime.now().minusHours(4)))
                .limit(256)
-               .delete();
+               .iterateAll(this::markBlobAsDeleted);
         } catch (Exception e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)

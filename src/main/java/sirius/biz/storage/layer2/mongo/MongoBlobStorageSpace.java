@@ -719,11 +719,12 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         try {
             mango.select(MongoBlob.class)
                  .eq(MongoBlob.SPACE_NAME, spaceName)
+                 .eq(MongoBlob.DELETED, false)
                  .where(QueryBuilder.FILTERS.lt(MongoBlob.LAST_MODIFIED, LocalDateTime.now().minusDays(retentionDays)))
                  .where(QueryBuilder.FILTERS.ltOrEmpty(MongoBlob.LAST_TOUCHED,
                                                        LocalDateTime.now().minusDays(retentionDays)))
                  .limit(256)
-                 .delete();
+                 .iterateAll(this::markBlobAsDeleted);
         } catch (Exception e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
@@ -737,10 +738,11 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         try {
             mango.select(MongoBlob.class)
                  .eq(MongoBlob.SPACE_NAME, spaceName)
+                 .eq(MongoBlob.DELETED, false)
                  .eq(MongoBlob.TEMPORARY, true)
                  .where(QueryBuilder.FILTERS.lt(MongoBlob.LAST_MODIFIED, LocalDateTime.now().minusHours(4)))
                  .limit(256)
-                 .delete();
+                 .iterateAll(this::markBlobAsDeleted);
         } catch (Exception e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
