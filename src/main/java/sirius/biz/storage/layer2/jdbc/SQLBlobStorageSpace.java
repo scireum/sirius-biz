@@ -783,19 +783,12 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
         }
 
         try {
-            SmartQuery<SQLBlob> deleteQuery = oma.select(SQLBlob.class)
-                                                 .eq(SQLBlob.SPACE_NAME, spaceName)
-                                                 .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED,
-                                                                       LocalDateTime.now().minusDays(retentionDays)))
-                                                 .where(OMA.FILTERS.ltOrEmpty(SQLBlob.LAST_TOUCHED,
-                                                                              LocalDateTime.now()
-                                                                                           .minusDays(retentionDays)));
-            if (isTouchTracking()) {
-                deleteQuery.where(OMA.FILTERS.ltOrEmpty(SQLBlob.LAST_TOUCHED,
-                                                        LocalDateTime.now().minusDays(retentionDays)));
-            }
-
-            deleteQuery.limit(256).delete();
+            oma.select(SQLBlob.class)
+               .eq(SQLBlob.SPACE_NAME, spaceName)
+               .where(OMA.FILTERS.lt(SQLBlob.LAST_MODIFIED, LocalDateTime.now().minusDays(retentionDays)))
+               .where(OMA.FILTERS.ltOrEmpty(SQLBlob.LAST_TOUCHED, LocalDateTime.now().minusDays(retentionDays)))
+               .limit(256)
+               .delete();
         } catch (Exception e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
