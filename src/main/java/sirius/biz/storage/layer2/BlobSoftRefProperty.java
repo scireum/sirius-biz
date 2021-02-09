@@ -141,6 +141,10 @@ public class BlobSoftRefProperty extends BlobRefProperty {
     }
 
     protected void onDeleteCascade(Object entity) {
+        if (!Strings.areEqual(blobSoftRef.getSpace(), ((Blob) entity).getSpaceName())) {
+            return;
+        }
+
         TaskContext taskContext = TaskContext.get();
 
         taskContext.smartLogLimited(() -> NLS.fmtr("BaseEntityRefProperty.cascadeDelete")
@@ -159,6 +163,10 @@ public class BlobSoftRefProperty extends BlobRefProperty {
     }
 
     protected void onDeleteSetNull(Object entity) {
+        if (!Strings.areEqual(blobSoftRef.getSpace(), ((Blob) entity).getSpaceName())) {
+            return;
+        }
+
         TaskContext taskContext = TaskContext.get();
         taskContext.smartLogLimited(() -> NLS.fmtr("BaseEntityRefProperty.cascadeSetNull")
                                              .set(PARAM_TYPE, getDescriptor().getPluralLabel())
