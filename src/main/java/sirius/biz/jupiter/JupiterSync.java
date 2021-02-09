@@ -8,16 +8,25 @@
 
 package sirius.biz.jupiter;
 
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
+import sirius.biz.storage.layer2.Blob;
+import sirius.biz.storage.layer2.BlobStorage;
+import sirius.biz.storage.layer2.Directory;
+import sirius.biz.storage.s3.BucketName;
+import sirius.biz.storage.s3.ObjectStore;
+import sirius.biz.storage.s3.ObjectStores;
 import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.kernel.Sirius;
 import sirius.kernel.Startable;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -29,12 +38,21 @@ import sirius.kernel.settings.Extension;
 import sirius.kernel.timer.EndOfDayTask;
 
 import javax.annotation.Nullable;
+import java.io.OutputStream;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * In charge of updating the configuration and the repository of attached Jupiter instances.
+ * <p>
+ * Next to iterating over all Jupiter instances and computer their config via {@link JupiterConfigUpdater}, this also
+ * synchronizes the contents of an object store (e.g. Amazon S3) as well as a local repository against the repository
+ * stored in Jupiter.
  */
 @Register(framework = Jupiter.FRAMEWORK_JUPITER, classes = {JupiterSync.class, Startable.class, EndOfDayTask.class})
 public class JupiterSync implements Startable, EndOfDayTask {
@@ -44,6 +62,28 @@ public class JupiterSync implements Startable, EndOfDayTask {
 
     @ConfigValue("jupiter.automaticUpdate")
     private boolean automaticUpdate;
+
+    @ConfigValue("jupiter.syncRepository")
+    private List<String> syncRepository;
+
+    @ConfigValue("jupiter.repository.uplink.store")
+    private String uplinkStore;
+
+    @ConfigValue("jupiter.repository.uplink.bucket")
+    private String uplinkBucket;
+
+    @ConfigValue("jupiter.repository.localSpaceName")
+    private String localRepoSpaceName;
+
+    @ConfigValue("jupiter.repository.hostUrl")
+    private String jupiterHostUrl;
+
+    @Part
+    private ObjectStores objectStores;
+
+    @Part
+    @Nullable
+    private BlobStorage blobStorage;
 
     @Parts(JupiterConfigUpdater.class)
     private PartCollection<JupiterConfigUpdater> updaters;
@@ -89,21 +129,32 @@ public class JupiterSync implements Startable, EndOfDayTask {
     }
 
     protected void performSync() {
+        runInStandbyProcess(processContext -> performSyncInProcess(processContext, true, true));
+    }
+
+    protected void runInStandbyProcess(Consumer<ProcessContext> processContextConsumer) {
         processes.executeInStandbyProcess("jupiter-sync",
                                           () -> "Jupiter Synchronization",
                                           tenants.getSystemTenantId(),
                                           tenants::getSystemTenantName,
-                                          this::performSyncInProcess);
+                                          processContextConsumer);
     }
 
     /**
      * Synchronizes all Jupiter instances and reports all activity into the given process.
      *
      * @param processContext the process used for logging and reporting
+     * @param syncConfig     determines if the config should be synced
+     * @param syncRepo       determines if the repository should be synced
      */
-    public void performSyncInProcess(ProcessContext processContext) {
+    public void performSyncInProcess(ProcessContext processContext, boolean syncConfig, boolean syncRepo) {
         try {
-            syncConfigs(processContext);
+            if (syncConfig) {
+                syncConfigs(processContext);
+            }
+            if (syncRepo) {
+                syncRepositories(processContext);
+            }
         } catch (Exception e) {
             processContext.handle(e);
         }
@@ -163,5 +214,250 @@ public class JupiterSync implements Startable, EndOfDayTask {
         options.setPrettyFlow(true);
         Yaml yaml = new Yaml(options);
         return yaml.dump(config);
+    }
+
+    private void syncRepositories(ProcessContext processContext) {
+        for (String instance : syncRepository) {
+            JupiterConnector connection = jupiter.getConnector(instance);
+            if (connection.isConfigured()) {
+                try {
+                    syncRepository(processContext, connection);
+                } catch (HandledException e) {
+                    processContext.log(ProcessLog.error()
+                                                 .withFormattedMessage("Failed to sync repository contents of %s: %s",
+                                                                       instance,
+                                                                       e.getMessage()));
+                    Jupiter.LOG.SEVERE(e);
+                }
+            } else {
+                processContext.log(ProcessLog.info()
+                                             .withFormattedMessage(
+                                                     "Not syncing repository contents of %s as not connection configuration is present!",
+                                                     instance));
+            }
+        }
+    }
+
+    private void syncRepository(ProcessContext processContext, JupiterConnector connection) {
+        try {
+            processContext.debug(ProcessLog.info()
+                                           .withFormattedMessage("Synchronizing repository contents of %s...",
+                                                                 connection.getName()));
+            List<RepositoryFile> repositoryFiles = connection.repository().list();
+
+            Set<String> filesToDelete =
+                    repositoryFiles.stream().map(RepositoryFile::getName).collect(Collectors.toSet());
+
+            syncLocalRepository(processContext, connection, repositoryFiles, filesToDelete);
+            syncUplinkRepository(processContext, connection, repositoryFiles, filesToDelete);
+
+            for (String file : filesToDelete) {
+                processContext.log(ProcessLog.info()
+                                             .withFormattedMessage("Deleting %s for %s", file, connection.getName()));
+                connection.repository().delete(file);
+            }
+
+            processContext.debug(ProcessLog.info()
+                                           .withFormattedMessage(
+                                                   "Successfully synchronized the repository contents of %s.",
+                                                   connection.getName()));
+        } catch (Exception e) {
+            processContext.handle(Exceptions.handle()
+                                            .error(e)
+                                            .withSystemErrorMessage(
+                                                    "Failed to synchronize the repository contents of %s: %s (%s)",
+                                                    connection.getName())
+                                            .handle());
+        }
+    }
+
+    private void syncUplinkRepository(ProcessContext processContext,
+                                      JupiterConnector connection,
+                                      List<RepositoryFile> repositoryFiles,
+                                      Set<String> filesToDelete) {
+        if (Strings.isEmpty(uplinkStore) || Strings.isEmpty(uplinkBucket)) {
+            processContext.debug(ProcessLog.info()
+                                           .withFormattedMessage(
+                                                   "Skipping uplink checks for %s as no repository or bucket is configured.",
+                                                   connection.getName()));
+            return;
+        }
+
+        processContext.debug(ProcessLog.info()
+                                       .withFormattedMessage("Checking uplink repository (%s in %s) for %s...",
+                                                             uplinkBucket,
+                                                             uplinkStore,
+                                                             connection.getName()));
+
+        try {
+            ObjectStore store = objectStores.getStore(uplinkStore);
+            BucketName uplinkBucketName = store.getBucketName(uplinkBucket);
+            store.listObjects(uplinkBucketName, null, object -> {
+                handleUplinkFile(processContext,
+                                 connection,
+                                 repositoryFiles,
+                                 filesToDelete,
+                                 store,
+                                 uplinkBucketName,
+                                 object);
+
+                return true;
+            });
+        } catch (Exception e) {
+            processContext.handle(Exceptions.handle()
+                                            .error(e)
+                                            .withSystemErrorMessage(
+                                                    "Failed to check the uplink repository %s for %s: %s (%s)",
+                                                    uplinkStore,
+                                                    connection.getName())
+                                            .handle());
+        }
+    }
+
+    private void handleUplinkFile(ProcessContext processContext,
+                                  JupiterConnector connection,
+                                  List<RepositoryFile> repositoryFiles,
+                                  Set<String> filesToDelete,
+                                  ObjectStore store,
+                                  BucketName uplinkBucketName,
+                                  S3ObjectSummary object) {
+        String effectiveFileName = "/" + object.getKey();
+        RepositoryFile repositoryFile = repositoryFiles.stream()
+                                                       .filter(file -> Strings.areEqual(file.getName(),
+                                                                                        effectiveFileName))
+                                                       .findFirst()
+                                                       .orElse(null);
+
+        if (repositoryFile == null || repositoryFile.getLastModified()
+                                                    .isBefore(object.getLastModified()
+                                                                    .toInstant()
+                                                                    .atZone(ZoneId.systemDefault())
+                                                                    .toLocalDateTime())) {
+            String url = store.objectUrl(uplinkBucketName, object.getKey());
+            processContext.log(ProcessLog.info()
+                                         .withFormattedMessage("Fetching %s for %s as it is new or updated...",
+                                                               effectiveFileName,
+                                                               connection.getName()));
+            connection.repository().fetchUrl(effectiveFileName, url, false);
+        } else {
+            processContext.debug(ProcessLog.info()
+                                           .withFormattedMessage("Skipping %s for %s as it is unchanged...",
+                                                                 effectiveFileName,
+                                                                 connection.getName()));
+        }
+
+        filesToDelete.remove(effectiveFileName);
+    }
+
+    private void syncLocalRepository(ProcessContext processContext,
+                                     JupiterConnector connection,
+                                     List<RepositoryFile> repositoryFiles,
+                                     Set<String> filesToDelete) {
+        if (blobStorage == null || tenants == null || Strings.isEmpty(localRepoSpaceName)) {
+            processContext.debug(ProcessLog.info()
+                                           .withFormattedMessage(
+                                                   "Skipping local repository for %s as no storage space is configured.",
+                                                   connection.getName()));
+            return;
+        }
+
+        processContext.debug(ProcessLog.info()
+                                       .withFormattedMessage("Checking local repository in storage space %s for %s...",
+                                                             localRepoSpaceName,
+                                                             connection.getName()));
+
+        try {
+            Directory root = blobStorage.getSpace(localRepoSpaceName)
+                                        .getRoot(tenants.getTenantUserManager().getSystemTenantId());
+            visitLocalDirectory(processContext, "", root, connection, repositoryFiles, filesToDelete);
+        } catch (Exception e) {
+            processContext.handle(Exceptions.handle()
+                                            .error(e)
+                                            .withSystemErrorMessage(
+                                                    "Failed to check the local repository %s for %s: %s (%s)",
+                                                    localRepoSpaceName,
+                                                    connection.getName())
+                                            .handle());
+        }
+    }
+
+    private void visitLocalDirectory(ProcessContext processContext,
+                                     String prefix,
+                                     Directory currentDirectory,
+                                     JupiterConnector connection,
+                                     List<RepositoryFile> repositoryFiles,
+                                     Set<String> filesToDelete) {
+        currentDirectory.listChildBlobs(null, null, 0, child -> {
+            handleLocalFile(processContext,
+                            connection,
+                            repositoryFiles,
+                            filesToDelete,
+                            prefix + "/" + child.getFilename(),
+                            child);
+            return true;
+        });
+        currentDirectory.listChildDirectories(null, 0, dirctory -> {
+            visitLocalDirectory(processContext,
+                                prefix + "/" + dirctory.getName(),
+                                dirctory,
+                                connection,
+                                repositoryFiles,
+                                filesToDelete);
+            return true;
+        });
+    }
+
+    private void handleLocalFile(ProcessContext processContext,
+                                 JupiterConnector connection,
+                                 List<RepositoryFile> repositoryFiles,
+                                 Set<String> filesToDelete,
+                                 String effectiveFileName,
+                                 Blob child) {
+        RepositoryFile repositoryFile = repositoryFiles.stream()
+                                                       .filter(file -> Strings.areEqual(file.getName(),
+                                                                                        effectiveFileName))
+                                                       .findFirst()
+                                                       .orElse(null);
+
+        if (repositoryFile == null || repositoryFile.getLastModified().isBefore(child.getLastModified())) {
+            String url = child.url()
+                              .withBaseURL(jupiterHostUrl)
+                              .asDownload()
+                              .buildURL()
+                              .orElseThrow(() -> new IllegalArgumentException(Strings.apply(
+                                      "Unable to build blob download url for: %s (%s)",
+                                      effectiveFileName,
+                                      child.getBlobKey())));
+
+            processContext.log(ProcessLog.info()
+                                         .withFormattedMessage("Fetching %s for %s as it is new or updated...",
+                                                               effectiveFileName,
+                                                               connection.getName()));
+            connection.repository().fetchUrl(effectiveFileName, url, false);
+        } else {
+            processContext.debug(ProcessLog.info()
+                                           .withFormattedMessage("Skipping %s for %s as it is unchanged...",
+                                                                 effectiveFileName,
+                                                                 connection.getName()));
+        }
+
+        filesToDelete.remove(effectiveFileName);
+    }
+
+    /**
+     * Stores a file in the local repository which will be synchronized/uploaded into the attached Jupiter instances.
+     *
+     * @param path the destination path to store the file at
+     * @return an output stream which can be supplied with the data to transfer to Jupiter
+     */
+    public OutputStream storeLocalRepositoryFile(String path) {
+        if (Strings.isEmpty(localRepoSpaceName) || blobStorage == null) {
+            throw new IllegalStateException("No local repository is configured.");
+        }
+        Blob blob = blobStorage.getSpace(localRepoSpaceName)
+                               .findOrCreateByPath(tenants.getTenantUserManager().getSystemTenantId(), path);
+        return blob.createOutputStream(() -> {
+            runInStandbyProcess(processContext -> performSyncInProcess(processContext, false, true));
+        }, Files.getFilenameAndExtension(path));
     }
 }

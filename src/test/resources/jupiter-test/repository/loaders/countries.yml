@@ -1,0 +1,6 @@
+file: "/countries.yml"
+namespace: "core"
+loader: "idb-yaml"
+table: "countries"
+indices: ["code","iso.two","iso.three"]
+fulltextIndices: ["name"]

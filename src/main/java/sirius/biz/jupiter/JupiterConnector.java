@@ -224,4 +224,12 @@ public class JupiterConnector {
         return new LRUCache(this, cache);
     }
 
+    /**
+     * Provides access to the repository management commands of this connection.
+     *
+     * @return the repository wrapper for this connection
+     */
+    public Repository repository() {
+        return new Repository(this);
+    }
 }

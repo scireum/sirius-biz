@@ -43,7 +43,7 @@ public class JupiterSyncJob extends SimpleBatchProcessJobFactory {
 
     @Override
     protected void execute(ProcessContext process) throws Exception {
-        jupiterSync.performSyncInProcess(process);
+        jupiterSync.performSyncInProcess(process, true, true);
     }
 
     @Nonnull
@@ -60,6 +60,7 @@ public class JupiterSyncJob extends SimpleBatchProcessJobFactory {
     @Nullable
     @Override
     public String getDescription() {
-        return "Pushes the configuration and repository contents into all attached Jupiter instances. Note that this will also be done every night and during system startup.";
+        return "Pushes the configuration and repository contents into all attached Jupiter instances. "
+               + "Note that this will also be done every night and during system startup.";
     }
 }
