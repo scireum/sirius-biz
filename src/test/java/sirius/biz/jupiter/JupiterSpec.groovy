@@ -9,26 +9,70 @@
 package sirius.biz.jupiter
 
 import sirius.kernel.BaseSpecification
+import sirius.kernel.commons.Wait
 import sirius.kernel.di.std.Part
+import sirius.web.resources.Resources
 
 import java.util.stream.Collectors
 
 /**
  * Provides a simple test for the communication with the Jupiter repository.
  */
-class IDBSpec extends BaseSpecification {
+class JupiterSpec extends BaseSpecification {
 
     @Part
     private static Jupiter jupiter
 
-    def "show_tables works"() {
+    @Part
+    private static Resources resources
+
+    // In case this test starts too early, Jupiter might not have processed its repository contents.
+    // We therefore give it some time to do so.
+    def setupSpec() {
+        jupiter.getDefault().updateConfig(resources.resolve("jupiter-test/settings.yml").get().getContentAsString())
+        jupiter.
+                getDefault().
+                repository().
+                store("/countries.yml", resources.resolve("jupiter-test/countries.yml").get().getContentAsString())
+        jupiter.
+                getDefault().
+                repository().
+                store("/loaders/countries.yml", resources.resolve("jupiter-test/countries_loader.yml").get().getContentAsString())
+        int attempts = 10
+        while (attempts-- > 0) {
+            Wait.seconds(1)
+            if (jupiter.getDefault().idb().showTables().size() > 0) {
+                return
+            }
+        }
+    }
+
+
+    def "LRU get/put/remove works"() {
+        given:
+        def cache = jupiter.getDefault().lru("test")
+        when:
+        cache.put("test", "value")
+        then:
+        cache.get("test").get() == "value"
+        and:
+        cache.extendedGet("test", { ignored -> null }) == "value"
+        and:
+        cache.extendedGet("test1", { ignored -> "value1" }) == "value1"
+        when:
+        cache.remove("test")
+        then:
+        !cache.get("test").isPresent()
+    }
+
+    def "IDB show_tables works"() {
         when:
         def list = jupiter.getDefault().idb().showTables()
         then:
         list.size() == 1
     }
 
-    def "queries work"() {
+    def "IDB queries work"() {
         when:
         def table = jupiter.getDefault().idb().table("countries")
         then:
