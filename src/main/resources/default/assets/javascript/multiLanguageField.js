@@ -17,6 +17,8 @@ function MultiLanguageField(options) {
     this.modalId = options.modalId;
     this.values = options.values;
     this.languageManagementEnabled = options.languageManagementEnabled;
+    this.rows = options.rows;
+    this.multiline = options.multiline || false;
 
     this.validLanguages = {};
     if (this.hasFallback) {
@@ -28,23 +30,32 @@ function MultiLanguageField(options) {
 
     this._wrapper = document.getElementById(this.wrapperId);
     this._input = this._wrapper.querySelector('.mls-input');
-    this._hiddenInputs = this._wrapper.querySelector('.mls-hidden-inputs');
-    this._modal = document.getElementById(this.modalId);
-
-    this._modalInputs = this._modal.querySelector('.mls-modal-inputs');
-    this._modalPlaceholder = this._modal.querySelector('.mls-modal-placeholder');
 
     const me = this;
 
-    $(me._modal).on('hidden.bs.modal', function () {
-        me.updateHiddenFields();
-        me.updateOuterInputField();
-    })
+    if (!this.multiline) {
+        this._hiddenInputs = this._wrapper.querySelector('.mls-hidden-inputs');
+        this._modal = document.getElementById(this.modalId);
+        this._modalInputs = this._modal.querySelector('.mls-modal-inputs');
+        this._modalPlaceholder = this._modal.querySelector('.mls-modal-placeholder');
 
-    this.renderModalBody();
-    this.updateHiddenFields();
-    this.updateOuterInputField();
-    this.updateLanguageManagementOptions();
+        $(me._modal).on('hidden.bs.modal', function () {
+            me.updateHiddenFields();
+            me.updateOuterInputField();
+        })
+
+        this.renderModalBody();
+        this.updateHiddenFields();
+        this.updateOuterInputField();
+        this.updateLanguageManagementOptions();
+    } else {
+        this._multilineHeader = this._wrapper.querySelector('.mls-tab-header');
+        this._multilineContent = this._wrapper.querySelector('.mls-tab-content');
+        this._modalPlaceholder = this._wrapper.querySelector('.mls-modal-placeholder');
+
+        this.renderMultilineHeader();
+        this.updateLanguageManagementOptions();
+    }
 }
 
 MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
@@ -77,6 +88,57 @@ MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
 
     return _row;
 };
+
+MultiLanguageField.prototype.renderLanguageTab = function (langCode, langName, active) {
+    const _li = document.createElement('li');
+    if (active) {
+        _li.classList.add('active');
+    }
+
+    const _anchor = document.createElement('a');
+    _anchor.classList.add('nav-link');
+    _anchor.classList.add('mls-language-label');
+    _anchor.href = '#' + this.fieldName + '-' + langCode;
+    _anchor.dataset.toggle = 'tab';
+    _li.appendChild(_anchor);
+
+    const _flag = this.renderFlag(langCode);
+    _anchor.appendChild(_flag);
+
+    const _name = document.createElement('span');
+    _name.textContent = langName;
+    _anchor.appendChild(_name);
+
+    return _li;
+};
+
+MultiLanguageField.prototype.renderLanguageTabInput = function (langCode, langName, active) {
+    const _inputColumn = document.createElement('div');
+    _inputColumn.classList.add('tab-pane');
+    if (active) {
+        _inputColumn.classList.add('active');
+    }
+    _inputColumn.id = this.fieldName + '-' + langCode;
+
+    const _textArea = document.createElement('textarea');
+    _textArea.classList.add('form-control');
+    _textArea.classList.add('input-block-level');
+    _textArea.classList.add('mls-input');
+    _textArea.rows = this.rows;
+
+    if (langCode === this.FALLBACK_CODE) {
+        _textArea.name = this.fieldName;
+    } else {
+        _textArea.name = this.fieldName + '-' + langCode;
+    }
+
+    _textArea.dataset.lang = langCode;
+    _textArea.value = this.values[langCode] || '';
+    _inputColumn.appendChild(_textArea);
+
+    return _inputColumn;
+};
+
 MultiLanguageField.prototype.renderModalBody = function () {
     this._modal.classList.add('mls-modal');
 
@@ -110,8 +172,58 @@ MultiLanguageField.prototype.renderModalBody = function () {
 
             let me = this;
             _link.addEventListener('click', function () {
-                let _row = me.renderLanguageRow(langCode, me.validLanguages[langCode]);
-                me._modalInputs.appendChild(_row);
+                let _row = me.renderLanguageTabInput(langCode, me.validLanguages[langCode]);
+                //me._modalInputs.appendChild(_row);
+                me._modalPlaceholder.classList.add('hidden');
+                me.updateLanguageManagementOptions();
+            });
+            _language.appendChild(_link);
+            _addLanguageOptions.appendChild(_language);
+        }
+    }
+}
+
+MultiLanguageField.prototype.renderMultilineHeader = function () {
+    // todo switch to dropwdown on more than 4 languages
+    let rowsAdded = false;
+    for (let langCode in this.validLanguages) {
+        let langName = this.validLanguages[langCode];
+
+        if (!this.languageManagementEnabled || langCode === this.FALLBACK_CODE || this.values[langCode]) {
+            let active = !rowsAdded;
+            let _langTab = this.renderLanguageTab(langCode, langName, active);
+            let mlsTabList = this._multilineHeader.querySelector('.mls-tab-list');
+            mlsTabList.appendChild(_langTab);
+
+            let _langTabInput = this.renderLanguageTabInput(langCode, langName, active);
+            this._multilineContent.appendChild(_langTabInput);
+
+            rowsAdded = true;
+        }
+    }
+
+    // todo adapt code to fit tabs
+    if (this.languageManagementEnabled) {
+        if (!rowsAdded) {
+            this._modalPlaceholder.classList.remove('hidden');
+        }
+
+        const _addLanguageButton = this._multilineHeader.querySelector('.mls-add-language-button');
+        _addLanguageButton.classList.remove('hidden');
+
+        const _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
+
+        for (let langCode in this.validLanguages) {
+            let _language = document.createElement('li');
+            _language.classList.add('pointer');
+            _language.dataset.lang = langCode;
+            let _link = document.createElement('a');
+            _link.textContent = this.validLanguages[langCode];
+
+            let me = this;
+            _link.addEventListener('click', function () {
+                let _languagePane = me.renderLanguageTab(langCode, me.validLanguages[langCode], true);
+                me._multilineContent.appendChild(_languagePane);
                 me._modalPlaceholder.classList.add('hidden');
                 me.updateLanguageManagementOptions();
             });
@@ -159,17 +271,33 @@ MultiLanguageField.prototype.updateLanguageManagementOptions = function () {
         return;
     }
 
-    const _addLanguageButton = this._modal.querySelector('.mls-add-language-button');
+    let _addLanguageButton;
+    if (this.multiline) {
+        _addLanguageButton = this._multilineHeader.querySelector('.mls-add-language-button');
+    } else {
+        _addLanguageButton = this._modal.querySelector('.mls-add-language-button');
+    }
 
     const _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
 
-    this._modalInputs.querySelectorAll('.row').forEach(function (_row) {
-        let lang = _row.querySelector('input').dataset.lang;
-        let _langOption = _addLanguageOptions.querySelector('li[data-lang="' + lang + '"]');
-        if (_langOption) {
-            _langOption.classList.add('hidden');
-        }
-    });
+    if (this.multiline) {
+        // todo check and adapt
+        this._multilineContent.querySelectorAll('.row').forEach(function (_row) {
+            let lang = _row.querySelector('input').dataset.lang;
+            let _langOption = _addLanguageOptions.querySelector('li[data-lang="' + lang + '"]');
+            if (_langOption) {
+                _langOption.classList.add('hidden');
+            }
+        });
+    } else {
+        this._modalInputs.querySelectorAll('.row').forEach(function (_row) {
+            let lang = _row.querySelector('input').dataset.lang;
+            let _langOption = _addLanguageOptions.querySelector('li[data-lang="' + lang + '"]');
+            if (_langOption) {
+                _langOption.classList.add('hidden');
+            }
+        });
+    }
 
     const _selectableOption = _addLanguageOptions.querySelector('li:not(.hidden)');
     if (!_selectableOption) {
