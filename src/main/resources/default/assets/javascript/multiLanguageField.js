@@ -172,8 +172,8 @@ MultiLanguageField.prototype.renderModalBody = function () {
 
             let me = this;
             _link.addEventListener('click', function () {
-                let _row = me.renderLanguageTabInput(langCode, me.validLanguages[langCode]);
-                //me._modalInputs.appendChild(_row);
+                let _row = me.renderLanguageRow(langCode, me.validLanguages[langCode]);
+                me._modalInputs.appendChild(_row);
                 me._modalPlaceholder.classList.add('hidden');
                 me.updateLanguageManagementOptions();
             });
