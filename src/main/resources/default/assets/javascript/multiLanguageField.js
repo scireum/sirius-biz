@@ -31,31 +31,43 @@ function MultiLanguageField(options) {
     this._wrapper = document.getElementById(this.wrapperId);
     this._input = this._wrapper.querySelector('.mls-input');
 
-    const me = this;
-
-    if (!this.multiline) {
-        this._hiddenInputs = this._wrapper.querySelector('.mls-hidden-inputs');
-        this._modal = document.getElementById(this.modalId);
-        this._modalInputs = this._modal.querySelector('.mls-modal-inputs');
-        this._modalPlaceholder = this._modal.querySelector('.mls-modal-placeholder');
-
-        $(me._modal).on('hidden.bs.modal', function () {
-            me.updateHiddenFields();
-            me.updateOuterInputField();
-        })
-
-        this.renderModalBody();
-        this.updateHiddenFields();
-        this.updateOuterInputField();
-        this.updateLanguageManagementOptions();
+    if (this.multiline) {
+        this.buildMultiline();
     } else {
-        this._multilineHeader = this._wrapper.querySelector('.mls-tab-header');
-        this._multilineContent = this._wrapper.querySelector('.mls-tab-content');
-        this._modalPlaceholder = this._wrapper.querySelector('.mls-modal-placeholder');
-
-        this.renderMultilineHeader();
-        this.updateLanguageManagementOptions();
+        this.buildSingleline();
     }
+}
+
+MultiLanguageField.prototype.buildSingleline = function () {
+    this._hiddenInputs = this._wrapper.querySelector('.mls-hidden-inputs');
+    this._modal = document.getElementById(this.modalId);
+    this._modalInputs = this._modal.querySelector('.mls-modal-inputs');
+    this._modalPlaceholder = this._modal.querySelector('.mls-modal-placeholder');
+
+    const me = this;
+    // have to use jquery here as bootstrap modals only trigger jquery events
+    $(me._modal).on('hidden.bs.modal', function () {
+        me.updateHiddenFields();
+        me.updateOuterInputField();
+    })
+
+    this.renderModalBody();
+    this.updateHiddenFields();
+    this.updateOuterInputField();
+    this.updateLanguageManagementOptions();
+}
+
+MultiLanguageField.prototype.buildMultiline = function () {
+    this._multilineHeader = this._wrapper.querySelector('.mls-tab-header');
+    this._toggleLanguageButton = this._multilineHeader.querySelector('.mls-toggle-language-button');
+    this._toggleLanguageOptions = this._multilineHeader.querySelector('.toggle-language-data');
+    this._multilineContent = this._wrapper.querySelector('.mls-tab-content');
+    this._modalPlaceholder = this._wrapper.querySelector('.mls-modal-placeholder');
+    this.MAX_TABS_VISIBLE = 5;
+    this.mobileOrSmallScreen = window.matchMedia('(max-width: 600px)').matches;
+
+    this.renderMultilineHeaderAndContent();
+    this.updateLanguageManagementOptions();
 }
 
 MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
@@ -91,6 +103,7 @@ MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
 
 MultiLanguageField.prototype.renderLanguageTab = function (langCode, langName, active) {
     const _li = document.createElement('li');
+    _li.classList.add('nav-item');
     if (active) {
         _li.classList.add('active');
     }
@@ -183,26 +196,41 @@ MultiLanguageField.prototype.renderModalBody = function () {
     }
 }
 
-MultiLanguageField.prototype.renderMultilineHeader = function () {
-    // todo switch to dropwdown on more than 4 languages
+MultiLanguageField.prototype.countActiveTabs = function () {
+    return this._multilineHeader.querySelectorAll('.nav-item').length;
+}
+
+MultiLanguageField.prototype.shouldRenderDropdownInsteadOfTabs = function () {
+    return this.mobileOrSmallScreen || this.countActiveTabs() >= this.MAX_TABS_VISIBLE;
+}
+
+MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     let rowsAdded = false;
     for (let langCode in this.validLanguages) {
         let langName = this.validLanguages[langCode];
 
+        let _language = this.buildLanguageEntry(langCode);
+        this._toggleLanguageOptions.appendChild(_language);
+
         if (!this.languageManagementEnabled || langCode === this.FALLBACK_CODE || this.values[langCode]) {
             let active = !rowsAdded;
-            let _langTab = this.renderLanguageTab(langCode, langName, active);
-            let mlsTabList = this._multilineHeader.querySelector('.mls-tab-list');
-            mlsTabList.appendChild(_langTab);
+
+            if (this.shouldRenderDropdownInsteadOfTabs()) {
+                this._multilineHeader.querySelectorAll('li .mls-language-label').forEach(function (item) {
+                    item.classList.add('hidden');
+                });
+                this._toggleLanguageButton.classList.remove('hidden');
+            } else {
+                let _langTab = this.renderLanguageTab(langCode, langName, active);
+                this._toggleLanguageButton.parentNode.insertBefore(_langTab, this._toggleLanguageButton);
+            }
 
             let _langTabInput = this.renderLanguageTabInput(langCode, langName, active);
             this._multilineContent.appendChild(_langTabInput);
-
             rowsAdded = true;
         }
     }
 
-    // todo adapt code to fit tabs
     if (this.languageManagementEnabled) {
         if (!rowsAdded) {
             this._modalPlaceholder.classList.remove('hidden');
@@ -214,24 +242,46 @@ MultiLanguageField.prototype.renderMultilineHeader = function () {
         const _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
 
         for (let langCode in this.validLanguages) {
-            let _language = document.createElement('li');
-            _language.classList.add('pointer');
-            _language.dataset.lang = langCode;
-            let _link = document.createElement('a');
-            _link.textContent = this.validLanguages[langCode];
-
+            let _language = this.buildLanguageEntry(langCode);
             let me = this;
-            _link.addEventListener('click', function () {
-                let _languagePane = me.renderLanguageTab(langCode, me.validLanguages[langCode], true);
+            _language.querySelector('a').addEventListener('click', function () {
+                if (me.shouldRenderDropdownInsteadOfTabs()) {
+                    me._multilineHeader.querySelectorAll('li .mls-language-label').forEach(function (item) {
+                        item.classList.add('hidden');
+                    });
+                    me._toggleLanguageButton.classList.remove('hidden');
+                } else {
+                    let _languagePane = me.renderLanguageTab(langCode, me.validLanguages[langCode], true);
+                    me._toggleLanguageButton.parentNode.insertBefore(_languagePane, me._toggleLanguageButton);
+                }
+
+                let _languageTabInput = me.renderLanguageTabInput(langCode, me.validLanguages[langCode], true);
                 me._multilineContent.appendChild(_languagePane);
+
                 me._modalPlaceholder.classList.add('hidden');
+                // todo set all other tab content divs to hidden once a new element has been added
+                // todo set element active
                 me.updateLanguageManagementOptions();
             });
-            _language.appendChild(_link);
             _addLanguageOptions.appendChild(_language);
         }
     }
 }
+
+MultiLanguageField.prototype.buildLanguageEntry = function (langCode) {
+    let _link = document.createElement('a');
+    _link.href = '#' + this.fieldName + '-' + langCode;
+    _link.dataset.toggle = 'tab';
+    const _flag = this.renderFlag(langCode);
+    _link.append(_flag);
+    _link.append(this.validLanguages[langCode]);
+    let _language = document.createElement('li');
+    _language.classList.add('pointer');
+    _language.dataset.lang = langCode;
+    _language.appendChild(_link);
+    return _language;
+}
+
 
 MultiLanguageField.prototype.updateOuterInputField = function () {
     const _fallbackInput = this._modal.querySelector('input[data-lang="fallback"]');
