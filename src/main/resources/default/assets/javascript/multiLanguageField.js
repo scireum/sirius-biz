@@ -203,6 +203,27 @@ MultiLanguageField.prototype.shouldRenderDropdownInsteadOfTabs = function () {
     return this.mobileOrSmallScreen || this.countActiveTabs() >= this.MAX_TABS_VISIBLE;
 }
 
+MultiLanguageField.prototype.renderLanguageOptionReplacement = function (langCode) {
+    const _li = document.createElement('li');
+    _li.classList.add('nav-item');
+    _li.classList.add('active');
+    const _anchor = document.createElement('a');
+    _anchor.classList.add('nav-link');
+    _anchor.classList.add('mls-language-label');
+    _anchor.href = '#' + this.fieldName + '-' + langCode;
+    _anchor.dataset.toggle = 'tab';
+    _li.appendChild(_anchor);
+    const _flag = this.renderFlag(langCode);
+    _anchor.appendChild(_flag);
+    const _name = document.createElement('span');
+    _name.textContent = this.getLanguageName(langCode);
+    _anchor.appendChild(_name);
+    const _caretSpan = document.createElement('span');
+    _caretSpan.classList.add('caret');
+    _anchor.appendChild(_caretSpan);
+    return _li;
+}
+
 MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     let rowsAdded = false;
     for (let langCode in this.validLanguages) {
@@ -247,6 +268,10 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
                 let _language = me.buildLanguageEntry(langCode);
                 me._toggleLanguageOptions.appendChild(_language);
 
+                me._multilineContent.querySelectorAll('.tab-pane').forEach(function (langTab) {
+                    langTab.classList.remove('active');
+                });
+
                 let _languageTabInput = me.renderLanguageTabInput(langCode, me.validLanguages[langCode], true);
                 me._multilineContent.appendChild(_languageTabInput);
 
@@ -256,6 +281,23 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
                     });
                     me._toggleLanguageButton.classList.remove('hidden');
                 }
+
+                me._toggleLanguageButton.parentNode.querySelectorAll('li').forEach(function (liEntry) {
+                    liEntry.classList.remove('active');
+                });
+                this.parentElement.classList.add('active');
+
+                const _li = me.renderLanguageOptionReplacement(langCode);
+                const _placeholder = me._toggleLanguageButton.querySelector('.toggle-language-placeholder');
+                _placeholder.appendChild(_li);
+
+                me._toggleLanguageOptions.querySelectorAll('li[data-lang]').forEach(function (langOption) {
+                    if (langOption.dataset.lang === langCode) {
+                        langOption.classList.add('hidden');
+                    } else {
+                        langOption.classList.remove('hidden');
+                    }
+                });
 
                 me.updateLanguageManagementOptions();
             });
