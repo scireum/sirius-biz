@@ -55,9 +55,6 @@ public class DatabaseController extends BasicController {
      */
     private static final int DEFAULT_LIMIT = 1000;
 
-    private static final String PARAM_DB = "db";
-    private static final String PARAM_QUERY = "query";
-
     @Part
     private Schema schema;
 
@@ -102,9 +99,9 @@ public class DatabaseController extends BasicController {
         Watch w = Watch.start();
 
         try {
-            String database = ctx.get(PARAM_DB).asString(defaultDatabase);
+            String database = ctx.get("db").asString(defaultDatabase);
             Database db = determineDatabase(database);
-            String sqlStatement = ctx.get(PARAM_QUERY).asString();
+            String sqlStatement = ctx.get("query").asString();
             SQLQuery qry = db.createQuery(sqlStatement).markAsLongRunning();
 
             OMA.LOG.INFO("Executing SQL (via /system/sql, authored by %s): %s",
@@ -152,15 +149,15 @@ public class DatabaseController extends BasicController {
             throw Exceptions.createHandled().withSystemErrorMessage("Unsafe or missing POST detected!").handle();
         }
 
-        String database = ctx.get(PARAM_DB).asString(defaultDatabase);
-        String sqlStatement = ctx.get(PARAM_QUERY).asString();
+        String database = ctx.get("db").asString(defaultDatabase);
+        String sqlStatement = ctx.get("exportQuery").asString();
 
         if (isDDSStatement(sqlStatement)) {
             throw Exceptions.createHandled().withDirectMessage("A DDS statement cannot be exported.").handle();
         } else {
             Map<String, String> params = new HashMap<>();
             params.put("database", database);
-            params.put(PARAM_QUERY, sqlStatement);
+            params.put("query", sqlStatement);
             ExportQueryResultJobFactory jobFactory =
                     jobs.findFactory(ExportQueryResultJobFactory.FACTORY_NAME, ExportQueryResultJobFactory.class);
             String processId = jobFactory.startInBackground(param -> Value.of(params.getOrDefault(param, null)));
