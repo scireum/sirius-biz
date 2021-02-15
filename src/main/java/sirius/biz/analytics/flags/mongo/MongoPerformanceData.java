@@ -13,7 +13,6 @@ import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.analytics.flags.PerformanceFlagModifier;
 import sirius.biz.analytics.flags.PerformanceFlagged;
 import sirius.biz.web.MongoPageHelper;
-import sirius.db.jdbc.constraints.SQLConstraint;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mixing.types.StringList;
 import sirius.db.mongo.MongoEntity;

@@ -28,6 +28,14 @@ import java.util.Set;
  */
 public class MongoTranslations extends BasicTranslations<MongoTranslation> {
 
+    @Part
+    private static Mongo mongo;
+
+    /**
+     * Creates a new translations composite to be used in MongoDB environments.
+     *
+     * @param owner the entity in which the translations is embedded
+     */
     public MongoTranslations(BaseEntity<?> owner) {
         super(owner);
     }
@@ -42,9 +50,6 @@ public class MongoTranslations extends BasicTranslations<MongoTranslation> {
     public MongoTranslations(BaseEntity<?> owner, @Nonnull Set<String> validLanguages) {
         super(owner, validLanguages);
     }
-
-    @Part
-    private static Mongo mongo;
 
     @Override
     protected void removeTranslations() {
