@@ -270,14 +270,42 @@ public class VFSController extends BizController {
         }
         parent.assertExistingDirectory();
 
-        FileSearch search = FileSearch.iterateAll(child -> outputFile(out, child.name(), child));
+        outputPath(out, parent);
+        outputChildren(ctx, out, parent);
 
+        out.property("canCreateChildren", parent.canCreateChildren());
+    }
+
+    private void outputChildren(WebContext ctx, JSONStructuredOutput out, VirtualFile parent) {
+        out.beginArray("children");
+
+        FileSearch search = FileSearch.iterateAll(child -> outputFile(out, child.name(), child));
         if (ctx.get("onlyDirectories").asBoolean()) {
             search.withOnlyDirectories();
         }
-
         search.withPrefixFilter(ctx.get("filter").asString());
-        search.withLimit(new Limit(0, 100));
+
+        // because of the additional ".."-entry for the parent, we need to adjust the pagination skip/limit
+        boolean hasParent = parent.parent() != null;
+        int skip = ctx.get("skip").asInt(0);
+        Integer limit = ctx.get("maxItems").getInteger();
+        if (hasParent) {
+            if (skip > 0) {
+                skip--;
+            } else {
+                outputFile(out, "..", parent.parent());
+                if (limit != null) {
+                    limit--;
+                }
+            }
+        }
+        search.withLimit(new Limit(skip, limit));
+
+        parent.children(search);
+        out.endArray();
+    }
+
+    private void outputPath(JSONStructuredOutput out, VirtualFile parent) {
         out.beginArray("path");
         for (VirtualFile element : parent.pathList()) {
             out.beginObject("element");
@@ -286,13 +314,6 @@ public class VFSController extends BizController {
             out.endObject();
         }
         out.endArray();
-        out.beginArray("children");
-        if (parent.parent() != null) {
-            outputFile(out, "..", parent.parent());
-        }
-        parent.children(search);
-        out.endArray();
-        out.property("canCreateChildren", parent.canCreateChildren());
     }
 
     private void outputFile(JSONStructuredOutput out, String name, VirtualFile child) {
