@@ -930,6 +930,46 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
+     * Downloads and provides the contents of the requested blob with the given variant.
+     * <p>
+     * Note: This method will not be able to return a file if the blob doesn't yet exist in the requested variant and
+     * the conversion is disabled on this node (see {@link #conversionEnabled}).
+     *
+     * @param blobKey the blob key of the blob to download
+     * @param variant the variant of the blob to download. Use {@link URLBuilder#VARIANT_RAW} to download the blob itself
+     * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist or couldn't
+     * be converted
+     */
+    @Override
+    public Optional<FileHandle> download(String blobKey, String variant) {
+        touch(blobKey);
+
+        try {
+            Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, false);
+
+            if (physicalKey == null) {
+                return Optional.empty();
+            }
+
+            return getPhysicalSpace().download(physicalKey.getFirst());
+        } catch (Exception e) {
+            handleFailedConversion(blobKey, variant, e);
+
+            return Optional.empty();
+        }
+    }
+
+    private void handleFailedConversion(String blobKey, String variant, Exception e) {
+        Exceptions.handle()
+                  .error(e)
+                  .to(StorageUtils.LOG)
+                  .withSystemErrorMessage("Layer2: Failed to perform conversion of %s for %s: %s (%s)",
+                                          blobKey,
+                                          variant)
+                  .handle();
+    }
+
+    /**
      * Provides read access via an {@link InputStream}.
      *
      * @param blob the blob to fetch the data for
@@ -1108,13 +1148,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         } catch (IllegalArgumentException e) {
             response.notCached().error(HttpResponseStatus.BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
-            Exceptions.handle()
-                      .error(e)
-                      .to(StorageUtils.LOG)
-                      .withSystemErrorMessage("Layer2: Failed to perform conversion of %s for %s: %s (%s)",
-                                              blobKey,
-                                              variant)
-                      .handle();
+            handleFailedConversion(blobKey, variant, e);
             response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -1538,13 +1572,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                              getPhysicalSpace().deliver(response, physicalKey.getFirst());
                          }
                      } catch (Exception e) {
-                         Exceptions.handle()
-                                   .error(e)
-                                   .to(StorageUtils.LOG)
-                                   .withSystemErrorMessage("Layer2: Failed to perform conversion of %s for %s: %s (%s)",
-                                                           blobKey,
-                                                           variant)
-                                   .handle();
+                         handleFailedConversion(blobKey, variant, e);
                          response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                      }
                  } else {
