@@ -12,7 +12,6 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.health.CachingLoadInfoProvider;
 import sirius.web.health.LoadInfo;
-import sirius.web.health.LoadInfoProvider;
 
 import java.util.function.Consumer;
 
