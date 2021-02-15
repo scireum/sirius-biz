@@ -8,6 +8,7 @@
 
 package sirius.biz.jdbc;
 
+import sirius.biz.jobs.Jobs;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.jdbc.Database;
 import sirius.db.jdbc.Databases;
@@ -28,6 +29,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.BasicController;
+import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
@@ -37,7 +39,9 @@ import sirius.web.services.JSONStructuredOutput;
 import javax.annotation.Nullable;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -51,6 +55,9 @@ public class DatabaseController extends BasicController {
      */
     private static final int DEFAULT_LIMIT = 1000;
 
+    private static final String PARAM_DB = "db";
+    private static final String PARAM_QUERY = "query";
+
     @Part
     private Schema schema;
 
@@ -63,6 +70,9 @@ public class DatabaseController extends BasicController {
     @ConfigValue("jdbc.selectableDatabases")
     private List<String> selectableDatabases;
 
+    @Part
+    private Jobs jobs;
+
     /**
      * Renders the UI to execute SQL queries.
      *
@@ -70,6 +80,7 @@ public class DatabaseController extends BasicController {
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/sql")
+    @DefaultRoute
     public void sql(WebContext ctx) {
         // Only display selectable databases which are properly configured..
         List<String> availableDatabases = selectableDatabases.stream()
@@ -91,9 +102,9 @@ public class DatabaseController extends BasicController {
         Watch w = Watch.start();
 
         try {
-            String database = ctx.get("db").asString(defaultDatabase);
+            String database = ctx.get(PARAM_DB).asString(defaultDatabase);
             Database db = determineDatabase(database);
-            String sqlStatement = ctx.get("query").asString();
+            String sqlStatement = ctx.get(PARAM_QUERY).asString();
             SQLQuery qry = db.createQuery(sqlStatement).markAsLongRunning();
 
             OMA.LOG.INFO("Executing SQL (via /system/sql, authored by %s): %s",
@@ -126,6 +137,34 @@ public class DatabaseController extends BasicController {
             // In case of an invalid query, we do not want to log this into the syslog but
             // rather just directly output the message to the user....
             throw Exceptions.createHandled().error(exception).withDirectMessage(exception.getMessage()).handle();
+        }
+    }
+
+    /**
+     * Exports the given SQL query
+     *
+     * @param ctx the current request
+     */
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
+    @Routed("/system/sql/export")
+    public void exportQuery(WebContext ctx) {
+        if (!ctx.isSafePOST()) {
+            throw Exceptions.createHandled().withSystemErrorMessage("Unsafe or missing POST detected!").handle();
+        }
+
+        String database = ctx.get(PARAM_DB).asString(defaultDatabase);
+        String sqlStatement = ctx.get(PARAM_QUERY).asString();
+
+        if (isDDSStatement(sqlStatement)) {
+            throw Exceptions.createHandled().withDirectMessage("A DDS statement cannot be exported.").handle();
+        } else {
+            Map<String, String> params = new HashMap<>();
+            params.put("database", database);
+            params.put(PARAM_QUERY, sqlStatement);
+            ExportQueryResultJobFactory jobFactory =
+                    jobs.findFactory(ExportQueryResultJobFactory.FACTORY_NAME, ExportQueryResultJobFactory.class);
+            String processId = jobFactory.startInBackground(param -> Value.of(params.getOrDefault(param, null)));
+            ctx.respondWith().redirectToGet("/ps/" + processId);
         }
     }
 

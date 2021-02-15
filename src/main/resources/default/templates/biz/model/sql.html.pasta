@@ -7,13 +7,24 @@
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="DatabaseController.sql"/>
+    <w:pageHeader>
+        <div class="row">
+            <div class="col-md-8">
+                @i18n("DatabaseController.sql")
+            </div>
+            <div class="col-md-4 align-right">
+                <a id="exportBtn" class="btn btn-default" href="#"><i class="fa fa-save"></i> Export</a>
+            </div>
+        </div>
+    </w:pageHeader>
 
     <div class="well">
+        <form id="exportForm" action="/system/sql/export" method="post">
         <div class="row">
             <div class="col-md-10">
                 <div class="input-group">
-                    <input type="text" id="query" class="form-control" placeholder="@i18n('NLS.searchkey')" autofocus />
+                    <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()" type="hidden"/>
+                    <input type="text" id="query" name="query" class="form-control" placeholder="@i18n('NLS.searchkey')" autofocus />
                     <span class="input-group-addon" onclick="execute()"><i class="fa fa-search"></i></span>
                 </div>
             </div>
@@ -23,6 +34,7 @@
                 </i:for>
             </w:singleSelect>
         </div>
+        </form>
     </div>
 
     <table class="table table-striped">
@@ -109,6 +121,14 @@
                 if (e.keyCode === 13) {
                     execute();
                     return false;
+                }
+            });
+
+            $('#exportBtn').click(function() {
+                if ($('#query').val() === "") {
+                    addError("Cannot export empty query");
+                } else {
+                    $('#exportForm').submit();
                 }
             });
         });
