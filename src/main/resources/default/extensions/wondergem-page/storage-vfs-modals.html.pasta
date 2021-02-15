@@ -2,6 +2,15 @@
 
 <i:switch test="@point">
     <i:block name="footer">
+        <style>
+            .pagination-controls {
+                text-align: center;
+            }
+
+            .pagination-controls > ul {
+                margin: 0;
+            }
+        </style>
         <w:modal name="select-directory-modal" titleKey="VFSController.selectDirectory">
             <w:modalBody>
                 <div class="row">
@@ -11,46 +20,83 @@
                     </div>
                 </div>
                 <div class="row">
+                    <w:textfield name="select-directory-path"
+                                 labelKey="VFSController.directory"
+                                 value=""
+                                 span="7"
+                                 readonly="true"/>
+
+                    <form class="col-md-5 form-group search-form">
+                        <label>@i18n("NLS.search")</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="@i18n('NLS.searchkey')">
+                            <span class="input-group-addon search-btn"><i class="fa fa-search"></i></span>
+                        </div>
+                    </form>
+                </div>
+                <div class="row">
+                    <label class="search-result-js col-md-12" hidden>@i18n("NLS.searchResult")</label>
                     <div class="col-md-12">
                         <table class="table table-striped select-directory-table">
                         </table>
                     </div>
                 </div>
                 <div class="row">
-                    <w:textfield name="select-directory-path"
-                                 labelKey="VFSController.directory"
-                                 value=""
-                                 span="12"
-                                 readonly="true"/>
+                    <nav aria-label="Pop-up pagination" class="pagination-controls col-md-12"></nav>
                 </div>
-                <w:modalFooter cancelKey="NLS.cancel">
-                    <button type="submit" class="btn btn-primary ok-btn">@i18n("NLS.ok")</button>
-                </w:modalFooter>
             </w:modalBody>
+            <w:modalFooter cancelKey="NLS.cancel">
+                <button type="submit" class="btn btn-primary ok-btn">@i18n("NLS.ok")</button>
+            </w:modalFooter>
         </w:modal>
 
         <script type="text/javascript">
             function selectVFSDirectory(path) {
                 return new Promise(function (resolve, reject) {
-                    var $modal = $("#select-directory-modal");
+                    const $modal = $("#select-directory-modal");
+                    const $table = $modal.find('.select-directory-table');
+                    const $searchForm = $modal.find('.search-form input').val("");
+                    const pageSize = 50;
 
-                    function update() {
+                    const pagination = paginate($modal.find(".pagination-controls"), function (page, pagination) {
                         $modal.find("input[name='select-directory-path']").val(path);
-                        $.getJSON('/fs/list', {path: path, onlyDirectories: true}, function (json) {
-                            var $table = $modal.find('.select-directory-table');
+                        if (page <= 1) {
+                            pagination.previousBtn.addClass("disabled");
+                        } else {
+                            pagination.previousBtn.removeClass("disabled");
+                        }
+                        $.getJSON('/fs/list', {
+                            path: path,
+                            onlyDirectories: true,
+                            skip: (page - 1) * pageSize,
+                            maxItems: pageSize + 1,
+                            filter: $searchForm.val()
+                        }, function (json) {
                             $table.html('');
-                            for (var i = 0; i < json.children.length; i++) {
-                                var child = json.children[i];
-                                var $tr = $('<tr>' +
+                            for (let i = 0; i < Math.min(json.children.length, pageSize); i++) {
+                                let child = json.children[i];
+                                let $tr = $('<tr>' +
                                     '<td><a class="file-link" href="#" data-path="' + child.path + '">' +
                                     '<i class="fa fa-folder-open"></i>&nbsp;' + child.name + '</a></td>' +
                                     '</tr>');
 
                                 $tr.find('.file-link').click(function () {
                                     path = $(this).data('path');
-                                    update();
+                                    pagination.reset();
                                 });
                                 $tr.appendTo($table);
+                            }
+
+                            if ($searchForm.val()) {
+                                $modal.find(".search-result-js").show();
+                            } else {
+                                $modal.find(".search-result-js").hide();
+                            }
+
+                            if (json.children.length <= pageSize) {
+                                pagination.nextBtn.addClass("disabled");
+                            } else {
+                                pagination.nextBtn.removeClass("disabled");
                             }
 
                             var $breadcrumbs = $modal.find('.breadcrumb');
@@ -61,15 +107,20 @@
                                 var $li = $('<li><a class="file-link" href="#" data-path="' + element.path + '">' + name + '</a></li>');
                                 $li.find('.file-link').click(function () {
                                     path = $(this).data('path');
-                                    update();
+                                    pagination.reset();
                                 });
                                 $li.appendTo($breadcrumbs);
                             }
                         });
+                    });
 
-                    }
-
-                    update();
+                    $modal.find('.search-form .search-btn').off('click').click(function () {
+                        $modal.find('.search-form').submit();
+                    });
+                    $modal.find('.search-form').off('submit').submit(function (event) {
+                        event.preventDefault();
+                        pagination.reset();
+                    });
 
                     $modal.find('.ok-btn').off('click').click(function () {
                         $modal.modal('hide');
@@ -94,33 +145,57 @@
                         <div class="uploadBox"></div>
                     </div>
                 </div>
+                <form class="row search-form">
+                    <div class="col-md-12 form-group">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="@i18n('NLS.search')">
+                            <span class="input-group-addon search-btn"><i class="fa fa-search"></i></span>
+                        </div>
+                    </div>
+                </form>
                 <div class="row">
+                    <label class="search-result-js col-md-12" hidden>@i18n("NLS.searchResult")</label>
                     <div class="col-md-12">
                         <table class="table table-striped select-file-table">
                         </table>
                     </div>
                 </div>
-                <w:modalFooter cancelKey="NLS.cancel"/>
+                <div class="row">
+                    <nav aria-label="Pop-up pagination" class="pagination-controls col-md-12"></nav>
+                </div>
             </w:modalBody>
+            <w:modalFooter cancelKey="NLS.cancel"/>
         </w:modal>
 
         <script type="text/javascript">
-            function selectVFSFile(initialPath, restrictToPath) {
+            function selectVFSFile(path, restrictToPath) {
                 return new Promise(function (resolve, reject) {
-                    var $modal = $("#select-file-modal");
+                    const $modal = $("#select-file-modal");
+                    const $table = $modal.find('.select-file-table');
+                    const $searchForm = $modal.find('.search-form input').val("");
+                    const pageSize = 50;
 
-                    function update(path) {
-                        $.getJSON('/fs/list', {path: path, onlyDirectories: false}, function (json) {
-                            var $table = $modal.find('.select-file-table');
+                    const pagination = paginate($modal.find(".pagination-controls"), function (page, pagination) {
+                        if (page <= 1) {
+                            pagination.previousBtn.addClass("disabled");
+                        } else {
+                            pagination.previousBtn.removeClass("disabled");
+                        }
+                        $.getJSON('/fs/list', {
+                            path: path, onlyDirectories: false,
+                            skip: (page - 1) * pageSize,
+                            maxItems: pageSize + 1,
+                            filter: $searchForm.val()
+                        }, function (json) {
                             $table.html('');
-                            for (var i = 0; i < json.children.length; i++) {
-                                var child = json.children[i];
+                            for (let i = 0; i < Math.min(json.children.length, pageSize); i++) {
+                                let child = json.children[i];
 
                                 if (restrictToPath !== undefined && !child.path.startsWith(restrictToPath)) {
                                     continue;
                                 }
 
-                                var $tr = $('<tr>' +
+                                let $tr = $('<tr>' +
                                     '<td><a class="file-link" href="#" data-dir="' + child.directory +
                                     '" data-path="' + child.path + '">' +
                                     '<i class="fa"></i>&nbsp;' + child.name + '</a></td>' +
@@ -136,13 +211,20 @@
 
                                 $tr.find('.file-link').click(function () {
                                     if ($(this).data('dir')) {
-                                        update($(this).data('path'));
+                                        path = $(this).data('path');
+                                        pagination.reset();
                                     } else {
                                         $modal.modal('hide');
                                         resolve($(this).data('path'));
                                     }
                                 });
                                 $tr.appendTo($table);
+                            }
+
+                            if ($searchForm.val()) {
+                                $modal.find(".search-result-js").show();
+                            } else {
+                                $modal.find(".search-result-js").hide();
                             }
 
                             var $breadcrumbs = $modal.find('.breadcrumb');
@@ -157,7 +239,8 @@
 
                                 var $li = $('<li><a class="file-link" href="#" data-path="' + element.path + '">' + name + '</a></li>');
                                 $li.find('.file-link').click(function () {
-                                    update($(this).data('path'));
+                                    path = $(this).data('path');
+                                    pagination.reset();
                                 });
                                 $li.appendTo($breadcrumbs);
                             }
@@ -179,10 +262,15 @@
                                 $modal.find('.uploadBox').html('');
                             }
                         });
+                    });
 
-                    }
-
-                    update(initialPath);
+                    $modal.find('.search-form .search-btn').off('click').click(function () {
+                        $modal.find('.search-form').submit();
+                    });
+                    $modal.find('.search-form').off('submit').submit(function (event) {
+                        event.preventDefault();
+                        pagination.reset();
+                    });
 
                     $modal.find('.ok-btn').off('click').click(function () {
                         $modal.modal('hide');
