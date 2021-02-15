@@ -265,7 +265,7 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
                 let _langTab = me.renderLanguageTab(langCode, me.validLanguages[langCode], true);
                 me._toggleLanguageButton.parentNode.insertBefore(_langTab, me._toggleLanguageButton);
 
-                let _language = me.buildLanguageEntry(langCode);
+                let _language = me.buildLanguageEntry(langCode, true);
                 me._toggleLanguageOptions.appendChild(_language);
 
                 me._multilineContent.querySelectorAll('.tab-pane').forEach(function (langTab) {
