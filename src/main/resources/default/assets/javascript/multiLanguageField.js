@@ -66,6 +66,24 @@ MultiLanguageField.prototype.buildMultiline = function () {
     this.mobileOrSmallScreen = window.matchMedia('(max-width: 600px)').matches;
 
     this.renderMultilineHeaderAndContent();
+
+    const elems = this._toggleLanguageOptions.querySelectorAll('li');
+    if (elems.length > 0) {
+        const element = elems[0];
+        const langCode = element.dataset.lang;
+        const _li = this.renderLanguageOptionReplacement(langCode);
+        const _placeholder = this._toggleLanguageButton.querySelector('.toggle-language-placeholder');
+        _placeholder.appendChild(_li);
+
+        this._toggleLanguageOptions.querySelectorAll('li[data-lang]').forEach(function (langOption) {
+            if (langOption.dataset.lang === langCode) {
+                langOption.classList.add('hidden');
+            } else {
+                langOption.classList.remove('hidden');
+            }
+        });
+    }
+
     this.updateLanguageManagementOptions();
 }
 
