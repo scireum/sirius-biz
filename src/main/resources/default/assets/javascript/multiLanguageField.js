@@ -232,7 +232,7 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
         if (!this.languageManagementEnabled || langCode === this.FALLBACK_CODE || this.values[langCode]) {
             let active = !rowsAdded;
 
-            let _language = this.buildLanguageEntry(langCode);
+            let _language = this.buildLanguageEntry(langCode, true);
             this._toggleLanguageOptions.appendChild(_language);
 
             let _langTab = this.renderLanguageTab(langCode, langName, active);
@@ -306,7 +306,7 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     }
 }
 
-MultiLanguageField.prototype.buildLanguageEntry = function (langCode) {
+MultiLanguageField.prototype.buildLanguageEntry = function (langCode, syncDropdownTitleOnClick = false) {
     let _link = document.createElement('a');
     _link.href = '#' + this.fieldName + '-' + langCode;
     _link.dataset.toggle = 'tab';
@@ -317,6 +317,27 @@ MultiLanguageField.prototype.buildLanguageEntry = function (langCode) {
     _language.classList.add('pointer');
     _language.dataset.lang = langCode;
     _language.appendChild(_link);
+
+    if (syncDropdownTitleOnClick) {
+        let me = this;
+        _link.addEventListener('click', function () {
+            me._toggleLanguageOptions.querySelectorAll('li[data-lang]').forEach(function (langOption) {
+                if (langOption.dataset.lang === langCode) {
+                    langOption.classList.add('hidden');
+                } else {
+                    langOption.classList.remove('hidden');
+                }
+            });
+            const _placeholder = me._toggleLanguageButton.querySelector('.toggle-language-placeholder');
+            _placeholder.querySelectorAll('li').forEach(function (option) {
+                option.classList.remove('active');
+                option.classList.add('hidden');
+            });
+            const _li = me.renderLanguageOptionReplacement(langCode);
+            _placeholder.appendChild(_li);
+        });
+    }
+
     return _language;
 }
 
