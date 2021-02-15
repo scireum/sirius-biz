@@ -259,8 +259,6 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
                 me._multilineContent.appendChild(_languagePane);
 
                 me._modalPlaceholder.classList.add('hidden');
-                // todo set all other tab content divs to hidden once a new element has been added
-                // todo set element active
                 me.updateLanguageManagementOptions();
             });
             _addLanguageOptions.appendChild(_language);
@@ -331,9 +329,8 @@ MultiLanguageField.prototype.updateLanguageManagementOptions = function () {
     const _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
 
     if (this.multiline) {
-        // todo check and adapt
-        this._multilineContent.querySelectorAll('.row').forEach(function (_row) {
-            let lang = _row.querySelector('input').dataset.lang;
+        this._multilineContent.querySelectorAll('.tab-pane').forEach(function (_pane) {
+            let lang = _pane.querySelector('textarea').dataset.lang;
             let _langOption = _addLanguageOptions.querySelector('li[data-lang="' + lang + '"]');
             if (_langOption) {
                 _langOption.classList.add('hidden');
