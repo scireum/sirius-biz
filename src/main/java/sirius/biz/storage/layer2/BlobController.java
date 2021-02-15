@@ -32,6 +32,15 @@ import java.io.IOException;
 @Register(framework = StorageUtils.FRAMEWORK_STORAGE)
 public class BlobController extends BizController {
 
+    private static final String KEY_FILENAME = "filename";
+    private static final String KEY_FILE = "qqfile";
+    private static final String KEY_FILE_ID = "fileId";
+    private static final String KEY_PREVIEW_URL = "previewUrl";
+    private static final String KEY_DOWNLOAD_URL = "downloadUrl";
+    private static final String KEY_SIZE = "size";
+    private static final String KEY_FORMATTED_SIZE = "formattedSize";
+    private static final String KEY_PATH = "path";
+
     @Part
     private BlobStorage blobStorage;
 
@@ -58,18 +67,18 @@ public class BlobController extends BizController {
             try {
                 ctx.markAsLongCall();
                 //TODO SIRI-96 remove legacy qqfile once library is updated...
-                String name = ctx.get("filename").asString(ctx.get("qqfile").asString());
+                String name = ctx.get(KEY_FILENAME).asString(ctx.get(KEY_FILE).asString());
                 blob.updateContent(name, upload, Long.parseLong(ctx.getHeader(HttpHeaderNames.CONTENT_LENGTH)));
 
-                out.property("fileId", blob.getBlobKey());
+                out.property(KEY_FILE_ID, blob.getBlobKey());
 
                 // TODO SIRI-96 remove once the blobHardRefField has been refactored
-                out.property("previewUrl", blob.url().asDownload().buildURL().orElse(""));
+                out.property(KEY_PREVIEW_URL, blob.url().asDownload().buildURL().orElse(""));
 
-                out.property("downloadUrl", blob.url().asDownload().buildURL().orElse(""));
-                out.property("filename", blob.getFilename());
-                out.property("size", blob.getSize());
-                out.property("formattedSize", NLS.formatSize(blob.getSize()));
+                out.property(KEY_DOWNLOAD_URL, blob.url().asDownload().buildURL().orElse(""));
+                out.property(KEY_FILENAME, blob.getFilename());
+                out.property(KEY_SIZE, blob.getSize());
+                out.property(KEY_FORMATTED_SIZE, NLS.formatSize(blob.getSize()));
             } finally {
                 upload.close();
             }
@@ -96,7 +105,7 @@ public class BlobController extends BizController {
     @Routed(value = "/dasd/blob-info-for-path/:1", jsonCall = true)
     @LoginRequired
     public void blobInfoForPath(final WebContext webContext, JSONStructuredOutput out, String spaceName) {
-        String path = webContext.getParameter("path");
+        String path = webContext.getParameter(KEY_PATH);
 
         BlobStorageSpace space = blobStorage.getSpace(spaceName);
 
@@ -114,10 +123,10 @@ public class BlobController extends BizController {
                                                               spaceName)
                                                       .handle());
 
-        out.property("fileId", blob.getBlobKey());
-        out.property("filename", blob.getFilename());
-        out.property("size", blob.getSize());
-        out.property("formattedSize", NLS.formatSize(blob.getSize()));
-        out.property("downloadUrl", blob.url().asDownload().buildURL().orElse(""));
+        out.property(KEY_FILE_ID, blob.getBlobKey());
+        out.property(KEY_FILENAME, blob.getFilename());
+        out.property(KEY_SIZE, blob.getSize());
+        out.property(KEY_FORMATTED_SIZE, NLS.formatSize(blob.getSize()));
+        out.property(KEY_DOWNLOAD_URL, blob.url().asDownload().buildURL().orElse(""));
     }
 }

@@ -317,6 +317,12 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         return Collections.unmodifiableList(subScopes);
     }
 
+    /**
+     * Returns the name of the given sub scope.
+     *
+     * @param scope the technical name of the sub scope
+     * @return the sub scope name as shown to the user
+     */
     public String getSubScopeName(String scope) {
         return NLS.get("SubScope." + scope + ".name");
     }

@@ -475,6 +475,7 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
      * Executes the given code as "Administrator" and permits to return a value.
      *
      * @param task the task to execute
+     * @return the value as returned by the given task
      * @throws Exception any exception which is thrown within the task will be propagated to the outside
      * @see #runAsAdmin(UnitOfWork)
      */

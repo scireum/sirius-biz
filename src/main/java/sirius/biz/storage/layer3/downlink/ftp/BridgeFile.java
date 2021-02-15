@@ -8,11 +8,13 @@
 
 package sirius.biz.storage.layer3.downlink.ftp;
 
+import com.google.common.io.ByteStreams;
 import org.apache.ftpserver.ftplet.FtpFile;
 import sirius.biz.storage.layer3.FileSearch;
+import sirius.biz.storage.layer3.Transfer;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.util.StorageUtils;
-import sirius.kernel.commons.Streams;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
 
 import java.io.ByteArrayInputStream;
@@ -21,6 +23,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Provides a bridge between {@link VirtualFile} and the FTP server.
@@ -148,7 +151,23 @@ class BridgeFile implements FtpFile {
 
     @Override
     public boolean move(FtpFile destination) {
-        //TODO SIRI-102 verify correctness / perform via VFS API!
+        if (destination instanceof BridgeFile) {
+            BridgeFile other = (BridgeFile) destination;
+            // Detect and optimize renames...
+            if (Objects.equals(file.parent(), other.parent)) {
+                file.rename(other.childName);
+                return true;
+            }
+
+            // Detect and optimize moves into another directory if possible...
+            if (other.file == null && Strings.areEqual(file.name(), other.childName)) {
+                Transfer transfer = file.transferTo(other.parent);
+                if (transfer.tryFastMove()) {
+                    return true;
+                }
+            }
+        }
+
         try {
             if (!doesExist()) {
                 return false;
@@ -156,7 +175,7 @@ class BridgeFile implements FtpFile {
 
             if (destination.isWritable() && this.isReadable()) {
                 try (OutputStream out = destination.createOutputStream(0L); InputStream in = createInputStream(0L)) {
-                    Streams.transfer(in, out);
+                    ByteStreams.copy(in, out);
                 }
             }
             return this.delete();

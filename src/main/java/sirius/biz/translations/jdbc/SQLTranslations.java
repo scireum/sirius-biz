@@ -29,6 +29,11 @@ import java.util.Set;
  */
 public class SQLTranslations extends BasicTranslations<SQLTranslation> {
 
+    /**
+     * Creates a new translations composite to be used in JDBC environments.
+     *
+     * @param owner the entity in which the translations is embedded
+     */
     public SQLTranslations(BaseEntity<?> owner) {
         super(owner);
     }

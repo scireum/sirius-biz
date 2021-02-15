@@ -15,7 +15,6 @@ import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.db.jdbc.Databases;
 import sirius.db.jdbc.OMA;
-import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.Mongo;
 import sirius.db.redis.Redis;

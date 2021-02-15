@@ -8,7 +8,6 @@
 
 package sirius.biz.tenants.jdbc;
 
-import sirius.biz.analytics.flags.PerformanceData;
 import sirius.biz.analytics.flags.PerformanceDataImportExtender;
 import sirius.biz.importer.ImportHandler;
 import sirius.biz.importer.ImportHandlerFactory;
@@ -128,5 +127,4 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
 
         return result;
     }
-
 }
