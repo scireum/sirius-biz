@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 
 /**
- * Responsible for resolving blob:// URIs and resizing the image while maintaining the image ratio.
+ * Resolves blob:// URIs to resized images while maintaining the image ratios.
  * <p>
  * The format of the URI needs to match blob://space/variant/blobKey.
  */
