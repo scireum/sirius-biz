@@ -62,7 +62,6 @@ MultiLanguageField.prototype.buildMultiline = function () {
     this._toggleLanguageButton = this._multilineHeader.querySelector('.mls-toggle-language-button');
     this._toggleLanguageOptions = this._multilineHeader.querySelector('.toggle-language-data');
     this._multilineContent = this._wrapper.querySelector('.mls-tab-content');
-    this._modalPlaceholder = this._wrapper.querySelector('.mls-modal-placeholder');
     this.MAX_TABS_VISIBLE = 5;
     this.mobileOrSmallScreen = window.matchMedia('(max-width: 600px)').matches;
 
@@ -209,33 +208,30 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     for (let langCode in this.validLanguages) {
         let langName = this.validLanguages[langCode];
 
-        let _language = this.buildLanguageEntry(langCode);
-        this._toggleLanguageOptions.appendChild(_language);
-
         if (!this.languageManagementEnabled || langCode === this.FALLBACK_CODE || this.values[langCode]) {
             let active = !rowsAdded;
+
+            let _language = this.buildLanguageEntry(langCode);
+            this._toggleLanguageOptions.appendChild(_language);
+
+            let _langTab = this.renderLanguageTab(langCode, langName, active);
+            this._toggleLanguageButton.parentNode.insertBefore(_langTab, this._toggleLanguageButton);
+
+            let _langTabInput = this.renderLanguageTabInput(langCode, langName, active);
+            this._multilineContent.appendChild(_langTabInput);
 
             if (this.shouldRenderDropdownInsteadOfTabs()) {
                 this._multilineHeader.querySelectorAll('li .mls-language-label').forEach(function (item) {
                     item.classList.add('hidden');
                 });
                 this._toggleLanguageButton.classList.remove('hidden');
-            } else {
-                let _langTab = this.renderLanguageTab(langCode, langName, active);
-                this._toggleLanguageButton.parentNode.insertBefore(_langTab, this._toggleLanguageButton);
             }
 
-            let _langTabInput = this.renderLanguageTabInput(langCode, langName, active);
-            this._multilineContent.appendChild(_langTabInput);
             rowsAdded = true;
         }
     }
 
     if (this.languageManagementEnabled) {
-        if (!rowsAdded) {
-            this._modalPlaceholder.classList.remove('hidden');
-        }
-
         const _addLanguageButton = this._multilineHeader.querySelector('.mls-add-language-button');
         _addLanguageButton.classList.remove('hidden');
 
@@ -245,20 +241,22 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
             let _language = this.buildLanguageEntry(langCode);
             let me = this;
             _language.querySelector('a').addEventListener('click', function () {
+                let _langTab = me.renderLanguageTab(langCode, me.validLanguages[langCode], true);
+                me._toggleLanguageButton.parentNode.insertBefore(_langTab, me._toggleLanguageButton);
+
+                let _language = me.buildLanguageEntry(langCode);
+                me._toggleLanguageOptions.appendChild(_language);
+
+                let _languageTabInput = me.renderLanguageTabInput(langCode, me.validLanguages[langCode], true);
+                me._multilineContent.appendChild(_languageTabInput);
+
                 if (me.shouldRenderDropdownInsteadOfTabs()) {
                     me._multilineHeader.querySelectorAll('li .mls-language-label').forEach(function (item) {
                         item.classList.add('hidden');
                     });
                     me._toggleLanguageButton.classList.remove('hidden');
-                } else {
-                    let _languagePane = me.renderLanguageTab(langCode, me.validLanguages[langCode], true);
-                    me._toggleLanguageButton.parentNode.insertBefore(_languagePane, me._toggleLanguageButton);
                 }
 
-                let _languageTabInput = me.renderLanguageTabInput(langCode, me.validLanguages[langCode], true);
-                me._multilineContent.appendChild(_languagePane);
-
-                me._modalPlaceholder.classList.add('hidden');
                 me.updateLanguageManagementOptions();
             });
             _addLanguageOptions.appendChild(_language);
@@ -352,10 +350,20 @@ MultiLanguageField.prototype.updateLanguageManagementOptions = function () {
     }
 }
 
+/**
+ * Returns the translated language name for a given langCode.
+ * @param langCode the language code, eg. 'de'
+ * @returns {*}
+ */
 MultiLanguageField.prototype.getLanguageName = function (langCode) {
     return this.validLanguages[langCode];
 }
 
+/**
+ * Renders a flag symbol based on the given langCode.
+ * @param langCode the language code, eg. 'de'
+ * @returns {HTMLImageElement}
+ */
 MultiLanguageField.prototype.renderFlag = function (langCode) {
     if (langCode === this.FALLBACK_CODE) {
         // globe icon
