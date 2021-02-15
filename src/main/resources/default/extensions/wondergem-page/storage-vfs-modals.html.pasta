@@ -227,6 +227,12 @@
                                 $modal.find(".search-result-js").hide();
                             }
 
+                            if (json.children.length <= pageSize) {
+                                pagination.nextBtn.addClass("disabled");
+                            } else {
+                                pagination.nextBtn.removeClass("disabled");
+                            }
+
                             var $breadcrumbs = $modal.find('.breadcrumb');
                             $breadcrumbs.html('');
                             for (var i = 0; i < json.path.length; i++) {
