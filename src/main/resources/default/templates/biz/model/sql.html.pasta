@@ -31,7 +31,7 @@
                     <span class="input-group-addon" onclick="execute()"><i class="fa fa-search"></i></span>
                 </div>
             </div>
-            <w:singleSelect name="db" id="db" span="2">
+            <w:singleSelect name="database" id="db" span="2">
                 <i:for type="String" var="db" items="dbs">
                     <option value="@db" @selected="defaultDB == db">@db</option>
                 </i:for>

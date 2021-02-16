@@ -54,6 +54,16 @@ public class DatabaseController extends BasicController {
      */
     private static final int DEFAULT_LIMIT = 1000;
 
+    private static final String PARAM_DATABASE = "database";
+    private static final String PARAM_QUERY = "query";
+    private static final String PARAM_EXPORT_QUERY = "exportQuery";
+    private static final String KEYWORD_UPDATE = "update";
+    private static final String KEYWORD_INSERT = "insert";
+    private static final String KEYWORD_ALTER = "alter";
+    private static final String KEYWORD_DROP = "drop";
+    private static final String KEYWORD_CREATE = "create";
+    private static final String KEYWORD_DELETE = "delete";
+
     @Part
     private Schema schema;
 
@@ -98,9 +108,9 @@ public class DatabaseController extends BasicController {
         Watch w = Watch.start();
 
         try {
-            String database = webContext.get("db").asString(defaultDatabase);
+            String database = webContext.get(PARAM_DATABASE).asString(defaultDatabase);
             Database db = determineDatabase(database);
-            String sqlStatement = webContext.get("query").asString();
+            String sqlStatement = webContext.get(PARAM_QUERY).asString();
             SQLQuery qry = db.createQuery(sqlStatement).markAsLongRunning();
 
             OMA.LOG.INFO("Executing SQL (via /system/sql, authored by %s): %s",
@@ -149,11 +159,13 @@ public class DatabaseController extends BasicController {
             throw Exceptions.createHandled().withSystemErrorMessage("Unsafe or missing POST detected!").handle();
         }
 
-        String database = webContext.get("db").asString(defaultDatabase);
-        String sqlStatement = webContext.get("exportQuery").asString();
+        String database = webContext.get(PARAM_DATABASE).asString(defaultDatabase);
+        String sqlStatement = webContext.get(PARAM_EXPORT_QUERY).asString();
 
         if (isDDLStatement(sqlStatement)) {
             throw Exceptions.createHandled().withDirectMessage("A DDL statement cannot be exported.").handle();
+        } else  if (isModifyStatement(sqlStatement)) {
+            throw Exceptions.createHandled().withDirectMessage("A modifying statement cannot be exported.").handle();
         } else {
             ExportQueryResultJobFactory jobFactory =
                     jobs.findFactory(ExportQueryResultJobFactory.FACTORY_NAME, ExportQueryResultJobFactory.class);
@@ -172,9 +184,9 @@ public class DatabaseController extends BasicController {
     private Function<String, Value> createJobParameterSupplier(String database, String sqlStatement) {
         return parameterName -> {
             switch (parameterName) {
-                case "database":
+                case PARAM_DATABASE:
                     return Value.of(database);
-                case "query":
+                case PARAM_QUERY:
                     return Value.of(sqlStatement);
                 default:
                     return Value.EMPTY;
@@ -191,14 +203,14 @@ public class DatabaseController extends BasicController {
 
     private boolean isModifyStatement(String query) {
         String lowerCaseQuery = query.toLowerCase().trim();
-        return lowerCaseQuery.startsWith("update") || lowerCaseQuery.startsWith("insert") || lowerCaseQuery.startsWith(
-                "delete");
+        return lowerCaseQuery.startsWith(KEYWORD_UPDATE) || lowerCaseQuery.startsWith(KEYWORD_INSERT) || lowerCaseQuery.startsWith(
+                KEYWORD_DELETE);
     }
 
     private boolean isDDLStatement(String qry) {
         String lowerCaseQuery = qry.toLowerCase().trim();
-        return lowerCaseQuery.startsWith("alter") || lowerCaseQuery.startsWith("drop") || lowerCaseQuery.startsWith(
-                "create");
+        return lowerCaseQuery.startsWith(KEYWORD_ALTER) || lowerCaseQuery.startsWith(KEYWORD_DROP) || lowerCaseQuery.startsWith(
+                KEYWORD_CREATE);
     }
 
     private void outputRow(JSONStructuredOutput out, Monoflop monoflop, Row row) {
