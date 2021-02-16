@@ -32,29 +32,28 @@
         </span>
         </label>
     </i:if>
-    <div class="mls-modal-placeholder hidden">
-        @i18n("MultiLanguageEditor.placeholder")
-    </div>
-    <div class="mls-tab-header">
-        <ul class="nav nav-tabs mls-tab-list">
-            <li class="dropdown mls-toggle-language-button hidden">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
-                   aria-expanded="false">
-                    @i18n("MultiLanguageEditor.pleaseSelect") <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu toggle-language-data"></ul>
-            </li>
+    <div class="mls-tab-container">
+        <div class="mls-tab-header">
+            <ul class="nav nav-tabs mls-tab-list">
+                <li class="dropdown mls-toggle-language-button hidden" role="presentation">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
+                       aria-expanded="false">
+                        <div class="toggle-language-placeholder"></div>
+                    </a>
+                    <ul class="dropdown-menu toggle-language-data"></ul>
+                </li>
 
-            <li class="mls-add-language-button btn-group dropup hidden">
-                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="#" role="button"
-                   aria-haspopup="true" aria-expanded="false">
-                    <i class="fa fa-plus"></i> @i18n("MultiLanguageEditor.addLanguage")
-                </a>
-                <ul class="dropdown-menu"></ul>
-            </li>
-        </ul>
-    </div>
-    <div class="tab-content mls-tab-content">
+                <li class="mls-add-language-button btn-group dropup hidden">
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown" href="#" role="button"
+                       aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-plus"></i> @i18n("MultiLanguageEditor.addLanguage")
+                    </a>
+                    <ul class="dropdown-menu"></ul>
+                </li>
+            </ul>
+        </div>
+        <div class="tab-content mls-tab-content">
+        </div>
     </div>
 
     <i:if test="isFilled(help)">

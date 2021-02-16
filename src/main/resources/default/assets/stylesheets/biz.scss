@@ -137,3 +137,32 @@ input.form-control.mls-input {
     }
   }
 }
+
+.mls-tab-container {
+  .mls-add-language-button .dropdown-menu {
+    max-height: 140x;
+    overflow: auto;
+  }
+
+  .mls-tab-list .mls-language-label {
+    display: flex;
+    height: 34px;
+    align-items: center;
+  }
+
+  .mls-tab-list .dropdown-toggle {
+    display: flex;
+    height: 34px;
+    align-items: center;
+  }
+
+  .mls-language-flag {
+    margin-right: 8px;
+  }
+
+  .mls-language-globe {
+    height: 12px;
+    width: 12px;
+    object-fit: cover;
+  }
+}
