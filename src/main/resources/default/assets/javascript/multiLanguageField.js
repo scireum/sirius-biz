@@ -24,7 +24,7 @@ function MultiLanguageField(options) {
     if (this.hasFallback) {
         this.validLanguages.fallback = this.fallbackLabel;
     }
-    for (const langCode in options.validLanguages) {
+    for (let  langCode in options.validLanguages) {
         this.validLanguages[langCode] = options.validLanguages[langCode];
     }
 
@@ -153,7 +153,7 @@ MultiLanguageField.prototype.renderModalBody = function () {
     this._modal.classList.add('mls-modal');
 
     let rowsAdded = false;
-    for (const langCode in this.validLanguages) {
+    for (let  langCode in this.validLanguages) {
         const langName = this.getLanguageName(langCode);
 
         if (!this.languageManagementEnabled || langCode === this.FALLBACK_CODE || this.values[langCode]) {
@@ -173,7 +173,7 @@ MultiLanguageField.prototype.renderModalBody = function () {
 
         const _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
 
-        for (const langCode in this.validLanguages) {
+        for (let  langCode in this.validLanguages) {
             const _language = document.createElement('li');
             _language.classList.add('pointer');
             _language.dataset.lang = langCode;
@@ -244,7 +244,7 @@ MultiLanguageField.prototype.renderLanguageOptionReplacement = function (langCod
 
 MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     let rowsAdded = false;
-    for (const langCode in this.validLanguages) {
+    for (let  langCode in this.validLanguages) {
         const langName = this.getLanguageName(langCode);
 
         if (!this.languageManagementEnabled || langCode === this.FALLBACK_CODE || this.values[langCode]) {
@@ -276,7 +276,7 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
 
         const _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
 
-        for (const langCode in this.validLanguages) {
+        for (let  langCode in this.validLanguages) {
             const _language = this.buildLanguageEntry(langCode, false);
             const me = this;
             _language.querySelector('a').addEventListener('click', function () {
