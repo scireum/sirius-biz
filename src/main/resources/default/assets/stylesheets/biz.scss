@@ -144,6 +144,11 @@ input.form-control.mls-input {
     overflow: auto;
   }
 
+  .mls-toggle-language-button .dropdown-menu {
+    max-height: 140px;
+    overflow: auto;
+  }
+
   .mls-tab-list .mls-language-label {
     display: flex;
     height: 34px;
