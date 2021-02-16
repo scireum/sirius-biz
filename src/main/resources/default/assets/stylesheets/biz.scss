@@ -159,6 +159,14 @@ input.form-control.mls-input {
   }
 
   .mls-toggle-language-button {
+    // We supress a border/separation between tab and textarea input
+    border-bottom: none;
+
+    &.active {
+      // We supress a border/separation between tab and textarea input
+      margin-bottom: -2px;
+    }
+
     a {
       color: #5e6468;
     }
