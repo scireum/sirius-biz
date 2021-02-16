@@ -11,178 +11,128 @@
                 margin: 0;
             }
         </style>
-        <w:modal name="select-directory-modal" titleKey="VFSController.selectDirectory">
-            <w:modalBody>
-                <div class="row">
-                    <div class="col-md-12">
-                        <ol class="breadcrumb">
-                        </ol>
-                    </div>
-                </div>
-                <div class="row">
-                    <w:textfield name="select-directory-path"
-                                 labelKey="VFSController.directory"
-                                 value=""
-                                 span="7"
-                                 readonly="true"/>
-
-                    <form class="col-md-5 form-group search-form">
-                        <label>@i18n("NLS.search")</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" placeholder="@i18n('NLS.searchkey')">
-                            <span class="input-group-addon search-btn"><i class="fa fa-search"></i></span>
-                        </div>
-                    </form>
-                </div>
-                <div class="row">
-                    <label class="search-result-js col-md-12" hidden>@i18n("NLS.searchResult")</label>
-                    <div class="col-md-12">
-                        <table class="table table-striped select-directory-table">
-                        </table>
-                    </div>
-                </div>
-                <div class="row">
-                    <nav aria-label="Pop-up pagination" class="pagination-controls col-md-12"></nav>
-                </div>
-            </w:modalBody>
-            <w:modalFooter cancelKey="NLS.cancel">
-                <button type="submit" class="btn btn-primary ok-btn">@i18n("NLS.ok")</button>
-            </w:modalFooter>
-        </w:modal>
-
-        <script type="text/javascript">
-            function selectVFSDirectory(path) {
-                return new Promise(function (resolve, reject) {
-                    const $modal = $("#select-directory-modal");
-                    const $table = $modal.find('.select-directory-table');
-                    const $searchForm = $modal.find('.search-form input').val("");
-                    const pageSize = 50;
-
-                    const pagination = paginate($modal.find(".pagination-controls"), function (page, pagination) {
-                        $modal.find("input[name='select-directory-path']").val(path);
-                        if (page <= 1) {
-                            pagination.previousBtn.addClass("disabled");
-                        } else {
-                            pagination.previousBtn.removeClass("disabled");
-                        }
-                        $.getJSON('/fs/list', {
-                            path: path,
-                            onlyDirectories: true,
-                            skip: (page - 1) * pageSize,
-                            maxItems: pageSize + 1,
-                            filter: $searchForm.val()
-                        }, function (json) {
-                            $table.html('');
-                            for (let i = 0; i < Math.min(json.children.length, pageSize); i++) {
-                                let child = json.children[i];
-                                let $tr = $('<tr>' +
-                                    '<td><a class="file-link" href="#" data-path="' + child.path + '">' +
-                                    '<i class="fa fa-folder-open"></i>&nbsp;' + child.name + '</a></td>' +
-                                    '</tr>');
-
-                                $tr.find('.file-link').click(function () {
-                                    path = $(this).data('path');
-                                    pagination.reset();
-                                });
-                                $tr.appendTo($table);
-                            }
-
-                            if ($searchForm.val()) {
-                                $modal.find(".search-result-js").show();
-                            } else {
-                                $modal.find(".search-result-js").hide();
-                            }
-
-                            if (json.children.length <= pageSize) {
-                                pagination.nextBtn.addClass("disabled");
-                            } else {
-                                pagination.nextBtn.removeClass("disabled");
-                            }
-
-                            var $breadcrumbs = $modal.find('.breadcrumb');
-                            $breadcrumbs.html('');
-                            for (var i = 0; i < json.path.length; i++) {
-                                var element = json.path[i];
-                                var name = element.name === '/' ? '<i class="fa fa-home"></i>' : element.name;
-                                var $li = $('<li><a class="file-link" href="#" data-path="' + element.path + '">' + name + '</a></li>');
-                                $li.find('.file-link').click(function () {
-                                    path = $(this).data('path');
-                                    pagination.reset();
-                                });
-                                $li.appendTo($breadcrumbs);
-                            }
-                        });
-                    });
-
-                    $modal.find('.search-form .search-btn').off('click').click(function () {
-                        $modal.find('.search-form').submit();
-                    });
-                    $modal.find('.search-form').off('submit').submit(function (event) {
-                        event.preventDefault();
-                        pagination.reset();
-                    });
-
-                    $modal.find('.ok-btn').off('click').click(function () {
-                        $modal.modal('hide');
-                        resolve(path);
-                    });
-
-                    $modal.modal('show');
-                });
-            }
-        </script>
 
         <w:modal name="select-file-modal" titleKey="VFSController.selectFile">
             <w:modalBody>
                 <div class="row">
                     <div class="col-md-12">
-                        <ol class="breadcrumb">
+                        <ol class="breadcrumb breadcrumb-js">
                         </ol>
                     </div>
                 </div>
-                <div class="row">
+                <div class="row upload-container-js">
                     <div class="col-md-12">
-                        <div class="uploadBox"></div>
+                        <div class="upload-box-js"></div>
                     </div>
                 </div>
-                <form class="row search-form">
+                <form class="row search-form-js">
                     <div class="col-md-12 form-group">
                         <div class="input-group">
                             <input type="text" class="form-control" placeholder="@i18n('NLS.search')">
-                            <span class="input-group-addon search-btn"><i class="fa fa-search"></i></span>
+                            <span class="input-group-addon search-btn-js"><i class="fa fa-search"></i></span>
                         </div>
                     </div>
                 </form>
                 <div class="row">
                     <label class="search-result-js col-md-12" hidden>@i18n("NLS.searchResult")</label>
                     <div class="col-md-12">
-                        <table class="table table-striped select-file-table">
+                        <table class="table table-striped select-file-table select-file-table-js">
                         </table>
                     </div>
                 </div>
                 <div class="row">
-                    <nav aria-label="Pop-up pagination" class="pagination-controls col-md-12"></nav>
+                    <nav aria-label="Pop-up pagination"
+                         class="pagination-controls pagination-controls-js col-md-12"></nav>
                 </div>
             </w:modalBody>
-            <w:modalFooter cancelKey="NLS.cancel"/>
+            <w:modalFooter cancelKey="NLS.cancel">
+                <button type="submit" class="btn btn-primary ok-btn-js">@i18n("NLS.ok")</button>
+            </w:modalFooter>
         </w:modal>
 
         <script type="text/javascript">
-            function selectVFSFile(path, restrictToPath) {
+            function selectVFSDirectory(path) {
+                $("#select-file-modal .modal-title").text("___i18n('VFSController.selectDirectory')");
+                return selectFileOrDirectoryModal({
+                    path: path,
+                    onlyDirectories: true,
+                    pathRestriction: undefined,
+                    allowUpload: false,
+                    filter: function (child) {
+                        return true;
+                    },
+                    createRow: function (child, pagination, $modal, resolve) {
+                        let $tr = $('<tr>' +
+                            '<td><a class="file-link" href="#" data-path="' + child.path + '">' +
+                            '<i class="fa fa-folder-open"></i>&nbsp;' + child.name + '</a></td>' +
+                            '</tr>');
+
+                        const _self = this;
+                        $tr.find('.file-link').click(function () {
+                            _self.path = $(this).data('path');
+                            pagination.reset();
+                        });
+                        return $tr;
+                    }
+                });
+            }
+
+            function selectVFSFile(path, pathRestriction) {
+                $("#select-file-modal .modal-title").text("___i18n('VFSController.selectFile')");
+                return selectFileOrDirectoryModal({
+                    path: path,
+                    onlyDirectories: false,
+                    pathRestriction: pathRestriction,
+                    allowUpload: true,
+                    filter: function (child) {
+                        return pathRestriction === undefined || child.path.startsWith(pathRestriction);
+                    },
+                    createRow: function (child, pagination, $modal, resolve) {
+                        let $tr = $('<tr>' +
+                            '<td><a class="file-link" href="#" data-dir="' + child.directory +
+                            '" data-path="' + child.path + '">' +
+                            '<i class="fa"></i>&nbsp;' + child.name + '</a></td>' +
+                            '<td class="align-right">' + child.sizeString + '</td>' +
+                            '<td class="align-right">' + child.lastModifiedString + '</td>' +
+                            '</tr>');
+
+                        if (child.directory) {
+                            $tr.find('.file-link i.fa').addClass('fa-folder-open');
+                        } else {
+                            $tr.find('.file-link i.fa').addClass('fa-file');
+                        }
+
+                        const _self = this;
+                        $tr.find('.file-link').click(function () {
+                            if ($(this).data('dir')) {
+                                _self.path = $(this).data('path');
+                                pagination.reset();
+                            } else {
+                                $modal.modal('hide');
+                                resolve($(this).data('path'));
+                            }
+                        });
+                        return $tr;
+                    }
+                });
+            }
+
+            function selectFileOrDirectoryModal(config) {
                 return new Promise(function (resolve, reject) {
                     const $modal = $("#select-file-modal");
-                    const $table = $modal.find('.select-file-table');
-                    const $searchForm = $modal.find('.search-form input').val("");
+                    const $table = $modal.find('.select-file-table-js');
+                    const $searchForm = $modal.find('.search-form-js input').val("");
                     const pageSize = 50;
 
-                    const pagination = paginate($modal.find(".pagination-controls"), function (page, pagination) {
+                    const pagination = paginate($modal.find(".pagination-controls-js"), function (page, pagination) {
                         if (page <= 1) {
                             pagination.previousBtn.addClass("disabled");
                         } else {
                             pagination.previousBtn.removeClass("disabled");
                         }
                         $.getJSON('/fs/list', {
-                            path: path, onlyDirectories: false,
+                            path: config.path,
+                            onlyDirectories: config.onlyDirectories,
                             skip: (page - 1) * pageSize,
                             maxItems: pageSize + 1,
                             filter: $searchForm.val()
@@ -190,35 +140,9 @@
                             $table.html('');
                             for (let i = 0; i < Math.min(json.children.length, pageSize); i++) {
                                 let child = json.children[i];
-
-                                if (restrictToPath !== undefined && !child.path.startsWith(restrictToPath)) {
-                                    continue;
+                                if (config.filter(child)) {
+                                    config.createRow(child, pagination, $modal, resolve).appendTo($table);
                                 }
-
-                                let $tr = $('<tr>' +
-                                    '<td><a class="file-link" href="#" data-dir="' + child.directory +
-                                    '" data-path="' + child.path + '">' +
-                                    '<i class="fa"></i>&nbsp;' + child.name + '</a></td>' +
-                                    '<td class="align-right">' + child.sizeString + '</td>' +
-                                    '<td class="align-right">' + child.lastModifiedString + '</td>' +
-                                    '</tr>');
-
-                                if (child.directory) {
-                                    $tr.find('.file-link i.fa').addClass('fa-folder-open');
-                                } else {
-                                    $tr.find('.file-link i.fa').addClass('fa-file');
-                                }
-
-                                $tr.find('.file-link').click(function () {
-                                    if ($(this).data('dir')) {
-                                        path = $(this).data('path');
-                                        pagination.reset();
-                                    } else {
-                                        $modal.modal('hide');
-                                        resolve($(this).data('path'));
-                                    }
-                                });
-                                $tr.appendTo($table);
                             }
 
                             if ($searchForm.val()) {
@@ -233,27 +157,25 @@
                                 pagination.nextBtn.removeClass("disabled");
                             }
 
-                            var $breadcrumbs = $modal.find('.breadcrumb');
+                            var $breadcrumbs = $modal.find('.breadcrumb-js');
                             $breadcrumbs.html('');
                             for (var i = 0; i < json.path.length; i++) {
                                 var element = json.path[i];
-                                var name = element.name === '/' ? '<i class="fa fa-home"></i>' : element.name;
-
-                                if (restrictToPath !== undefined && !element.path.startsWith(restrictToPath)) {
+                                if (!config.filter(element)) {
                                     continue;
                                 }
-
+                                var name = element.name === '/' ? '<i class="fa fa-home"></i>' : element.name;
                                 var $li = $('<li><a class="file-link" href="#" data-path="' + element.path + '">' + name + '</a></li>');
                                 $li.find('.file-link').click(function () {
-                                    path = $(this).data('path');
+                                    config.path = $(this).data('path');
                                     pagination.reset();
                                 });
                                 $li.appendTo($breadcrumbs);
                             }
 
-                            if (json.canCreateChildren) {
-                                $modal.find('.uploadBox').each(function (index) {
-                                    fileUpload('/fs/upload?path=' + encodeURIComponent(path),
+                            if (config.allowUpload && json.canCreateChildren) {
+                                $modal.find('.upload-box-js').each(function (index) {
+                                    fileUpload('/fs/upload?path=' + encodeURIComponent(config.path),
                                         this, undefined, [], 3, function (response) {
                                             $modal.modal('hide');
                                             if (response.error) {
@@ -265,23 +187,29 @@
                                         });
                                 });
                             } else {
-                                $modal.find('.uploadBox').html('');
+                                $modal.find('.upload-box-js').html('');
                             }
                         });
                     });
 
-                    $modal.find('.search-form .search-btn').off('click').click(function () {
-                        $modal.find('.search-form').submit();
+                    $modal.find('.search-form-js .search-btn-js').off('click').click(function () {
+                        $modal.find('.search-form-js').submit();
                     });
-                    $modal.find('.search-form').off('submit').submit(function (event) {
+                    $modal.find('.search-form-js').off('submit').submit(function (event) {
                         event.preventDefault();
                         pagination.reset();
                     });
 
-                    $modal.find('.ok-btn').off('click').click(function () {
+                    $modal.find('.ok-btn-js').off('click').click(function () {
                         $modal.modal('hide');
-                        resolve(path);
+                        resolve(config.path);
                     });
+
+                    if (config.onlyDirectories) {
+                        $modal.find('.ok-btn-js').show();
+                    } else {
+                        $modal.find('.ok-btn-js').hide();
+                    }
 
                     $modal.modal('show');
                 });
