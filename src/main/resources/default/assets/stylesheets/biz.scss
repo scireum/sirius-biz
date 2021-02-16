@@ -125,16 +125,16 @@ input.form-control.mls-input {
     display: flex;
     height: 34px;
     align-items: center;
+  }
 
-    .mls-language-flag {
-      margin-right: 8px;
-    }
+  .mls-language-flag {
+    margin-right: 8px;
+  }
 
-    .mls-language-globe {
-      height: 12px;
-      width: 12px;
-      object-fit: cover;
-    }
+  .mls-language-globe {
+    height: 12px;
+    width: 12px;
+    object-fit: cover;
   }
 }
 

@@ -177,8 +177,8 @@ MultiLanguageField.prototype.renderModalBody = function () {
             const _language = document.createElement('li');
             _language.classList.add('pointer');
             _language.dataset.lang = langCode;
-            const _link = document.createElement('a');
-            _link.textContent = this.getLanguageName(langCode);
+
+            const _link = this.renderLanguageLink(langCode);
 
             const me = this;
             _link.addEventListener('click', function () {
