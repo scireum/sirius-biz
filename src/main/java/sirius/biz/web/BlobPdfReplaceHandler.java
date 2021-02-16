@@ -12,6 +12,7 @@ import org.xhtmlrenderer.extend.FSImage;
 import org.xhtmlrenderer.extend.UserAgentCallback;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.BlobStorage;
+import sirius.biz.storage.layer2.URLBuilder;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -23,7 +24,7 @@ import java.util.Optional;
 /**
  * Resolves blob:// URIs to resized images while maintaining the image ratios.
  * <p>
- * The format of the URI needs to match blob://space/variant/blobKey.
+ * The format of the URI needs to match blob://space/blobKey or blob://space/blobKey/variant.
  */
 @Register
 public class BlobPdfReplaceHandler extends PdfReplaceHandler {
@@ -42,11 +43,18 @@ public class BlobPdfReplaceHandler extends PdfReplaceHandler {
             throws Exception {
         String[] blobInfo = Strings.split(uri, "://").getSecond().split("/");
 
-        if (blobInfo.length != 3) {
-            throw new IllegalArgumentException("The URI is required to match the format 'blob://space/variant/blobKey'");
+        if (blobInfo.length != 2 && blobInfo.length != 3) {
+            throw new IllegalArgumentException(
+                    "The URI is required to match the format 'blob://space/blobKey/variant' or 'blob://space/blobKey'");
         }
 
-        Optional<FileHandle> fileHandle = storage.getSpace(blobInfo[0]).download(blobInfo[2], blobInfo[1]);
+        String variant = URLBuilder.VARIANT_RAW;
+
+        if (blobInfo.length == 3) {
+            variant = blobInfo[2];
+        }
+
+        Optional<FileHandle> fileHandle = storage.getSpace(blobInfo[0]).download(blobInfo[1], variant);
 
         if (fileHandle.isPresent()) {
             FSImage image = resolveResource(userAgentCallback, fileHandle.get().getFile().toURI().toURL());
