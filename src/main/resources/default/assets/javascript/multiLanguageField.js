@@ -24,9 +24,11 @@ function MultiLanguageField(options) {
     if (this.hasFallback) {
         this.validLanguages.fallback = this.fallbackLabel;
     }
-    for (let  langCode in options.validLanguages) {
-        this.validLanguages[langCode] = options.validLanguages[langCode];
-    }
+
+    const me = this;
+    Object.keys(options.validLanguages).forEach(function (langCode) {
+        me.validLanguages[langCode] = options.validLanguages[langCode];
+    });
 
     this._wrapper = document.getElementById(this.wrapperId);
     this._input = this._wrapper.querySelector('.mls-input');
@@ -153,15 +155,16 @@ MultiLanguageField.prototype.renderModalBody = function () {
     this._modal.classList.add('mls-modal');
 
     let rowsAdded = false;
-    for (let  langCode in this.validLanguages) {
-        const langName = this.getLanguageName(langCode);
+    const me = this;
+    this.forEachValidLanguage(function (langCode) {
+        const langName = me.getLanguageName(langCode);
 
-        if (!this.languageManagementEnabled || langCode === this.FALLBACK_CODE || this.values[langCode]) {
-            const _row = this.renderLanguageRow(langCode, langName);
-            this._modalInputs.appendChild(_row);
+        if (!me.languageManagementEnabled || langCode === me.FALLBACK_CODE || me.values[langCode]) {
+            const _row = me.renderLanguageRow(langCode, langName);
+            me._modalInputs.appendChild(_row);
             rowsAdded = true;
         }
-    }
+    });
 
     if (this.languageManagementEnabled) {
         if (!rowsAdded) {
@@ -173,14 +176,13 @@ MultiLanguageField.prototype.renderModalBody = function () {
 
         const _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
 
-        for (let  langCode in this.validLanguages) {
+        this.forEachValidLanguage(function (langCode) {
             const _language = document.createElement('li');
             _language.classList.add('pointer');
             _language.dataset.lang = langCode;
 
-            const _link = this.renderLanguageLink(langCode);
+            const _link = me.renderLanguageLink(langCode);
 
-            const me = this;
             _link.addEventListener('click', function () {
                 const _row = me.renderLanguageRow(langCode, me.validLanguages[langCode]);
                 me._modalInputs.appendChild(_row);
@@ -189,7 +191,7 @@ MultiLanguageField.prototype.renderModalBody = function () {
             });
             _language.appendChild(_link);
             _addLanguageOptions.appendChild(_language);
-        }
+        });
     }
 }
 
@@ -244,31 +246,32 @@ MultiLanguageField.prototype.renderLanguageOptionReplacement = function (langCod
 
 MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     let rowsAdded = false;
-    for (let  langCode in this.validLanguages) {
-        const langName = this.getLanguageName(langCode);
+    const me = this;
+    this.forEachValidLanguage(function (langCode) {
+        const langName = me.getLanguageName(langCode);
 
-        if (!this.languageManagementEnabled || langCode === this.FALLBACK_CODE || this.values[langCode]) {
+        if (!me.languageManagementEnabled || langCode === me.FALLBACK_CODE || me.values[langCode]) {
             const active = !rowsAdded;
 
-            const _language = this.buildLanguageEntry(langCode, true);
-            this._toggleLanguageOptions.appendChild(_language);
+            const _language = me.buildLanguageEntry(langCode, true);
+            me._toggleLanguageOptions.appendChild(_language);
 
-            const _langTab = this.renderLanguageTab(langCode, langName, active);
-            this._toggleLanguageButton.parentNode.insertBefore(_langTab, this._toggleLanguageButton);
+            const _langTab = me.renderLanguageTab(langCode, langName, active);
+            me._toggleLanguageButton.parentNode.insertBefore(_langTab, me._toggleLanguageButton);
 
-            const _langTabInput = this.renderLanguageTabInput(langCode, langName, active);
-            this._multilineContent.appendChild(_langTabInput);
+            const _langTabInput = me.renderLanguageTabInput(langCode, langName, active);
+            me._multilineContent.appendChild(_langTabInput);
 
-            if (this.shouldRenderDropdownInsteadOfTabs()) {
-                this._multilineHeader.querySelectorAll('li .mls-language-label').forEach(function (item) {
+            if (me.shouldRenderDropdownInsteadOfTabs()) {
+                me._multilineHeader.querySelectorAll('li .mls-language-label').forEach(function (item) {
                     item.classList.add('hidden');
                 });
-                this._toggleLanguageButton.classList.remove('hidden');
+                me._toggleLanguageButton.classList.remove('hidden');
             }
 
             rowsAdded = true;
         }
-    }
+    });
 
     if (this.languageManagementEnabled) {
         const _addLanguageButton = this._multilineHeader.querySelector('.mls-add-language-button');
@@ -276,9 +279,9 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
 
         const _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
 
-        for (let  langCode in this.validLanguages) {
-            const _language = this.buildLanguageEntry(langCode, false);
-            const me = this;
+        const me = this;
+        this.forEachValidLanguage(function (langCode) {
+            const _language = me.buildLanguageEntry(langCode, false);
             _language.querySelector('a').addEventListener('click', function () {
                 me._multilineContent.querySelectorAll('.tab-pane').forEach(function (langTab) {
                     langTab.classList.remove('active');
@@ -306,7 +309,7 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
                 me.updateLanguageManagementOptions();
             });
             _addLanguageOptions.appendChild(_language);
-        }
+        });
     }
 }
 
@@ -443,4 +446,13 @@ MultiLanguageField.prototype.renderFlag = function (langCode) {
         _flag.title = langCode;
         return _flag;
     }
+}
+
+/**
+ * Iterates all valid languages in a way that is supported by all browsers (even IE 11).
+ *
+ * @param callback the function to be called for each language code
+ */
+MultiLanguageField.prototype.forEachValidLanguage = function (callback) {
+    Object.keys(this.validLanguages).forEach(callback);
 }
