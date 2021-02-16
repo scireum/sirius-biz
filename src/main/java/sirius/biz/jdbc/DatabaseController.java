@@ -39,9 +39,8 @@ import sirius.web.services.JSONStructuredOutput;
 import javax.annotation.Nullable;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -89,19 +88,19 @@ public class DatabaseController extends BasicController {
     /**
      * Executes the given sql query.
      *
-     * @param ctx the current request
-     * @param out the JSON response
+     * @param webContext the current request
+     * @param out        the JSON response
      * @throws SQLException in case of a database error
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed(value = "/system/sql/api/execute", jsonCall = true)
-    public void executeQuery(WebContext ctx, JSONStructuredOutput out) throws SQLException {
+    public void executeQuery(WebContext webContext, JSONStructuredOutput out) throws SQLException {
         Watch w = Watch.start();
 
         try {
-            String database = ctx.get("db").asString(defaultDatabase);
+            String database = webContext.get("db").asString(defaultDatabase);
             Database db = determineDatabase(database);
-            String sqlStatement = ctx.get("query").asString();
+            String sqlStatement = webContext.get("query").asString();
             SQLQuery qry = db.createQuery(sqlStatement).markAsLongRunning();
 
             OMA.LOG.INFO("Executing SQL (via /system/sql, authored by %s): %s",
@@ -124,7 +123,8 @@ public class DatabaseController extends BasicController {
                 out.property("rowModified", qry.executeUpdate());
             } else {
                 Monoflop monoflop = Monoflop.create();
-                qry.iterateAll(r -> outputRow(out, monoflop, r), new Limit(0, ctx.get("limit").asInt(DEFAULT_LIMIT)));
+                qry.iterateAll(r -> outputRow(out, monoflop, r),
+                               new Limit(0, webContext.get("limit").asInt(DEFAULT_LIMIT)));
                 if (monoflop.successiveCall()) {
                     out.endArray();
                 }
@@ -140,29 +140,46 @@ public class DatabaseController extends BasicController {
     /**
      * Exports the given SQL query
      *
-     * @param ctx the current request
+     * @param webContext the current request
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/sql/export")
-    public void exportQuery(WebContext ctx) {
-        if (!ctx.isSafePOST()) {
+    public void exportQuery(WebContext webContext) {
+        if (!webContext.isSafePOST()) {
             throw Exceptions.createHandled().withSystemErrorMessage("Unsafe or missing POST detected!").handle();
         }
 
-        String database = ctx.get("db").asString(defaultDatabase);
-        String sqlStatement = ctx.get("exportQuery").asString();
+        String database = webContext.get("db").asString(defaultDatabase);
+        String sqlStatement = webContext.get("exportQuery").asString();
 
         if (isDDSStatement(sqlStatement)) {
             throw Exceptions.createHandled().withDirectMessage("A DDS statement cannot be exported.").handle();
         } else {
-            Map<String, String> params = new HashMap<>();
-            params.put("database", database);
-            params.put("query", sqlStatement);
             ExportQueryResultJobFactory jobFactory =
                     jobs.findFactory(ExportQueryResultJobFactory.FACTORY_NAME, ExportQueryResultJobFactory.class);
-            String processId = jobFactory.startInBackground(param -> Value.of(params.getOrDefault(param, null)));
-            ctx.respondWith().redirectToGet("/ps/" + processId);
+            String processId = jobFactory.startInBackground(createJobParameterSupplier(database, sqlStatement));
+            webContext.respondWith().redirectToGet("/ps/" + processId);
         }
+    }
+
+    /**
+     * Transforms the parameters from the names used here to the ones expected by {@link ExportQueryResultJobFactory}.
+     *
+     * @param database     the selected database
+     * @param sqlStatement the query to execute
+     * @return a parameter supplier as expected by the job factory
+     */
+    private Function<String, Value> createJobParameterSupplier(String database, String sqlStatement) {
+        return parameterName -> {
+            switch (parameterName) {
+                case "database":
+                    return Value.of(database);
+                case "query":
+                    return Value.of(sqlStatement);
+                default:
+                    return Value.EMPTY;
+            }
+        };
     }
 
     protected Database determineDatabase(String database) {
