@@ -107,13 +107,13 @@ public class DatabaseController extends BasicController {
                          UserContext.getCurrentUser().getUserName(),
                          sqlStatement);
 
-            if (isDDSStatement(sqlStatement)) {
+            if (isDDLStatement(sqlStatement)) {
                 // To prevent accidential damage, we try to filter DDL queries (modifying the database structure) and
                 // only permit them against our system database.
                 if (!Strings.areEqual(database, defaultDatabase)) {
                     throw Exceptions.createHandled()
                                     .withSystemErrorMessage(
-                                            "Cannot execute a DDS query against this database. This can be only done for '%s'",
+                                            "Cannot execute a DDL statement against this database. This can be only done for '%s'",
                                             database)
                                     .handle();
                 }
@@ -152,8 +152,8 @@ public class DatabaseController extends BasicController {
         String database = webContext.get("db").asString(defaultDatabase);
         String sqlStatement = webContext.get("exportQuery").asString();
 
-        if (isDDSStatement(sqlStatement)) {
-            throw Exceptions.createHandled().withDirectMessage("A DDS statement cannot be exported.").handle();
+        if (isDDLStatement(sqlStatement)) {
+            throw Exceptions.createHandled().withDirectMessage("A DDL statement cannot be exported.").handle();
         } else {
             ExportQueryResultJobFactory jobFactory =
                     jobs.findFactory(ExportQueryResultJobFactory.FACTORY_NAME, ExportQueryResultJobFactory.class);
@@ -195,7 +195,7 @@ public class DatabaseController extends BasicController {
                 "delete");
     }
 
-    private boolean isDDSStatement(String qry) {
+    private boolean isDDLStatement(String qry) {
         String lowerCaseQuery = qry.toLowerCase().trim();
         return lowerCaseQuery.startsWith("alter") || lowerCaseQuery.startsWith("drop") || lowerCaseQuery.startsWith(
                 "create");
