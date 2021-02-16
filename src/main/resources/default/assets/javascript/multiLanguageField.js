@@ -62,7 +62,7 @@ MultiLanguageField.prototype.buildMultiline = function () {
     this._toggleLanguageButton = this._multilineHeader.querySelector('.mls-toggle-language-button');
     this._toggleLanguageOptions = this._multilineHeader.querySelector('.toggle-language-data');
     this._multilineContent = this._wrapper.querySelector('.mls-tab-content');
-    this.MAX_TABS_VISIBLE = 5;
+    this.MAX_TABS_VISIBLE = 3;
     this.mobileOrSmallScreen = window.matchMedia('(max-width: 600px)').matches;
 
     this.renderMultilineHeaderAndContent();
@@ -280,17 +280,17 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
             let _language = this.buildLanguageEntry(langCode, false);
             let me = this;
             _language.querySelector('a').addEventListener('click', function () {
-                let _langTab = me.renderLanguageTab(langCode, me.validLanguages[langCode], true);
+                me._multilineContent.querySelectorAll('.tab-pane').forEach(function (langTab) {
+                    langTab.classList.remove('active');
+                });
+
+                let _langTab = me.renderLanguageTab(langCode, me.getLanguageName(langCode), true);
                 me._toggleLanguageButton.parentNode.insertBefore(_langTab, me._toggleLanguageButton);
 
                 let _language = me.buildLanguageEntry(langCode, true);
                 me._toggleLanguageOptions.appendChild(_language);
 
-                me._multilineContent.querySelectorAll('.tab-pane').forEach(function (langTab) {
-                    langTab.classList.remove('active');
-                });
-
-                let _languageTabInput = me.renderLanguageTabInput(langCode, me.validLanguages[langCode], true);
+                let _languageTabInput = me.renderLanguageTabInput(langCode, me.getLanguageName(langCode), true);
                 me._multilineContent.appendChild(_languageTabInput);
 
                 if (me.shouldRenderDropdownInsteadOfTabs()) {

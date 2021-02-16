@@ -138,15 +138,35 @@ input.form-control.mls-input {
   }
 }
 
-.mls-tab-container {
+.mls-tab-header {
+  .nav-tabs {
+    border-bottom: none;
+  }
+
+  .nav-tabs > li > a {
+    color: #5e6468;
+    margin-right: 0;
+    margin-left: 2px;
+  }
+
+  .caret {
+    margin-left: 8px;
+  }
+
   .mls-add-language-button .dropdown-menu {
     max-height: 140x;
     overflow: auto;
   }
 
-  .mls-toggle-language-button .dropdown-menu {
-    max-height: 140px;
-    overflow: auto;
+  .mls-toggle-language-button {
+    a {
+      color: #5e6468;
+    }
+
+    .dropdown-menu {
+      max-height: 140px;
+      overflow: auto;
+    }
   }
 
   .mls-tab-list .mls-language-label {
