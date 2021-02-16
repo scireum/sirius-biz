@@ -35,7 +35,7 @@ public class BridgePath implements Path {
     @Part
     private static VirtualFileSystem vfs;
 
-    private VirtualFile virtualFile;
+    private final VirtualFile virtualFile;
     private BridgeFileSystem fileSystem;
 
     /**

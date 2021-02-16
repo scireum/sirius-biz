@@ -10,7 +10,6 @@ package sirius.biz.jobs.batch.file;
 
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
-import sirius.biz.storage.layer3.VirtualFile;
 
 import java.util.function.Consumer;
 

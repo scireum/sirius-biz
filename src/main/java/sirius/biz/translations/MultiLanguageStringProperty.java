@@ -234,10 +234,8 @@ public class MultiLanguageStringProperty extends BaseMapProperty implements ESPr
     @Override
     public boolean loadFromWebContext(WebContext webContext, BaseEntity<?> entity) {
         MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
-        if (multiLanguageString.isWithFallback()) {
-            if (webContext.hasParameter(getPropertyName())) {
-                multiLanguageString.setFallback(webContext.getParameter(getPropertyName()));
-            }
+        if (multiLanguageString.isWithFallback() && webContext.hasParameter(getPropertyName())) {
+            multiLanguageString.setFallback(webContext.getParameter(getPropertyName()));
         }
 
         if (UserContext.getCurrentUser().hasPermission(multiLanguageString.getI18nPermission())) {

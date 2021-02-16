@@ -11,7 +11,6 @@ package sirius.biz.tenants.mongo;
 import sirius.biz.jobs.batch.file.EntityExportJobFactory;
 import sirius.biz.tenants.TenantController;
 import sirius.db.mongo.MongoQuery;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.http.QueryString;
 import sirius.web.security.Permission;

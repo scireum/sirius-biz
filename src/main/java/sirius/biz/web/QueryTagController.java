@@ -8,7 +8,6 @@
 
 package sirius.biz.web;
 
-import org.checkerframework.checker.lock.qual.EnsuresLockHeldIf;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;

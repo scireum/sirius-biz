@@ -12,7 +12,6 @@ import sirius.biz.model.AddressData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantData;
 import sirius.biz.tenants.TenantSearchProvider;
-import sirius.biz.tenants.mongo.MongoTenant;
 import sirius.db.jdbc.OMA;
 import sirius.db.mixing.query.Query;
 import sirius.db.mixing.query.QueryField;
