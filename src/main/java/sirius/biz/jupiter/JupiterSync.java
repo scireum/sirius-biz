@@ -27,6 +27,7 @@ import sirius.kernel.Startable;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Watch;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -53,6 +54,9 @@ import java.util.stream.Collectors;
  * Next to iterating over all Jupiter instances and computer their config via {@link JupiterConfigUpdater}, this also
  * synchronizes the contents of an object store (e.g. Amazon S3) as well as a local repository against the repository
  * stored in Jupiter.
+ * <p>
+ * Note that this also schedules all {@link JupiterDataProvider} so that they can store or update their data in
+ * the local repository (which will then be directly uploaded into Jupiter).
  */
 @Register(framework = Jupiter.FRAMEWORK_JUPITER, classes = {JupiterSync.class, Startable.class, EndOfDayTask.class})
 public class JupiterSync implements Startable, EndOfDayTask {
@@ -85,6 +89,9 @@ public class JupiterSync implements Startable, EndOfDayTask {
     @Nullable
     private BlobStorage blobStorage;
 
+    @Parts(JupiterDataProvider.class)
+    private PartCollection<JupiterDataProvider> dataProviders;
+
     @Parts(JupiterConfigUpdater.class)
     private PartCollection<JupiterConfigUpdater> updaters;
 
@@ -116,20 +123,18 @@ public class JupiterSync implements Startable, EndOfDayTask {
 
     @Override
     public void execute() throws Exception {
-        if (automaticUpdate) {
-            tasks.defaultExecutor().start(this::performSync);
-        }
+        runInStandbyProcess(processContext -> performSyncInProcess(processContext, true, true, true));
     }
 
     @Override
     public void started() {
         if (automaticUpdate) {
-            elastic.getReadyFuture().onSuccess(this::performSync);
+            elastic.getReadyFuture()
+                   .onSuccess(() -> runInStandbyProcess(processContext -> performSyncInProcess(processContext,
+                                                                                               true,
+                                                                                               true,
+                                                                                               false)));
         }
-    }
-
-    protected void performSync() {
-        runInStandbyProcess(processContext -> performSyncInProcess(processContext, true, true));
     }
 
     protected void runInStandbyProcess(Consumer<ProcessContext> processContextConsumer) {
@@ -143,12 +148,20 @@ public class JupiterSync implements Startable, EndOfDayTask {
     /**
      * Synchronizes all Jupiter instances and reports all activity into the given process.
      *
-     * @param processContext the process used for logging and reporting
-     * @param syncConfig     determines if the config should be synced
-     * @param syncRepo       determines if the repository should be synced
+     * @param processContext    the process used for logging and reporting
+     * @param syncConfig        determines if the config should be synced
+     * @param syncRepo          determines if the repository should be synced
+     * @param syncDataProviders determines if the {@link JupiterDataProvider data providers} should be invoked so that
+     *                          the local repository is filled
      */
-    public void performSyncInProcess(ProcessContext processContext, boolean syncConfig, boolean syncRepo) {
+    public void performSyncInProcess(ProcessContext processContext,
+                                     boolean syncConfig,
+                                     boolean syncRepo,
+                                     boolean syncDataProviders) {
         try {
+            if (syncDataProviders) {
+                executeDataProviders(processContext);
+            }
             if (syncConfig) {
                 syncConfigs(processContext);
             }
@@ -157,6 +170,43 @@ public class JupiterSync implements Startable, EndOfDayTask {
             }
         } catch (Exception e) {
             processContext.handle(e);
+        }
+    }
+
+    private void executeDataProviders(ProcessContext processContext) {
+        if (Strings.isEmpty(localRepoSpaceName) || blobStorage == null) {
+            return;
+        }
+
+        for (JupiterDataProvider provider : dataProviders) {
+            executeDataProvider(processContext, provider);
+        }
+    }
+
+    private void executeDataProvider(ProcessContext processContext, JupiterDataProvider provider) {
+        Watch watch = Watch.start();
+        processContext.log(ProcessLog.info().withFormattedMessage("Executing data provider: %s", provider.getName()));
+
+        Blob blob = blobStorage.getSpace(localRepoSpaceName)
+                               .findOrCreateByPath(tenants.getTenantUserManager().getSystemTenantId(),
+                                                   provider.getFilename());
+
+        try (OutputStream out = blob.createOutputStream(Files.getFilenameAndExtension(provider.getFilename()))) {
+            provider.execute(out);
+            processContext.log(ProcessLog.info()
+                                         .withFormattedMessage("Creating '%s' took %s...",
+                                                               provider.getFilename(),
+                                                               watch.duration()));
+        } catch (Exception e) {
+            processContext.log(ProcessLog.error()
+                                         .withMessage(Exceptions.handle()
+                                                                .to(Jupiter.LOG)
+                                                                .error(e)
+                                                                .withSystemErrorMessage(
+                                                                        "Failed to execute data provider %s: %s (%s)",
+                                                                        provider.getName())
+                                                                .handle()
+                                                                .getMessage()));
         }
     }
 
@@ -457,7 +507,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
         Blob blob = blobStorage.getSpace(localRepoSpaceName)
                                .findOrCreateByPath(tenants.getTenantUserManager().getSystemTenantId(), path);
         return blob.createOutputStream(() -> {
-            runInStandbyProcess(processContext -> performSyncInProcess(processContext, false, true));
+            runInStandbyProcess(processContext -> performSyncInProcess(processContext, false, false, true));
         }, Files.getFilenameAndExtension(path));
     }
 }

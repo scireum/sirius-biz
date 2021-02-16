@@ -43,7 +43,7 @@ public class JupiterSyncJob extends SimpleBatchProcessJobFactory {
 
     @Override
     protected void execute(ProcessContext process) throws Exception {
-        jupiterSync.performSyncInProcess(process, true, true);
+        jupiterSync.performSyncInProcess(process, true, true, true);
     }
 
     @Nonnull
