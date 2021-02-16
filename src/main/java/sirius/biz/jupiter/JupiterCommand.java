@@ -12,6 +12,8 @@ import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.util.SafeEncoder;
 import sirius.kernel.commons.Explain;
 
+import java.util.Arrays;
+
 /**
  * Provides a custom command as defined by Jupiter.
  */
@@ -35,5 +37,10 @@ public class JupiterCommand implements ProtocolCommand {
     @Override
     public byte[] getRaw() {
         return rawCommand;
+    }
+
+    @Override
+    public String toString() {
+        return command;
     }
 }

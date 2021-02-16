@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 public class InfoGraphDB {
 
     private static final JupiterCommand CMD_SHOW_TABLES = new JupiterCommand("IDB.SHOW_TABLES");
+    private static final JupiterCommand CMD_SHOW_SETS = new JupiterCommand("IDB.SHOW_SETS");
 
     private final JupiterConnector connection;
 
@@ -51,11 +52,14 @@ public class InfoGraphDB {
     public List<IDBTableInfo> showTables() {
         return connection.query(() -> "IDB.SHOW_TABLES", redis -> {
             redis.sendCommand(CMD_SHOW_TABLES, "raw");
-            return redis.getObjectMultiBulkReply().stream().map(this::parseMetadataRow).collect(Collectors.toList());
+            return redis.getObjectMultiBulkReply()
+                        .stream()
+                        .map(this::parseTableMetadataRow)
+                        .collect(Collectors.toList());
         });
     }
 
-    private IDBTableInfo parseMetadataRow(Object obj) {
+    private IDBTableInfo parseTableMetadataRow(Object obj) {
         Values row = Jupiter.readArray(obj);
         return new IDBTableInfo(connection,
                                 Jupiter.readString(row.at(0)),
@@ -64,5 +68,26 @@ public class InfoGraphDB {
                                 row.at(3).asLong(0),
                                 row.at(4).asLong(0),
                                 row.at(5).asLong(0));
+    }
+
+    /**
+     * Lists all known sets in the connected InfoGraphDB.
+     *
+     * @return a list of all known sets
+     */
+    public List<IDBSetInfo> showSets() {
+        return connection.query(() -> "IDB.SHOW_SETS", redis -> {
+            redis.sendCommand(CMD_SHOW_SETS, "raw");
+            return redis.getObjectMultiBulkReply().stream().map(this::parseSetMetadataRow).collect(Collectors.toList());
+        });
+    }
+
+    private IDBSetInfo parseSetMetadataRow(Object obj) {
+        Values row = Jupiter.readArray(obj);
+        return new IDBSetInfo(connection,
+                              Jupiter.readString(row.at(0)),
+                              row.at(1).asLong(0),
+                              row.at(2).asLong(0),
+                              row.at(3).asLong(0));
     }
 }
