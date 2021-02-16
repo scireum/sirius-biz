@@ -72,16 +72,7 @@ MultiLanguageField.prototype.buildMultiline = function () {
         const element = langTabs[0];
         const langCode = element.dataset.lang;
         const _li = this.renderLanguageOptionReplacement(langCode);
-        const _placeholder = this._toggleLanguageButton.querySelector('.toggle-language-placeholder');
-        _placeholder.appendChild(_li);
-
-        this._toggleLanguageOptions.querySelectorAll('li[data-lang]').forEach(function (langOption) {
-            if (langOption.dataset.lang === langCode) {
-                langOption.classList.add('hidden');
-            } else {
-                langOption.classList.remove('hidden');
-            }
-        });
+        this.replaceButtonCaption(_li);
     }
 
     this.updateLanguageManagementOptions();
@@ -309,22 +300,8 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
                     me._toggleLanguageButton.classList.remove('hidden');
                 }
 
-                me._toggleLanguageButton.parentNode.querySelectorAll('li').forEach(function (liEntry) {
-                    liEntry.classList.remove('active');
-                });
-                this.parentElement.classList.add('active');
-
                 const _li = me.renderLanguageOptionReplacement(langCode);
-                const _placeholder = me._toggleLanguageButton.querySelector('.toggle-language-placeholder');
-                _placeholder.appendChild(_li);
-
-                me._toggleLanguageOptions.querySelectorAll('li[data-lang]').forEach(function (langOption) {
-                    if (langOption.dataset.lang === langCode) {
-                        langOption.classList.add('hidden');
-                    } else {
-                        langOption.classList.remove('hidden');
-                    }
-                });
+                me.replaceButtonCaption(_li);
 
                 me.updateLanguageManagementOptions();
             });
@@ -349,24 +326,20 @@ MultiLanguageField.prototype.buildLanguageEntry = function (langCode, syncDropdo
     if (syncDropdownTitleOnClick) {
         const me = this;
         _link.addEventListener('click', function () {
-            me._toggleLanguageOptions.querySelectorAll('li[data-lang]').forEach(function (langOption) {
-                if (langOption.dataset.lang === langCode) {
-                    langOption.classList.add('hidden');
-                } else {
-                    langOption.classList.remove('hidden');
-                }
-            });
-            const _placeholder = me._toggleLanguageButton.querySelector('.toggle-language-placeholder');
-            _placeholder.querySelectorAll('li').forEach(function (option) {
-                option.classList.remove('active');
-                option.classList.add('hidden');
-            });
             const _li = me.renderLanguageOptionReplacement(langCode);
-            _placeholder.appendChild(_li);
+            me.replaceButtonCaption(_li);
         });
     }
 
     return _language;
+}
+
+MultiLanguageField.prototype.replaceButtonCaption = function (element) {
+    const _oldPlaceholder = this._toggleLanguageButton.querySelector('.toggle-language-placeholder');
+    const _newPlaceholder = document.createElement('div');
+    _newPlaceholder.classList.add('toggle-language-placeholder');
+    _newPlaceholder.appendChild(element);
+    _oldPlaceholder.parentElement.replaceChild(_newPlaceholder, _oldPlaceholder);
 }
 
 MultiLanguageField.prototype.updateOuterInputField = function () {
