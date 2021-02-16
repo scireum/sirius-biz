@@ -277,7 +277,7 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
         const _addLanguageOptions = _addLanguageButton.querySelector('.dropdown-menu');
 
         for (let langCode in this.validLanguages) {
-            let _language = this.buildLanguageEntry(langCode);
+            let _language = this.buildLanguageEntry(langCode, false);
             let me = this;
             _language.querySelector('a').addEventListener('click', function () {
                 let _langTab = me.renderLanguageTab(langCode, me.validLanguages[langCode], true);
@@ -324,13 +324,14 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     }
 }
 
-MultiLanguageField.prototype.buildLanguageEntry = function (langCode, syncDropdownTitleOnClick = false) {
+MultiLanguageField.prototype.buildLanguageEntry = function (langCode, syncDropdownTitleOnClick) {
     let _link = document.createElement('a');
     _link.href = '#' + this.fieldName + '-' + langCode;
     _link.dataset.toggle = 'tab';
     const _flag = this.renderFlag(langCode);
-    _link.append(_flag);
-    _link.append(this.getLanguageName(langCode));
+    _link.appendChild(_flag);
+    const _text = document.createTextNode(this.getLanguageName(langCode));
+    _link.appendChild(_text);
     let _language = document.createElement('li');
     _language.classList.add('pointer');
     _language.dataset.lang = langCode;
