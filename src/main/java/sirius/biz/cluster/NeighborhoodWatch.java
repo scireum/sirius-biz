@@ -106,10 +106,10 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
     private volatile boolean bleeding;
 
     private Map<String, SynchronizeType> syncSettings = Collections.emptyMap();
-    private Map<String, String> descriptions = new ConcurrentHashMap<>();
-    private Map<String, Boolean> localOverwrite = new ConcurrentHashMap<>();
-    private Map<String, String> executionInfos = new ConcurrentHashMap<>();
-    private Map<String, Boolean> globallyEnabledState = new ConcurrentHashMap<>();
+    private final Map<String, String> descriptions = new ConcurrentHashMap<>();
+    private final Map<String, Boolean> localOverwrite = new ConcurrentHashMap<>();
+    private final Map<String, String> executionInfos = new ConcurrentHashMap<>();
+    private final Map<String, Boolean> globallyEnabledState = new ConcurrentHashMap<>();
 
     @Nonnull
     @Override
@@ -414,7 +414,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         try {
             targetMap.put(key, SynchronizeType.valueOf(setting.toUpperCase()));
         } catch (IllegalArgumentException e) {
-            Cluster.LOG.WARN("Invalid configuration found for orchestration." + key + ": " + setting.toString());
+            Cluster.LOG.WARN("Invalid configuration found for orchestration." + key + ": " + setting);
             targetMap.put(key, SynchronizeType.LOCAL);
         }
     }
