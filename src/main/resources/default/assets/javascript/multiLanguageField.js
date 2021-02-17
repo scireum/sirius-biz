@@ -195,7 +195,7 @@ MultiLanguageField.prototype.renderModalBody = function () {
     }
 }
 
-MultiLanguageField.prototype.countActiveTabs = function () {
+MultiLanguageField.prototype.countVisibleLanguageTabs = function () {
     return this._multilineHeader.querySelectorAll('ul > li.nav-item > a.mls-language-label').length;
 }
 
@@ -203,10 +203,7 @@ MultiLanguageField.prototype.shouldRenderDropdownInsteadOfTabs = function () {
     if (this.mobileOrSmallScreen) {
         return true;
     }
-    if (!this.languageManagementEnabled && this.countActiveTabs() > this.MAX_TABS_VISIBLE) {
-        return true;
-    }
-    if ((this.languageManagementEnabled && (this.countActiveTabs() - 1) > this.MAX_TABS_VISIBLE)) {
+    if (this.countVisibleLanguageTabs() > this.MAX_TABS_VISIBLE) {
         return true;
     }
     return false;
