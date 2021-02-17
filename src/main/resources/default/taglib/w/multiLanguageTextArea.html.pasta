@@ -25,32 +25,34 @@
 <i:local name="modalId" value="@('mls-modal-' + id)"/>
 
 <div id="@fieldId" class="col-xs-@smallSpan col-md-@span @UserContext.get().signalFieldError(fieldName)">
-    <i:if test="isFilled(label) || forceLabel">
-        <label>
-        <span class="@if (required) { input-required } @if (adminOnly) { admin-link }">
-            @label
-        </span>
-        </label>
-    </i:if>
+    <div class="mls-header">
+        <div class="mls-tab-header">
+            <ul class="nav nav-tabs mls-tab-list">
+                <li class="dropdown mls-toggle-language-button hidden" role="presentation">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
+                       aria-expanded="false">
+                        <div class="toggle-language-placeholder"></div>
+                    </a>
+                    <ul class="dropdown-menu toggle-language-data"></ul>
+                </li>
 
-    <div class="mls-tab-header pull-right">
-        <ul class="nav nav-tabs mls-tab-list">
-            <li class="dropdown mls-toggle-language-button hidden" role="presentation">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
-                   aria-expanded="false">
-                    <div class="toggle-language-placeholder"></div>
-                </a>
-                <ul class="dropdown-menu toggle-language-data"></ul>
-            </li>
-
-            <li class="mls-add-language-button btn-group dropup hidden">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button"
-                   aria-haspopup="true" aria-expanded="false" title="@i18n('MultiLanguageEditor.addLanguage')">
-                    <i class="fa fa-plus"></i>
-                </a>
-                <ul class="dropdown-menu"></ul>
-            </li>
-        </ul>
+                <li class="mls-add-language-button btn-group dropup hidden">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button"
+                       aria-haspopup="true" aria-expanded="false" title="@i18n('MultiLanguageEditor.addLanguage')">
+                        <i class="fa fa-plus"></i>
+                    </a>
+                    <ul class="dropdown-menu"></ul>
+                </li>
+            </ul>
+        </div>
+        
+        <i:if test="isFilled(label) || forceLabel">
+            <label>
+                <span class="@if (required) { input-required } @if (adminOnly) { admin-link }">
+                    @label
+                </span>
+            </label>
+        </i:if>
     </div>
     <div class="tab-content mls-tab-content">
     </div>
