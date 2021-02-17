@@ -12,6 +12,8 @@ import redis.clients.jedis.util.SafeEncoder;
 import sirius.db.redis.Redis;
 import sirius.db.redis.RedisDB;
 import sirius.kernel.Sirius;
+import sirius.kernel.cache.Cache;
+import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
@@ -32,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -70,6 +73,11 @@ public class Jupiter implements MetricProvider {
                                           .appendOffset("+HH:MM", "Z")
                                           .optionalEnd()
                                           .toFormatter();
+
+    private static final Cache<String, Object> LOCAL_SMALL_CACHE =
+            CacheManager.createCoherentCache("jupiter-local-small");
+    private static final Cache<String, Object> LOCAL_LARGE_CACHE =
+            CacheManager.createCoherentCache("jupiter-local-large");
 
     @Part
     private Redis redis;
@@ -171,15 +179,55 @@ public class Jupiter implements MetricProvider {
 
     @Override
     public void gather(MetricsCollector metricsCollector) {
-        metricsCollector.metric("jupiter_calls",
-                                "jupiter-calls",
-                                "Jupiter Calls",
-                                callDuration.getCount(),
-                                "/min");
+        metricsCollector.metric("jupiter_calls", "jupiter-calls", "Jupiter Calls", callDuration.getCount(), "/min");
         metricsCollector.metric("jupiter_call_duration",
                                 "jupiter-call-duration",
                                 "Jupiter Call Duration",
                                 callDuration.getAndClear(),
                                 "ms");
+    }
+
+    /**
+     * Fetches a locally cached object based on Jupiter data which is relatively small.
+     * <p>
+     * This is a larger cache for (relatively) small objects like strings or tuples.
+     * <p>
+     * Note that the underlying cache is automatically cleared once the Jupiter repository is synced, so that
+     * this cache shoudln't contain any stale data.
+     *
+     * @param key           the globally unique key used to locally lookup the value
+     * @param valueComputer the computer which actually uses Jupiter (e.g. IDB) to compute the cachable data.
+     * @param <V>           the type of the cached value
+     * @return the value which was either cached or computed
+     */
+    @SuppressWarnings("unchecked")
+    public <V> V fetchFromSmallCache(String key, Supplier<V> valueComputer) {
+        return (V) LOCAL_SMALL_CACHE.get(key, ignored -> valueComputer.get());
+    }
+
+    /**
+     * Fetches a locally cached object based on Jupiter data which is relatively large/complex.
+     * <p>
+     * This is a larger cache for (relatively) large/complex compound objects.
+     * <p>
+     * Note that the underlying cache is automatically cleared once the Jupiter repository is synced, so that
+     * this cache shoudln't contain any stale data.
+     *
+     * @param key           the globally unique key used to locally lookup the value
+     * @param valueComputer the computer which actually uses Jupiter (e.g. IDB) to compute the cachable data.
+     * @param <V>           the type of the cached value
+     * @return the value which was either cached or computed
+     */
+    @SuppressWarnings("unchecked")
+    public <V> V fetchFromLargeCache(String key, Supplier<V> valueComputer) {
+        return (V) LOCAL_LARGE_CACHE.get(key, ignored -> valueComputer.get());
+    }
+
+    /**
+     * Flushes all local caches which might contain stale Jupiter data (e.g. loaded from IDB).
+     */
+    public void flushCaches() {
+        LOCAL_SMALL_CACHE.clear();
+        LOCAL_LARGE_CACHE.clear();
     }
 }

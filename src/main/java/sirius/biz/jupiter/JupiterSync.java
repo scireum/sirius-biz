@@ -176,6 +176,9 @@ public class JupiterSync implements Startable, EndOfDayTask {
             if (syncRepo) {
                 syncRepositories(processContext);
             }
+
+            processContext.log(ProcessLog.info().withMessage("Flushing local cache..."));
+            jupiter.flushCaches();
         } catch (Exception e) {
             processContext.handle(e);
         }
