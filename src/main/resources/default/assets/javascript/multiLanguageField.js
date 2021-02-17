@@ -80,7 +80,7 @@ MultiLanguageField.prototype.buildMultiline = function () {
     this.updateLanguageManagementOptions();
 }
 
-MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
+MultiLanguageField.prototype.renderLanguageRow = function (langCode) {
     const _row = document.createElement('div');
     _row.classList.add('row');
     _row.classList.add('form-group');
@@ -94,7 +94,7 @@ MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
     _labelColumn.appendChild(_flag);
 
     const _name = document.createElement('span');
-    _name.textContent = langName;
+    _name.textContent = this.getLanguageName(langCode);
     _labelColumn.appendChild(_name);
 
     const _inputColumn = document.createElement('div');
@@ -111,7 +111,7 @@ MultiLanguageField.prototype.renderLanguageRow = function (langCode, langName) {
     return _row;
 };
 
-MultiLanguageField.prototype.renderLanguageTab = function (langCode, langName, active) {
+MultiLanguageField.prototype.renderLanguageTab = function (langCode, active) {
     const _li = document.createElement('li');
     _li.classList.add('nav-item');
     if (active) {
@@ -124,7 +124,7 @@ MultiLanguageField.prototype.renderLanguageTab = function (langCode, langName, a
     return _li;
 };
 
-MultiLanguageField.prototype.renderLanguageTabInput = function (langCode, langName, active) {
+MultiLanguageField.prototype.renderLanguageTabInput = function (langCode, active) {
     const _inputColumn = document.createElement('div');
     _inputColumn.classList.add('tab-pane');
     if (active) {
@@ -160,7 +160,7 @@ MultiLanguageField.prototype.renderModalBody = function () {
         const langName = me.getLanguageName(langCode);
 
         if (!me.languageManagementEnabled || langCode === me.FALLBACK_CODE || me.values[langCode]) {
-            const _row = me.renderLanguageRow(langCode, langName);
+            const _row = me.renderLanguageRow(langCode);
             me._modalInputs.appendChild(_row);
             rowsAdded = true;
         }
@@ -184,7 +184,7 @@ MultiLanguageField.prototype.renderModalBody = function () {
             const _link = me.renderLanguageLink(langCode);
 
             _link.addEventListener('click', function () {
-                const _row = me.renderLanguageRow(langCode, me.validLanguages[langCode]);
+                const _row = me.renderLanguageRow(langCode);
                 me._modalInputs.appendChild(_row);
                 me._modalPlaceholder.classList.add('hidden');
                 me.updateLanguageManagementOptions();
@@ -253,13 +253,16 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
         if (!me.languageManagementEnabled || langCode === me.FALLBACK_CODE || me.values[langCode]) {
             const active = !rowsAdded;
 
-            const _language = me.buildLanguageEntry(langCode, true);
-            me._toggleLanguageOptions.appendChild(_language);
+            const _languageLi = me.buildLanguageEntry(langCode, true);
+            if (active) {
+                _languageLi.classList.add('active');
+            }
+            me._toggleLanguageOptions.appendChild(_languageLi);
 
-            const _langTab = me.renderLanguageTab(langCode, langName, active);
+            const _langTab = me.renderLanguageTab(langCode, active);
             me._toggleLanguageButton.parentNode.insertBefore(_langTab, me._toggleLanguageButton);
 
-            const _langTabInput = me.renderLanguageTabInput(langCode, langName, active);
+            const _langTabInput = me.renderLanguageTabInput(langCode, active);
             me._multilineContent.appendChild(_langTabInput);
 
             if (me.shouldRenderDropdownInsteadOfTabs()) {
@@ -281,19 +284,20 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
 
         const me = this;
         this.forEachValidLanguage(function (langCode) {
-            const _language = me.buildLanguageEntry(langCode, false);
-            _language.querySelector('a').addEventListener('click', function () {
-                me._multilineContent.querySelectorAll('.tab-pane').forEach(function (langTab) {
-                    langTab.classList.remove('active');
+            const _languageLiDropdown = me.buildLanguageEntry(langCode, false);
+            _languageLiDropdown.querySelector('a').addEventListener('click', function () {
+                me._multilineHeader.querySelectorAll('li.nav-item').forEach(function (item) {
+                    item.classList.remove('active');
                 });
 
-                const _langTab = me.renderLanguageTab(langCode, me.getLanguageName(langCode), true);
+                const _langTab = me.renderLanguageTab(langCode, true);
                 me._toggleLanguageButton.parentNode.insertBefore(_langTab, me._toggleLanguageButton);
 
-                const _language = me.buildLanguageEntry(langCode, true);
-                me._toggleLanguageOptions.appendChild(_language);
+                const _languageLi = me.buildLanguageEntry(langCode, true);
+                _languageLi.classList.add('active');
+                me._toggleLanguageOptions.appendChild(_languageLi);
 
-                const _languageTabInput = me.renderLanguageTabInput(langCode, me.getLanguageName(langCode), true);
+                const _languageTabInput = me.renderLanguageTabInput(langCode, true);
                 me._multilineContent.appendChild(_languageTabInput);
 
                 if (me.shouldRenderDropdownInsteadOfTabs()) {
@@ -301,6 +305,7 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
                         item.classList.add('hidden');
                     });
                     me._toggleLanguageButton.classList.remove('hidden');
+                    me._toggleLanguageButton.classList.add('active');
                 }
 
                 const _li = me.renderLanguageOptionReplacement(langCode);
@@ -308,7 +313,7 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
 
                 me.updateLanguageManagementOptions();
             });
-            _addLanguageOptions.appendChild(_language);
+            _addLanguageOptions.appendChild(_languageLiDropdown);
         });
     }
 }
@@ -321,10 +326,10 @@ MultiLanguageField.prototype.buildLanguageEntry = function (langCode, syncDropdo
     _link.appendChild(_flag);
     const _text = document.createTextNode(this.getLanguageName(langCode));
     _link.appendChild(_text);
-    const _language = document.createElement('li');
-    _language.classList.add('pointer');
-    _language.dataset.lang = langCode;
-    _language.appendChild(_link);
+    const _languageLi = document.createElement('li');
+    _languageLi.classList.add('pointer');
+    _languageLi.dataset.lang = langCode;
+    _languageLi.appendChild(_link);
 
     if (syncDropdownTitleOnClick) {
         const me = this;
@@ -334,11 +339,12 @@ MultiLanguageField.prototype.buildLanguageEntry = function (langCode, syncDropdo
         });
     }
 
-    return _language;
+    return _languageLi;
 }
 
 MultiLanguageField.prototype.replaceButtonCaption = function (element) {
     const _oldPlaceholder = this._toggleLanguageButton.querySelector('.toggle-language-placeholder');
+    this._toggleLanguageButton.classList.add('active');
     const _newPlaceholder = document.createElement('div');
     _newPlaceholder.classList.add('toggle-language-placeholder');
     _newPlaceholder.appendChild(element);
