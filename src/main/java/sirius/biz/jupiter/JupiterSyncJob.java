@@ -9,6 +9,7 @@
 package sirius.biz.jupiter;
 
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
+import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.tenants.TenantUserManager;
@@ -28,12 +29,21 @@ import java.util.function.Consumer;
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class JupiterSyncJob extends SimpleBatchProcessJobFactory {
 
+    private static final Parameter<Boolean> SYNC_CONFIG =
+            new BooleanParameter("sync-config", "Synchronize Configuration").withDefaultTrue().build();
+    private static final Parameter<Boolean> EXECUTE_DATA_PROVIDERS =
+            new BooleanParameter("execute-providers", "Execute Data Providers").withDefaultTrue().build();
+    private static final Parameter<Boolean> SYNC_REPO =
+            new BooleanParameter("sync-rep", "Synchronize Repository").withDefaultTrue().build();
+
     @Part
     private JupiterSync jupiterSync;
 
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
-        // This job has no parameters.
+        parameterCollector.accept(SYNC_CONFIG);
+        parameterCollector.accept(EXECUTE_DATA_PROVIDERS);
+        parameterCollector.accept(SYNC_REPO);
     }
 
     @Override
@@ -43,7 +53,10 @@ public class JupiterSyncJob extends SimpleBatchProcessJobFactory {
 
     @Override
     protected void execute(ProcessContext process) throws Exception {
-        jupiterSync.performSyncInProcess(process, true, true, true);
+        jupiterSync.performSyncInProcess(process,
+                                         process.require(SYNC_CONFIG),
+                                         process.require(SYNC_REPO),
+                                         process.require(EXECUTE_DATA_PROVIDERS));
     }
 
     @Nonnull

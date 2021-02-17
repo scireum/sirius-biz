@@ -26,7 +26,9 @@ import sirius.kernel.Sirius;
 import sirius.kernel.Startable;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Wait;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.PartCollection;
 import sirius.kernel.di.std.ConfigValue;
@@ -129,11 +131,17 @@ public class JupiterSync implements Startable, EndOfDayTask {
     @Override
     public void started() {
         if (automaticUpdate) {
+            // As re run in the "readiness callback" of elastic, we rather fork a thread here, as synchronizing the
+            // repository might take a while.
+            // We await the readiness of elastic in the first place, as we use the Process framework to log what we
+            // do...
             elastic.getReadyFuture()
-                   .onSuccess(() -> runInStandbyProcess(processContext -> performSyncInProcess(processContext,
-                                                                                               true,
-                                                                                               true,
-                                                                                               false)));
+                   .onSuccess(() -> tasks.defaultExecutor()
+                                         .start(() -> runInStandbyProcess(processContext -> performSyncInProcess(
+                                                 processContext,
+                                                 true,
+                                                 true,
+                                                 false))));
         }
     }
 
@@ -272,6 +280,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
             if (connection.isConfigured()) {
                 try {
                     syncRepository(processContext, connection);
+                    awaitNextEpoch(processContext, connection);
                 } catch (HandledException e) {
                     processContext.log(ProcessLog.error()
                                                  .withFormattedMessage("Failed to sync repository contents of %s: %s",
@@ -492,6 +501,34 @@ public class JupiterSync implements Startable, EndOfDayTask {
         }
 
         filesToDelete.remove(effectiveFileName);
+    }
+
+    private void awaitNextEpoch(ProcessContext processContext, JupiterConnector connector) {
+        connector.repository().requestEpoch();
+        int retries = 30;
+        Monoflop stateUpdate = Monoflop.create();
+        while (processContext.isActive() && retries-- > 0 && !connector.repository().isEpochSync()) {
+            if (stateUpdate.firstCall()) {
+                processContext.setCurrentStateMessage(Strings.apply("Waiting for the repository of %s to be synced...",
+                                                                    connector.getName()));
+            }
+            Wait.seconds(2);
+        }
+
+        if (stateUpdate.successiveCall()) {
+            processContext.setCurrentStateMessage(null);
+        }
+
+        if (connector.repository().isEpochSync()) {
+            processContext.log(ProcessLog.info()
+                                         .withFormattedMessage("Repository of %s is fully synced...",
+                                                               connector.getName()));
+        } else {
+            processContext.log(ProcessLog.warn()
+                                         .withFormattedMessage(
+                                                 "Repository of %s was unable to synchronize within 60 seconds...",
+                                                 connector.getName()));
+        }
     }
 
     /**

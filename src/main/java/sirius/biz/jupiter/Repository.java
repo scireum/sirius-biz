@@ -26,6 +26,8 @@ public class Repository {
     private static final JupiterCommand CMD_STORE = new JupiterCommand("REPO.STORE");
     private static final JupiterCommand CMD_DELETE = new JupiterCommand("REPO.DELETE");
     private static final JupiterCommand CMD_LIST = new JupiterCommand("REPO.LIST");
+    private static final JupiterCommand CMD_INC_EPOCH = new JupiterCommand("REPO.INC_EPOCH");
+    private static final JupiterCommand CMD_EPOCHS = new JupiterCommand("REPO.EPOCHS");
 
     private final JupiterConnector connection;
 
@@ -108,5 +110,36 @@ public class Repository {
         return new RepositoryFile(Jupiter.readString(row.at(0)),
                                   row.at(1).asLong(0),
                                   Jupiter.readLocalDateTime(row.at(2)));
+    }
+
+    /**
+     * Increments the foreground and background epoch in the Jupiter instance.
+     * <p>
+     * This can be used to determine if the background system of the Jupiter repository is idle (has completed all
+     * previously scheduled tasks).
+     * <p>
+     * After invoking this, one has to call {@link #isEpochSync()} and wait until this returns <tt>true</tt>.
+     */
+    public void requestEpoch() {
+        connection.execDirect(() -> "REPO.INC_EPOCH", jupiter -> {
+            jupiter.sendCommand(CMD_INC_EPOCH);
+            jupiter.getStatusCodeReply();
+        });
+    }
+
+    /**
+     * Determines if the foreground epoch and background epoch of Jupiter are equal.
+     * <p>
+     * If previously {@link #requestEpoch()} has been called, this can be used to guarantee, that the background
+     * actor of Jupiter is idle/has completed all tasks.
+     *
+     * @return <tt>true</tt> if the epochs are equal (the background system is idle), <tt>false</tt> otherwise
+     */
+    public boolean isEpochSync() {
+        return connection.queryDirect(() -> "REPO.EPOCHS", jupiter -> {
+            jupiter.sendCommand(CMD_EPOCHS);
+            Values epochs = Values.of(jupiter.getIntegerMultiBulkReply());
+            return epochs.at(0).asLong(0) == epochs.at(1).asLong(-1);
+        });
     }
 }
