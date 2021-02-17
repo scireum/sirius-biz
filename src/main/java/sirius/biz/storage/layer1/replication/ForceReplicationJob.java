@@ -31,7 +31,7 @@ import java.util.function.Consumer;
 /**
  * Forces the replication of a given {@link ObjectStorageSpace}.
  * <p>
- * This is most commonly used after as new replication target has been defined in order to copy the existing
+ * This is most commonly used after a new replication target has been defined in order to copy the existing
  * objects.
  */
 @Register
