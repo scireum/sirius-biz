@@ -339,12 +339,17 @@ MultiLanguageField.prototype.buildLanguageEntry = function (langCode, syncDropdo
 }
 
 MultiLanguageField.prototype.replaceButtonCaption = function (element) {
-    const _oldPlaceholder = this._toggleLanguageButton.querySelector('.toggle-language-placeholder');
-    this._toggleLanguageButton.classList.add('active');
-    const _newPlaceholder = document.createElement('div');
-    _newPlaceholder.classList.add('toggle-language-placeholder');
+    const _oldPlaceholder = this._toggleLanguageButton.querySelector('.dropdown-toggle');
+    const _newPlaceholder = document.createElement('a');
+    _newPlaceholder.dataset.toggle = 'dropdown';
+    _newPlaceholder.role = 'button';
+    _newPlaceholder.setAttribute('aria-haspopup', 'true');
+    _newPlaceholder.setAttribute('aria-expanded', 'false');
+    _newPlaceholder.classList.add('dropdown-toggle');
+    _newPlaceholder.href = '#';
     _newPlaceholder.appendChild(element);
     _oldPlaceholder.parentElement.replaceChild(_newPlaceholder, _oldPlaceholder);
+    this._toggleLanguageButton.classList.add('active');
 }
 
 MultiLanguageField.prototype.updateOuterInputField = function () {
