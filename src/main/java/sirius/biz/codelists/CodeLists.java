@@ -34,6 +34,7 @@ import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +53,7 @@ import java.util.Optional;
  * @param <L> the effective entity type used to represent code lists
  * @param <E> the effective entity type used to represent code list entries
  */
-public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L, ?>> {
+public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L, ?>> {
 
     protected static final String CONFIG_EXTENSION_CODE_LISTS = "code-lists";
     protected static final String CONFIG_KEY_NAME = "name";
@@ -428,7 +429,7 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
     }
 
     /**
-     * Returns the value translated from the given code list associated with the given code.
+     * Returns the value translated from the given code list associated with the given code for the current language.
      * <p>
      * If no matching entry exists, the code itself will be returned.
      *
@@ -438,9 +439,23 @@ public abstract class CodeLists<I, L extends BaseEntity<I> & CodeList, E extends
      */
     @Nullable
     public String getTranslatedValue(@Nonnull String codeListName, @Nullable String code) {
-        String value = getValue(codeListName, code, NLS.getCurrentLang());
+        return getTranslatedValue(codeListName, code, NLS.getCurrentLang());
+    }
+
+    /**
+     * Returns the value translated from the given code list associated with the given code and language code.
+     * <p>
+     * If no matching entry exists, the code itself will be returned.
+     *
+     * @param codeListName the code list to search in
+     * @param code         the code to lookup
+     * @param langCode     the language code to translate into
+     * @return the translated value associated with the code or the code itself if no value exists
+     */
+    public String getTranslatedValue(@Nonnull String codeListName, @Nullable String code, String langCode) {
+        String value = getValue(codeListName, code, langCode);
         if (value != null && value.startsWith("$")) {
-            return Value.of(value).translate().getString();
+            return Value.of(value).translate(langCode).getString();
         } else {
             return value;
         }

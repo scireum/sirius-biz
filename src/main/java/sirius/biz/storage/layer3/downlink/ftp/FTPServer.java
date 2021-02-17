@@ -164,6 +164,7 @@ public class FTPServer implements Startable, Stoppable {
             return;
         }
 
+        StorageUtils.LOG.INFO("Layer3/FTP: Setting up SFTP support using key %s of store %s", keyAlias, keystore);
         SslConfigurationFactory ssl = new SslConfigurationFactory();
         ssl.setKeystoreFile(new File(keystore));
         ssl.setKeystorePassword(keystorePassword);

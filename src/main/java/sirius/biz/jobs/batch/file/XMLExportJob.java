@@ -9,7 +9,6 @@
 package sirius.biz.jobs.batch.file;
 
 import sirius.biz.process.ProcessContext;
-import sirius.biz.storage.layer3.FileOrDirectoryParameter;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.xml.XMLStructuredOutput;
@@ -39,14 +38,11 @@ public abstract class XMLExportJob extends ArchiveExportJob {
     /**
      * Creates a new job for the given process context.
      *
-     * @param destinationParameter the parameter used to select the destination for the file being written
-     * @param process              the context in which the process will be executed
+     * @param process the context in which the process will be executed
      */
-    protected XMLExportJob(@Nonnull XMLExportJobFactory factory,
-                           FileOrDirectoryParameter destinationParameter,
-                           ProcessContext process) {
-        super(destinationParameter, process);
-        requireValidFile = process.getParameter(factory.requireValidFile).orElse(false);
+    protected XMLExportJob(@Nonnull XMLExportJobFactory factory, ProcessContext process) {
+        super(process);
+        requireValidFile = process.getParameter(XMLExportJobFactory.VALID_FILE_PARAMETER).orElse(false);
         xsdResourcePath = factory.getXsdResourcePath();
     }
 

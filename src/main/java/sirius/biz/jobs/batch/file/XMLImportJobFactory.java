@@ -9,7 +9,6 @@
 package sirius.biz.jobs.batch.file;
 
 import sirius.biz.jobs.params.Parameter;
-import sirius.biz.jobs.params.SelectStringParameter;
 import sirius.biz.process.ProcessContext;
 
 import java.util.LinkedHashMap;
@@ -22,19 +21,20 @@ import java.util.function.Consumer;
  */
 public abstract class XMLImportJobFactory extends FileImportJobFactory {
 
-    protected final SelectStringParameter requireValidFile =
-            new SelectStringParameter("requireValidFile", "$XMLImportJobFactory.requireValidFile").withDescription(
-                    "$XMLImportJobFactory.requireValidFile.help").hidden();
+    @Override
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
+        super.collectParameters(parameterCollector);
+
+        Map<String, String> paths = new LinkedHashMap<>();
+        collectXsdResourcePaths(paths::put);
+        if (!paths.isEmpty()) {
+            parameterCollector.accept(XMLImportJob.createSchemaParameter(paths));
+        }
+    }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
-        Map<String, String> paths = new LinkedHashMap<>();
-        fillXsdResourcePaths(paths::put);
-        if (!paths.isEmpty()) {
-            paths.forEach((xsdPath, name) -> requireValidFile.withEntry(xsdPath, name));
-            parameterCollector.accept(requireValidFile);
-        }
-        super.collectParameters(parameterCollector);
+    protected void collectAcceptedFileExtensions(Consumer<String> fileExtensionConsumer) {
+        fileExtensionConsumer.accept("xml");
     }
 
     @Override
@@ -50,7 +50,7 @@ public abstract class XMLImportJobFactory extends FileImportJobFactory {
      * <p>
      * This allows to provide more than one XSD for validation when multiple variants of a data format are supported.
      */
-    protected void fillXsdResourcePaths(BiConsumer<String, String> entryConsumer) {
+    protected void collectXsdResourcePaths(BiConsumer<String, String> entryConsumer) {
         // Nothing to do in the default implementation
     }
 }

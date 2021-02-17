@@ -45,8 +45,10 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     @Part
     private IndexMappings mappings;
 
-    private EntityDescriptorParameter entityDescriptorParameter =
-            new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity).markRequired();
+    private Parameter<EntityDescriptor> entityDescriptorParameter =
+            new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity)
+                                           .markRequired()
+                                           .build();
 
     @Override
     public String getLabel() {
@@ -113,7 +115,7 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(entityDescriptorParameter);
     }
 

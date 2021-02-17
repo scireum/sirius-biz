@@ -8,7 +8,7 @@
 
 package sirius.biz.mongo;
 
-import sirius.db.mixing.properties.MultiLanguageStringProperty;
+import sirius.biz.translations.MultiLanguageStringProperty;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.di.transformers.Transformer;
 

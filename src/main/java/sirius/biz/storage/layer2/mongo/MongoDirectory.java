@@ -45,6 +45,7 @@ import java.util.function.Predicate;
 @Index(name = "directory_normalized_name_lookup",
         columns = {"spaceName", "parent", "deleted", "normalizedDirectoryName"},
         columnSettings = {Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING, Mango.INDEX_ASCENDING})
+@Index(name = "directory_renamed_loop", columns = "renamed", columnSettings = Mango.INDEX_ASCENDING)
 public class MongoDirectory extends MongoEntity implements Directory, OptimisticCreate {
 
     /**
@@ -98,6 +99,12 @@ public class MongoDirectory extends MongoEntity implements Directory, Optimistic
     public static final Mapping DELETED = Mapping.named("deleted");
     private boolean deleted;
 
+    /**
+     * Stores if the directory has been renamed.
+     */
+    public static final Mapping RENAMED = Mapping.named("renamed");
+    private boolean renamed;
+
     @Part
     private static BlobStorage layer2;
 
@@ -122,6 +129,10 @@ public class MongoDirectory extends MongoEntity implements Directory, Optimistic
                 this.directoryName = null;
                 this.normalizedDirectoryName = null;
             }
+        }
+
+        if (!isNew() && isChanged(DIRECTORY_NAME)) {
+            renamed = true;
         }
     }
 
@@ -245,5 +256,9 @@ public class MongoDirectory extends MongoEntity implements Directory, Optimistic
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public boolean isRenamed() {
+        return renamed;
     }
 }

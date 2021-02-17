@@ -1,5 +1,6 @@
 <i:pragma name="description" value="Provides an infobox to rendered in the sidebar which can use rateLimitInfo to output rate limits. If none are available, the box remains hidden." />
 
+<i:local name="isenguard" value="Injector.context().getPart(Isenguard.class)" />
 <i:if test="isenguard != null">
     <w:permission permission="permission-view-rate-limits">
         <i:local name="content" value="@renderToString('body')"/>

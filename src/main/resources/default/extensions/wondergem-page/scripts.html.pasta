@@ -3,5 +3,6 @@
 <i:switch test="@point">
     <i:block name="head">
         <script src="/assets/javascript/blobreffield.js" type="text/javascript"></script>
+        <script src="/assets/javascript/multiLanguageField.js" type="text/javascript"></script>
     </i:block>
 </i:switch>

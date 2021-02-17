@@ -98,8 +98,8 @@ public class ObjectStore {
 
     private class MonitoringProgressListener implements S3ProgressListener {
 
-        private Watch w = Watch.start();
-        private boolean upload;
+        private final Watch watch = Watch.start();
+        private final boolean upload;
 
         MonitoringProgressListener(boolean upload) {
             this.upload = upload;
@@ -113,15 +113,15 @@ public class ObjectStore {
         @Override
         public void progressChanged(ProgressEvent progressEvent) {
             if (progressEvent.getEventType() == ProgressEventType.TRANSFER_STARTED_EVENT) {
-                w.reset();
+                watch.reset();
             }
 
             if (progressEvent.getEventType() == ProgressEventType.TRANSFER_COMPLETED_EVENT) {
                 if (upload) {
-                    stores.uploads.addValue(w.elapsedMillis());
+                    stores.uploads.addValue(watch.elapsedMillis());
                     stores.uploadedBytes.add(progressEvent.getBytesTransferred());
                 } else {
-                    stores.downloads.addValue(w.elapsedMillis());
+                    stores.downloads.addValue(watch.elapsedMillis());
                     stores.downloadedBytes.add(progressEvent.getBytesTransferred());
                 }
             }
@@ -543,7 +543,7 @@ public class ObjectStore {
      * @param bucket        the bucket to upload the file to
      * @param objectId      the object id to use
      * @param inputStream   the data to upload
-     * @param contentLength the total number of bytes to upload
+     * @param contentLength the total number of bytes to upload or 0 to indicate that the length is unknown
      */
     public void upload(BucketName bucket, String objectId, InputStream inputStream, long contentLength) {
         upload(bucket, objectId, inputStream, contentLength, null);
@@ -555,7 +555,7 @@ public class ObjectStore {
      * @param bucket        the bucket to upload the file to
      * @param objectId      the object id to use
      * @param inputStream   the data to upload
-     * @param contentLength the total number of bytes to upload
+     * @param contentLength the total number of bytes to upload or 0 to indicate that the length is unknown
      * @param metadata      the metadata for the object
      */
     public void upload(BucketName bucket,
@@ -564,7 +564,7 @@ public class ObjectStore {
                        long contentLength,
                        @Nullable ObjectMetadata metadata) {
         try {
-            if (contentLength >= MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE) {
+            if (contentLength == 0 || contentLength >= MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE) {
                 upload(bucket, objectId, inputStream);
             } else {
                 uploadAsync(bucket, objectId, inputStream, contentLength, metadata).waitForUploadResult();
@@ -594,6 +594,7 @@ public class ObjectStore {
      * @param inputStream the data to upload
      */
     public void upload(BucketName bucket, String objectId, InputStream inputStream) {
+        ensureBucketExists(bucket);
         InitiateMultipartUploadResult multipartUpload =
                 getClient().initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket.getName(), objectId));
         try {

@@ -42,13 +42,13 @@ public class LogController extends BizController {
         ph.addTermAggregation(LoggedMessage.NODE);
         ph.addTimeAggregation(LoggedMessage.TOD,
                               false,
-                              DateRange.lastFiveMinutes(),
-                              DateRange.lastFiveteenMinutes(),
-                              DateRange.lastTwoHours(),
-                              DateRange.today(),
-                              DateRange.yesterday(),
-                              DateRange.thisWeek(),
-                              DateRange.lastWeek());
+                              DateRange.LAST_FIVE_MINUTES,
+                              DateRange.LAST_FIFTEEN_MINUTES,
+                              DateRange.LAST_TWO_HOURS,
+                              DateRange.TODAY,
+                              DateRange.YESTERDAY,
+                              DateRange.THIS_WEEK,
+                              DateRange.LAST_WEEK);
         ph.withSearchFields(QueryField.contains(LoggedMessage.SEARCH_FIELD));
 
         ctx.respondWith().template("/templates/biz/protocol/logs.html.pasta", ph.asPage());

@@ -11,16 +11,16 @@ package sirius.biz.jobs.batch.file;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.importer.txn.ImportTransactionHelper;
 import sirius.biz.importer.txn.ImportTransactionalEntity;
-import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.EnumParameter;
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
-import sirius.biz.storage.layer3.FileParameter;
 import sirius.biz.tenants.Tenants;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
 import sirius.db.mixing.query.Query;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -50,6 +50,18 @@ import java.util.function.Consumer;
 public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransactionalEntity, Q extends Query<Q, E, ?>>
         extends DictionaryBasedImportJob {
 
+    /**
+     * Contains the parameter which determines the {@link SyncMode}.
+     */
+    public static final Parameter<SyncMode> SYNC_MODE_PARAMETER = new EnumParameter<>("syncMode",
+                                                                                      "$EntityImportSyncJobFactory.syncMode",
+                                                                                      SyncMode.class).withDefault(
+            SyncMode.NEW_AND_UPDATE_ONLY)
+                                                                                                     .markRequired()
+                                                                                                     .withDescription(
+                                                                                                             "$EntityImportSyncJobFactory.syncMode.help")
+                                                                                                     .build();
+
     @Part
     private static Mixing mixing;
 
@@ -67,25 +79,19 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     /**
      * Creates a new job for the given factory, name and process.
      *
-     * @param fileParameter        the parameter which is used to derive the import file from
-     * @param ignoreEmptyParameter the parameter which is used to determine if empty values should be ignored
-     * @param syncModeParameter    the parameter which is used to determine the {@link SyncMode} to use
-     * @param type                 the type of entities being imported
-     * @param dictionary           the import dictionary to use
-     * @param process              the process context itself
-     * @param factoryName          the name of the factory which created this job
+     * @param type        the type of entities being imported
+     * @param dictionary  the import dictionary to use
+     * @param process     the process context itself
+     * @param factoryName the name of the factory which created this job
      */
-    public RelationalEntityImportJob(FileParameter fileParameter,
-                                     BooleanParameter ignoreEmptyParameter,
-                                     EnumParameter<SyncMode> syncModeParameter,
-                                     Class<E> type,
+    public RelationalEntityImportJob(Class<E> type,
                                      ImportDictionary dictionary,
                                      ProcessContext process,
                                      String factoryName) {
-        super(fileParameter, ignoreEmptyParameter, dictionary, process);
+        super(dictionary, process);
         this.importer.setFactoryName(factoryName);
         this.importTransactionHelper = importer.findHelper(ImportTransactionHelper.class);
-        this.mode = process.getParameter(syncModeParameter).orElse(SyncMode.NEW_AND_UPDATE_ONLY);
+        this.mode = process.getParameter(SYNC_MODE_PARAMETER).orElse(SyncMode.NEW_AND_UPDATE_ONLY);
         this.type = type;
         this.descriptor = mixing.getDescriptor(type);
     }
@@ -115,12 +121,14 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     }
 
     @Override
-    protected void executeForStream(String filename, InputStream in) throws Exception {
+    protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
         importTransactionHelper.start();
-        LineBasedProcessor.create(filename, in).run(this, error -> {
-            process.handle(error);
-            return true;
-        });
+        try (InputStream in = inputSupplier.create()) {
+            LineBasedProcessor.create(filename, in).run(this, error -> {
+                process.handle(error);
+                return true;
+            });
+        }
         commitImportTransaction();
     }
 
@@ -175,7 +183,11 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
             }
 
             fillAndVerify(entity, context);
-            if (entity.isNew()) {
+            boolean isNew = entity.isNew();
+
+            createOrUpdate(entity, context);
+
+            if (isNew) {
                 process.addTiming(NLS.get("EntityImportJob.entityCreated"), watch.elapsedMillis());
             } else {
                 process.addTiming(NLS.get("EntityImportJob.entityUpdated"), watch.elapsedMillis());

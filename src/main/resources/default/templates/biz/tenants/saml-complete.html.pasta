@@ -10,7 +10,7 @@
     <w:pageHeader titleKey="SAMLController.samlRedirect"/>
         <script type="text/javascript">
             $(document).ready(function () {
-                let target = '@wondergemRoot';
+                let target = '@config("product.wondergemRoot")';
 
                 try {
                     target = window.localStorage.getItem('samlPostLoginUri');
@@ -22,7 +22,7 @@
                     console.log(e);
                 }
 
-                window.location.replace('@wondergemRoot');
+                window.location.replace('@config("product.wondergemRoot")');
             });
         </script>
 

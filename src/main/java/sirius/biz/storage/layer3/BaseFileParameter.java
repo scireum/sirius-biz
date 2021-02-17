@@ -8,7 +8,7 @@
 
 package sirius.biz.storage.layer3;
 
-import sirius.biz.jobs.params.Parameter;
+import sirius.biz.jobs.params.ParameterBuilder;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
@@ -26,7 +26,8 @@ import java.util.Optional;
  *
  * @param <P> the effective parameter type for fluent method calls
  */
-public abstract class BaseFileParameter<P extends Parameter<VirtualFile, P>> extends Parameter<VirtualFile, P> {
+public abstract class BaseFileParameter<P extends ParameterBuilder<VirtualFile, P>> extends
+                                                                                    ParameterBuilder<VirtualFile, P> {
 
     @Part
     protected static VirtualFileSystem vfs;

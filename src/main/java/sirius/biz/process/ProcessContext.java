@@ -99,7 +99,7 @@ public interface ProcessContext extends TaskContextAdapter {
     /**
      * Increments the given performance counter by one.
      *
-     * @param counter the counter to increment
+     * @param counter   the counter to increment
      * @param adminOnly whether to show the timing only to administrators instead of all users
      */
     void incCounter(String counter, boolean adminOnly);
@@ -191,12 +191,11 @@ public interface ProcessContext extends TaskContextAdapter {
      *
      * @param parameter the parameter used to read and convert
      * @param <V>       the type of the returned value
-     * @param <P>       the generic type of the parameter
      * @return the value read from the process context wrapped as optional or an empty optional if there was no data or
      * a conversion error
      */
     @Nonnull
-    <V, P extends Parameter<V, P>> Optional<V> getParameter(Parameter<V, P> parameter);
+    <V> Optional<V> getParameter(Parameter<V> parameter);
 
     /**
      * Uses the given parameter to read and convert a value from the context of the process.
@@ -205,11 +204,10 @@ public interface ProcessContext extends TaskContextAdapter {
      *
      * @param parameter the parameter used to read and convert
      * @param <V>       the type of the returned value
-     * @param <P>       the generic type of the parameter
      * @return the value read from the process context
      */
     @Nonnull
-    <V, P extends Parameter<V, P>> V require(Parameter<V, P> parameter);
+    <V> V require(Parameter<V> parameter);
 
     /**
      * Adds an external link to the process.

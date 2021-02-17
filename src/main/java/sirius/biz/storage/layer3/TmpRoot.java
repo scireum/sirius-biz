@@ -97,6 +97,7 @@ public class TmpRoot implements VFSRoot {
         result.markAsExistingFile();
         result.withInputStreamSupplier(ignored -> blob.createInputStream());
         result.withFileHandleSupplier(ignored -> blob.download().orElse(null));
+        result.withSizeSupplier(ignored -> blob.getSize());
 
         return result;
     }

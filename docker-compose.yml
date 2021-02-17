@@ -7,6 +7,12 @@ services:
       - "6379"
     hostname: redis
 
+  redis-jupiter:
+    image: scireum/jupiter-io:0.1.5
+    ports:
+      - "2410"
+    hostname: redis-jupiter
+
   mongo:
     image: mongo:4.0.20
     ports:

@@ -23,6 +23,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.Formatter;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -137,11 +138,23 @@ public class PersonData extends Composite {
      * @return a short string (salutation, title and last name) used to address the person
      */
     public String getAddressableName() {
+        return getAddressableName(NLS.getCurrentLang());
+    }
+
+    /**
+     * Generates a string which is used to address the person in the given language.
+     * <p>
+     * An example would be <tt>Mr. Prof. Skip</tt>
+     *
+     * @param langCode the language code to translate to
+     * @return a short string (salutation, title and last name) used to address the person in the given language
+     */
+    public String getAddressableName(@Nonnull String langCode) {
         if (Strings.isEmpty(lastname)) {
             return "";
         }
         return Formatter.create("[${salutation} ][${title} ]${lastname}")
-                        .set("salutation", getTranslatedSalutation())
+                        .set("salutation", getTranslatedSalutation(langCode))
                         .set("title", title)
                         .set("lastname", lastname)
                         .smartFormat();
@@ -169,8 +182,21 @@ public class PersonData extends Composite {
      */
     @Override
     public String toString() {
+        return toTranslatedString(null);
+    }
+
+    /**
+     * Generates a string representation of the full name, tranlated corresponding to the given language code.
+     *
+     * @param langCode the language code to translate to
+     * @return the full name (if filled)
+     */
+    public String toTranslatedString(@Nullable String langCode) {
         return Formatter.create("[${salutation} ][${title} ][${firstname} ]${lastname}")
-                        .set("salutation", getTranslatedSalutation())
+                        .set("salutation",
+                             (langCode == null ?
+                              getTranslatedSalutation() :
+                              getTranslatedSalutation(langCode)))
                         .set("title", title)
                         .set("firstname", firstname)
                         .set("lastname", lastname)
@@ -210,6 +236,16 @@ public class PersonData extends Composite {
      */
     public String getTranslatedSalutation() {
         return codeLists.getTranslatedValue(CODE_LIST_SALUTATIONS, salutation);
+    }
+
+    /**
+     * Returns the value (by langCode specified translated name) of the salutation.
+     *
+     * @param langCode the language code to translate to
+     * @return the value for <tt>salutation</tt> from the <tt>salutations</tt> code list
+     */
+    public String getTranslatedSalutation(String langCode) {
+        return codeLists.getTranslatedValue(CODE_LIST_SALUTATIONS, salutation, langCode);
     }
 
     public String getTitle() {

@@ -35,7 +35,8 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
      * References the raw blob from which this variant was derived.
      */
     public static final Mapping SOURCE_BLOB = Mapping.named("sourceBlob");
-    private final SQLEntityRef<SQLBlob> sourceBlob = SQLEntityRef.writeOnceOn(SQLBlob.class, BaseEntityRef.OnDelete.CASCADE);
+    private final SQLEntityRef<SQLBlob> sourceBlob =
+            SQLEntityRef.writeOnceOn(SQLBlob.class, BaseEntityRef.OnDelete.CASCADE);
 
     /**
      * Contains the name / type of this variant.
@@ -77,6 +78,24 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
      */
     public static final Mapping QUEUED_FOR_CONVERSION = Mapping.named("queuedForConversion");
     private boolean queuedForConversion;
+
+    /**
+     * Stores how long the conversion took (in millis).
+     */
+    public static final Mapping CONVERSION_DURATION = Mapping.named("conversionDuration");
+    private long conversionDuration;
+
+    /**
+     * Stores how long the the conversion waited in the queue (in millis).
+     */
+    public static final Mapping QUEUE_DURATION = Mapping.named("queueDuration");
+    private long queueDuration;
+
+    /**
+     * Stores how long the the download and upload from and to the storage took (in millis).
+     */
+    public static final Mapping TRANSFER_DURATION = Mapping.named("transferDuration");
+    private long transferDuration;
 
     /**
      * Stores the node name on which the last conversion was attempted.
@@ -166,5 +185,29 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
 
     public void setPhysicalObjectKey(String physicalObjectKey) {
         this.physicalObjectKey = physicalObjectKey;
+    }
+
+    public long getConversionDuration() {
+        return conversionDuration;
+    }
+
+    public void setConversionDuration(long conversionDuration) {
+        this.conversionDuration = conversionDuration;
+    }
+
+    public long getQueueDuration() {
+        return queueDuration;
+    }
+
+    public void setQueueDuration(long queueDuration) {
+        this.queueDuration = queueDuration;
+    }
+
+    public long getTransferDuration() {
+        return transferDuration;
+    }
+
+    public void setTransferDuration(long transferDuration) {
+        this.transferDuration = transferDuration;
     }
 }

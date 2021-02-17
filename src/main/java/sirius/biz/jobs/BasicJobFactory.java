@@ -118,8 +118,8 @@ public abstract class BasicJobFactory implements JobFactory {
     }
 
     @Override
-    public List<Parameter<?, ?>> getParameters() {
-        List<Parameter<?, ?>> result = new ArrayList<>();
+    public List<Parameter<?>> getParameters() {
+        List<Parameter<?>> result = new ArrayList<>();
         collectParameters(result::add);
         return result;
     }
@@ -134,7 +134,7 @@ public abstract class BasicJobFactory implements JobFactory {
      *
      * @param parameterCollector the collector to be supplied with the expected parameters
      */
-    protected abstract void collectParameters(Consumer<Parameter<?, ?>> parameterCollector);
+    protected abstract void collectParameters(Consumer<Parameter<?>> parameterCollector);
 
     @Nullable
     @Override
@@ -273,16 +273,17 @@ public abstract class BasicJobFactory implements JobFactory {
                                                      boolean enforceRequiredParameters,
                                                      Consumer<HandledException> errorConsumer) {
         Map<String, String> context = new HashMap<>();
-        for (Parameter<?, ?> parameter : getParameters()) {
+        for (Parameter<?> parameter : getParameters()) {
             try {
                 Value contextValue = parameterProvider.apply(parameter.getName());
-                if (enforceRequiredParameters && contextValue.isEmptyString() && parameter.isRequired()) {
+                String value = parameter.checkAndTransform(contextValue);
+                if (enforceRequiredParameters && Strings.isEmpty(value) && parameter.isRequired()) {
                     errorConsumer.accept(Exceptions.createHandled()
                                                    .withNLSKey("Parameter.required")
                                                    .set("name", parameter.getLabel())
                                                    .handle());
                 } else {
-                    String value = parameter.checkAndTransform(contextValue);
+
                     context.put(parameter.getName(), value);
                 }
             } catch (HandledException e) {

@@ -20,6 +20,8 @@ import sirius.kernel.commons.Explain;
 import sirius.kernel.di.transformers.Transformable;
 import sirius.web.security.MessageProvider;
 
+import java.io.Serializable;
+
 /**
  * Provides the database independent interface for describing a user account which uses the system.
  * <p>
@@ -30,7 +32,7 @@ import sirius.web.security.MessageProvider;
  */
 @SuppressWarnings("squid:S1214")
 @Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
-public interface UserAccount<I, T extends BaseEntity<I> & Tenant<I>>
+public interface UserAccount<I extends Serializable, T extends BaseEntity<I> & Tenant<I>>
         extends Transformable, MessageProvider, Traced, Journaled, TenantAware, RateLimitedEntity, PerformanceFlagged {
 
     /**

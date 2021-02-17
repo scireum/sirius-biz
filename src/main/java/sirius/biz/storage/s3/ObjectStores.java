@@ -188,7 +188,7 @@ public class ObjectStores {
 
         return new URL(endpoint.getProtocol(),
                        hostAndPort.getFirst(),
-                       hostAndPort.getSecond(),
+                       Integer.valueOf(defaultPort).equals(hostAndPort.getSecond()) ? -1 : hostAndPort.getSecond(),
                        endpoint.getFile()).toString();
     }
 }

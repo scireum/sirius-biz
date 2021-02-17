@@ -11,21 +11,20 @@ package sirius.biz.web;
 import parsii.tokenizer.Position;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
-import sirius.tagliatelle.compiler.CompilationContext;
-import sirius.tagliatelle.expression.Expression;
-import sirius.tagliatelle.macros.Macro;
-import sirius.tagliatelle.rendering.LocalRenderContext;
+import sirius.pasta.noodle.Environment;
+import sirius.pasta.noodle.compiler.CompilationContext;
+import sirius.pasta.noodle.macros.BasicMacro;
 
 import javax.annotation.Nonnull;
 import java.util.List;
 
 /**
  * Signs a link which can be verified using BizController.verifySignedLink.
- *
+ * <p>
  * This is intended to be used in GET requests. For POST request see {@link sirius.biz.web.ComputeAuthSignatureMacro}.
  */
 @Register
-public class SignLinkMacro implements Macro {
+public class SignLinkMacro extends BasicMacro {
 
     @Override
     public Class<?> getType() {
@@ -33,25 +32,20 @@ public class SignLinkMacro implements Macro {
     }
 
     @Override
-    public void verifyArguments(CompilationContext context, Position pos, List<Expression> args) {
+    protected void verifyArguments(CompilationContext compilationContext, Position pos, List<Class<?>> args) {
         if (args.size() != 1) {
             throw new IllegalArgumentException("Expected a single argument.");
         }
     }
 
     @Override
-    public Object eval(LocalRenderContext ctx, Expression[] args) {
-        Object value = args[0].eval(ctx);
+    public Object invoke(Environment environment, Object[] args) {
+        Object value = args[0];
         if (Strings.isEmpty(value)) {
             return null;
         }
 
         return BizController.signLink(value.toString());
-    }
-
-    @Override
-    public boolean isConstant(Expression[] expressions) {
-        return true;
     }
 
     @Override

@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists.mongo;
 
+import sirius.biz.codelists.CodeList;
 import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.importer.ImportContext;
@@ -34,7 +35,8 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
     /**
      * Contains the mongo code list to import the code list entries into.
      */
-    private CodeListParameter codeListParameter = new CodeListParameter("codeList", "$CodeList").markRequired();
+    private Parameter<CodeList> codeListParameter =
+            new CodeListParameter("codeList", "$CodeList").markRequired().build();
 
     @Nonnull
     @Override
@@ -48,7 +50,7 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(codeListParameter);
         super.collectParameters(parameterCollector);
     }

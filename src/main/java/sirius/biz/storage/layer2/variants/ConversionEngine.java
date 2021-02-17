@@ -9,14 +9,16 @@
 package sirius.biz.storage.layer2.variants;
 
 import sirius.biz.storage.layer1.FileHandle;
-import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.Sirius;
-import sirius.kernel.async.Promise;
+import sirius.kernel.async.Future;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Watch;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Average;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
@@ -48,6 +50,8 @@ public class ConversionEngine {
     private static final String CONFIG_KEY_CONVERTERS = "storage.layer2.conversion.converters";
     private static final String EXECUTOR_STORAGE_CONVERSION = "storage-conversion";
     private static final String CONFIG_KEY_TYPE = "type";
+
+    private Average conversionDuration = new Average();
 
     @Part
     private Tasks tasks;
@@ -159,34 +163,61 @@ public class ConversionEngine {
     /**
      * Invokes the {@link Converter} which has been configured for the given variant to perform the actual conversion.
      *
-     * @param blob    the blob to convert
-     * @param variant the variant to generate
-     * @return a promise which will either be fullfilled with the generated file or be failed with an appropriate
-     * error message
+     * @param conversionProcess the conversion to perform
+     * @return a future which is fulfilled once the conversion is completed
      */
-    public Promise<FileHandle> performConversion(Blob blob, String variant) {
-        Promise<FileHandle> result = new Promise<>();
+    public Future performConversion(ConversionProcess conversionProcess) {
+        Future result = new Future();
 
+        Watch queueWatch = Watch.start();
         tasks.executor(EXECUTOR_STORAGE_CONVERSION).dropOnOverload(() -> {
             result.fail(new IllegalStateException("Conversion subsystem overloaded!"));
         }).fork(() -> {
             try {
-                Converter converter = fetchConverter(variant);
+                conversionProcess.recordQueueDuration(queueWatch.elapsedMillis());
+                Converter converter = fetchConverter(conversionProcess.getVariantName());
                 if (converter == null) {
                     // We use a handled exception here as the error has already been reported and we do not want to jam
                     // the logs with additional error reports for the same problem.
                     throw Exceptions.createHandled()
-                                    .withSystemErrorMessage("A configuration problem is present for: %s", variant)
+                                    .withSystemErrorMessage("A configuration problem is present for: %s",
+                                                            conversionProcess.getVariantName())
                                     .handle();
                 }
 
-                result.success(converter.performConversion(blob));
+                converter.performConversion(conversionProcess);
+                FileHandle resultFileHandle = conversionProcess.getResultFileHandle();
+                if (resultFileHandle == null
+                    || !resultFileHandle.exists()
+                    || resultFileHandle.getFile().length() == 0) {
+                    if (resultFileHandle != null) {
+                        resultFileHandle.close();
+                    }
+                    throw new IllegalArgumentException(Strings.apply(
+                            "The conversion engine created an empty result for variant %s of %s (%s)",
+                            conversionProcess.getVariantName(),
+                            conversionProcess.getBlobToConvert().getFilename(),
+                            conversionProcess.getBlobToConvert().getBlobKey()));
+                }
+
+                conversionDuration.addValue(conversionProcess.getConversionDuration());
+                result.success();
             } catch (Exception e) {
                 result.fail(e);
             }
-            //TODO metics
         });
 
         return result;
+    }
+
+    /**
+     * Exposes the metric which records the conversion performed on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the average which records the conversion duration for this node
+     */
+    public Average getConversionDuration() {
+        return conversionDuration;
     }
 }

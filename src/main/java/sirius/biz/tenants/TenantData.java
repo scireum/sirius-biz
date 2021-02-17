@@ -251,7 +251,6 @@ public class TenantData extends Composite implements Journaled {
     /**
      * Used to record changes on fields of the tenant.
      */
-    public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal;
 
     /**
@@ -398,10 +397,10 @@ public class TenantData extends Composite implements Journaled {
      */
     @Nonnull
     public Settings getSettings() {
-        Config config = getConfig();
+        Config tenantConfig = getConfig();
 
-        if (config != null) {
-            return new Settings(config, false);
+        if (tenantConfig != null) {
+            return new Settings(tenantConfig, false);
         }
 
         return new Settings(ConfigFactory.empty(), false);

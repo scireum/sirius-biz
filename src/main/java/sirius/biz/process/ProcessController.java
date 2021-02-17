@@ -96,6 +96,7 @@ public class ProcessController extends BizController {
         ElasticPageHelper<Process> pageHelper = ElasticPageHelper.withQuery(query);
         pageHelper.withContext(ctx);
         pageHelper.addTermAggregation(Process.STATE, ProcessState.class);
+        pageHelper.addBooleanAggregation(Process.ERRORNEOUS);
         pageHelper.addParameterFacet("reference",
                                      "reference-label",
                                      Process.REFERENCES,
@@ -104,13 +105,13 @@ public class ProcessController extends BizController {
         pageHelper.addTermAggregation(Process.PROCESS_TYPE, value -> NLS.getIfExists(value, null).orElse(null));
         pageHelper.addTimeAggregation(Process.STARTED,
                                       false,
-                                      DateRange.lastFiveMinutes(),
-                                      DateRange.lastFiveteenMinutes(),
-                                      DateRange.lastTwoHours(),
-                                      DateRange.today(),
-                                      DateRange.yesterday(),
-                                      DateRange.thisWeek(),
-                                      DateRange.lastWeek());
+                                      DateRange.LAST_FIVE_MINUTES,
+                                      DateRange.LAST_FIFTEEN_MINUTES,
+                                      DateRange.LAST_TWO_HOURS,
+                                      DateRange.TODAY,
+                                      DateRange.YESTERDAY,
+                                      DateRange.THIS_WEEK,
+                                      DateRange.LAST_WEEK);
         pageHelper.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
         ctx.respondWith().template("/templates/biz/process/processes.html.pasta", pageHelper.asPage());
@@ -170,9 +171,9 @@ public class ProcessController extends BizController {
         }
         ph.addTimeAggregation(ProcessLog.TIMESTAMP,
                               false,
-                              DateRange.lastFiveMinutes(),
-                              DateRange.lastFiveteenMinutes(),
-                              DateRange.lastTwoHours());
+                              DateRange.LAST_FIVE_MINUTES,
+                              DateRange.LAST_FIFTEEN_MINUTES,
+                              DateRange.LAST_TWO_HOURS);
         ph.addTermAggregation(ProcessLog.NODE);
         ph.addSortFacet(Tuple.create("$ProcessController.sortDesc", qry -> qry.orderDesc(ProcessLog.SORT_KEY)),
                         Tuple.create("$ProcessController.sortAsc", qry -> qry.orderAsc(ProcessLog.SORT_KEY)));

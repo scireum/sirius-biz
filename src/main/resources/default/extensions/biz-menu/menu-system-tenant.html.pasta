@@ -20,10 +20,14 @@
                         permission="flag-system-administrator"/>
             <w:menuItem title="SQL" icon="fa-database" url="/system/sql"
                         permission="flag-system-administrator"/>
+            <w:menuItem title="Redis" icon="fa-database" url="/system/redis"
+                        permission="flag-system-administrator"/>
             <w:menuItem title="DB Query Tool" icon="fa-search" url="/system/query"
                         permission="flag-system-administrator"/>
             <w:menuItem title="Cluster" icon="fa-sitemap" url="/system/cluster"
                         permission="permission-system-cluster"/>
+            <w:menuItem title="Scripting" icon="fa-terminal" url="/system/scripting"
+                        permission="permission-sytem-scripting"/>
         </w:menuSection>
     </i:block>
 </i:switch>

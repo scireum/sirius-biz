@@ -13,7 +13,6 @@ import sirius.biz.importer.Importer;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.importer.txn.ImportTransactionalEntity;
 import sirius.biz.jobs.infos.JobInfoCollector;
-import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.db.mixing.BaseEntity;
@@ -34,28 +33,6 @@ import java.util.function.Consumer;
 public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> & ImportTransactionalEntity, Q extends Query<Q, E, ?>>
         extends DictionaryBasedImportJobFactory {
 
-    /**
-     * Determines the {@link SyncMode}.
-     */
-    protected final EnumParameter<SyncMode> syncModeParameter = createSyncModeParameter();
-
-    /**
-     * Creates the parameter which determines the import mode to use.
-     * <p>
-     * This is provided as a helper method so that other / similar jobs can re-use it.
-     * We do not re-use the same parameter, as a parameter isn't immutable, so a global constant could
-     * be easily set into an inconsistent state.
-     *
-     * @return the completely initialized parameter.
-     */
-    public static EnumParameter<SyncMode> createSyncModeParameter() {
-        return new EnumParameter<>("syncMode", "$EntityImportSyncJobFactory.syncMode", SyncMode.class).withDefault(
-                SyncMode.NEW_AND_UPDATE_ONLY)
-                                                                                                      .markRequired()
-                                                                                                      .withDescription(
-                                                                                                              "$EntityImportSyncJobFactory.syncMode.help");
-    }
-
     @Override
     protected DictionaryBasedImportJob createJob(ProcessContext process) {
         // We only resolve the parameters once and keep the final values around in a local context...
@@ -67,15 +44,13 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
 
     @SuppressWarnings("squid:S2095")
     @Explain("The job must not be closed here as it is returned and managed by the caller.")
-    protected RelationalEntityImportJob createImportJob(ProcessContext process, ImportContext parameterContext) {
-        return new RelationalEntityImportJob<E, Q>(fileParameter,
-                                                   ignoreEmptyParameter,
-                                                   syncModeParameter,
-                                                   getImportType(),
+    protected RelationalEntityImportJob<E, Q> createImportJob(ProcessContext process, ImportContext parameterContext) {
+        return new RelationalEntityImportJob<E, Q>(getImportType(),
                                                    getDictionary(),
                                                    process,
                                                    getName()).withDeleteQueryTuner(this::tuneDeleteQuery)
-                                                       .withContextExtender(context -> context.putAll(parameterContext));
+                                                             .withContextExtender(context -> context.putAll(
+                                                                     parameterContext));
     }
 
     protected void tuneDeleteQuery(ProcessContext processContext, Q query) {
@@ -133,8 +108,8 @@ public abstract class RelationalEntityImportJobFactory<E extends BaseEntity<?> &
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         super.collectParameters(parameterCollector);
-        parameterCollector.accept(syncModeParameter);
+        parameterCollector.accept(RelationalEntityImportJob.SYNC_MODE_PARAMETER);
     }
 }

@@ -16,6 +16,8 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.commons.Explain;
 
+import java.io.Serializable;
+
 /**
  * Provides the database independent interface for describing a code list entry.
  * <p>
@@ -27,7 +29,7 @@ import sirius.kernel.commons.Explain;
  */
 @SuppressWarnings("squid:S1214")
 @Explain("We rather keep the constants here, as this emulates the behaviour and layout of a real entity.")
-public interface CodeListEntry<I, L extends BaseEntity<I> & CodeList, T extends BasicTranslations<?>>
+public interface CodeListEntry<I extends Serializable, L extends BaseEntity<I> & CodeList, T extends BasicTranslations<?>>
         extends Entity, Translatable<T> {
 
     /**

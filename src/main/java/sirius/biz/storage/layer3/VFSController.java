@@ -277,7 +277,7 @@ public class VFSController extends BizController {
         }
 
         search.withPrefixFilter(ctx.get("filter").asString());
-        search.withLimit(new Limit(0, 1000));
+        search.withLimit(new Limit(0, 100));
         out.beginArray("path");
         for (VirtualFile element : parent.pathList()) {
             out.beginObject("element");

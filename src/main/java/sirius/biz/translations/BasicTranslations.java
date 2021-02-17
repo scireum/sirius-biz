@@ -17,10 +17,11 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,8 +39,7 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
     protected BaseEntity<?> owner;
 
     @Transient
-    @ConfigValue("mixing.multiLanguageStrings.supportedLanguages")
-    protected static Set<String> supportedLanguages;
+    protected Set<String> validLanguages = Collections.emptySet();
 
     @Transient
     @Part
@@ -47,6 +47,21 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
 
     protected BasicTranslations(BaseEntity<?> owner) {
         this.owner = owner;
+    }
+
+    /**
+     * Allows to specify a set of language codes to use when validating translation texts.
+     *
+     * @param owner          the entity that owns the translations
+     * @param validLanguages set of language codes to validate against
+     */
+    protected BasicTranslations(BaseEntity<?> owner, @Nonnull Set<String> validLanguages) {
+        this.owner = owner;
+        this.validLanguages = Collections.unmodifiableSet(validLanguages);
+    }
+
+    public Set<String> getValidLanguages() {
+        return Collections.unmodifiableSet(validLanguages);
     }
 
     /**
@@ -58,11 +73,18 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
     /**
      * Provides a validator so translations can only be added for supported languages.
      *
-     * @param lang the language code in question
-     * @return true if language is supported by the system, false otherwise
+     * @param lang  the language code in question
+     * @param field the name of the field to be translated
+     * @throws sirius.kernel.health.HandledException if lang is not supported by the system
      */
-    protected boolean isSupportedLanguage(String lang) {
-        return supportedLanguages.contains(lang);
+    protected void assertValidLanguage(String lang, String field) {
+        if (!validLanguages.isEmpty() && !validLanguages.contains(lang)) {
+            throw Exceptions.createHandled()
+                            .withNLSKey("Translations.invalidLanguage")
+                            .set("language", lang)
+                            .set("field", field)
+                            .handle();
+        }
     }
 
     /**
@@ -131,8 +153,7 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * @param field {@link Mapping} of the translated field
      * @param lang  language code
      * @param text  translated text for the given language
-     * @return the translation entity matching the database in use (Mongo or SQL), null if language not supported
-     * @throws IllegalArgumentException if lang is not supported by the system
+     * @return the translation entity matching the database in use (Mongo or SQL)
      */
     protected abstract T findOrCreateTranslation(@Nonnull Mapping field, String lang, String text);
 
@@ -142,14 +163,8 @@ public abstract class BasicTranslations<T extends BaseEntity<?> & Translation> e
      * @param field {@link Mapping} of the translated field
      * @param lang  language code
      * @return {@link Optional} with translated text for the given language, or empty if none is found
-     * @throws IllegalArgumentException if lang is not supported by the system
      */
     public Optional<String> getText(@Nonnull Mapping field, String lang) {
-        if (!isSupportedLanguage(lang)) {
-            throw new IllegalArgumentException(
-                    "lang must be a language code supported by the system (supportedLanguages)!");
-        }
-
         Optional<T> translation = fetchTranslation(field, lang);
         return translation.map(t -> t.getTranslationData().getText());
     }

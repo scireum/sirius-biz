@@ -1,4 +1,5 @@
-<i:arg type="sirius.biz.storage.legacy.VirtualObjectParameter" name="param"/>
+<i:arg type="sirius.biz.jobs.params.Parameter" name="param"/>
+
 <i:arg type="Map" name="context"/>
 
 
@@ -11,9 +12,9 @@
                                     help="@param.getDescription()"
                                     required="@param.isRequired()"
                                     optional="@!param.isRequired()"
-                                    serviceUri="@param.getAutocompleteUri()">
+                                    serviceUri="@param.as(sirius.biz.storage.legacy.VirtualObjectParameter.class).getAutocompleteUri()">
 
-            <i:local name="idAndLabel" value="param.renderCurrentValue(context)"/>
+            <i:local name="idAndLabel" value="param.as(sirius.biz.storage.legacy.VirtualObjectParameter.class).renderCurrentValue(context)"/>
             <i:if test="idAndLabel != null">
                 <option value="@idAndLabel.getFirst()" selected="selected">
                     @idAndLabel.getSecond()
@@ -30,7 +31,7 @@
     <script type="text/javascript">
         $(function () {
             $('#upload-@param.getName()').on('change', function (event) {
-                uploadFile(event, $('[name=@param.getName()]'), "@param.getBucketName()");
+                uploadFile(event, $('[name=@param.getName()]'), "@param.as(sirius.biz.storage.legacy.VirtualObjectParameter.class).getBucketName()");
             });
         });
     </script>
