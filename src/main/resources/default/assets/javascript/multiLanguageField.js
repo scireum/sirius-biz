@@ -196,7 +196,7 @@ MultiLanguageField.prototype.renderModalBody = function () {
 }
 
 MultiLanguageField.prototype.countActiveTabs = function () {
-    return this._multilineHeader.querySelectorAll('.nav-item').length;
+    return this._multilineHeader.querySelectorAll('ul > li.nav-item > a.mls-language-label').length;
 }
 
 MultiLanguageField.prototype.shouldRenderDropdownInsteadOfTabs = function () {
@@ -266,7 +266,7 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
             me._multilineContent.appendChild(_langTabInput);
 
             if (me.shouldRenderDropdownInsteadOfTabs()) {
-                me.hideAllTabs();
+                me.hideAllLanguageTabs();
                 me._toggleLanguageButton.classList.remove('hidden');
             }
 
@@ -284,8 +284,6 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
         this.forEachValidLanguage(function (langCode) {
             const _languageLiDropdown = me.buildLanguageEntry(langCode, false);
             _languageLiDropdown.querySelector('a').addEventListener('click', function () {
-                me.hideAllTabs();
-
                 const _langTab = me.renderLanguageTab(langCode, true);
                 me._toggleLanguageButton.parentNode.insertBefore(_langTab, me._toggleLanguageButton);
 
@@ -297,9 +295,7 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
                 me._multilineContent.appendChild(_languageTabInput);
 
                 if (me.shouldRenderDropdownInsteadOfTabs()) {
-                    me._multilineHeader.querySelectorAll('li .mls-language-label').forEach(function (item) {
-                        item.classList.add('hidden');
-                    });
+                    me.hideAllLanguageTabs();
                     me._toggleLanguageButton.classList.remove('hidden');
                     me._toggleLanguageButton.classList.add('active');
                 }
@@ -314,10 +310,10 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     }
 }
 
-MultiLanguageField.prototype.hideAllTabs = function () {
-    this._multilineHeader.querySelectorAll('li.nav-item,.mls-language-label').forEach(function (item) {
-        item.classList.remove('active');
-        item.classList.add('hidden');
+MultiLanguageField.prototype.hideAllLanguageTabs = function () {
+    this._multilineHeader.querySelectorAll('ul > li.nav-item > a.mls-language-label').forEach(function (item) {
+        item.parentElement.classList.remove('active');
+        item.parentElement.classList.add('hidden');
     });
 }
 
