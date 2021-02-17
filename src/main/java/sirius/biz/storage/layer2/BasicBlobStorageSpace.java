@@ -26,6 +26,7 @@ import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Processor;
 import sirius.kernel.commons.Producer;
+import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Wait;
@@ -41,15 +42,20 @@ import sirius.web.security.UserContext;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
@@ -148,6 +154,16 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     private static final String HEADER_VARIANT_SOURCE = "X-VariantSource";
     private static final String HEADER_VARIANT_COMPUTER = "X-VariantComputer";
+
+    /**
+     * Connect timeout for delegated blob downloads
+     */
+    private static final int CONNECT_TIMEOUT = (int) TimeUnit.MILLISECONDS.convert(15, TimeUnit.SECONDS);
+
+    /**
+     * Read timeout for delegated blob downloads
+     */
+    private static final int READ_TIMEOUT = (int) TimeUnit.MILLISECONDS.convert(15, TimeUnit.SECONDS);
 
     @Part
     protected static ObjectStorage objectStorage;
@@ -948,7 +964,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, false);
 
             if (physicalKey == null) {
-                return Optional.empty();
+                return tryDelegateDownload(blobKey, variant);
             }
 
             return getPhysicalSpace().download(physicalKey.getFirst());
@@ -957,6 +973,38 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
             return Optional.empty();
         }
+    }
+
+    /**
+     * Used if the requested variant doesn't exist but the local node is not permitted to perform the conversion itself.
+     * <p>
+     * In this case, we attempt to download the variant from one of our known conversion servers.
+     *
+     * @param blobKey the blob key of the blob to download
+     * @param variant the variant of the blob to download
+     * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist or couldn't
+     * be converted
+     * @throws IOException in case of an IO error
+     */
+    private Optional<FileHandle> tryDelegateDownload(String blobKey, String variant) throws IOException {
+        Optional<URL> url = determineDelegateConversionUrl(blobKey, variant);
+
+        if (!url.isPresent()) {
+            return Optional.empty();
+        }
+
+        URLConnection connection = url.get().openConnection();
+        connection.setConnectTimeout(CONNECT_TIMEOUT);
+        connection.setReadTimeout(READ_TIMEOUT);
+        connection.connect();
+
+        File temporaryFile = File.createTempFile("delegate-", null);
+
+        try (FileOutputStream out = new FileOutputStream(temporaryFile); InputStream in = connection.getInputStream()) {
+            Streams.transfer(in, out);
+        }
+
+        return Optional.of(FileHandle.temporaryFileHandle(temporaryFile));
     }
 
     private void handleFailedConversion(String blobKey, String variant, Exception e) {
@@ -1592,17 +1640,36 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param response the response to populate
      */
     private void delegateConversion(String blobKey, @Nullable String variant, Response response) {
-        if (conversionEnabled || conversionHosts.isEmpty()) {
+        Optional<URL> url = determineDelegateConversionUrl(blobKey, variant);
+
+        if (!url.isPresent()) {
             response.error(HttpResponseStatus.NOT_FOUND);
             return;
         }
 
-        String conversionHost = conversionHosts.get(ThreadLocalRandom.current().nextInt(conversionHosts.size()));
-        // Generates an appropriate URL as URLBuilder would do which will then handled by the BlobDispatcher
-        // of the conversion server. Note that this will be a call within the cluster, therefore http is fine
-        // (or even required as we're behind the SSL offload server).
+        response.addHeader(HEADER_VARIANT_SOURCE, "delegated");
+        response.addHeader(HEADER_VARIANT_COMPUTER, url.get().getHost());
+        response.tunnel(url.get().toString());
+    }
+
+    /**
+     * Generates an appropriate URL as URLBuilder would do which will then be handled by the BlobDispatcher of a
+     * conversion server.
+     * <p>
+     * Note that this will be a call within the cluster, therefore http is fine (or even required as
+     * we're behind the SSL offload server).
+     *
+     * @param blobKey the blob to deliver
+     * @param variant the variant of the blob to deliver
+     * @return the URL for requesting the variant from one of our conversion servers
+     */
+    private Optional<URL> determineDelegateConversionUrl(String blobKey, String variant) {
+        if (conversionEnabled || conversionHosts.isEmpty()) {
+            return Optional.empty();
+        }
+
         String conversionUrl = "http://"
-                               + conversionHost
+                               + conversionHosts.get(ThreadLocalRandom.current().nextInt(conversionHosts.size()))
                                + BlobDispatcher.URI_PREFIX
                                + "/"
                                + BlobDispatcher.FLAG_VIRTUAL
@@ -1615,9 +1682,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                + "/"
                                + blobKey;
 
-        response.addHeader(HEADER_VARIANT_SOURCE, "delegated");
-        response.addHeader(HEADER_VARIANT_COMPUTER, conversionHost);
-        response.tunnel(conversionUrl);
+        try {
+            return Optional.of(new URL(conversionUrl));
+        } catch (MalformedURLException e) {
+            throw Exceptions.handle(e);
+        }
     }
 
     /**
