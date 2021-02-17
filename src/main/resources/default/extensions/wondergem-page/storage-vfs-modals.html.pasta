@@ -122,7 +122,7 @@
                     const $modal = $("#select-file-modal");
                     const $table = $modal.find('.select-file-table-js');
                     const $searchForm = $modal.find('.search-form-js input').val("");
-                    const pageSize = 50;
+                    const pageSize = 25;
 
                     const pagination = paginate($modal.find(".pagination-controls-js"), function (page, pagination) {
                         if (page <= 1) {
