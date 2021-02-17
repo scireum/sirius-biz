@@ -153,6 +153,13 @@ input.form-control.mls-input {
   }
 }
 
+.mls-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-direction: row-reverse;
+}
+
 .mls-tab-header {
   .nav-tabs {
     border-bottom: none;
