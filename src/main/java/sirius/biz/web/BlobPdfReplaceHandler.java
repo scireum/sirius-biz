@@ -54,12 +54,14 @@ public class BlobPdfReplaceHandler extends PdfReplaceHandler {
             variant = blobInfo[2];
         }
 
-        Optional<FileHandle> fileHandle = storage.getSpace(blobInfo[0]).download(blobInfo[1], variant);
+        Optional<FileHandle> optionalFileHandle = storage.getSpace(blobInfo[0]).download(blobInfo[1], variant);
 
-        if (fileHandle.isPresent()) {
-            FSImage image = resolveResource(userAgentCallback, fileHandle.get().getFile().toURI().toURL());
+        if (optionalFileHandle.isPresent()) {
+            try (FileHandle fileHandle = optionalFileHandle.get()) {
+                FSImage image = resolveResource(userAgentCallback, fileHandle.getFile().toURI().toURL());
 
-            return resizeImage(image, cssWidth, cssHeight);
+                return resizeImage(image, cssWidth, cssHeight);
+            }
         }
 
         return null;
