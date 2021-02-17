@@ -203,10 +203,10 @@ MultiLanguageField.prototype.shouldRenderDropdownInsteadOfTabs = function () {
     if (this.mobileOrSmallScreen) {
         return true;
     }
-    if (!this.languageManagementEnabled && this.countActiveTabs() >= this.MAX_TABS_VISIBLE) {
+    if (!this.languageManagementEnabled && this.countActiveTabs() > this.MAX_TABS_VISIBLE) {
         return true;
     }
-    if ((this.languageManagementEnabled && this.countActiveTabs() >= (this.MAX_TABS_VISIBLE + 1))) {
+    if ((this.languageManagementEnabled && (this.countActiveTabs() - 1) > this.MAX_TABS_VISIBLE)) {
         return true;
     }
     return false;
