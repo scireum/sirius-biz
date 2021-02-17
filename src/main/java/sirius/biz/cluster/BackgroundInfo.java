@@ -19,12 +19,14 @@ public class BackgroundInfo {
     private String nodeName;
     private boolean bleeding;
     private String uptime;
+    private String version;
     protected Map<String, BackgroundJobInfo> jobs = new HashMap<>();
 
-    protected BackgroundInfo(String nodeName, boolean bleeding, String uptime) {
+    protected BackgroundInfo(String nodeName, boolean bleeding, String uptime, String version) {
         this.nodeName = nodeName;
         this.bleeding = bleeding;
         this.uptime = uptime;
+        this.version = version;
     }
 
     /**
@@ -47,6 +49,10 @@ public class BackgroundInfo {
 
     public boolean isBleeding() {
         return bleeding;
+    }
+
+    public String getVersion() {
+        return version;
     }
 
     /**

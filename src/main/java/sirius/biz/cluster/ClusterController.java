@@ -20,6 +20,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.metrics.Metric;
 import sirius.kernel.health.metrics.Metrics;
+import sirius.kernel.info.Product;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.BasicController;
 import sirius.web.controller.Routed;
@@ -53,6 +54,7 @@ public class ClusterController extends BasicController {
     public static final String RESPONSE_CODE = "code";
     public static final String RESPONSE_DESCRIPTION = "description";
     public static final String RESPONSE_NODE_STATE = "nodeState";
+    public static final String RESPONSE_VERSION = "version";
     public static final String RESPONSE_UPTIME = "uptime";
     public static final String RESPONSE_BLEEDING = "bleeding";
     public static final String RESPONSE_METRICS = "metrics";
@@ -142,6 +144,7 @@ public class ClusterController extends BasicController {
 
         out.property(RESPONSE_NAME, CallContext.getNodeName());
         out.property(RESPONSE_NODE_STATE, cluster.getNodeState().toString());
+        out.property(RESPONSE_VERSION, Product.getProduct().getDetails());
         out.property(RESPONSE_UPTIME, NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false));
         out.property(RESPONSE_BLEEDING, neighborhoodWatch.isBleeding());
 

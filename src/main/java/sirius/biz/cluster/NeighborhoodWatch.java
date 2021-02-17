@@ -27,6 +27,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.info.Product;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.timer.EveryDay;
 import sirius.kernel.timer.Timers;
@@ -454,7 +455,8 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
     public BackgroundInfo getLocalBackgroundInfo() {
         BackgroundInfo result = new BackgroundInfo(CallContext.getNodeName(),
                                                    isBleeding(),
-                                                   NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false));
+                                                   NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false),
+                                                   Product.getProduct().getDetails());
 
         for (Map.Entry<String, SynchronizeType> job : syncSettings.entrySet()) {
             result.jobs.put(job.getKey(),
@@ -470,12 +472,16 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
 
     private BackgroundInfo parseBackgroundInfos(JSONObject jsonObject) {
         if (jsonObject.getBooleanValue(InterconnectClusterManager.RESPONSE_ERROR)) {
-            return new BackgroundInfo(jsonObject.getString(InterconnectClusterManager.RESPONSE_NODE_NAME), false, "-");
+            return new BackgroundInfo(jsonObject.getString(InterconnectClusterManager.RESPONSE_NODE_NAME),
+                                      false,
+                                      "-",
+                                      "-");
         }
 
         BackgroundInfo result = new BackgroundInfo(jsonObject.getString(InterconnectClusterManager.RESPONSE_NODE_NAME),
                                                    jsonObject.getBooleanValue(ClusterController.RESPONSE_BLEEDING),
-                                                   jsonObject.getString(ClusterController.RESPONSE_UPTIME));
+                                                   jsonObject.getString(ClusterController.RESPONSE_UPTIME),
+                                                   jsonObject.getString(ClusterController.RESPONSE_VERSION));
         jsonObject.getJSONArray(ClusterController.RESPONSE_JOBS).forEach(job -> {
             try {
                 JSONObject jobJson = (JSONObject) job;
