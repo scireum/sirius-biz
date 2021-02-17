@@ -1639,7 +1639,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param variant  the variant of the blob to deliver
      * @param response the response to populate
      */
-    private void delegateConversion(String blobKey, @Nullable String variant, Response response) {
+    private void delegateConversion(String blobKey, String variant, Response response) {
         Optional<URL> url = determineDelegateConversionUrl(blobKey, variant);
 
         if (!url.isPresent()) {
