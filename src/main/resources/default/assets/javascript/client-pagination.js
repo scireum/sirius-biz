@@ -9,8 +9,8 @@
 function paginate(paginationControls, update) {
     const pagination = {
         previousBtn: $("<li><a href='#' aria-label='Previous'><span aria-hidden='true'>&laquo;</span></a></li>"),
-        pageIndicator: $("<li><a href='#' aria-label='Previous'/></li>"),
-        nextBtn: $("<li><a href='#' aria-label='Previous'><span aria-hidden='true'>&raquo;</span></a></li>"),
+        pageIndicator: $("<li><a href='#' aria-label='Page'/></li>"),
+        nextBtn: $("<li><a href='#' aria-label='Next'><span aria-hidden='true'>&raquo;</span></a></li>"),
         currentPage: 1
     }
 
