@@ -158,6 +158,9 @@ input.form-control.mls-input {
   justify-content: space-between;
   align-items: flex-end;
   flex-direction: row-reverse;
+
+  // We supress a border/separation between tab and textarea input
+  margin-bottom: -1px;
 }
 
 .mls-tab-header {
@@ -169,6 +172,11 @@ input.form-control.mls-input {
     color: #5e6468;
     margin-right: 0;
     margin-left: 2px;
+  }
+  
+  .nav-tabs > li {
+    // We supress a border/separation between tab and textarea input
+    border-bottom: 1px solid #ffffff;
   }
 
   .dropdown-menu > li > a:hover,
@@ -196,14 +204,6 @@ input.form-control.mls-input {
   }
 
   .mls-toggle-language-button {
-    // We supress a border/separation between tab and textarea input
-    border-bottom: none;
-
-    &.active {
-      // We supress a border/separation between tab and textarea input
-      margin-bottom: -2px;
-    }
-
     a {
       color: #5e6468;
     }
