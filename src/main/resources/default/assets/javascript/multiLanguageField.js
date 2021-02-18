@@ -156,8 +156,6 @@ MultiLanguageField.prototype.renderModalBody = function () {
     let rowsAdded = false;
     const me = this;
     this.forEachValidLanguage(function (langCode) {
-        const langName = me.getLanguageName(langCode);
-
         if (!me.languageManagementEnabled || langCode === me.FALLBACK_CODE || me.values[langCode]) {
             const _row = me.renderLanguageRow(langCode);
             me._modalInputs.appendChild(_row);
@@ -253,8 +251,6 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     const me = this;
 
     this.forEachValidLanguage(function (langCode) {
-        const langName = me.getLanguageName(langCode);
-
         if (!me.languageManagementEnabled || langCode === me.FALLBACK_CODE || me.values[langCode]) {
             // Render language management option for adding the language
             const _languageLi = me.buildLanguageEntry(langCode);
@@ -275,7 +271,8 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
         me.hideAllLanguageTabs();
         me._toggleLanguageButton.classList.remove('hidden');
 
-        me._toggleLanguageOptions.firstChild.classList.add('active');
+        // mark the element as selected in the list of language entries
+        me.markDropdownItemAsSelected(me._toggleLanguageOptions.firstChild);
     } else {
         this._multilineHeader.querySelector('.mls-language-tab').classList.add('active');
     }
@@ -298,8 +295,11 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
                 const _langTab = me.renderLanguageTab(langCode, true);
                 me._toggleLanguageButton.parentNode.insertBefore(_langTab, me._toggleLanguageButton);
 
+                me.removeSelectionStyleFromLanguageOptions();
                 const _languageLi = me.buildLanguageEntry(langCode);
-                _languageLi.classList.add('active');
+                // mark the element as selected in the list of language entries
+                me.markDropdownItemAsSelected(_languageLi);
+
                 me._toggleLanguageOptions.appendChild(_languageLi);
 
                 me._multilineContent.querySelectorAll('.tab-pane').forEach(function (_pane) {
@@ -338,6 +338,9 @@ MultiLanguageField.prototype.buildLanguageEntry = function (langCode) {
     const me = this;
     _link.addEventListener('click', function () {
         me.updateLanguageSwitcherLabel(langCode);
+        me.removeSelectionStyleFromLanguageOptions();
+        // mark the element as selected in the list of language entries
+        me.markDropdownItemAsSelected(_languageLi);
     });
 
     return _languageLi;
@@ -369,6 +372,18 @@ MultiLanguageField.prototype.updateLanguageSwitcherLabel = function (langCode) {
 
     _dropdownToggle.appendChild(_anchor);
     this._toggleLanguageButton.classList.add('active');
+}
+
+MultiLanguageField.prototype.markDropdownItemAsSelected = function (_languageItem) {
+    // add custom selection class 'language-selected' as Bootstrap does not allow multiple active elements in the same nav
+    _languageItem.classList.add('language-selected');
+}
+
+MultiLanguageField.prototype.removeSelectionStyleFromLanguageOptions = function (langCode) {
+    // remove custom selection marker from all language options
+    this._toggleLanguageOptions.querySelectorAll('ul>li.pointer.language-selected').forEach(function (_li) {
+        _li.classList.remove('language-selected');
+    });
 }
 
 MultiLanguageField.prototype.updateOuterInputField = function () {
