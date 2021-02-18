@@ -73,8 +73,7 @@ MultiLanguageField.prototype.buildMultiline = function () {
     if (langTabs.length > 0) {
         const element = langTabs[0];
         const langCode = element.dataset.lang;
-        const _li = this.renderLanguageOptionReplacement(langCode);
-        this.replaceButtonCaption(_li);
+        this.updateLanguageSwitcherLabel(langCode);
     }
 
     this.updateLanguageManagementOptions();
@@ -209,6 +208,9 @@ MultiLanguageField.prototype.shouldRenderDropdownInsteadOfTabs = function () {
     if (this.mobileOrSmallScreen) {
         return true;
     }
+    if (!this._toggleLanguageButton.classList.contains('hidden')) {
+        return true;
+    }
     if (this.countVisibleLanguageTabs() > this.MAX_TABS_VISIBLE) {
         return true;
     }
@@ -268,7 +270,7 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
         }
     });
 
-    // Activate the first option/tab and its pane
+    // Activate the first option/tab and its corresponding pane
     if (me.shouldRenderDropdownInsteadOfTabs()) {
         me.hideAllLanguageTabs();
         me._toggleLanguageButton.classList.remove('hidden');
