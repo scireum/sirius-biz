@@ -113,7 +113,7 @@ MultiLanguageField.prototype.renderLanguageRow = function (langCode) {
 
 MultiLanguageField.prototype.renderLanguageTab = function (langCode, active) {
     const _li = document.createElement('li');
-    _li.classList.add('nav-item');
+    _li.classList.add('mls-language-tab');
     if (active) {
         _li.classList.add('active');
     }
@@ -196,7 +196,13 @@ MultiLanguageField.prototype.renderModalBody = function () {
 }
 
 MultiLanguageField.prototype.countVisibleLanguageTabs = function () {
-    return this._multilineHeader.querySelectorAll('ul > li.nav-item > a.mls-language-label').length;
+    return this._multilineHeader.querySelectorAll('.mls-language-tab').length;
+}
+
+MultiLanguageField.prototype.hideAllLanguageTabs = function () {
+    this._multilineHeader.querySelectorAll('.mls-language-tab').forEach(function (item) {
+        item.parentNode.removeChild(item);
+    });
 }
 
 MultiLanguageField.prototype.shouldRenderDropdownInsteadOfTabs = function () {
@@ -242,34 +248,36 @@ MultiLanguageField.prototype.renderLanguageOptionReplacement = function (langCod
 }
 
 MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
-    let rowsAdded = false;
     const me = this;
+
     this.forEachValidLanguage(function (langCode) {
         const langName = me.getLanguageName(langCode);
 
         if (!me.languageManagementEnabled || langCode === me.FALLBACK_CODE || me.values[langCode]) {
-            const active = !rowsAdded;
-
-            const _languageLi = me.buildLanguageEntry(langCode, true);
-            if (active) {
-                _languageLi.classList.add('active');
-            }
+            // Render language management option for adding the language
+            const _languageLi = me.buildLanguageEntry(langCode);
             me._toggleLanguageOptions.appendChild(_languageLi);
 
-            const _langTab = me.renderLanguageTab(langCode, active);
+            // Render the actual tab
+            const _langTab = me.renderLanguageTab(langCode, false);
             me._toggleLanguageButton.parentNode.insertBefore(_langTab, me._toggleLanguageButton);
 
-            const _langTabInput = me.renderLanguageTabInput(langCode, active);
+            // Render the actual input associated with the created tab
+            const _langTabInput = me.renderLanguageTabInput(langCode, false);
             me._multilineContent.appendChild(_langTabInput);
-
-            if (me.shouldRenderDropdownInsteadOfTabs()) {
-                me.hideAllLanguageTabs();
-                me._toggleLanguageButton.classList.remove('hidden');
-            }
-
-            rowsAdded = true;
         }
     });
+
+    // Activate the first option/tab and its pane
+    if (me.shouldRenderDropdownInsteadOfTabs()) {
+        me.hideAllLanguageTabs();
+        me._toggleLanguageButton.classList.remove('hidden');
+
+        me._toggleLanguageOptions.firstChild.classList.add('active');
+    } else {
+        this._multilineHeader.querySelector('.mls-language-tab').classList.add('active');
+    }
+    me._multilineContent.querySelector('.tab-pane').classList.add('active');
 
     if (this.languageManagementEnabled) {
         const _addLanguageButton = this._multilineHeader.querySelector('.mls-add-language-button');
@@ -279,26 +287,31 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
 
         const me = this;
         this.forEachValidLanguage(function (langCode) {
-            const _languageLiDropdown = me.buildLanguageEntry(langCode, false);
+            const _languageLiDropdown = me.buildAddLanguageEntry(langCode);
             _languageLiDropdown.querySelector('a').addEventListener('click', function () {
+                me._multilineHeader.querySelectorAll('.mls-language-tab').forEach(function (_tab) {
+                    _tab.classList.remove('active');
+                });
+
                 const _langTab = me.renderLanguageTab(langCode, true);
                 me._toggleLanguageButton.parentNode.insertBefore(_langTab, me._toggleLanguageButton);
 
-                const _languageLi = me.buildLanguageEntry(langCode, true);
+                const _languageLi = me.buildLanguageEntry(langCode);
                 _languageLi.classList.add('active');
                 me._toggleLanguageOptions.appendChild(_languageLi);
 
+                me._multilineContent.querySelectorAll('.tab-pane').forEach(function (_pane) {
+                    _pane.classList.remove('active');
+                });
                 const _languageTabInput = me.renderLanguageTabInput(langCode, true);
                 me._multilineContent.appendChild(_languageTabInput);
 
                 if (me.shouldRenderDropdownInsteadOfTabs()) {
                     me.hideAllLanguageTabs();
                     me._toggleLanguageButton.classList.remove('hidden');
-                    me._toggleLanguageButton.classList.add('active');
                 }
 
-                const _li = me.renderLanguageOptionReplacement(langCode);
-                me.replaceButtonCaption(_li);
+                me.updateLanguageSwitcherLabel(langCode);
 
                 me.updateLanguageManagementOptions();
             });
@@ -307,14 +320,7 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     }
 }
 
-MultiLanguageField.prototype.hideAllLanguageTabs = function () {
-    this._multilineHeader.querySelectorAll('ul > li.nav-item > a.mls-language-label').forEach(function (item) {
-        item.parentElement.classList.remove('active');
-        item.parentElement.classList.add('hidden');
-    });
-}
-
-MultiLanguageField.prototype.buildLanguageEntry = function (langCode, syncDropdownTitleOnClick) {
+MultiLanguageField.prototype.buildLanguageEntry = function (langCode) {
     const _link = document.createElement('a');
     _link.href = '#' + this.fieldName + '-' + langCode;
     _link.dataset.toggle = 'tab';
@@ -327,28 +333,39 @@ MultiLanguageField.prototype.buildLanguageEntry = function (langCode, syncDropdo
     _languageLi.dataset.lang = langCode;
     _languageLi.appendChild(_link);
 
-    if (syncDropdownTitleOnClick) {
-        const me = this;
-        _link.addEventListener('click', function () {
-            const _li = me.renderLanguageOptionReplacement(langCode);
-            me.replaceButtonCaption(_li);
-        });
-    }
+    const me = this;
+    _link.addEventListener('click', function () {
+        me.updateLanguageSwitcherLabel(langCode);
+    });
 
     return _languageLi;
 }
 
-MultiLanguageField.prototype.replaceButtonCaption = function (element) {
-    const _oldPlaceholder = this._toggleLanguageButton.querySelector('.dropdown-toggle');
-    const _newPlaceholder = document.createElement('a');
-    _newPlaceholder.dataset.toggle = 'dropdown';
-    _newPlaceholder.role = 'button';
-    _newPlaceholder.setAttribute('aria-haspopup', 'true');
-    _newPlaceholder.setAttribute('aria-expanded', 'false');
-    _newPlaceholder.classList.add('dropdown-toggle');
-    _newPlaceholder.href = '#';
-    _newPlaceholder.appendChild(element);
-    _oldPlaceholder.parentElement.replaceChild(_newPlaceholder, _oldPlaceholder);
+MultiLanguageField.prototype.buildAddLanguageEntry = function (langCode) {
+    const _link = document.createElement('a');
+    const _flag = this.renderFlag(langCode);
+    _link.appendChild(_flag);
+    const _text = document.createTextNode(this.getLanguageName(langCode));
+    _link.appendChild(_text);
+    const _languageLi = document.createElement('li');
+    _languageLi.classList.add('pointer');
+    _languageLi.dataset.lang = langCode;
+    _languageLi.appendChild(_link);
+
+    return _languageLi;
+}
+
+MultiLanguageField.prototype.updateLanguageSwitcherLabel = function (langCode) {
+    const _dropdownToggle = this._toggleLanguageButton.querySelector('.dropdown-toggle');
+
+    _dropdownToggle.textContent = '';
+
+    const _anchor = this.renderLanguageLink(langCode);
+    const _caretSpan = document.createElement('span');
+    _caretSpan.classList.add('caret');
+    _anchor.appendChild(_caretSpan);
+
+    _dropdownToggle.appendChild(_anchor);
     this._toggleLanguageButton.classList.add('active');
 }
 

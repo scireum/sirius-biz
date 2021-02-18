@@ -27,16 +27,13 @@
 <div id="@fieldId" class="col-xs-@smallSpan col-md-@span @UserContext.get().signalFieldError(fieldName)">
     <div class="mls-header">
         <div class="mls-tab-header">
-            <ul class="nav nav-tabs mls-tab-list">
-                <li class="nav-item dropdown mls-toggle-language-button hidden" role="presentation">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true"
-                       aria-expanded="false">
-                        <div class="toggle-language-placeholder"></div>
-                    </a>
+            <ul class="nav nav-tabs mls-tab-list" role="tablist">
+                <li class="dropdown mls-toggle-language-button hidden" role="presentation">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="tab">Dropdown</a>
                     <ul class="dropdown-menu toggle-language-data"></ul>
                 </li>
 
-                <li class="nav-item dropup mls-add-language-button hidden" role="presentation">
+                <li class="dropdown mls-add-language-button hidden" role="presentation">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button"
                        aria-haspopup="true" aria-expanded="false" title="@i18n('MultiLanguageEditor.addLanguage')">
                         <i class="fa fa-plus"></i>
