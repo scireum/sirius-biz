@@ -8,12 +8,15 @@
 
 package sirius.biz.tycho.kb;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class KnowledgeBaseArticle {
 
     protected KnowledgeBaseEntry entry;
     private KnowledgeBase knowledgeBase;
+    private List<String> unresolvedReferences = new ArrayList<>();
 
     public KnowledgeBaseArticle(KnowledgeBaseEntry entry, KnowledgeBase knowledgeBase) {
         this.entry = entry;
@@ -54,6 +57,16 @@ public class KnowledgeBaseArticle {
 
     public List<KnowledgeBaseArticle> queryBreadcrumbs() {
         return knowledgeBase.queryBreadcrumbs(this);
+    }
+
+    public void addUnresolvedReference(String code) {
+        if (!this.unresolvedReferences.contains(code)) {
+            this.unresolvedReferences.add(code);
+        }
+    }
+
+    public List<String> getUnresolvedReferences() {
+        return Collections.unmodifiableList(this.unresolvedReferences);
     }
 
 

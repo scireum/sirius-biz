@@ -8,7 +8,6 @@
 
 package sirius.biz.tycho.kb;
 
-import sirius.biz.locks.Locks;
 import sirius.db.KeyGenerator;
 import sirius.db.es.Elastic;
 import sirius.db.mixing.Mixing;
@@ -20,24 +19,28 @@ import sirius.kernel.di.std.Priorized;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.timer.EndOfDayTask;
-import sirius.tagliatelle.Tagliatelle;
-import sirius.tagliatelle.Template;
-import sirius.tagliatelle.rendering.GlobalRenderContext;
+import sirius.pasta.noodle.compiler.CompileException;
+import sirius.pasta.noodle.compiler.SourceCodeInfo;
+import sirius.pasta.tagliatelle.Tagliatelle;
+import sirius.pasta.tagliatelle.Template;
+import sirius.pasta.tagliatelle.compiler.TemplateCompilationContext;
+import sirius.pasta.tagliatelle.compiler.TemplateCompiler;
+import sirius.pasta.tagliatelle.rendering.GlobalRenderContext;
+import sirius.web.resources.Resource;
+import sirius.web.resources.Resources;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 @Register(framework = KnowledgeBase.FRAMEWORK_KNOWLEDGE_BASE)
 public class SynchronizeArticlesTask implements EndOfDayTask {
 
     private boolean executed = false;
-
-    @Part
-    private Locks locks;
 
     @Part
     private KeyGenerator keyGenerator;
@@ -49,7 +52,13 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
     private Mixing mixing;
 
     @Part
+    private Resources resources;
+
+    @Part
     private Tagliatelle tagliatelle;
+
+    @Part
+    private KnowledgeBase knowledgeBase;
 
     @Override
     public String getName() {
@@ -62,29 +71,32 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
             return;
         }
 
-        //TODO perform this for all EODtasks
-        if (!locks.tryLock("sync-knowledgebase", Duration.ofSeconds(5))) {
-            return;
-        }
-
-        try {
-            synchronizeArticles();
-            //  executed = true;
-        } finally {
-            locks.unlock("sync-knowledgebase");
-        }
+        synchronizeArticles();
+        executed = Sirius.isProd();
     }
 
     private void synchronizeArticles() {
         String syncId = keyGenerator.generateId();
-        Sirius.getClasspath()
-              .find(Pattern.compile("(default/|customizations/[^/]+/)?kb/.*\\.pasta"))
-              .forEach(matcher -> updateArticle(cleanupTemplatePath(matcher.group(0)), syncId));
 
+        // Compile all templates and update contents in Elastic...
+        findAllArticleTemplates().forEach(matcher -> updateArticle(cleanupTemplatePath(matcher.group(0)), syncId));
+
+        // Force Elastic to digest our updates...
         elastic.getLowLevelClient().refresh(mixing.getDescriptor(KnowledgeBaseEntry.class).getRelationName());
+
+        // Remove outdated data...
         cleanupOldEntries(syncId);
         cleanupEmptyChapters();
+
+        // Check direct references (k:ref)...
+        checkTextReferences();
+
+        // Check the consistency...
         checkCrossReferences();
+    }
+
+    private Stream<Matcher> findAllArticleTemplates() {
+        return Sirius.getClasspath().find(Pattern.compile("(default/|customizations/[^/]+/)?kb/.*\\.pasta"));
     }
 
     private String cleanupTemplatePath(String templatePath) {
@@ -96,13 +108,13 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
 
     private void updateArticle(String templatePath, String syncId) {
         try {
-            Template template = tagliatelle.resolve(templatePath).orElseThrow(() -> new IllegalArgumentException(""));
+            Template template = compileTemplate(templatePath);
             GlobalRenderContext context = tagliatelle.createRenderContext();
             template.render(context);
 
             String articleId = Strings.split(template.getShortName(), ".").getFirst().toUpperCase();
             String lang = context.getExtraBlock("lang");
-            KnowledgeBaseEntry entry = findOrCreateEntry(templatePath, articleId, lang);
+            KnowledgeBaseEntry entry = findOrCreateEntry(templatePath, articleId, lang, syncId);
 
             entry.setSyncId(syncId);
             entry.setChapter(Value.of(context.getExtraBlock("chapter")).asBoolean());
@@ -118,6 +130,8 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
                   .forEach(crossReference -> entry.getRelatesTo().modify().add(crossReference));
 
             elastic.update(entry);
+        } catch (CompileException e) {
+            KnowledgeBase.LOG.WARN("Failed to compile article %s: %s", templatePath, e.getMessage());
         } catch (Exception e) {
             Exceptions.handle()
                       .to(KnowledgeBase.LOG)
@@ -127,7 +141,20 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
         }
     }
 
-    private KnowledgeBaseEntry findOrCreateEntry(String templatePath, String articleId, String lang) {
+    private Template compileTemplate(String templatePath) throws CompileException {
+        Resource templateResource = resources.resolve(templatePath)
+                                             .orElseThrow(() -> new IllegalArgumentException(
+                                                     "Cannot resolve articel template."));
+        Template template = new Template(templatePath, templateResource);
+        TemplateCompilationContext compilationContext =
+                new TemplateCompilationContext(template, SourceCodeInfo.forResource(templateResource), null);
+        TemplateCompiler compiler = new TemplateCompiler(compilationContext);
+        compiler.compile();
+        compiler.getContext().processCollectedErrors();
+        return template;
+    }
+
+    private KnowledgeBaseEntry findOrCreateEntry(String templatePath, String articleId, String lang, String syncId) {
         KnowledgeBaseEntry entry = elastic.select(KnowledgeBaseEntry.class)
                                           .eq(KnowledgeBaseEntry.ARTICLE_ID, articleId)
                                           .eq(KnowledgeBaseEntry.LANG, lang)
@@ -136,8 +163,8 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
             entry = new KnowledgeBaseEntry();
             entry.setArticleId(articleId);
             entry.setLang(lang);
-            entry.setTemplatePath(templatePath);
-        } else if (!Strings.areEqual(templatePath, entry.getTemplatePath())) {
+        } else if (!Strings.areEqual(templatePath, entry.getTemplatePath()) && Strings.areEqual(entry.getSyncId(),
+                                                                                                syncId)) {
             throw Exceptions.handle()
                             .withSystemErrorMessage(
                                     "KnowledgeBase detected an article id collision for id %s: %s vs %s (Language: %s)",
@@ -147,6 +174,9 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
                                     lang)
                             .handle();
         }
+
+        entry.setTemplatePath(templatePath);
+
         return entry;
     }
 
@@ -204,6 +234,31 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
             if (performCheck.get()) {
                 elastic.getLowLevelClient().refresh(mixing.getDescriptor(KnowledgeBaseEntry.class).getRelationName());
             }
+        }
+    }
+
+    private void checkTextReferences() {
+        elastic.select(KnowledgeBaseEntry.class).iterateAll(this::checkArticle);
+    }
+
+    private void checkArticle(KnowledgeBaseEntry article) {
+        KnowledgeBaseArticle articleUnderTest = new KnowledgeBaseArticle(article, knowledgeBase);
+        knowledgeBase.installCurrentArticle(articleUnderTest);
+        try {
+            compileTemplate(article.getTemplatePath()).render(tagliatelle.createRenderContext());
+            if (!articleUnderTest.getUnresolvedReferences().isEmpty()) {
+                KnowledgeBase.LOG.WARN("The article %s has unresolved references: %s",
+                                       article.getTemplatePath(),
+                                       Strings.join(articleUnderTest.getUnresolvedReferences(), ", "));
+            }
+        } catch (Exception e) {
+            Exceptions.handle()
+                      .to(KnowledgeBase.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Failed to check article %s: %s (%s)", article.getTemplatePath())
+                      .handle();
+        } finally {
+            knowledgeBase.installCurrentArticle(null);
         }
     }
 

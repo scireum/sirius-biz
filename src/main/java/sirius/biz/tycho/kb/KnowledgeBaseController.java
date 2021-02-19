@@ -11,13 +11,12 @@ package sirius.biz.tycho.kb;
 import sirius.biz.web.BizController;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.web.controller.Controller;
+import sirius.kernel.nls.NLS;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
-import sirius.web.security.UserContext;
 
-@Register(classes = Controller.class, framework = KnowledgeBase.FRAMEWORK_KNOWLEDGE_BASE)
+@Register(framework = KnowledgeBase.FRAMEWORK_KNOWLEDGE_BASE)
 public class KnowledgeBaseController extends BizController {
 
     @Part
@@ -38,16 +37,18 @@ public class KnowledgeBaseController extends BizController {
     @Routed("/tycho/kba/:1")
     @LoginRequired
     public void article(WebContext webContext, String articleId) {
-        KnowledgeBaseArticle article = knowledgeBase.resolve("de", articleId).get();
-        UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
-        webContext.respondWith().template(article.getTemplatePath());
+        langArticle(webContext, NLS.getCurrentLang(), articleId);
     }
 
     @Routed("/tycho/kba/:1/:2")
     @LoginRequired
     public void langArticle(WebContext webContext, String lang, String articleId) {
         KnowledgeBaseArticle article = knowledgeBase.resolve(lang, articleId).get();
-        UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
-        webContext.respondWith().template(article.getTemplatePath());
+        knowledgeBase.installCurrentArticle(article);
+        try {
+            webContext.respondWith().template(article.getTemplatePath());
+        } finally {
+            knowledgeBase.installCurrentArticle(null);
+        }
     }
 }

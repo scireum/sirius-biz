@@ -12,7 +12,7 @@ import sirius.biz.tycho.search.OpenSearchProvider;
 import sirius.biz.tycho.search.OpenSearchResult;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.web.security.UserContext;
+import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
@@ -46,7 +46,7 @@ public class KnowledgeBaseSearchProvider implements OpenSearchProvider {
 
     @Override
     public void query(String query, int maxResults, Consumer<OpenSearchResult> resultCollector) {
-        knowledgeBase.query(UserContext.getCurrentUser().getLang(), query, maxResults).forEach(article -> {
+        knowledgeBase.query(NLS.getCurrentLang(), query, maxResults).forEach(article -> {
             resultCollector.accept(new OpenSearchResult().withLabel(article.getTitle())
                                                          .withDescription(article.getDescription())
                                                          .withURL("/tycho/kba/" + article.getArticleId()));
