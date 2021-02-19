@@ -69,7 +69,7 @@
                     aria-haspopup="true" aria-expanded="false">
                 <i class="fa fa-plus"></i> @i18n("MultiLanguageEditor.addLanguage")
             </button>
-            <ul class="dropdown-menu"></ul>
+            <ul class="dropdown-menu dropdown-menu-right"></ul>
         </div>
 
         <a class="btn btn-primary" data-dismiss="modal">@i18n("NLS.close")</a>
