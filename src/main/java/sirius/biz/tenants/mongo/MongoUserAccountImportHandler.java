@@ -22,10 +22,8 @@ import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 /**
  * Provides an import handler for {@link MongoUserAccount user accounts}.

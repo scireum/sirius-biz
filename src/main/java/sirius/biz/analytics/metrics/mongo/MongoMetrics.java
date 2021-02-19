@@ -19,9 +19,7 @@ import sirius.db.mongo.Updater;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Stores metrics into the appropriate collections of the underlying MongoDB.

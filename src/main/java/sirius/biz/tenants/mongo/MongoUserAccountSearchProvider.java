@@ -12,7 +12,6 @@ import sirius.biz.model.PersonData;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
 import sirius.biz.tenants.UserAccountSearchProvider;
-import sirius.biz.tenants.jdbc.SQLUserAccount;
 import sirius.db.mixing.query.Query;
 import sirius.db.mixing.query.QueryField;
 import sirius.db.mongo.Mango;

@@ -38,7 +38,7 @@ public class Transfer {
     /**
      * Contains the max total size (in bytes) of files which can be copied / Moved interactively.
      */
-    private static final long MAX_SIZE_THRESHOLD = 32_768 * 1024;
+    private static final long MAX_SIZE_THRESHOLD = 32_768L * 1024L;
 
     private final VirtualFile source;
     private final VirtualFile destination;

@@ -276,13 +276,14 @@ public abstract class BasicJobFactory implements JobFactory {
         for (Parameter<?> parameter : getParameters()) {
             try {
                 Value contextValue = parameterProvider.apply(parameter.getName());
-                if (enforceRequiredParameters && contextValue.isEmptyString() && parameter.isRequired()) {
+                String value = parameter.checkAndTransform(contextValue);
+                if (enforceRequiredParameters && Strings.isEmpty(value) && parameter.isRequired()) {
                     errorConsumer.accept(Exceptions.createHandled()
                                                    .withNLSKey("Parameter.required")
                                                    .set("name", parameter.getLabel())
                                                    .handle());
                 } else {
-                    String value = parameter.checkAndTransform(contextValue);
+
                     context.put(parameter.getName(), value);
                 }
             } catch (HandledException e) {
