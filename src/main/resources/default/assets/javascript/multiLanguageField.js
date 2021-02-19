@@ -121,6 +121,8 @@ MultiLanguageField.prototype.renderLanguageTab = function (langCode, active) {
     if (active) {
         _li.classList.add('active');
     }
+    // Add language code for tab handling (eg. active style toggling)
+    _li.dataset.lang = langCode;
 
     const _anchor = this.renderLanguageLink(langCode);
     _li.appendChild(_anchor);
