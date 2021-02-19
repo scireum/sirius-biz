@@ -77,6 +77,7 @@ MultiLanguageField.prototype.buildMultiline = function () {
     if (langTabs.length > 0) {
         const element = langTabs[0];
         const langCode = element.dataset.lang;
+        this.markLanguageItemAsSelected(langCode);
         this.updateLanguageSwitcherLabel(langCode);
     }
 
@@ -279,8 +280,10 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     this.forEachValidLanguage(function (langCode) {
         if (!me.languageManagementEnabled || langCode === me.FALLBACK_CODE || me.values[langCode]) {
             // Render language management option for adding the language
-            const _languageLi = me.buildLanguageEntry(langCode);
-            me._toggleLanguageOptions.appendChild(_languageLi);
+            const _toggleLanguageOption = me.buildLanguageEntry(langCode);
+            me._toggleLanguageOptions.appendChild(_toggleLanguageOption);
+            // Mark the element as selected in the list of language entries
+            me.markLanguageItemAsSelected(langCode);
 
             // Render the actual tab which triggers the associated language pane
             const _langTab = me.renderLanguageTab(langCode, false);
@@ -296,9 +299,6 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     if (me.shouldRenderDropdownInsteadOfTabs()) {
         me.removeAllLanguageTabs();
         me.showLanguageToggleButton();
-
-        // Mark the element as selected in the list of language entries
-        me.markDropdownItemAsSelected(me._toggleLanguageOptions.firstChild);
     } else {
         // Set the current tab active
         this._multilineHeader.querySelector('li.mls-language-tab').classList.add('active');
@@ -313,24 +313,32 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
         this.forEachValidLanguage(function (langCode) {
             const _additionalLanguageOption = me.buildAddLanguageEntry(langCode);
             _additionalLanguageOption.querySelector('a').addEventListener('click', function () {
-                me._multilineHeader.querySelectorAll('li.mls-language-tab').forEach(function (_tab) {
-                    _tab.classList.remove('active');
-                });
+                // Render language management option for adding the language
+                const _toggleLanguageOption = me.buildLanguageEntry(langCode);
+                me._toggleLanguageOptions.appendChild(_toggleLanguageOption);
+                // Mark the element as selected in the list of language entries
+                me.markLanguageItemAsSelected(langCode);
 
+                // Render the actual tab which triggers the associated language pane
                 const _langTab = me.renderLanguageTab(langCode, true);
                 me._toggleLanguageButton.parentNode.insertBefore(_langTab, me._toggleLanguageButton);
 
-                me.removeSelectionStyleFromLanguageOptions();
-                const _toggleLanguageOption = me.buildLanguageEntry(langCode);
-                // Mark the element as selected in the list of language entries
-                me.markDropdownItemAsSelected(_toggleLanguageOption);
-                me._toggleLanguageOptions.appendChild(_toggleLanguageOption);
-
-                me._multilineContent.querySelectorAll('.tab-pane').forEach(function (_pane) {
-                    _pane.classList.remove('active');
-                });
+                // Render the actual input associated with the created tab
                 const _languageTabInput = me.renderLanguageTabInput(langCode, true);
                 me._multilineContent.appendChild(_languageTabInput);
+
+                // Remove the active class from all tabs not being active after adding the new language option
+                me._multilineHeader.querySelectorAll('li.mls-language-tab').forEach(function (_tab) {
+                    if (_tab.dataset.lang !== langCode) {
+                        _tab.classList.remove('active');
+                    }
+                });
+                // Remove the active class from all tab panes not being active after adding the new language option
+                me._multilineContent.querySelectorAll('div.tab-pane>textarea').forEach(function (_textarea) {
+                    if (_textarea.dataset.lang !== langCode) {
+                        _textarea.parentElement.classList.remove('active');
+                    }
+                });
 
                 if (me.shouldRenderDropdownInsteadOfTabs()) {
                     me.removeAllLanguageTabs();
@@ -363,9 +371,8 @@ MultiLanguageField.prototype.buildLanguageEntry = function (langCode) {
     const me = this;
     _link.addEventListener('click', function () {
         me.updateLanguageSwitcherLabel(langCode);
-        me.removeSelectionStyleFromLanguageOptions();
-        // mark the element as selected in the list of language entries
-        me.markDropdownItemAsSelected(_languageLi);
+        // Mark the element as selected in the list of language entries
+        me.markLanguageItemAsSelected(langCode);
     });
 
     return _languageLi;
@@ -399,15 +406,14 @@ MultiLanguageField.prototype.updateLanguageSwitcherLabel = function (langCode) {
     this._toggleLanguageButton.classList.add('active');
 }
 
-MultiLanguageField.prototype.markDropdownItemAsSelected = function (_languageItem) {
+MultiLanguageField.prototype.markLanguageItemAsSelected = function (langCode) {
     // add custom selection class 'language-selected' as Bootstrap does not allow multiple active elements in the same nav
-    _languageItem.classList.add('language-selected');
-}
-
-MultiLanguageField.prototype.removeSelectionStyleFromLanguageOptions = function () {
-    // remove custom selection marker from all language options
-    this._toggleLanguageOptions.querySelectorAll('ul>li.pointer.language-selected').forEach(function (_li) {
-        _li.classList.remove('language-selected');
+    this._toggleLanguageOptions.querySelectorAll('ul>li.pointer').forEach(function (_li) {
+        if (_li.dataset.lang === langCode) {
+            _li.classList.add('language-selected');
+        } else {
+            _li.classList.remove('language-selected');
+        }
     });
 }
 
