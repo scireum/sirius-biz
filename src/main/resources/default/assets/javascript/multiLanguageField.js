@@ -71,6 +71,11 @@ MultiLanguageField.prototype.buildMultiline = function () {
     this.MAX_TABS_VISIBLE = 3;
     this.mobileOrSmallScreen = window.matchMedia('(max-width: 600px)').matches;
 
+    if (this.mobileOrSmallScreen) {
+        this._addLanguageOptions.classList.add('dropdown-menu-right');
+        this._toggleLanguageOptions.classList.add('dropdown-menu-right');
+    }
+
     this.renderMultilineHeaderAndContent();
 
     const langTabs = this._toggleLanguageOptions.querySelectorAll('li');
