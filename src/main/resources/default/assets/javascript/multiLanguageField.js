@@ -274,24 +274,29 @@ MultiLanguageField.prototype.renderCaretSpan = function () {
     return _caretSpan;
 }
 
+MultiLanguageField.prototype.addLanguage = function (langCode, active) {
+    // Render language management option for adding the language
+    const _toggleLanguageOption = this.buildLanguageEntry(langCode);
+    this._toggleLanguageOptions.appendChild(_toggleLanguageOption);
+    // Mark the element as selected in the list of language entries
+    this.markLanguageItemAsSelected(langCode);
+
+    // Render the actual tab which triggers the associated language pane
+    const _langTab = this.renderLanguageTab(langCode, active);
+    this._toggleLanguageButton.parentNode.insertBefore(_langTab, this._toggleLanguageButton);
+
+    // Render the actual input associated with the created tab
+    const _langTabInput = this.renderLanguageTabInput(langCode, active);
+    this._multilineContent.appendChild(_langTabInput);
+}
+
+
 MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
     const me = this;
 
     this.forEachValidLanguage(function (langCode) {
         if (!me.languageManagementEnabled || langCode === me.FALLBACK_CODE || me.values[langCode]) {
-            // Render language management option for adding the language
-            const _toggleLanguageOption = me.buildLanguageEntry(langCode);
-            me._toggleLanguageOptions.appendChild(_toggleLanguageOption);
-            // Mark the element as selected in the list of language entries
-            me.markLanguageItemAsSelected(langCode);
-
-            // Render the actual tab which triggers the associated language pane
-            const _langTab = me.renderLanguageTab(langCode, false);
-            me._toggleLanguageButton.parentNode.insertBefore(_langTab, me._toggleLanguageButton);
-
-            // Render the actual input associated with the created tab
-            const _langTabInput = me.renderLanguageTabInput(langCode, false);
-            me._multilineContent.appendChild(_langTabInput);
+            me.addLanguage(langCode, false)
         }
     });
 
@@ -313,19 +318,7 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
         this.forEachValidLanguage(function (langCode) {
             const _additionalLanguageOption = me.buildAddLanguageEntry(langCode);
             _additionalLanguageOption.querySelector('a').addEventListener('click', function () {
-                // Render language management option for adding the language
-                const _toggleLanguageOption = me.buildLanguageEntry(langCode);
-                me._toggleLanguageOptions.appendChild(_toggleLanguageOption);
-                // Mark the element as selected in the list of language entries
-                me.markLanguageItemAsSelected(langCode);
-
-                // Render the actual tab which triggers the associated language pane
-                const _langTab = me.renderLanguageTab(langCode, true);
-                me._toggleLanguageButton.parentNode.insertBefore(_langTab, me._toggleLanguageButton);
-
-                // Render the actual input associated with the created tab
-                const _languageTabInput = me.renderLanguageTabInput(langCode, true);
-                me._multilineContent.appendChild(_languageTabInput);
+                me.addLanguage(langCode, true);
 
                 // Remove the active class from all tabs not being active after adding the new language option
                 me._multilineHeader.querySelectorAll('li.mls-language-tab').forEach(function (_tab) {
