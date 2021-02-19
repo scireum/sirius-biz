@@ -19,6 +19,7 @@ function MultiLanguageField(options) {
     this.languageManagementEnabled = options.languageManagementEnabled;
     this.rows = options.rows;
     this.multiline = options.multiline || false;
+    this.mobileOrSmallScreen = window.matchMedia('(max-width: 600px)').matches;
 
     this.validLanguages = {};
     if (this.hasFallback) {
@@ -48,6 +49,10 @@ MultiLanguageField.prototype.buildSingleline = function () {
     this._addLanguageButton = this._modal.querySelector('.mls-add-language-button');
     this._addLanguageOptions = this._addLanguageButton.querySelector('.dropdown-menu');
 
+    if (this.mobileOrSmallScreen) {
+        this._addLanguageOptions.classList.add('dropdown-menu-right');
+    }
+
     const me = this;
     // have to use jquery here as bootstrap modals only trigger jquery events
     $(me._modal).on('hidden.bs.modal', function () {
@@ -69,7 +74,6 @@ MultiLanguageField.prototype.buildMultiline = function () {
     this._toggleLanguageOptions = this._multilineHeader.querySelector('.toggle-language-data');
     this._multilineContent = this._wrapper.querySelector('.mls-tab-content');
     this.MAX_TABS_VISIBLE = 3;
-    this.mobileOrSmallScreen = window.matchMedia('(max-width: 600px)').matches;
 
     if (this.mobileOrSmallScreen) {
         this._addLanguageOptions.classList.add('dropdown-menu-right');
