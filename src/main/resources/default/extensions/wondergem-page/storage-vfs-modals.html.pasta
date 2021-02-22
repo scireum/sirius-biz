@@ -3,10 +3,6 @@
 <i:switch test="@point">
     <i:block name="footer">
         <style>
-            .pagination-controls {
-                text-align: center;
-            }
-
             .pagination-controls > ul {
                 margin: 0;
             }
@@ -36,13 +32,15 @@
                 <div class="row">
                     <label class="search-result-js col-md-12" hidden>@i18n("NLS.searchResult")</label>
                     <div class="col-md-12">
-                        <table class="table table-striped select-file-table select-file-table-js">
+                        <table class="table table-striped select-file-table">
+                            <tbody class="select-file-table-js">
+                            </tbody>
                         </table>
                     </div>
                 </div>
                 <div class="row">
                     <nav aria-label="Pop-up pagination"
-                         class="pagination-controls pagination-controls-js col-md-12"></nav>
+                         class="text-center pagination-controls pagination-controls-js col-md-12"></nav>
                 </div>
             </w:modalBody>
             <w:modalFooter cancelKey="NLS.cancel">
@@ -52,7 +50,7 @@
 
         <script type="text/javascript">
             function selectVFSDirectory(path) {
-                $("#select-file-modal .modal-title").text("___i18n('VFSController.selectDirectory')");
+                document.querySelector("#select-file-modal .modal-title").textContent = "___i18n('VFSController.selectDirectory')";
                 return selectFileOrDirectoryModal({
                     path: path,
                     onlyDirectories: true,
@@ -61,24 +59,23 @@
                     filter: function (child) {
                         return true;
                     },
-                    createRow: function (child, pagination, $modal, resolve) {
-                        let $tr = $('<tr>' +
-                            '<td><a class="file-link" href="#" data-path="' + child.path + '">' +
-                            '<i class="fa fa-folder-open"></i>&nbsp;' + child.name + '</a></td>' +
-                            '</tr>');
-
+                    createRow: function (child, pagination, modal, resolve) {
                         const _self = this;
-                        $tr.find('.file-link').click(function () {
-                            _self.path = $(this).data('path');
+
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = "<td><a class='file-link' href='#' data-path='" + child.path + "'>" +
+                            "<i class='fa fa-folder-open'></i>&nbsp;" + child.name + "</a></td>";
+                        tr.querySelector(".file-link").addEventListener("click", function () {
+                            _self.path = this.dataset.path;
                             pagination.reset();
                         });
-                        return $tr;
+                        return tr;
                     }
                 });
             }
 
             function selectVFSFile(path, pathRestriction) {
-                $("#select-file-modal .modal-title").text("___i18n('VFSController.selectFile')");
+                document.querySelector("#select-file-modal .modal-title").textContent = "___i18n('VFSController.selectFile')";
                 return selectFileOrDirectoryModal({
                     path: path,
                     onlyDirectories: false,
@@ -87,132 +84,137 @@
                     filter: function (child) {
                         return pathRestriction === undefined || child.path.startsWith(pathRestriction);
                     },
-                    createRow: function (child, pagination, $modal, resolve) {
-                        let $tr = $('<tr>' +
-                            '<td><a class="file-link" href="#" data-dir="' + child.directory +
-                            '" data-path="' + child.path + '">' +
-                            '<i class="fa"></i>&nbsp;' + child.name + '</a></td>' +
-                            '<td class="align-right">' + child.sizeString + '</td>' +
-                            '<td class="align-right">' + child.lastModifiedString + '</td>' +
-                            '</tr>');
-
-                        if (child.directory) {
-                            $tr.find('.file-link i.fa').addClass('fa-folder-open');
-                        } else {
-                            $tr.find('.file-link i.fa').addClass('fa-file');
-                        }
-
+                    createRow: function (child, pagination, modal, resolve) {
                         const _self = this;
-                        $tr.find('.file-link').click(function () {
-                            if ($(this).data('dir')) {
-                                _self.path = $(this).data('path');
+
+                        const tr = document.createElement("tr");
+                        tr.innerHTML = '<td><a class="file-link" href="#" data-dir="' + child.directory +
+                            '" data-path="' + child.path + '">' +
+                            '<i class="fa ' + (child.directory ? "fa-folder-open" : "fa-file") + '"></i>&nbsp;' + child.name + '</a></td>' +
+                            '<td class="align-right">' + child.sizeString + '</td>' +
+                            '<td class="align-right">' + child.lastModifiedString + '</td>';
+
+                        tr.querySelector(".file-link").addEventListener("click", function () {
+                            if (this.dataset.dir === "true") {
+                                _self.path = this.dataset.path;
                                 pagination.reset();
                             } else {
-                                $modal.modal('hide');
-                                resolve($(this).data('path'));
+                                $(modal).modal("hide");
+                                resolve(this.dataset.path);
                             }
                         });
-                        return $tr;
+                        return tr;
                     }
                 });
             }
 
             function selectFileOrDirectoryModal(config) {
                 return new Promise(function (resolve, reject) {
-                    const $modal = $("#select-file-modal");
-                    const $table = $modal.find('.select-file-table-js');
-                    const $searchForm = $modal.find('.search-form-js input').val("");
-                    const pageSize = 25;
+                    const modal = document.getElementById("select-file-modal");
+                    const table = modal.querySelector('.select-file-table-js');
+                    const searchForm = modal.querySelector('.search-form-js input');
+                    const pageSize = 5;
 
-                    const pagination = paginate($modal.find(".pagination-controls-js"), function (page, pagination) {
-                        if (page <= 1) {
-                            pagination.previousBtn.addClass("disabled");
+                    searchForm.value = "";
+
+                    const pagination = new Pagination(modal.querySelector(".pagination-controls-js"), pageSize, function (page, pagination) {
+                        if (page <= 0) {
+                            pagination.previousBtn.classList.add("disabled");
                         } else {
-                            pagination.previousBtn.removeClass("disabled");
+                            pagination.previousBtn.classList.remove("disabled");
                         }
-                        $.getJSON('/fs/list', {
-                            path: config.path,
-                            onlyDirectories: config.onlyDirectories,
-                            skip: (page - 1) * pageSize,
-                            maxItems: pageSize + 1,
-                            filter: $searchForm.val()
-                        }, function (json) {
-                            $table.html('');
-                            for (let i = 0; i < Math.min(json.children.length, pageSize); i++) {
+                        let url = '/fs/list?';
+                        url += "path=" + encodeURIComponent(config.path);
+                        url += "&onlyDirectories=" + config.onlyDirectories;
+                        url += "&skip=" + (page * pageSize);
+                        url += "&maxItems=" + (pageSize + 1);
+                        url += "&filter=" + encodeURIComponent(searchForm.value);
+                        fetch(url).then(function (response) {
+                            if (!response.ok) {
+                                throw "Http response status was " + response.status;
+                            }
+                            return response.json();
+                        }).then(function (json) {
+                            table.textContent = "";
+                            let numItems = Math.min(json.children.length, pageSize);
+                            for (let i = 0; i < numItems; i++) {
                                 let child = json.children[i];
                                 if (config.filter(child)) {
-                                    config.createRow(child, pagination, $modal, resolve).appendTo($table);
+                                    table.appendChild(config.createRow(child, pagination, modal, resolve));
                                 }
                             }
+                            pagination.setPageLabel((page * pageSize + 1) + " - " + (page * pageSize + numItems));
 
-                            if ($searchForm.val()) {
-                                $modal.find(".search-result-js").show();
-                            } else {
-                                $modal.find(".search-result-js").hide();
-                            }
+                            modal.querySelector(".search-result-js").style.display = searchForm.value ? "block" : "none";
 
                             if (json.children.length <= pageSize) {
-                                pagination.nextBtn.addClass("disabled");
+                                pagination.nextBtn.classList.add("disabled");
                             } else {
-                                pagination.nextBtn.removeClass("disabled");
+                                pagination.nextBtn.classList.remove("disabled");
                             }
 
-                            var $breadcrumbs = $modal.find('.breadcrumb-js');
-                            $breadcrumbs.html('');
-                            for (var i = 0; i < json.path.length; i++) {
-                                var element = json.path[i];
+                            const breadcrumbs = modal.querySelector('.breadcrumb-js');
+                            breadcrumbs.textContent = '';
+                            for (let i = 0; i < json.path.length; i++) {
+                                const element = json.path[i];
                                 if (!config.filter(element)) {
                                     continue;
                                 }
-                                var name = element.name === '/' ? '<i class="fa fa-home"></i>' : element.name;
-                                var $li = $('<li><a class="file-link" href="#" data-path="' + element.path + '">' + name + '</a></li>');
-                                $li.find('.file-link').click(function () {
-                                    config.path = $(this).data('path');
+                                const label = element.name === '/' ? '<i class="fa fa-home"></i>' : element.name;
+                                const li = document.createElement("li");
+                                li.innerHTML = '<a class="file-link" href="#" data-path="' + element.path + '">' + label + '</a>';
+                                li.querySelector('.file-link').addEventListener("click", function () {
+                                    config.path = this.dataset.path = 'path';
                                     pagination.reset();
                                 });
-                                $li.appendTo($breadcrumbs);
+                                breadcrumbs.appendChild(li);
                             }
 
                             if (config.allowUpload && json.canCreateChildren) {
-                                $modal.find('.upload-box-js').each(function (index) {
-                                    fileUpload('/fs/upload?path=' + encodeURIComponent(config.path),
-                                        this, undefined, [], 3, function (response) {
-                                            $modal.modal('hide');
-                                            if (response.error) {
-                                                clearMessages();
-                                                addError(response.message);
-                                            } else {
-                                                resolve(response.file);
-                                            }
-                                        });
-                                });
+                                const uploadBox = modal.querySelector('.upload-box-js');
+                                fileUpload('/fs/upload?path=' + encodeURIComponent(config.path),
+                                    uploadBox, undefined, [], 3, function (response) {
+                                        $(modal).modal('hide');
+                                        if (response.error) {
+                                            clearMessages();
+                                            addError(response.message);
+                                        } else {
+                                            resolve(response.file);
+                                        }
+                                    });
                             } else {
-                                $modal.find('.upload-box-js').html('');
+                                modal.querySelector('.upload-box-js').textContent = '';
                             }
                         });
+
                     });
 
-                    $modal.find('.search-form-js .search-btn-js').off('click').click(function () {
-                        $modal.find('.search-form-js').submit();
+                    replaceEventHandlers(modal.querySelector('.search-form-js .search-btn-js'), "click", function () {
+                        modal.querySelector('.search-form-js').submit();
                     });
-                    $modal.find('.search-form-js').off('submit').submit(function (event) {
+                    replaceEventHandlers(modal.querySelector('.search-form-js'), 'submit', function (event) {
                         event.preventDefault();
                         pagination.reset();
                     });
-
-                    $modal.find('.ok-btn-js').off('click').click(function () {
-                        $modal.modal('hide');
+                    replaceEventHandlers(modal.querySelector('.ok-btn-js'), 'click', function () {
+                        $(modal).modal('hide');
                         resolve(config.path);
                     });
 
-                    if (config.onlyDirectories) {
-                        $modal.find('.ok-btn-js').show();
-                    } else {
-                        $modal.find('.ok-btn-js').hide();
-                    }
+                    modal.querySelector(".ok-btn-js").style.display = config.onlyDirectories ? "inline-block" : "none";
 
-                    $modal.modal('show');
+                    $(modal).modal('show');
                 });
+            }
+
+            function replaceEventHandlers(elem, eventName, handler) {
+                const clonedElem = elem.cloneNode(false);
+                while (elem.hasChildNodes()) {
+                    clonedElem.appendChild(elem.firstChild);
+                }
+                elem.parentNode.replaceChild(clonedElem, elem);
+                clonedElem.addEventListener(eventName, handler);
+                return clonedElem;
             }
         </script>
     </i:block>

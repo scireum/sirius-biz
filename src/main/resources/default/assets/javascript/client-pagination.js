@@ -6,47 +6,60 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-function paginate(paginationControls, update) {
-    const pagination = {
-        previousBtn: $("<li><a href='#' aria-label='Previous'><span aria-hidden='true'>&laquo;</span></a></li>"),
-        pageIndicator: $("<li><a href='#' aria-label='Page'/></li>"),
-        nextBtn: $("<li><a href='#' aria-label='Next'><span aria-hidden='true'>&raquo;</span></a></li>"),
-        currentPage: 1
-    }
+function Pagination(paginationContainer, pageSize, update) {
+    const self = this;
 
-    pagination.reset = function () {
-        pagination.updatePage(1)
-    };
+    paginationContainer.innerHTML = "";
 
-    pagination.updatePage = function (page) {
-        pagination.pageIndicator.children("a").text(page);
-        pagination.currentPage = page;
-        update(page, pagination);
-    }
+    const paginationList = document.createElement("ul");
+    paginationList.classList.add("pagination")
+    paginationContainer.appendChild(paginationList);
 
-    pagination.next = function () {
+    this.previousBtn = document.createElement("li");
+    this.previousBtn.innerHTML = "<a href='#' aria-label='Previous'><span aria-hidden='true'>&#8592;</span></a>";
+    this.nextBtn = document.createElement("li");
+    this.nextBtn.innerHTML = "<a href='#' aria-label='Next'><span aria-hidden='true'>&#8594;</span></a>";
+    this.pageIndicator = document.createElement("li");
+    this.pageIndicator.innerHTML = "<a href='#' aria-label='Page'/>";
+
+    paginationList.appendChild(this.previousBtn);
+    paginationList.appendChild(this.pageIndicator);
+    paginationList.appendChild(this.nextBtn);
+
+    this.previousBtn.addEventListener("click", function () {
         if (!this.classList.contains("disabled")) {
-            pagination.updatePage(pagination.currentPage + 1);
+            self.previousPage();
         }
-    }
-
-    pagination.prev = function () {
+    });
+    this.nextBtn.addEventListener("click", function () {
         if (!this.classList.contains("disabled")) {
-            pagination.updatePage(pagination.currentPage - 1);
+            self.nextPage();
         }
-    }
+    });
 
-    let paginationList = $("<ul class='pagination'></ul>");
-    paginationControls.children().remove();
-    paginationList.appendTo(paginationControls);
+    this._pageSize = pageSize;
+    this._updateFn = update;
 
-    paginationList.append(pagination.previousBtn);
-    paginationList.append(pagination.pageIndicator);
-    paginationList.append(pagination.nextBtn);
+    this.reset();
+}
 
-    pagination.previousBtn.click(pagination.prev);
-    pagination.nextBtn.click(pagination.next);
-    pagination.reset();
+Pagination.prototype.reset = function () {
+    this.updatePage(0);
+}
 
-    return pagination;
+Pagination.prototype.updatePage = function (page) {
+    this.currentPage = page;
+    this._updateFn(page, this);
+}
+
+Pagination.prototype.setPageLabel = function (label) {
+    this.pageIndicator.firstChild.textContent = label;
+}
+
+Pagination.prototype.nextPage = function () {
+    this.updatePage(this.currentPage + 1);
+}
+
+Pagination.prototype.previousPage = function () {
+    this.updatePage(this.currentPage - 1);
 }
