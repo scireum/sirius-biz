@@ -38,6 +38,7 @@ import java.util.Optional;
 @Register
 public class VFSController extends BizController {
 
+    public static final String PARENT_DIR = "..";
     @Part
     private VirtualFileSystem vfs;
 
@@ -258,42 +259,42 @@ public class VFSController extends BizController {
      * <p>
      * This is used by the selectVFSFile or selectVFSDirectory JavaScript calls/modals.
      *
-     * @param ctx the request to handle
+     * @param webContext the request to handle
      * @param out the JSON response to populate
      */
     @LoginRequired
     @Routed(value = "/fs/list", jsonCall = true)
-    public void listAPI(WebContext ctx, JSONStructuredOutput out) {
-        VirtualFile parent = vfs.resolve(ctx.get("path").asString("/"));
+    public void listAPI(WebContext webContext, JSONStructuredOutput out) {
+        VirtualFile parent = vfs.resolve(webContext.get("path").asString("/"));
         if (parent.exists() && !parent.isDirectory()) {
             parent = parent.parent();
         }
         parent.assertExistingDirectory();
 
         outputPath(out, parent);
-        outputChildren(ctx, out, parent);
+        outputChildren(webContext, out, parent);
 
         out.property("canCreateChildren", parent.canCreateChildren());
     }
 
-    private void outputChildren(WebContext ctx, JSONStructuredOutput out, VirtualFile parent) {
+    private void outputChildren(WebContext webContext, JSONStructuredOutput out, VirtualFile parent) {
         out.beginArray("children");
 
         FileSearch search = FileSearch.iterateAll(child -> outputFile(out, child.name(), child));
-        if (ctx.get("onlyDirectories").asBoolean()) {
+        if (webContext.get("onlyDirectories").asBoolean()) {
             search.withOnlyDirectories();
         }
-        search.withPrefixFilter(ctx.get("filter").asString());
+        search.withPrefixFilter(webContext.get("filter").asString());
 
         // because of the additional ".."-entry for the parent, we need to adjust the pagination skip/limit
         boolean hasParent = parent.parent() != null;
-        int skip = ctx.get("skip").asInt(0);
-        Integer limit = ctx.get("maxItems").getInteger();
+        int skip = webContext.get("skip").asInt(0);
+        Integer limit = webContext.get("maxItems").getInteger();
         if (hasParent) {
             if (skip > 0) {
                 skip--;
             } else {
-                outputFile(out, "..", parent.parent());
+                outputFile(out, PARENT_DIR, parent.parent());
                 if (limit != null) {
                     limit--;
                 }
