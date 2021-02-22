@@ -59,6 +59,9 @@
 }
 
 #select-file-modal {
+  .pagination-controls > ul {
+    margin: 0;
+  }
 
   .breadcrumb {
     background-color: white;

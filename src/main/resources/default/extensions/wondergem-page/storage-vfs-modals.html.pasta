@@ -3,9 +3,6 @@
 <i:switch test="@point">
     <i:block name="footer">
         <style>
-            .pagination-controls > ul {
-                margin: 0;
-            }
         </style>
 
         <w:modal name="select-file-modal" titleKey="VFSController.selectFile">
