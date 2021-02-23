@@ -21,10 +21,12 @@ import sirius.kernel.nls.NLS;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -82,20 +84,28 @@ public class ImportDictionary {
 
         this.fields.put(field.getName(), field);
 
-        addCheckedAlias(field, field.getLabel());
-        field.getAliases().forEach(alias -> addCheckedAlias(field, alias));
+        Set<String> aliasDuplicatesToRemove = new HashSet<>();
+
+        addCheckedAlias(field, field.getLabel(), aliasDuplicatesToRemove::add);
+        field.getAliases().forEach(alias -> addCheckedAlias(field, alias, aliasDuplicatesToRemove::add));
+
+        aliasDuplicatesToRemove.forEach(field::removeAlias);
 
         return this;
     }
 
-    private void addCheckedAlias(FieldDefinition field, String alias) {
+    private void addCheckedAlias(FieldDefinition field, String alias, Consumer<String> duplicateConsumer) {
         String previousField = aliases.putIfAbsent(normalize(alias), field.getName());
         if (Strings.isFilled(previousField) && !Strings.areEqual(field.getName(), previousField)) {
-            throw new IllegalArgumentException(Strings.apply(
-                    "Cannot add alias '%s' for field '%s', as this alias already points to '%s'!",
-                    alias,
-                    field.getName(),
-                    previousField));
+            duplicateConsumer.accept(alias);
+            Exceptions.handle()
+                      .to(Log.BACKGROUND)
+                      .withSystemErrorMessage(
+                              "Cannot add alias '%s' for field '%s', as this alias already points to '%s'!",
+                              alias,
+                              field.getName(),
+                              previousField)
+                      .handle();
         }
     }
 
@@ -591,7 +601,7 @@ public class ImportDictionary {
                     .replace("ö", "oe")
                     .replace("ü", "ue")
                     .replace("ß", "ss")
-                    .replaceAll("[^a-z0-9_]", "");
+                    .replaceAll("[^\\p{L}0-9_]", "");
     }
 
     /**
