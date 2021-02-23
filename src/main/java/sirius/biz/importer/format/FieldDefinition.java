@@ -299,6 +299,15 @@ public class FieldDefinition {
     }
 
     /**
+     * Removes an alias for the field.
+     *
+     * @param alias the alias to remove
+     */
+    public void removeAlias(String alias) {
+        aliases.remove(alias);
+    }
+
+    /**
      * Adds an alias for the field resolving all available translations.
      * <p>
      * Aliases are used by {@link ImportDictionary#determineMappingFromHeadings(Values, boolean)} to "learn" which
