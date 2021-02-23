@@ -591,7 +591,7 @@ public class ImportDictionary {
                     .replace("ö", "oe")
                     .replace("ü", "ue")
                     .replace("ß", "ss")
-                    .replaceAll("[^a-z0-9_]", "");
+                    .replaceAll("[^\\p{L}0-9_]", "");
     }
 
     /**
