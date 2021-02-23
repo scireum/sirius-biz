@@ -56,17 +56,17 @@
                     filter: function (child) {
                         return true;
                     },
-                    createRow: function (child, pagination, modal, resolve) {
-                        const _self = this;
+                    createRow: function (child, pagination, _modal, resolve) {
+                        const self = this;
 
-                        const tr = document.createElement("tr");
-                        tr.innerHTML = "<td><a class='file-link' href='#' data-path='" + child.path + "'>" +
+                        const _tr = document.createElement("tr");
+                        _tr.innerHTML = "<td><a class='file-link' href='#' data-path='" + child.path + "'>" +
                             "<i class='fa fa-folder-open'></i>&nbsp;" + child.name + "</a></td>";
-                        tr.querySelector(".file-link").addEventListener("click", function () {
-                            _self.path = this.dataset.path;
+                        _tr.querySelector(".file-link").addEventListener("click", function () {
+                            self.path = this.dataset.path;
                             pagination.reset();
                         });
-                        return tr;
+                        return _tr;
                     }
                 });
             }
@@ -81,97 +81,97 @@
                     filter: function (child) {
                         return pathRestriction === undefined || child.path.startsWith(pathRestriction);
                     },
-                    createRow: function (child, pagination, modal, resolve) {
+                    createRow: function (child, pagination, _modal, resolve) {
                         const _self = this;
 
-                        const tr = document.createElement("tr");
-                        tr.innerHTML = '<td><a class="file-link" href="#" data-dir="' + child.directory +
+                        const _tr = document.createElement("tr");
+                        _tr.innerHTML = '<td><a class="file-link" href="#" data-dir="' + child.directory +
                             '" data-path="' + child.path + '">' +
                             '<i class="fa ' + (child.directory ? "fa-folder-open" : "fa-file") + '"></i>&nbsp;' + child.name + '</a></td>' +
                             '<td class="align-right">' + child.sizeString + '</td>' +
                             '<td class="align-right">' + child.lastModifiedString + '</td>';
 
-                        tr.querySelector(".file-link").addEventListener("click", function () {
+                        _tr.querySelector(".file-link").addEventListener("click", function () {
                             if (this.dataset.dir === "true") {
                                 _self.path = this.dataset.path;
                                 pagination.reset();
                             } else {
-                                $(modal).modal("hide");
+                                $(_modal).modal("hide");
                                 resolve(this.dataset.path);
                             }
                         });
-                        return tr;
+                        return _tr;
                     }
                 });
             }
 
             function selectFileOrDirectoryModal(config) {
                 return new Promise(function (resolve, reject) {
-                    const modal = document.getElementById("select-file-modal");
-                    const table = modal.querySelector('.select-file-table-js');
-                    const searchForm = modal.querySelector('.search-form-js input');
+                    const _modal = document.getElementById("select-file-modal");
+                    const _table = _modal.querySelector('.select-file-table-js');
+                    const _searchForm = _modal.querySelector('.search-form-js input');
                     const pageSize = 5;
 
-                    searchForm.value = "";
+                    _searchForm.value = "";
 
-                    const pagination = new Pagination(modal.querySelector(".pagination-controls-js"), pageSize, function (page, pagination) {
+                    const pagination = new Pagination(_modal.querySelector(".pagination-controls-js"), pageSize, function (page, pagination) {
                         if (page <= 0) {
-                            pagination.previousBtn.classList.add("disabled");
+                            pagination._previousBtn.classList.add("disabled");
                         } else {
-                            pagination.previousBtn.classList.remove("disabled");
+                            pagination._previousBtn.classList.remove("disabled");
                         }
                         let url = '/fs/list?';
                         url += "path=" + encodeURIComponent(config.path);
                         url += "&onlyDirectories=" + config.onlyDirectories;
                         url += "&skip=" + (page * pageSize);
                         url += "&maxItems=" + (pageSize + 1);
-                        url += "&filter=" + encodeURIComponent(searchForm.value);
+                        url += "&filter=" + encodeURIComponent(_searchForm.value);
                         fetch(url).then(function (response) {
                             if (!response.ok) {
                                 throw "Http response status was " + response.status;
                             }
                             return response.json();
                         }).then(function (json) {
-                            table.textContent = "";
+                            _table.textContent = "";
                             let numItems = Math.min(json.children.length, pageSize);
                             for (let i = 0; i < numItems; i++) {
                                 let child = json.children[i];
                                 if (config.filter(child)) {
-                                    table.appendChild(config.createRow(child, pagination, modal, resolve));
+                                    _table.appendChild(config.createRow(child, pagination, _modal, resolve));
                                 }
                             }
                             pagination.setPageLabel((page * pageSize + 1) + " - " + (page * pageSize + numItems));
 
-                            modal.querySelector(".search-result-js").style.display = searchForm.value ? "block" : "none";
+                            _modal.querySelector(".search-result-js").style.display = _searchForm.value ? "block" : "none";
 
                             if (json.children.length <= pageSize) {
-                                pagination.nextBtn.classList.add("disabled");
+                                pagination._nextBtn.classList.add("disabled");
                             } else {
-                                pagination.nextBtn.classList.remove("disabled");
+                                pagination._nextBtn.classList.remove("disabled");
                             }
 
-                            const breadcrumbs = modal.querySelector('.breadcrumb-js');
-                            breadcrumbs.textContent = '';
+                            const _breadcrumbs = _modal.querySelector('.breadcrumb-js');
+                            _breadcrumbs.textContent = '';
                             for (let i = 0; i < json.path.length; i++) {
                                 const element = json.path[i];
                                 if (!config.filter(element)) {
                                     continue;
                                 }
-                                const label = element.name === '/' ? '<i class="fa fa-home"></i>' : element.name;
-                                const li = document.createElement("li");
-                                li.innerHTML = '<a class="file-link" href="#" data-path="' + element.path + '">' + label + '</a>';
-                                li.querySelector('.file-link').addEventListener("click", function () {
+                                const _label = element.name === '/' ? '<i class="fa fa-home"></i>' : element.name;
+                                const _li = document.createElement("li");
+                                _li.innerHTML = '<a class="file-link" href="#" data-path="' + element.path + '">' + _label + '</a>';
+                                _li.querySelector('.file-link').addEventListener("click", function () {
                                     config.path = this.dataset.path = 'path';
                                     pagination.reset();
                                 });
-                                breadcrumbs.appendChild(li);
+                                _breadcrumbs.appendChild(_li);
                             }
 
                             if (config.allowUpload && json.canCreateChildren) {
-                                const uploadBox = modal.querySelector('.upload-box-js');
+                                const _uploadBox = _modal.querySelector('.upload-box-js');
                                 fileUpload('/fs/upload?path=' + encodeURIComponent(config.path),
-                                    uploadBox, undefined, [], 3, function (response) {
-                                        $(modal).modal('hide');
+                                    _uploadBox, undefined, [], 3, function (response) {
+                                        $(_modal).modal('hide');
                                         if (response.error) {
                                             clearMessages();
                                             addError(response.message);
@@ -180,38 +180,38 @@
                                         }
                                     });
                             } else {
-                                modal.querySelector('.upload-box-js').textContent = '';
+                                _modal.querySelector('.upload-box-js').textContent = '';
                             }
                         });
 
                     });
 
-                    replaceEventHandlers(modal.querySelector('.search-form-js .search-btn-js'), "click", function () {
-                        modal.querySelector('.search-form-js').submit();
+                    replaceEventHandlers(_modal.querySelector('.search-form-js .search-btn-js'), "click", function () {
+                        _modal.querySelector('.search-form-js').submit();
                     });
-                    replaceEventHandlers(modal.querySelector('.search-form-js'), 'submit', function (event) {
+                    replaceEventHandlers(_modal.querySelector('.search-form-js'), 'submit', function (event) {
                         event.preventDefault();
                         pagination.reset();
                     });
-                    replaceEventHandlers(modal.querySelector('.ok-btn-js'), 'click', function () {
-                        $(modal).modal('hide');
+                    replaceEventHandlers(_modal.querySelector('.ok-btn-js'), 'click', function () {
+                        $(_modal).modal('hide');
                         resolve(config.path);
                     });
 
-                    modal.querySelector(".ok-btn-js").style.display = config.onlyDirectories ? "inline-block" : "none";
+                    _modal.querySelector(".ok-btn-js").style.display = config.onlyDirectories ? "inline-block" : "none";
 
-                    $(modal).modal('show');
+                    $(_modal).modal('show');
                 });
             }
 
-            function replaceEventHandlers(elem, eventName, handler) {
-                const clonedElem = elem.cloneNode(false);
-                while (elem.hasChildNodes()) {
-                    clonedElem.appendChild(elem.firstChild);
+            function replaceEventHandlers(_elem, eventName, handler) {
+                const _clonedElem = _elem.cloneNode(false);
+                while (_elem.hasChildNodes()) {
+                    _clonedElem.appendChild(_elem.firstChild);
                 }
-                elem.parentNode.replaceChild(clonedElem, elem);
-                clonedElem.addEventListener(eventName, handler);
-                return clonedElem;
+                _elem.parentNode.replaceChild(_clonedElem, _elem);
+                _clonedElem.addEventListener(eventName, handler);
+                return _clonedElem;
             }
         </script>
     </i:block>

@@ -6,32 +6,32 @@
  * http://www.scireum.de - info@scireum.de
  */
 
-function Pagination(paginationContainer, pageSize, update) {
+function Pagination(_paginationContainer, pageSize, update) {
     const self = this;
 
-    paginationContainer.innerHTML = "";
+    _paginationContainer.innerHTML = "";
 
-    const paginationList = document.createElement("ul");
-    paginationList.classList.add("pagination")
-    paginationContainer.appendChild(paginationList);
+    const _paginationList = document.createElement("ul");
+    _paginationList.classList.add("pagination")
+    _paginationContainer.appendChild(_paginationList);
 
-    this.previousBtn = document.createElement("li");
-    this.previousBtn.innerHTML = "<a href='#' aria-label='Previous'><span aria-hidden='true'>&#8592;</span></a>";
-    this.nextBtn = document.createElement("li");
-    this.nextBtn.innerHTML = "<a href='#' aria-label='Next'><span aria-hidden='true'>&#8594;</span></a>";
-    this.pageIndicator = document.createElement("li");
-    this.pageIndicator.innerHTML = "<a href='#' aria-label='Page'/>";
+    this._previousBtn = document.createElement("li");
+    this._previousBtn.innerHTML = "<a href='#' aria-label='Previous'><span aria-hidden='true'>&#8592;</span></a>";
+    this._nextBtn = document.createElement("li");
+    this._nextBtn.innerHTML = "<a href='#' aria-label='Next'><span aria-hidden='true'>&#8594;</span></a>";
+    this._pageIndicator = document.createElement("li");
+    this._pageIndicator.innerHTML = "<a href='#' aria-label='Page'/>";
 
-    paginationList.appendChild(this.previousBtn);
-    paginationList.appendChild(this.pageIndicator);
-    paginationList.appendChild(this.nextBtn);
+    _paginationList.appendChild(this._previousBtn);
+    _paginationList.appendChild(this._pageIndicator);
+    _paginationList.appendChild(this._nextBtn);
 
-    this.previousBtn.addEventListener("click", function () {
+    this._previousBtn.addEventListener("click", function () {
         if (!this.classList.contains("disabled")) {
             self.previousPage();
         }
     });
-    this.nextBtn.addEventListener("click", function () {
+    this._nextBtn.addEventListener("click", function () {
         if (!this.classList.contains("disabled")) {
             self.nextPage();
         }
@@ -53,7 +53,7 @@ Pagination.prototype.updatePage = function (page) {
 }
 
 Pagination.prototype.setPageLabel = function (label) {
-    this.pageIndicator.firstChild.textContent = label;
+    this._pageIndicator.firstChild.textContent = label;
 }
 
 Pagination.prototype.nextPage = function () {
