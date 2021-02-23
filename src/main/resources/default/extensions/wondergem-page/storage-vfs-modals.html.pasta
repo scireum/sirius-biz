@@ -2,9 +2,6 @@
 
 <i:switch test="@point">
     <i:block name="footer">
-        <style>
-        </style>
-
         <w:modal name="select-file-modal" titleKey="VFSController.selectFile">
             <w:modalBody>
                 <div class="row">
