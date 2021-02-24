@@ -1,14 +1,50 @@
 <i:arg type="Page" name="tenants"/>
 <i:arg type="sirius.biz.tenants.TenantController" name="controller"/>
 
-<w:page titleKey="Tenant.plural">
+<t:page titleKey="Tenant.plural">
     <i:block name="breadcrumbs">
         <li>
             <a href="/tenants">@i18n("Tenant.plural")</a>
         </li>
     </i:block>
+    <i:block name="page-header">
+        <t:pageHeader titleKey="Tenant.plural"/>
+    </i:block>
 
-    <w:pageHeader titleKey="Tenant.plural"/>
+    <t:sidebar>
+        <i:block name="sidebar">
+
+        </i:block>
+
+        <t:searchHeader page="tenants" baseUrl="/tenants">
+            <a class="btn btn-outline-primary" href="/tenant/new">@i18n("Model.create")</a>
+        </t:searchHeader>
+        <t:datacards>
+            <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants.getItems()">
+                <t:datacard title="@tenant.getTenantData().getName()"
+                            subTitle="@tenant.getTenantData().getAccountNumber()"
+                            link="@apply('/tenant/%s', tenant.getIdAsString())">
+
+                    <i:block name="actions">
+                        <t:dropdownItem permission="permission-select-tenant"
+                                        titleKey="TenantController.select"
+                                        icon="fa-building"
+                                        url="@apply('/tenants/select/%s', tenant.getIdAsString())" />
+                        <t:dropdownItem titleKey="NLS.delete"
+                                        icon="fa-trash"
+                                        class="text-sirius-red-dark"
+                                        url="@controller.getDeleteLink(tenant.getIdAsString())" />
+                    </i:block>
+
+                    <div>@tenant.getTenantData().getFullName()</div>
+                    <div>@tenant.getTenantData().getAddress().getStreet()</div>
+                    <div>
+                        @tenant.getTenantData().getAddress().getZip() @tenant.getTenantData().getAddress().getCity()
+                    </div>
+                </t:datacard>
+            </i:for>
+        </t:datacards>
+    </t:sidebar>
 
     <div class="row">
         <i:if test="@tenants.hasFacets()">
@@ -86,4 +122,4 @@
             <w:pagination page="tenants" baseUrl="/tenants"/>
         </div>
     </div>
-</w:page>
+</t:page>

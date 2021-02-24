@@ -1,0 +1,15 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="120"/>
+
+<i:switch test="@point">
+    <i:block name="settings">
+        <t:dropdownSection>
+            <t:dropdownItem titleKey="CodeList.plural" url="/code-lists"
+                        permission="permission-manage-code-lists"
+                        framework="biz.code-lists-jdbc"/>
+            <t:dropdownItem titleKey="CodeList.plural" url="/code-lists"
+                        permission="permission-manage-code-lists"
+                        framework="biz.code-lists-mongo"/>
+        </t:dropdownSection>
+    </i:block>
+</i:switch>

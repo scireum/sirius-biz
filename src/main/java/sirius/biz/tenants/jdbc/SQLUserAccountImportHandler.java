@@ -22,6 +22,7 @@ import sirius.db.jdbc.batch.FindQuery;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.security.UserContext;
 
@@ -33,6 +34,9 @@ import java.util.function.Supplier;
  * Provides an import handler for {@link SQLUserAccount user accounts}.
  */
 public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserAccount> {
+
+    @Part
+    private static SQLTenants tenants;
 
     /**
      * Provides the factory to instantiate this import handler.
@@ -109,6 +113,10 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
 
         if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)) {
             load(data, account, SQLUserAccount.TENANT);
+        }
+
+        if (account.getTenant().isEmpty()) {
+            account.getTenant().setValue(tenants.getRequiredTenant());
         }
 
         load(data, account, SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL));

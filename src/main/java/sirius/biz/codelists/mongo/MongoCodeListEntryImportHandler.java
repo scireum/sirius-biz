@@ -13,9 +13,9 @@ import sirius.biz.importer.ImportHandler;
 import sirius.biz.importer.ImportHandlerFactory;
 import sirius.biz.importer.ImporterContext;
 import sirius.biz.importer.MongoEntityImportHandler;
-import sirius.biz.tenants.mongo.MongoTenants;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 
 import java.util.Optional;
@@ -29,7 +29,7 @@ public class MongoCodeListEntryImportHandler extends MongoEntityImportHandler<Mo
     /**
      * Provides the factory to instantiate this import handler.
      */
-    @Register(framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
+    @Register(framework = MongoCodeLists.FRAMEWORK_CODE_LISTS_MONGO)
     public static class MongoCodeListImportHandlerFactory implements ImportHandlerFactory {
 
         @Override
@@ -68,6 +68,26 @@ public class MongoCodeListEntryImportHandler extends MongoEntityImportHandler<Mo
                             data.getValue(MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE)
                                                                                  .getName()))
                         .eq(MongoCodeListEntry.CODE_LIST, data.getValue(MongoCodeListEntry.CODE_LIST.getName()))
+                        .one();
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    protected MongoCodeListEntry loadForFind(Context data) {
+        return load(data,
+                    MongoCodeListEntry.CODE_LIST,
+                    MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE));
+    }
+
+    @Override
+    protected Optional<MongoCodeListEntry> tryFindByExample(MongoCodeListEntry example) {
+        if (example.getCodeList().isFilled() && Strings.isFilled(example.getCodeListEntryData().getCode())) {
+            return mango.select(MongoCodeListEntry.class)
+                        .eq(MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE),
+                            example.getCodeListEntryData().getCode())
+                        .eq(MongoCodeListEntry.CODE_LIST, example.getCodeList())
                         .one();
         }
 

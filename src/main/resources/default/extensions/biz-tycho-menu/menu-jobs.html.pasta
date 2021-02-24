@@ -1,0 +1,14 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="110"/>
+
+<i:switch test="@point">
+    <i:block name="settings">
+        <t:dropdownSection>
+            <t:dropdownItem titleKey="JobsController.jobs" url="/jobs"
+                            permission="permission-execute-jobs"
+                            framework="biz.jobs"/>
+            <t:dropdownItem titleKey="Process.plural" url="/ps"
+                            framework="biz.processes"/>
+        </t:dropdownSection>
+    </i:block>
+</i:switch>

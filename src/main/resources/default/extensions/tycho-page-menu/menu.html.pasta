@@ -1,0 +1,38 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="1000"/>
+
+<i:switch test="@point">
+    <i:block name="left">
+        <t:menuDropdown titleKey="Menu.settings" permission="flag-logged-in">
+            <i:extensions target="biz-tycho-menu" point="settings"/>
+        </t:menuDropdown>
+    </i:block>
+    <i:block name="right">
+        <t:permission permission="flag-logged-in">
+            <i:local name="currentUser"
+                     value="UserContext.getCurrentUser()"/>
+            <i:local name="userName"
+                     value="currentUser.is(sirius.biz.tenants.UserAccount.class) ? currentUser.as(sirius.biz.tenants.UserAccount.class).getUserAccountData().getShortName() : currentUser.getUserName()"/>
+            <i:local name="tenantName" value="currentUser.getTenantName()"/>
+
+            <li class="nav-item dropdown">
+                <a class="nav-link"
+                   style="padding-top: 0; padding-bottom: 0; line-height: 32px"
+                   title="@format('${user}[ (${tenant})]').set('user', userName).set('tenant', tenantName).smartFormat()"
+                   href="#"
+                   role="button"
+                   data-toggle="dropdown"
+                   aria-haspopup="true"
+                   aria-expanded="false">
+                    <img style="max-height: 32px" src="/assets/images/f.png" />
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                    <i:extensions target="biz-tycho-menu" point="user"/>
+                </div>
+            </li>
+        </t:permission>
+        <t:menuDropdown menuClasses="dropdown-menu-right" icon="fa-cogs">
+            <i:extensions target="biz-tycho-menu" point="system"/>
+        </t:menuDropdown>
+    </i:block>
+</i:switch>

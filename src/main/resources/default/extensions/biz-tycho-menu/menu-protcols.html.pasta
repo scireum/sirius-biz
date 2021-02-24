@@ -1,0 +1,26 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="110"/>
+
+<i:switch test="@point">
+    <i:block name="user">
+        <t:dropdownSection>
+            <t:dropdownItem titleKey="AuditLogEntry.plural" url="/audit-log" framework="biz.protocols"/>
+        </t:dropdownSection>
+    </i:block>
+    <i:block name="system">
+        <t:dropdownSection>
+            <t:permission permission="permission-system-protocols">
+                <t:dropdownItem titleKey="LoggedMessage.plural" icon="fa-list-ul" url="/system/logs"
+                                framework="biz.protocols"/>
+                <t:dropdownItem titleKey="StoredIncident.plural" icon="fa-fire-extinguisher"
+                                url="/system/errors" framework="biz.protocols"/>
+                <t:dropdownItem titleKey="MailProtocol.plural" icon="fa-envelope" url="/system/mails"
+                                framework="biz.protocols"/>
+            </t:permission>
+            <t:permission permission="permission-system-journal">
+                <t:dropdownItem titleKey="JournalEntry.plural" icon="fa-history" url="/system/protocol"
+                                framework="biz.journal"/>
+            </t:permission>
+        </t:dropdownSection>
+    </i:block>
+</i:switch>

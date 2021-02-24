@@ -1,0 +1,31 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="90"/>
+
+<i:switch test="@point">
+    <i:block name="settings">
+        <t:dropdownSection framework="biz.tenants">
+            <t:dropdownItem titleKey="Tenant.plural" url="/tenants" permission="permission-manage-tenants"/>
+            <i:if test="user().is(sirius.biz.tenants.Tenant.class) &&
+                        user().as(sirius.biz.tenants.Tenant.class).hasPermission('flag-system-tenant')">
+                <t:dropdownItem titleKey="UserAccount.plural" url="/user-accounts"
+                            permission="permission-manage-system-users"/>
+                <i:else>
+                    <t:dropdownItem titleKey="UserAccount.plural" url="/user-accounts"
+                                permission="permission-manage-user-accounts"/>
+                </i:else>
+            </i:if>
+        </t:dropdownSection>
+
+    </i:block>
+    <i:block name="user">
+        <t:dropdownSection framework="biz.tenants">
+            <t:dropdownItem titleKey="ProfileController.myProfile" url="/profile"/>
+            <t:dropdownItem titleKey="Model.password.set" url="/profile/password"/>
+        </t:dropdownSection>
+        <t:dropdownSection framework="biz.tenants">
+            <t:dropdownItem titleKey="Tenant.select" url="/tenants/select" permission="permission-select-tenant"/>
+            <t:dropdownItem titleKey="UserAccount.select" url="/user-accounts/select"
+                        permission="permission-select-user-account"/>
+        </t:dropdownSection>
+    </i:block>
+</i:switch>

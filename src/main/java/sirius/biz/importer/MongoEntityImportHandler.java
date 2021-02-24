@@ -9,13 +9,19 @@
 package sirius.biz.importer;
 
 import sirius.biz.tenants.mongo.MongoTenantAware;
+import sirius.db.jdbc.batch.FindQuery;
 import sirius.db.mixing.Mapping;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.std.Part;
 
+import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Provides a base implementation for all {@link MongoEntity MongoDB entities}.
@@ -67,6 +73,36 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
         // Provides an empty base implementation as for most entities this can be controlled
         // via @Exportable
     }
+
+
+    @Override
+    public Optional<E> tryFind(Context data) {
+        E example = loadForFind(data);
+        return tryFindByExample(example);
+    }
+
+    /**
+     * Loads all {@link #mappingsToLoadForFind} and may perform some cleanups if necessarry.
+     * <p>
+     * Some fields are normalized within {@link sirius.db.mixing.annotations.BeforeSave} handlers. This method
+     * can be overwritten to perform the same operations so that the values properly match within the
+     * find queries.
+     *
+     * @param data the data used to describe the entity to find
+     * @return the example entity which has been populated from the given <tt>data</tt>
+     */
+    protected E loadForFind(Context data) {
+        return load(data, mappingsToLoad);
+    }
+
+    /**
+     * Tries to find a persistent entity using the given example.
+     *
+     * @param example the example instance used to search by
+     * @return a matching entity wrapped as optional or an empty optional if no match is available
+     */
+    protected abstract Optional<E> tryFindByExample(E example);
+
 
     @Override
     public E createOrUpdateNow(E entity) {

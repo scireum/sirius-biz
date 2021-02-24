@@ -9,6 +9,7 @@
 package sirius.biz.tenants.mongo;
 
 import sirius.biz.analytics.flags.PerformanceDataImportExtender;
+import sirius.biz.importer.ImportContext;
 import sirius.biz.importer.ImportHandler;
 import sirius.biz.importer.ImportHandlerFactory;
 import sirius.biz.importer.ImporterContext;
@@ -16,11 +17,18 @@ import sirius.biz.importer.MongoEntityImportHandler;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
+import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.TenantData;
+import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
 
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -61,27 +69,55 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
     }
 
     @Override
-    public Optional<MongoUserAccount> tryFind(Context data) {
-        if (data.containsKey(MongoUserAccount.ID.getName())) {
+    protected MongoUserAccount loadForFind(Context data) {
+        MongoUserAccount userAccount = load(data,
+                                            MongoUserAccount.ID,
+                                            MongoUserAccount.TENANT,
+                                            MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
+                                                                              .inner(LoginData.USERNAME));
+        if (userAccount.getTenant().isEmpty()) {
+            userAccount.getTenant().setValue(tenants.getRequiredTenant());
+        }
+
+        return userAccount;
+    }
+
+    @Override
+    protected Optional<MongoUserAccount> tryFindByExample(MongoUserAccount example) {
+        if (Strings.isFilled(example.getId())) {
             return mango.select(MongoUserAccount.class)
-                        .eq(MongoUserAccount.ID, data.getValue(MongoUserAccount.ID.getName()).asString())
-                        .eq(MongoUserAccount.TENANT, tenants.getRequiredTenant())
+                        .eq(MongoUserAccount.ID, example.getId())
+                        .eq(MongoUserAccount.TENANT, example.getTenant())
                         .one();
         }
 
-        if (data.containsKey(MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                               .inner(LoginData.USERNAME)
-                                                               .getName())) {
+        if (Strings.isFilled(example.getUserAccountData().getLogin().getUsername())) {
             return mango.select(MongoUserAccount.class)
                         .eq(MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.USERNAME),
-                            data.getValue(MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
-                                                                            .inner(LoginData.USERNAME)
-                                                                            .getName()))
-                        .eq(MongoUserAccount.TENANT, tenants.getRequiredTenant())
+                            example.getUserAccountData().getLogin().getUsername())
+                        .eq(MongoUserAccount.TENANT, example.getTenant())
                         .one();
         }
 
         return Optional.empty();
+    }
+
+    @Override
+    protected boolean parseComplexProperty(MongoUserAccount entity, Property property, Value value, Context data) {
+        if (UserAccount.TENANT.getName().equals(property.getName())) {
+            ImportContext lookupContext = ImportContext.create();
+            lookupContext.set(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER), value.get());
+            //XXX NO COMMIT!!!!!!
+//            ImportHandler<MongoTenant> importHandler = context.findHandler(MongoTenant.class);
+//            itemReference.setValue(importHandler.tryFind(lookupContext)
+//                                                .orElseThrow(() -> Exceptions.createHandled()
+//                                                                             .withSystemErrorMessage(
+//                                                                                     "Cannot resolve item from: '%s' and namespace '%s'",
+//                                                                                     value.getString(),
+//                                                                                     data.get(Item.NAMESPACE.getName()))
+//                                                                             .handle()));
+        }
+        return super.parseComplexProperty(entity, property, value, data);
     }
 
     @Override
