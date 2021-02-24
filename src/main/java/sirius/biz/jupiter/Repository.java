@@ -118,7 +118,7 @@ public class Repository {
      * This can be used to determine if the background system of the Jupiter repository is idle (has completed all
      * previously scheduled tasks).
      * <p>
-     * After invoking this, one has to call {@link #isEpochSync()} and wait until this returns <tt>true</tt>.
+     * After invoking this, one has to call {@link #isEpochInSync()} and wait until this returns <tt>true</tt>.
      */
     public void requestEpoch() {
         connection.execDirect(() -> "REPO.INC_EPOCH", jupiter -> {
@@ -135,7 +135,7 @@ public class Repository {
      *
      * @return <tt>true</tt> if the epochs are equal (the background system is idle), <tt>false</tt> otherwise
      */
-    public boolean isEpochSync() {
+    public boolean isEpochInSync() {
         return connection.queryDirect(() -> "REPO.EPOCHS", jupiter -> {
             jupiter.sendCommand(CMD_EPOCHS);
             Values epochs = Values.of(jupiter.getIntegerMultiBulkReply());

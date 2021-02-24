@@ -193,7 +193,7 @@ public class Jupiter implements MetricProvider {
      * This is a larger cache for (relatively) small objects like strings or tuples.
      * <p>
      * Note that the underlying cache is automatically cleared once the Jupiter repository is synced, so that
-     * this cache shoudln't contain any stale data.
+     * this cache shouldn't contain any stale data.
      *
      * @param key           the globally unique key used to locally lookup the value
      * @param valueComputer the computer which actually uses Jupiter (e.g. IDB) to compute the cachable data.
@@ -208,7 +208,7 @@ public class Jupiter implements MetricProvider {
     /**
      * Fetches a locally cached object based on Jupiter data which is relatively large/complex.
      * <p>
-     * This is a larger cache for (relatively) large/complex compound objects.
+     * This is a smaller cache for (relatively) large/complex compound objects.
      * <p>
      * Note that the underlying cache is automatically cleared once the Jupiter repository is synced, so that
      * this cache shoudln't contain any stale data.

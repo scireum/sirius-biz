@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 /**
  * In charge of updating the configuration and the repository of attached Jupiter instances.
  * <p>
- * Next to iterating over all Jupiter instances and computer their config via {@link JupiterConfigUpdater}, this also
+ * Next to iterating over all Jupiter instances and computing their config via {@link JupiterConfigUpdater}, this also
  * synchronizes the contents of an object store (e.g. Amazon S3) as well as a local repository against the repository
  * stored in Jupiter.
  * <p>
@@ -62,6 +62,27 @@ import java.util.stream.Collectors;
  */
 @Register(framework = Jupiter.FRAMEWORK_JUPITER, classes = {JupiterSync.class, Startable.class, EndOfDayTask.class})
 public class JupiterSync implements Startable, EndOfDayTask {
+
+    /**
+     * Specifies the number of attempts when waiting for the repository to be in "epoch sync".
+     * <p>
+     * After the repository contents have been synced (or more exactly, their sync has been requested) we ask jupiter
+     * to increment the epochs (basically a simple counter) for the frontend and backend actors. As the frontend
+     * actor will immediatelly incement its value but the background actor will put this task into its internal queue,
+     * we know that once the values are the same again, all background tasks which were previously scheduled, are
+     * completed.
+     * <p>
+     * This specifies the number of attempts (query the values, compare them, and wait for
+     * {@link #SYNC_AWAIT_PAUSE_SECONDS} in case the values do not match).
+     */
+    private static final int MAX_ATTEMPTS_FOR_EPOCH_SYNC = 30;
+
+    /**
+     * Specifies the wait interval when awaiting synchronized epochs.
+     *
+     * @see #MAX_ATTEMPTS_FOR_EPOCH_SYNC
+     */
+    private static final int SYNC_AWAIT_PAUSE_SECONDS = 2;
 
     @ConfigValue("jupiter.updateConfig")
     private List<String> updateConfig;
@@ -508,21 +529,21 @@ public class JupiterSync implements Startable, EndOfDayTask {
 
     private void awaitNextEpoch(ProcessContext processContext, JupiterConnector connector) {
         connector.repository().requestEpoch();
-        int retries = 30;
+        int attempts = MAX_ATTEMPTS_FOR_EPOCH_SYNC;
         Monoflop stateUpdate = Monoflop.create();
-        while (processContext.isActive() && retries-- > 0 && !connector.repository().isEpochSync()) {
+        while (processContext.isActive() && attempts-- > 0 && !connector.repository().isEpochInSync()) {
             if (stateUpdate.firstCall()) {
                 processContext.setCurrentStateMessage(Strings.apply("Waiting for the repository of %s to be synced...",
                                                                     connector.getName()));
             }
-            Wait.seconds(2);
+            Wait.seconds(SYNC_AWAIT_PAUSE_SECONDS);
         }
 
         if (stateUpdate.successiveCall()) {
             processContext.setCurrentStateMessage(null);
         }
 
-        if (connector.repository().isEpochSync()) {
+        if (connector.repository().isEpochInSync()) {
             processContext.log(ProcessLog.info()
                                          .withFormattedMessage("Repository of %s is fully synced...",
                                                                connector.getName()));

@@ -55,7 +55,7 @@ public class IDBTable {
     }
 
     /**
-     * Used as fluent tool to build queries.
+     * Provides a tool to fluently build queries.
      */
     public class QueryBuilder {
 
