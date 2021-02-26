@@ -54,6 +54,15 @@ MultiLanguageField.prototype.buildSingleline = function () {
     }
 
     const me = this;
+
+    this._addLanguageButton.addEventListener('click', function () {
+        let rowCount = me._modalInputs.querySelectorAll('.row').length;
+        const totalRowsHeight = (rowCount * 40) + 100;
+        if (totalRowsHeight) {
+            me._addLanguageOptions.style.maxHeight = totalRowsHeight + 'px';
+        }
+    });
+
     // have to use jquery here as bootstrap modals only trigger jquery events
     $(me._modal).on('hidden.bs.modal', function () {
         me.updateHiddenFields();
