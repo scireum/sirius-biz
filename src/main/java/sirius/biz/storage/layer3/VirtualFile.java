@@ -34,6 +34,8 @@ import sirius.web.http.WebContext;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.mail.internet.ContentDisposition;
+import javax.mail.internet.ParseException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -49,7 +51,6 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -1300,17 +1301,40 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      *                              before and no modification was detected.
      * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
      *                              ".php" or the like as effective file name.
-     * @return the file which has been resolved (and downloaded if necessarry)
+     * @return a tuple containing the file which has been resolved, and a boolean indicating if it was freshly downloaded
      * @throws IOException      in case of an IO error during the download
      * @throws HandledException in case no effective filename can be detected
      */
-    public VirtualFile resolveOrLoadChildFromURL(URL url, boolean force, Predicate<String> fileExtensionVerifier)
+    public Tuple<VirtualFile, Boolean> resolveOrLoadChildFromURL(URL url,
+                                                                 boolean force,
+                                                                 Predicate<String> fileExtensionVerifier)
             throws IOException {
-        String path = loadPathFromUrl(url, fileExtensionVerifier);
+
+        String path = parsePathFromUrl(url, fileExtensionVerifier);
+        boolean downloaded = false;
+        long lastModifiedHeader = -1;
+
         if (Strings.isEmpty(path)) {
-            String contentDisposition = loadContentDisposition(url);
-            if (fileExtensionVerifier.test(contentDisposition)) {
-                path = contentDisposition;
+            HttpURLConnection urlConnection = null;
+            String contentDispositionPath;
+            try {
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("HEAD");
+                urlConnection.connect();
+
+                contentDispositionPath =
+                        parseFileNameFromContentDisposition(urlConnection.getHeaderField(HttpHeaderNames.CONTENT_DISPOSITION
+                                                                                                 .toString()));
+                lastModifiedHeader = urlConnection.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString(), 0);
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+            }
+
+            if (Strings.isFilled(contentDispositionPath) && fileExtensionVerifier.test(Files.getFileExtension(
+                    contentDispositionPath))) {
+                path = contentDispositionPath;
             } else {
                 throw Exceptions.createHandled()
                                 .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
@@ -1318,74 +1342,51 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
                                 .handle();
             }
         }
+
         VirtualFile file = resolve(path);
-        file.loadFromUrl(url, force);
-        return file;
+
+        if (force || lastModifiedHeader == -1) {
+            //we haven't checked last modified, use original force param
+            downloaded = file.loadFromUrl(url, force);
+        } else {
+            //we already know the last modified header, only download if resource is newer
+            if (lastModifiedHeader > file.lastModified()) {
+                downloaded = file.loadFromUrl(url, true);
+            }
+        }
+        return Tuple.create(file, downloaded);
     }
 
-    private String loadContentDisposition(URL url) throws IOException {
-        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-        urlConnection.connect();
-        String contentDisposition = urlConnection.getHeaderField(HttpHeaderNames.CONTENT_DISPOSITION.toString());
-        urlConnection.disconnect();
-        return contentDisposition;
+    private String parseFileNameFromContentDisposition(String contentDispositionHeader) {
+        String filename = null;
+        if (contentDispositionHeader != null) {
+            ContentDisposition cd = null;
+            try {
+                cd = new ContentDisposition(contentDispositionHeader);
+            } catch (ParseException e) {
+                // Ultimately we don't care why we don't have a path, just return empty and throw an error later
+                Exceptions.ignore(e);
+                return null;
+            }
+            return cd.getParameter("filename");
+        }
+        return filename;
     }
 
-    @Nullable
-    private String loadPathFromUrl(URL url, Predicate<String> fileExtensionVerifier) {
+    private String parsePathFromUrl(URL url, Predicate<String> fileExtensionVerifier) {
         QueryStringDecoder qsd = new QueryStringDecoder(url.toString(), StandardCharsets.UTF_8);
         return qsd.parameters()
                   .values()
                   .stream()
                   .flatMap(List::stream)
-                  .filter(fileExtensionVerifier)
+                  .filter(path -> fileExtensionVerifier.test(Files.getFileExtension(path)))
                   .findFirst()
                   .orElseGet(() -> {
-                      if (fileExtensionVerifier.test(url.getPath())) {
+                      if (fileExtensionVerifier.test(Files.getFileExtension(url.getPath()))) {
                           return url.getPath();
                       }
                       return null;
                   });
-    }
-
-    /**
-     * Attempts to resolve the file from the given URL or performs a download just as {@link #resolveOrLoadChildFromURL(URL, boolean, Predicate)} but reports to the given process.
-     * <p>
-     * This will increment one of the timings (downloaded or download skipped) and also directly report IO
-     * errors to the process without spamming the system logs.
-     *
-     * @param url                   the URL which determines the filename/path as well as the source of the file to fetch
-     * @param force                 if set to <tt>true</tt> a download will be performed, even if we already downloaded the file
-     *                              before and no modification was detected
-     * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
-     *                              ".php" or the like as effective file name
-     * @param processContext        the process to report to
-     * @return the file which has been resolved (and downloaded if necessarry)
-     */
-    public VirtualFile resolveOrLoadChildFromURL(URL url,
-                                                 boolean force,
-                                                 Predicate<String> fileExtensionVerifier,
-                                                 ProcessContext processContext) {
-        String path = loadPathFromUrl(url, fileExtensionVerifier);
-        if (Strings.isEmpty(path)) {
-            try {
-                String contentDisposition = loadContentDisposition(url);
-                if (fileExtensionVerifier.test(contentDisposition)) {
-                    path = contentDisposition;
-                } else {
-                    processContext.log(ProcessLog.error()
-                                                 .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
-                                                 .withContext("url", url.toString()));
-                }
-            } catch (IOException e) {
-                processContext.log(ProcessLog.error()
-                                             .withNLSKey("VirtualFile.downloadFailed")
-                                             .withContext("url", url.toString()));
-            }
-        }
-        VirtualFile file = resolve(path);
-        file.loadFromUrl(url, force, processContext);
-        return file;
     }
 
     /**
