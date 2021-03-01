@@ -10,6 +10,7 @@ package sirius.biz.storage.layer3;
 
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
@@ -41,12 +42,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -1298,12 +1301,91 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
      *                              ".php" or the like as effective file name.
      * @return the file which has been resolved (and downloaded if necessarry)
-     * @throws IOException              in case of an IO error during the download
+     * @throws IOException      in case of an IO error during the download
      * @throws HandledException in case no effective filename can be detected
      */
     public VirtualFile resolveOrLoadChildFromURL(URL url, boolean force, Predicate<String> fileExtensionVerifier)
             throws IOException {
-        return null;
+        String path = loadPathFromUrl(url, fileExtensionVerifier);
+        if (Strings.isEmpty(path)) {
+            String contentDisposition = loadContentDisposition(url);
+            if (fileExtensionVerifier.test(contentDisposition)) {
+                path = contentDisposition;
+            } else {
+                throw Exceptions.createHandled()
+                                .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
+                                .set("url", url)
+                                .handle();
+            }
+        }
+        VirtualFile file = resolve(path);
+        file.loadFromUrl(url, force);
+        return file;
+    }
+
+    private String loadContentDisposition(URL url) throws IOException {
+        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+        urlConnection.connect();
+        String contentDisposition = urlConnection.getHeaderField(HttpHeaderNames.CONTENT_DISPOSITION.toString());
+        urlConnection.disconnect();
+        return contentDisposition;
+    }
+
+    @Nullable
+    private String loadPathFromUrl(URL url, Predicate<String> fileExtensionVerifier) {
+        QueryStringDecoder qsd = new QueryStringDecoder(url.toString(), StandardCharsets.UTF_8);
+        return qsd.parameters()
+                  .values()
+                  .stream()
+                  .flatMap(List::stream)
+                  .filter(fileExtensionVerifier)
+                  .findFirst()
+                  .orElseGet(() -> {
+                      if (fileExtensionVerifier.test(url.getPath())) {
+                          return url.getPath();
+                      }
+                      return null;
+                  });
+    }
+
+    /**
+     * Attempts to resolve the file from the given URL or performs a download just as {@link #resolveOrLoadChildFromURL(URL, boolean, Predicate)} but reports to the given process.
+     * <p>
+     * This will increment one of the timings (downloaded or download skipped) and also directly report IO
+     * errors to the process without spamming the system logs.
+     *
+     * @param url                   the URL which determines the filename/path as well as the source of the file to fetch
+     * @param force                 if set to <tt>true</tt> a download will be performed, even if we already downloaded the file
+     *                              before and no modification was detected
+     * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
+     *                              ".php" or the like as effective file name
+     * @param processContext        the process to report to
+     * @return the file which has been resolved (and downloaded if necessarry)
+     */
+    public VirtualFile resolveOrLoadChildFromURL(URL url,
+                                                 boolean force,
+                                                 Predicate<String> fileExtensionVerifier,
+                                                 ProcessContext processContext) {
+        String path = loadPathFromUrl(url, fileExtensionVerifier);
+        if (Strings.isEmpty(path)) {
+            try {
+                String contentDisposition = loadContentDisposition(url);
+                if (fileExtensionVerifier.test(contentDisposition)) {
+                    path = contentDisposition;
+                } else {
+                    processContext.log(ProcessLog.error()
+                                                 .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
+                                                 .withContext("url", url.toString()));
+                }
+            } catch (IOException e) {
+                processContext.log(ProcessLog.error()
+                                             .withNLSKey("VirtualFile.downloadFailed")
+                                             .withContext("url", url.toString()));
+            }
+        }
+        VirtualFile file = resolve(path);
+        file.loadFromUrl(url, force, processContext);
+        return file;
     }
 
     /**
