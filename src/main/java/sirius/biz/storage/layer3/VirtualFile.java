@@ -1268,6 +1268,45 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     }
 
     /**
+     * Attempts to resolve the file from the given URL or performs a download if the file does not exist.
+     * <p>
+     * Uses the path of the given URL relative to this directory and tries to resolve the child file. If this file
+     * does not exist, or has been modified since its last download (or if <tt>force</tt> is set), a download will
+     * be attempted.
+     * <p>
+     * As a result, the resolved file will be returned (which was either already there or has been downloaded).
+     * <p>
+     * In order to determine the effective filename/path within the given URL we attempt the following steps:
+     * <ol>
+     *     <li>
+     *         Check all parameters in the query string, if one contains a path with an accepted file extension,
+     *         we use this.
+     *     </li>
+     *     <li>
+     *         Otherwise, we check the path in the URL. This the file there has an accepted file extension, we use this
+     *         path.
+     *     </li>
+     *     <li>
+     *         If the two attempts above fail, we emit a HEAD request and try to determine the filename/path by checking
+     *         the <tt>content-disposition</tt> header.
+     *     </li>
+     * </ol>
+     *
+     * @param url                   the URL which determines the filename/path as well as the source of the file to fetch
+     * @param force                 if set to <tt>true</tt> a download will be performed, even if we already downloaded the file
+     *                              before and no modification was detected.
+     * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
+     *                              ".php" or the like as effective file name.
+     * @return the file which has been resolved (and downloaded if necessarry)
+     * @throws IOException              in case of an IO error during the download
+     * @throws HandledException in case no effective filename can be detected
+     */
+    public VirtualFile resolveOrLoadChildFromURL(URL url, boolean force, Predicate<String> fileExtensionVerifier)
+            throws IOException {
+        return null;
+    }
+
+    /**
      * Performs a download just as {@link #loadFromUrl(URL, boolean)} but reports to the given process.
      * <p>
      * This will increment one of the timings (downloaded or download skipped) and also directly report IO
