@@ -53,7 +53,21 @@ MultiLanguageField.prototype.buildSingleline = function () {
         this._addLanguageOptions.classList.add('dropdown-menu-right');
     }
 
+    this._modalBody = this._modal.querySelector('.modal-body');
+    this._modalContent = this._modal.querySelector('.modal-content');
+
     const me = this;
+    this._addLanguageButton.addEventListener('click', function () {
+        const langOptionCount = me._addLanguageOptions.querySelectorAll('li:not(.hidden)').length;
+        const totalRowsHeight = (langOptionCount * 27);
+        const maxHeight = window.innerHeight - 182;
+
+        if ((me._modalBody.clientHeight < maxHeight) && (totalRowsHeight > me._modalBody.style.height)) {
+            me._modalBody.style.height = (totalRowsHeight - me._modalBody.style.height) + 'px';
+            me._addLanguageOptions.style.maxHeight = totalRowsHeight + 'px';
+        }
+    });
+
     // have to use jquery here as bootstrap modals only trigger jquery events
     $(me._modal).on('hidden.bs.modal', function () {
         me.updateHiddenFields();
@@ -459,7 +473,7 @@ MultiLanguageField.prototype.updateLanguageManagementOptions = function () {
         return;
     }
 
-    let me = this;
+    const me = this;
 
     if (this.multiline) {
         this._multilineContent.querySelectorAll('.tab-pane').forEach(function (_pane) {
