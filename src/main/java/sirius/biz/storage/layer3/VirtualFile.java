@@ -1249,7 +1249,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
         if (!force && exists()) {
             urlConnection.addRequestProperty(HttpHeaderNames.IF_MODIFIED_SINCE.toString(),
-                                             lastModifiedDate().format(DateTimeFormatter.RFC_1123_DATE_TIME));
+                                             lastModifiedDate().atOffset(ZoneOffset.UTC)
+                                                               .format(DateTimeFormatter.RFC_1123_DATE_TIME));
         }
 
         urlConnection.connect();
