@@ -153,7 +153,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
     @Override
     public void started() {
         if (automaticUpdate) {
-            // As re run in the "readiness callback" of elastic, we rather fork a thread here, as synchronizing the
+            // As we run in the "readiness callback" of elastic, we rather fork a thread here, as synchronizing the
             // repository might take a while.
             // We await the readiness of elastic in the first place, as we use the Process framework to log what we
             // do...
