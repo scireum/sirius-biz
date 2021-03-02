@@ -12,8 +12,6 @@ import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.util.SafeEncoder;
 import sirius.kernel.commons.Explain;
 
-import java.util.Arrays;
-
 /**
  * Provides a custom command as defined by Jupiter.
  */
