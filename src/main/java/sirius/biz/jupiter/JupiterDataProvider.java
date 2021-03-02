@@ -8,6 +8,8 @@
 
 package sirius.biz.jupiter;
 
+import sirius.kernel.di.std.AutoRegister;
+
 import java.io.OutputStream;
 
 /**
@@ -16,7 +18,10 @@ import java.io.OutputStream;
  * The {@link JupiterSync} will invoke all data providers each night to update their file contents in the local
  * repository. This will then be synchronized with the repository in the Jupiter instance itself so that
  * InfoGraphDB and other consumers can load this data.
+ * <p>
+ * Note that a data provider must be {@link sirius.kernel.di.std.Register registered} to be visible to the framework.
  */
+@AutoRegister
 public interface JupiterDataProvider {
 
     /**
