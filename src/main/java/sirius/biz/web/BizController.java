@@ -570,7 +570,7 @@ public class BizController extends BasicController {
      */
     protected void handle(Exception exception) {
         if (exception.getCause() instanceof InvalidFieldException) {
-            UserContext.get().signalFieldError(((InvalidFieldException) exception.getCause()).getField());
+            UserContext.get().addFieldError(((InvalidFieldException) exception.getCause()).getField(), "");
         }
 
         UserContext.handle(exception);

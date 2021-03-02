@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 public class ExportXLSX implements LineBasedExport {
 
     private final ExcelExport export;
-    private Supplier<OutputStream> outputStreamSupplier;
+    private final Supplier<OutputStream> outputStreamSupplier;
 
     /**
      * Creates a new export which writes to the given output stream.

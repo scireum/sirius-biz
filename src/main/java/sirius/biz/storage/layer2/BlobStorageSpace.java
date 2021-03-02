@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer2;
 
+import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
 import sirius.biz.tenants.Tenants;
 import sirius.web.http.Response;
@@ -250,6 +251,16 @@ public interface BlobStorageSpace {
      * @return <tt>true</tt> if this space is readonly, <tt>false</tt> otherwise
      */
     boolean isReadonly();
+
+    /**
+     * Downloads and provides the contents of the requested blob with the given variant.
+     *
+     * @param blobKey the blob key of the blob to download
+     * @param variant the variant of the blob to download. Use {@link URLBuilder#VARIANT_RAW} to download the blob itself
+     * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist or couldn't
+     * be converted
+     */
+    Optional<FileHandle> download(String blobKey, String variant);
 
     /**
      * Resolves the filename of the given blob.
