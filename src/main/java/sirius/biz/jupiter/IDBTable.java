@@ -325,7 +325,7 @@ public class IDBTable {
      * @return the first row which matched the given query
      */
     public Optional<Values> lookup(String lookupPath, String filterValue, String... pathsToQuery) {
-        return jupiter.query(() -> "IDB.LOOKUP " + name, redis -> {
+        return jupiter.query(() -> CMD_LOOKUP + " " + name, redis -> {
             String[] args = new String[pathsToQuery.length + 3];
             args[0] = name;
             args[1] = lookupPath;
@@ -363,7 +363,7 @@ public class IDBTable {
                                     String lookupPath,
                                     String filterValue,
                                     String... pathsToQuery) {
-        return jupiter.query(() -> "IDB.ILOOKUP " + name, redis -> {
+        return jupiter.query(() -> CMD_ILOOKUP + " " + name, redis -> {
             String[] args = new String[pathsToQuery.length + 5];
             args[0] = name;
             args[1] = mainLanguage;
@@ -389,7 +389,7 @@ public class IDBTable {
      * @return the rows which matched the given query
      */
     public List<Values> query(String lookupPath, String filterValue, Limit limit, String... pathsToQuery) {
-        return jupiter.query(() -> "IDB.QUERY " + name, redis -> {
+        return jupiter.query(() -> CMD_QUERY + " " + name, redis -> {
             String[] args = new String[pathsToQuery.length + 5];
             args[0] = name;
             args[1] = String.valueOf(limit.getItemsToSkip());
@@ -431,7 +431,7 @@ public class IDBTable {
                                String filterValue,
                                Limit limit,
                                String... pathsToQuery) {
-        return jupiter.query(() -> "IDB.IQUERY " + name, redis -> {
+        return jupiter.query(() -> CMD_IQUERY + " " + name, redis -> {
             String[] args = new String[pathsToQuery.length + 7];
             args[0] = name;
             args[1] = mainLanguage;
@@ -459,7 +459,7 @@ public class IDBTable {
      * @return the rows which matched the given query
      */
     public List<Values> search(String lookupPath, String filterValue, Limit limit, String... pathsToQuery) {
-        return jupiter.query(() -> "IDB.SEARCH " + name, redis -> {
+        return jupiter.query(() -> CMD_SEARCH + " " + name, redis -> {
             String[] args = new String[pathsToQuery.length + 5];
             args[0] = name;
             args[1] = String.valueOf(limit.getItemsToSkip());
@@ -492,7 +492,7 @@ public class IDBTable {
                                 String filterValue,
                                 Limit limit,
                                 String... pathsToQuery) {
-        return jupiter.query(() -> "IDB.ISEARCH " + name, redis -> {
+        return jupiter.query(() -> CMD_ISEARCH + " " + name, redis -> {
             String[] args = new String[pathsToQuery.length + 7];
             args[0] = name;
             args[1] = mainLanguage;
@@ -518,7 +518,7 @@ public class IDBTable {
      * @return the rows which matched the given query
      */
     public List<Values> scan(Limit limit, String... pathsToQuery) {
-        return jupiter.query(() -> "IDB.SCAN " + name, redis -> {
+        return jupiter.query(() -> CMD_SCAN + " " + name, redis -> {
             String[] args = new String[pathsToQuery.length + 3];
             args[0] = name;
             args[1] = String.valueOf(limit.getItemsToSkip());
@@ -542,7 +542,7 @@ public class IDBTable {
      * @return the rows which matched the given query
      */
     public List<Values> iscan(String mainLanguage, String fallbackLanguage, Limit limit, String... pathsToQuery) {
-        return jupiter.query(() -> "IDB.ISCAN " + name, redis -> {
+        return jupiter.query(() -> CMD_ISCAN + " " + name, redis -> {
             String[] args = new String[pathsToQuery.length + 5];
             args[0] = name;
             args[1] = mainLanguage;

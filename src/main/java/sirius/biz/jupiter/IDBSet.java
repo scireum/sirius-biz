@@ -42,11 +42,15 @@ public class IDBSet {
      * @return <tt>true</tt> if the key is contained in the set, <tt>false</tt> otherwise
      */
     public boolean contains(String key) {
-        return jupiter.query(() -> CMD_CONTAINS.toString() + " " + name, redis -> {
+        return jupiter.query(this::containsOp, redis -> {
             redis.sendCommand(CMD_CONTAINS, key);
 
             return redis.getIntegerReply() == 1;
         });
+    }
+
+    private String containsOp() {
+        return CMD_CONTAINS.toString() + " " + name;
     }
 
     /**
@@ -56,7 +60,7 @@ public class IDBSet {
      * @return <tt>true</tt> if any key is contained in the set, <tt>false</tt> otherwise
      */
     public boolean containsAny(String... keys) {
-        return jupiter.query(() -> CMD_CONTAINS.toString() + " " + name, redis -> {
+        return jupiter.query(this::containsOp, redis -> {
             redis.sendCommand(CMD_CONTAINS, keys);
 
             return redis.getIntegerMultiBulkReply().stream().anyMatch(result -> result == 1);
@@ -70,7 +74,7 @@ public class IDBSet {
      * @return <tt>true</tt> if all keys is contained in the set, <tt>false</tt> otherwise
      */
     public boolean containsAll(String... keys) {
-        return jupiter.query(() -> CMD_CONTAINS.toString() + " " + name, redis -> {
+        return jupiter.query(this::containsOp, redis -> {
             redis.sendCommand(CMD_CONTAINS, keys);
 
             return redis.getIntegerMultiBulkReply().stream().allMatch(result -> result == 1);
@@ -84,11 +88,15 @@ public class IDBSet {
      * @return the one-based position within the set or 0 if the key isn't part of the set
      */
     public int indexOf(String key) {
-        return jupiter.query(() -> CMD_INDEX_OF.toString() + " " + name, redis -> {
+        return jupiter.query(this::indexOfOp, redis -> {
             redis.sendCommand(CMD_INDEX_OF, key);
 
             return redis.getIntegerReply().intValue();
         });
+    }
+
+    private String indexOfOp() {
+        return CMD_INDEX_OF.toString() + " " + name;
     }
 
     /**
@@ -98,7 +106,7 @@ public class IDBSet {
      * @return a list of all keys along with their position in the set
      */
     public List<Tuple<String, Integer>> indexOf(String... keys) {
-        return jupiter.query(() -> CMD_INDEX_OF.toString() + " " + name, redis -> {
+        return jupiter.query(this::indexOfOp, redis -> {
             redis.sendCommand(CMD_INDEX_OF, keys);
 
             List<Long> indices = redis.getIntegerMultiBulkReply();

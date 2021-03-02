@@ -466,23 +466,25 @@ public class JupiterSync implements Startable, EndOfDayTask {
     }
 
     private void visitLocalDirectory(ProcessContext processContext,
-                                     String prefix,
+                                     @Nullable String prefix,
                                      Directory currentDirectory,
                                      JupiterConnector connection,
                                      List<RepositoryFile> repositoryFiles,
                                      Set<String> filesToDelete) {
+        String effectivePrefix = Value.of(prefix).asString();
+
         currentDirectory.listChildBlobs(null, null, 0, child -> {
             handleLocalFile(processContext,
                             connection,
                             repositoryFiles,
                             filesToDelete,
-                            prefix + "/" + child.getFilename(),
+                            effectivePrefix + "/" + child.getFilename(),
                             child);
             return true;
         });
         currentDirectory.listChildDirectories(null, 0, dirctory -> {
             visitLocalDirectory(processContext,
-                                prefix + "/" + dirctory.getName(),
+                                effectivePrefix + "/" + dirctory.getName(),
                                 dirctory,
                                 connection,
                                 repositoryFiles,
