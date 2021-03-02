@@ -13,7 +13,7 @@ import sirius.kernel.di.std.AutoRegister;
 import java.io.OutputStream;
 
 /**
- * Provides data to be stored in a file inthe local Jupiter repository.
+ * Provides data to be stored in a file in the local Jupiter repository.
  * <p>
  * The {@link JupiterSync} will invoke all data providers each night to update their file contents in the local
  * repository. This will then be synchronized with the repository in the Jupiter instance itself so that
