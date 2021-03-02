@@ -30,6 +30,8 @@ import java.util.function.Supplier;
  * <p>
  * If a failover is performed, we will continue to use the fallback for up to 60s before we attempt to switch
  * back to the main instance.
+ * <p>
+ * A connector is usually obtained via {@link Jupiter#getConnector(String)} or {@link Jupiter#getDefault()}.
  */
 public class JupiterConnector {
 
@@ -117,7 +119,8 @@ public class JupiterConnector {
                                       RedisDB main,
                                       RedisDB fallback,
                                       Runnable executeOnFailover) {
-        try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME); Jedis jedis = main.getConnection()) {
+        try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
+             Jedis jedis = main.getConnection()) {
             return perform(description, jedis, task);
         } catch (JedisConnectionException ignored) {
             executeOnFailover.run();
@@ -128,7 +131,8 @@ public class JupiterConnector {
     }
 
     private <T> T performWithoutFailover(Supplier<String> description, Function<Client, T> task, RedisDB redis) {
-        try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME); Jedis jedis = redis.getConnection()) {
+        try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
+             Jedis jedis = redis.getConnection()) {
             return perform(description, jedis, task);
         } catch (Exception e) {
             throw Exceptions.handle(Jupiter.LOG, e);
@@ -163,7 +167,8 @@ public class JupiterConnector {
      * @return a result computed by <tt>task</tt>
      */
     public <T> T queryDirect(Supplier<String> description, Function<Client, T> task) {
-        try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME); Jedis jedis = redis.getConnection()) {
+        try (Operation op = new Operation(description, EXPECTED_JUPITER_COMMAND_RUNTIME);
+             Jedis jedis = redis.getConnection()) {
             return perform(description, jedis, task);
         } catch (Exception e) {
             throw Exceptions.handle(Jupiter.LOG, e);
@@ -224,4 +229,26 @@ public class JupiterConnector {
         return new LRUCache(this, cache);
     }
 
+    /**
+     * Provides access to the repository management commands of this connection.
+     *
+     * @return the repository wrapper for this connection
+     */
+    public Repository repository() {
+        return new Repository(this);
+    }
+
+    /**
+     * Provides access to the InfoGraphDB of this connection.
+     *
+     * @return the wrapped used to access the IDB of the underlying Jupiter instance.
+     */
+    public InfoGraphDB idb() {
+        return new InfoGraphDB(this);
+    }
+
+    @Override
+    public String toString() {
+        return "Jupiter: " + instanceName;
+    }
 }

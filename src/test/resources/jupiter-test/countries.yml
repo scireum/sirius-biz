@@ -1,0 +1,15 @@
+code: "D"
+iso:
+  two: "de"
+  three: "deu"
+name:
+  de: "Deutschland"
+  en: "Germany"
+---
+code: "A"
+iso:
+  two: "at"
+  three: "aut"
+name:
+  de: "Österreich"
+  en: "Austria"

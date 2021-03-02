@@ -36,4 +36,9 @@ public class JupiterCommand implements ProtocolCommand {
     public byte[] getRaw() {
         return rawCommand;
     }
+
+    @Override
+    public String toString() {
+        return command;
+    }
 }

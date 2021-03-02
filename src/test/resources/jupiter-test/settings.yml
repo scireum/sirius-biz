@@ -1,0 +1,10 @@
+caches:
+  test:
+    size: 128
+    max_memory: 16m
+    soft_ttl: 15m
+    hard_ttl: 1d
+    refresh_interval: 30s
+
+repository:
+  namespaces: [ "core" ]
