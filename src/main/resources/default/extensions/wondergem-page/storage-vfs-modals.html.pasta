@@ -57,7 +57,7 @@
                         const self = this;
 
                         const _tr = document.createElement("tr");
-                        _tr.innerHTML = Mustache.render("<td><a class='file-link' href='#' data-path='{{path}}}'>" +
+                        _tr.innerHTML = Mustache.render("<td><a class='file-link' href='#' data-path='{{path}}'>" +
                             "<i class='fa fa-folder-open'></i>&nbsp;{{name}}</a></td>", child);
                         _tr.querySelector(".file-link").addEventListener("click", function () {
                             self.path = this.dataset.path;
@@ -156,7 +156,7 @@
                                     continue;
                                 }
                                 const _li = document.createElement("li");
-                                _li.innerHTML = Mustache.render('<a class="file-link" href="#" data-path={{path}}>{{name}}</a>', {
+                                _li.innerHTML = Mustache.render('<a class="file-link" href="#" data-path={{path}}>{{{name}}}</a>', {
                                     path: element.path,
                                     name: element.name === "/" ? "<i class='fa fa-home'></i>" : element.name
                                 });
