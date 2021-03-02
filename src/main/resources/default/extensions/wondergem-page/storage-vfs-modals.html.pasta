@@ -57,8 +57,8 @@
                         const self = this;
 
                         const _tr = document.createElement("tr");
-                        _tr.innerHTML = "<td><a class='file-link' href='#' data-path='" + child.path + "'>" +
-                            "<i class='fa fa-folder-open'></i>&nbsp;" + child.name + "</a></td>";
+                        _tr.innerHTML = Mustache.render("<td><a class='file-link' href='#' data-path='{{path}}}'>" +
+                            "<i class='fa fa-folder-open'></i>&nbsp;{{name}}</a></td>", child);
                         _tr.querySelector(".file-link").addEventListener("click", function () {
                             self.path = this.dataset.path;
                             pagination.reset();
@@ -80,13 +80,13 @@
                     },
                     createRow: function (child, pagination, _modal, resolve) {
                         const _self = this;
+                        child.icon = child.directory ? "fa-folder-open" : "fa-file";
 
                         const _tr = document.createElement("tr");
-                        _tr.innerHTML = '<td><a class="file-link" href="#" data-dir="' + child.directory +
-                            '" data-path="' + child.path + '">' +
-                            '<i class="fa ' + (child.directory ? "fa-folder-open" : "fa-file") + '"></i>&nbsp;' + child.name + '</a></td>' +
-                            '<td class="align-right">' + child.sizeString + '</td>' +
-                            '<td class="align-right">' + child.lastModifiedString + '</td>';
+                        _tr.innerHTML = Mustache.render(
+                            '<td><a class="file-link" href="#" data-dir="{{directory}}" data-path="{{path}}"><i class="fa {{icon}}"></i>&nbsp;{{name}}</a></td>' +
+                            '<td class="align-right">{{sizeString}}</td>' +
+                            '<td class="align-right">{{lastModifiedString}}</td>', child);
 
                         _tr.querySelector(".file-link").addEventListener("click", function () {
                             if (this.dataset.dir === "true") {
@@ -117,12 +117,13 @@
                         } else {
                             pagination._previousBtn.classList.remove("disabled");
                         }
-                        let url = '/fs/list?';
-                        url += "path=" + encodeURIComponent(config.path);
-                        url += "&onlyDirectories=" + config.onlyDirectories;
-                        url += "&skip=" + (page * pageSize);
-                        url += "&maxItems=" + (pageSize + 1);
-                        url += "&filter=" + encodeURIComponent(_searchForm.value);
+                        const url = Mustache.render("/fs/list?path={{path}}&onlyDirectories={{onlyDirectories}}&skip={{skip}}&maxItems={{maxItems}}&filter={{filter}}", {
+                            path: encodeURIComponent(config.path),
+                            onlyDirectories: config.onlyDirectories,
+                            skip: page * pageSize,
+                            maxItems: pageSize + 1,
+                            filter: encodeURIComponent(_searchForm.value)
+                        });
                         fetch(url).then(function (response) {
                             if (!response.ok) {
                                 throw "Http response status was " + response.status;
@@ -154,9 +155,11 @@
                                 if (!config.filter(element)) {
                                     continue;
                                 }
-                                const _label = element.name === '/' ? '<i class="fa fa-home"></i>' : element.name;
                                 const _li = document.createElement("li");
-                                _li.innerHTML = '<a class="file-link" href="#" data-path="' + element.path + '">' + _label + '</a>';
+                                _li.innerHTML = Mustache.render('<a class="file-link" href="#" data-path={{path}}>{{name}}</a>', {
+                                    path: element.path,
+                                    name: element.name === "/" ? "<i class='fa fa-home'></i>" : element.name
+                                });
                                 _li.querySelector('.file-link').addEventListener("click", function () {
                                     config.path = this.dataset.path = 'path';
                                     pagination.reset();
