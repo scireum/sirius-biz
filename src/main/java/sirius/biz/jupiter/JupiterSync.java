@@ -28,6 +28,7 @@ import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.PartCollection;
@@ -452,7 +453,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
         try {
             Directory root = blobStorage.getSpace(localRepoSpaceName)
                                         .getRoot(tenants.getTenantUserManager().getSystemTenantId());
-            visitLocalDirectory(processContext, "", root, connection, repositoryFiles, filesToDelete);
+            visitLocalDirectory(processContext, null, root, connection, repositoryFiles, filesToDelete);
         } catch (Exception e) {
             processContext.handle(Exceptions.handle()
                                             .error(e)
