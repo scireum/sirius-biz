@@ -31,7 +31,7 @@ import java.util.function.Supplier;
  * If a failover is performed, we will continue to use the fallback for up to 60s before we attempt to switch
  * back to the main instance.
  * <p>
- * A connector is usually obtained via {@link Jupiter#getConnector(String)} ot {@link Jupiter#getDefault()}.
+ * A connector is usually obtained via {@link Jupiter#getConnector(String)} or {@link Jupiter#getDefault()}.
  */
 public class JupiterConnector {
 
