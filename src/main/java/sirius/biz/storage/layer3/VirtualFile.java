@@ -17,16 +17,19 @@ import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.util.Attempt;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.transformers.Composable;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
+import sirius.kernel.xml.Outcall;
 import sirius.web.http.MimeHelper;
 import sirius.web.http.Response;
 import sirius.web.http.WebContext;
@@ -34,21 +37,17 @@ import sirius.web.http.WebContext;
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.mail.internet.ContentDisposition;
-import javax.mail.internet.ParseException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -1246,22 +1245,19 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @throws IOException in case of any IO error while downloading the contents
      */
     public boolean loadFromUrl(URL url, boolean force) throws IOException {
-        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-        if (!force && exists()) {
-            urlConnection.addRequestProperty(HttpHeaderNames.IF_MODIFIED_SINCE.toString(),
-                                             lastModifiedDate().atOffset(ZoneOffset.UTC)
-                                                               .format(DateTimeFormatter.RFC_1123_DATE_TIME));
+        Outcall outcall = new Outcall(url);
+        if (!force && exists() && lastModifiedDate() != null) {
+            outcall.setIfModifiedSince(lastModifiedDate());
         }
 
-        urlConnection.connect();
-
-        if (urlConnection.getResponseCode() == HttpResponseStatus.NOT_MODIFIED.code()) {
+        if (outcall.getResponseCode() == HttpResponseStatus.NOT_MODIFIED.code()) {
             return false;
         }
 
-        try (InputStream in = urlConnection.getInputStream()) {
-            if (urlConnection.getContentLengthLong() >= 0) {
-                consumeStream(in, urlConnection.getContentLengthLong());
+        try (InputStream in = outcall.getInput()) {
+            long length = Value.of(outcall.getHeaderField(HttpHeaderNames.CONTENT_LENGTH.toString())).asLong(-1);
+            if (length >= 0) {
+                consumeStream(in, length);
             } else {
                 try (OutputStream out = createOutputStream()) {
                     Streams.transfer(in, out);
@@ -1302,40 +1298,26 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      *                              before and no modification was detected.
      * @param fileExtensionVerifier specifies which extensions are accepted. This should be used to prevent using
      *                              ".php" or the like as effective file name.
-     * @return a tuple containing the file which has been resolved, and a boolean indicating if it was freshly downloaded
+     * @return the file which has been resolved (and downloaded if necessary)
      * @throws IOException      in case of an IO error during the download
      * @throws HandledException in case no effective filename can be detected
      */
-    public Tuple<VirtualFile, Boolean> resolveOrLoadChildFromURL(URL url,
-                                                                 boolean force,
-                                                                 Predicate<String> fileExtensionVerifier)
+    public VirtualFile resolveOrLoadChildFromURL(URL url, boolean force, Predicate<String> fileExtensionVerifier)
             throws IOException {
-
+        Watch watch = Watch.start();
         String path = parsePathFromUrl(url, fileExtensionVerifier);
-        boolean downloaded = false;
-        long lastModifiedHeader = -1;
+        boolean downloaded;
+        Optional<LocalDateTime> lastModifiedHeader = Optional.empty();
 
         if (Strings.isEmpty(path)) {
-            HttpURLConnection urlConnection = null;
-            String contentDispositionPath;
-            try {
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("HEAD");
-                urlConnection.connect();
+            Outcall outcall = new Outcall(url);
+            outcall.markAsHeadRequest();
+            Optional<String> contentDispositionPath = outcall.parseFileNameFromContentDisposition();
+            lastModifiedHeader = outcall.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString());
 
-                contentDispositionPath =
-                        parseFileNameFromContentDisposition(urlConnection.getHeaderField(HttpHeaderNames.CONTENT_DISPOSITION
-                                                                                                 .toString()));
-                lastModifiedHeader = urlConnection.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString(), 0);
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-            }
-
-            if (Strings.isFilled(contentDispositionPath) && fileExtensionVerifier.test(Files.getFileExtension(
-                    contentDispositionPath))) {
-                path = contentDispositionPath;
+            if (contentDispositionPath.isPresent() && fileExtensionVerifier.test(Files.getFileExtension(
+                    contentDispositionPath.get()))) {
+                path = contentDispositionPath.get();
             } else {
                 throw Exceptions.createHandled()
                                 .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
@@ -1346,32 +1328,27 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
         VirtualFile file = resolve(path);
 
-        if (force || lastModifiedHeader == -1) {
-            //we haven't checked last modified, use original force param
+        if (force || !file.exists() || file.lastModifiedDate() == null || !lastModifiedHeader.isPresent()) {
+            // We haven't checked last modified, use original logic to send if-modfied-since header
             downloaded = file.loadFromUrl(url, force);
         } else {
-            //we already know the last modified header, only download if resource is newer
-            if (lastModifiedHeader > file.lastModified()) {
+            // We already know the last modified header, we can short-circuit the if-modified-since header logic
+            if (lastModifiedHeader.get().isAfter(file.lastModifiedDate())) {
+                // We force the download as the resource has been modified
                 downloaded = file.loadFromUrl(url, true);
+            } else {
+                // We skip the download as the resource has not been modified
+                downloaded = false;
             }
         }
-        return Tuple.create(file, downloaded);
-    }
 
-    private String parseFileNameFromContentDisposition(String contentDispositionHeader) {
-        String filename = null;
-        if (contentDispositionHeader != null) {
-            ContentDisposition cd = null;
-            try {
-                cd = new ContentDisposition(contentDispositionHeader);
-            } catch (ParseException e) {
-                // Ultimately we don't care why we don't have a path, just return empty and throw an error later
-                Exceptions.ignore(e);
-                return null;
-            }
-            return cd.getParameter("filename");
+        if (downloaded) {
+            TaskContext.get().addTiming(NLS.get("VirtualFile.fileDownloaded"), watch.elapsedMillis());
+        } else {
+            TaskContext.get().addTiming(NLS.get("VirtualFile.fileDownloadSkipped"), watch.elapsedMillis());
         }
-        return filename;
+
+        return file;
     }
 
     private String parsePathFromUrl(URL url, Predicate<String> fileExtensionVerifier) {
