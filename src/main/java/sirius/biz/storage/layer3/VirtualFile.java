@@ -1284,8 +1284,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      *         we use this.
      *     </li>
      *     <li>
-     *         Otherwise, we check the path in the URL. This the file there has an accepted file extension, we use this
-     *         path.
+     *         Otherwise, we check the path in the URL. If it has an accepted file extension, we use this as path.
      *     </li>
      *     <li>
      *         If the two attempts above fail, we emit a HEAD request and try to determine the filename/path by checking
