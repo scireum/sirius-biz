@@ -1,5 +1,5 @@
-<i:arg type="List" name="dbs" />
-<i:arg type="String" name="defaultDB" />
+<i:arg type="List" name="dbs"/>
+<i:arg type="String" name="defaultDB"/>
 <w:page titleKey="DatabaseController.sql">
     <i:block name="breadcrumbs">
         <li>
@@ -22,21 +22,23 @@
 
     <div class="well">
         <form id="exportForm" action="/system/sql/export" method="post">
-        <div class="row">
-            <div class="col-md-10">
-                <div class="input-group">
-                    <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()" type="hidden"/>
-                    <input type="hidden" id="exportQuery" name="exportQuery" />
-                    <input type="text" id="query" name="query" class="form-control" placeholder="@i18n('NLS.searchkey')" autofocus />
-                    <span class="input-group-addon" onclick="execute()"><i class="fa fa-search"></i></span>
+            <div class="row">
+                <div class="col-md-10">
+                    <div class="input-group">
+                        <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
+                               type="hidden"/>
+                        <input type="hidden" id="exportQuery" name="exportQuery"/>
+                        <input type="text" id="query" name="query" class="form-control"
+                               placeholder="@i18n('NLS.searchkey')" autofocus/>
+                        <span class="input-group-addon" onclick="execute()"><i class="fa fa-search"></i></span>
+                    </div>
                 </div>
+                <w:singleSelect name="database" id="db" span="2">
+                    <i:for type="String" var="db" items="dbs">
+                        <option value="@db" @selected="defaultDB == db">@db</option>
+                    </i:for>
+                </w:singleSelect>
             </div>
-            <w:singleSelect name="database" id="db" span="2">
-                <i:for type="String" var="db" items="dbs">
-                    <option value="@db" @selected="defaultDB == db">@db</option>
-                </i:for>
-            </w:singleSelect>
-        </div>
         </form>
     </div>
 
@@ -65,7 +67,7 @@
             $.getJSON('/system/sql/api/execute',
                 {
                     query: $('#query').val(),
-                    db: $('[name=db]').val()
+                    database: $('#db').val()
                 },
                 function (data) {
                     $columns.html('');
@@ -135,7 +137,7 @@
                 }
             });
 
-            $('#exportBtn').click(function() {
+            $('#exportBtn').click(function () {
                 if ($('#exportQuery').val() === "") {
                     addError("Cannot export empty query");
                 } else {

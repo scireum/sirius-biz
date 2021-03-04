@@ -14,7 +14,6 @@ import sirius.db.es.Elastic;
 import sirius.db.es.ElasticQuery;
 import sirius.db.mixing.DateRange;
 import sirius.db.mixing.query.QueryField;
-import sirius.kernel.async.CallContext;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;

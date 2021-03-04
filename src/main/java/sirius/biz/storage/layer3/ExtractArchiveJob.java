@@ -197,7 +197,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
     private void updateState(ExtractedFile extractedFile) {
         TaskContext taskContext = TaskContext.get();
         if (taskContext.shouldUpdateState().check()) {
-            taskContext.setState(NLS.fmtr("$ExtractArchiveJob.progress")
+            taskContext.setState(NLS.fmtr("ExtractArchiveJob.progress")
                                     .set("progress", extractedFile.getProgressInPercent().toPercentString())
                                     .format());
         }
