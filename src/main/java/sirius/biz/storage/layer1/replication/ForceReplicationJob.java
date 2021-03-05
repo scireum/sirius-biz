@@ -34,8 +34,7 @@ import java.util.function.Consumer;
  * This is most commonly used after a new replication target has been defined in order to copy the existing
  * objects.
  */
-@Register
-@Framework(StorageUtils.FRAMEWORK_STORAGE)
+@Register(framework = StorageUtils.FRAMEWORK_STORAGE)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ForceReplicationJob extends SimpleBatchProcessJobFactory {
 
