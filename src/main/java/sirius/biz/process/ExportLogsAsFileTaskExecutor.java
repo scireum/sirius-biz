@@ -23,11 +23,13 @@ import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableProcessOutputType;
 import sirius.db.es.Elastic;
 import sirius.db.es.ElasticQuery;
+import sirius.kernel.commons.RateLimit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
+import sirius.kernel.nls.Formatter;
 import sirius.kernel.nls.NLS;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
@@ -38,6 +40,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -78,6 +82,8 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
 
     @Part
     private TableProcessOutputType tableProcessOutputType;
+
+    private final RateLimit exportLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
 
     @Override
     public String queueName() {
@@ -146,7 +152,11 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
                                NLS.get("ProcessLog.message"),
                                NLS.get("ProcessLog.messageType"),
                                NLS.get("ProcessLog.node"));
-            createLogsQuery(out, processContext).iterateAll(logEntry -> writeLog(export, logEntry));
+            AtomicInteger rowCount = new AtomicInteger(0);
+            createLogsQuery(out, processContext).iterateAll(logEntry -> {
+                writeLog(export, logEntry);
+                setExportState(processContext, rowCount.incrementAndGet());
+            });
         }
     }
 
@@ -207,7 +217,11 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
             List<String> columns = tableProcessOutputType.determineColumns(out);
             List<String> labels = tableProcessOutputType.determineLabels(out, columns);
             export.addRow(labels);
-            createLogsQuery(out, processContext).iterateAll(logEntry -> writeTableRow(columns, export, logEntry));
+            AtomicInteger rowCount = new AtomicInteger(0);
+            createLogsQuery(out, processContext).iterateAll(logEntry -> {
+                writeTableRow(columns, export, logEntry);
+                setExportState(processContext, rowCount.incrementAndGet());
+            });
         }
     }
 
@@ -223,6 +237,12 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
                             .error(e)
                             .withSystemErrorMessage("An error occurred while exporting a row: %s (%s)")
                             .handle();
+        }
+    }
+
+    private void setExportState(ProcessContext processContext, int currentRow) {
+        if (exportLimiter.check()) {
+            processContext.setState(Formatter.create("Process.rowsExported").set("rows", currentRow).format());
         }
     }
 }
