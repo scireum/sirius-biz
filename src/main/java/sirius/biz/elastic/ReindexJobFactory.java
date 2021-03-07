@@ -46,7 +46,7 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     @Part
     private IndexMappings mappings;
 
-    private Parameter<EntityDescriptor> entityDescriptorParameter =
+    private final Parameter<EntityDescriptor> entityDescriptorParameter =
             new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity)
                                            .markRequired()
                                            .build();

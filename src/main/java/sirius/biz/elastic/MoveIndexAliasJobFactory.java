@@ -47,11 +47,11 @@ public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
     @Part
     private IndexMappings mappings;
 
-    private Parameter<EntityDescriptor> entityDescriptorParameter =
+    private final Parameter<EntityDescriptor> entityDescriptorParameter =
             new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity)
                                            .markRequired()
                                            .build();
-    private Parameter<String> destinationParameter =
+    private final Parameter<String> destinationParameter =
             new StringParameter("destination", "Destination").markRequired().build();
 
     @Override

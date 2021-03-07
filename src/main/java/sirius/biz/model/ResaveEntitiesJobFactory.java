@@ -51,14 +51,15 @@ import java.util.function.Consumer;
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
 
-    private Parameter<EntityDescriptor> descriptorParameter = new EntityDescriptorParameter().markRequired().build();
+    private final Parameter<EntityDescriptor> descriptorParameter =
+            new EntityDescriptorParameter().markRequired().build();
 
-    private Parameter<Boolean> executeSaveParameter =
+    private final Parameter<Boolean> executeSaveParameter =
             new BooleanParameter("executeSave", "Execute Save").withDefaultTrue()
                                                                .withDescription(
                                                                        "Determines if the update method of the underlying mapper should be invoked so that all BeforeSave handlers are executed.")
                                                                .build();
-    private Parameter<Boolean> performValidationParameter =
+    private final Parameter<Boolean> performValidationParameter =
             new BooleanParameter("performValidation", "Perform Validation").withDefaultTrue()
                                                                            .withDescription(
                                                                                    "Determines if all OnValidate handlers should be invoked.")
