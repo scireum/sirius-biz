@@ -207,6 +207,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     private boolean hidden;
 
     @Part
+    @Nullable
     private static BlobStorage layer2;
 
     @Part

@@ -54,6 +54,7 @@ class ProcessEnvironment implements ProcessContext {
     private Map<String, Average> adminTimings;
 
     @Part
+    @Nullable
     private static Processes processes;
 
     @Part

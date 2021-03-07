@@ -29,6 +29,7 @@ import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
 import sirius.web.services.JSONStructuredOutput;
 
+import javax.annotation.Nullable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -87,6 +88,7 @@ public class ClusterController extends BasicController {
     private DelayLine delayLine;
 
     @Part
+    @Nullable
     private Locks locks;
 
     @Part
