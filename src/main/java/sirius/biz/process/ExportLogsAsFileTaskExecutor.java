@@ -155,8 +155,9 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
             AtomicInteger rowCount = new AtomicInteger(0);
             createLogsQuery(out, processContext).iterateAll(logEntry -> {
                 writeLog(export, logEntry);
-                setExportState(processContext, rowCount.incrementAndGet());
+                setExportState(processContext, rowCount.incrementAndGet(), false);
             });
+            setExportState(processContext, rowCount.get(), true);
         }
     }
 
@@ -220,8 +221,9 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
             AtomicInteger rowCount = new AtomicInteger(0);
             createLogsQuery(out, processContext).iterateAll(logEntry -> {
                 writeTableRow(columns, export, logEntry);
-                setExportState(processContext, rowCount.incrementAndGet());
+                setExportState(processContext, rowCount.incrementAndGet(), false);
             });
+            setExportState(processContext, rowCount.get(), true);
         }
     }
 
@@ -240,8 +242,8 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
         }
     }
 
-    private void setExportState(ProcessContext processContext, int currentRow) {
-        if (exportLimiter.check()) {
+    private void setExportState(ProcessContext processContext, int currentRow, boolean lastCall) {
+        if (exportLimiter.check() || lastCall) {
             processContext.setState(Formatter.create("Process.rowsExported").set("rows", currentRow).format());
         }
     }
