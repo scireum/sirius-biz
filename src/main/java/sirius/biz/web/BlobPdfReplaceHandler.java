@@ -13,6 +13,7 @@ import org.xhtmlrenderer.extend.UserAgentCallback;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer2.BlobStorage;
 import sirius.biz.storage.layer2.URLBuilder;
+import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -26,7 +27,7 @@ import java.util.Optional;
  * <p>
  * The format of the URI needs to match blob://space/blobKey or blob://space/blobKey/variant.
  */
-@Register
+@Register(framework = StorageUtils.FRAMEWORK_STORAGE)
 public class BlobPdfReplaceHandler extends PdfReplaceHandler {
 
     @Part

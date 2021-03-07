@@ -13,6 +13,7 @@ import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.kernel.di.std.Part;
@@ -36,7 +37,7 @@ import java.util.stream.Collectors;
  * We build the intersection here to determine the truly unused keys, as maybe some nodes have specific tasks
  * and will not use all keys.
  */
-@Register
+@Register(framework = Processes.FRAMEWORK_PROCESSES)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ReportUnusedNLSKeysJob extends SimpleBatchProcessJobFactory {
 

@@ -14,6 +14,7 @@ import sirius.biz.jobs.batch.file.LineBasedExportJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.TextareaParameter;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.Processes;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.jdbc.Database;
 import sirius.db.jdbc.Row;
@@ -33,7 +34,7 @@ import java.util.function.Consumer;
 /**
  * Exports all rows of a given SQL query as Excel or CSV file.
  */
-@Register
+@Register(framework = Processes.FRAMEWORK_PROCESSES)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ExportQueryResultJobFactory extends LineBasedExportJobFactory {
 

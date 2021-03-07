@@ -17,6 +17,7 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.mongo.PrefixSearchableEntity;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.protocol.Traced;
 import sirius.biz.tenants.TenantUserManager;
@@ -46,7 +47,7 @@ import java.util.function.Consumer;
  * @see sirius.db.mixing.annotations.BeforeSave
  * @see sirius.db.mixing.annotations.OnValidate
  */
-@Register
+@Register(framework = Processes.FRAMEWORK_PROCESSES)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
 

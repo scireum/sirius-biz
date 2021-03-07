@@ -17,6 +17,7 @@ import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
+import sirius.biz.storage.util.StorageUtils;
 import sirius.biz.util.ArchiveExtractor;
 import sirius.biz.util.ExtractedFile;
 import sirius.kernel.async.TaskContext;
@@ -40,7 +41,7 @@ import java.util.function.Consumer;
  * This uses the {@link ArchiveExtractor} so depending if 7-ZIP is enabled this supports either a whole bunch
  * of formats (rar, 7z, tar etc.) or "just" ZIP files using the Java API.
  */
-@Register(classes = {JobFactory.class, ExtractArchiveJob.class})
+@Register(classes = {JobFactory.class, ExtractArchiveJob.class}, framework = StorageUtils.FRAMEWORK_STORAGE)
 public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
 
     /**
