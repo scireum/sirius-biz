@@ -23,13 +23,12 @@ import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableProcessOutputType;
 import sirius.db.es.Elastic;
 import sirius.db.es.ElasticQuery;
-import sirius.kernel.commons.RateLimit;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
-import sirius.kernel.nls.Formatter;
 import sirius.kernel.nls.NLS;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
@@ -40,7 +39,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -82,8 +80,6 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
 
     @Part
     private TableProcessOutputType tableProcessOutputType;
-
-    private final RateLimit exportLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
 
     @Override
     public String queueName() {
@@ -155,9 +151,9 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
             AtomicInteger rowCount = new AtomicInteger(0);
             createLogsQuery(out, processContext).iterateAll(logEntry -> {
                 writeLog(export, logEntry);
-                setExportState(processContext, rowCount.incrementAndGet(), false);
+                updateExportState(processContext, rowCount.incrementAndGet(), false);
             });
-            setExportState(processContext, rowCount.get(), true);
+            updateExportState(processContext, rowCount.get(), true);
         }
     }
 
@@ -221,9 +217,9 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
             AtomicInteger rowCount = new AtomicInteger(0);
             createLogsQuery(out, processContext).iterateAll(logEntry -> {
                 writeTableRow(columns, export, logEntry);
-                setExportState(processContext, rowCount.incrementAndGet(), false);
+                updateExportState(processContext, rowCount.incrementAndGet(), false);
             });
-            setExportState(processContext, rowCount.get(), true);
+            updateExportState(processContext, rowCount.get(), true);
         }
     }
 
@@ -242,9 +238,9 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
         }
     }
 
-    private void setExportState(ProcessContext processContext, int currentRow, boolean lastCall) {
-        if (exportLimiter.check() || lastCall) {
-            processContext.setState(Formatter.create("Process.rowsExported").set("rows", currentRow).format());
+    private void updateExportState(ProcessContext processContext, int currentRow, boolean lastCall) {
+        if (TaskContext.get().shouldUpdateState().check() || lastCall) {
+            processContext.setState(NLS.fmtr("Process.rowsExported").set("rows", currentRow).format());
         }
     }
 }
