@@ -54,7 +54,7 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
     @Part
     private static StorageUtils utils;
 
-    private File baseDir;
+    private final File baseDir;
 
     /**
      * Creates a new instance based on the given config.
