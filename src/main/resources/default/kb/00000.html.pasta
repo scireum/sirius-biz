@@ -1,7 +1,0 @@
-<k:chapter language="de" title="KB" parent="" priority="0" permissions="flag-logged-in">
-    <i:block name="description">
-        This is a description.
-    </i:block>
-
-    This is a helpful text.
-</k:chapter>
