@@ -35,7 +35,7 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
     /**
      * Contains the mongo code list to import the code list entries into.
      */
-    private Parameter<CodeList> codeListParameter =
+    private final Parameter<CodeList> codeListParameter =
             new CodeListParameter("codeList", "$CodeList").markRequired().build();
 
     @Nonnull
