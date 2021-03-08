@@ -41,7 +41,7 @@ services:
       - discovery.type=single-node
     hostname: es
   s3-system:
-    image: scireum/s3-ninja:6.0.2
+    image: scireum/s3-ninja:7.0
     ports:
       - 9000
     hostname: s3ninja
