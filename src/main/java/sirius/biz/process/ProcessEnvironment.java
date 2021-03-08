@@ -46,14 +46,15 @@ import java.util.stream.Collectors;
  */
 class ProcessEnvironment implements ProcessContext {
 
-    private String processId;
+    private final String processId;
 
-    private RateLimit logLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
-    private RateLimit timingLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
+    private final RateLimit logLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
+    private final RateLimit timingLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
     private Map<String, Average> timings;
     private Map<String, Average> adminTimings;
 
     @Part
+    @Nullable
     private static Processes processes;
 
     @Part

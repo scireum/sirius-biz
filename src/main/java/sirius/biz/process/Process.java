@@ -32,6 +32,7 @@ import sirius.kernel.health.Average;
 import sirius.kernel.nls.NLS;
 import sirius.web.security.UserContext;
 
+import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -261,6 +262,7 @@ public class Process extends SearchableEntity {
     private ProcessState state;
 
     @Part
+    @Nullable
     private static Processes processes;
 
     @BeforeSave

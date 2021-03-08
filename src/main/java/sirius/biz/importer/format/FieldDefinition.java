@@ -289,13 +289,21 @@ public class FieldDefinition {
      * Aliases are used by {@link ImportDictionary#determineMappingFromHeadings(Values, boolean)} to "learn" which
      * field is provided in which column.
      *
-     * @param alias the alias to add, which will be {@link sirius.kernel.nls.NLS#smartGet(String) auto translated
+     * @param alias the alias to add, which will be {@link sirius.kernel.nls.NLS#smartGet(String) auto translated}
      * @return the field itself for fluent method calls
      */
     public FieldDefinition addAlias(String alias) {
         aliases.add(NLS.smartGet(alias));
-
         return this;
+    }
+
+    /**
+     * Removes an alias for the field.
+     *
+     * @param alias the alias to remove
+     */
+    public void removeAlias(String alias) {
+        aliases.remove(alias);
     }
 
     /**

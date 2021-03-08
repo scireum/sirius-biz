@@ -46,6 +46,7 @@ public abstract class FileExportJob extends BatchJob {
     public static final Parameter<VirtualFile> DESTINATION_PARAMETER = createDestinationParameter(null);
 
     @Part
+    @Nullable
     private static Processes processes;
 
     protected final VirtualFile destination;

@@ -17,6 +17,7 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.mongo.PrefixSearchableEntity;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.protocol.Traced;
 import sirius.biz.tenants.TenantUserManager;
@@ -46,18 +47,19 @@ import java.util.function.Consumer;
  * @see sirius.db.mixing.annotations.BeforeSave
  * @see sirius.db.mixing.annotations.OnValidate
  */
-@Register
+@Register(framework = Processes.FRAMEWORK_PROCESSES)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
 
-    private Parameter<EntityDescriptor> descriptorParameter = new EntityDescriptorParameter().markRequired().build();
+    private final Parameter<EntityDescriptor> descriptorParameter =
+            new EntityDescriptorParameter().markRequired().build();
 
-    private Parameter<Boolean> executeSaveParameter =
+    private final Parameter<Boolean> executeSaveParameter =
             new BooleanParameter("executeSave", "Execute Save").withDefaultTrue()
                                                                .withDescription(
                                                                        "Determines if the update method of the underlying mapper should be invoked so that all BeforeSave handlers are executed.")
                                                                .build();
-    private Parameter<Boolean> performValidationParameter =
+    private final Parameter<Boolean> performValidationParameter =
             new BooleanParameter("performValidation", "Perform Validation").withDefaultTrue()
                                                                            .withDescription(
                                                                                    "Determines if all OnValidate handlers should be invoked.")

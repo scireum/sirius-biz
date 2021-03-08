@@ -17,6 +17,8 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
+import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
@@ -58,6 +60,7 @@ public class ObjectStorage {
     private GlobalContext globalContext;
 
     @Part
+    @Nullable
     private ReplicationManager replicationManager;
 
     @ConfigValue("storage.layer1.spaces.default.engine")
@@ -114,6 +117,15 @@ public class ObjectStorage {
      */
     public boolean isKnown(String space) {
         return getSpaceMap().containsKey(space);
+    }
+
+    /**
+     * Returns all known layer 1 spaces.
+     *
+     * @return all known storage spaces of the layer 1
+     */
+    public Collection<ObjectStorageSpace> getSpaces() {
+        return getSpaceMap().values();
     }
 
     /**

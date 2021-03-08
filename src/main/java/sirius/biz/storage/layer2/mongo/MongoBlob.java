@@ -212,6 +212,7 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
     private boolean hidden;
 
     @Part
+    @Nullable
     private static BlobStorage layer2;
 
     @Part

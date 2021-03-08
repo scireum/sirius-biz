@@ -14,6 +14,11 @@ import sirius.kernel.di.transformers.Transformer;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+/**
+ * Provides the basic infrastructure to transform a {@link Property} into a {@link FieldDefinitionSupplier}.
+ *
+ * @param <S> the actual type of the property being transformed
+ */
 public abstract class BaseFieldDefinitionTransformer<S extends Property>
         implements Transformer<S, FieldDefinitionSupplier> {
 
@@ -39,8 +44,20 @@ public abstract class BaseFieldDefinitionTransformer<S extends Property>
         };
     }
 
+    /**
+     * Determines the official type description to be used for this field.
+     *
+     * @param property the property to derive the type label from
+     * @return a type description as generated e.g. by {@link FieldDefinition#typeString(Integer)} or the like
+     */
     protected abstract String determineType(S property);
 
+    /**
+     * Further specializes the field definition based on the given property.
+     *
+     * @param property the property to derive infos from
+     * @param field    the field to customize
+     */
     protected void customizeField(S property, FieldDefinition field) {
         // Provides an empty default implementation...
     }
