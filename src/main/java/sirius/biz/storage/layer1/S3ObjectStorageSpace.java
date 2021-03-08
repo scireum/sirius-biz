@@ -29,6 +29,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.ZoneId;
 import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 
@@ -187,9 +188,14 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     }
 
     @Override
-    public void iterateObjects(Predicate<String> physicalKeyHandler) throws IOException {
+    public void iterateObjects(Predicate<ObjectMetadata> objectHandler) throws IOException {
         store.listObjects(bucketName(), null, s3Object -> {
-            return physicalKeyHandler.test(s3Object.getKey());
+            return objectHandler.test(new ObjectMetadata(s3Object.getKey(),
+                                                         s3Object.getLastModified()
+                                                                 .toInstant()
+                                                                 .atZone(ZoneId.systemDefault())
+                                                                 .toLocalDateTime(),
+                                                         s3Object.getSize()));
         });
     }
 }
