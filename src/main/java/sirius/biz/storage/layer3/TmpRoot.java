@@ -10,6 +10,7 @@ package sirius.biz.storage.layer3;
 
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.BlobStorage;
+import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
@@ -36,7 +37,7 @@ import javax.annotation.Nullable;
  * One user of this framework is the {@link sirius.biz.jobs.JobsRoot} which accepts incoming files, stores them
  * in the <tt>tmp</tt> space and then uses the VFS path as noted above to pass these files on to the jobs framework.
  */
-@Register
+@Register(framework = StorageUtils.FRAMEWORK_STORAGE)
 public class TmpRoot implements VFSRoot {
 
     /**

@@ -13,6 +13,7 @@ import sirius.biz.jobs.params.EntityDescriptorParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.StringParameter;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.Processes;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.es.Elastic;
 import sirius.db.es.IndexMappings;
@@ -33,7 +34,7 @@ import java.util.function.Consumer;
 /**
  * Implements a job which moves the alias which marks an active index to a desired destination index.
  */
-@Register
+@Register(framework = Processes.FRAMEWORK_PROCESSES)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
 
@@ -46,11 +47,11 @@ public class MoveIndexAliasJobFactory extends SimpleBatchProcessJobFactory {
     @Part
     private IndexMappings mappings;
 
-    private Parameter<EntityDescriptor> entityDescriptorParameter =
+    private final Parameter<EntityDescriptor> entityDescriptorParameter =
             new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity)
                                            .markRequired()
                                            .build();
-    private Parameter<String> destinationParameter =
+    private final Parameter<String> destinationParameter =
             new StringParameter("destination", "Destination").markRequired().build();
 
     @Override

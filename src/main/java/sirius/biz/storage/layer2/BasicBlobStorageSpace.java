@@ -175,6 +175,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected static StorageUtils utils;
 
     @Part
+    @Nullable
     private static Locks locks;
 
     @Part
@@ -184,6 +185,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected static Tasks tasks;
 
     @Part
+    @Nullable
     protected static TouchWritebackLoop touchWritebackLoop;
 
     @ConfigValue("storage.layer2.conversion.enabled")

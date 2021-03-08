@@ -106,6 +106,7 @@ public class SQLDirectory extends SQLEntity implements Directory, OptimisticCrea
     private boolean renamed;
 
     @Part
+    @Nullable
     private static BlobStorage layer2;
 
     @Transient

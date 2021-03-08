@@ -53,6 +53,7 @@ public abstract class ObjectStorageSpace {
     private ObjectStorageSpace replicationSpace;
 
     @Part
+    @Nullable
     private static ReplicationManager replicationManager;
 
     @Part

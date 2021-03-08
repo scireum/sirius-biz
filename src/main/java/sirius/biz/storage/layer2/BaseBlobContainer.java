@@ -15,6 +15,8 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
+import javax.annotation.Nullable;
+
 /**
  * Base class for {@link BlobContainer} and {@link BlobReferenceContainer}.
  */
@@ -30,6 +32,7 @@ abstract class BaseBlobContainer extends Composite {
     protected BlobStorageSpace space;
 
     @Part
+    @Nullable
     protected static BlobStorage objectStorage;
 
     /**

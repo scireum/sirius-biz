@@ -68,6 +68,7 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
     public static final String CONTEXT_FORMAT = "format";
 
     @Part
+    @Nullable
     private Processes processes;
 
     @Part

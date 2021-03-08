@@ -27,6 +27,7 @@ public class BlobHardRef {
     protected String key;
 
     @Part
+    @Nullable
     protected static BlobStorage storage;
 
     /**

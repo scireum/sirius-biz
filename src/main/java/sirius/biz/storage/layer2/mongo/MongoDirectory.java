@@ -106,6 +106,7 @@ public class MongoDirectory extends MongoEntity implements Directory, Optimistic
     private boolean renamed;
 
     @Part
+    @Nullable
     private static BlobStorage layer2;
 
     @Transient
