@@ -90,7 +90,7 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
     }
 
     /**
-     * Loads all {@link #mappingsToLoad} and may perform some cleanups if necessarry.
+     * Loads all {@link #mappingsToLoad} and may perform some cleanups if necessary.
      * <p>
      * Some fields are normalized within {@link sirius.db.mixing.annotations.BeforeSave} handlers. This method
      * can be overwritten to perform the same operations so that the values properly match within the
