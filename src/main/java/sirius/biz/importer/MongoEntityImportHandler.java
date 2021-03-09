@@ -15,6 +15,7 @@ import sirius.db.mongo.MongoEntity;
 import sirius.kernel.commons.Context;
 import sirius.kernel.di.std.Part;
 
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 /**
@@ -67,6 +68,48 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
         // Provides an empty base implementation as for most entities this can be controlled
         // via @Exportable
     }
+
+    @Override
+    public final Optional<E> tryFind(Context data) {
+        return findByExample(data);
+    }
+
+    /**
+     * Provides the default implementation for {@link #tryFind(Context)}.
+     * <p>
+     * Most probably, {@link #loadForFind(Context)} and {@link #tryFindByExample(MongoEntity)} should be overwritten
+     * instead of this method. However, for a completely custom approach, this method can be overwritten, as tryFind
+     * itself is final.
+     *
+     * @param data the data used to find the entity
+     * @return the entity for the given data or an empty optional if no matching entity can be found
+     */
+    protected Optional<E> findByExample(Context data) {
+        E example = loadForFind(data);
+        return tryFindByExample(example);
+    }
+
+    /**
+     * Loads all {@link #mappingsToLoad} and may perform some cleanups if necessary.
+     * <p>
+     * Some fields are normalized within {@link sirius.db.mixing.annotations.BeforeSave} handlers. This method
+     * can be overwritten to perform the same operations so that the values properly match within the
+     * find queries.
+     *
+     * @param data the data used to describe the entity to find
+     * @return the example entity which has been populated from the given <tt>data</tt>
+     */
+    protected E loadForFind(Context data) {
+        return load(data, mappingsToLoad);
+    }
+
+    /**
+     * Tries to find a persisted entity using the given example.
+     *
+     * @param example the example instance used to search by
+     * @return a matching entity wrapped as optional or an empty optional if no match is available
+     */
+    protected abstract Optional<E> tryFindByExample(E example);
 
     @Override
     public E createOrUpdateNow(E entity) {

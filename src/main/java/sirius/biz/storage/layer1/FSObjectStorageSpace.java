@@ -31,6 +31,8 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 
@@ -52,7 +54,7 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
     @Part
     private static StorageUtils utils;
 
-    private File baseDir;
+    private final File baseDir;
 
     /**
      * Creates a new instance based on the given config.
@@ -259,18 +261,23 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
     }
 
     @Override
-    public void iterateObjects(Predicate<String> physicalKeyHandler) throws IOException {
+    public void iterateObjects(Predicate<ObjectMetadata> objectHandler) throws IOException {
         java.nio.file.Files.walkFileTree(baseDir.toPath(), new SimpleFileVisitor<Path>() {
             @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (file.toFile().isFile()) {
-                    if (physicalKeyHandler.test(file.toFile().getName())) {
+            public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+                File file = path.toFile();
+                if (file.isFile()) {
+                    if (objectHandler.test(new ObjectMetadata(file.getName(),
+                                                              Instant.ofEpochMilli(file.lastModified())
+                                                                     .atZone(ZoneId.systemDefault())
+                                                                     .toLocalDateTime(),
+                                                              file.length()))) {
                         return FileVisitResult.CONTINUE;
                     } else {
                         return FileVisitResult.TERMINATE;
                     }
                 }
-                return super.visitFile(file, attrs);
+                return super.visitFile(path, attrs);
             }
         });
     }

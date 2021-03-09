@@ -503,11 +503,11 @@ public abstract class ObjectStorageSpace {
      * Note that this is most probably a very inefficient operation and should only be used for maintenance or
      * debugging tasks.
      *
-     * @param physicalKeyHandler a handler to be invoked for every key found in this space. Returns <tt>true</tt>
-     *                           to continue iterating and <tt>false</tt> to abort.
+     * @param objectHandler a handler to be invoked for every object found in this space. Returns <tt>true</tt>
+     *                      to continue iterating and <tt>false</tt> to abort.
      * @throws IOException in case of an IO error
      */
-    public abstract void iterateObjects(Predicate<String> physicalKeyHandler) throws IOException;
+    public abstract void iterateObjects(Predicate<ObjectMetadata> objectHandler) throws IOException;
 
     /**
      * Returns the configuration block which was used to setup this space.
