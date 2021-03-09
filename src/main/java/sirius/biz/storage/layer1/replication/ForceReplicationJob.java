@@ -9,10 +9,11 @@
 package sirius.biz.storage.layer1.replication;
 
 import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
+import sirius.biz.jobs.params.LocalDateParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.jobs.params.SelectStringParameter;
-import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
 import sirius.biz.storage.util.StorageUtils;
@@ -24,6 +25,7 @@ import sirius.kernel.nls.NLS;
 import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -45,6 +47,10 @@ public class ForceReplicationJob extends SimpleBatchProcessJobFactory {
     @Part
     private ReplicationManager replicationManager;
 
+    private static final Parameter<LocalDate> MIN_MODIFICATION_DATE_PARAMTER =
+            new LocalDateParameter("minModificationDate", "$ForceReplicationJob.minModificationDate").withDescription(
+                    "$ForceReplicationJob.minModificationDate.description").build();
+
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         SelectStringParameter spaceParameter =
@@ -56,6 +62,7 @@ public class ForceReplicationJob extends SimpleBatchProcessJobFactory {
                      .forEach(spaceName -> spaceParameter.withEntry(spaceName, spaceName));
 
         parameterCollector.accept(spaceParameter.build());
+        parameterCollector.accept(MIN_MODIFICATION_DATE_PARAMTER);
     }
 
     @Override
@@ -66,12 +73,27 @@ public class ForceReplicationJob extends SimpleBatchProcessJobFactory {
     @Override
     protected void execute(ProcessContext process) throws Exception {
         String spaceName = process.getContext().get(PARAMETER_SPACE);
+
+        LocalDate minModificationDate = process.getParameter(MIN_MODIFICATION_DATE_PARAMTER).orElse(null);
         ObjectStorageSpace space = objectStorage.getSpace(spaceName);
-        space.iterateObjects(key -> {
+        space.iterateObjects(metadata -> {
             try {
-                Watch watch = Watch.start();
-                replicationManager.notifyAboutUpdate(space, key, 0);
-                process.addTiming("Object", watch.elapsedMillis());
+                if (metadata.getSize() == 0) {
+                    // We cannot / do not want to backup empty files...
+                    process.incCounter("Skipped");
+                    process.debug(ProcessLog.info()
+                                            .withFormattedMessage("Skipped empty object: %s", metadata.getKey()));
+                } else if (minModificationDate == null || !metadata.getLastModified()
+                                                                   .toLocalDate()
+                                                                   .isBefore(minModificationDate)) {
+                    Watch watch = Watch.start();
+                    replicationManager.notifyAboutUpdate(space, metadata.getKey(), metadata.getSize());
+                    process.addTiming("Scheduled", watch.elapsedMillis());
+                } else {
+                    process.incCounter("Ignored");
+                    process.debug(ProcessLog.info()
+                                            .withFormattedMessage("Ignored unmodified object: %s", metadata.getKey()));
+                }
             } catch (Exception e) {
                 process.handle(e);
             }
@@ -80,14 +102,9 @@ public class ForceReplicationJob extends SimpleBatchProcessJobFactory {
         });
     }
 
-    @Override
-    protected PersistencePeriod getPersistencePeriod() {
-        return PersistencePeriod.FOURTEEN_DAYS;
-    }
-
     @Nonnull
     @Override
     public String getName() {
-        return "force-layer1-replicaion";
+        return "force-layer1-replication";
     }
 }
