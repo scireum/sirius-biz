@@ -47,7 +47,7 @@ public class ForceReplicationJob extends SimpleBatchProcessJobFactory {
     @Part
     private ReplicationManager replicationManager;
 
-    private static final Parameter<LocalDate> MIN_MODIFICATION_DATE_PARAMTER =
+    private static final Parameter<LocalDate> MIN_MODIFICATION_DATE_PARAMETER =
             new LocalDateParameter("minModificationDate", "$ForceReplicationJob.minModificationDate").withDescription(
                     "$ForceReplicationJob.minModificationDate.description").build();
 
@@ -62,7 +62,7 @@ public class ForceReplicationJob extends SimpleBatchProcessJobFactory {
                      .forEach(spaceName -> spaceParameter.withEntry(spaceName, spaceName));
 
         parameterCollector.accept(spaceParameter.build());
-        parameterCollector.accept(MIN_MODIFICATION_DATE_PARAMTER);
+        parameterCollector.accept(MIN_MODIFICATION_DATE_PARAMETER);
     }
 
     @Override
@@ -74,7 +74,7 @@ public class ForceReplicationJob extends SimpleBatchProcessJobFactory {
     protected void execute(ProcessContext process) throws Exception {
         String spaceName = process.getContext().get(PARAMETER_SPACE);
 
-        LocalDate minModificationDate = process.getParameter(MIN_MODIFICATION_DATE_PARAMTER).orElse(null);
+        LocalDate minModificationDate = process.getParameter(MIN_MODIFICATION_DATE_PARAMETER).orElse(null);
         ObjectStorageSpace space = objectStorage.getSpace(spaceName);
         space.iterateObjects(metadata -> {
             try {

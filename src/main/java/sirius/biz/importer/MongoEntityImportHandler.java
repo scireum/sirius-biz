@@ -104,7 +104,7 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
     }
 
     /**
-     * Tries to find a persistent entity using the given example.
+     * Tries to find a persisted entity using the given example.
      *
      * @param example the example instance used to search by
      * @return a matching entity wrapped as optional or an empty optional if no match is available
