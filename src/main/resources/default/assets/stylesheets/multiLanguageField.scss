@@ -5,6 +5,7 @@ input.form-control.mls-input {
 .mls-modal {
   .modal-body {
     max-height: calc(100vh - 182px);
+    min-height: 250px;
     overflow: auto;
   }
 

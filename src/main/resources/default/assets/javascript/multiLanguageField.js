@@ -59,11 +59,12 @@ MultiLanguageField.prototype.buildSingleline = function () {
     const me = this;
     this._addLanguageButton.addEventListener('click', function () {
         const langOptionCount = me._addLanguageOptions.querySelectorAll('li:not(.hidden)').length;
-        const totalRowsHeight = (langOptionCount * 27);
-        const maxHeight = window.innerHeight - 182;
+        // 12px are reserved for border and padding of the language selection menu
+        const totalRowsHeight = (langOptionCount * 27) + 12;
 
-        if ((me._modalBody.clientHeight < maxHeight) && (totalRowsHeight > me._modalBody.style.height)) {
-            me._modalBody.style.height = (totalRowsHeight - me._modalBody.style.height) + 'px';
+        if (totalRowsHeight > me._modalBody.clientHeight) {
+            me._addLanguageOptions.style.maxHeight = me._modalBody.clientHeight + 'px';
+        } else {
             me._addLanguageOptions.style.maxHeight = totalRowsHeight + 'px';
         }
     });
