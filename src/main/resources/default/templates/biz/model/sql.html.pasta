@@ -67,7 +67,7 @@
             $.getJSON('/system/sql/api/execute',
                 {
                     query: $('#query').val(),
-                    database: $('#db').val()
+                    database: $('[name=database]').val()
                 },
                 function (data) {
                     $columns.html('');
