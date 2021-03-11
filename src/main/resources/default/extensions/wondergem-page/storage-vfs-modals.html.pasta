@@ -53,15 +53,14 @@
                     filter: function (child) {
                         return true;
                     },
-                    createRow: function (child, pagination, _modal, resolve) {
+                    createRow: function (child, _modal, resolve, cd) {
                         const self = this;
 
                         const _tr = document.createElement("tr");
                         _tr.innerHTML = Mustache.render("<td><a class='file-link' href='#' data-path='{{path}}'>" +
                             "<i class='fa fa-folder-open'></i>&nbsp;{{name}}</a></td>", child);
                         _tr.querySelector(".file-link").addEventListener("click", function () {
-                            self.path = this.dataset.path;
-                            pagination.reset();
+                            cd(this.dataset.path);
                         });
                         return _tr;
                     }
@@ -78,7 +77,7 @@
                     filter: function (child) {
                         return pathRestriction === undefined || child.path.startsWith(pathRestriction);
                     },
-                    createRow: function (child, pagination, _modal, resolve) {
+                    createRow: function (child, _modal, resolve, cd) {
                         const _self = this;
                         child.icon = child.directory ? "fa-folder-open" : "fa-file";
 
@@ -90,8 +89,7 @@
 
                         _tr.querySelector(".file-link").addEventListener("click", function () {
                             if (this.dataset.dir === "true") {
-                                _self.path = this.dataset.path;
-                                pagination.reset();
+                                cd(this.dataset.path);
                             } else {
                                 $(_modal).modal("hide");
                                 resolve(this.dataset.path);
@@ -107,7 +105,7 @@
                     const _modal = document.getElementById("select-file-modal");
                     const _table = _modal.querySelector('.select-file-table-js');
                     const _searchForm = _modal.querySelector('.search-form-js input');
-                    const pageSize = 5;
+                    const pageSize = 25;
 
                     _searchForm.value = "";
 
@@ -135,7 +133,11 @@
                             for (let i = 0; i < numItems; i++) {
                                 let child = json.children[i];
                                 if (config.filter(child)) {
-                                    _table.appendChild(config.createRow(child, pagination, _modal, resolve));
+                                    _table.appendChild(config.createRow(child, _modal, resolve, function (newPath) {
+                                        config.path = newPath;
+                                        _searchForm.value = "";
+                                        pagination.reset();
+                                    }));
                                 }
                             }
                             pagination.setPageLabel((page * pageSize + 1) + " - " + (page * pageSize + numItems));
@@ -161,7 +163,7 @@
                                     name: element.name === "/" ? "<i class='fa fa-home'></i>" : element.name
                                 });
                                 _li.querySelector('.file-link').addEventListener("click", function () {
-                                    config.path = this.dataset.path = 'path';
+                                    config.path = this.dataset.path;
                                     pagination.reset();
                                 });
                                 _breadcrumbs.appendChild(_li);
@@ -187,7 +189,7 @@
                     });
 
                     replaceEventHandlers(_modal.querySelector('.search-form-js .search-btn-js'), "click", function () {
-                        _modal.querySelector('.search-form-js').submit();
+                        pagination.reset();
                     });
                     replaceEventHandlers(_modal.querySelector('.search-form-js'), 'submit', function (event) {
                         event.preventDefault();
