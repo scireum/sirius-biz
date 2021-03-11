@@ -53,14 +53,14 @@
                     filter: function (child) {
                         return true;
                     },
-                    createRow: function (child, _modal, resolve, cd) {
+                    createRow: function (child, _modal, resolve, changeDirectory) {
                         const self = this;
 
                         const _tr = document.createElement("tr");
                         _tr.innerHTML = Mustache.render("<td><a class='file-link' href='#' data-path='{{path}}'>" +
                             "<i class='fa fa-folder-open'></i>&nbsp;{{name}}</a></td>", child);
                         _tr.querySelector(".file-link").addEventListener("click", function () {
-                            cd(this.dataset.path);
+                            changeDirectory(this.dataset.path);
                         });
                         return _tr;
                     }
@@ -77,7 +77,7 @@
                     filter: function (child) {
                         return pathRestriction === undefined || child.path.startsWith(pathRestriction);
                     },
-                    createRow: function (child, _modal, resolve, cd) {
+                    createRow: function (child, _modal, resolve, changeDirectory) {
                         const _self = this;
                         child.icon = child.directory ? "fa-folder-open" : "fa-file";
 
@@ -89,7 +89,7 @@
 
                         _tr.querySelector(".file-link").addEventListener("click", function () {
                             if (this.dataset.dir === "true") {
-                                cd(this.dataset.path);
+                                changeDirectory(this.dataset.path);
                             } else {
                                 $(_modal).modal("hide");
                                 resolve(this.dataset.path);
