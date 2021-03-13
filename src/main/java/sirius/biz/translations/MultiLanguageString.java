@@ -381,4 +381,9 @@ public class MultiLanguageString extends SafeMap<String, String> {
         }
         return jsonObject.toJSONString();
     }
+
+    @Override
+    public String toString() {
+        return getText().orElse("");
+    }
 }
