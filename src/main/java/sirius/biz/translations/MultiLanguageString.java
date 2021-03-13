@@ -52,43 +52,6 @@ public class MultiLanguageString extends SafeMap<String, String> {
     }
 
     /**
-     * Creates a new object to hold a language-text map validating against the given set of language codes
-     * with no place for a fallback string.
-     *
-     * @param validLanguages set of language codes to validate against
-     * @deprecated use fluent api instead ({@link MultiLanguageString#withValidLanguages(List)})
-     */
-    @Deprecated
-    public MultiLanguageString(@Nonnull List<String> validLanguages) {
-        this.withFallback = false;
-        this.validLanguages = Collections.unmodifiableList(validLanguages);
-    }
-
-    /**
-     * Creates a new object to hold a language-text map.
-     *
-     * @param withFallback if a fallback should also be stored in the map
-     * @deprecated use fluent api instead ({@link MultiLanguageString#withFallback})
-     */
-    @Deprecated
-    public MultiLanguageString(boolean withFallback) {
-        this.withFallback = withFallback;
-    }
-
-    /**
-     * Creates a new object to hold a language-text map validating against the given set of language codes.
-     *
-     * @param withFallback   if a fallback should also be stored in the map
-     * @param validLanguages list of language codes to validate against
-     * @deprecated use fluent api instead ({@link MultiLanguageString#withFallback}, {@link MultiLanguageString#withValidLanguages(List)})
-     */
-    @Deprecated
-    public MultiLanguageString(boolean withFallback, @Nonnull List<String> validLanguages) {
-        this.withFallback = withFallback;
-        this.validLanguages = new ArrayList<>(validLanguages);
-    }
-
-    /**
      * Enables fallback for this MultiLanguageString.
      *
      * @return the object itself for fluent method calls
@@ -199,21 +162,6 @@ public class MultiLanguageString extends SafeMap<String, String> {
     public MultiLanguageString addText(String language, String text) {
         put(language, text);
         return this;
-    }
-
-    /**
-     * Adds the given text as a fallback to the map.
-     * <p>
-     * If a null text is given it will be ignored, if the list already contains an entry it will be removed.
-     *
-     * @param text the text to be used as fallback
-     * @return the object itself for fluent method calls
-     * @throws IllegalStateException if this field does not support fallbacks
-     * @deprecated use <tt>setFallback</tt>
-     */
-    @Deprecated
-    public MultiLanguageString addFallback(String text) {
-        return setFallback(text);
     }
 
     /**
