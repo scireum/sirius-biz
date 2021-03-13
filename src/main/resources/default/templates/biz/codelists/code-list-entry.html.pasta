@@ -1,0 +1,47 @@
+<i:arg type="sirius.biz.codelists.CodeList" name="codeList"/>
+<i:arg type="sirius.biz.codelists.CodeListEntry" name="entry"/>
+
+<w:page title="@apply('%s - %s', codeList.getCodeListData().getName(), entry.getCodeListEntryData())">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/code-lists">@i18n("CodeList.plural")</a>
+        </li>
+        <li>
+            <a href="/code-list/@codeList.getIdAsString()">@i18n("Model.codeList")</a>
+        </li>
+        <li>
+            <a href="/code-list/@codeList.getIdAsString()/entry">@entry.getCodeListEntryData()</a>
+        </li>
+    </i:block>
+
+    <w:pageHeader>@codeList.getCodeListData().getName() - @entry.getCodeListEntryData()</w:pageHeader>
+
+    <w:editForm url="@apply('/code-list/%s/entry', codeList.getIdAsString())">
+        <div class="row">
+            <w:textfield name="codeListEntryData_code"
+                         value="@entry.getCodeListEntryData().getCode()"
+                         labelKey="Model.code"
+                         readonly="!entry.isNew()"
+                         required="true"/>
+            <w:textfield name="codeListEntryData_priority"
+                         value="@toUserString(entry.getCodeListEntryData().getPriority())"
+                         labelKey="Model.priority"/>
+            <w:multiLanguageTextField span="12"
+                                      name="codeListEntryData_value"
+                                      value="entry.getCodeListEntryData().getValue()"
+                                      labelKey="CodeListEntryData.value"
+                                      languageManagementEnabled="true"/>
+            <w:multiLanguageTextField span="12"
+                                      name="codeListEntryData_additionalValue"
+                                      value="entry.getCodeListEntryData().getAdditionalValue()"
+                                      labelKey="CodeListEntryData.additionalValue"
+                                      languageManagementEnabled="true"/>
+            <w:textarea span="12"
+                        rows="5"
+                        name="codeListEntryData_description"
+                        value="@entry.getCodeListEntryData().getDescription()"
+                        labelKey="Model.description"/>
+        </div>
+    </w:editForm>
+    <w:formBar backUrl="@apply('/code-list/%s', codeList.getIdAsString())"/>
+</w:page>

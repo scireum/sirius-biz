@@ -11,30 +11,32 @@
         </li>
     </i:block>
 
-    <w:pageHeader>@codeList.getCodeListData().getName()</w:pageHeader>
+    <w:pageHeader>@codeList.getCodeListData()</w:pageHeader>
 
-    <i:if test="!codeList.isNew()">
-        <div class="col-md-3">
-            <w:navbox labelKey="Model.details">
-                <li>
-                    @codeList.getCodeListData().getName() (@codeList.getCodeListData().getCode())
-                </li>
-                <li class="small muted">@codeList.getCodeListData().getDescription()</li>
-                <li class="nav-header"></li>
-                <w:navboxLink labelKey="Model.details"
-                              url="@apply('/code-list/%s/details', codeList.getIdAsString())"
-                              active="page == 'details'"/>
-                <w:navboxLink labelKey="CodeListEntry.plural"
-                              url="@apply('/code-list/%s', codeList.getIdAsString())"
-                              active="page == 'entries'"/>
-            </w:navbox>
+    <div class="row">
+        <i:if test="!codeList.isNew()">
+            <div class="col-md-3">
+                <w:navbox labelKey="Model.details">
+                    <li>
+                        @codeList.getCodeListData().getName() (@codeList.getCodeListData().getCode())
+                    </li>
+                    <li class="small muted">@codeList.getCodeListData().getDescription()</li>
+                    <li class="nav-header"></li>
+                    <w:navboxLink labelKey="Model.details"
+                                  url="@apply('/code-list/%s/details', codeList.getIdAsString())"
+                                  active="page == 'details'"/>
+                    <w:navboxLink labelKey="CodeListEntry.plural"
+                                  url="@apply('/code-list/%s', codeList.getIdAsString())"
+                                  active="page == 'entries'"/>
+                </w:navbox>
 
-            <w:jobs target="codeList"/>
+                <w:jobs target="codeList"/>
 
-            <a href="/code-lists" class="btn btn-block">@i18n("NLS.back")</a>
+                <a href="/code-lists" class="btn btn-block">@i18n("NLS.back")</a>
+            </div>
+        </i:if>
+        <div class="col-md-9">
+            <i:render name="body"/>
         </div>
-    </i:if>
-    <div class="col-md-9">
-        <i:render name="body" />
     </div>
 </w:page>

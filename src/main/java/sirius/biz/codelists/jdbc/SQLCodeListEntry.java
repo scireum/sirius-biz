@@ -11,13 +11,11 @@ package sirius.biz.codelists.jdbc;
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListEntryData;
 import sirius.biz.importer.AutoImport;
-import sirius.biz.translations.jdbc.SQLTranslations;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SQLEntityRef;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.di.std.Framework;
-import sirius.kernel.nls.NLS;
 
 /**
  * Provides the JDBC/SQL implementation of {@link CodeListEntry}.
@@ -25,15 +23,13 @@ import sirius.kernel.nls.NLS;
 @Framework(SQLCodeLists.FRAMEWORK_CODE_LISTS_JDBC)
 @TranslationSource(CodeListEntry.class)
 @Index(name = "lookup", columns = {"codeList", "codeListEntryData_code"}, unique = true)
-public class SQLCodeListEntry extends SQLEntity implements CodeListEntry<Long, SQLCodeList, SQLTranslations> {
+public class SQLCodeListEntry extends SQLEntity implements CodeListEntry<Long, SQLCodeList> {
 
     @AutoImport
     private final SQLEntityRef<SQLCodeList> codeList =
             SQLEntityRef.writeOnceOn(SQLCodeList.class, SQLEntityRef.OnDelete.CASCADE);
 
     private final CodeListEntryData codeListEntryData = new CodeListEntryData(this);
-
-    private final SQLTranslations codeListEntryTranslations = new SQLTranslations(this, NLS.getSupportedLanguages());
 
     @Override
     public SQLEntityRef<SQLCodeList> getCodeList() {
@@ -43,10 +39,5 @@ public class SQLCodeListEntry extends SQLEntity implements CodeListEntry<Long, S
     @Override
     public CodeListEntryData getCodeListEntryData() {
         return codeListEntryData;
-    }
-
-    @Override
-    public SQLTranslations getTranslations() {
-        return codeListEntryTranslations;
     }
 }
