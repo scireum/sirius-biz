@@ -128,6 +128,23 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                                });
         }
 
+        if (this.length > 0) {
+            multiLanguageString.data()
+                               .values()
+                               .stream()
+                               .filter(value -> Strings.isFilled(value) && value.length() > this.length)
+                               .findFirst()
+                               .ifPresent(value -> {
+                                   throw Exceptions.createHandled()
+                                                   .withNLSKey("StringProperty.dataTruncation")
+                                                   .set("value", Strings.limit(value, 30))
+                                                   .set(PARAM_FIELD, this.getFullLabel())
+                                                   .set("length", value.length())
+                                                   .set("maxLength", this.length)
+                                                   .handle();
+                               });
+        }
+
         if (isNullable()) {
             return;
         }
