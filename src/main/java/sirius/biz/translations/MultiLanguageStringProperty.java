@@ -179,10 +179,6 @@ public class MultiLanguageStringProperty extends BaseMapProperty implements ESPr
     @Override
     @SuppressWarnings("unchecked")
     protected Object transformToMongo(Object object) {
-        if (object instanceof List) {
-            return object;
-        }
-
         List<Document> texts = new ArrayList<>();
         ((Map<String, String>) object).forEach((language, text) -> {
             Document doc = new Document();
@@ -210,10 +206,6 @@ public class MultiLanguageStringProperty extends BaseMapProperty implements ESPr
     @Override
     @SuppressWarnings("unchecked")
     protected Object transformToElastic(Object object) {
-        if (object instanceof List) {
-            return object;
-        }
-
         JSONObject texts = new JSONObject();
         ((Map<String, String>) object).forEach(texts::fluentPut);
         return texts;
