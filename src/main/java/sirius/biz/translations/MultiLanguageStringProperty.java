@@ -207,7 +207,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty implements ESPr
     @SuppressWarnings("unchecked")
     protected Object transformToElastic(Object object) {
         JSONObject texts = new JSONObject();
-        ((Map<String, String>) object).forEach(texts::fluentPut);
+        ((Map<String, String>) object).forEach(texts::put);
         return texts;
     }
 
