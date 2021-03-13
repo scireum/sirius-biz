@@ -67,8 +67,8 @@ public class MultiLanguageString extends SafeMap<String, String> {
      * @param validLanguages the list of language codes to validate against
      * @return the object itself for fluent method calls
      */
-    public MultiLanguageString withValidLanguages(@Nonnull List<String> validLanguages) {
-        this.validLanguages = Collections.unmodifiableList(validLanguages);
+    public MultiLanguageString withValidLanguages(@Nonnull Collection<String> validLanguages) {
+        this.validLanguages = new ArrayList<>(validLanguages);
         return this;
     }
 
