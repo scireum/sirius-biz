@@ -9,7 +9,6 @@
 <i:arg name="helpKey" type="String" default=""/>
 <i:arg name="help" type="String" default="@i18n(helpKey)"/>
 <i:arg name="required" type="boolean" default="false"/>
-<i:arg name="readonly" type="boolean" default="false"/>
 <i:arg name="adminOnly" type="boolean" default="false"/>
 <i:arg name="id" type="String" default="@generateId()"/>
 <i:arg name="tabIndex" type="String" default=""/>
@@ -22,7 +21,7 @@
 
 <i:pragma name="description" value="Renders a multi language text input field within a Wondergem template"/>
 
-<i:if test="!readonly && value.isEnabled()">
+<i:if test="value.isEnabled()">
     <i:local name="fieldId" value="@('mls-field-' + id)"/>
     <i:local name="modalId" value="@('mls-modal-' + id)"/>
 
@@ -106,7 +105,6 @@
                      value="@value.fetchTextOrFallback()"
                      label="@label"
                      forceLabel="@forceLabel"
-                     readonly="@readonly"
                      adminOnly="@adminOnly"
                      fieldName="fieldName"
                      help="@help"/>

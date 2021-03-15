@@ -10,7 +10,6 @@
 <i:arg name="help" type="String" default="@i18n(helpKey)"/>
 <i:arg name="required" type="boolean" default="false"/>
 <i:arg name="adminOnly" type="boolean" default="false"/>
-<i:arg name="readonly" type="boolean" default="false"/>
 <i:arg name="id" type="String" default="@generateId()"/>
 <i:arg name="tabIndex" type="String" default=""/>
 <i:arg name="defaultLanguage" type="String" default="@NLS.getCurrentLang()"/>
@@ -19,13 +18,12 @@
        type="boolean"
        default="false"
        description="Determines if the user can decide which languages to edit (true) or if all should be shown (false)"/>
-<i:arg name="languageManagementEnabled" type="boolean" default="false"/>
 <i:arg name="rows" type="int" default="2"/>
 
 <i:pragma name="description" value="Renders a multi language text input field within a Wondergem template"/>
 
 
-<i:if test="!readonly && value.isEnabled()">
+<i:if test="value.isEnabled()">
     <i:local name="fieldId" value="@('mls-field-' + id)"/>
     <i:local name="modalId" value="@('mls-modal-' + id)"/>
 
@@ -96,7 +94,6 @@
                     required="@required"
                     value="@value.fetchTextOrFallback()"
                     label="@label"
-                    readonly="@readonly"
                     adminOnly="@adminOnly"
                     rows="@rows"
                     help="@help"/>
