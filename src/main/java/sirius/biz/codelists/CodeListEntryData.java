@@ -119,7 +119,6 @@ public class CodeListEntryData extends Composite {
     @AfterDelete
     protected void flushCache() {
         codeLists.clearCache();
-        CodeListLookupTable.flushReverseLookupCache();
     }
 
     /**
