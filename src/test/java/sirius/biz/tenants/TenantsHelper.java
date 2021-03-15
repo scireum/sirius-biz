@@ -64,6 +64,7 @@ public class TenantsHelper {
         oma.getReadyFuture().await(Duration.ofSeconds(60));
 
         testTenant = oma.select(SQLTenant.class).eq(Tenant.TENANT_DATA.inner(TenantData.NAME), "Test").queryFirst();
+
         if (testTenant == null) {
             testTenant = new SQLTenant();
             testTenant.getTenantData().setName("Test");
@@ -112,10 +113,9 @@ public class TenantsHelper {
      * @return Tenant for tests
      */
     public static SQLTenant getTestTenant() {
-        if (testTenant != null) {
-            return testTenant;
+        if (testTenant == null) {
+            setupTestTenant();
         }
-        setupTestTenant();
         return testTenant;
     }
 
@@ -127,10 +127,9 @@ public class TenantsHelper {
      * @return UserAccount for tests
      */
     public static SQLUserAccount getTestUser() {
-        if (testUser != null) {
-            return testUser;
+        if (testUser == null) {
+            setupTestUser();
         }
-        setupTestUser();
         return testUser;
     }
 }
