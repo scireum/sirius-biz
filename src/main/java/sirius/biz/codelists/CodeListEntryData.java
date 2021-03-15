@@ -118,21 +118,33 @@ public class CodeListEntryData extends Composite {
         CodeListLookupTable.flushReverseLookupCache();
     }
 
+    /**
+     * Fetches the translation of the value for the given language.
+     *
+     * @param lang the language to translate to
+     * @return the value for the given language or the fallback value
+     */
     public String getTranslatedValue(String lang) {
         return value.getText(lang).map(NLS::smartGet).orElse(null);
     }
 
+    /**
+     * Fetches the translation of the additional value for the given language.
+     *
+     * @param lang the language to translate to
+     * @return the additional value for the given language or the fallback value
+     */
     public String getTranslatedAdditionalValue(String lang) {
         return additionalValue.getText(lang).map(NLS::smartGet).orElse(null);
     }
 
     @Override
     public String toString() {
-       if (Strings.isEmpty(code)) {
-           return NLS.get("CodeListEntry.new");
-       }
+        if (Strings.isEmpty(code)) {
+            return NLS.get("CodeListEntry.new");
+        }
 
-       return code;
+        return code;
     }
 
     public String getCode() {
