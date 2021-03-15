@@ -253,8 +253,12 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     protected Object transformFromJDBC(Value object) {
         String rawData = object.asString();
         Tuple<String, String> fallbackAndMap = Strings.split(rawData, I18N_MAP_SEPARATOR);
+
         Map<String, String> texts = new LinkedHashMap<>();
-        texts.put(MultiLanguageString.FALLBACK_KEY, fallbackAndMap.getFirst());
+        if (Strings.isFilled(fallbackAndMap.getFirst())) {
+            texts.put(MultiLanguageString.FALLBACK_KEY, fallbackAndMap.getFirst());
+        }
+
         if (Strings.isFilled(fallbackAndMap.getSecond())) {
             JSON.parseObject(fallbackAndMap.getSecond()).forEach((key, value) -> {
                 texts.put(key, value.toString());
