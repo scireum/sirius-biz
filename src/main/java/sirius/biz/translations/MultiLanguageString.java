@@ -10,12 +10,15 @@ package sirius.biz.translations;
 
 import com.alibaba.fastjson.JSONObject;
 import sirius.db.mixing.types.SafeMap;
+import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.nls.NLS;
+import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +40,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
     public static final String FALLBACK_KEY = "fallback";
 
     private List<String> validLanguages = Collections.emptyList();
+    private String i18nCondition;
     private String i18nPermission;
     private boolean withFallback;
 
@@ -45,43 +49,6 @@ public class MultiLanguageString extends SafeMap<String, String> {
      */
     public MultiLanguageString() {
         this.withFallback = false;
-    }
-
-    /**
-     * Creates a new object to hold a language-text map validating against the given set of language codes
-     * with no place for a fallback string.
-     *
-     * @param validLanguages set of language codes to validate against
-     * @deprecated use fluent api instead ({@link MultiLanguageString#withValidLanguages(List)})
-     */
-    @Deprecated
-    public MultiLanguageString(@Nonnull List<String> validLanguages) {
-        this.withFallback = false;
-        this.validLanguages = Collections.unmodifiableList(validLanguages);
-    }
-
-    /**
-     * Creates a new object to hold a language-text map.
-     *
-     * @param withFallback if a fallback should also be stored in the map
-     * @deprecated use fluent api instead ({@link MultiLanguageString#withFallback})
-     */
-    @Deprecated
-    public MultiLanguageString(boolean withFallback) {
-        this.withFallback = withFallback;
-    }
-
-    /**
-     * Creates a new object to hold a language-text map validating against the given set of language codes.
-     *
-     * @param withFallback   if a fallback should also be stored in the map
-     * @param validLanguages list of language codes to validate against
-     * @deprecated use fluent api instead ({@link MultiLanguageString#withFallback}, {@link MultiLanguageString#withValidLanguages(List)})
-     */
-    @Deprecated
-    public MultiLanguageString(boolean withFallback, @Nonnull List<String> validLanguages) {
-        this.withFallback = withFallback;
-        this.validLanguages = new ArrayList<>(validLanguages);
     }
 
     /**
@@ -100,8 +67,8 @@ public class MultiLanguageString extends SafeMap<String, String> {
      * @param validLanguages the list of language codes to validate against
      * @return the object itself for fluent method calls
      */
-    public MultiLanguageString withValidLanguages(@Nonnull List<String> validLanguages) {
-        this.validLanguages = Collections.unmodifiableList(validLanguages);
+    public MultiLanguageString withValidLanguages(@Nonnull Collection<String> validLanguages) {
+        this.validLanguages = new ArrayList<>(validLanguages);
         return this;
     }
 
@@ -116,12 +83,47 @@ public class MultiLanguageString extends SafeMap<String, String> {
         return this;
     }
 
-    public List<String> getValidLanguages() {
-        return Collections.unmodifiableList(validLanguages);
+    /**
+     * Specifies the condition flag which has to be enabled so that this string actually supports multiple languages.
+     * <p>
+     * As especially in the JDBC/SQL world, there is a certain overhead of managing and storing the translated values,
+     * this can be enabled or disabled using the system config <tt>i18n.CONDITION-NAME</tt>.
+     * <p>
+     * If the condition is set to <tt>false</tt>, this will behave like a normal string field operating only on
+     * 'fallback'. Otherwise, full multi language support is enabled, which also means, that even if a
+     * {@link sirius.db.mixing.annotations.Length} is present, this value will always be stored in a <tt>TEXT</tt>.
+     *
+     * @param conditionName the name of the flag required to be set to <tt>true</tt> for full i18n support
+     * @return the object itself for fluent method calls
+     */
+    public MultiLanguageString withConditionName(@Nonnull String conditionName) {
+        this.i18nCondition = conditionName;
+        return this;
     }
 
-    public String getI18nPermission() {
-        return i18nPermission;
+    /**
+     * Determines if this field is in "multi language" mode.
+     * <p>
+     * This can be suppressed by two methods: {@link #withConditionName(String)} can be used to disable i18n support
+     * for the whole system and {@link #withI18nPermission(String)} can be used to enable or disable i18n support
+     * per tenant.
+     *
+     * @return <tt>true</tt> if multi language mode is enabled, <tt>false</tt> otherwise
+     */
+    public boolean isEnabled() {
+        return isEnabledForCurrentUser() && isConditionEnabled();
+    }
+
+    protected boolean isConditionEnabled() {
+        return Strings.isEmpty(i18nCondition) || Sirius.getSettings().get("i18n." + i18nCondition).asBoolean();
+    }
+
+    protected boolean isEnabledForCurrentUser() {
+        return UserContext.getCurrentUser().hasPermission(i18nPermission);
+    }
+
+    public List<String> getValidLanguages() {
+        return Collections.unmodifiableList(validLanguages);
     }
 
     @Override
@@ -160,21 +162,6 @@ public class MultiLanguageString extends SafeMap<String, String> {
     public MultiLanguageString addText(String language, String text) {
         put(language, text);
         return this;
-    }
-
-    /**
-     * Adds the given text as a fallback to the map.
-     * <p>
-     * If a null text is given it will be ignored, if the list already contains an entry it will be removed.
-     *
-     * @param text the text to be used as fallback
-     * @return the object itself for fluent method calls
-     * @throws IllegalStateException if this field does not support fallbacks
-     * @deprecated use <tt>setFallback</tt>
-     */
-    @Deprecated
-    public MultiLanguageString addFallback(String text) {
-        return setFallback(text);
     }
 
     /**
@@ -393,5 +380,10 @@ public class MultiLanguageString extends SafeMap<String, String> {
             jsonObject.putAll(data);
         }
         return jsonObject.toJSONString();
+    }
+
+    @Override
+    public String toString() {
+        return getText().orElse("");
     }
 }

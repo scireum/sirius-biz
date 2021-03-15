@@ -8,12 +8,16 @@
 
 package sirius.biz.translations;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.bson.Document;
 import sirius.biz.web.ComplexLoadProperty;
 import sirius.db.es.ESPropertyInfo;
 import sirius.db.es.IndexMappings;
 import sirius.db.es.annotations.IndexMode;
+import sirius.db.jdbc.schema.SQLPropertyInfo;
+import sirius.db.jdbc.schema.Table;
+import sirius.db.jdbc.schema.TableColumn;
 import sirius.db.mixing.AccessPath;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
@@ -23,16 +27,17 @@ import sirius.db.mixing.Property;
 import sirius.db.mixing.PropertyFactory;
 import sirius.db.mixing.properties.BaseMapProperty;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.http.WebContext;
-import sirius.web.security.UserContext;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -46,12 +51,19 @@ import java.util.function.Consumer;
  * <p>
  * Multi-Language Strings are stored as a list of nested objects which contain a
  * <tt>lang</tt> and a <tt>text</tt> property.
+ * <p>
+ * For JDBC/SQL databases the map of translations is serialized into a JSON representation within the field. Note
+ * that this is only done, if more than just the "fallback" is filled. Note however, that as soon as multi language
+ * support is enabled (or rather not suppressed via {@link MultiLanguageString#withConditionName(String)}) each column
+ * will be turned into a <tt>TEXT</tt> field, rather than a <tt>CHAR</tt>, even if a length is given.
  */
-public class MultiLanguageStringProperty extends BaseMapProperty implements ESPropertyInfo, ComplexLoadProperty {
+public class MultiLanguageStringProperty extends BaseMapProperty
+        implements SQLPropertyInfo, ESPropertyInfo, ComplexLoadProperty {
 
     private static final String LANGUAGE_PROPERTY = "lang";
     private static final String TEXT_PROPERTY = "text";
     private static final String PARAM_FIELD = "field";
+    private static final String I18N_MAP_SEPARATOR = "$$MAP:";
 
     /**
      * Factory for generating properties based on their field type
@@ -79,8 +91,16 @@ public class MultiLanguageStringProperty extends BaseMapProperty implements ESPr
         }
     }
 
+    private boolean i18nEnabled;
+
     MultiLanguageStringProperty(EntityDescriptor descriptor, AccessPath accessPath, Field field) {
         super(descriptor, accessPath, field);
+    }
+
+    @Override
+    protected void link() {
+        super.link();
+        this.i18nEnabled = getMultiLanguageString(getDescriptor().getReferenceInstance()).isConditionEnabled();
     }
 
     @Override
@@ -108,12 +128,30 @@ public class MultiLanguageStringProperty extends BaseMapProperty implements ESPr
                                });
         }
 
+        if (this.length > 0) {
+            multiLanguageString.data()
+                               .values()
+                               .stream()
+                               .filter(value -> Strings.isFilled(value) && value.length() > this.length)
+                               .findFirst()
+                               .ifPresent(value -> {
+                                   throw Exceptions.createHandled()
+                                                   .withNLSKey("StringProperty.dataTruncation")
+                                                   .set("value", Strings.limit(value, 30))
+                                                   .set(PARAM_FIELD, this.getFullLabel())
+                                                   .set("length", value.length())
+                                                   .set("maxLength", this.length)
+                                                   .handle();
+                               });
+        }
+
         if (isNullable()) {
             return;
         }
 
         if (multiLanguageString.isWithFallback()) {
-            if (Strings.isEmpty(multiLanguageString.data().get(MultiLanguageString.FALLBACK_KEY))) {
+            String fallbackValue = multiLanguageString.data().get(MultiLanguageString.FALLBACK_KEY);
+            if (Strings.isEmpty(fallbackValue)) {
                 throw Exceptions.createHandled()
                                 .error(new InvalidFieldException(getName()))
                                 .withNLSKey("MultiLanguageStringProperty.fallbackNotSet")
@@ -179,10 +217,6 @@ public class MultiLanguageStringProperty extends BaseMapProperty implements ESPr
     @Override
     @SuppressWarnings("unchecked")
     protected Object transformToMongo(Object object) {
-        if (object instanceof List) {
-            return object;
-        }
-
         List<Document> texts = new ArrayList<>();
         ((Map<String, String>) object).forEach((language, text) -> {
             Document doc = new Document();
@@ -210,13 +244,55 @@ public class MultiLanguageStringProperty extends BaseMapProperty implements ESPr
     @Override
     @SuppressWarnings("unchecked")
     protected Object transformToElastic(Object object) {
-        if (object instanceof List) {
-            return object;
+        JSONObject texts = new JSONObject();
+        ((Map<String, String>) object).forEach(texts::put);
+        return texts;
+    }
+
+    @Override
+    protected Object transformFromJDBC(Value object) {
+        String rawData = object.asString();
+        Tuple<String, String> fallbackAndMap = Strings.split(rawData, I18N_MAP_SEPARATOR);
+
+        Map<String, String> texts = new LinkedHashMap<>();
+        if (Strings.isFilled(fallbackAndMap.getFirst())) {
+            texts.put(MultiLanguageString.FALLBACK_KEY, fallbackAndMap.getFirst());
         }
 
-        JSONObject texts = new JSONObject();
-        ((Map<String, String>) object).forEach(texts::fluentPut);
+        if (Strings.isFilled(fallbackAndMap.getSecond())) {
+            JSON.parseObject(fallbackAndMap.getSecond()).forEach((key, value) -> {
+                texts.put(key, value.toString());
+            });
+        }
+
         return texts;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected Object transformToJDBC(Object object) {
+        Map<String, String> texts = (Map<String, String>) object;
+        if (texts.isEmpty()) {
+            return "";
+        }
+
+        StringBuilder data = new StringBuilder(texts.getOrDefault(MultiLanguageString.FALLBACK_KEY, ""));
+        if (i18nEnabled && (texts.size() > 1 || !texts.containsKey(MultiLanguageString.FALLBACK_KEY))) {
+            JSONObject textMap = new JSONObject();
+            texts.entrySet()
+                 .stream()
+                 .filter(entry -> !MultiLanguageString.FALLBACK_KEY.equals(entry.getKey()))
+                 .forEach(entry -> textMap.put(entry.getKey(), entry.getValue()));
+            data.append(I18N_MAP_SEPARATOR);
+            data.append(textMap.toJSONString());
+        }
+
+        return data.toString();
+    }
+
+    @Override
+    public void contributeToTable(Table table) {
+        table.getColumns().add(new TableColumn(this, i18nEnabled ? Types.CLOB : Types.CHAR));
     }
 
     @Override
@@ -238,7 +314,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty implements ESPr
             multiLanguageString.setFallback(webContext.getParameter(getPropertyName()));
         }
 
-        if (UserContext.getCurrentUser().hasPermission(multiLanguageString.getI18nPermission())) {
+        if (i18nEnabled && multiLanguageString.isEnabledForCurrentUser()) {
             Collection<String> languagesToLoad = multiLanguageString.getValidLanguages().isEmpty() ?
                                                  NLS.getSupportedLanguages() :
                                                  multiLanguageString.getValidLanguages();

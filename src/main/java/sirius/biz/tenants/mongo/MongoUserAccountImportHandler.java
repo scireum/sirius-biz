@@ -33,6 +33,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.web.security.UserContext;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
@@ -42,6 +43,7 @@ import java.util.function.BiConsumer;
 public class MongoUserAccountImportHandler extends MongoEntityImportHandler<MongoUserAccount> {
 
     @Part
+    @Nullable
     protected MongoTenants tenants;
 
     /**

@@ -9,6 +9,6 @@
                 optional="@!param.isRequired()"
                 required="@param.isRequired()">
     <i:for var="value" type="sirius.biz.codelists.CodeListEntry" items="@param.as(sirius.biz.jobs.params.CodeListEntryParameter.class).getValues()">
-        <option value="@value.getCodeListEntryData().getCode()" @selected="value == param.get(context).orElse(null)">@smartTranslate(value.getCodeListEntryData().getValue())</option>
+        <option value="@value.getCodeListEntryData().getCode()" @selected="value == param.get(context).orElse(null)">@value.getCodeListEntryData().getValue()</option>
     </i:for>
 </w:singleSelect>

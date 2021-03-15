@@ -33,6 +33,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.web.security.UserContext;
 
+import javax.annotation.Nullable;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -43,6 +44,7 @@ import java.util.function.Supplier;
 public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserAccount> {
 
     @Part
+    @Nullable
     private static SQLTenants tenants;
 
     /**

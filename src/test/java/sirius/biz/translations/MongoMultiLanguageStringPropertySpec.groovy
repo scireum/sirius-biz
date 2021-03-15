@@ -166,7 +166,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
         given:
         def entity = new MongoMultiLanguageStringEntity()
         when:
-        entity.getMultiLangText().addFallback("test")
+        entity.getMultiLangText().setFallback("test")
 
         then:
         thrown(IllegalStateException)
@@ -177,7 +177,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
         def entity = new MongoMultiLanguageStringEntity()
         entity.getMultiLangTextWithFallback().addText("de", "In Ordnung")
         entity.getMultiLangTextWithFallback().addText("en", "Fine")
-        entity.getMultiLangTextWithFallback().addFallback("OK")
+        entity.getMultiLangTextWithFallback().setFallback("OK")
         mango.update(entity)
 
         when:
@@ -221,7 +221,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
         def entity = new MongoMultiLanguageStringEntity()
         entity.getMultiLangTextWithFallback().addText(null)
         entity.getMultiLangTextWithFallback().addText("de", "Super")
-        entity.getMultiLangTextWithFallback().addFallback(null)
+        entity.getMultiLangTextWithFallback().setFallback(null)
         mango.update(entity)
 
         when:
