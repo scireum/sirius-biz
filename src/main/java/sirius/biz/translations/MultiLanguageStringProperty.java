@@ -53,7 +53,7 @@ import java.util.function.Consumer;
  * <tt>lang</tt> and a <tt>text</tt> property.
  * <p>
  * For JDBC/SQL databases the map of translations is serialized into a JSON representation within the field. Note
- * that this is only done, if more than just the "fallback" is filled. Note however, that as soon that multi language
+ * that this is only done, if more than just the "fallback" is filled. Note however, that as soon as multi language
  * support is enabled (or rather not suppressed via {@link MultiLanguageString#withConditionName(String)}) each column
  * will be turned into a <tt>TEXT</tt> field, rather than a <tt>CHAR</tt>, even if a length is given.
  */
