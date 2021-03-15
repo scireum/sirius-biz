@@ -72,7 +72,9 @@ public class CodeListEntryData extends Composite {
     @AutoImport
     @Autoloaded
     @PrefixSearchContent
-    private final MultiLanguageString value = new MultiLanguageString().withFallback().withValidLanguages(NLS.getSupportedLanguages());
+    private final MultiLanguageString value = new MultiLanguageString().withFallback()
+                                                                       .withValidLanguages(NLS.getSupportedLanguages())
+                                                                       .withConditionName("code-lists");
 
     /**
      * Contains the additional value associated with the code of this entry.
@@ -82,7 +84,9 @@ public class CodeListEntryData extends Composite {
     @AutoImport
     @Autoloaded
     @PrefixSearchContent
-    private final MultiLanguageString additionalValue = new MultiLanguageString().withFallback();
+    private final MultiLanguageString additionalValue = new MultiLanguageString().withFallback()
+                                                                                 .withValidLanguages(NLS.getSupportedLanguages())
+                                                                                 .withConditionName("code-lists");
 
     /**
      * Contains a description of the value or the entry.
