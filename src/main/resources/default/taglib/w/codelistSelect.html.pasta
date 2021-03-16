@@ -19,7 +19,7 @@
     <i:for var="entry" type="sirius.biz.codelists.CodeListEntry" items="@Injector.context().getPart(CodeLists.class).getEntries(list)">
         <option value="@entry.getCodeListEntryData().getCode()"
                 @selected="entry.getCodeListEntryData().getCode().equals(value)">
-            @entry.getCodeListEntryData().getValue()
+            @entry.getCodeListEntryData().getTranslatedValue(NLS.getCurrentLang())
         </option>
     </i:for>
 </w:singleSelect>
