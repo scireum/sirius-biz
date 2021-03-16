@@ -16,14 +16,17 @@ import net.sf.sevenzipjbinding.IInArchive;
 import net.sf.sevenzipjbinding.ISequentialOutStream;
 import net.sf.sevenzipjbinding.PropID;
 import net.sf.sevenzipjbinding.SevenZipException;
+import org.apache.commons.io.output.DeferredFileOutputStream;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.Log;
 
 import javax.annotation.Nonnull;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -36,9 +39,13 @@ import java.util.function.Predicate;
  */
 public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
 
+    private static final int IN_MEMORY_THRESHOLD = 1024 * 1024 * 4;
+    private static final int INITIAL_BUFFER_SIZE = 1024 * 128;
+    private static final String TMP_FILE_PREFIX = "sirius_archive_";
+
     private final IInArchive inArchive;
     private final Function<String, Boolean> filter;
-    private ByteArrayOutputStream buffer;
+    private DeferredFileOutputStream buffer;
     private boolean skipExtraction;
     private boolean stop;
     private String filePath;
@@ -91,7 +98,7 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
 
         filePath = fixEncodingProblems(filePath, (String) inArchive.getProperty(index, PropID.HOST_OS));
 
-        buffer = new ByteArrayOutputStream();
+        buffer = new DeferredFileOutputStream(IN_MEMORY_THRESHOLD, INITIAL_BUFFER_SIZE, TMP_FILE_PREFIX, null, null);
         return data -> {
             try {
                 buffer.write(data);
@@ -186,7 +193,14 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
             byteSource = new ByteSource() {
                 @Override
                 public InputStream openStream() {
-                    return new ByteArrayInputStream(buffer.toByteArray());
+                    if (buffer.isInMemory()) {
+                        return new ByteArrayInputStream(buffer.getData());
+                    }
+                    try {
+                        return new FileInputStream(buffer.getFile());
+                    } catch (FileNotFoundException e) {
+                        throw Exceptions.createHandled().withSystemErrorMessage("No file found inside buffer").handle();
+                    }
                 }
             };
         }
@@ -198,6 +212,24 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
                                                                                   filesProcessed,
                                                                                   bytesProcessed,
                                                                                   totalBytes));
+
+        closeBuffer();
+    }
+
+    private void closeBuffer() {
+        if (buffer != null) {
+            try {
+                buffer.close();
+            } catch (Exception e) {
+                Exceptions.handle()
+                          .to(Log.SYSTEM)
+                          .error(e)
+                          .withSystemErrorMessage(
+                                  "Failed to close a temporary buffer created when extracting an archive: %s (%s)");
+            }
+
+            buffer = null;
+        }
     }
 
     @Override
