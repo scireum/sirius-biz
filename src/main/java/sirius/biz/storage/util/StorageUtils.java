@@ -57,6 +57,13 @@ public class StorageUtils {
     public static final Pattern SANITIZE_SLASHES = Pattern.compile("[/\\\\]+");
 
     /**
+     * Regular Expressions that matches any character that is not allowed in a path.
+     * <p>
+     * These chars are prohibited as they might be reserved by the file system as indicated here: https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words
+     */
+    private static final String SANITIZE_ILLEGAL_PATH_CHARS = "[?%*:|\"<>]";
+
+    /**
      * Lists the layers which are placed in the config as <tt>storage.layer1.spaces</tt> etc. Each of
      * these layers provide a list of {@link Extension extensions} - one per storage space.
      */
@@ -160,10 +167,11 @@ public class StorageUtils {
      * Sanitizes the given path.
      * <p>
      * This will replace backslashes with forward slashes, and remove successive slashes. Trailing slashes are removed
-     * from directory paths, and absolute paths are made relative by removing leading slashes.
+     * from directory paths, and absolute paths are made relative by removing leading slashes. Also replaces chars that
+     * may be illegal in file systems with {@code _}.
      *
      * @param path the path to cleanup
-     * @return the sanitized path without backslashes, successive slashes, and without leading and trailing slashes
+     * @return the sanitized path without illegal charachters
      */
     @Nonnull
     public String sanitizePath(@Nullable String path) {
@@ -174,6 +182,7 @@ public class StorageUtils {
         }
 
         path = SANITIZE_SLASHES.matcher(path).replaceAll("/");
+        path = path.replaceAll(SANITIZE_ILLEGAL_PATH_CHARS, "_");
 
         if (path.startsWith("/")) {
             path = path.substring(1);
@@ -182,6 +191,8 @@ public class StorageUtils {
         if (path.endsWith("/")) {
             path = path.substring(0, path.length() - 1);
         }
+
+        path = path.replaceAll(SANITIZE_ILLEGAL_PATH_CHARS, "_");
 
         return path;
     }
