@@ -171,7 +171,7 @@ public class StorageUtils {
      * may be illegal in file systems with {@code _}.
      *
      * @param path the path to cleanup
-     * @return the sanitized path without illegal charachters
+     * @return the sanitized path without illegal characters
      */
     @Nonnull
     public String sanitizePath(@Nullable String path) {
