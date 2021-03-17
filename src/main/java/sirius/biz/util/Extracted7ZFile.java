@@ -8,11 +8,8 @@
 
 package sirius.biz.util;
 
-import org.apache.commons.io.output.DeferredFileOutputStream;
 import sirius.kernel.commons.Amount;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
@@ -22,12 +19,12 @@ import java.time.LocalDateTime;
  */
 class Extracted7ZFile implements ExtractedFile {
 
-    private final DeferredFileOutputStream data;
+    private final ExtractedFileBuffer data;
     private final String filePath;
     private final Amount progress;
     private final LocalDateTime lastModified;
 
-    Extracted7ZFile(DeferredFileOutputStream data, String filePath, LocalDateTime lastModified, Amount progress) {
+    Extracted7ZFile(ExtractedFileBuffer data, String filePath, LocalDateTime lastModified, Amount progress) {
         this.data = data;
         this.filePath = filePath;
         this.progress = progress;
@@ -36,20 +33,12 @@ class Extracted7ZFile implements ExtractedFile {
 
     @Override
     public InputStream openInputStream() throws IOException {
-        if (data.isInMemory()) {
-            return new ByteArrayInputStream(data.getData());
-        } else {
-            return new FileInputStream(data.getFile());
-        }
+        return data.getInputStream();
     }
 
     @Override
     public long size() {
-        if (data.isInMemory()) {
-            return data.getData().length;
-        } else {
-            return data.getFile().length();
-        }
+        return data.getSize();
     }
 
     @Override

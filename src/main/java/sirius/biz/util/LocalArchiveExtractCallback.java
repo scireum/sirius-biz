@@ -22,8 +22,6 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nonnull;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -38,7 +36,7 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
 
     private final IInArchive inArchive;
     private final Function<String, Boolean> filter;
-    private ByteArrayOutputStream buffer;
+    ExtractedFileBuffer buffer;
     private boolean skipExtraction;
     private boolean stop;
     private String filePath;
@@ -90,8 +88,7 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
         }
 
         filePath = fixEncodingProblems(filePath, (String) inArchive.getProperty(index, PropID.HOST_OS));
-
-        buffer = new ByteArrayOutputStream();
+        buffer = new ExtractedFileBuffer();
         return data -> {
             try {
                 buffer.write(data);
@@ -186,7 +183,7 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
             byteSource = new ByteSource() {
                 @Override
                 public InputStream openStream() {
-                    return new ByteArrayInputStream(buffer.toByteArray());
+                    return buffer.getInputStream();
                 }
             };
         }
@@ -198,6 +195,8 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
                                                                                   filesProcessed,
                                                                                   bytesProcessed,
                                                                                   totalBytes));
+
+        buffer.closeOutputStream();
     }
 
     @Override

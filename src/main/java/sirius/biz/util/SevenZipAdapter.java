@@ -15,7 +15,6 @@ import net.sf.sevenzipjbinding.IInArchive;
 import net.sf.sevenzipjbinding.ISequentialOutStream;
 import net.sf.sevenzipjbinding.PropID;
 import net.sf.sevenzipjbinding.SevenZipException;
-import org.apache.commons.io.output.DeferredFileOutputStream;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.Processor;
@@ -36,10 +35,6 @@ import java.util.function.Predicate;
  */
 class SevenZipAdapter implements IArchiveExtractCallback {
 
-    private static final int IN_MEMORY_THRESHOLD = 1024 * 1024 * 4;
-    private static final int INITIAL_BUFFER_SIZE = 1024 * 128;
-    private static final String TMP_FILE_PREFIX = "sirius_archive_";
-
     private final IInArchive inArchive;
     private final Predicate<String> filter;
     private final TaskContext taskContext;
@@ -48,7 +43,7 @@ class SevenZipAdapter implements IArchiveExtractCallback {
     private int filesExtracted = 0;
 
     private boolean stop;
-    private DeferredFileOutputStream currentBuffer;
+    private ExtractedFileBuffer currentBuffer;
     private String currentFilePath;
     private Instant currentLastModified;
 
@@ -64,7 +59,9 @@ class SevenZipAdapter implements IArchiveExtractCallback {
     @Override
     public ISequentialOutStream getStream(int index, ExtractAskMode extractAskMode) throws SevenZipException {
         // Just to be sure, set all shared variables to a known state...
-        closeBuffer();
+        if (currentBuffer != null) {
+            currentBuffer.closeOutputStream();
+        }
         currentFilePath = null;
 
         // An abort has been requested...
@@ -95,9 +92,7 @@ class SevenZipAdapter implements IArchiveExtractCallback {
         // We actually want to extract this file - setup the shared buffer properly.
         // Note that this might (sooner or later) create a temporary file. Therefore it is essential that this stream
         // is closed.
-        currentBuffer =
-                new DeferredFileOutputStream(IN_MEMORY_THRESHOLD, INITIAL_BUFFER_SIZE, TMP_FILE_PREFIX, null, null);
-
+        currentBuffer = new ExtractedFileBuffer();
         return data -> {
             try {
                 currentBuffer.write(data);
@@ -161,23 +156,7 @@ class SevenZipAdapter implements IArchiveExtractCallback {
         }
 
         // We need to always close the buffer (if it is open) as it might drag a temporary file along...
-        closeBuffer();
-    }
-
-    private void closeBuffer() {
-        if (currentBuffer != null) {
-            try {
-                currentBuffer.close();
-            } catch (Exception e) {
-                Exceptions.handle()
-                          .to(Log.SYSTEM)
-                          .error(e)
-                          .withSystemErrorMessage(
-                                  "Failed to close a temporary buffer created when extracting an archive: %s (%s)");
-            }
-
-            currentBuffer = null;
-        }
+        currentBuffer.closeOutputStream();
     }
 
     @Override
