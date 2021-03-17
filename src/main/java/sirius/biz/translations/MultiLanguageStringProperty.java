@@ -205,20 +205,15 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     @SuppressWarnings("unchecked")
     protected Object transformFromMongo(Value object) {
         Map<String, String> texts = new LinkedHashMap<>();
-
         Object valueObject = object.get();
-        if (valueObject == null) {
-            return texts;
-        }
         if (valueObject instanceof String) {
             texts.put(MultiLanguageString.FALLBACK_KEY, valueObject.toString());
-            return texts;
-        }
-
-        for (Document document : (List<Document>) valueObject) {
-            Object textValue = document.get(TEXT_PROPERTY);
-            if (textValue != null) {
-                texts.put(document.get(LANGUAGE_PROPERTY).toString(), textValue.toString());
+        } else if (valueObject instanceof List) {
+            for (Document document : (List<Document>) valueObject) {
+                Object textValue = document.get(TEXT_PROPERTY);
+                if (textValue != null) {
+                    texts.put(document.get(LANGUAGE_PROPERTY).toString(), textValue.toString());
+                }
             }
         }
         return texts;
