@@ -22,7 +22,7 @@ import java.io.InputStream;
  * Wraps a {@link DeferredFileOutputStream stream} that contains an extracted file either retained in memory or in
  * a temporary file.
  */
-public class ExtractedFileBuffer {
+class ExtractedFileBuffer {
 
     private static final int DEFAULT_IN_MEMORY_THRESHOLD = 1024 * 1024 * 4;
     private static final int DEFAULT_INITIAL_BUFFER_SIZE = 1024 * 128;
@@ -45,11 +45,7 @@ public class ExtractedFileBuffer {
      * @param tempFilePrefix    the prefix of the temporary file which will be created if the memory threshold is reached
      */
     public ExtractedFileBuffer(int memoryThreshold, int initialBufferSize, String tempFilePrefix) {
-        buffer = new DeferredFileOutputStream(memoryThreshold,
-                                              initialBufferSize,
-                                              tempFilePrefix,
-                                              null,
-                                              null);
+        buffer = new DeferredFileOutputStream(memoryThreshold, initialBufferSize, tempFilePrefix, null, null);
     }
 
     /**
