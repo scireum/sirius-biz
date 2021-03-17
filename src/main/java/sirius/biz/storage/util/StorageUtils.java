@@ -57,11 +57,11 @@ public class StorageUtils {
     public static final Pattern SANITIZE_SLASHES = Pattern.compile("[/\\\\]+");
 
     /**
-     * Regular Expressions that matches any character that is not allowed in a path.
+     * Regular Expressions that matches any character that is not allowed in a file.
      * <p>
      * These chars are prohibited as they might be reserved by the file system as indicated here: https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words
      */
-    private static final String SANITIZE_ILLEGAL_PATH_CHARS = "[?%*:|\"<>]";
+    public static final Pattern SANITIZE_ILLEGAL_FILE_CHARS = Pattern.compile("[?%*:|\"<>]");
 
     /**
      * Lists the layers which are placed in the config as <tt>storage.layer1.spaces</tt> etc. Each of
@@ -181,8 +181,7 @@ public class StorageUtils {
             return "";
         }
 
-        path = SANITIZE_SLASHES.matcher(path).replaceAll("/");
-        path = path.replaceAll(SANITIZE_ILLEGAL_PATH_CHARS, "_");
+        path = replaceIllegalFileChars(path, false);
 
         if (path.startsWith("/")) {
             path = path.substring(1);
@@ -192,9 +191,22 @@ public class StorageUtils {
             path = path.substring(0, path.length() - 1);
         }
 
-        path = path.replaceAll(SANITIZE_ILLEGAL_PATH_CHARS, "_");
-
         return path;
+    }
+
+    /**
+     * Can be used to replace chars in a path or file name that might be reserved by the file system.
+     * <p>
+     * Also cleans up multiple slashes and replaces backslashes. These can either be kept as a single forward slash
+     * or also be replaced by {@code _}, depending on the replaceSlashes parameter.
+     *
+     * @param path           the path or filename to clean up
+     * @param replaceSlashes if slashes should be replaced or only cleaned up
+     * @return the path or file name without illegal chars
+     */
+    public String replaceIllegalFileChars(String path, boolean replaceSlashes) {
+        path = SANITIZE_SLASHES.matcher(path).replaceAll(replaceSlashes ? "_" : "/");
+        return SANITIZE_ILLEGAL_FILE_CHARS.matcher(path).replaceAll("_");
     }
 
     /**
