@@ -324,7 +324,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
     @Override
     public void setData(Map<String, String> newData) {
         if (newData == null) {
-            super.setData(Collections.emptyMap());
+            this.clear();
             return;
         }
 
