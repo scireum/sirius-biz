@@ -323,10 +323,13 @@ public class MultiLanguageString extends SafeMap<String, String> {
 
     @Override
     public void setData(Map<String, String> newData) {
+        if (newData == null) {
+            super.setData(Collections.emptyMap());
+            return;
+        }
+
         // remove keys with null values first
-        super.setData(newData == null ?
-                      Collections.emptyMap() :
-                      newData.entrySet()
+        super.setData(newData.entrySet()
                              .stream()
                              .filter(entry -> entry.getValue() != null)
                              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
