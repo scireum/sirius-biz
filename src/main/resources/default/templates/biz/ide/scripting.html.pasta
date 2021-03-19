@@ -78,7 +78,7 @@
                 lastCheckedScript = script;
 
                 $.getJSON('/system/scripting/api/compile',
-                    {script: editor.getSession().getDocument().getValue(), node: $('#node').val()},
+                    {script: editor.getSession().getDocument().getValue()},
                     function (data) {
                         if (data.problems != null && data.problems.length > 0) {
                             editor.getSession().setAnnotations(data.problems);
@@ -110,7 +110,7 @@
 
         $('#execute').click(function () {
             $.getJSON('/system/scripting/api/submit',
-                {script: editor.getSession().getDocument().getValue(), node: $('#node').val()},
+                {script: editor.getSession().getDocument().getValue(), node: $('#node').next('select').val()},
                 function (data) {
                     clearMessages();
 
