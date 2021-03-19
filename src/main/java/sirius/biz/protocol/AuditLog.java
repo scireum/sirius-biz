@@ -23,6 +23,7 @@ import sirius.web.security.UserInfo;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -52,6 +53,7 @@ public class AuditLog implements Initializable {
 
         protected AuditLogBuilder(String message, boolean negative) {
             entry.setTimestamp(LocalDateTime.now());
+            entry.setDate(LocalDate.now());
             entry.setNegative(negative);
             entry.setMessage(message);
             entry.setIp(getCurrentIP());
