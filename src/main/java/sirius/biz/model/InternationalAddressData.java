@@ -49,7 +49,6 @@ public class InternationalAddressData extends AddressData {
      * <p>
      * Note that a code list "country" exists which enumerates possible countries.
      */
-    @SuppressWarnings("squid:S1192")
     @Explain("We provide a second constant here as they are semantically different.")
     public static final Mapping COUNTRY = Mapping.named("country");
     @Trim
