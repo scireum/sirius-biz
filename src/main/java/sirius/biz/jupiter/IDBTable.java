@@ -238,7 +238,7 @@ public class IDBTable {
          * @return a stream which iterates over all selected rows
          */
         public Stream<Values> manyRows(Limit limit, String... pathsToQuery) {
-            if (limit.getMaxItems() < FETCH_PAGE_SIZE) {
+            if (limit.getMaxItems() > 0 && limit.getMaxItems() < FETCH_PAGE_SIZE) {
                 return execute(limit, pathsToQuery).stream();
             } else {
                 return StreamSupport.stream(new QuerySpliterator(pathsToQuery, this, limit.getItemsToSkip()), false);
