@@ -1250,8 +1250,15 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             outcall.setIfModifiedSince(lastModifiedDate());
         }
 
-        if (outcall.getResponseCode() == HttpResponseStatus.NOT_MODIFIED.code()) {
+        int responseCode = outcall.getResponseCode();
+        if (responseCode == HttpResponseStatus.NOT_MODIFIED.code()) {
             return false;
+        }
+        if (responseCode >= 400) {
+            throw new IOException(Strings.apply(
+                    "Could not load the resource from: %s . The server responded with status %s!",
+                    url.toString(),
+                    HttpResponseStatus.valueOf(responseCode).toString()));
         }
 
         try (InputStream in = outcall.getInput()) {
@@ -1387,7 +1394,9 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         } catch (IOException e) {
             processContext.log(ProcessLog.error()
                                          .withNLSKey("VirtualFile.downloadFailed")
-                                         .withContext("url", url.toString()));
+                                         .withContext("url", url.toString())
+                                         .withContext("errorMessage",
+                                                      Exceptions.createHandled().error(e).handle().getMessage()));
         }
     }
 
