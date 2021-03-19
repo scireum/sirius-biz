@@ -12,11 +12,11 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorConfig;
 import sirius.biz.storage.util.StorageUtils;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Keeps the configuration used to build a FTP connector using the
@@ -31,7 +31,7 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
     protected FTPUplinkConnectorConfig(Extension config) {
         super(config);
 
-        this.encoding = config.get("encoding").getString();
+        this.encoding = config.get("encoding").asString(StandardCharsets.UTF_8.name());
     }
 
     @Override
@@ -47,12 +47,7 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
             client.setDataTimeout(readTimeoutMillis);
             client.setDefaultTimeout(readTimeoutMillis);
 
-            if (Strings.isFilled(encoding)) {
-                client.setControlEncoding(encoding);
-            }
-
-            // Enable autodetection of UTF-8 even if we set an encoding - if the server wants UTF-8 it will get it
-            client.setAutodetectUTF8(true);
+            client.setControlEncoding(encoding);
 
             client.connect(host, port);
             client.login(user, password);
