@@ -43,7 +43,7 @@ public class IDBSet {
      */
     public boolean contains(String key) {
         return jupiter.query(this::containsOp, redis -> {
-            redis.sendCommand(CMD_CONTAINS, key);
+            redis.sendCommand(CMD_CONTAINS, name, key);
 
             return redis.getIntegerReply() == 1;
         });
@@ -61,7 +61,10 @@ public class IDBSet {
      */
     public boolean containsAny(String... keys) {
         return jupiter.query(this::containsOp, redis -> {
-            redis.sendCommand(CMD_CONTAINS, keys);
+            String[] params = new String[keys.length + 1];
+            params[0] = name;
+            System.arraycopy(keys, 0, params, 1, keys.length);
+            redis.sendCommand(CMD_CONTAINS, params);
 
             return redis.getIntegerMultiBulkReply().stream().anyMatch(result -> result == 1);
         });
@@ -75,7 +78,10 @@ public class IDBSet {
      */
     public boolean containsAll(String... keys) {
         return jupiter.query(this::containsOp, redis -> {
-            redis.sendCommand(CMD_CONTAINS, keys);
+            String[] params = new String[keys.length + 1];
+            params[0] = name;
+            System.arraycopy(keys, 0, params, 1, keys.length);
+            redis.sendCommand(CMD_CONTAINS, params);
 
             return redis.getIntegerMultiBulkReply().stream().allMatch(result -> result == 1);
         });
@@ -89,7 +95,7 @@ public class IDBSet {
      */
     public int indexOf(String key) {
         return jupiter.query(this::indexOfOp, redis -> {
-            redis.sendCommand(CMD_INDEX_OF, key);
+            redis.sendCommand(CMD_INDEX_OF, name, key);
 
             return redis.getIntegerReply().intValue();
         });
