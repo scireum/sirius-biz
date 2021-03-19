@@ -556,6 +556,10 @@ public class IDBTable {
         });
     }
 
+    public String getName() {
+        return name;
+    }
+
     @Override
     public String toString() {
         return "IDB Table: " + name + " in: " + jupiter;

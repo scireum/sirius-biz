@@ -125,6 +125,10 @@ public class IDBSet {
         });
     }
 
+    public String getName() {
+        return name;
+    }
+
     @Override
     public String toString() {
         return "IDB Set: " + name + " in: " + jupiter;
