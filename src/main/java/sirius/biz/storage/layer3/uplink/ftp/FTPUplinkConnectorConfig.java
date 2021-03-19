@@ -12,6 +12,7 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import sirius.biz.storage.layer3.uplink.util.UplinkConnectorConfig;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
@@ -25,8 +26,12 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
 
     private static final int DEFAULT_FTP_PORT = 21;
 
+    private final String encoding;
+
     protected FTPUplinkConnectorConfig(Extension config) {
         super(config);
+
+        this.encoding = config.get("encoding").getString();
     }
 
     @Override
@@ -41,6 +46,14 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
             client.setConnectTimeout(connectTimeoutMillis);
             client.setDataTimeout(readTimeoutMillis);
             client.setDefaultTimeout(readTimeoutMillis);
+
+            if (Strings.isFilled(encoding)) {
+                client.setControlEncoding(encoding);
+            }
+
+            // Enable autodetection of UTF-8 even if we set an encoding - if the server wants UTF-8 it will get it
+            client.setAutodetectUTF8(true);
+
             client.connect(host, port);
             client.login(user, password);
             client.setFileType(FTP.BINARY_FILE_TYPE);
