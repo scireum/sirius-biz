@@ -29,7 +29,7 @@ import java.util.stream.Stream;
  * the config can specify which field is the name of an entry (<tt>name</tt> is the default). The same applies to the
  * field used to provide a description for an entry which defaults to <tt>description</tt>.
  * <p>
- * Additionally the config can specify which additional code fields are search when a code is normalized.
+ * Additionally the config can specify which additional code fields are searched when a code is normalized.
  * <p>
  * Furthermore, if the table contains a field "deprecated", these entries will still resolve and normalize like
  * normal entries, but will be ignored when suggesting values or when scanning the table. Therefore it is best to

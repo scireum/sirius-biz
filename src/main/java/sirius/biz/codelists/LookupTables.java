@@ -22,8 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Manages all known {@link LookupTable lookup tables}.
  * <p>
- * This is mainly reqired to instantiate the concrete type of lookup table for a given table name. Depending on
- * the configuration, this could either by a {@link CodeLists code list} or a table backed by
+ * This is mainly required to instantiate the concrete type of lookup table for a given table name. Depending on
+ * the configuration, this could either be a {@link CodeLists code list} or a table backed by
  * {@link sirius.biz.jupiter.InfoGraphDB}.
  *
  * @see LookupTable

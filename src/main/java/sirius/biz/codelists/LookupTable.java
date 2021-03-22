@@ -23,11 +23,11 @@ import java.util.stream.Stream;
  * Lookup tables are actually an abstraction over {@link CodeLists} and {@link sirius.biz.jupiter.IDBTable tables}
  * provided by Jupiter. Based on the system config, a lookup table can be represented by either of those.
  * <p>
- * A lookup table has a normalied code field, which is used e.g. in a database entity to represent a value. Using
+ * A lookup table has a normalized code field, which is used e.g. in a database entity to represent a value. Using
  * {@link #normalize(String)} one can transform aliased codes (e.g. a three letter ISO language code) into the main
  * code (e.g. a two letter ISO code). This can also be used to verify that a code is valid.
  * <p>
- * Next to the code these is always a name field which is used to provide a textual representation of the field. This
+ * Next to the code there is always a name field which is used to provide a textual representation of the field. This
  * can be automatically translated to the users language.
  * <p>
  * Using {@link #fetchField(String, String)}, {@link #fetchTranslatedField(String, String)} or even
@@ -37,7 +37,7 @@ import java.util.stream.Stream;
  * database entities and &lt;lookupField&gt; which can be used to render an autocomplete along with a value selection
  * helper for said fields.
  * <p>
- * A actually control how a lookup table is represented internally, a config section within <tt>lookup-tables</tt>
+ * To actually control how a lookup table is represented internally, a config section within <tt>lookup-tables</tt>
  * has to be defined. See <tt>component-biz.conf</tt> for further details. If no matching section is found, the
  * {@link CodeLists code list} with the same name is used.
  */
@@ -261,7 +261,7 @@ public abstract class LookupTable {
     protected abstract <T> Optional<T> performFetchObject(Class<T> type, @Nonnull String code, boolean useCache);
 
     /**
-     * Sugesst several entries for the given search term using the currently active language.
+     * Suggests several entries for the given search term using the currently active language.
      *
      * @param searchTerm the term used to filter the suggestions
      * @return a stream of suggestions for the given term. Note that most probably {@link Stream#limit(long)} should
@@ -272,7 +272,7 @@ public abstract class LookupTable {
     }
 
     /**
-     * Sugesst several entries for the given search term using the given language.
+     * Suggests several entries for the given search term using the given language.
      *
      * @param searchTerm the term used to filter the suggestions
      * @param lang       the language to translate the name and description to
