@@ -175,6 +175,8 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      * <p>
      * Note that "global" code lists are always stored in the system tenant and shared accross all tenants.
      *
+     * @param codeListName the name of the code list to determine if the code list is global and doesn't require a
+     *                     tenant at all
      * @return optional of the current tenant to be used to determine which code lists to operate on.
      */
     @SuppressWarnings("unchecked")
@@ -261,7 +263,6 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
         }
         return getCurrentTenant(codeListName).flatMap(tenant -> fetchValueFromCache(tenant, codeListName, code));
     }
-
 
     private Optional<Tuple<String, String>> fetchValueFromCache(@Nonnull Tenant<?> tenant,
                                                                 String codeListName,
@@ -397,7 +398,9 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      * @return the value in the given language associated with the code or either the code itself
      * (if {@link CodeListData#AUTO_FILL} is <tt>true</tt>) or an empty optional otherwise
      */
-    public Optional<String> tryGetTranslatedValue(@Nonnull String codeListName, @Nullable String code, @Nullable String lang) {
+    public Optional<String> tryGetTranslatedValue(@Nonnull String codeListName,
+                                                  @Nullable String code,
+                                                  @Nullable String lang) {
         if (Strings.isEmpty(code)) {
             return Optional.empty();
         }
