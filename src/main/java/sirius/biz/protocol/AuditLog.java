@@ -182,6 +182,7 @@ public class AuditLog implements Initializable {
                           .eq(AuditLogEntry.USER, entry.getUser())
                           .eq(AuditLogEntry.TENANT, entry.getTenant())
                           .eq(AuditLogEntry.IP, entry.getIp())
+                          .eq(AuditLogEntry.MESSAGE, entry.getMessage())
                           .exists();
         }
 
