@@ -16,6 +16,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Keeps the configuration used to build a FTP connector using the
@@ -25,8 +26,12 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
 
     private static final int DEFAULT_FTP_PORT = 21;
 
+    private final String encoding;
+
     protected FTPUplinkConnectorConfig(Extension config) {
         super(config);
+
+        this.encoding = config.get("encoding").asString(StandardCharsets.UTF_8.name());
     }
 
     @Override
@@ -41,6 +46,9 @@ class FTPUplinkConnectorConfig extends UplinkConnectorConfig<FTPClient> {
             client.setConnectTimeout(connectTimeoutMillis);
             client.setDataTimeout(readTimeoutMillis);
             client.setDefaultTimeout(readTimeoutMillis);
+
+            client.setControlEncoding(encoding);
+
             client.connect(host, port);
             client.login(user, password);
             client.setFileType(FTP.BINARY_FILE_TYPE);
