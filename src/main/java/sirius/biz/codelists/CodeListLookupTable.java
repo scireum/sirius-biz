@@ -8,7 +8,6 @@
 
 package sirius.biz.codelists;
 
-import sirius.biz.tenants.Tenant;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Limit;
@@ -62,12 +61,6 @@ class CodeListLookupTable extends LookupTable {
         }
     }
 
-    @Override
-    protected Optional<String> performReverseLookup(String name) {
-        return Optional.ofNullable(REVERSE_LOOKUP_CACHE.get(codeList + "-" + fetchCodeListTenantId() + "-" + name,
-                                                            this::performReverseLookupScan));
-    }
-
     /**
      * Flushes the internal cache which is used for reverse (value to code) lookups.
      */
@@ -75,8 +68,14 @@ class CodeListLookupTable extends LookupTable {
         REVERSE_LOOKUP_CACHE.clear();
     }
 
+    @Override
+    protected Optional<String> performReverseLookup(String name) {
+        return Optional.ofNullable(REVERSE_LOOKUP_CACHE.get(codeList + "-" + fetchCodeListTenantId() + "-" + name,
+                                                            this::performReverseLookupScan));
+    }
+
     private String fetchCodeListTenantId() {
-        return codeLists.getCurrentTenant(codeList).map(Tenant::getIdAsString).orElse("GLOBAL");
+        return codeLists.getRequiredTenant(codeList).getIdAsString();
     }
 
     private String performReverseLookupScan(String name) {
