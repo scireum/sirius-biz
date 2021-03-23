@@ -11,6 +11,7 @@ package sirius.biz.cluster.work;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.AsyncExecutor;
 import sirius.kernel.async.BackgroundLoop;
+import sirius.kernel.async.CallContext;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -43,7 +44,7 @@ public class WorkLoaderLoop extends BackgroundLoop {
     @Part
     private DistributedTasks distributedTasks;
 
-    private Lock schedulerLock = new ReentrantLock();
+    private final Lock schedulerLock = new ReentrantLock();
 
     @Nonnull
     @Override
@@ -69,6 +70,7 @@ public class WorkLoaderLoop extends BackgroundLoop {
         while (executor.getQueue().isEmpty() && executor.getActiveCount() < executor.getMaximumPoolSize()) {
             Optional<DistributedTasks.DistributedTask> work = distributedTasks.fetchWork();
             if (work.isPresent()) {
+                CallContext.initialize();
                 executor.submit(() -> executeWork(work.get()));
                 tasksScheduled++;
             } else {
@@ -94,6 +96,7 @@ public class WorkLoaderLoop extends BackgroundLoop {
     }
 
     private void executeWork(DistributedTasks.DistributedTask work) {
+        CallContext.initialize();
         work.execute();
         scheduleNextWork();
     }
