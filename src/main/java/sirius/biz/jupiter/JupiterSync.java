@@ -100,6 +100,9 @@ public class JupiterSync implements Startable, EndOfDayTask {
     @ConfigValue("jupiter.repository.uplink.bucket")
     private String uplinkBucket;
 
+    @ConfigValue("jupiter.repository.uplink.ignoredPaths")
+    private List<String> uplinkIgnoredPaths;
+
     @ConfigValue("jupiter.repository.localSpaceName")
     private String localRepoSpaceName;
 
@@ -377,13 +380,15 @@ public class JupiterSync implements Startable, EndOfDayTask {
             ObjectStore store = objectStores.getStore(uplinkStore);
             BucketName uplinkBucketName = store.getBucketName(uplinkBucket);
             store.listObjects(uplinkBucketName, null, object -> {
-                handleUplinkFile(processContext,
-                                 connection,
-                                 repositoryFiles,
-                                 filesToDelete,
-                                 store,
-                                 uplinkBucketName,
-                                 object);
+                if (uplinkIgnoredPaths.stream().noneMatch(ignoredPath -> object.getKey().startsWith(ignoredPath))) {
+                    handleUplinkFile(processContext,
+                                     connection,
+                                     repositoryFiles,
+                                     filesToDelete,
+                                     store,
+                                     uplinkBucketName,
+                                     object);
+                }
 
                 return true;
             });
