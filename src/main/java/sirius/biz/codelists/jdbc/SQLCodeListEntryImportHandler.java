@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists.jdbc;
 
+import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListEntryData;
 import sirius.biz.importer.ImportHandler;
 import sirius.biz.importer.ImportHandlerFactory;
@@ -19,6 +20,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -52,6 +54,18 @@ public class SQLCodeListEntryImportHandler extends SQLEntityImportHandler<SQLCod
      */
     protected SQLCodeListEntryImportHandler(Class<?> clazz, ImporterContext context) {
         super(clazz, context);
+    }
+
+    @Override
+    public Function<? super SQLCodeListEntry, ?> createExtractor(String fieldToExport) {
+        if (fieldToExport.equals(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE).getName())) {
+            return codeListEntry -> codeListEntry.getCodeListEntryData().getValue().getFallback();
+        }
+        if (fieldToExport.equals(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE)
+                                                                   .getName())) {
+            return codeListEntry -> codeListEntry.getCodeListEntryData().getAdditionalValue().getFallback();
+        }
+        return super.createExtractor(fieldToExport);
     }
 
     @Override

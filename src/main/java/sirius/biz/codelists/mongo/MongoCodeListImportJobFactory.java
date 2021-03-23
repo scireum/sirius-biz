@@ -16,6 +16,7 @@ import sirius.biz.jobs.batch.file.EntityImportJobFactory;
 import sirius.biz.jobs.params.CodeListParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.ProcessLink;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.Register;
 import sirius.web.http.QueryString;
@@ -47,6 +48,21 @@ public class MongoCodeListImportJobFactory extends EntityImportJobFactory {
     @Override
     protected Class<? extends BaseEntity<?>> getImportType() {
         return MongoCodeListEntry.class;
+    }
+
+    @Override
+    protected String createProcessTitle(Map<String, String> context) {
+        return super.createProcessTitle(context) + codeListParameter.get(context)
+                                                                    .map(codeList -> " - " + codeList.getCodeListData()
+                                                                                                     .getName())
+                                                                    .orElse("");
+    }
+
+    @Override
+    protected void executeTask(ProcessContext process) throws Exception {
+        process.addLink(new ProcessLink().withLabel("$CodeList")
+                                         .withUri("/code-list/" + process.require(codeListParameter).getIdAsString()));
+        super.executeTask(process);
     }
 
     @Override

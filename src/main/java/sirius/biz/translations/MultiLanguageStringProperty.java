@@ -40,6 +40,7 @@ import java.lang.reflect.Modifier;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -338,5 +339,13 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     public void parseValues(Object entity, Values values) {
         MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
         multiLanguageString.setFallback(values.at(0).getString());
+    }
+
+    @Override
+    protected void setValueToField(Object value, Object target) {
+        if (value instanceof String) {
+            value = Collections.singletonMap(MultiLanguageString.FALLBACK_KEY, value.toString());
+        }
+        super.setValueToField(value, target);
     }
 }
