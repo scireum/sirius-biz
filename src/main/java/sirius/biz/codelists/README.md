@@ -2,7 +2,7 @@
 
 Provides a framework to retrieve and manage simple masterdata. The more general part of this framework
 is [LookupTables](LookupTables.java) and [LookupTable](LookupTable.java)
-which provide access to more or less static date like "list of all known countries" etc.
+which provide access to more or less static data like "list of all known countries" etc.
 
 Such data can either be provided via [Jupiter](https://github.com/scireum/jupiter) or by an
 internal [CodeList](CodeLists.java).
