@@ -44,7 +44,7 @@ public class WorkLoaderLoop extends BackgroundLoop {
     @Part
     private DistributedTasks distributedTasks;
 
-    private Lock schedulerLock = new ReentrantLock();
+    private final Lock schedulerLock = new ReentrantLock();
 
     @Nonnull
     @Override
