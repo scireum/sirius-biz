@@ -46,39 +46,30 @@ public abstract class LookupTable {
     private static final int MAX_SUGGESTIONS = 25;
     private static final String CONFIG_KEY_SUPPORTS_SCAN = "supportsScan";
     private static final String CONFIG_KEY_CODE_CASE_MODE = "codeCase";
-    private static final String CODE_CASE_LOWER = "lower";
-    private static final String CODE_CASE_UPPER = "upper";
-
     private final boolean supportsScan;
-    private final boolean codesAreUppercase;
-    private final boolean codesAreLowercase;
+    private final CodeCase codeCase;
+
+    enum CodeCase {
+        LOWER, UPPER, VERBATIM
+    }
 
     protected final Extension extension;
 
     protected LookupTable(Extension extension) {
         this.extension = extension;
         this.supportsScan = extension.get(CONFIG_KEY_SUPPORTS_SCAN).asBoolean();
-
-        String codeCaseMode = extension.get(CONFIG_KEY_CODE_CASE_MODE).toLowerCase();
-        if (Strings.areEqual(CODE_CASE_LOWER, codeCaseMode)) {
-            codesAreUppercase = false;
-            codesAreLowercase = true;
-        } else if (Strings.areEqual(CODE_CASE_UPPER, codeCaseMode)) {
-            codesAreUppercase = true;
-            codesAreLowercase = false;
-        } else {
-            codesAreUppercase = false;
-            codesAreLowercase = false;
-        }
+        this.codeCase =
+                extension.get(CONFIG_KEY_CODE_CASE_MODE).upperCase().getEnum(CodeCase.class).orElse(CodeCase.VERBATIM);
     }
 
     protected String normalizeCodeValue(String code) {
-        if (codesAreLowercase) {
-            return code.toLowerCase();
-        } else if (codesAreUppercase) {
-            return code.toUpperCase();
-        } else {
-            return code;
+        switch (codeCase) {
+            case LOWER:
+                return code.toLowerCase();
+            case UPPER:
+                return code.toUpperCase();
+            default:
+                return code;
         }
     }
 
