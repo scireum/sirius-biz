@@ -721,12 +721,14 @@ public class Processes {
         taskContext.setAdapter(env);
         try {
             if (env.isActive()) {
+                CallContext.getCurrent().resetLang();
                 installUserOfProcess(userContext, env);
                 task.accept(env);
             }
         } catch (Exception e) {
             throw env.handle(e);
         } finally {
+            CallContext.getCurrent().resetLang();
             taskContext.setAdapter(taskContextAdapterBackup);
             userContext.setCurrentUser(userInfoBackup);
             if (complete) {
