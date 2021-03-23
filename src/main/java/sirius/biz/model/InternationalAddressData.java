@@ -49,7 +49,6 @@ public class InternationalAddressData extends AddressData {
      * <p>
      * Note that a code list "country" exists which enumerates possible countries.
      */
-    @SuppressWarnings("squid:S1192")
     @Explain("We provide a second constant here as they are semantically different.")
     public static final Mapping COUNTRY = Mapping.named("country");
     @Trim
@@ -66,20 +65,6 @@ public class InternationalAddressData extends AddressData {
     @Override
     public boolean isAnyFieldEmpty() {
         return super.isAnyFieldEmpty() || Strings.isEmpty(country);
-    }
-
-    /**
-     * Determines if the given address is partially filled.
-     * <p>
-     * Note that this excludes the check if only a country if filled and nothing else (as this is commonly
-     * provided by a drop-down selector). Therefore we treat an address with only a country as "empty".
-     *
-     * @return <tt>true</tt> if there is at least one field filled and at least one field left empty.
-     * <tt>false</tt> otherwise.
-     */
-    @Override
-    public boolean isPartiallyFilled() {
-        return isAnyFieldEmpty() && !super.areAllFieldsEmpty();
     }
 
     @Override

@@ -70,6 +70,17 @@ public class InfoGraphDB {
                                 row.at(5).asLong(0));
     }
 
+
+    /**
+     * Provides a query wrapper for the given set.
+     *
+     * @param name the name of the set to access
+     * @return a wrapper to query an InfoGraphDB set
+     */
+    public IDBSet set(String name) {
+        return new IDBSet(connection, name);
+    }
+
     /**
      * Lists all known sets in the connected InfoGraphDB.
      *

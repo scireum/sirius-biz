@@ -21,7 +21,6 @@ import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
-import sirius.kernel.commons.Value;
 import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -123,7 +122,7 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
             throw new IllegalArgumentException("codeList must not be empty");
         }
 
-        Tenant<?> currentTenant = getCurrentTenant(codeListName).orElseThrow(this::warnAboutMissingTenant);
+        Tenant<?> currentTenant = getRequiredTenant(codeListName);
 
         L codeList = createListQuery().eq(CodeList.TENANT, currentTenant)
                                       .eq(CodeList.CODE_LIST_DATA.inner(CodeListData.CODE), codeListName)
@@ -132,15 +131,11 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
         return Optional.ofNullable(codeList);
     }
 
-    protected HandledException warnAboutMissingTenant() {
-        return Exceptions.handle().to(LOG).withNLSKey("CodeLists.noCurrentTenant").handle();
-    }
-
     @Nonnull
     private L findOrCreateCodelist(@Nonnull String codeListName) {
         Optional<L> optionalCodeList = findCodelist(codeListName);
 
-        Tenant<?> currentTenant = getCurrentTenant(codeListName).orElseThrow(this::warnAboutMissingTenant);
+        Tenant<?> currentTenant = getRequiredTenant(codeListName);
 
         if (optionalCodeList.isPresent()) {
             return optionalCodeList.get();
@@ -180,6 +175,8 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      * <p>
      * Note that "global" code lists are always stored in the system tenant and shared accross all tenants.
      *
+     * @param codeListName the name of the code list to determine if the code list is global and doesn't require a
+     *                     tenant at all
      * @return optional of the current tenant to be used to determine which code lists to operate on.
      */
     @SuppressWarnings("unchecked")
@@ -203,6 +200,24 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
         }
 
         return Optional.of(currentTenant);
+    }
+
+    /**
+     * Determines the effective current tenant and fails if none is present.
+     * <p>
+     * This uses the same lookup logic as {@link #getCurrentTenant(String)}.
+     *
+     * @param codeListName the name of the code list to determine if the code list is global and doesn't require a
+     *                     tenant at all
+     * @return the currently active tenant to use for code list operations
+     * @throws HandledException in case a tenant is required and none is available
+     */
+    protected Tenant<?> getRequiredTenant(String codeListName) {
+        return getCurrentTenant(codeListName).orElseThrow(this::warnAboutMissingTenant);
+    }
+
+    protected HandledException warnAboutMissingTenant() {
+        return Exceptions.handle().to(LOG).withNLSKey("CodeLists.noCurrentTenant").handle();
     }
 
     private boolean isCodeListGlobal(String codeListName) {
@@ -248,7 +263,6 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
         }
         return getCurrentTenant(codeListName).flatMap(tenant -> fetchValueFromCache(tenant, codeListName, code));
     }
-
 
     private Optional<Tuple<String, String>> fetchValueFromCache(@Nonnull Tenant<?> tenant,
                                                                 String codeListName,
@@ -384,7 +398,9 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      * @return the value in the given language associated with the code or either the code itself
      * (if {@link CodeListData#AUTO_FILL} is <tt>true</tt>) or an empty optional otherwise
      */
-    public Optional<String> tryGetTranslatedValue(@Nonnull String codeListName, @Nullable String code, @Nullable String lang) {
+    public Optional<String> tryGetTranslatedValue(@Nonnull String codeListName,
+                                                  @Nullable String code,
+                                                  @Nullable String lang) {
         if (Strings.isEmpty(code)) {
             return Optional.empty();
         }
