@@ -21,6 +21,8 @@ import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.protocol.Traced;
 import sirius.biz.tenants.TenantUserManager;
+import sirius.db.es.ElasticEntity;
+import sirius.db.es.ElasticQuery;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.BaseEntity;
@@ -87,6 +89,8 @@ public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
             Query<?, ?, ?> query = descriptor.getMapper().select((descriptor.getType().asSubclass(BaseEntity.class)));
             if (query instanceof SmartQuery) {
                 ((SmartQuery<? extends SQLEntity>) query).iterateBlockwiseAll(this::processEntity);
+            } else if (query instanceof ElasticQuery) {
+                ((ElasticQuery<? extends ElasticEntity>) query).deliberatelyUnrouted().iterateAll(this::processEntity);
             } else {
                 query.iterateAll(this::processEntity);
             }
