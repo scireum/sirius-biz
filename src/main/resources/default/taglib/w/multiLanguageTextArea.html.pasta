@@ -89,7 +89,7 @@
     <i:else>
         <w:textarea span="@span"
                     smallSpan="@smallSpan"
-                    name="name"
+                    name="@name"
                     id="@id"
                     required="@required"
                     value="@value.fetchTextOrFallback()"

@@ -99,14 +99,14 @@
     <i:else>
         <w:textfield span="@span"
                      smallSpan="@smallSpan"
-                     name="name"
+                     name="@name"
                      id="@id"
                      required="@required"
                      value="@value.fetchTextOrFallback()"
                      label="@label"
                      forceLabel="@forceLabel"
                      adminOnly="@adminOnly"
-                     fieldName="fieldName"
+                     fieldName="@fieldName"
                      help="@help"/>
     </i:else>
 </i:if>
