@@ -102,7 +102,7 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
     @Nonnull
     private String fixEncodingProblems(String filePath, String hostOS) {
         String newFilePath = fixWindowsEncoding(filePath, hostOS);
-        newFilePath = fixOtherStrangeBug(newFilePath);
+        newFilePath = attemptToFixEncodingErrors(newFilePath);
         return newFilePath;
     }
 
@@ -147,8 +147,8 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
 
     @Nonnull
     @SuppressWarnings("squid:S1067")
-    @Explain("Reducing operators won't increase code visibility")
-    private String fixOtherStrangeBug(@Nonnull String filePath) {
+    @Explain("We rather keep all comparisons in one place.")
+    private String attemptToFixEncodingErrors(@Nonnull String filePath) {
         byte[] filePathBytes = filePath.getBytes(StandardCharsets.UTF_8);
         for (int i = 0; i < filePathBytes.length - 3; i++) {
             // The bug interpretates UTF-8 as ISO-8859-1 (which doubles the number of characters)
