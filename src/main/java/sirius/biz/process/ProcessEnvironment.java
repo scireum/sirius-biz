@@ -38,6 +38,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +57,7 @@ class ProcessEnvironment implements ProcessContext {
 
     private final RateLimit logLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
     private final RateLimit timingLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
+    private final CombinedFuture barrier = new CombinedFuture();
     private final RateLimit stateUpdate = RateLimit.timeInterval(5, TimeUnit.SECONDS);
     private Map<String, Average> timings;
     private Map<String, Average> adminTimings;
@@ -387,5 +389,42 @@ class ProcessEnvironment implements ProcessContext {
     @Override
     public TableOutput.ColumnBuilder addTable(String name, String label) {
         return new TableOutput.ColumnBuilder(this, name, label);
+    }
+
+    @Override
+    public <P> Promise<P> computeInSideTask(Producer<P> parallelTask) {
+        Promise<P> promise = new Promise<>();
+        performInSideTask(() -> promise.success(parallelTask.create())).onFailure(promise::fail);
+
+        return promise;
+    }
+
+    @Override
+    public Future performInSideTask(UnitOfWork parallelTask) {
+        Future future = new Future();
+        tasks.executor("process-sidetask").fork(() -> {
+            try {
+                parallelTask.execute();
+                future.success();
+            } catch (Exception e) {
+                future.fail(e);
+            }
+        }).onFailure(future::fail);
+
+        barrier.add(future);
+
+        return future;
+    }
+
+    protected void awaitCompletion() {
+        Future completionFuture = barrier.asFuture();
+        if (!completionFuture.isCompleted()) {
+            log(ProcessLog.info().withNLSKey("Process.awaitingSideTaskCompletion"));
+            while (TaskContext.get().isActive()) {
+                if (completionFuture.await(Duration.ofSeconds(5))) {
+                    return;
+                }
+            }
+        }
     }
 }

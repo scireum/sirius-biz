@@ -13,9 +13,13 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.output.ChartOutput;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableOutput;
+import sirius.kernel.async.Future;
+import sirius.kernel.async.Promise;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.TaskContextAdapter;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.UnitOfWork;
 import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
@@ -289,4 +293,39 @@ public interface ProcessContext extends TaskContextAdapter {
      * @throws IOException in case of a local IO error
      */
     OutputStream addFile(String filename) throws IOException;
+
+    /**
+     * Executes the given task in parallel to the main thread of this process.
+     * <p>
+     * If no "work stealing" threads are available the main thread is blocked and the task is executed there.
+     * <p>
+     * Note that the process will await the completion of all of its forked side tasks. However, once this state has
+     * been reached no further tasks may be started. Therefore when processing the results of this task, a
+     * {@link sirius.kernel.async.CombinedFuture} has to be used in the main thread, rather than a simple completion
+     * handler attached to the promise.
+     *
+     * @param parallelTask the task to execute in parallel
+     * @param <P>          the type of result being produced by the given task
+     * @return a promise which represents the result of this task. Note that the main thread can wait for the completion
+     * of one or many tasks using {@link sirius.kernel.async.CombinedFuture}. However, a sideTask must not fork another
+     * side task in the completion handler of the promise, as the process might have already ended / being shutdown then.
+     */
+    <P> Promise<P> computeInSideTask(Producer<P> parallelTask);
+
+    /**
+     * Executes the given task in parallel to the main thread of this process.
+     * <p>
+     * If no "work stealing" threads are available the main thread is blocked and the task is executed there.
+     * <p>
+     * Note that the process will await the completion of all of its forked side tasks. However, once this state has
+     * been reached no further tasks may be started. Therefore when processing the results of this task, a
+     * {@link sirius.kernel.async.CombinedFuture} has to be used in the main thread, rather than a simple completion
+     * handler attached to the future.
+     *
+     * @param parallelTask the task to execute in parallel
+     * @return a future which is fulfilled once the task is completed.
+     * @see #computeInSideTask(Producer) for a description why the completion handler of the future must not fork
+     * additional sideTasks (other than using a {@link sirius.kernel.async.CombinedFuture} in the main thread).
+     */
+    Future performInSideTask(UnitOfWork parallelTask);
 }
