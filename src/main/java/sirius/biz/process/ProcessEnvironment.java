@@ -39,10 +39,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -125,25 +125,29 @@ class ProcessEnvironment implements ProcessContext {
         addTiming(counter, -1L, adminOnly);
     }
 
-    protected Map<String, Average> getTimings() {
+    private Map<String, Average> getTimings() {
         if (timings == null) {
-            timings = new HashMap<>();
-            loadPreviousTimings();
+            initializeTimings();
         }
 
         return timings;
     }
 
-    protected Map<String, Average> getAdminTimings() {
+    private Map<String, Average> getAdminTimings() {
         if (adminTimings == null) {
-            adminTimings = new HashMap<>();
-            loadPreviousTimings();
+            initializeTimings();
         }
 
         return adminTimings;
     }
 
-    private void loadPreviousTimings() {
+    private synchronized void initializeTimings() {
+        if (timings != null) {
+            return;
+        }
+
+        timings = new ConcurrentHashMap<>();
+        adminTimings = new ConcurrentHashMap<>();
         processes.fetchProcess(processId).ifPresent(process -> {
             process.getPerformanceCounters().data().keySet().forEach(key -> {
                 int counter = process.getPerformanceCounters().get(key).orElse(0);
