@@ -336,6 +336,27 @@ public abstract class ObjectStorageSpace {
     }
 
     /**
+     * Creates a new {@link DownloadManager} for this storage space.
+     *
+     * @param completionConsumer the handler which is supplied with all downloaded objects
+     * @param failureHandler     the handler which is  invoked if an error occurs
+     * @param <P>                the payload type which is carried along so that the callbacks have some context
+     * @return a new download manager for this space
+     */
+    public <P> DownloadManager<P> downloadManager(BiConsumer<P, Optional<FileHandle>> completionConsumer,
+                                                  BiConsumer<P, Exception> failureHandler) {
+        return new DownloadManager<>(this, completionConsumer, (payload, innerError) -> {
+            failureHandler.accept(payload,
+                                  Exceptions.handle()
+                                            .error(innerError)
+                                            .to(StorageUtils.LOG)
+                                            .withSystemErrorMessage(
+                                                    "Layer 1: Failed to perform a download using the DownloadManager: %s (%s)")
+                                            .handle());
+        });
+    }
+
+    /**
      * Downloads an provides the contents of the requested object.
      *
      * @param objectKey the id of the object
