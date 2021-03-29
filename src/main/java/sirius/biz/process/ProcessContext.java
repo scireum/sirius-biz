@@ -25,6 +25,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 
 import javax.annotation.Nonnull;
+import javax.annotation.concurrent.ThreadSafe;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -41,6 +42,7 @@ import java.util.function.Supplier;
  * install this using {@link sirius.kernel.async.TaskContext#setAdapter(TaskContextAdapter)} so that calls to
  * {@link sirius.kernel.async.TaskContext} will be delegated to the processes framework.
  */
+@ThreadSafe
 public interface ProcessContext extends TaskContextAdapter {
 
     /**
