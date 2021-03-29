@@ -195,10 +195,6 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
     @Nullable
     @Override
     protected FileHandle getData(String objectKey) throws IOException {
-        if (Strings.isEmpty(objectKey)) {
-            return null;
-        }
-
         File file = getFile(objectKey);
         if (file.exists()) {
             return FileHandle.permanentFileHandle(file);
