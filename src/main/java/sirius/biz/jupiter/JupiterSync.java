@@ -541,14 +541,14 @@ public class JupiterSync implements Startable, EndOfDayTask {
         Monoflop stateUpdate = Monoflop.create();
         while (processContext.isActive() && attempts-- > 0 && !connector.repository().isEpochInSync()) {
             if (stateUpdate.firstCall()) {
-                processContext.setCurrentStateMessage(Strings.apply("Waiting for the repository of %s to be synced...",
+                processContext.forceUpdateState(Strings.apply("Waiting for the repository of %s to be synced...",
                                                                     connector.getName()));
             }
             Wait.seconds(SYNC_AWAIT_PAUSE_SECONDS);
         }
 
         if (stateUpdate.successiveCall()) {
-            processContext.setCurrentStateMessage(null);
+            processContext.forceUpdateState(null);
         }
 
         if (connector.repository().isEpochInSync()) {

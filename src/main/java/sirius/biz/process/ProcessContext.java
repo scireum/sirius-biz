@@ -165,7 +165,9 @@ public interface ProcessContext extends TaskContextAdapter {
      * along with {@link TaskContext#setState(String, Object...)} is most probably a better choice.
      *
      * @param state the new state message to show
+     * @deprecated Use either {@link #tryUpdateState(String)} or {@link #forceUpdateState(String)}.
      */
+    @Deprecated
     void setCurrentStateMessage(String state);
 
     /**

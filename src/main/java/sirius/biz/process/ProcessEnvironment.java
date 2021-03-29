@@ -17,9 +17,15 @@ import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableOutput;
 import sirius.biz.process.output.TableProcessOutputType;
 import sirius.db.mixing.types.StringMap;
+import sirius.kernel.async.CombinedFuture;
+import sirius.kernel.async.Future;
+import sirius.kernel.async.Promise;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.RateLimit;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.UnitOfWork;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Average;
@@ -50,6 +56,7 @@ class ProcessEnvironment implements ProcessContext {
 
     private final RateLimit logLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
     private final RateLimit timingLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
+    private final RateLimit stateUpdate = RateLimit.timeInterval(5, TimeUnit.SECONDS);
     private Map<String, Average> timings;
     private Map<String, Average> adminTimings;
 
@@ -226,9 +233,49 @@ class ProcessEnvironment implements ProcessContext {
         // ignored
     }
 
+    /**
+     * Invoked if {@link sirius.kernel.async.TaskContext#setState(String, Object...)} is called in the attached
+     * context.
+     *
+     * @param message the message to set as state
+     * @deprecated Use either {@link #forceUpdateState(String)} or {@link #tryUpdateState(String)}
+     */
     @Override
-    public void setState(String state) {
+    @Deprecated
+    public void setState(String message) {
+        processes.setStateMessage(processId, message);
+    }
+
+    /**
+     * Updates the "current state" message of the process.
+     * <p>
+     * Note that this doesn't perform any rate limiting etc. Therefore {@link TaskContext#shouldUpdateState()}
+     * along with {@link TaskContext#setState(String, Object...)} is most probably a better choice.
+     *
+     * @param state the new state message to show
+     * @deprecated Use either {@link #tryUpdateState(String)} or {@link #forceUpdateState(String)}.
+     */
+    @Override
+    @Deprecated
+    public void setCurrentStateMessage(String state) {
         processes.setStateMessage(processId, state);
+    }
+
+    @Override
+    public RateLimit shouldUpdateState() {
+        return stateUpdate;
+    }
+
+    @Override
+    public void tryUpdateState(String message) {
+        if (shouldUpdateState().check()) {
+            forceUpdateState(message);
+        }
+    }
+
+    @Override
+    public void forceUpdateState(String message) {
+        processes.setStateMessage(processId, message);
     }
 
     @Override
@@ -256,11 +303,6 @@ class ProcessEnvironment implements ProcessContext {
     @Nullable
     public String getTenantId() {
         return processes.fetchProcess(processId).map(Process::getTenantId).orElse(null);
-    }
-
-    @Override
-    public void setCurrentStateMessage(String state) {
-        processes.setStateMessage(processId, state);
     }
 
     @Override
