@@ -375,6 +375,7 @@ public class ObjectStore {
         File dest = null;
         try {
             dest = File.createTempFile("AMZS3", null);
+            ensureBucketExists(bucket);
             transferManager.download(new GetObjectRequest(bucket.getName(), objectId),
                                      dest,
                                      new MonitoringProgressListener(false)).waitForCompletion();
