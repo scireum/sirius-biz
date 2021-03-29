@@ -196,7 +196,7 @@ public class LocalArchiveExtractCallback implements IArchiveExtractCallback {
                                                                                   bytesProcessed,
                                                                                   totalBytes));
 
-        buffer.closeOutputStream();
+        buffer.cleanup();
     }
 
     @Override

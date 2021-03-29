@@ -90,11 +90,14 @@ class ExtractedFileBuffer {
     }
 
     /**
-     * Closes the underlying output stream.
+     * Releases all internally acquired resources.
      */
-    public void closeOutputStream() {
+    public void cleanup() {
         try {
             buffer.close();
+            if (!buffer.isInMemory()) {
+                Files.delete(buffer.getFile());
+            }
         } catch (Exception e) {
             Exceptions.handle()
                       .to(Log.SYSTEM)

@@ -60,7 +60,7 @@ class SevenZipAdapter implements IArchiveExtractCallback {
     public ISequentialOutStream getStream(int index, ExtractAskMode extractAskMode) throws SevenZipException {
         // Just to be sure, set all shared variables to a known state...
         if (currentBuffer != null) {
-            currentBuffer.closeOutputStream();
+            currentBuffer.cleanup();
         }
         currentFilePath = null;
 
@@ -156,7 +156,7 @@ class SevenZipAdapter implements IArchiveExtractCallback {
         }
 
         // We need to always close the buffer (if it is open) as it might drag a temporary file along...
-        currentBuffer.closeOutputStream();
+        currentBuffer.cleanup();
     }
 
     @Override
