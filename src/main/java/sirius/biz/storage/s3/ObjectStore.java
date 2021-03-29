@@ -35,8 +35,10 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import sirius.biz.storage.layer1.FileHandle;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.Operation;
+import sirius.kernel.async.Promise;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Files;
@@ -45,6 +47,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.health.HandledException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -64,7 +67,10 @@ import java.util.stream.Collectors;
  */
 public class ObjectStore {
 
-    private static final String EXECUTOR_S3 = "s3";
+    /**
+     * Contains the name of the thread pool, which is used for all up- and downloads.
+     */
+    public static final String EXECUTOR_S3 = "s3";
 
     /**
      * When performing a multipart upload in {@link #upload(BucketName, String, InputStream)} we keep
@@ -96,6 +102,9 @@ public class ObjectStore {
     @Part
     private static Tasks tasks;
 
+    /**
+     * Provides some book keeping and monitoring for S3 up- and downloads.
+     */
     private class MonitoringProgressListener implements S3ProgressListener {
 
         private final Watch watch = Watch.start();
@@ -132,6 +141,42 @@ public class ObjectStore {
                 } else {
                     stores.failedDownloads.inc();
                 }
+            }
+        }
+    }
+
+    /**
+     * Provides a bridge between AWS S3 async downloads and {@link Promise promises} used by <tt>sirius</tt>.
+     */
+    private class AsyncDownloadListener extends MonitoringProgressListener {
+        private final String bucket;
+        private final String objectId;
+        private final File file;
+        private final Promise<FileHandle> promise;
+
+        AsyncDownloadListener(String bucket, String objectId, File file, Promise<FileHandle> promise) {
+            super(false);
+            this.bucket = bucket;
+            this.objectId = objectId;
+            this.file = file;
+            this.promise = promise;
+        }
+
+        @Override
+        public void progressChanged(ProgressEvent progressEvent) {
+            super.progressChanged(progressEvent);
+            if (progressEvent.getEventType() == ProgressEventType.TRANSFER_COMPLETED_EVENT) {
+                if (!promise.isCompleted()) {
+                    promise.success(FileHandle.temporaryFileHandle(file));
+                }
+            } else if (progressEvent.getEventType() == ProgressEventType.TRANSFER_FAILED_EVENT) {
+                Files.delete(file);
+                promise.fail(Exceptions.handle()
+                                       .to(ObjectStores.LOG)
+                                       .withSystemErrorMessage("An error occurred while trying to download: %s/%s",
+                                                               bucket,
+                                                               objectId)
+                                       .handle());
             }
         }
     }
@@ -395,24 +440,53 @@ public class ObjectStore {
             Files.delete(dest);
             if (e.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
                 throw new FileNotFoundException(objectId);
+            } else {
+                throw handleDownloadError(bucket, objectId, e);
             }
-
-            throw Exceptions.handle()
-                            .to(ObjectStores.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("An error occurred while trying to download: %s/%s - %s (%s)",
-                                                    bucket,
-                                                    objectId)
-                            .handle();
         } catch (Exception e) {
             Files.delete(dest);
-            throw Exceptions.handle()
-                            .to(ObjectStores.LOG)
-                            .error(e)
-                            .withSystemErrorMessage("An error occurred while trying to download: %s/%s - %s (%s)",
-                                                    bucket,
-                                                    objectId)
-                            .handle();
+            throw handleDownloadError(bucket, objectId, e);
+        }
+    }
+
+    private HandledException handleDownloadError(BucketName bucket, String objectId, Exception e) {
+        return Exceptions.handle()
+                         .to(ObjectStores.LOG)
+                         .error(e)
+                         .withSystemErrorMessage("An error occurred while trying to download: %s/%s - %s (%s)",
+                                                 bucket,
+                                                 objectId)
+                         .handle();
+    }
+
+    /**
+     * Performs an async downlod of the given object in the given bucket.
+     *
+     * @param bucket   the bucket in which the object resides
+     * @param objectId the object to download
+     * @return the promise which will be fulfilled with the downloaded object as file
+     * @throws FileNotFoundException if the requested object does not exist
+     */
+    public Promise<FileHandle> downloadAsync(BucketName bucket, String objectId) throws FileNotFoundException {
+        File dest = null;
+        try {
+            dest = File.createTempFile("AMZS3", null);
+            Promise<FileHandle> promise = new Promise<>();
+            ensureBucketExists(bucket);
+            transferManager.download(new GetObjectRequest(bucket.getName(), objectId),
+                                     dest,
+                                     new AsyncDownloadListener(bucket.getName(), objectId, dest, promise));
+            return promise;
+        } catch (AmazonS3Exception e) {
+            Files.delete(dest);
+            if (e.getStatusCode() == HttpResponseStatus.NOT_FOUND.code()) {
+                throw new FileNotFoundException(objectId);
+            }
+
+            throw handleDownloadError(bucket, objectId, e);
+        } catch (Exception e) {
+            Files.delete(dest);
+            throw handleDownloadError(bucket, objectId, e);
         }
     }
 

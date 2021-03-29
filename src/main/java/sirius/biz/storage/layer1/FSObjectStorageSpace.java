@@ -12,6 +12,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.layer1.transformer.ByteBlockTransformer;
 import sirius.biz.storage.layer1.transformer.TransformingInputStream;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.async.Promise;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
@@ -206,6 +207,16 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
         return null;
     }
 
+    @Override
+    protected Promise<FileHandle> getDataAsync(String objectId) {
+        File file = getFile(objectId);
+        if (file.exists()) {
+            return new Promise<>(FileHandle.permanentFileHandle(file));
+        } else {
+            return new Promise<>(null);
+        }
+    }
+
     @Nullable
     @Override
     protected FileHandle getData(String objectKey, ByteBlockTransformer transformer) throws IOException {
@@ -228,6 +239,19 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
                                     objectKey)
                             .handle();
         }
+    }
+
+    @Override
+    protected Promise<FileHandle> getDataAsync(String objectId, ByteBlockTransformer transformer) {
+        // We actually perform a synchronous call here, as the IO invloved is negligible...
+        Promise<FileHandle> result = new Promise<>();
+        try {
+            result.success(getData(objectId, transformer));
+        } catch (IOException e) {
+            result.fail(e);
+        }
+
+        return result;
     }
 
     @Override
