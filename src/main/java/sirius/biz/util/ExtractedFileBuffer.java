@@ -9,6 +9,7 @@
 package sirius.biz.util;
 
 import org.apache.commons.io.output.DeferredFileOutputStream;
+import sirius.kernel.commons.Files;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 
@@ -33,7 +34,7 @@ class ExtractedFileBuffer {
     /**
      * Creates a buffer with the default settings.
      */
-    public ExtractedFileBuffer() {
+    ExtractedFileBuffer() {
         this(DEFAULT_IN_MEMORY_THRESHOLD, DEFAULT_INITIAL_BUFFER_SIZE, DEFAULT_TMP_FILE_PREFIX);
     }
 
@@ -44,7 +45,7 @@ class ExtractedFileBuffer {
      * @param initialBufferSize the initial size of the underlying output stream in bytes
      * @param tempFilePrefix    the prefix of the temporary file which will be created if the memory threshold is reached
      */
-    public ExtractedFileBuffer(int memoryThreshold, int initialBufferSize, String tempFilePrefix) {
+    ExtractedFileBuffer(int memoryThreshold, int initialBufferSize, String tempFilePrefix) {
         buffer = new DeferredFileOutputStream(memoryThreshold, initialBufferSize, tempFilePrefix, null, null);
     }
 
