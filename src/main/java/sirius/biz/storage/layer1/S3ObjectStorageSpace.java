@@ -15,6 +15,8 @@ import sirius.biz.storage.s3.BucketName;
 import sirius.biz.storage.s3.ObjectStore;
 import sirius.biz.storage.s3.ObjectStores;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.async.Promise;
+import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.di.std.Part;
@@ -51,9 +53,12 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
 
     @Part
     private static ObjectStores objectStores;
-    private final String bucketName;
 
-    private ObjectStore store;
+    @Part
+    private static Tasks tasks;
+
+    private final String bucketName;
+    private final ObjectStore store;
 
     /**
      * Creates a new instance based on the given config.
@@ -149,6 +154,16 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
         }
     }
 
+    @Override
+    protected Promise<FileHandle> getDataAsync(String objectId) {
+        try {
+            return store.downloadAsync(bucketName(), objectId);
+        } catch (FileNotFoundException ex) {
+            Exceptions.ignore(ex);
+            return new Promise<>(null);
+        }
+    }
+
     @Nullable
     @Override
     protected FileHandle getData(String objectKey, ByteBlockTransformer transformer) throws IOException {
@@ -171,6 +186,30 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
                                     objectKey)
                             .handle();
         }
+    }
+
+    @Override
+    protected Promise<FileHandle> getDataAsync(String objectId, ByteBlockTransformer transformer) {
+        Promise<FileHandle> result = new Promise<>();
+
+        // We cannot use the AWS TransferManager for an async download here, as we have to apply our transfomer.
+        // Therefore we run the whole task in a separate thread...
+        tasks.executor(ObjectStore.EXECUTOR_S3).fork(() -> {
+            try {
+                result.success(getData(objectId, transformer));
+            } catch (Exception ex) {
+                result.fail(Exceptions.handle()
+                                      .error(ex)
+                                      .to(StorageUtils.LOG)
+                                      .withSystemErrorMessage(
+                                              "Layer 1/S3: An error occurred when downloading %s (%s): %s (%s)",
+                                              objectId,
+                                              name)
+                                      .handle());
+            }
+        });
+
+        return result;
     }
 
     @Nullable

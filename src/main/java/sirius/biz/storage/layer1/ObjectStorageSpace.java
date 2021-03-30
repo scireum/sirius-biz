@@ -19,6 +19,7 @@ import sirius.biz.storage.layer1.transformer.CompressionLevel;
 import sirius.biz.storage.layer1.transformer.DeflateTransformer;
 import sirius.biz.storage.layer1.transformer.InflateTransformer;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.async.Promise;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.GlobalContext;
@@ -33,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 
@@ -314,6 +316,47 @@ public abstract class ObjectStorageSpace {
     }
 
     /**
+     * Tries to perform the download asynchronous and yields an appropriate promise.
+     *
+     * @param objectId the object to download
+     * @return a promise which is fulfilled with the downloaded data. Note that an empty optional is used to signal
+     * that the object with the given ID doesnt exist
+     */
+    public Promise<Optional<FileHandle>> downloadAsync(String objectId) {
+        Promise<Optional<FileHandle>> promise = new Promise<>();
+        if (Strings.isEmpty(objectId)) {
+            promise.success(Optional.empty());
+        } else if (hasTransformer()) {
+            getDataAsync(objectId, createReadTransformer()).mapChain(promise, Optional::ofNullable);
+        } else {
+            getDataAsync(objectId).mapChain(promise, Optional::ofNullable);
+        }
+
+        return promise;
+    }
+
+    /**
+     * Creates a new {@link DownloadManager} for this storage space.
+     *
+     * @param completionConsumer the handler which is supplied with all downloaded objects
+     * @param failureHandler     the handler which is  invoked if an error occurs
+     * @param <P>                the payload type which is carried along so that the callbacks have some context
+     * @return a new download manager for this space
+     */
+    public <P> DownloadManager<P> downloadManager(BiConsumer<P, Optional<FileHandle>> completionConsumer,
+                                                  BiConsumer<P, Exception> failureHandler) {
+        return new DownloadManager<>(this, completionConsumer, (payload, innerError) -> {
+            failureHandler.accept(payload,
+                                  Exceptions.handle()
+                                            .error(innerError)
+                                            .to(StorageUtils.LOG)
+                                            .withSystemErrorMessage(
+                                                    "Layer 1: Failed to perform a download using the DownloadManager: %s (%s)")
+                                            .handle());
+        });
+    }
+
+    /**
      * Downloads an provides the contents of the requested object.
      *
      * @param objectKey the id of the object
@@ -322,6 +365,15 @@ public abstract class ObjectStorageSpace {
      */
     @Nullable
     protected abstract FileHandle getData(String objectKey) throws IOException;
+
+    /**
+     * Downloads and provides the contents of the requested object asynchronous.
+     *
+     * @param objectKey the id of the object
+     * @return a a promise which is fulfilled with the handle for the given object once it is downloaded. If the object
+     * doesn't exist, the promise will be fulfilled with <tt>null</tt>.
+     */
+    protected abstract Promise<FileHandle> getDataAsync(String objectKey);
 
     /**
      * Downloads an provides the contents of the requested object.
@@ -333,6 +385,16 @@ public abstract class ObjectStorageSpace {
      */
     @Nullable
     protected abstract FileHandle getData(String objectKey, ByteBlockTransformer transformer) throws IOException;
+
+    /**
+     * Downloads and provides the contents of the requested object asynchronous.
+     *
+     * @param objectKey   the id of the object
+     * @param transformer the transform to apply when reading data
+     * @return a a promise which is fulfilled with the handle for the given object once it is downloaded. If the object
+     * doesn't exist, the promise will be fulfilled with <tt>null</tt>.
+     */
+    protected abstract Promise<FileHandle> getDataAsync(String objectKey, ByteBlockTransformer transformer);
 
     /**
      * Provides direct access to the contents of the requested object.
