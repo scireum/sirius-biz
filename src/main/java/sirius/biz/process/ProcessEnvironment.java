@@ -421,7 +421,7 @@ class ProcessEnvironment implements ProcessContext {
         if (!completionFuture.isCompleted()) {
             log(ProcessLog.info().withNLSKey("Process.awaitingSideTaskCompletion"));
             while (TaskContext.get().isActive()) {
-                if (completionFuture.await(Duration.ofSeconds(5))) {
+                if (completionFuture.await(Duration.ofSeconds(1))) {
                     return;
                 }
             }
