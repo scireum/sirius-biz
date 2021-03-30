@@ -25,7 +25,7 @@ import java.util.function.Consumer;
  * Permits to download several objects from a {@link ObjectStorageSpace}.
  * <p>
  * If possible (and feasible) the downloads will be executed asynchronously to increase the overall speed. However,
- * the callbacks to the completion consmer will always happen from the thread which invokes {@link #close()} or
+ * the callbacks to the completion consumer will always happen from the thread which invokes {@link #close()} or
  * {@link #addDownload(Object, String)} so that no elaborate synchronization or thread safety is required.
  *
  * @param <P> the type of payload data which can be passed through to the handlers.

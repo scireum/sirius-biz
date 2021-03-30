@@ -367,7 +367,7 @@ public abstract class ObjectStorageSpace {
     protected abstract FileHandle getData(String objectKey) throws IOException;
 
     /**
-     * Downloads an provides the contents of the requested object asynchronous.
+     * Downloads and provides the contents of the requested object asynchronous.
      *
      * @param objectKey the id of the object
      * @return a a promise which is fulfilled with the handle for the given object once it is downloaded. If the object
@@ -387,7 +387,7 @@ public abstract class ObjectStorageSpace {
     protected abstract FileHandle getData(String objectKey, ByteBlockTransformer transformer) throws IOException;
 
     /**
-     * Downloads an provides the contents of the requested object asynchronous.
+     * Downloads and provides the contents of the requested object asynchronous.
      *
      * @param objectKey   the id of the object
      * @param transformer the transform to apply when reading data

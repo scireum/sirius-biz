@@ -239,7 +239,7 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
 
     @Override
     protected Promise<FileHandle> getDataAsync(String objectId, ByteBlockTransformer transformer) {
-        // We actually perform a synchronous call here, as the IO invloved is negligible...
+        // We actually perform a synchronous call here, as the IO involved is negligible...
         Promise<FileHandle> result = new Promise<>();
         try {
             result.success(getData(objectId, transformer));
