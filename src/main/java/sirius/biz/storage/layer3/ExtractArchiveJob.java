@@ -20,7 +20,6 @@ import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.biz.util.ArchiveExtractor;
 import sirius.biz.util.ExtractedFile;
-import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Watch;
@@ -139,7 +138,7 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                                                              flattenDirs));
         }
 
-        process.setState(NLS.get("ExtractArchiveJob.completed"));
+        process.forceUpdateState(NLS.get("ExtractArchiveJob.completed"));
 
         if (!process.isErroneous() && process.require(deleteArchiveParameter).booleanValue()) {
             process.log(ProcessLog.info().withNLSKey("ExtractArchiveJob.deletingArchive"));
@@ -152,7 +151,9 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                                      ArchiveExtractor.OverrideMode overrideMode,
                                      VirtualFile targetDirectory,
                                      boolean flattenDirectory) throws Exception {
-        updateState(extractedFile);
+        process.tryUpdateState(NLS.fmtr("ExtractArchiveJob.progress")
+                                  .set("progress", extractedFile.getProgressInPercent().toPercentString())
+                                  .format());
 
         Watch watch = Watch.start();
         String targetPath = getTargetPath(extractedFile, flattenDirectory);
@@ -193,15 +194,6 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                                         NLS.formatSize(extractedFile.size()),
                                         NLS.toUserString(extractedFile.lastModified()),
                                         result));
-    }
-
-    private void updateState(ExtractedFile extractedFile) {
-        TaskContext taskContext = TaskContext.get();
-        if (taskContext.shouldUpdateState().check()) {
-            taskContext.setState(NLS.fmtr("ExtractArchiveJob.progress")
-                                    .set("progress", extractedFile.getProgressInPercent().toPercentString())
-                                    .format());
-        }
     }
 
     @Override

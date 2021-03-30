@@ -24,11 +24,13 @@ class JobTaskContextAdapter implements TaskContextAdapter {
     private final Scripting scripting;
     private final String jobNumber;
     private final RateLimit logLimiter;
+    private final RateLimit stateLimiter;
 
     protected JobTaskContextAdapter(Scripting scripting, String jobNumber) {
         this.scripting = scripting;
         this.jobNumber = jobNumber;
         this.logLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
+        this.stateLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
     }
 
     @Override
@@ -41,8 +43,31 @@ class JobTaskContextAdapter implements TaskContextAdapter {
         scripting.logInTranscript(jobNumber, message);
     }
 
+    /**
+     * Invoked if {@link sirius.kernel.async.TaskContext#setState(String, Object...)} is called in the attached
+     * context.
+     *
+     * @param message the message to set as state
+     * @deprecated Use either {@link #forceUpdateState(String)} or {@link #tryUpdateState(String)}
+     */
+    @Deprecated
     @Override
     public void setState(String message) {
+        // unsupported by this adapter.
+    }
+
+    @Override
+    public RateLimit shouldUpdateState() {
+        return stateLimiter;
+    }
+
+    @Override
+    public void tryUpdateState(String message) {
+        // unsupported by this adapter.
+    }
+
+    @Override
+    public void forceUpdateState(String message) {
         // unsupported by this adapter.
     }
 

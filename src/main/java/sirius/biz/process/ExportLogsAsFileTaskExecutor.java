@@ -240,8 +240,10 @@ public class ExportLogsAsFileTaskExecutor implements DistributedTaskExecutor {
     }
 
     private void updateExportState(ProcessContext processContext, int currentRow, boolean lastCall) {
-        if (TaskContext.get().shouldUpdateState().check() || lastCall) {
-            processContext.setState(NLS.fmtr("Process.rowsExported").set("rows", currentRow).format());
+        if (lastCall) {
+            processContext.forceUpdateState(NLS.fmtr("Process.rowsExported").set("rows", currentRow).format());
+        } else {
+            processContext.tryUpdateState(NLS.fmtr("Process.rowsExported").set("rows", currentRow).format());
         }
     }
 }

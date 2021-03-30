@@ -728,6 +728,7 @@ public class Processes {
         } catch (Exception e) {
             throw env.handle(e);
         } finally {
+            env.awaitCompletion();
             CallContext.getCurrent().resetLang();
             taskContext.setAdapter(taskContextAdapterBackup);
             userContext.setCurrentUser(userInfoBackup);

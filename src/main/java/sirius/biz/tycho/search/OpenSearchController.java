@@ -13,7 +13,7 @@ import com.alibaba.fastjson.JSONObject;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.tycho.QuickAction;
 import sirius.biz.web.BizController;
-import sirius.kernel.async.Barrier;
+import sirius.kernel.async.CombinedFuture;
 import sirius.kernel.async.Future;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Explain;
@@ -36,7 +36,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Contains the main parts of the OpenSearch engine for the Tycho UI.
@@ -152,7 +151,7 @@ public class OpenSearchController extends BizController {
         OutputStream outputStream =
                 webContext.respondWith().outputStream(HttpResponseStatus.OK, CONTENT_TYPE_APPLICATION_JSON);
         try {
-            Barrier allTasksCompleted = new Barrier();
+            CombinedFuture allTasksCompleted = new CombinedFuture();
 
             for (OpenSearchProvider provider : providers) {
                 if (provider.ensureAccess()) {
@@ -165,7 +164,7 @@ public class OpenSearchController extends BizController {
                 }
             }
 
-            allTasksCompleted.await(SEARCH_TIMEOUT.getSeconds(), TimeUnit.SECONDS);
+            allTasksCompleted.asFuture().await(SEARCH_TIMEOUT);
             outputStream.write(RESPONSE_COMPLETED_MESSAGE);
         } catch (IOException e) {
             Exceptions.ignore(e);
