@@ -53,7 +53,7 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
 
     @Override
     public String getLabel() {
-        return "Re-Index Elasticseach Entity";
+        return "Re-Index Elasticsearch Entity";
     }
 
     @Nullable
