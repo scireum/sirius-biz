@@ -3,7 +3,6 @@
 
 <div class="row">
     <w:textfield name="userAccountData_email" value="@account.getUserAccountData().getEmail()" labelKey="Model.email"
-                 required="true"
                  helpKey="UserAccount.email.help"/>
     <w:textfield name="userAccountData_login_username" value="@account.getUserAccountData().getLogin().getUsername()"
                  labelKey="LoginData.username"
