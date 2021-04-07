@@ -58,7 +58,7 @@ public class SQLTenantUserManager extends TenantUserManager<Long, SQLTenant, SQL
     }
 
     @Override
-    protected void recordLogin(UserInfo user, boolean external) {
+    public void recordLogin(UserInfo user, boolean external) {
         try {
             SQLUserAccount account = getUserObject(user);
 

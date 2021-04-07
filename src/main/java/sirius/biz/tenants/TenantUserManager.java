@@ -175,18 +175,20 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     private static final String REMOVE_BY_TENANT_UNIQUE_NAME = "tenant-unique-name";
 
     protected static Cache<String, Tuple<Set<String>, String>> rolesCache =
-            CacheManager.<Tuple<Set<String>, String>>createCoherentCache("tenants-roles").addRemover(
-                    REMOVE_BY_TENANT_UNIQUE_NAME,
-                    (uniqueTenantName, entry) -> Strings.areEqual(uniqueTenantName, entry.getValue().getSecond()));
+            CacheManager.<Tuple<Set<String>, String>>createCoherentCache("tenants-roles")
+                        .addRemover(REMOVE_BY_TENANT_UNIQUE_NAME,
+                                    (uniqueTenantName, entry) -> Strings.areEqual(uniqueTenantName,
+                                                                                  entry.getValue().getSecond()));
 
     protected static Cache<String, UserAccount<?, ?>> userAccountCache =
             CacheManager.createCoherentCache("tenants-users");
     protected static Cache<String, Tenant<?>> tenantsCache = CacheManager.createCoherentCache("tenants-tenants");
 
     protected static Cache<String, Tuple<UserSettings, String>> configCache =
-            CacheManager.<Tuple<UserSettings, String>>createCoherentCache("tenants-configs").addRemover(
-                    REMOVE_BY_TENANT_UNIQUE_NAME,
-                    (uniqueTenantName, entry) -> Strings.areEqual(uniqueTenantName, entry.getValue().getSecond()));
+            CacheManager.<Tuple<UserSettings, String>>createCoherentCache("tenants-configs")
+                        .addRemover(REMOVE_BY_TENANT_UNIQUE_NAME,
+                                    (uniqueTenantName, entry) -> Strings.areEqual(uniqueTenantName,
+                                                                                  entry.getValue().getSecond()));
 
     protected TenantUserManager(ScopeInfo scope, Extension config) {
         super(scope, config);
@@ -764,7 +766,13 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         recordLogin(user, true);
     }
 
-    protected abstract void recordLogin(UserInfo user, boolean external);
+    /**
+     * Actually tracks the login of the user in the account entity.
+     *
+     * @param user     the user which logged in
+     * @param external whether or not the login was from an external source (e.g. via SAML)
+     */
+    public abstract void recordLogin(UserInfo user, boolean external);
 
     @Override
     protected U getUserObject(UserInfo userInfo) {

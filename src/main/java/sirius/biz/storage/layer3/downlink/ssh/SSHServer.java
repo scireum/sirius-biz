@@ -21,6 +21,7 @@ import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.storage.layer3.downlink.ssh.scp.BridgeScpCommandFactory;
 import sirius.biz.storage.layer3.downlink.ssh.sftp.BridgeSftpSubsystemFactory;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.biz.tenants.TenantUserManager;
 import sirius.kernel.Killable;
 import sirius.kernel.Startable;
 import sirius.kernel.Stoppable;
@@ -147,7 +148,8 @@ public class SSHServer implements Startable, Stoppable, Killable {
             StorageUtils.LOG.FINE("Layer 3/SSH: Trying to authenticate user: " + username);
         }
 
-        UserInfo authUser = UserContext.get().getUserManager().findUserByCredentials(null, username, password);
+        sirius.web.security.UserManager userManager = UserContext.get().getUserManager();
+        UserInfo authUser = userManager.findUserByCredentials(null, username, password);
 
         if (authUser == null) {
             return false;
@@ -156,6 +158,10 @@ public class SSHServer implements Startable, Stoppable, Killable {
         if (!authUser.isSubScopeEnabled(VirtualFileSystem.SUB_SCOPE_VFS)) {
             StorageUtils.LOG.FINE("Layer 3/SSH: The required sub scope is not enabled for: " + username);
             return false;
+        }
+
+        if (userManager instanceof TenantUserManager) {
+            ((TenantUserManager<?, ?, ?>) userManager).recordLogin(authUser, false);
         }
 
         ((BridgeSession) session).attachUser(authUser);

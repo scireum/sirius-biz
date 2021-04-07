@@ -61,7 +61,7 @@ public class MongoTenantUserManager extends TenantUserManager<String, MongoTenan
     }
 
     @Override
-    protected void recordLogin(UserInfo user, boolean external) {
+    public void recordLogin(UserInfo user, boolean external) {
         try {
             MongoUserAccount account = getUserObject(user);
 
