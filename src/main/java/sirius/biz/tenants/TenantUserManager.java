@@ -639,6 +639,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         LoginData loginData = account.getUserAccountData().getLogin();
         if (acceptApiTokens && checkApiToken(loginData, password)) {
             completeAuditLogForUser(auditLog.neutral("AuditLog.apiTokenLogin"), account);
+            recordLogin(result, false);
             return result;
         }
 
@@ -653,6 +654,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
                 return rehashingResult.get();
             }
 
+            recordLogin(result, false);
             return result;
         }
 
@@ -750,7 +752,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
     @Override
     protected void recordUserLogin(WebContext ctx, UserInfo user) {
-        recordLogin(user, false);
+        // Ignored, as findUserByCredentials already records all logins.
     }
 
     /**
