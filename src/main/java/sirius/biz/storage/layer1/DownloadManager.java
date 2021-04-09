@@ -13,6 +13,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Wait;
 
 import java.io.Closeable;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -76,7 +77,12 @@ public class DownloadManager<P> implements Closeable {
         while (iterator.hasNext()) {
             Tuple<P, Promise<Optional<FileHandle>>> nextDownload = iterator.next();
             if (nextDownload.getSecond().isSuccessful()) {
-                completedDownloadHandler.accept(Tuple.create(nextDownload.getFirst(), nextDownload.getSecond().get()));
+                Optional<FileHandle> fileHandle = nextDownload.getSecond().get();
+                if (fileHandle.isPresent()) {
+                    completedDownloadHandler.accept(Tuple.create(nextDownload.getFirst(), fileHandle));
+                } else {
+                    failureConsumer.accept(nextDownload.getFirst(), new FileNotFoundException());
+                }
                 iterator.remove();
             } else if (nextDownload.getSecond().isFailed()) {
                 failureConsumer.accept(nextDownload.getFirst(), nextDownload.getSecond().getFailure());
