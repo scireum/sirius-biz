@@ -391,7 +391,7 @@ public abstract class ObjectStorageSpace {
      *
      * @param objectKey   the id of the object
      * @param transformer the transform to apply when reading data
-     * @return a a promise which is fulfilled with the handle for the given object once it is downloaded. If the object
+     * @return a promise which is fulfilled with the handle for the given object once it is downloaded. If the object
      * doesn't exist, the promise will be fulfilled with <tt>null</tt>.
      */
     protected abstract Promise<FileHandle> getDataAsync(String objectKey, ByteBlockTransformer transformer);
