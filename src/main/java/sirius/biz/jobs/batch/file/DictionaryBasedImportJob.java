@@ -41,6 +41,7 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
     protected boolean ignoreEmptyValues;
     protected ImportDictionary dictionary;
     protected boolean skipLoggingMappings;
+    protected boolean validateHeader;
 
     /**
      * Creates a new job for the given factory, name and process.
@@ -61,8 +62,18 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
      *
      * @return the object itself for fluent calls
      */
-    protected DictionaryBasedImportJob suppressLoggingMappings() {
-        this.skipLoggingMappings = true;
+    public DictionaryBasedImportJob suppressLoggingMappings() {
+        skipLoggingMappings = true;
+        return this;
+    }
+
+    /**
+     * Validates the header of the input file against the dictionary.
+     *
+     * @return the object itself for fluent calls
+     */
+    public DictionaryBasedImportJob validateHeader() {
+        validateHeader = true;
         return this;
     }
 
@@ -83,7 +94,7 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
         }
 
         if (!dictionary.hasMappings()) {
-            dictionary.determineMappingFromHeadings(row, false);
+            dictionary.determineMappingFromHeadings(row, validateHeader);
             if (!skipLoggingMappings) {
                 process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
             }
