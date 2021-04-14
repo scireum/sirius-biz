@@ -44,6 +44,7 @@ import java.util.function.Consumer;
  */
 public abstract class FileImportJob extends ImportJob {
 
+    private static final String FILE_NAME_KEY = "filename";
     private String currentFileName;
     private final LinkedHashMap<String, Boolean> entriesToExtract = new LinkedHashMap<>();
 
@@ -240,12 +241,12 @@ public abstract class FileImportJob extends ImportJob {
             if (Boolean.TRUE.equals(fileRequired)) {
                 throw Exceptions.createHandled()
                                 .withNLSKey("FileImportJob.requiredFileNotFound")
-                                .set("filename", fileName)
+                                .set(FILE_NAME_KEY, fileName)
                                 .handle();
             } else {
                 process.log(ProcessLog.info()
                                       .withNLSKey("FileImportJob.requiredFileNotFound")
-                                      .withContext("filename", fileName));
+                                      .withContext(FILE_NAME_KEY, fileName));
             }
         });
     }
@@ -275,7 +276,7 @@ public abstract class FileImportJob extends ImportJob {
         if (canHandleFileExtension(Files.getFileExtension(extractedFile.getFilePath()))) {
             process.log(ProcessLog.info()
                                   .withNLSKey("FileImportJob.importingZippedFile")
-                                  .withContext("filename", extractedFile.getFilePath()));
+                                  .withContext(FILE_NAME_KEY, extractedFile.getFilePath()));
             currentFileName = extractedFile.getFilePath();
             executeForStream(currentFileName, extractedFile::openInputStream);
             return true;
