@@ -40,6 +40,7 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
 
     protected boolean ignoreEmptyValues;
     protected ImportDictionary dictionary;
+    protected boolean skipLoggingMappings;
 
     /**
      * Creates a new job for the given factory, name and process.
@@ -53,6 +54,16 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
         if (dictionary != null) {
             this.dictionary = dictionary.withCustomFieldLookup(this::customFieldLookup);
         }
+    }
+
+    /**
+     * Suppress logging the mappings determined from the dictionary.
+     *
+     * @return the object itself for fluent calls
+     */
+    protected DictionaryBasedImportJob suppressLoggingMappings() {
+        this.skipLoggingMappings = true;
+        return this;
     }
 
     @Nullable
@@ -73,7 +84,9 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
 
         if (!dictionary.hasMappings()) {
             dictionary.determineMappingFromHeadings(row, false);
-            process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
+            if (!skipLoggingMappings) {
+                process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
+            }
         } else {
             Watch watch = Watch.start();
             try {
