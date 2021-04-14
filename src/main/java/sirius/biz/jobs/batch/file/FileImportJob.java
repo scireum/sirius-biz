@@ -21,6 +21,7 @@ import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.util.ArchiveExtractor;
 import sirius.biz.util.ExtractedFile;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
@@ -33,6 +34,7 @@ import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -43,6 +45,7 @@ import java.util.function.Consumer;
 public abstract class FileImportJob extends ImportJob {
 
     private String currentFileName;
+    private final LinkedHashMap<String, Boolean> entriesToExtract = new LinkedHashMap<>();
 
     /**
      * Contains the parameter which selects the file to import.
@@ -176,6 +179,7 @@ public abstract class FileImportJob extends ImportJob {
 
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
+                defineEntriesToExtract();
                 executeForArchive(file.name(), fileHandle);
             }
         } else {
@@ -199,15 +203,72 @@ public abstract class FileImportJob extends ImportJob {
         process.log(ProcessLog.info().withNLSKey("FileImportJob.importingZipFile"));
 
         AtomicInteger filesImported = new AtomicInteger();
-        extractor.extractAll(filename, fileHandle.getFile(), null, file -> {
-            if (executeForEntry(file)) {
-                filesImported.incrementAndGet();
-            }
-        });
+        if (entriesToExtract.isEmpty()) {
+            extractAllEntries(filename, fileHandle, filesImported::incrementAndGet);
+        } else {
+            extractEntriesFromList(filename, fileHandle, filesImported::incrementAndGet);
+        }
 
         if (filesImported.get() == 0) {
             throw Exceptions.createHandled().withNLSKey("FileImportJob.noZippedFileFound").handle();
         }
+    }
+
+    private void extractAllEntries(String filename, FileHandle fileHandle, Runnable counter) {
+        extractor.extractAll(filename, fileHandle.getFile(), null, file -> {
+            if (executeForEntry(file)) {
+                counter.run();
+            }
+        });
+    }
+
+    private void extractEntriesFromList(String filename, FileHandle fileHandle, Runnable counter) {
+        entriesToExtract.forEach((fileName, fileRequired) -> {
+            Monoflop entryFound = Monoflop.create();
+            extractor.extractAll(filename, fileHandle.getFile(), entryName -> {
+                return entryName.equals(fileName);
+            }, file -> {
+                if (executeForEntry(file)) {
+                    counter.run();
+                }
+                entryFound.toggle();
+            });
+            if (entryFound.isToggled()) {
+                return;
+            }
+
+            if (Boolean.TRUE.equals(fileRequired)) {
+                throw Exceptions.createHandled()
+                                .withNLSKey("FileImportJob.requiredFileNotFound")
+                                .set("filename", fileName)
+                                .handle();
+            } else {
+                process.log(ProcessLog.info()
+                                      .withNLSKey("FileImportJob.requiredFileNotFound")
+                                      .withContext("filename", fileName));
+            }
+        });
+    }
+
+    /**
+     * Specifies specific entries to extract from an archive.
+     * <p>
+     * Override this method in order to filter specific entries.
+     *
+     * @see #addEntryFilter(String, boolean)
+     */
+    protected void defineEntriesToExtract() {
+        // By default all entries are extracted.
+    }
+
+    /**
+     * Adds an entry to filter when extracting files from an archive.
+     *
+     * @param filename     the filename to filter
+     * @param fileRequired specifies if the file must exist in the archive
+     */
+    protected void addEntryFilter(String filename, boolean fileRequired) {
+        entriesToExtract.put(filename, fileRequired);
     }
 
     private boolean executeForEntry(ExtractedFile extractedFile) throws Exception {
