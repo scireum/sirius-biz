@@ -42,6 +42,8 @@ import java.util.function.Consumer;
  */
 public abstract class FileImportJob extends ImportJob {
 
+    private String currentFileName;
+
     /**
      * Contains the parameter which selects the file to import.
      * <p>
@@ -162,8 +164,9 @@ public abstract class FileImportJob extends ImportJob {
                                   .withContext("size", NLS.formatSize(file.size())));
 
             try (FileHandle fileHandle = file.download()) {
-                backupInputFile(file.name(), fileHandle);
-                executeForStream(file.name(), fileHandle::getInputStream);
+                currentFileName = file.name();
+                backupInputFile(currentFileName, fileHandle);
+                executeForStream(currentFileName, fileHandle::getInputStream);
             }
         } else if (extractor.isArchiveFile(file.fileExtension())) {
             process.log(ProcessLog.info()
@@ -212,7 +215,8 @@ public abstract class FileImportJob extends ImportJob {
             process.log(ProcessLog.info()
                                   .withNLSKey("FileImportJob.importingZippedFile")
                                   .withContext("filename", extractedFile.getFilePath()));
-            executeForStream(extractedFile.getFilePath(), extractedFile::openInputStream);
+            currentFileName = extractedFile.getFilePath();
+            executeForStream(currentFileName, extractedFile::openInputStream);
             return true;
         } else if (auxiliaryFileMode != AuxiliaryFileMode.IGNORE) {
             return handleAuxiliaryFile(extractedFile);
@@ -286,6 +290,17 @@ public abstract class FileImportJob extends ImportJob {
         }
 
         return auxFilesDestination.get();
+    }
+
+    /**
+     * Returns the file name currently being processed.
+     * <p>
+     * This method is useful when processing archives since it points to the actual entry being processed
+     *
+     * @return a string containing the file name
+     */
+    public String getCurrentFileName() {
+        return currentFileName;
     }
 
     /**
