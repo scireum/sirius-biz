@@ -39,7 +39,7 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
                     "$DictionaryBasedImportJobFactory.ignoreEmpty.help").build();
 
     protected boolean ignoreEmptyValues;
-    protected final ImportDictionary dictionary;
+    protected ImportDictionary dictionary;
 
     /**
      * Creates a new job for the given factory, name and process.
@@ -50,7 +50,9 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
     protected DictionaryBasedImportJob(ImportDictionary dictionary, ProcessContext process) {
         super(process);
         this.ignoreEmptyValues = process.getParameter(IGNORE_EMPTY_PARAMETER).orElse(false);
-        this.dictionary = dictionary.withCustomFieldLookup(this::customFieldLookup);
+        if (dictionary != null) {
+            this.dictionary = dictionary.withCustomFieldLookup(this::customFieldLookup);
+        }
     }
 
     @Nullable
@@ -61,6 +63,7 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
     @Override
     public void handleRow(int index, Values row) {
         if (index == 1) {
+            dictionary = determineDictionary();
             dictionary.resetMappings();
         }
 
@@ -110,6 +113,19 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
 
     protected boolean isEmptyContext(Context context) {
         return context.entrySet().stream().noneMatch(entry -> Strings.isFilled(entry.getValue()));
+    }
+
+    /**
+     * Determines the dictionary used when processing the input file.
+     * <p>
+     * By default the dictionary used during initialization is used.
+     * One can override this method to dynamically provide other dictionaries, for example
+     * when processing entries of an archive.
+     *
+     * @return the dictionary used to handle the row
+     */
+    protected ImportDictionary determineDictionary() {
+        return dictionary;
     }
 
     /**
