@@ -31,6 +31,9 @@ import javax.annotation.Nullable;
  */
 public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
 
+    private static final String MESSAGE_KEY = "message";
+    private static final String ERROR_IN_ROW_KEY = "LineBasedJob.errorInRow";
+
     /**
      * Contains the parameter which is used to determine if empty values should be ignored.
      */
@@ -113,9 +116,9 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
             process.incCounter(NLS.get("LineBasedJob.erroneousRow"));
             process.handle(Exceptions.createHandled()
                                      .to(Log.BACKGROUND)
-                                     .withNLSKey("LineBasedJob.errorInRow")
+                                     .withNLSKey(ERROR_IN_ROW_KEY)
                                      .set("row", index)
-                                     .set("message", e.getMessage())
+                                     .set(MESSAGE_KEY, e.getMessage())
                                      .handle());
         } catch (Exception e) {
             process.incCounter(NLS.get("LineBasedJob.erroneousRow"));
@@ -138,15 +141,15 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
         dictionary.detectHeaderProblems(row, (problem, isFatal) -> {
             if (Boolean.TRUE.equals(isFatal)) {
                 throw Exceptions.createHandled()
-                                .withNLSKey("LineBasedJob.errorInRow")
+                                .withNLSKey(ERROR_IN_ROW_KEY)
                                 .set("row", index)
-                                .set("message", problem)
+                                .set(MESSAGE_KEY, problem)
                                 .handle();
             }
             process.log(ProcessLog.warn()
-                                  .withNLSKey("LineBasedJob.errorInRow")
+                                  .withNLSKey(ERROR_IN_ROW_KEY)
                                   .withContext("row", index)
-                                  .withContext("message", problem));
+                                  .withContext(MESSAGE_KEY, problem));
         }, true);
     }
 
