@@ -63,6 +63,7 @@ public class ImportDictionary {
     private Map<String, String> aliases = new LinkedHashMap<>();
     private List<String> mappingFunction;
     private List<Function<String, FieldDefinition>> computedFieldLookups = new ArrayList<>();
+    private boolean hasIdentityMapping;
 
     /**
      * Adds a field to the record.
@@ -149,6 +150,7 @@ public class ImportDictionary {
      * Resets the <tt>mapping function</tt>.
      */
     public void resetMappings() {
+        hasIdentityMapping = false;
         this.mappingFunction = null;
     }
 
@@ -180,8 +182,19 @@ public class ImportDictionary {
      * @return the instance itself for fluent method calls
      */
     public ImportDictionary useIdentityMapping() {
+        this.hasIdentityMapping = true;
         this.mappingFunction = new ArrayList<>(fields.keySet());
         return this;
+    }
+
+    /**
+     * Determines if an identity mapping is being used.
+     *
+     * @return <tt>true</tt> if the identity mapping has been set, <tt>false</tt> otherwise
+     * @see #useIdentityMapping()
+     */
+    public boolean hasIdentityMapping() {
+        return hasIdentityMapping;
     }
 
     /**

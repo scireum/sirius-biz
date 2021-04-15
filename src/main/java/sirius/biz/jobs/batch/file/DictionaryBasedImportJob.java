@@ -86,45 +86,68 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
     public void handleRow(int index, Values row) {
         if (index == 1) {
             dictionary = determineDictionary();
-            dictionary.resetMappings();
+
+            if (dictionary.hasIdentityMapping()) {
+                assertHeaders(1, row);
+            } else {
+                dictionary.resetMappings();
+                dictionary.determineMappingFromHeadings(row, validateHeader);
+                if (!skipLoggingMappings) {
+                    process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
+                }
+            }
+            return;
         }
 
         if (row.length() == 0) {
             return;
         }
 
-        if (!dictionary.hasMappings()) {
-            dictionary.determineMappingFromHeadings(row, validateHeader);
-            if (!skipLoggingMappings) {
-                process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
+        Watch watch = Watch.start();
+        try {
+            Context context = filterEmptyValues(dictionary.load(row, false));
+            if (!isEmptyContext(context)) {
+                handleRow(index, context);
             }
-        } else {
-            Watch watch = Watch.start();
-            try {
-                Context context = filterEmptyValues(dictionary.load(row, false));
-                if (!isEmptyContext(context)) {
-                    handleRow(index, context);
-                }
-            } catch (HandledException e) {
-                process.incCounter(NLS.get("LineBasedJob.erroneousRow"));
-                process.handle(Exceptions.createHandled()
-                                         .to(Log.BACKGROUND)
-                                         .withNLSKey("LineBasedJob.errorInRow")
-                                         .set("row", index)
-                                         .set("message", e.getMessage())
-                                         .handle());
-            } catch (Exception e) {
-                process.incCounter(NLS.get("LineBasedJob.erroneousRow"));
-                process.handle(Exceptions.handle()
-                                         .to(Log.BACKGROUND)
-                                         .error(e)
-                                         .withNLSKey("LineBasedJob.failureInRow")
-                                         .set("row", index)
-                                         .handle());
-            } finally {
-                process.addTiming(NLS.get("LineBasedJob.row"), watch.elapsedMillis());
-            }
+        } catch (HandledException e) {
+            process.incCounter(NLS.get("LineBasedJob.erroneousRow"));
+            process.handle(Exceptions.createHandled()
+                                     .to(Log.BACKGROUND)
+                                     .withNLSKey("LineBasedJob.errorInRow")
+                                     .set("row", index)
+                                     .set("message", e.getMessage())
+                                     .handle());
+        } catch (Exception e) {
+            process.incCounter(NLS.get("LineBasedJob.erroneousRow"));
+            process.handle(Exceptions.handle()
+                                     .to(Log.BACKGROUND)
+                                     .error(e)
+                                     .withNLSKey("LineBasedJob.failureInRow")
+                                     .set("row", index)
+                                     .handle());
+        } finally {
+            process.addTiming(NLS.get("LineBasedJob.row"), watch.elapsedMillis());
         }
+    }
+
+    private void assertHeaders(int index, Values row) {
+        if (!validateHeader) {
+            return;
+        }
+
+        dictionary.detectHeaderProblems(row, (problem, isFatal) -> {
+            if (Boolean.TRUE.equals(isFatal)) {
+                throw Exceptions.createHandled()
+                                .withNLSKey("LineBasedJob.errorInRow")
+                                .set("row", index)
+                                .set("message", problem)
+                                .handle();
+            }
+            process.log(ProcessLog.warn()
+                                  .withNLSKey("LineBasedJob.errorInRow")
+                                  .withContext("row", index)
+                                  .withContext("message", problem));
+        }, true);
     }
 
     protected Context filterEmptyValues(Context source) {
