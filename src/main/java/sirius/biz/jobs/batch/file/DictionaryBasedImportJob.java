@@ -14,6 +14,7 @@ import sirius.biz.jobs.params.BooleanParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Values;
@@ -94,7 +95,15 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
                 assertHeaders(1, row);
             } else {
                 dictionary.resetMappings();
-                dictionary.determineMappingFromHeadings(row, validateHeader);
+                try {
+                    dictionary.determineMappingFromHeadings(row, validateHeader);
+                } catch (HandledException e) {
+                    process.log(ProcessLog.error()
+                                          .withNLSKey(ERROR_IN_ROW_KEY)
+                                          .withContext("row", 1)
+                                          .withContext(MESSAGE_KEY, e.getMessage()));
+                    TaskContext.get().cancel();
+                }
                 if (!skipLoggingMappings) {
                     process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
                 }
@@ -138,19 +147,19 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
             return;
         }
 
-        dictionary.detectHeaderProblems(row, (problem, isFatal) -> {
+        boolean problemsFound = dictionary.detectHeaderProblems(row, (problem, isFatal) -> {
+            ProcessLog log;
             if (Boolean.TRUE.equals(isFatal)) {
-                throw Exceptions.createHandled()
-                                .withNLSKey(ERROR_IN_ROW_KEY)
-                                .set("row", index)
-                                .set(MESSAGE_KEY, problem)
-                                .handle();
+                log = ProcessLog.error();
+            } else {
+                log = ProcessLog.warn();
             }
-            process.log(ProcessLog.warn()
-                                  .withNLSKey(ERROR_IN_ROW_KEY)
-                                  .withContext("row", index)
-                                  .withContext(MESSAGE_KEY, problem));
+            process.log(log.withNLSKey(ERROR_IN_ROW_KEY).withContext("row", index).withContext(MESSAGE_KEY, problem));
         }, true);
+
+        if (problemsFound) {
+            TaskContext.get().cancel();
+        }
     }
 
     protected Context filterEmptyValues(Context source) {
