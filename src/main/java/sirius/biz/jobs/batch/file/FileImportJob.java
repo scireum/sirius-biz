@@ -225,6 +225,9 @@ public abstract class FileImportJob extends ImportJob {
 
     private void extractEntriesFromList(String filename, FileHandle fileHandle, Runnable counter) {
         entriesToExtract.forEach((fileName, fileRequired) -> {
+            if (!process.isActive()) {
+                return;
+            }
             Monoflop entryFound = Monoflop.create();
             extractor.extractAll(filename, fileHandle.getFile(), entryName -> {
                 return entryName.equals(fileName);
