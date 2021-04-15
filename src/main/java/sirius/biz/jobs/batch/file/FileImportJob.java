@@ -208,6 +208,11 @@ public abstract class FileImportJob extends ImportJob {
             extractAllEntries(filename, fileHandle, filesImported::incrementAndGet);
         } else {
             extractEntriesFromList(filename, fileHandle, filesImported::incrementAndGet);
+            if (process.isActive() && auxiliaryFileMode != AuxiliaryFileMode.IGNORE) {
+                // Loop over the entries again, ignoring the files provided via the list
+                // so we can import the auxiliary files such as images or documents
+                extractAllEntries(filename, fileHandle, filesImported::incrementAndGet);
+            }
         }
 
         if (filesImported.get() == 0) {
@@ -216,7 +221,9 @@ public abstract class FileImportJob extends ImportJob {
     }
 
     private void extractAllEntries(String filename, FileHandle fileHandle, Runnable counter) {
-        extractor.extractAll(filename, fileHandle.getFile(), null, file -> {
+        extractor.extractAll(filename, fileHandle.getFile(), entry -> {
+            return entriesToExtract.keySet().stream().noneMatch(entry::equals);
+        }, file -> {
             if (executeForEntry(file)) {
                 counter.run();
             }
