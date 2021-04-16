@@ -43,7 +43,8 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
                     "$DictionaryBasedImportJobFactory.ignoreEmpty.help").build();
 
     protected boolean ignoreEmptyValues;
-    protected ImportDictionary dictionary;
+    protected final ImportDictionary defaultDictionary;
+    protected ImportDictionary currentDictionary;
     protected boolean skipLoggingMappings;
     protected boolean validateHeader;
 
@@ -57,7 +58,9 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
         super(process);
         this.ignoreEmptyValues = process.getParameter(IGNORE_EMPTY_PARAMETER).orElse(false);
         if (dictionary != null) {
-            this.dictionary = dictionary.withCustomFieldLookup(this::customFieldLookup);
+            this.defaultDictionary = dictionary.withCustomFieldLookup(this::customFieldLookup);
+        } else {
+            this.defaultDictionary = null;
         }
     }
 
@@ -89,14 +92,14 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
     @Override
     public void handleRow(int index, Values row) {
         if (index == 1) {
-            dictionary = determineDictionary();
+            currentDictionary = determineDictionary();
 
-            if (dictionary.hasIdentityMapping()) {
+            if (currentDictionary.hasIdentityMapping()) {
                 assertHeaders(1, row);
             } else {
-                dictionary.resetMappings();
+                currentDictionary.resetMappings();
                 try {
-                    dictionary.determineMappingFromHeadings(row, validateHeader);
+                    currentDictionary.determineMappingFromHeadings(row, validateHeader);
                 } catch (HandledException e) {
                     process.log(ProcessLog.error()
                                           .withNLSKey(ERROR_IN_ROW_KEY)
@@ -105,7 +108,7 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
                     TaskContext.get().cancel();
                 }
                 if (!skipLoggingMappings) {
-                    process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
+                    process.log(ProcessLog.info().withMessage(currentDictionary.getMappingAsString()));
                 }
             }
             return;
@@ -117,7 +120,7 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
 
         Watch watch = Watch.start();
         try {
-            Context context = filterEmptyValues(dictionary.load(row, false));
+            Context context = filterEmptyValues(currentDictionary.load(row, false));
             if (!isEmptyContext(context)) {
                 handleRow(index, context);
             }
@@ -147,7 +150,7 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
             return;
         }
 
-        boolean problemsFound = dictionary.detectHeaderProblems(row, (problem, isFatal) -> {
+        boolean problemsFound = currentDictionary.detectHeaderProblems(row, (problem, isFatal) -> {
             ProcessLog log;
             if (Boolean.TRUE.equals(isFatal)) {
                 log = ProcessLog.error();
@@ -184,7 +187,7 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
      * @return the dictionary used to handle the row
      */
     protected ImportDictionary determineDictionary() {
-        return dictionary;
+        return defaultDictionary;
     }
 
     /**
