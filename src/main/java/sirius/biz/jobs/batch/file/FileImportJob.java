@@ -45,7 +45,7 @@ import java.util.function.Consumer;
 public abstract class FileImportJob extends ImportJob {
 
     private static final String FILE_NAME_KEY = "filename";
-    private String currentFileName;
+    private String currentEntry;
     private final LinkedHashMap<String, Boolean> entriesToExtract = new LinkedHashMap<>();
 
     /**
@@ -168,9 +168,9 @@ public abstract class FileImportJob extends ImportJob {
                                   .withContext("size", NLS.formatSize(file.size())));
 
             try (FileHandle fileHandle = file.download()) {
-                currentFileName = file.name();
-                backupInputFile(currentFileName, fileHandle);
-                executeForStream(currentFileName, fileHandle::getInputStream);
+                currentEntry = file.name();
+                backupInputFile(currentEntry, fileHandle);
+                executeForStream(currentEntry, fileHandle::getInputStream);
             }
         } else if (extractor.isArchiveFile(file.fileExtension())) {
             process.log(ProcessLog.info()
@@ -287,8 +287,8 @@ public abstract class FileImportJob extends ImportJob {
             process.log(ProcessLog.info()
                                   .withNLSKey("FileImportJob.importingZippedFile")
                                   .withContext(FILE_NAME_KEY, extractedFile.getFilePath()));
-            currentFileName = extractedFile.getFilePath();
-            executeForStream(currentFileName, extractedFile::openInputStream);
+            currentEntry = extractedFile.getFilePath();
+            executeForStream(currentEntry, extractedFile::openInputStream);
             return true;
         } else if (auxiliaryFileMode != AuxiliaryFileMode.IGNORE) {
             return handleAuxiliaryFile(extractedFile);
@@ -365,14 +365,13 @@ public abstract class FileImportJob extends ImportJob {
     }
 
     /**
-     * Returns the file name currently being processed.
-     * <p>
-     * This method is useful when processing archives since it points to the actual entry being processed
+     * Returns current entry being processed.
      *
-     * @return a string containing the file name
+     * @return a string containing the relative path of the current entry when loading from an archive
+     * or the file name if loaded from VFS.
      */
-    public String getCurrentFileName() {
-        return currentFileName;
+    public String getCurrentEntry() {
+        return currentEntry;
     }
 
     /**
