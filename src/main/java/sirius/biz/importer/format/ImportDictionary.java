@@ -150,7 +150,7 @@ public class ImportDictionary {
      * Resets the <tt>mapping function</tt>.
      */
     public void resetMappings() {
-        hasIdentityMapping = false;
+        this.hasIdentityMapping = false;
         this.mappingFunction = null;
     }
 
