@@ -37,6 +37,7 @@ import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -180,7 +181,7 @@ public abstract class FileImportJob extends ImportJob {
 
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
-                defineEntriesToExtract();
+                defineEntriesToExtract(entriesToExtract::put);
                 executeForArchive(file.name(), fileHandle);
             }
         } else {
@@ -266,20 +267,10 @@ public abstract class FileImportJob extends ImportJob {
      * <p>
      * Override this method in order to filter specific entries.
      *
-     * @see #addEntryFilter(String, boolean)
+     * @param entryConsumer the consumer expecting the entry name to filter and if the entry is expected to exist
      */
-    protected void defineEntriesToExtract() {
+    protected void defineEntriesToExtract(BiConsumer<String, Boolean> entryConsumer) {
         // By default all entries are extracted.
-    }
-
-    /**
-     * Adds an entry to filter when extracting files from an archive.
-     *
-     * @param filename     the filename to filter
-     * @param fileRequired specifies if the file must exist in the archive
-     */
-    protected void addEntryFilter(String filename, boolean fileRequired) {
-        entriesToExtract.put(filename, fileRequired);
     }
 
     private boolean executeForEntry(ExtractedFile extractedFile) throws Exception {
