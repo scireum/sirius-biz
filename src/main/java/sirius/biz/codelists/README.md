@@ -7,6 +7,9 @@ which provide access to more or less static data like "list of all known countri
 Such data can either be provided via [Jupiter](https://github.com/scireum/jupiter) or by an
 internal [CodeList](CodeLists.java).
 
+Not that [LookupValue](LookupValue.java) or [LookupValues](LookupValues.java) can be used to easily reference such
+lookup tables from a string column in database entities.
+
 The more specific framework are these [CodeLists](CodeLists.java) which mainly map codes to values. These can either be
 global or managed per tenant. Note that code lists are either backed by JDBC/SQL or by MongoDB and either of those
 frameworks (*biz.code-lists-jdbc* or *biz.code-lists-mongo*) has to be enabled in order to use code lists.
