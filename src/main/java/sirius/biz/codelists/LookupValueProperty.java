@@ -70,6 +70,10 @@ public class LookupValueProperty extends StringProperty {
         referenceValue = getLookupValue(descriptor.getReferenceInstance());
     }
 
+    public LookupValue getReferenceValue() {
+        return referenceValue;
+    }
+
     protected LookupValue getLookupValue(Object entity) {
         Object target = accessPath.apply(entity);
         return (LookupValue) super.getValueFromField(target);
