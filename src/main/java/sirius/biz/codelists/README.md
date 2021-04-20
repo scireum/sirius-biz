@@ -7,7 +7,7 @@ which provide access to more or less static data like "list of all known countri
 Such data can either be provided via [Jupiter](https://github.com/scireum/jupiter) or by an
 internal [CodeList](CodeLists.java).
 
-Not that [LookupValue](LookupValue.java) or [LookupValues](LookupValues.java) can be used to easily reference such
+Note that [LookupValue](LookupValue.java) or [LookupValues](LookupValues.java) can be used to easily reference such
 lookup tables from a string column in database entities.
 
 The more specific framework are these [CodeLists](CodeLists.java) which mainly map codes to values. These can either be
