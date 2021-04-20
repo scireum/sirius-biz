@@ -113,8 +113,6 @@ public class LookupValueProperty extends StringProperty {
     @Override
     protected Object transformValueFromImport(Value value) {
         String importValue = value.trim();
-        return referenceValue.getTable()
-                             .normalizeInput(importValue)
-                             .orElseGet(() -> referenceValue.getTable().reverseLookup(importValue).orElse(importValue));
+        return referenceValue.getTable().normalizeInput(importValue).orElse(importValue);
     }
 }

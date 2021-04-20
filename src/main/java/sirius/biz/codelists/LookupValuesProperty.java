@@ -104,8 +104,7 @@ public class LookupValuesProperty extends StringListProperty {
         LookupTable table = referenceValues.getTable();
         List<String> values = (List<String>) super.transformValueFromImport(value);
         return values.stream()
-                     .map(importValue -> table.normalizeInput(importValue)
-                                              .orElseGet(() -> table.reverseLookup(importValue).orElse(importValue)))
+                     .map(importValue -> table.normalizeInput(importValue).orElse(importValue))
                      .collect(Collectors.toList());
     }
 }
