@@ -47,7 +47,7 @@ public class Countries {
     public static final String FIELD_ISO2 = "mappings.isoAlpha2";
 
     /**
-     * Contains th three letter ISO country code.
+     * Contains the three letter ISO country code.
      */
     public static final String FIELD_ISO3 = "mappings.isoAlpha3";
 

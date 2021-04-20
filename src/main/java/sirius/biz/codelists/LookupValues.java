@@ -52,7 +52,7 @@ public class LookupValues extends StringList {
      * Creates a new list using default settings.
      * <p>
      * Note that when using the list in database entities, the field has to be final, as the actual values
-     * is stored internally.
+     * are stored internally.
      * <p>
      * By default, <tt>LookupValues</tt> doesn't support custom values, shows the name in the UI and exports the
      * normalized code.
