@@ -8,7 +8,9 @@
 
 package sirius.biz.codelists;
 
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.nls.NLS;
 
 /**
  * Represents a string value backed by a {@link LookupTable} to be used in database entities.
@@ -81,6 +83,17 @@ public class LookupValue {
      */
     public LookupValue(String lookupTableName) {
         this(lookupTableName, CustomValues.REJECT, Display.NAME, Export.CODE);
+    }
+
+    /**
+     * Determines if the currently stored value is a valid code in the underlying lookp table.
+     *
+     * @throws IllegalArgumentException if the currently stored code is invalid
+     */
+    public void verifyValue() {
+        if (Strings.isFilled(value) && !getTable().normalize(value).isPresent()) {
+            throw new IllegalArgumentException(NLS.fmtr("LookupValue.invalidValue").set("value", value).format());
+        }
     }
 
     /**
