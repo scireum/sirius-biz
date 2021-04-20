@@ -57,18 +57,6 @@ public class SQLCodeListEntryImportHandler extends SQLEntityImportHandler<SQLCod
     }
 
     @Override
-    public Function<? super SQLCodeListEntry, ?> createExtractor(String fieldToExport) {
-        if (fieldToExport.equals(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE).getName())) {
-            return codeListEntry -> codeListEntry.getCodeListEntryData().getValue().getFallback();
-        }
-        if (fieldToExport.equals(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE)
-                                                                   .getName())) {
-            return codeListEntry -> codeListEntry.getCodeListEntryData().getAdditionalValue().getFallback();
-        }
-        return super.createExtractor(fieldToExport);
-    }
-
-    @Override
     protected void collectFindQueries(BiConsumer<Predicate<SQLCodeListEntry>, Supplier<FindQuery<SQLCodeListEntry>>> queryConsumer) {
         queryConsumer.accept(sqlCodeListEntry -> Strings.isFilled(sqlCodeListEntry.getCodeListEntryData().getCode())
                                                  && sqlCodeListEntry.getCodeList().isFilled(),
