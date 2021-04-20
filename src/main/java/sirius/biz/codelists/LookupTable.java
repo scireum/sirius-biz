@@ -274,6 +274,14 @@ public abstract class LookupTable {
         return performSuggest(new Limit(0, MAX_SUGGESTIONS), searchTerm, lang);
     }
 
+    /**
+     * Computes the actual suggestions for the given query and limit.
+     *
+     * @param limit      regulates how many suggestions are generated
+     * @param searchTerm the term to search by
+     * @param lang       the language to translate names and descriptions in
+     * @return a stream containing all suggestions
+     */
     protected abstract Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String lang);
 
     /**
