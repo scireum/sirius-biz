@@ -8,11 +8,13 @@
 
 package sirius.biz.model;
 
-import sirius.biz.codelists.CodeLists;
+import sirius.biz.codelists.LookupValue;
+import sirius.biz.util.Countries;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
+import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
@@ -23,26 +25,21 @@ import sirius.kernel.nls.NLS;
 import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 /**
- * Provides a street address which can be embedded into other entities or mixins.
+ * Provides a {@link AddressData street address} along with a country code to be emdedded in entities or mixins.
+ * <p>
+ * Note that just like {@link AddressData} this doesn't perform any validations or verifications unless explicitly
+ * told to do so.
  */
 public class InternationalAddressData extends AddressData {
 
-    /**
-     * Contains the name of the code list which defines all valid countries for {@link #COUNTRY}.
-     * <p>
-     * In this code list the key is the value in the field (probably a country code). The <tt>value</tt> is the name
-     * of the country and the <tt>additionalValue</tt> can be a regular expression which validates ZIP codes for this
-     * country.
-     */
-    private static final String CODE_LIST_COUNTRIES = "countries";
-
     @Part
-    @Nullable
-    private static CodeLists<?, ?, ?> codeLists;
+    private static Countries countries;
+
+    @Transient
+    private String countriesLookupTable;
 
     /**
      * Contains the country code.
@@ -55,7 +52,28 @@ public class InternationalAddressData extends AddressData {
     @NullAllowed
     @Autoloaded
     @Length(3)
-    private String country;
+    private final LookupValue country = new LookupValue(countriesLookupTable,
+                                                        LookupValue.CustomValues.ACCEPT,
+                                                        LookupValue.Display.NAME,
+                                                        LookupValue.Export.CODE);
+
+    /**
+     * Creates a new composite using the default lookup table.
+     */
+    public InternationalAddressData() {
+        this(Countries.LOOKUP_TABLE_COUNTRIES);
+    }
+
+    /**
+     * Creates a new composite using the given lookup table.
+     * <p>
+     * This can be used to provide a filtered subset in case the <tt>countries</tt> table contains too many entries.
+     *
+     * @param countriesLookupTable the name of the lookup table to use
+     */
+    public InternationalAddressData(String countriesLookupTable) {
+        this.countriesLookupTable = countriesLookupTable;
+    }
 
     @Override
     public boolean areAllFieldsEmpty() {
@@ -70,7 +88,7 @@ public class InternationalAddressData extends AddressData {
     @Override
     public void clear() {
         super.clear();
-        country = null;
+        country.setValue(null);
     }
 
     /**
@@ -84,7 +102,7 @@ public class InternationalAddressData extends AddressData {
      */
     public void verifyCountry(@Nullable String fieldLabel) {
         try {
-            codeLists.verifyValue(CODE_LIST_COUNTRIES, country);
+            country.verifyValue();
         } catch (Exception e) {
             throw Exceptions.createHandled()
                             .withNLSKey("AddressData.invalidCountry")
@@ -106,7 +124,7 @@ public class InternationalAddressData extends AddressData {
      */
     public void validateCountry(@Nullable String fieldLabel, Consumer<String> validationMessageConsumer) {
         try {
-            codeLists.verifyValue(CODE_LIST_COUNTRIES, country);
+            country.verifyValue();
         } catch (Exception e) {
             validationMessageConsumer.accept(NLS.fmtr("AddressData.invalidCountry")
                                                 .set("name", determineFieldLabel(fieldLabel))
@@ -125,17 +143,12 @@ public class InternationalAddressData extends AddressData {
      * @throws sirius.kernel.health.HandledException in case of an invalid ZIP code
      */
     public void verifyZip(@Nullable String fieldLabel) {
-        if (Strings.isEmpty(country)) {
-            return;
-        }
-
-        String zipRegEx = codeLists.getValues(CODE_LIST_COUNTRIES, country).getSecond();
-        if (Strings.isEmpty(zipRegEx)) {
+        if (Strings.isEmpty(country.getValue())) {
             return;
         }
 
         try {
-            if (!Pattern.compile(zipRegEx).matcher(getZip()).matches()) {
+            if (!countries.isValidZipCode(country.getValue(), getZip())) {
                 throw Exceptions.createHandled()
                                 .withNLSKey("AddressData.badZip")
                                 .set("name", determineFieldLabel(fieldLabel))
@@ -158,17 +171,12 @@ public class InternationalAddressData extends AddressData {
      *                                  passed into the on validate method and can simply be forwarded here.
      */
     public void validateZIP(@Nullable String fieldLabel, Consumer<String> validationMessageConsumer) {
-        if (Strings.isEmpty(country)) {
-            return;
-        }
-
-        String zipRegEx = codeLists.getValues(CODE_LIST_COUNTRIES, country).getSecond();
-        if (Strings.isEmpty(zipRegEx)) {
+        if (Strings.isEmpty(country.getValue())) {
             return;
         }
 
         try {
-            if (!Pattern.compile(zipRegEx).matcher(getZip()).matches()) {
+            if (!countries.isValidZipCode(country.getValue(), getZip())) {
                 validationMessageConsumer.accept(NLS.fmtr("AddressData.badZip")
                                                     .set("name", determineFieldLabel(fieldLabel))
                                                     .set("zip", getZip())
@@ -211,14 +219,14 @@ public class InternationalAddressData extends AddressData {
      * @return the value for <tt>country</tt> from the <tt>countries</tt> code list
      */
     public String getTranslatedCountry() {
-        return codeLists.getTranslatedValue(CODE_LIST_COUNTRIES, country);
+        return country.getTable().resolveName(country.getValue()).orElse(country.getValue());
     }
 
     public String getCountry() {
-        return country;
+        return country.getValue();
     }
 
     public void setCountry(String country) {
-        this.country = country;
+        this.country.setValue(country);
     }
 }
