@@ -79,7 +79,7 @@ class CodeListLookupTable extends LookupTable {
     }
 
     private String performReverseLookupScan(String name) {
-        return scan().filter(pair -> Strings.areEqual(name, pair.getName()))
+        return scan().filter(pair -> Strings.equalIgnoreCase(name, pair.getName()))
                      .findFirst()
                      .map(LookupTableEntry::getCode)
                      .orElse(null);
