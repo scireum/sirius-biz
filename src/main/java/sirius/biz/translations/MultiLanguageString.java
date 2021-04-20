@@ -312,7 +312,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
      * @return the map itself for fluent method calls
      */
     @Override
-    public SafeMap<String, String> put(@Nonnull String key, String value) {
+    public MultiLanguageString put(@Nonnull String key, String value) {
         if (Strings.isFilled(value)) {
             super.modify().put(key, value);
         } else {
