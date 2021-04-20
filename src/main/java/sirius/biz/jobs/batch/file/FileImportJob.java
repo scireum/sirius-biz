@@ -21,6 +21,7 @@ import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.util.ArchiveExtractor;
 import sirius.biz.util.ExtractedFile;
 import sirius.kernel.commons.Files;
+import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
@@ -33,14 +34,20 @@ import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
  * Provides an import job which reads and imports a file.
  */
 public abstract class FileImportJob extends ImportJob {
+
+    private static final String FILE_NAME_KEY = "filename";
+    private String currentEntry;
+    private final LinkedHashMap<String, Boolean> entriesToExtract = new LinkedHashMap<>();
 
     /**
      * Contains the parameter which selects the file to import.
@@ -162,8 +169,9 @@ public abstract class FileImportJob extends ImportJob {
                                   .withContext("size", NLS.formatSize(file.size())));
 
             try (FileHandle fileHandle = file.download()) {
-                backupInputFile(file.name(), fileHandle);
-                executeForStream(file.name(), fileHandle::getInputStream);
+                currentEntry = file.name();
+                backupInputFile(currentEntry, fileHandle);
+                executeForStream(currentEntry, fileHandle::getInputStream);
             }
         } else if (extractor.isArchiveFile(file.fileExtension())) {
             process.log(ProcessLog.info()
@@ -173,6 +181,7 @@ public abstract class FileImportJob extends ImportJob {
 
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
+                defineEntriesToExtract(entriesToExtract::put);
                 executeForArchive(file.name(), fileHandle);
             }
         } else {
@@ -196,23 +205,81 @@ public abstract class FileImportJob extends ImportJob {
         process.log(ProcessLog.info().withNLSKey("FileImportJob.importingZipFile"));
 
         AtomicInteger filesImported = new AtomicInteger();
-        extractor.extractAll(filename, fileHandle.getFile(), null, file -> {
-            if (executeForEntry(file)) {
-                filesImported.incrementAndGet();
+        if (entriesToExtract.isEmpty()) {
+            extractAllEntries(filename, fileHandle, filesImported::incrementAndGet);
+        } else {
+            extractEntriesFromList(filename, fileHandle, filesImported::incrementAndGet);
+            if (process.isActive() && auxiliaryFileMode != AuxiliaryFileMode.IGNORE) {
+                // Loop over the entries again, ignoring the files provided via the list
+                // so we can import the auxiliary files such as images or documents
+                extractAllEntries(filename, fileHandle, filesImported::incrementAndGet);
             }
-        });
+        }
 
         if (filesImported.get() == 0) {
             throw Exceptions.createHandled().withNLSKey("FileImportJob.noZippedFileFound").handle();
         }
     }
 
+    private void extractAllEntries(String filename, FileHandle fileHandle, Runnable counter) {
+        extractor.extractAll(filename, fileHandle.getFile(), entry -> {
+            return entriesToExtract.keySet().stream().noneMatch(entry::equals);
+        }, file -> {
+            if (executeForEntry(file)) {
+                counter.run();
+            }
+        });
+    }
+
+    private void extractEntriesFromList(String filename, FileHandle fileHandle, Runnable counter) {
+        entriesToExtract.forEach((fileName, fileRequired) -> {
+            if (!process.isActive()) {
+                return;
+            }
+            Monoflop entryFound = Monoflop.create();
+            extractor.extractAll(filename, fileHandle.getFile(), entryName -> {
+                return entryName.equals(fileName);
+            }, file -> {
+                if (executeForEntry(file)) {
+                    counter.run();
+                }
+                entryFound.toggle();
+            });
+            if (entryFound.isToggled()) {
+                return;
+            }
+
+            if (Boolean.TRUE.equals(fileRequired)) {
+                throw Exceptions.createHandled()
+                                .withNLSKey("FileImportJob.requiredFileNotFound")
+                                .set(FILE_NAME_KEY, fileName)
+                                .handle();
+            } else {
+                process.log(ProcessLog.info()
+                                      .withNLSKey("FileImportJob.requiredFileNotFound")
+                                      .withContext(FILE_NAME_KEY, fileName));
+            }
+        });
+    }
+
+    /**
+     * Specifies specific entries to extract from an archive.
+     * <p>
+     * Override this method in order to filter specific entries.
+     *
+     * @param entryConsumer the consumer expecting the entry name to filter and if the entry is expected to exist
+     */
+    protected void defineEntriesToExtract(BiConsumer<String, Boolean> entryConsumer) {
+        // By default all entries are extracted.
+    }
+
     private boolean executeForEntry(ExtractedFile extractedFile) throws Exception {
         if (canHandleFileExtension(Files.getFileExtension(extractedFile.getFilePath()))) {
             process.log(ProcessLog.info()
                                   .withNLSKey("FileImportJob.importingZippedFile")
-                                  .withContext("filename", extractedFile.getFilePath()));
-            executeForStream(extractedFile.getFilePath(), extractedFile::openInputStream);
+                                  .withContext(FILE_NAME_KEY, extractedFile.getFilePath()));
+            currentEntry = extractedFile.getFilePath();
+            executeForStream(currentEntry, extractedFile::openInputStream);
             return true;
         } else if (auxiliaryFileMode != AuxiliaryFileMode.IGNORE) {
             return handleAuxiliaryFile(extractedFile);
@@ -286,6 +353,16 @@ public abstract class FileImportJob extends ImportJob {
         }
 
         return auxFilesDestination.get();
+    }
+
+    /**
+     * Returns current entry being processed.
+     *
+     * @return a string containing the relative path of the current entry when loading from an archive
+     * or the file name if loaded from VFS.
+     */
+    public String getCurrentEntry() {
+        return currentEntry;
     }
 
     /**
