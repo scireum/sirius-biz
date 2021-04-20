@@ -25,6 +25,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.security.UserContext;
 
+import javax.annotation.Nonnull;
 import java.time.LocalDateTime;
 import java.util.stream.Stream;
 
@@ -44,7 +45,7 @@ public class JournalData extends Composite {
     private volatile boolean batchLog;
 
     @Transient
-    private BaseEntity<?> owner;
+    private final BaseEntity<?> owner;
 
     @Part
     private static AutoBatchLoop autoBatchLoop;
@@ -129,8 +130,35 @@ public class JournalData extends Composite {
         addJournalEntry(entity, changes, false);
     }
 
-    private static void addJournalEntry(BaseEntity<?> entity, String changes, boolean batchLog) {
-        if (!Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_PROTOCOLS) || entity.isNew()) {
+    /**
+     * Adds an entry to the journal of the given entity.
+     *
+     * @param targetId   the id of the entity under which the entity will be written
+     * @param targetType the type of the entity under which the entity will be written
+     * @param targetName the name identifying the entity, which can differ from the owner entity
+     * @param changes    the entry to add to the journal
+     */
+    public static void addJournalEntry(String targetId, String targetType, String targetName, String changes) {
+        addJournalEntry(targetId, targetName, targetType, changes, false);
+    }
+
+    private static void addJournalEntry(@Nonnull BaseEntity<?> entity, String changes, boolean batchLog) {
+        if (entity.isNew()) {
+            return;
+        }
+        addJournalEntry(String.valueOf(entity.getId()),
+                        entity.toString(),
+                        Mixing.getNameForType(entity.getClass()),
+                        changes,
+                        batchLog);
+    }
+
+    private static void addJournalEntry(String targetId,
+                                        String targetName,
+                                        String targetType,
+                                        String changes,
+                                        boolean batchLog) {
+        if (!Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_PROTOCOLS)) {
             return;
         }
 
@@ -138,9 +166,9 @@ public class JournalData extends Composite {
             JournalEntry entry = new JournalEntry();
             entry.setTod(LocalDateTime.now());
             entry.setChanges(changes);
-            entry.setTargetId(String.valueOf(entity.getId()));
-            entry.setTargetName(entity.toString());
-            entry.setTargetType(Mixing.getNameForType(entity.getClass()));
+            entry.setTargetId(targetId);
+            entry.setTargetName(targetName);
+            entry.setTargetType(targetType);
             entry.setSubsystem(TaskContext.get().getSystemString());
             entry.setUserId(UserContext.getCurrentUser().getUserId());
             entry.setUsername(UserContext.getCurrentUser().getProtocolUsername());

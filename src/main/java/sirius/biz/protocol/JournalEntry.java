@@ -53,14 +53,14 @@ public class JournalEntry extends SearchableEntity {
     private String subsystem;
 
     /**
-     * Contains the type name of the entity which was changed.
+     * Contains the type name of the entity which owns this change record.
      */
     public static final Mapping TARGET_TYPE = Mapping.named("targetType");
     @SearchContent
     private String targetType;
 
     /**
-     * Contains the ID of entity which was changed.
+     * Contains the ID of entity which owns this change record.
      */
     public static final Mapping TARGET_ID = Mapping.named("targetId");
     @SearchContent
