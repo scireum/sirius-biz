@@ -13,6 +13,7 @@ import com.alibaba.fastjson.JSONObject;
 import sirius.biz.jupiter.IDBTable;
 import sirius.biz.jupiter.Jupiter;
 import sirius.kernel.commons.Limit;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.settings.Extension;
 
@@ -80,7 +81,7 @@ class IDBLookupTable extends LookupTable {
                                                       .searchValue(code)
                                                       .translate(lang)
                                                       .singleRow(nameField)
-                                                      .map(row -> row.at(0).asString()));
+                                                      .map(row -> row.at(0).asString())).filter(Strings::isFilled);
     }
 
     @Override
@@ -90,7 +91,8 @@ class IDBLookupTable extends LookupTable {
                                                       .lookupPaths(codeField)
                                                       .searchValue(code)
                                                       .singleRow(targetField)
-                                                      .map(row -> row.at(0).asString()));
+                                                      .map(row -> row.at(0).asString())
+                                                      .filter(Strings::isFilled));
     }
 
     @Override
@@ -108,7 +110,8 @@ class IDBLookupTable extends LookupTable {
                                                       .searchValue(code)
                                                       .translate(lang)
                                                       .singleRow(targetField)
-                                                      .map(row -> row.at(0).asString()));
+                                                      .map(row -> row.at(0).asString())
+                                                      .filter(Strings::isFilled));
     }
 
     @Override
@@ -118,7 +121,8 @@ class IDBLookupTable extends LookupTable {
                                                       .lookupPaths(aliasCodeFields)
                                                       .searchValue(code)
                                                       .singleRow(codeField)
-                                                      .map(row -> row.at(0).asString()));
+                                                      .map(row -> row.at(0).asString())
+                                                      .filter(Strings::isFilled));
     }
 
     @Override
@@ -128,7 +132,8 @@ class IDBLookupTable extends LookupTable {
                                                       .searchPaths(nameField)
                                                       .searchValue(name.toLowerCase())
                                                       .singleRow(codeField)
-                                                      .map(row -> row.at(0).asString()));
+                                                      .map(row -> row.at(0).asString())
+                                                      .filter(Strings::isFilled));
     }
 
     @Override

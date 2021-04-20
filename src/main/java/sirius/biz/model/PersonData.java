@@ -8,7 +8,7 @@
 
 package sirius.biz.model;
 
-import sirius.biz.codelists.CodeLists;
+import sirius.biz.codelists.LookupValue;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Composite;
@@ -18,7 +18,6 @@ import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.Formatter;
 import sirius.kernel.nls.NLS;
@@ -42,10 +41,14 @@ import java.util.function.Consumer;
 public class PersonData extends Composite {
 
     /**
+     * Contains the name of the lookup table which contains all known salutations.
+     */
+    public static final String LOOKUP_TABLE_SALUTATIONS = "salutations";
+
+    /**
      * Contains a title.
      */
     public static final Mapping TITLE = Mapping.named("title");
-    public static final String CODE_LIST_SALUTATIONS = "salutations";
     @Length(50)
     @Trim
     @Autoloaded
@@ -62,9 +65,11 @@ public class PersonData extends Composite {
     @Length(20)
     @Autoloaded
     @NullAllowed
-    @Trim
     @AutoImport
-    private String salutation;
+    private final LookupValue salutation = new LookupValue(LOOKUP_TABLE_SALUTATIONS,
+                                                           LookupValue.CustomValues.ACCEPT,
+                                                           LookupValue.Display.NAME,
+                                                           LookupValue.Export.NAME);
 
     /**
      * Contains the first name of the person.
@@ -88,12 +93,8 @@ public class PersonData extends Composite {
     @AutoImport
     private String lastname;
 
-    @Part
-    @Nullable
-    private static CodeLists<?, ?, ?> codeLists;
-
     /**
-     * Verifies that the given salutation is part of the underlying code list.
+     * Verifies that the given salutation is part of the underlying lookup table.
      * <p>
      * This is intended to be invoked within a {@link sirius.db.mixing.annotations.BeforeSave} handler.
      * Note that this will skip empty values.
@@ -102,7 +103,7 @@ public class PersonData extends Composite {
      */
     public void verifySalutation() {
         try {
-            codeLists.verifyValue(CODE_LIST_SALUTATIONS, salutation);
+            salutation.verifyValue();
         } catch (Exception e) {
             throw Exceptions.createHandled()
                             .withNLSKey("PersonData.invalidSalutation")
@@ -112,7 +113,7 @@ public class PersonData extends Composite {
     }
 
     /**
-     * Validates that the given salutation is part of the underlying code list.
+     * Validates that the given salutation is part of the underlying lookup table.
      * <p>
      * This is intended to be invoked within a {@link sirius.db.mixing.annotations.OnValidate} handler.
      * Note that this will skip empty values.
@@ -122,7 +123,7 @@ public class PersonData extends Composite {
      */
     public void validateSalutation(Consumer<String> validationMessageConsumer) {
         try {
-            codeLists.verifyValue(CODE_LIST_SALUTATIONS, salutation);
+            salutation.verifyValue();
         } catch (Exception e) {
             validationMessageConsumer.accept(NLS.fmtr("PersonData.invalidSalutation")
                                                 .set("error", e.getMessage())
@@ -194,9 +195,7 @@ public class PersonData extends Composite {
     public String toTranslatedString(@Nullable String langCode) {
         return Formatter.create("[${salutation} ][${title} ][${firstname} ]${lastname}")
                         .set("salutation",
-                             (langCode == null ?
-                              getTranslatedSalutation() :
-                              getTranslatedSalutation(langCode)))
+                             (langCode == null ? getTranslatedSalutation() : getTranslatedSalutation(langCode)))
                         .set("title", title)
                         .set("firstname", firstname)
                         .set("lastname", lastname)
@@ -235,7 +234,7 @@ public class PersonData extends Composite {
      * @return the value for <tt>salutation</tt> from the <tt>salutations</tt> code list
      */
     public String getTranslatedSalutation() {
-        return codeLists.getTranslatedValue(CODE_LIST_SALUTATIONS, salutation);
+        return salutation.getTable().resolveName(salutation.getValue()).orElse(salutation.getValue());
     }
 
     /**
@@ -245,7 +244,7 @@ public class PersonData extends Composite {
      * @return the value for <tt>salutation</tt> from the <tt>salutations</tt> code list
      */
     public String getTranslatedSalutation(String langCode) {
-        return codeLists.getTranslatedValue(CODE_LIST_SALUTATIONS, salutation, langCode);
+        return salutation.getTable().resolveName(salutation.getValue(), langCode).orElse(salutation.getValue());
     }
 
     public String getTitle() {
@@ -257,11 +256,11 @@ public class PersonData extends Composite {
     }
 
     public String getSalutation() {
-        return salutation;
+        return salutation.getValue();
     }
 
     public void setSalutation(String salutation) {
-        this.salutation = salutation;
+        this.salutation.setValue(salutation);
     }
 
     public String getFirstname() {

@@ -71,7 +71,7 @@ class CodeListLookupTable extends LookupTable {
     @Override
     protected Optional<String> performReverseLookup(String name) {
         return Optional.ofNullable(REVERSE_LOOKUP_CACHE.get(codeList + "-" + fetchCodeListTenantId() + "-" + name,
-                                                            this::performReverseLookupScan));
+                                                            ignored -> performReverseLookupScan(name)));
     }
 
     private String fetchCodeListTenantId() {
@@ -79,7 +79,7 @@ class CodeListLookupTable extends LookupTable {
     }
 
     private String performReverseLookupScan(String name) {
-        return scan().filter(pair -> Strings.areEqual(name, pair.getName()))
+        return scan().filter(pair -> Strings.equalIgnoreCase(name, pair.getName()))
                      .findFirst()
                      .map(LookupTableEntry::getCode)
                      .orElse(null);

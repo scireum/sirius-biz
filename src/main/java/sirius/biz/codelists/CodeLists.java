@@ -542,5 +542,6 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      */
     public void clearCache() {
         valueCache.clear();
+        CodeListLookupTable.flushReverseLookupCache();
     }
 }
