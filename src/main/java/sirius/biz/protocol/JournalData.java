@@ -143,7 +143,7 @@ public class JournalData extends Composite {
     }
 
     private static void addJournalEntry(@Nonnull BaseEntity<?> entity, String changes, boolean batchLog) {
-        if (entity.isNew()) {
+        if (entity.isNew() || entity.wasCreated()) {
             return;
         }
         addJournalEntry(String.valueOf(entity.getId()),
