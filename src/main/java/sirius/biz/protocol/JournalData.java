@@ -186,7 +186,7 @@ public class JournalData extends Composite {
     protected void onDelete() {
         if (!silent) {
             try {
-                addJournalEntry(owner, "Entity has been deleted.", batchLog);
+                addJournalEntry(owner, Strings.apply("Entity '%s' has been deleted.", owner.toString()), batchLog);
             } catch (Exception e) {
                 Exceptions.handle(e);
             }
