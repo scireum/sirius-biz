@@ -16,7 +16,6 @@ import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
-import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Register;
 
@@ -70,12 +69,12 @@ public class MultiLanguageStringExtender implements EntityImportHandlerExtender 
             multiLanguageString.clear();
         }
 
-        if (Strings.isFilled(multiLanguageStringHelper.getImportLanguage())) {
-            multiLanguageString.put(multiLanguageStringHelper.getImportLanguage(), value.getString());
+        if (multiLanguageStringHelper.hasForcedLanguage()) {
+            multiLanguageString.put(multiLanguageStringHelper.getForcedLanguage(), value.getString());
         } else if (multiLanguageString.isWithFallback()) {
             multiLanguageString.setFallback(value.toString());
         } else {
-            multiLanguageString.put(multiLanguageStringHelper.getEffectiveImportLanguage(), value.getString());
+            multiLanguageString.put(multiLanguageStringHelper.getEffectiveLanguage(), value.getString());
         }
     }
 
@@ -99,13 +98,13 @@ public class MultiLanguageStringExtender implements EntityImportHandlerExtender 
         MultiLanguageStringHelper multiLanguageStringHelper =
                 context.getImporter().findHelper(MultiLanguageStringHelper.class);
         MultiLanguageString multiLanguageString = property.getMultiLanguageString(entity);
-        if (Strings.isFilled(multiLanguageStringHelper.getExportLanguage())) {
-            return multiLanguageString.fetchTextOrFallback(multiLanguageStringHelper.getExportLanguage());
+        if (multiLanguageStringHelper.hasForcedLanguage()) {
+            return multiLanguageString.fetchTextOrFallback(multiLanguageStringHelper.getForcedLanguage());
         }
         if (multiLanguageString.isWithFallback()) {
             return multiLanguageString.getFallback();
         } else {
-            return multiLanguageString.fetchText(multiLanguageStringHelper.getEffectiveExportLanguage());
+            return multiLanguageString.fetchText(multiLanguageStringHelper.getEffectiveLanguage());
         }
     }
 }

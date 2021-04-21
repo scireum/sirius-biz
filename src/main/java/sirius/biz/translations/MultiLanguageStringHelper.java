@@ -20,13 +20,12 @@ import java.util.Map;
  * Provides a central helper when importing data for {@link MultiLanguageString} fields.
  * <p>
  * Basically we support two ways of importing data into a multi language string field. Either this helper is
- * configured appropriately (using {@link #setReplaceOnImport(boolean)}, {@link #setImportLanguage(String)}, or
- * {@link #setDefaultImportLanguage(String)}) or either {@link #createReplacement()} or {@link #createUpdate()}
+ * configured appropriately (using {@link #replaceOnImport()} , {@link #updateOnImport()} as well as
+ * {@link #forceLanguage(String)} or {@link #withDefaultLanguage(String)}.
+ * <p>
+ * Alternatively. either {@link #createReplacement()} or {@link #createUpdate()}
  * are used to build {@link MultiLanguageStringValue} objects which are picked up by the
  * {@link MultiLanguageStringExtender} which will update the fields accordingly.
- * <p>
- * For exporting data, {@link #setExportLanguage(String)} and {@link #setDefaultExportLanguage(String)} can be used
- * to control which values are actually exported.
  */
 public class MultiLanguageStringHelper extends ImportHelper {
 
@@ -70,10 +69,8 @@ public class MultiLanguageStringHelper extends ImportHelper {
     }
 
     private boolean replaceOnImport;
-    private String importLanguage;
-    private String defaultImportLanguage;
-    private String exportLanguage;
-    private String defaultExportLanguage;
+    private String forcedLanguage;
+    private String defaultLanguage;
 
     /**
      * Creates a new instance for the given context.
@@ -104,7 +101,7 @@ public class MultiLanguageStringHelper extends ImportHelper {
      * a multi language string field.
      */
     public static MultiLanguageStringValue createReplacement(String fallbackValue) {
-        return new MultiLanguageStringValue(false).withFallback(fallbackValue);
+        return new MultiLanguageStringValue(true).withFallback(fallbackValue);
     }
 
     /**
@@ -142,89 +139,61 @@ public class MultiLanguageStringHelper extends ImportHelper {
     }
 
     /**
-     * Determines if a multi language string field should be cleared before importing new data.
-     * <p>
-     * If the import is used to add translations to existing data, this should be set to <tt>false</tt>. If the
-     * import replaces all existing data, this should be set to <tt>true</tt>.
-     *
-     * @param replaceOnImport <tt>true</tt> to remove all data before applying the new one, <tt>false</tt> to keep
-     *                        existing values (unless overwritten during the import).
+     * Overwrites all previously available translations when importing data into a multilanguage string.
      */
-    public void setReplaceOnImport(boolean replaceOnImport) {
-        this.replaceOnImport = replaceOnImport;
+    public MultiLanguageStringHelper replaceOnImport() {
+        this.replaceOnImport = true;
+        return this;
     }
 
     /**
-     * Specifies the target language to use <b>for all fields</b> when importing strings into multi language fields.
+     * Keeps previous translations in multi language strings and only adds new ones during an import.
+     */
+    public void updateOnImport() {
+        this.replaceOnImport = false;
+    }
+
+    /**
+     * Specifies the target language to use <b>for all fields</b> when importing or exporting strings from or to multi
+     * language fields.
      * <p>
      * Note, if this is set, it will be used for all fields, even if these would have a <b>fallback</b> value to
      * update.
      *
-     * @param importLanguage the import language to use for all fields
-     * @see #setDefaultImportLanguage(String)
+     * @param forcedLanguage the language to use for all fields
+     * @see #withDefaultLanguage(String)
      */
-    public void setImportLanguage(String importLanguage) {
-        this.importLanguage = importLanguage;
+    public void forceLanguage(String forcedLanguage) {
+        this.forcedLanguage = forcedLanguage;
     }
 
     /**
      * Specifies the target language to use <b>for fields without a fallback value</b>.
      * <p>
-     * Note that this language is only used, if we cannot update hte <b>fallback value</b> (which is suppressed for
-     * some multi language fields). If no explicit default import language is specified, we use the current
-     * language of the user.
+     * Note that this language is only used, if multi language string field doesn't support default values. If no
+     * explicit default language is specified, we use the current language of the user.
      *
-     * @param defaultImportLanguage the language used to import strings into fields which do not accept a fallback value
+     * @param defaultLanguage the language used for fields which do not accept a fallback value
      */
-    public void setDefaultImportLanguage(String defaultImportLanguage) {
-        this.defaultImportLanguage = defaultImportLanguage;
-    }
-
-    /**
-     * Specifies the export language to use <b>for all fields</b>.
-     *
-     * If speciied, we export the value for this language for all multi language strings, even if a <b>fallback</b>
-     * value would be present.
-     *
-     * @param exportLanguage the export language to use for all fields
-     * @see #setDefaultExportLanguage(String)
-     */
-    public void setExportLanguage(String exportLanguage) {
-        this.exportLanguage = exportLanguage;
-    }
-
-    /**
-     * Specifies the export language to use <b>for fields which do not support a fallback value</b>.
-     *
-     * @param defaultExportLanguage the language to export if no <b>fallback</b> is present
-     */
-    public void setDefaultExportLanguage(String defaultExportLanguage) {
-        this.defaultExportLanguage = defaultExportLanguage;
+    public void withDefaultLanguage(String defaultLanguage) {
+        this.defaultLanguage = defaultLanguage;
     }
 
     protected boolean isReplaceOnImport() {
         return replaceOnImport;
     }
 
-    protected String getImportLanguage() {
-        return importLanguage;
+    protected boolean hasForcedLanguage() {
+        return Strings.isFilled(forcedLanguage);
     }
 
-    protected String getEffectiveImportLanguage() {
-        if (Strings.isFilled(defaultImportLanguage)) {
-            return defaultImportLanguage;
-        } else {
-            return NLS.getCurrentLang();
-        }
+    protected String getForcedLanguage() {
+        return forcedLanguage;
     }
 
-    protected String getExportLanguage() {
-        return exportLanguage;
-    }
-
-    protected String getEffectiveExportLanguage() {
-        if (Strings.isFilled(defaultExportLanguage)) {
-            return defaultExportLanguage;
+    protected String getEffectiveLanguage() {
+        if (Strings.isFilled(defaultLanguage)) {
+            return defaultLanguage;
         } else {
             return NLS.getCurrentLang();
         }
