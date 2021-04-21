@@ -53,13 +53,13 @@ public class DelegateJournalData extends Composite {
      * Creates a new instance for the given id and type suppliers.
      *
      * @param owner      the entity which triggered the change or delete event.
-     * @param targetId   the supplier which delivers the target id under which the journal message will be created
      * @param targetType the supplier which delivers the target entity type under which the journal message will be created
+     * @param targetId   the supplier which delivers the target id under which the journal message will be created
      */
-    public DelegateJournalData(BaseEntity<?> owner, Supplier<String> targetId, Supplier<String> targetType) {
+    public DelegateJournalData(BaseEntity<?> owner, Supplier<String> targetType, Supplier<String> targetId) {
         this.owner = owner;
-        this.targetId = targetId;
         this.targetType = targetType;
+        this.targetId = targetId;
     }
 
     /**
@@ -139,7 +139,7 @@ public class DelegateJournalData extends Composite {
         try {
             String message = messageSupplier.get();
             if (Strings.isFilled(message)) {
-                JournalData.addJournalEntry(targetId.get(), targetType.get(), owner.toString(), message);
+                JournalData.addJournalEntry(targetType.get(), targetId.get(), owner.toString(), message);
             }
         } catch (Exception e) {
             Exceptions.handle(e);

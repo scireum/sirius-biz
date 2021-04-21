@@ -133,12 +133,12 @@ public class JournalData extends Composite {
     /**
      * Adds an entry to the journal of the given entity.
      *
-     * @param targetId   the id of the entity under which the entity will be written
      * @param targetType the type of the entity under which the entity will be written
+     * @param targetId   the id of the entity under which the entity will be written
      * @param targetName the name identifying the entity, which can differ from the owner entity
      * @param changes    the entry to add to the journal
      */
-    public static void addJournalEntry(String targetId, String targetType, String targetName, String changes) {
+    public static void addJournalEntry(String targetType, String targetId, String targetName, String changes) {
         addJournalEntry(targetId, targetName, targetType, changes, false);
     }
 
