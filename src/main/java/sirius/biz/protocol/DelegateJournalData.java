@@ -129,10 +129,11 @@ public class DelegateJournalData extends Composite {
     }
 
     private void createJournalEntry(Supplier<String> messageSupplier) {
-        if (silent
-            || !Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_JOURNAL)
-            || messageSupplier == null
-            || owner.isNew()) {
+        if (silent || !Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_JOURNAL) || messageSupplier == null) {
+            return;
+        }
+
+        if (owner.isNew() || owner.wasCreated()) {
             return;
         }
 
