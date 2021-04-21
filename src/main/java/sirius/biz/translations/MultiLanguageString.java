@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
  * Provides a language-text map as property value.
  *
  * @see MultiLanguageStringProperty
+ * @see MultiLanguageStringHelper
  */
 public class MultiLanguageString extends SafeMap<String, String> {
 
@@ -312,7 +313,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
      * @return the map itself for fluent method calls
      */
     @Override
-    public SafeMap<String, String> put(@Nonnull String key, String value) {
+    public MultiLanguageString put(@Nonnull String key, String value) {
         if (Strings.isFilled(value)) {
             super.modify().put(key, value);
         } else {

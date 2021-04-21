@@ -56,18 +56,6 @@ public class MongoCodeListEntryImportHandler extends MongoEntityImportHandler<Mo
     }
 
     @Override
-    public Function<? super MongoCodeListEntry, ?> createExtractor(String fieldToExport) {
-        if (fieldToExport.equals(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.VALUE).getName())) {
-            return codeListEntry -> codeListEntry.getCodeListEntryData().getValue().getFallback();
-        }
-        if (fieldToExport.equals(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.ADDITIONAL_VALUE)
-                                                                   .getName())) {
-            return codeListEntry -> codeListEntry.getCodeListEntryData().getAdditionalValue().getFallback();
-        }
-        return super.createExtractor(fieldToExport);
-    }
-
-    @Override
     protected MongoCodeListEntry loadForFind(Context data) {
         return load(data,
                     MongoCodeListEntry.CODE_LIST,
