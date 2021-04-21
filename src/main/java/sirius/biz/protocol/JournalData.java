@@ -20,6 +20,7 @@ import sirius.db.mixing.annotations.AfterSave;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.TaskContext;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
@@ -133,29 +134,27 @@ public class JournalData extends Composite {
     /**
      * Adds an entry to the journal of the given entity.
      *
-     * @param targetType the type of the entity under which the entity will be written
-     * @param targetId   the id of the entity under which the entity will be written
-     * @param targetName the name identifying the entity, which can differ from the owner entity
-     * @param changes    the entry to add to the journal
+     * @param targetType        the type of the entity under which the entity will be written
+     * @param targetId          the id of the entity under which the entity will be written
+     * @param contentIdentifier the name identifying the entity, which can differ from the owner entity
+     * @param changes           the entry to add to the journal
      */
-    public static void addJournalEntry(String targetType, String targetId, String targetName, String changes) {
-        addJournalEntry(targetId, targetName, targetType, changes, false);
+    public static void addJournalEntry(String targetType, String targetId, String contentIdentifier, String changes) {
+        addJournalEntry(targetType, targetId, contentIdentifier, changes, false);
     }
 
     private static void addJournalEntry(@Nonnull BaseEntity<?> entity, String changes, boolean batchLog) {
         if (entity.isNew() || entity.wasCreated()) {
             return;
         }
-        addJournalEntry(String.valueOf(entity.getId()),
-                        entity.toString(),
-                        Mixing.getNameForType(entity.getClass()),
-                        changes,
-                        batchLog);
+        String targetId = String.valueOf(entity.getId());
+        String targetType = Mixing.getNameForType(entity.getClass());
+        addJournalEntry(targetType, targetId, Strings.apply("%s-%s", targetType, targetId), changes, batchLog);
     }
 
-    private static void addJournalEntry(String targetId,
-                                        String targetName,
-                                        String targetType,
+    private static void addJournalEntry(String targetType,
+                                        String targetId,
+                                        String contentIdentifier,
                                         String changes,
                                         boolean batchLog) {
         if (!Sirius.isFrameworkEnabled(Protocols.FRAMEWORK_PROTOCOLS)) {
@@ -167,7 +166,7 @@ public class JournalData extends Composite {
             entry.setTod(LocalDateTime.now());
             entry.setChanges(changes);
             entry.setTargetId(targetId);
-            entry.setTargetName(targetName);
+            entry.setContentIdentifier(contentIdentifier);
             entry.setTargetType(targetType);
             entry.setSubsystem(TaskContext.get().getSystemString());
             entry.setUserId(UserContext.getCurrentUser().getUserId());
