@@ -149,8 +149,9 @@ public class MultiLanguageStringHelper extends ImportHelper {
     /**
      * Keeps previous translations in multi language strings and only adds new ones during an import.
      */
-    public void updateOnImport() {
+    public MultiLanguageStringHelper updateOnImport() {
         this.replaceOnImport = false;
+        return this;
     }
 
     /**
@@ -175,8 +176,9 @@ public class MultiLanguageStringHelper extends ImportHelper {
      *
      * @param defaultLanguage the language used for fields which do not accept a fallback value
      */
-    public void withDefaultLanguage(String defaultLanguage) {
+    public MultiLanguageStringHelper withDefaultLanguage(String defaultLanguage) {
         this.defaultLanguage = defaultLanguage;
+        return this;
     }
 
     protected boolean isReplaceOnImport() {
