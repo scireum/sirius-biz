@@ -18,6 +18,7 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nonnull;
@@ -30,6 +31,9 @@ import java.util.function.Supplier;
  * To skip a record entirely, {@link #setSilent(boolean)} can be called before the update or delete.
  */
 public class DelegateJournalData extends Composite {
+
+    @Part
+    private static Mixing mixing;
 
     @Transient
     private volatile boolean silent;
@@ -116,6 +120,21 @@ public class DelegateJournalData extends Composite {
      */
     public void setSilent(boolean silent) {
         this.silent = silent;
+    }
+
+    /**
+     * Adds an entry to the journal of the given entity.
+     *
+     * @param targetType the type of the entity under which the entity will be written
+     * @param targetId   the id of the entity under which the entity will be written
+     * @param aClass     the class of the actual entity which was changed
+     * @param changes    the entry to add to the journal, automatically appended by the class's label
+     */
+    public static void createJournalEntry(String targetType, String targetId, Class<?> aClass, String changes) {
+        JournalData.addJournalEntry(targetType,
+                                    targetId,
+                                    Mixing.getNameForType(aClass),
+                                    Strings.apply("%s - %s", mixing.getDescriptor(aClass).getLabel(), changes));
     }
 
     @AfterSave
