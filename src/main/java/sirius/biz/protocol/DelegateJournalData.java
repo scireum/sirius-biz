@@ -125,8 +125,8 @@ public class DelegateJournalData extends Composite {
     /**
      * Adds an entry to the journal of the given entity.
      *
-     * @param targetType             the type of the entity under which the entity will be written
-     * @param targetId               the id of the entity under which the entity will be written
+     * @param targetType             the type of the entity under which the journal entity will be written
+     * @param targetId               the id of the entity under which the journal entity will be written
      * @param contentIdentifierClass the type of the actual entity which was changed
      * @param contentIdentifierId    the id of the actual entity which was changed
      * @param changes                the entry to add to the journal, automatically appended by the class's label
