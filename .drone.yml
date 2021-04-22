@@ -65,6 +65,16 @@ steps:
       event:
         - tag
 
+  - name: test JDK16
+    failure: ignore
+    image: hub.scireum.com/scireum/sirius-build-jdk16:latest
+    commands:
+      - mvn -U clean test
+    volumes: *scireum_volumes
+    when:
+      event:
+      - pull_request
+
 volumes:
   - name: docker_socket
     host:
