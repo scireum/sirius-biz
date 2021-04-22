@@ -125,16 +125,25 @@ public class DelegateJournalData extends Composite {
     /**
      * Adds an entry to the journal of the given entity.
      *
-     * @param targetType the type of the entity under which the entity will be written
-     * @param targetId   the id of the entity under which the entity will be written
-     * @param aClass     the class of the actual entity which was changed
-     * @param changes    the entry to add to the journal, automatically appended by the class's label
+     * @param targetType             the type of the entity under which the entity will be written
+     * @param targetId               the id of the entity under which the entity will be written
+     * @param contentIdentifierClass the type of the actual entity which was changed
+     * @param contentIdentifierId    the id of the actual entity which was changed
+     * @param changes                the entry to add to the journal, automatically appended by the class's label
      */
-    public static void createJournalEntry(String targetType, String targetId, Class<?> aClass, String changes) {
+    public static void createJournalEntry(String targetType,
+                                          String targetId,
+                                          Class<?> contentIdentifierClass,
+                                          String contentIdentifierId,
+                                          String changes) {
         JournalData.addJournalEntry(targetType,
                                     targetId,
-                                    Mixing.getNameForType(aClass),
-                                    Strings.apply("%s - %s", mixing.getDescriptor(aClass).getLabel(), changes));
+                                    Strings.apply("%s-%s",
+                                                  Mixing.getNameForType(contentIdentifierClass),
+                                                  contentIdentifierId),
+                                    Strings.apply("%s - %s",
+                                                  mixing.getDescriptor(contentIdentifierClass).getLabel(),
+                                                  changes));
     }
 
     @AfterSave
