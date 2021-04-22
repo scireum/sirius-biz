@@ -140,6 +140,8 @@ public class MultiLanguageStringHelper extends ImportHelper {
 
     /**
      * Overwrites all previously available translations when importing data into a multilanguage string.
+     *
+     * @return the object itself for fluent calls
      */
     public MultiLanguageStringHelper replaceOnImport() {
         this.replaceOnImport = true;
@@ -148,9 +150,12 @@ public class MultiLanguageStringHelper extends ImportHelper {
 
     /**
      * Keeps previous translations in multi language strings and only adds new ones during an import.
+     *
+     * @return the object itself for fluent calls
      */
-    public void updateOnImport() {
+    public MultiLanguageStringHelper updateOnImport() {
         this.replaceOnImport = false;
+        return this;
     }
 
     /**
@@ -174,9 +179,11 @@ public class MultiLanguageStringHelper extends ImportHelper {
      * explicit default language is specified, we use the current language of the user.
      *
      * @param defaultLanguage the language used for fields which do not accept a fallback value
+     * @return the object itself for fluent calls
      */
-    public void withDefaultLanguage(String defaultLanguage) {
+    public MultiLanguageStringHelper withDefaultLanguage(String defaultLanguage) {
         this.defaultLanguage = defaultLanguage;
+        return this;
     }
 
     protected boolean isReplaceOnImport() {
