@@ -12,6 +12,8 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
+import java.util.Optional;
+
 /**
  * Represents a string value backed by a {@link LookupTable} to be used in database entities.
  * <p>
@@ -107,6 +109,26 @@ public class LookupValue {
         }
 
         return table;
+    }
+
+    /**
+     * Resolves the name for the current value.
+     *
+     * @return the name of the current value in the current language, or an empty optional if no value is present or
+     * if the code is unknown.
+     */
+    public Optional<String> fetchName() {
+        return getTable().resolveName(value);
+    }
+
+    /**
+     * Fetches the description for the current value.
+     *
+     * @return the description for the current value in the current language, or an empty optional if no value is
+     * present or if the code is unknown.
+     */
+    public Optional<String> fetchDescription() {
+        return getTable().resolveDescription(value);
     }
 
     public String getValue() {

@@ -122,6 +122,41 @@ public abstract class LookupTable {
     protected abstract Optional<String> performResolveName(@Nonnull String code, String lang);
 
     /**
+     * Resolves the description for the given code.
+     *
+     * @param code the code to resolve the description for
+     * @return the description for the given code in the currently active language or an empty optional, if the code
+     * is unknown or no description is present.
+     * <p>
+     * Note that this will only resolve the main code. When in doubt, the code
+     * must be normalized via {@link #normalize(String)} before invoking this method.
+     */
+    public Optional<String> resolveDescription(String code) {
+        return resolveDescription(code, NLS.getCurrentLang());
+    }
+
+    /**
+     * Resolves the description in the given language for the given code.
+     *
+     * @param code the code to resolve the description for
+     * @param lang the language of the description to resolve
+     * @return the description for the given code in the given language or an empty optional, if the code is unknown or
+     * if no description is present.
+     * <p>
+     * Note that this will only resolve the main code. When in doubt, the code must be normalized via
+     * {@link #normalize(String)} before invoking this method.
+     */
+    public Optional<String> resolveDescription(String code, String lang) {
+        if (Strings.isEmpty(code)) {
+            return Optional.empty();
+        }
+
+        return performResolveDescription(normalizeCodeValue(code), lang);
+    }
+
+    protected abstract Optional<String> performResolveDescription(@Nonnull String code, String lang);
+
+    /**
      * Fetches the requested field for the given code.
      *
      * @param code        the code to fetch the field for

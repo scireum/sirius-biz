@@ -44,6 +44,12 @@ class CodeListLookupTable extends LookupTable {
     }
 
     @Override
+    protected Optional<String> performResolveDescription(@Nonnull String code, String lang) {
+        // Descriptions are not supported by code lists...
+        return Optional.empty();
+    }
+
+    @Override
     protected Optional<String> performFetchField(String code, String targetField) {
         return Optional.ofNullable(codeLists.getValues(codeList, code).getSecond());
     }
