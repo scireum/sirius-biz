@@ -18,6 +18,7 @@ import sirius.db.mixing.PropertyFactory;
 import sirius.db.mixing.properties.StringListProperty;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -72,9 +73,26 @@ public class LookupValuesProperty extends StringListProperty {
         return referenceValues;
     }
 
+    /**
+     * Bypasses {@link StringListProperty#getValueFromField(java.lang.Object)} to access the actual LookupValues entity.
+     *
+     * @param entity the target object determined by the access path
+     * @return the corresponding {@link LookupValues} object determined by the access path
+     * @see Property#getValueFromField(java.lang.Object)
+     */
     protected LookupValues getLookupValues(Object entity) {
         Object target = accessPath.apply(entity);
-        return (LookupValues) getValueFromField(target);
+        try {
+            return (LookupValues) field.get(target);
+        } catch (IllegalAccessException e) {
+            throw Exceptions.handle()
+                            .to(Mixing.LOG)
+                            .error(e)
+                            .withSystemErrorMessage("Cannot read property '%s' (from '%s'): %s (%s)",
+                                                    getName(),
+                                                    getDefinition())
+                            .handle();
+        }
     }
 
     @Override
