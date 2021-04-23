@@ -168,12 +168,7 @@ public class DelegateJournalData extends Composite {
         try {
             String message = messageSupplier.get();
             if (Strings.isFilled(message)) {
-                JournalData.addJournalEntry(targetType.get(),
-                                            targetId.get(),
-                                            Strings.apply("%s-%s",
-                                                          Mixing.getNameForType(owner.getClass()),
-                                                          String.valueOf(owner.getId())),
-                                            Strings.apply("%s - %s", owner.getDescriptor().getLabel(), message));
+                createJournalEntry(targetType.get(), targetId.get(), owner.getClass(), owner.getIdAsString(), message);
             }
         } catch (Exception e) {
             Exceptions.handle(e);
