@@ -14,6 +14,7 @@ import sirius.kernel.commons.Limit;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.settings.Extension;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -71,6 +72,11 @@ class IDBFilteredLookupTable extends LookupTable {
     @Override
     protected Optional<String> performNormalize(String code) {
         return baseTable.performNormalize(code).filter(this::contains);
+    }
+
+    @Override
+    protected Optional<String> performNormalizeWithMapping(@Nonnull String code, String mapping) {
+        return baseTable.performNormalizeWithMapping(code, mapping).filter(this::contains);
     }
 
     @Override

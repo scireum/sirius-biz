@@ -11,6 +11,7 @@ package sirius.biz.codelists;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.settings.Extension;
 
+import javax.annotation.Nonnull;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -59,6 +60,12 @@ class CustomLookupTable extends LookupTable {
     @Override
     protected Optional<String> performNormalize(String code) {
         return or(customTable.performNormalize(code), () -> baseTable.performNormalize(code));
+    }
+
+    @Override
+    protected Optional<String> performNormalizeWithMapping(@Nonnull String code, String mapping) {
+        return or(customTable.performNormalizeWithMapping(code, mapping),
+                  () -> baseTable.performNormalizeWithMapping(code, mapping));
     }
 
     @Override

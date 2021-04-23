@@ -43,6 +43,7 @@ class IDBLookupTable extends LookupTable {
     private static final String CACHE_PREFIX_RESOLVE_NAME = "resolve-name-";
     private static final String CACHE_PREFIX_FETCH_FIELD = "fetch-field-";
     private static final String CACHE_PREFIX_NORMALIZE = "normalize-";
+    private static final String CACHE_PREFIX_NORMALIZE_WITH_MAPPING = "normalize-with-mapping";
     private static final String CACHE_PREFIX_REVERSE_LOOKUP = "reverse-lookup-";
     private static final String CACHE_PREFIX_FETCH_OBJECT = "fetch-object-";
 
@@ -119,6 +120,22 @@ class IDBLookupTable extends LookupTable {
         return jupiter.fetchFromSmallCache(CACHE_PREFIX_NORMALIZE + table.getName() + "-" + code,
                                            () -> table.query()
                                                       .lookupPaths(aliasCodeFields)
+                                                      .searchValue(code)
+                                                      .singleRow(codeField)
+                                                      .map(row -> row.at(0).asString())
+                                                      .filter(Strings::isFilled));
+    }
+
+    @Override
+    protected Optional<String> performNormalizeWithMapping(String code, String mapping) {
+        return jupiter.fetchFromSmallCache(CACHE_PREFIX_NORMALIZE_WITH_MAPPING
+                                           + table.getName()
+                                           + "-"
+                                           + code
+                                           + "-"
+                                           + mapping,
+                                           () -> table.query()
+                                                      .lookupPaths(mapping)
                                                       .searchValue(code)
                                                       .singleRow(codeField)
                                                       .map(row -> row.at(0).asString())

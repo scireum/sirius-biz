@@ -32,24 +32,26 @@ public class Countries {
     /**
      * Contains the name of the main lookup table which contains all known countries.
      */
-    public static final String LOOKUP_TABLE_COUNTRIES = "countries";
+    public static final String LOOKUP_TABLE_ALL_COUNTRIES = "countries";
 
     /**
-     * Represents the leading code field.
+     * Contains the name of the lookup table which contains all countries which are "active" / "shown to the user".
      * <p>
-     * By convention we use the two letter country code for this.
+     * This can be a subset of <tt>LOOKUP_TABLE_ALL_COUNTRIES</tt> in case only a limited set of countries should
+     * be provided in select lists etc. Note that applications can also define their own sub sets for custom purposes
+     * and still use the helper methods provided here.
      */
-    public static final String CODE_FIELD = "code";
+    public static final String LOOKUP_TABLE_ACTIVE_COUNTRIES = "active-countries";
 
     /**
-     * Contains the two letter ISO country code.
+     * Contains the two letter ISO country code to be used with {@link LookupTable#fetchMapping(String, String)} etc.
      */
-    public static final String FIELD_ISO2 = "mappings.isoAlpha2";
+    public static final String MAPPING_ISO2 = "isoAlpha2";
 
     /**
-     * Contains the three letter ISO country code.
+     * Contains the three letter ISO country code to be used with {@link LookupTable#fetchMapping(String, String)} etc.
      */
-    public static final String FIELD_ISO3 = "mappings.isoAlpha3";
+    public static final String MAPPING_ISO3 = "isoAlpha3";
 
     private static final String FIELD_ZIP_REGEX = "zipCodeRegEx";
 
@@ -57,12 +59,21 @@ public class Countries {
     private LookupTables lookupTables;
 
     /**
-     * Provides access to the underlying lookup table.
+     * Provides access to the underlying lookup table for all countries.
      *
      * @return the lookup table for countries.
      */
-    public LookupTable lookupTable() {
-        return lookupTables.fetchTable(LOOKUP_TABLE_COUNTRIES);
+    public LookupTable all() {
+        return lookupTables.fetchTable(LOOKUP_TABLE_ALL_COUNTRIES);
+    }
+
+    /**
+     * Provides access to the underlying lookup table for all active countries.
+     *
+     * @return the lookup table for  active countries.
+     */
+    public LookupTable active() {
+        return lookupTables.fetchTable(LOOKUP_TABLE_ACTIVE_COUNTRIES);
     }
 
     /**
@@ -78,7 +89,7 @@ public class Countries {
         }
 
         try {
-            return lookupTable().fetchField(code, FIELD_ZIP_REGEX)
+            return all().fetchField(code, FIELD_ZIP_REGEX)
                                 .map(Pattern::compile)
                                 .map(pattern -> pattern.matcher(zip).matches())
                                 .orElse(true);
