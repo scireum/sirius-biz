@@ -18,6 +18,7 @@ import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nonnull;
@@ -30,6 +31,9 @@ import java.util.function.Supplier;
  * To skip a record entirely, {@link #setSilent(boolean)} can be called before the update or delete.
  */
 public class DelegateJournalData extends Composite {
+
+    @Part
+    private static Mixing mixing;
 
     @Transient
     private volatile boolean silent;
@@ -118,6 +122,30 @@ public class DelegateJournalData extends Composite {
         this.silent = silent;
     }
 
+    /**
+     * Adds an entry to the journal of the given entity.
+     *
+     * @param targetType             the type of the entity under which the journal entity will be written
+     * @param targetId               the id of the entity under which the journal entity will be written
+     * @param contentIdentifierClass the type of the actual entity which was changed
+     * @param contentIdentifierId    the id of the actual entity which was changed
+     * @param changes                the entry to add to the journal, automatically appended by the class's label
+     */
+    public static void createJournalEntry(String targetType,
+                                          String targetId,
+                                          Class<?> contentIdentifierClass,
+                                          String contentIdentifierId,
+                                          String changes) {
+        JournalData.addJournalEntry(targetType,
+                                    targetId,
+                                    Strings.apply("%s-%s",
+                                                  Mixing.getNameForType(contentIdentifierClass),
+                                                  contentIdentifierId),
+                                    Strings.apply("%s - %s",
+                                                  mixing.getDescriptor(contentIdentifierClass).getLabel(),
+                                                  changes));
+    }
+
     @AfterSave
     protected void onSave() {
         createJournalEntry(changeMessageSupplier);
@@ -140,12 +168,7 @@ public class DelegateJournalData extends Composite {
         try {
             String message = messageSupplier.get();
             if (Strings.isFilled(message)) {
-                JournalData.addJournalEntry(targetType.get(),
-                                            targetId.get(),
-                                            Strings.apply("%s-%s",
-                                                          Mixing.getNameForType(owner.getClass()),
-                                                          String.valueOf(owner.getId())),
-                                            Strings.apply("%s - %s", owner.getDescriptor().getLabel(), message));
+                createJournalEntry(targetType.get(), targetId.get(), owner.getClass(), owner.getIdAsString(), message);
             }
         } catch (Exception e) {
             Exceptions.handle(e);
