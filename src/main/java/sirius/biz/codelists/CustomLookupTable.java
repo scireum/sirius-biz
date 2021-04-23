@@ -46,6 +46,11 @@ class CustomLookupTable extends LookupTable {
     }
 
     @Override
+    protected Optional<String> performResolveDescription(@Nonnull String code, String lang) {
+        return or(customTable.performResolveDescription(code, lang), () -> baseTable.performResolveDescription(code, lang));
+    }
+
+    @Override
     protected Optional<String> performFetchField(String code, String targetField) {
         return or(customTable.performFetchField(code, targetField),
                   () -> baseTable.performFetchField(code, targetField));
