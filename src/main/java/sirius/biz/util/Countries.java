@@ -39,7 +39,7 @@ public class Countries {
      * <p>
      * This can be a subset of <tt>LOOKUP_TABLE_ALL_COUNTRIES</tt> in case only a limited set of countries should
      * be provided in select lists etc. Note that applications can also define their own sub sets for custom purposes
-     * and still the the helper methods provided here.
+     * and still use the helper methods provided here.
      */
     public static final String LOOKUP_TABLE_ACTIVE_COUNTRIES = "active-countries";
 

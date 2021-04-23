@@ -69,7 +69,7 @@ public abstract class LookupTable {
     /**
      * Normalizes a given code.
      * <p>
-     * Depending on the <tt>codeCase</tt> this will change the givne code to upper- or lowercase.
+     * Depending on the <tt>codeCase</tt> this will change the given code to upper- or lowercase.
      *
      * @param code the code to normalize
      * @return the normalized code (all uppercase or lowercase - depending on the settings for the lookup table)
