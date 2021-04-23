@@ -14,7 +14,6 @@ import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
-import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
@@ -38,9 +37,6 @@ public class InternationalAddressData extends AddressData {
     @Part
     private static Countries countries;
 
-    @Transient
-    private String countriesLookupTable;
-
     /**
      * Contains the country code.
      * <p>
@@ -52,16 +48,13 @@ public class InternationalAddressData extends AddressData {
     @NullAllowed
     @Autoloaded
     @Length(3)
-    private final LookupValue country = new LookupValue(countriesLookupTable,
-                                                        LookupValue.CustomValues.ACCEPT,
-                                                        LookupValue.Display.NAME,
-                                                        LookupValue.Export.CODE);
+    private final LookupValue country;
 
     /**
      * Creates a new composite using the default lookup table.
      */
     public InternationalAddressData() {
-        this(Countries.LOOKUP_TABLE_COUNTRIES);
+        this(Countries.LOOKUP_TABLE_ACTIVE_COUNTRIES);
     }
 
     /**
@@ -72,7 +65,10 @@ public class InternationalAddressData extends AddressData {
      * @param countriesLookupTable the name of the lookup table to use
      */
     public InternationalAddressData(String countriesLookupTable) {
-        this.countriesLookupTable = countriesLookupTable;
+        this.country = new LookupValue(countriesLookupTable,
+                                       LookupValue.CustomValues.ACCEPT,
+                                       LookupValue.Display.NAME,
+                                       LookupValue.Export.CODE);
     }
 
     @Override
