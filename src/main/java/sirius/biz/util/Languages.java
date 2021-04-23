@@ -67,7 +67,7 @@ public class Languages {
     /**
      * Provides access to the underlying lookup table for all active languages.
      *
-     * @return the lookup table for active anguages
+     * @return the lookup table for active languages
      */
     public LookupTable active() {
         return lookupTables.fetchTable(LOOKUP_TABLE_ACTIVE_LANGUAGES);
