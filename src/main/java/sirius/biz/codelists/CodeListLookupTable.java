@@ -16,6 +16,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.settings.Extension;
 
+import javax.annotation.Nonnull;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -59,6 +60,12 @@ class CodeListLookupTable extends LookupTable {
         } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    protected Optional<String> performNormalizeWithMapping(@Nonnull String code, String mapping) {
+        // This isn't supported by code lists...
+        return Optional.empty();
     }
 
     /**

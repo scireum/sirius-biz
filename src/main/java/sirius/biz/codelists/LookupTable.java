@@ -14,6 +14,7 @@ import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -46,8 +47,10 @@ public abstract class LookupTable {
     private static final int MAX_SUGGESTIONS = 25;
     private static final String CONFIG_KEY_SUPPORTS_SCAN = "supportsScan";
     private static final String CONFIG_KEY_CODE_CASE_MODE = "codeCase";
+    public static final String CONFIG_KEY_MAPPING_FIELD = "mappingsField";
     private final boolean supportsScan;
     private final CodeCase codeCase;
+    private final String mappingsField;
 
     enum CodeCase {
         LOWER, UPPER, VERBATIM
@@ -58,11 +61,25 @@ public abstract class LookupTable {
     protected LookupTable(Extension extension) {
         this.extension = extension;
         this.supportsScan = extension.get(CONFIG_KEY_SUPPORTS_SCAN).asBoolean();
+        this.mappingsField = extension.get(CONFIG_KEY_MAPPING_FIELD).asString();
         this.codeCase =
                 extension.get(CONFIG_KEY_CODE_CASE_MODE).upperCase().getEnum(CodeCase.class).orElse(CodeCase.VERBATIM);
     }
 
-    protected String normalizeCodeValue(String code) {
+    /**
+     * Normalizes a given code.
+     * <p>
+     * Depending on the <tt>codeCase</tt> this will change the givne code to upper- or lowercase.
+     *
+     * @param code the code to normalize
+     * @return the normalized code (all uppercase or lowercase - depending on the settings for the lookup table)
+     */
+    @Nullable
+    public String normalizeCodeValue(@Nullable String code) {
+        if (Strings.isEmpty(code)) {
+            return null;
+        }
+
         switch (codeCase) {
             case LOWER:
                 return code.toLowerCase();
@@ -118,6 +135,85 @@ public abstract class LookupTable {
         }
 
         return performFetchField(normalizeCodeValue(code), targetField);
+    }
+
+    /**
+     * Fetches the mapping for the given code.
+     * <p>
+     * Mappings are most probably only supported by IDB backed tables. If <tt>acme</tt> is given, this will
+     * return the value in <tt>mappings.acme</tt>.
+     *
+     * @param code    the code to fetch the mapping for
+     * @param mapping the name of the mapping to fetch
+     * @return the value to use or an empty optional of either no mapping is present or the code is unknown
+     * @see #fetchMappingOrCode(String, String)
+     */
+    public Optional<String> fetchMapping(String code, String mapping) {
+        if (Strings.isEmpty(code)) {
+            return Optional.empty();
+        }
+
+        return performFetchField(normalizeCodeValue(code), mappingsField + "." + mapping);
+    }
+
+    /**
+     * Fetches the mapping for the give code or the code itself if no mapping is present or if the code is unknown.
+     *
+     * @param code    the code to fetch the mapping for
+     * @param mapping the name of the mapping to fetch
+     * @return either the mapping or the code itself if no mapping is present
+     * @see #fetchMapping(String, String)
+     */
+    @Nullable
+    public String fetchMappingOrCode(String code, String mapping) {
+        if (Strings.isEmpty(code)) {
+            return null;
+        }
+
+        return fetchMapping(code, mapping).orElseGet(() -> normalizeCodeValue(code));
+    }
+
+    /**
+     * Fetches either the primary or the secondary mapping stored for the given code.
+     * <p>
+     * This can be used to perform a two stage lookup. E.g. if an <tt>acme 1.0</tt> standard is requested, one could
+     * query <tt>acme-10</tt> as primary mapping and <tt>acme</tt> as secondary. This way, if a version dependent
+     * mapping is present, this will be used. Otherwise the base value from the standard is returned (if present).
+     *
+     * @param code             the code to fetch the mapping for
+     * @param primaryMapping   the more specific mapping to attempt to fetch
+     * @param secondaryMapping the more general mapping to fetch
+     * @return either the mapping for the first or second mapping to use or an empty optional if neither is present
+     */
+    public Optional<String> fetchMappings(String code, String primaryMapping, String secondaryMapping) {
+        if (Strings.isEmpty(code)) {
+            return Optional.empty();
+        }
+
+        Optional<String> result = performFetchField(normalizeCodeValue(code), mappingsField + "." + primaryMapping);
+        if (result.isPresent()) {
+            return result;
+        }
+
+        return performFetchField(normalizeCodeValue(code), mappingsField + "." + secondaryMapping);
+    }
+
+    /**
+     * Fetches the mapping for the give code or the code itself if no mapping is present or if the code is unknown.
+     *
+     * @param code             the code to fetch the mapping for
+     * @param primaryMapping   the more specific mapping to attempt to fetch
+     * @param secondaryMapping the more general mapping to fetch
+     * @return either the mapping for the first or second mapping to use or the code itself if neither is present
+     * @see #fetchMappings(String, String, String)
+     */
+    @Nullable
+    public String fetchMappingsOrCode(String code, String primaryMapping, String secondaryMapping) {
+        if (Strings.isEmpty(code)) {
+            return null;
+        }
+
+        return fetchMappings(code, primaryMapping, secondaryMapping).orElseGet(() -> normalizeCodeValue(code));
     }
 
     protected abstract Optional<String> performFetchField(@Nonnull String code, String targetField);
@@ -178,6 +274,104 @@ public abstract class LookupTable {
     }
 
     protected abstract Optional<String> performNormalize(@Nonnull String code);
+
+    /**
+     * Attempts to normalize the given code or returns the input itself.
+     *
+     * @param code the code to normalize
+     * @return the normalized code or the original input which has been adjusted using
+     * {@link #normalizeCodeValue(String)}
+     */
+    public String forceNormalize(String code) {
+        return normalize(code).orElseGet(() -> normalizeCodeValue(code));
+    }
+
+    /**
+     * Normalizes the given code by using the given mapping.
+     * <p>
+     * This first attempts to resolve the code by searching for the given mapping. If this doesn't yield a match,
+     * {@link #normalize(String)} is attempted.
+     *
+     * @param code    the code to normalize / resolve
+     * @param mapping the mapping to use as a first step when normalizing
+     * @return the normalized code or an empty optional if the given code is unknown
+     */
+    public Optional<String> normalizeWithMapping(String code, String mapping) {
+        if (Strings.isEmpty(code)) {
+            return Optional.empty();
+        }
+
+        String normalizedCodeValue = normalizeCodeValue(code);
+        Optional<String> result = performNormalizeWithMapping(normalizedCodeValue, mapping);
+        if (result.isPresent()) {
+            return result;
+        }
+
+        return performNormalize(normalizedCodeValue);
+    }
+
+    protected abstract Optional<String> performNormalizeWithMapping(@Nonnull String code, String mapping);
+
+    /**
+     * Attempts to normalize the given code using the given mapping or returns the input itself.
+     *
+     * @param code    the code to normalize
+     * @param mapping the mapping to use as a first step when normalizing
+     * @return the normalized code or the original input which has been adjusted using
+     * {@link #normalizeCodeValue(String)}
+     * @see #normalizeWithMapping(String, String)
+     */
+    public String forcedNormalizeWithMapping(String code, String mapping) {
+        return normalizeWithMapping(code, mapping).orElseGet(() -> normalizeCodeValue(code));
+    }
+
+    /**
+     * Normalizes the given code by using the given mappings.
+     * <p>
+     * This first attempts to resolve the code by searching for the given mappings. If this doesn't yield a match,
+     * {@link #normalize(String)} is attempted.
+     * <p>
+     * If a value for the standard <tt>acme 1.0</tt> is given, this would be invoked with <tt>acme-10</tt> as
+     * primary mapping and <tt>acme</tt> as secondary. Therefore if a mapping is present for the specific version,
+     * this will be used. Otherwise, if a general value is present for <tt>acme</tt> this will be the result.
+     * Finally if all this fails, a common {@link #normalize(String)} is attempted for the given code.
+     *
+     * @param code             the code to normalize / resolve
+     * @param primaryMapping   the more specific mapping used when resolving the code
+     * @param secondaryMapping the more general mapping used when resolving the code
+     * @return the normalized code or an empty optional if the given code is unknown
+     */
+    public Optional<String> normalizeWithMappings(String code, String primaryMapping, String secondaryMapping) {
+        if (Strings.isEmpty(code)) {
+            return Optional.empty();
+        }
+
+        String normalizedCodeValue = normalizeCodeValue(code);
+        Optional<String> result = performNormalizeWithMapping(normalizedCodeValue, primaryMapping);
+        if (result.isPresent()) {
+            return result;
+        }
+        result = performNormalizeWithMapping(normalizedCodeValue, secondaryMapping);
+        if (result.isPresent()) {
+            return result;
+        }
+
+        return performNormalize(normalizedCodeValue);
+    }
+
+    /**
+     * Attempts to normalize the given code using the given mappings or returns the input itself.
+     *
+     * @param code             the code to normalize
+     * @param primaryMapping   the more specific mapping used when resolving the code
+     * @param secondaryMapping the more general mapping used when resolving the code
+     * @return the normalized code or the original input which has been adjusted using
+     * {@link #normalizeCodeValue(String)}
+     * @see #normalizeWithMappings(String, String, String)
+     */
+    public String forcedNormalizeWithMappings(String code, String primaryMapping, String secondaryMapping) {
+        return normalizeWithMappings(code, primaryMapping, secondaryMapping).orElseGet(() -> normalizeCodeValue(code));
+    }
 
     /**
      * Performs a reverse lookup which transforms a given name into the leading code of this table.
