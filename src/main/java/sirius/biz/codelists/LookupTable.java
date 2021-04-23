@@ -145,7 +145,7 @@ public abstract class LookupTable {
      *
      * @param code    the code to fetch the mapping for
      * @param mapping the name of the mapping to fetch
-     * @return the value to use or an empty optional of either no mapping is present or the code is unknown
+     * @return the value to use or an empty optional if either no mapping is present or the code is unknown
      * @see #fetchMappingOrCode(String, String)
      */
     public Optional<String> fetchMapping(String code, String mapping) {
@@ -157,7 +157,7 @@ public abstract class LookupTable {
     }
 
     /**
-     * Fetches the mapping for the give code or the code itself if no mapping is present or if the code is unknown.
+     * Fetches the mapping for the given code or the code itself if no mapping is present or if the code is unknown.
      *
      * @param code    the code to fetch the mapping for
      * @param mapping the name of the mapping to fetch
@@ -199,7 +199,7 @@ public abstract class LookupTable {
     }
 
     /**
-     * Fetches the mapping for the give code or the code itself if no mapping is present or if the code is unknown.
+     * Fetches the mapping for the given code or the code itself if no mapping is present or if the code is unknown.
      *
      * @param code             the code to fetch the mapping for
      * @param primaryMapping   the more specific mapping to attempt to fetch
