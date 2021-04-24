@@ -8,14 +8,22 @@
 
 package sirius.biz.codelists;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
+import sirius.web.util.JSONPath;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -479,6 +487,139 @@ public abstract class LookupTable {
     }
 
     protected abstract <T> Optional<T> performFetchObject(Class<T> type, @Nonnull String code, boolean useCache);
+
+    /**
+     * Provides a helper method to extract a translation table as used by Jupiter.
+     * <p>
+     * When querying a whole record a JSON using {@link #fetchObject(Class, String)}, we have to handle these
+     * tables manually. Therefore, this method is used to parse them and {@link #fetchTranslation(Map, String)}
+     * can be used to fetch the actual value.
+     *
+     * @param root the JSON object to query
+     * @param path the path to the field to query
+     * @return the parsed translation map. Note that this also gracefully handles sindle string values
+     */
+    public static Map<String, String> parseTranslationTable(JSONObject root, String path) {
+        Value translations = JSONPath.queryValue(root, path);
+        if (translations.is(JSONObject.class)) {
+            return ((JSONObject) translations.get()).entrySet()
+                                                    .stream()
+                                                    .collect(Collectors.toMap(Map.Entry::getKey,
+                                                                              entry -> String.valueOf(entry.getValue())));
+        } else {
+            return Collections.singletonMap("xx", translations.asString());
+        }
+    }
+
+    /**
+     * Resolves the translation for a given language using a translation table.
+     * <p>
+     * This table can be built / parsed using {@link #parseTranslationTable(JSONObject, String)}.
+     *
+     * @param table he table used to lookup the value
+     * @param lang  the language to translate to or <tt>null</tt> to use the current language
+     * @return the translation for the given language, or a fallback value, or an empty optional if no translation is
+     * present
+     */
+    public static Optional<String> fetchTranslation(Map<String, String> table, @Nullable String lang) {
+        String result = table.get(Strings.isFilled(lang) ? lang : NLS.getCurrentLang());
+        if (Strings.isFilled(result)) {
+            return Optional.of(result);
+        }
+
+        return Optional.ofNullable(table.get("xx"));
+    }
+
+    /**
+     * Parses and extracts an inner list of strings from a JSON object.
+     * <p>
+     * This can be used when processing JSON in order to build an object for {@link #fetchObject(Class, String)}.
+     *
+     * @param root the JSON object to query
+     * @param path the path to the field to query
+     * @return the string list found in the JSON, or an empty list if there is none
+     */
+    public static List<String> parseStringList(JSONObject root, String path) {
+        Value value = JSONPath.queryValue(root, path);
+        if (value.is(JSONArray.class)) {
+            return transformArrayToStringList(value.get(JSONArray.class, null));
+        } else if (value.is(String.class) && !value.isEmptyString()) {
+            return Collections.singletonList(value.asString());
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    private static List<String> transformArrayToStringList(JSONArray array) {
+        return array.stream().filter(Strings::isFilled).map(String::valueOf).collect(Collectors.toList());
+    }
+
+    /**
+     * Parses and extracts an inner map (of strings to string) from a JSON object.
+     * <p>
+     * This can be used when processing JSON in order to build an object for {@link #fetchObject(Class, String)}.
+     *
+     * @param root the JSON object to query
+     * @param path the path to the field to query
+     * @return the string map found in the JSON, or an empty map if there is none
+     */
+    public static Map<String, String> parseStringMap(JSONObject root, String path) {
+        Value value = JSONPath.queryValue(root, path);
+        if (value.is(JSONObject.class)) {
+            return ((JSONObject) value.get()).entrySet()
+                                             .stream()
+                                             .filter(entry -> Strings.isFilled(entry.getValue()))
+                                             .collect(Collectors.toMap(Map.Entry::getKey,
+                                                                       entry -> String.valueOf(entry.getValue())));
+        } else {
+            return Collections.emptyMap();
+        }
+    }
+
+    /**
+     * Parses and extracts an inner map (of strings to a list of strings) from a JSON object.
+     * <p>
+     * This can be used when processing JSON in order to build an object for {@link #fetchObject(Class, String)}.
+     *
+     * @param root the JSON object to query
+     * @param path the path to the field to query
+     * @return the map found in the JSON, or an empty map if there is none
+     */
+    public static Map<String, List<String>> parseStringListMap(JSONObject root, String path) {
+        Value value = JSONPath.queryValue(root, path);
+        if (value.is(JSONObject.class)) {
+            return ((JSONObject) value.get()).entrySet()
+                                             .stream()
+                                             .filter(entry -> entry.getValue() instanceof JSONArray)
+                                             .collect(Collectors.toMap(Map.Entry::getKey,
+                                                                       entry -> transformArrayToStringList((JSONArray) entry
+                                                                               .getValue())));
+        } else {
+            return Collections.emptyMap();
+        }
+    }
+
+    /**
+     * Parses and extracts an inner map (of strings to JSONObjects) from a JSON object.
+     * <p>
+     * This can be used when processing JSON in order to build an object for {@link #fetchObject(Class, String)}.
+     *
+     * @param root the JSON object to query
+     * @param path the path to the field to query
+     * @return the map found in the JSON, or an empty map if there is none
+     */
+    public static Map<String, JSONObject> parseMap(JSONObject root, String path) {
+        Value value = JSONPath.queryValue(root, path);
+        if (value.is(JSONObject.class)) {
+            return ((JSONObject) value.get()).entrySet()
+                                             .stream()
+                                             .filter(entry -> entry.getValue() instanceof JSONObject)
+                                             .collect(Collectors.toMap(Map.Entry::getKey,
+                                                                       entry -> (JSONObject) entry.getValue()));
+        } else {
+            return Collections.emptyMap();
+        }
+    }
 
     /**
      * Suggests several entries for the given search term using the currently active language.
