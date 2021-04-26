@@ -17,14 +17,13 @@
 
             <li class="nav-item dropdown">
                 <a class="nav-link"
-                   style="padding-top: 0; padding-bottom: 0; line-height: 32px"
                    title="@format('${user}[ (${tenant})]').set('user', userName).set('tenant', tenantName).smartFormat()"
                    href="#"
                    role="button"
                    data-toggle="dropdown"
                    aria-haspopup="true"
                    aria-expanded="false">
-                    <img style="max-height: 32px" src="/assets/images/f.png" />
+                    <i class="fa fa-user"></i>
                 </a>
                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
                     <i:extensions target="biz-tycho-menu" point="user"/>
