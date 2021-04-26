@@ -40,7 +40,6 @@ class IDBLookupTable extends LookupTable {
 
     private static final String COL_DEPRECATED = "deprecated";
 
-    private static final String CACHE_PREFIX_RESOLVE_NAME = "resolve-name-";
     private static final String CACHE_PREFIX_FETCH_FIELD = "fetch-field-";
     private static final String CACHE_PREFIX_NORMALIZE = "normalize-";
     private static final String CACHE_PREFIX_NORMALIZE_WITH_MAPPING = "normalize-with-mapping";
@@ -76,13 +75,15 @@ class IDBLookupTable extends LookupTable {
 
     @Override
     protected Optional<String> performResolveName(String code, String lang) {
-        return jupiter.fetchFromSmallCache(CACHE_PREFIX_RESOLVE_NAME + table.getName() + "-" + code + "-" + lang,
-                                           () -> table.query()
-                                                      .lookupPaths(codeField)
-                                                      .searchValue(code)
-                                                      .translate(lang)
-                                                      .singleRow(nameField)
-                                                      .map(row -> row.at(0).asString())).filter(Strings::isFilled);
+        return performFetchTranslatedField(code, nameField, lang);
+    }
+
+    @Override
+    protected Optional<String> performResolveDescription(String code, String lang) {
+        if (Strings.isEmpty(descriptionField)) {
+            return Optional.empty();
+        }
+        return performFetchTranslatedField(code, descriptionField, lang);
     }
 
     @Override

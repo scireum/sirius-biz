@@ -52,6 +52,15 @@ class IDBFilteredLookupTable extends LookupTable {
     }
 
     @Override
+    protected Optional<String> performResolveDescription(@Nonnull String code, String lang) {
+        if (contains(code)) {
+            return baseTable.performResolveDescription(code, lang);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    @Override
     protected Optional<String> performFetchField(String code, String targetField) {
         if (contains(code)) {
             return baseTable.performFetchField(code, targetField);
