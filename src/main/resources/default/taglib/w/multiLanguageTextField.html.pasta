@@ -88,7 +88,7 @@
                 fallbackLabel: '@i18n("Language.fallback")',
                 wrapperId: '___fieldId',
                 modalId: '___modalId',
-                values: JSON.parse(<i:raw>'@escapeJS(value.getAsJSON())'</i:raw>),
+                values: <i:raw>@value.getAsJSON()</i:raw>,
                 defaultLanguage: '___defaultLanguage',
                 validLanguages: validLanguages,
                 languageManagementEnabled: ___languageManagementEnabled,
