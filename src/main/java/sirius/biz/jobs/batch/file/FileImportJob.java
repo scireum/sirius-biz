@@ -36,7 +36,9 @@ import sirius.kernel.nls.NLS;
 import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -49,6 +51,7 @@ public abstract class FileImportJob extends ImportJob {
     private static final String FILE_NAME_KEY = "filename";
     private String currentEntry;
     private final List<Tuple<String, Boolean>> entriesToExtract = new ArrayList<>();
+    private final Map<String, Integer> entriesCount = new HashMap<>();
 
     /**
      * Contains the parameter which selects the file to import.
@@ -244,6 +247,12 @@ public abstract class FileImportJob extends ImportJob {
             extractor.extractAll(filename, fileHandle.getFile(), entryName -> {
                 return entryName.equals(fileName);
             }, file -> {
+                entriesCount.compute(fileName, (key, integer) -> {
+                    if (integer == null) {
+                        return 1;
+                    }
+                    return integer + 1;
+                });
                 if (executeForEntry(file)) {
                     counter.run();
                 }
@@ -360,13 +369,28 @@ public abstract class FileImportJob extends ImportJob {
     }
 
     /**
-     * Returns current entry being processed.
+     * Returns the current entry being processed.
      *
      * @return a string containing the relative path of the current entry when loading from an archive
      * or the file name if loaded from VFS.
      */
     public String getCurrentEntry() {
         return currentEntry;
+    }
+
+    /**
+     * Returns pass count of the current entry being processed.
+     *
+     * @return an integer with the current pass count for the entry, starting at 1 (one).
+     * This method will return 0 when not extracting based on a predetermined list.
+     * @see #defineEntriesToExtract(BiConsumer)
+     */
+    public int getCurrentEntryPass() {
+        Integer currentPass = entriesCount.get(getCurrentEntry());
+        if (currentPass == null) {
+            return 0;
+        }
+        return currentPass;
     }
 
     /**
