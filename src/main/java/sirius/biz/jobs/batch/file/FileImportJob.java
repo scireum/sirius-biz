@@ -238,16 +238,16 @@ public abstract class FileImportJob extends ImportJob {
 
     private void extractEntriesFromList(String filename, FileHandle fileHandle, Runnable counter) {
         entriesToExtract.forEach(entry -> {
-            String fileName = entry.getFirst();
-            boolean fileRequired = entry.getSecond();
+            String entryFileName = entry.getFirst();
+            boolean entryRequired = entry.getSecond();
             if (!process.isActive()) {
                 return;
             }
             Monoflop entryFound = Monoflop.create();
             extractor.extractAll(filename, fileHandle.getFile(), entryName -> {
-                return entryName.equals(fileName);
+                return entryName.equals(entryFileName);
             }, file -> {
-                entriesCount.compute(fileName, (key, integer) -> {
+                entriesCount.compute(entryFileName, (key, integer) -> {
                     if (integer == null) {
                         return 1;
                     }
@@ -262,15 +262,15 @@ public abstract class FileImportJob extends ImportJob {
                 return;
             }
 
-            if (fileRequired) {
+            if (entryRequired) {
                 throw Exceptions.createHandled()
                                 .withNLSKey("FileImportJob.requiredFileNotFound")
-                                .set(FILE_NAME_KEY, fileName)
+                                .set(FILE_NAME_KEY, entryFileName)
                                 .handle();
             } else {
                 process.log(ProcessLog.info()
                                       .withNLSKey("FileImportJob.requiredFileNotFound")
-                                      .withContext(FILE_NAME_KEY, fileName));
+                                      .withContext(FILE_NAME_KEY, entryFileName));
             }
         });
     }
