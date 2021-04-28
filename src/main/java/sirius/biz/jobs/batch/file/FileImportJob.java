@@ -24,6 +24,7 @@ import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.commons.Watch;
@@ -34,7 +35,7 @@ import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -47,7 +48,7 @@ public abstract class FileImportJob extends ImportJob {
 
     private static final String FILE_NAME_KEY = "filename";
     private String currentEntry;
-    private final LinkedHashMap<String, Boolean> entriesToExtract = new LinkedHashMap<>();
+    private final List<Tuple<String, Boolean>> entriesToExtract = new ArrayList<>();
 
     /**
      * Contains the parameter which selects the file to import.
@@ -181,7 +182,8 @@ public abstract class FileImportJob extends ImportJob {
 
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
-                defineEntriesToExtract(entriesToExtract::put);
+                defineEntriesToExtract((fileName, fileRequired) -> entriesToExtract.add(Tuple.create(fileName,
+                                                                                                     fileRequired)));
                 executeForArchive(file.name(), fileHandle);
             }
         } else {
@@ -223,7 +225,7 @@ public abstract class FileImportJob extends ImportJob {
 
     private void extractAllEntries(String filename, FileHandle fileHandle, Runnable counter) {
         extractor.extractAll(filename, fileHandle.getFile(), entry -> {
-            return entriesToExtract.keySet().stream().noneMatch(entry::equals);
+            return entriesToExtract.stream().map(Tuple::getFirst).noneMatch(entry::equals);
         }, file -> {
             if (executeForEntry(file)) {
                 counter.run();
@@ -232,7 +234,9 @@ public abstract class FileImportJob extends ImportJob {
     }
 
     private void extractEntriesFromList(String filename, FileHandle fileHandle, Runnable counter) {
-        entriesToExtract.forEach((fileName, fileRequired) -> {
+        entriesToExtract.forEach(entry -> {
+            String fileName = entry.getFirst();
+            boolean fileRequired = entry.getSecond();
             if (!process.isActive()) {
                 return;
             }
@@ -249,7 +253,7 @@ public abstract class FileImportJob extends ImportJob {
                 return;
             }
 
-            if (Boolean.TRUE.equals(fileRequired)) {
+            if (fileRequired) {
                 throw Exceptions.createHandled()
                                 .withNLSKey("FileImportJob.requiredFileNotFound")
                                 .set(FILE_NAME_KEY, fileName)
