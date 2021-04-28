@@ -46,7 +46,7 @@ public class BizInterceptor implements Interceptor {
             ctx.respondWith().template("/templates/biz/login.html.pasta", ctx.getRequest().uri());
         } else {
             ctx.respondWith()
-               .template("/templates/wondergem/error.html.pasta",
+               .template("/templates/tycho/error.html.pasta",
                          NLS.fmtr("BizInterceptor.missingPermission")
                             .set("permission", Permissions.getTranslatedPermission(permission))
                             .format());
