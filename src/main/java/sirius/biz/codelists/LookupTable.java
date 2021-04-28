@@ -345,7 +345,7 @@ public abstract class LookupTable {
         }
 
         String normalizedCodeValue = normalizeCodeValue(code);
-        Optional<String> result = performNormalizeWithMapping(normalizedCodeValue, mapping);
+        Optional<String> result = performNormalizeWithMapping(normalizedCodeValue, mappingsField + "." + mapping);
         if (result.isPresent()) {
             return result;
         }
@@ -382,7 +382,7 @@ public abstract class LookupTable {
      * @param code             the code to normalize / resolve
      * @param primaryMapping   the more specific mapping used when resolving the code
      * @param secondaryMapping the more general mapping used when resolving the code
-     * @return the normalized code or an empty optional if the given code is unknown
+     * @return the normalized code, or an empty optional if the given code is unknown
      */
     public Optional<String> normalizeWithMappings(String code, String primaryMapping, String secondaryMapping) {
         if (Strings.isEmpty(code)) {
@@ -390,11 +390,12 @@ public abstract class LookupTable {
         }
 
         String normalizedCodeValue = normalizeCodeValue(code);
-        Optional<String> result = performNormalizeWithMapping(normalizedCodeValue, primaryMapping);
+        Optional<String> result =
+                performNormalizeWithMapping(normalizedCodeValue, mappingsField + "." + primaryMapping);
         if (result.isPresent()) {
             return result;
         }
-        result = performNormalizeWithMapping(normalizedCodeValue, secondaryMapping);
+        result = performNormalizeWithMapping(normalizedCodeValue, mappingsField + "." + secondaryMapping);
         if (result.isPresent()) {
             return result;
         }
