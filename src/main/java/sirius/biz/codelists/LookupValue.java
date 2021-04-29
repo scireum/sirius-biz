@@ -122,6 +122,20 @@ public class LookupValue {
     }
 
     /**
+     * Resolves the name for the current value or returns the code itself if the name is unknown.
+     *
+     * @return the name of the current value or the code, if the name cannot be resolved. Note that this will return
+     * an empty string if no value is presnet
+     */
+    public String forceFetchName() {
+        if (Strings.isEmpty(value)) {
+            return "";
+        } else {
+            return fetchName().orElse(value);
+        }
+    }
+
+    /**
      * Fetches the description for the current value.
      *
      * @return the description for the current value in the current language, or an empty optional if no value is
@@ -149,5 +163,14 @@ public class LookupValue {
 
     public CustomValues getCustomValues() {
         return customValues;
+    }
+
+    @Override
+    public String toString() {
+        if (Strings.isEmpty(value)) {
+            return lookupTableName + ": empty";
+        } else {
+            return Strings.apply("%s: %s (%s)", lookupTableName, value, fetchName().orElse("unknown"));
+        }
     }
 }
