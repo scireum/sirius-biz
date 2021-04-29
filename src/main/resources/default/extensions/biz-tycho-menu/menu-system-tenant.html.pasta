@@ -10,11 +10,11 @@
         <t:dropdownSection>
             <t:dropdownItem title="State" icon="fa-info-circle" url="/system/state"
                         permission="flag-system-tenant-member"/>
-            <t:dropdownItem title="System Load" icon="fa-dashboard" url="/system/load"
+            <t:dropdownItem title="System Load" icon="fa-tachometer-alt" url="/system/load"
                         permission="flag-system-tenant-member"/>
             <t:dropdownItem title="Console" icon="fa-terminal" url="/system/console"
                         permission="permission-system-console"/>
-            <t:dropdownItem title="Timing" icon="fa-clock-o" url="/system/timing"
+            <t:dropdownItem title="Timing" icon="fa-stopwatch" url="/system/timing"
                         permission="permission-system-timing"/>
             <t:dropdownItem title="Schema" icon="fa-table" url="/system/schema"
                         permission="flag-system-administrator"/>
