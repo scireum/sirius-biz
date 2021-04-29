@@ -145,6 +145,23 @@ public class LookupValue {
         return getTable().resolveDescription(value);
     }
 
+    /**
+     * Determines if a value is present.
+     *
+     * @return <tt>true</tt> if a non-null and non-empty value is present, <tt>false</tt> otherwise
+     */
+    public boolean isFilled() {
+        return Strings.isFilled(value);
+    }
+
+    /**
+     * Determines if no value is present.
+     * @return <tt>true</tt> if the value is null or empty, <tt>false otherwise</tt>
+     */
+    public boolean isEmpty() {
+        return !isFilled();
+    }
+
     public String getValue() {
         return value;
     }
