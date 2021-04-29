@@ -125,7 +125,7 @@ public class LookupValue {
      * Resolves the name for the current value or returns the code itself if the name is unknown.
      *
      * @return the name of the current value or the code, if the name cannot be resolved. Note that this will return
-     * an empty string if no value is presnet
+     * an empty string if no value is present
      */
     public String forceFetchName() {
         if (Strings.isEmpty(value)) {
