@@ -14,6 +14,7 @@ import sirius.biz.jupiter.IDBTable;
 import sirius.biz.jupiter.Jupiter;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.settings.Extension;
 
@@ -41,6 +42,7 @@ class IDBLookupTable extends LookupTable {
     private static final String COL_DEPRECATED = "deprecated";
 
     private static final String CACHE_PREFIX_FETCH_FIELD = "fetch-field-";
+    private static final String CACHE_PREFIX_FETCH_TRANSLATED_FIELD = "fetch-field-";
     private static final String CACHE_PREFIX_NORMALIZE = "normalize-";
     private static final String CACHE_PREFIX_NORMALIZE_WITH_MAPPING = "normalize-with-mapping";
     private static final String CACHE_PREFIX_REVERSE_LOOKUP = "reverse-lookup-";
@@ -87,19 +89,20 @@ class IDBLookupTable extends LookupTable {
     }
 
     @Override
-    protected Optional<String> performFetchField(String code, String targetField) {
+    protected Value performFetchField(String code, String targetField) {
         return jupiter.fetchFromSmallCache(CACHE_PREFIX_FETCH_FIELD + table.getName() + "-" + code + "-" + targetField,
                                            () -> table.query()
                                                       .lookupPaths(codeField)
                                                       .searchValue(code)
                                                       .singleRow(targetField)
-                                                      .map(row -> row.at(0).asString())
-                                                      .filter(Strings::isFilled));
+                                                      .map(row -> row.at(0))
+                                                      .filter(Value::isFilled)
+                                                      .orElse(Value.EMPTY));
     }
 
     @Override
     protected Optional<String> performFetchTranslatedField(String code, String targetField, String lang) {
-        return jupiter.fetchFromSmallCache(CACHE_PREFIX_FETCH_FIELD
+        return jupiter.fetchFromSmallCache(CACHE_PREFIX_FETCH_TRANSLATED_FIELD
                                            + table.getName()
                                            + "-"
                                            + code

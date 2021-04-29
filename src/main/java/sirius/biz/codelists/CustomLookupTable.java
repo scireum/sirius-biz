@@ -9,6 +9,7 @@
 package sirius.biz.codelists;
 
 import sirius.kernel.commons.Limit;
+import sirius.kernel.commons.Value;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
@@ -47,13 +48,17 @@ class CustomLookupTable extends LookupTable {
 
     @Override
     protected Optional<String> performResolveDescription(@Nonnull String code, String lang) {
-        return or(customTable.performResolveDescription(code, lang), () -> baseTable.performResolveDescription(code, lang));
+        return or(customTable.performResolveDescription(code, lang),
+                  () -> baseTable.performResolveDescription(code, lang));
     }
 
     @Override
-    protected Optional<String> performFetchField(String code, String targetField) {
-        return or(customTable.performFetchField(code, targetField),
-                  () -> baseTable.performFetchField(code, targetField));
+    protected Value performFetchField(String code, String targetField) {
+        Value result = customTable.performFetchField(code, targetField);
+        if (result.isFilled()) {
+            return result;
+        }
+        return baseTable.performFetchField(code, targetField);
     }
 
     @Override

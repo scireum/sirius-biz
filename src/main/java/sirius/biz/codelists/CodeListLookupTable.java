@@ -50,8 +50,8 @@ class CodeListLookupTable extends LookupTable {
     }
 
     @Override
-    protected Optional<String> performFetchField(String code, String targetField) {
-        return Optional.ofNullable(codeLists.getValues(codeList, code).getSecond());
+    protected Value performFetchField(String code, String targetField) {
+        return Value.of(codeLists.getValues(codeList, code).getSecond());
     }
 
     @Override

@@ -177,6 +177,22 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
+        return performFetchField(normalizeCodeValue(code), targetField).asOptionalString();
+    }
+
+    /**
+     * Fetches the requested field for the given code.
+     *
+     * @param code        the code to fetch the field for
+     * @param targetField the field to fetch
+     * @return the value of the field or an empty value if the code is unknown. Note that this will only resolve the
+     * main code. When in doubt, the code must be normalized via {@link #normalize(String)} before invoking this method.
+     */
+    public Value fetchFieldValue(String code, String targetField) {
+        if (Strings.isEmpty(code)) {
+            return Value.EMPTY;
+        }
+
         return performFetchField(normalizeCodeValue(code), targetField);
     }
 
@@ -196,7 +212,7 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        return performFetchField(normalizeCodeValue(code), mappingsField + "." + mapping);
+        return performFetchField(normalizeCodeValue(code), mappingsField + "." + mapping).asOptionalString();
     }
 
     /**
@@ -233,12 +249,13 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        Optional<String> result = performFetchField(normalizeCodeValue(code), mappingsField + "." + primaryMapping);
+        Optional<String> result =
+                performFetchField(normalizeCodeValue(code), mappingsField + "." + primaryMapping).asOptionalString();
         if (result.isPresent()) {
             return result;
         }
 
-        return performFetchField(normalizeCodeValue(code), mappingsField + "." + secondaryMapping);
+        return performFetchField(normalizeCodeValue(code), mappingsField + "." + secondaryMapping).asOptionalString();
     }
 
     /**
@@ -259,7 +276,7 @@ public abstract class LookupTable {
         return fetchMappings(code, primaryMapping, secondaryMapping).orElseGet(() -> normalizeCodeValue(code));
     }
 
-    protected abstract Optional<String> performFetchField(@Nonnull String code, String targetField);
+    protected abstract Value performFetchField(@Nonnull String code, String targetField);
 
     /**
      * Fetches the translated value of the requested field for the given code.

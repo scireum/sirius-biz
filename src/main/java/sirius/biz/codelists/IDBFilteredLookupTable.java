@@ -11,6 +11,7 @@ package sirius.biz.codelists;
 import sirius.biz.jupiter.IDBSet;
 import sirius.biz.jupiter.Jupiter;
 import sirius.kernel.commons.Limit;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.settings.Extension;
 
@@ -61,11 +62,11 @@ class IDBFilteredLookupTable extends LookupTable {
     }
 
     @Override
-    protected Optional<String> performFetchField(String code, String targetField) {
+    protected Value performFetchField(String code, String targetField) {
         if (contains(code)) {
             return baseTable.performFetchField(code, targetField);
         } else {
-            return Optional.empty();
+            return Value.EMPTY;
         }
     }
 
