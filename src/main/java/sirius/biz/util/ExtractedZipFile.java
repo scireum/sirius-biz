@@ -22,13 +22,20 @@ import java.util.zip.ZipEntry;
 /**
  * Represents a file extracted from a ZIP archive.
  */
-class ExtractedZipFile implements ExtractedFile {
+public class ExtractedZipFile implements ExtractedFile {
 
     private final ZipEntry entry;
     private final Producer<InputStream> inputStreamSupplier;
     private final Amount progress;
 
-    ExtractedZipFile(ZipEntry entry, Producer<InputStream> inputStreamProducer, Amount progress) {
+    /**
+     * Creates a new wrapped for the given entry stream and progress.
+     *
+     * @param entry               the entry being unzipped
+     * @param inputStreamProducer a producer to obtain the stream
+     * @param progress            a progress info if present
+     */
+    public ExtractedZipFile(ZipEntry entry, Producer<InputStream> inputStreamProducer, Amount progress) {
         this.entry = entry;
         this.inputStreamSupplier = inputStreamProducer;
         this.progress = progress;

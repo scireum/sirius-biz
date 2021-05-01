@@ -13,6 +13,10 @@ import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.VirtualFile;
+import sirius.biz.util.ExtractedFile;
+import sirius.biz.util.ExtractedZipFile;
+import sirius.kernel.async.TaskContext;
+import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
@@ -25,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -75,7 +81,7 @@ public abstract class ArchiveImportJob extends FileImportJob {
     /**
      * Imports data based on files inside the 'opened' archive.
      *
-     * @throws Exception in case of a exception during importing
+     * @throws Exception in case of an exception during importing
      */
     protected abstract void importEntries() throws Exception;
 
@@ -84,24 +90,24 @@ public abstract class ArchiveImportJob extends FileImportJob {
      * <p>
      * Note, that previously opened input stream might get closed by performing this action.
      *
-     * @param fileName   the name of the file to fetch
-     * @param isRequired flag if the file is required
-     * @return input stream for the requested file
-     * @throws Exception in case of an exception during fetching or if the file wasn't found but is required
+     * @param fileName the name of the file to fetch
+     * @return the extracted file, or an empty optional if the file wasn't found
+     * @throws IOException in case of an IO error while extracting the file
      */
-    @Nullable
-    protected InputStream fetchEntry(String fileName, boolean isRequired) throws Exception {
+    protected Optional<ExtractedFile> fetchEntry(String fileName) throws IOException {
+        TaskContext taskContext = TaskContext.get();
         Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
-        while (zipEntries.hasMoreElements()) {
+        while (zipEntries.hasMoreElements() && taskContext.isActive()) {
             ZipEntry zipEntry = zipEntries.nextElement();
 
             if (Strings.areEqual(fileName, zipEntry.getName())) {
-                return zipFile.getInputStream(zipEntry);
+                return Optional.of(new ExtractedZipFile(zipEntry,
+                                                        () -> zipFile.getInputStream(zipEntry),
+                                                        Amount.NOTHING));
             }
         }
 
-        handleMissingFile(fileName, isRequired);
-        return null;
+        return Optional.empty();
     }
 
     protected void handleMissingFile(String fileName, boolean isRequired) {
@@ -129,6 +135,20 @@ public abstract class ArchiveImportJob extends FileImportJob {
 
         return Arrays.stream(fileNamesToCheck)
                      .allMatch(fileName -> zipEntries.stream().anyMatch(entry -> entry.getName().equals(fileName)));
+    }
+
+    /**
+     * Extracts all files from the archive
+     *
+     * @param fileHandler a handler to be invoked for each file in the archive
+     */
+    protected void extractAllFiles(Consumer<ExtractedZipFile> fileHandler) {
+        TaskContext taskContext = TaskContext.get();
+        Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
+        while (zipEntries.hasMoreElements() && taskContext.isActive()) {
+            ZipEntry zipEntry = zipEntries.nextElement();
+            fileHandler.accept(new ExtractedZipFile(zipEntry, () -> zipFile.getInputStream(zipEntry), Amount.NOTHING));
+        }
     }
 
     @Override

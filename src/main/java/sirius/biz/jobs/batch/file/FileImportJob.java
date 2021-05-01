@@ -21,10 +21,8 @@ import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.util.ArchiveExtractor;
 import sirius.biz.util.ExtractedFile;
 import sirius.kernel.commons.Files;
-import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.commons.Watch;
@@ -35,23 +33,14 @@ import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
  * Provides an import job which reads and imports a file.
  */
 public abstract class FileImportJob extends ImportJob {
-
-    private static final String FILE_NAME_KEY = "filename";
-    private String currentEntry;
-    private final List<Tuple<String, Boolean>> entriesToExtract = new ArrayList<>();
-    private final Map<String, Integer> entriesCount = new HashMap<>();
 
     /**
      * Contains the parameter which selects the file to import.
@@ -173,9 +162,8 @@ public abstract class FileImportJob extends ImportJob {
                                   .withContext("size", NLS.formatSize(file.size())));
 
             try (FileHandle fileHandle = file.download()) {
-                currentEntry = file.name();
-                backupInputFile(currentEntry, fileHandle);
-                executeForStream(currentEntry, fileHandle::getInputStream);
+                backupInputFile(file.name(), fileHandle);
+                executeForStream(file.name(), fileHandle::getInputStream);
             }
         } else if (extractor.isArchiveFile(file.fileExtension())) {
             process.log(ProcessLog.info()
@@ -185,8 +173,6 @@ public abstract class FileImportJob extends ImportJob {
 
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
-                defineEntriesToExtract((fileName, fileRequired) -> entriesToExtract.add(Tuple.create(fileName,
-                                                                                                     fileRequired)));
                 executeForArchive(file.name(), fileHandle);
             }
         } else {
@@ -210,89 +196,23 @@ public abstract class FileImportJob extends ImportJob {
         process.log(ProcessLog.info().withNLSKey("FileImportJob.importingZipFile"));
 
         AtomicInteger filesImported = new AtomicInteger();
-        if (entriesToExtract.isEmpty()) {
-            extractAllEntries(filename, fileHandle, filesImported::incrementAndGet);
-        } else {
-            extractEntriesFromList(filename, fileHandle, filesImported::incrementAndGet);
-            if (process.isActive() && auxiliaryFileMode != AuxiliaryFileMode.IGNORE) {
-                // Loop over the entries again, ignoring the files provided via the list
-                // so we can import the auxiliary files such as images or documents
-                extractAllEntries(filename, fileHandle, filesImported::incrementAndGet);
+        extractor.extractAll(filename, fileHandle.getFile(), null, file -> {
+            if (executeForEntry(file)) {
+                filesImported.incrementAndGet();
             }
-        }
+        });
 
         if (filesImported.get() == 0) {
             throw Exceptions.createHandled().withNLSKey("FileImportJob.noZippedFileFound").handle();
         }
     }
 
-    private void extractAllEntries(String filename, FileHandle fileHandle, Runnable counter) {
-        extractor.extractAll(filename, fileHandle.getFile(), entry -> {
-            return entriesToExtract.stream().map(Tuple::getFirst).noneMatch(entry::equals);
-        }, file -> {
-            if (executeForEntry(file)) {
-                counter.run();
-            }
-        });
-    }
-
-    private void extractEntriesFromList(String filename, FileHandle fileHandle, Runnable counter) {
-        entriesToExtract.forEach(entry -> {
-            String entryFileName = entry.getFirst();
-            boolean entryRequired = entry.getSecond();
-            if (!process.isActive()) {
-                return;
-            }
-            Monoflop entryFound = Monoflop.create();
-            extractor.extractAll(filename, fileHandle.getFile(), entryName -> {
-                return entryName.equals(entryFileName);
-            }, file -> {
-                entriesCount.compute(entryFileName, (key, integer) -> {
-                    if (integer == null) {
-                        return 1;
-                    }
-                    return integer + 1;
-                });
-                if (executeForEntry(file)) {
-                    counter.run();
-                }
-                entryFound.toggle();
-            });
-            if (entryFound.isToggled()) {
-                return;
-            }
-
-            if (entryRequired) {
-                throw Exceptions.createHandled()
-                                .withNLSKey("FileImportJob.requiredFileNotFound")
-                                .set(FILE_NAME_KEY, entryFileName)
-                                .handle();
-            } else {
-                process.log(ProcessLog.info()
-                                      .withNLSKey("FileImportJob.requiredFileNotFound")
-                                      .withContext(FILE_NAME_KEY, entryFileName));
-            }
-        });
-    }
-
-    /**
-     * Specifies specific entries to extract from an archive.
-     * <p>
-     * Override this method in order to filter specific entries.
-     *
-     * @param entryConsumer the consumer expecting the entry name to filter and if the entry is expected to exist
-     */
-    protected void defineEntriesToExtract(BiConsumer<String, Boolean> entryConsumer) {
-        // By default all entries are extracted.
-    }
-
     private boolean executeForEntry(ExtractedFile extractedFile) throws Exception {
         if (canHandleFileExtension(Files.getFileExtension(extractedFile.getFilePath()))) {
             process.log(ProcessLog.info()
                                   .withNLSKey("FileImportJob.importingZippedFile")
-                                  .withContext(FILE_NAME_KEY, extractedFile.getFilePath()));
-            currentEntry = extractedFile.getFilePath();
-            executeForStream(currentEntry, extractedFile::openInputStream);
+                                  .withContext("filename", extractedFile.getFilePath()));
+            executeForStream(extractedFile.getFilePath(), extractedFile::openInputStream);
             return true;
         } else if (auxiliaryFileMode != AuxiliaryFileMode.IGNORE) {
             return handleAuxiliaryFile(extractedFile);
@@ -366,31 +286,6 @@ public abstract class FileImportJob extends ImportJob {
         }
 
         return auxFilesDestination.get();
-    }
-
-    /**
-     * Returns the current entry being processed.
-     *
-     * @return a string containing the relative path of the current entry when loading from an archive
-     * or the file name if loaded from VFS.
-     */
-    public String getCurrentEntry() {
-        return currentEntry;
-    }
-
-    /**
-     * Returns pass count of the current entry being processed.
-     *
-     * @return an integer with the current pass count for the entry, starting at 1 (one).
-     * This method will return 0 when not extracting based on a predetermined list.
-     * @see #defineEntriesToExtract(BiConsumer)
-     */
-    public int getCurrentEntryPass() {
-        Integer currentPass = entriesCount.get(getCurrentEntry());
-        if (currentPass == null) {
-            return 0;
-        }
-        return currentPass;
     }
 
     /**
