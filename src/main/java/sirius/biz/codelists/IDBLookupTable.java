@@ -34,7 +34,7 @@ import java.util.stream.Stream;
  * Additionally the config can specify which additional code fields are searched when a code is normalized.
  * <p>
  * Furthermore, if the table contains a field "deprecated", these entries will still resolve and normalize like
- * normal entries, but will be ignored when suggesting values or when scanning the table. Therefore it is best to
+ * normal entries, but will be ignored when suggesting values or when scanning the table. Therefore, it is best to
  * sort these entries to the end of the table.
  */
 class IDBLookupTable extends LookupTable {
