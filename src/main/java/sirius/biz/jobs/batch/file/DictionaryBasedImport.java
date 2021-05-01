@@ -45,6 +45,7 @@ public class DictionaryBasedImport {
     protected final ProcessContext process;
     protected final boolean ignoreEmptyValues;
     protected final ImportDictionary dictionary;
+    protected final String filename;
     protected Callback<Tuple<Integer, Context>> rowHandler;
 
     /**
@@ -53,11 +54,12 @@ public class DictionaryBasedImport {
      * @param dictionary the import dictionary to use
      * @param process    the process context itself
      */
-    protected DictionaryBasedImport(ImportDictionary dictionary,
+    protected DictionaryBasedImport(String filename,
+                                    ImportDictionary dictionary,
                                     ProcessContext process,
                                     boolean ignoreEmptyValues,
                                     Callback<Tuple<Integer, Context>> rowHandler) {
-
+this.filename = filename;
         this.dictionary = dictionary;
         this.process = process;
         this.ignoreEmptyValues = ignoreEmptyValues;
@@ -128,6 +130,7 @@ public class DictionaryBasedImport {
             process.handle(Exceptions.createHandled()
                                      .to(Log.BACKGROUND)
                                      .withNLSKey(ERROR_IN_ROW_KEY)
+                                     .set("file", filename)
                                      .set("row", index)
                                      .set(MESSAGE_KEY, e.getMessage())
                                      .handle());
@@ -138,6 +141,7 @@ public class DictionaryBasedImport {
                                      .error(e)
                                      .withNLSKey("LineBasedJob.failureInRow")
                                      .set("row", index)
+                                     .set("file", filename)
                                      .handle());
         } finally {
             process.addTiming(NLS.get("LineBasedJob.row"), watch.elapsedMillis());
