@@ -39,6 +39,7 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
         protected boolean required;
         protected boolean ignoreEmptyFields;
         protected Callback<Tuple<Integer, Context>> rowHandler;
+        protected Callback<ImportFile> completionHandler;
 
         /**
          * Creates a new instance for the given name.
@@ -51,6 +52,17 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
             this.filename = filename;
             this.dictionary = dictionary;
             this.rowHandler = rowHandler;
+        }
+
+        /**
+         * Sets a callback handler to be called once the file has been processed.
+         *
+         * @param completionHandler the handler to be called
+         * @return the file itself for fluent method calls
+         */
+        public ImportFile withCompletionHandler(Callback<ImportFile> completionHandler) {
+            this.completionHandler = completionHandler;
+            return this;
         }
 
         /**
@@ -124,17 +136,6 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
         });
     }
 
-    /**
-     * Defines a method called after a file entry has been processed.
-     * <p>
-     * Overwrite this method if any post-processing operation must be performed after a file has been processed.
-     *
-     * @param importFile the {@link ImportFile} just imported
-     */
-    protected void fileProcessed(ImportFile importFile) {
-        // Empty by default.
-    }
-
     private void handleFile(ImportFile importFile, ExtractedFile extractedFile) throws Exception {
         DictionaryBasedImport dictionaryBasedImport = new DictionaryBasedImport(importFile.filename,
                                                                                 importFile.dictionary,
@@ -150,6 +151,8 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
                               });
         }
 
-        fileProcessed(importFile);
+        if (importFile.completionHandler != null) {
+            importFile.completionHandler.invoke(importFile);
+        }
     }
 }
