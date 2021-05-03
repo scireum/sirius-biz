@@ -120,6 +120,17 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
         });
     }
 
+    /**
+     * Defines a method called after a file entry has been processed.
+     * <p>
+     * Overwrite this method if any post-processing operation must be performed after a file has been processed.
+     *
+     * @param importFile the {@link ImportFile} just imported
+     */
+    protected void fileProcessed(ImportFile importFile) {
+        // Empty by default.
+    }
+
     private void handleFile(ImportFile importFile, ExtractedFile extractedFile) throws Exception {
         DictionaryBasedImport dictionaryBasedImport = new DictionaryBasedImport(importFile.filename,
                                                                                 importFile.dictionary,
@@ -134,5 +145,7 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
                                   return true;
                               });
         }
+
+        fileProcessed(importFile);
     }
 }
