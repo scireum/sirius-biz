@@ -14,6 +14,7 @@ import sirius.biz.util.ExtractedFile;
 import sirius.kernel.commons.Callback;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.UnitOfWork;
 import sirius.web.data.LineBasedProcessor;
 
 import javax.annotation.CheckReturnValue;
@@ -39,6 +40,7 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
         protected boolean required;
         protected boolean ignoreEmptyFields;
         protected Callback<Tuple<Integer, Context>> rowHandler;
+        protected UnitOfWork completionHandler;
 
         /**
          * Creates a new instance for the given name.
@@ -51,6 +53,17 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
             this.filename = filename;
             this.dictionary = dictionary;
             this.rowHandler = rowHandler;
+        }
+
+        /**
+         * Sets a callback handler to be called once the file has been processed.
+         *
+         * @param completionHandler the handler to be called
+         * @return the file itself for fluent method calls
+         */
+        public ImportFile withCompletionHandler(UnitOfWork completionHandler) {
+            this.completionHandler = completionHandler;
+            return this;
         }
 
         /**
@@ -73,6 +86,10 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
         public ImportFile ignoreEmptyFields() {
             this.ignoreEmptyFields = true;
             return this;
+        }
+
+        public String getFilename() {
+            return filename;
         }
     }
 
@@ -133,6 +150,10 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
                                   process.handle(error);
                                   return true;
                               });
+        }
+
+        if (importFile.completionHandler != null) {
+            importFile.completionHandler.execute();
         }
     }
 }
