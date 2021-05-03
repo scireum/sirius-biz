@@ -121,7 +121,8 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
     }
 
     private void handleFile(ImportFile importFile, ExtractedFile extractedFile) throws Exception {
-        DictionaryBasedImport dictionaryBasedImport = new DictionaryBasedImport(importFile.dictionary,
+        DictionaryBasedImport dictionaryBasedImport = new DictionaryBasedImport(importFile.filename,
+                                                                                importFile.dictionary,
                                                                                 process,
                                                                                 importFile.ignoreEmptyFields,
                                                                                 importFile.rowHandler);

@@ -11,6 +11,7 @@ package sirius.biz.jobs.batch.file;
 import sirius.biz.importer.format.FieldDefinition;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Values;
 
@@ -22,6 +23,7 @@ import javax.annotation.Nullable;
  */
 public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
 
+    protected final ImportDictionary dictionary;
     protected DictionaryBasedImport dictionaryBasedImport;
 
     /**
@@ -32,12 +34,21 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
      */
     protected DictionaryBasedImportJob(ImportDictionary dictionary, ProcessContext process) {
         super(process);
-        this.dictionaryBasedImport = new DictionaryBasedImport(dictionary,
+
+        this.dictionary = dictionary;
+    }
+
+    @Override
+    public void execute() throws Exception {
+        VirtualFile file = process.require(FILE_PARAMETER);
+        this.dictionaryBasedImport = new DictionaryBasedImport(file.name(),
+                                                               dictionary,
                                                                process,
                                                                process.getParameter(DictionaryBasedImport.IGNORE_EMPTY_PARAMETER)
                                                                       .orElse(false),
                                                                indexAndRow -> handleRow(indexAndRow.getFirst(),
                                                                                         indexAndRow.getSecond()));
+        super.execute();
     }
 
     @Nullable
