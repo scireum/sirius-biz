@@ -196,11 +196,26 @@ public abstract class FileImportJob extends ImportJob {
         process.log(ProcessLog.info().withNLSKey("FileImportJob.importingZipFile"));
 
         AtomicInteger filesImported = new AtomicInteger();
-        extractor.extractAll(filename, fileHandle.getFile(), null, file -> {
-            if (executeForEntry(file)) {
-                filesImported.incrementAndGet();
-            }
-        });
+
+        if (auxiliaryFileMode != AuxiliaryFileMode.IGNORE) {
+            extractor.extractAll(filename,
+                                 fileHandle.getFile(),
+                                 name -> !canHandleFileExtension(Files.getFileExtension(name)),
+                                 file -> {
+                                     if (executeForEntry(file)) {
+                                         filesImported.incrementAndGet();
+                                     }
+                                 });
+        }
+
+        extractor.extractAll(filename,
+                             fileHandle.getFile(),
+                             name -> canHandleFileExtension(Files.getFileExtension(name)),
+                             file -> {
+                                 if (executeForEntry(file)) {
+                                     filesImported.incrementAndGet();
+                                 }
+                             });
 
         if (filesImported.get() == 0) {
             throw Exceptions.createHandled().withNLSKey("FileImportJob.noZippedFileFound").handle();
