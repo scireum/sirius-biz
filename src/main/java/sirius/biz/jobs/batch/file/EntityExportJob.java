@@ -299,6 +299,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
         } catch (HandledException e) {
             process.handle(Exceptions.createHandled()
                                      .withNLSKey("LineBasedJob.errorInRow")
+                                     .set("file", templateFile.name())
                                      .set("row", rowNumber)
                                      .set("message", e.getMessage())
                                      .handle());
@@ -307,6 +308,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
                                      .to(Log.BACKGROUND)
                                      .error(e)
                                      .withNLSKey("LineBasedJob.failureInRow")
+                                     .set("file", templateFile.name())
                                      .set("row", rowNumber)
                                      .handle());
         } finally {

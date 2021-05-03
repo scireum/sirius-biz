@@ -25,6 +25,6 @@ public abstract class DictionaryBasedImportJobFactory extends LineBasedImportJob
     @Override
     protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         super.collectParameters(parameterCollector);
-        parameterCollector.accept(DictionaryBasedImportJob.IGNORE_EMPTY_PARAMETER);
+        parameterCollector.accept(DictionaryBasedImport.IGNORE_EMPTY_PARAMETER);
     }
 }
