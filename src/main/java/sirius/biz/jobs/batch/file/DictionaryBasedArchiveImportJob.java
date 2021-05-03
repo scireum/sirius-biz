@@ -74,6 +74,10 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
             this.ignoreEmptyFields = true;
             return this;
         }
+
+        public String getFilename() {
+            return filename;
+        }
     }
 
     private final Set<String> handledFiles = new HashSet<>();
