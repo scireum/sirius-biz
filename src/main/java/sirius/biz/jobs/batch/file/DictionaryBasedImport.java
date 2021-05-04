@@ -39,7 +39,7 @@ public class DictionaryBasedImport {
             new BooleanParameter("ignoreEmpty", "$DictionaryBasedImportJobFactory.ignoreEmpty").withDescription(
                     "$DictionaryBasedImportJobFactory.ignoreEmpty.help").build();
 
-    private static final String NLS_KEY_ERROR_IN_ROW_AND_FILE = "LineBasedJob.errorInRowAndFile";
+    private static final String NLS_KEY_ERROR_IN_FILE_AND_ROW = "LineBasedJob.errorInFileAndRow";
     private static final String MESSAGE_PARAM_ROW = "row";
     private static final String MESSAGE_PARAM_MESSAGE = "message";
     private static final String MESSAGE_PARAM_FILE = "file";
@@ -87,13 +87,13 @@ public class DictionaryBasedImport {
             boolean problemsFound = dictionary.detectHeaderProblems(row, (problem, isFatal) -> {
                 if (Boolean.TRUE.equals(isFatal)) {
                     process.log(ProcessLog.error()
-                                          .withNLSKey(NLS_KEY_ERROR_IN_ROW_AND_FILE)
+                                          .withNLSKey(NLS_KEY_ERROR_IN_FILE_AND_ROW)
                                           .withContext(MESSAGE_PARAM_FILE, filename)
                                           .withContext(MESSAGE_PARAM_ROW, 1)
                                           .withContext(MESSAGE_PARAM_MESSAGE, problem));
                 } else {
                     process.log(ProcessLog.warn()
-                                          .withNLSKey(NLS_KEY_ERROR_IN_ROW_AND_FILE)
+                                          .withNLSKey(NLS_KEY_ERROR_IN_FILE_AND_ROW)
                                           .withContext(MESSAGE_PARAM_FILE, filename)
                                           .withContext(MESSAGE_PARAM_ROW, 1)
                                           .withContext(MESSAGE_PARAM_MESSAGE, problem));
@@ -110,7 +110,7 @@ public class DictionaryBasedImport {
                 process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
             } catch (HandledException e) {
                 process.log(ProcessLog.error()
-                                      .withNLSKey(NLS_KEY_ERROR_IN_ROW_AND_FILE)
+                                      .withNLSKey(NLS_KEY_ERROR_IN_FILE_AND_ROW)
                                       .withContext(MESSAGE_PARAM_FILE, filename)
                                       .withContext(MESSAGE_PARAM_ROW, 1)
                                       .withContext(MESSAGE_PARAM_MESSAGE, e.getMessage()));
@@ -134,7 +134,7 @@ public class DictionaryBasedImport {
             process.incCounter(NLS.get("LineBasedJob.erroneousRow"));
             process.handle(Exceptions.createHandled()
                                      .to(Log.BACKGROUND)
-                                     .withNLSKey(NLS_KEY_ERROR_IN_ROW_AND_FILE)
+                                     .withNLSKey(NLS_KEY_ERROR_IN_FILE_AND_ROW)
                                      .set(MESSAGE_PARAM_FILE, filename)
                                      .set(MESSAGE_PARAM_ROW, index)
                                      .set(MESSAGE_PARAM_MESSAGE, e.getMessage())
