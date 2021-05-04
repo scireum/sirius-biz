@@ -38,7 +38,7 @@ public class DictionaryBasedImport {
     public static final Parameter<Boolean> IGNORE_EMPTY_PARAMETER =
             new BooleanParameter("ignoreEmpty", "$DictionaryBasedImportJobFactory.ignoreEmpty").withDescription(
                     "$DictionaryBasedImportJobFactory.ignoreEmpty.help").build();
-    
+
     private static final String NLS_KEY_ERROR_IN_ROW_AND_FILE = "LineBasedJob.errorInRowAndFile";
     private static final String MESSAGE_PARAM_ROW = "row";
     private static final String MESSAGE_PARAM_MESSAGE = "message";
@@ -144,7 +144,7 @@ public class DictionaryBasedImport {
             process.handle(Exceptions.handle()
                                      .to(Log.BACKGROUND)
                                      .error(e)
-                                     .withNLSKey("LineBasedJob.failureInRowAndFile")
+                                     .withNLSKey("LineBasedJob.failureInFileAndRow")
                                      .set(MESSAGE_PARAM_FILE, filename)
                                      .set(MESSAGE_PARAM_ROW, index)
                                      .set(MESSAGE_PARAM_MESSAGE, e.getMessage())
