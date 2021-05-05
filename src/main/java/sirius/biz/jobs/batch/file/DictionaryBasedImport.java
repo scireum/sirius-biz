@@ -32,15 +32,17 @@ import sirius.kernel.nls.NLS;
  */
 public class DictionaryBasedImport {
 
-    private static final String MESSAGE_KEY = "message";
-    private static final String ERROR_IN_ROW_KEY = "LineBasedJob.errorInRow";
-
     /**
      * Contains the parameter which is used to determine if empty values should be ignored.
      */
     public static final Parameter<Boolean> IGNORE_EMPTY_PARAMETER =
             new BooleanParameter("ignoreEmpty", "$DictionaryBasedImportJobFactory.ignoreEmpty").withDescription(
                     "$DictionaryBasedImportJobFactory.ignoreEmpty.help").build();
+
+    private static final String NLS_KEY_ERROR_IN_FILE_AND_ROW = "LineBasedJob.errorInFileAndRow";
+    private static final String MESSAGE_PARAM_ROW = "row";
+    private static final String MESSAGE_PARAM_MESSAGE = "message";
+    private static final String MESSAGE_PARAM_FILE = "file";
 
     protected final ProcessContext process;
     protected final boolean ignoreEmptyValues;
@@ -59,7 +61,7 @@ public class DictionaryBasedImport {
                                     ProcessContext process,
                                     boolean ignoreEmptyValues,
                                     Callback<Tuple<Integer, Context>> rowHandler) {
-this.filename = filename;
+        this.filename = filename;
         this.dictionary = dictionary;
         this.process = process;
         this.ignoreEmptyValues = ignoreEmptyValues;
@@ -85,14 +87,16 @@ this.filename = filename;
             boolean problemsFound = dictionary.detectHeaderProblems(row, (problem, isFatal) -> {
                 if (Boolean.TRUE.equals(isFatal)) {
                     process.log(ProcessLog.error()
-                                          .withNLSKey(ERROR_IN_ROW_KEY)
-                                          .withContext("row", 1)
-                                          .withContext(MESSAGE_KEY, problem));
+                                          .withNLSKey(NLS_KEY_ERROR_IN_FILE_AND_ROW)
+                                          .withContext(MESSAGE_PARAM_FILE, filename)
+                                          .withContext(MESSAGE_PARAM_ROW, 1)
+                                          .withContext(MESSAGE_PARAM_MESSAGE, problem));
                 } else {
                     process.log(ProcessLog.warn()
-                                          .withNLSKey(ERROR_IN_ROW_KEY)
-                                          .withContext("row", 1)
-                                          .withContext(MESSAGE_KEY, problem));
+                                          .withNLSKey(NLS_KEY_ERROR_IN_FILE_AND_ROW)
+                                          .withContext(MESSAGE_PARAM_FILE, filename)
+                                          .withContext(MESSAGE_PARAM_ROW, 1)
+                                          .withContext(MESSAGE_PARAM_MESSAGE, problem));
                 }
             }, true);
 
@@ -106,9 +110,10 @@ this.filename = filename;
                 process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
             } catch (HandledException e) {
                 process.log(ProcessLog.error()
-                                      .withNLSKey(ERROR_IN_ROW_KEY)
-                                      .withContext("row", 1)
-                                      .withContext(MESSAGE_KEY, e.getMessage()));
+                                      .withNLSKey(NLS_KEY_ERROR_IN_FILE_AND_ROW)
+                                      .withContext(MESSAGE_PARAM_FILE, filename)
+                                      .withContext(MESSAGE_PARAM_ROW, 1)
+                                      .withContext(MESSAGE_PARAM_MESSAGE, e.getMessage()));
                 TaskContext.get().cancel();
             }
         }
@@ -129,19 +134,20 @@ this.filename = filename;
             process.incCounter(NLS.get("LineBasedJob.erroneousRow"));
             process.handle(Exceptions.createHandled()
                                      .to(Log.BACKGROUND)
-                                     .withNLSKey(ERROR_IN_ROW_KEY)
-                                     .set("file", filename)
-                                     .set("row", index)
-                                     .set(MESSAGE_KEY, e.getMessage())
+                                     .withNLSKey(NLS_KEY_ERROR_IN_FILE_AND_ROW)
+                                     .set(MESSAGE_PARAM_FILE, filename)
+                                     .set(MESSAGE_PARAM_ROW, index)
+                                     .set(MESSAGE_PARAM_MESSAGE, e.getMessage())
                                      .handle());
         } catch (Exception e) {
             process.incCounter(NLS.get("LineBasedJob.erroneousRow"));
             process.handle(Exceptions.handle()
                                      .to(Log.BACKGROUND)
                                      .error(e)
-                                     .withNLSKey("LineBasedJob.failureInRow")
-                                     .set("row", index)
-                                     .set("file", filename)
+                                     .withNLSKey("LineBasedJob.failureInFileAndRow")
+                                     .set(MESSAGE_PARAM_FILE, filename)
+                                     .set(MESSAGE_PARAM_ROW, index)
+                                     .set(MESSAGE_PARAM_MESSAGE, e.getMessage())
                                      .handle());
         } finally {
             process.addTiming(NLS.get("LineBasedJob.row"), watch.elapsedMillis());
