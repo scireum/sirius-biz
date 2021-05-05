@@ -15,6 +15,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Values;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -127,7 +128,7 @@ public class IDBTable {
          * @param value the value to search for
          * @return the builder itself for fluent method calls
          */
-        public QueryBuilder searchValue(String value) {
+        public QueryBuilder searchValue(@Nullable String value) {
             this.searchValue = value;
             return this;
         }
@@ -186,13 +187,19 @@ public class IDBTable {
                 }
             }
 
+            if (Strings.isFilled(searchPaths)) {
+                return Optional.empty();
+            }
+
             return execute(Limit.singleItem(), pathsToQuery).stream().findFirst();
         }
 
         private void checkConstraints() {
-            if (Strings.isFilled(searchValue) != (Strings.isFilled(searchPaths))) {
-                throw new IllegalStateException(
-                        "Either both 'searchPaths' and 'searchValue' needs to be filled or none of both");
+            if (Strings.isFilled(searchValue) && !Strings.isFilled(searchPaths)) {
+                throw new IllegalStateException(Strings.apply(
+                        "Cannot handle a 'searchValue' without any searchPath to search in! (Table: %s, Value: '%s')",
+                        name,
+                        searchValue));
             }
         }
 
@@ -206,7 +213,12 @@ public class IDBTable {
         }
 
         private List<Values> execute(Limit limit, String... pathsToQuery) {
+            checkConstraints();
+
             if (Strings.isEmpty(searchValue)) {
+                if (Strings.isFilled(searchPaths)) {
+                    return Collections.emptyList();
+                }
                 if (Strings.isFilled(primaryLang)) {
                     return iscan(primaryLang, fallbackLang, limit, pathsToQuery);
                 } else {
