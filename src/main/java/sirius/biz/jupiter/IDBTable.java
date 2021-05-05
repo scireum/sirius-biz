@@ -179,16 +179,13 @@ public class IDBTable {
          */
         public Optional<Values> singleRow(String... pathsToQuery) {
             checkConstraints();
+
             if (exact && Strings.isFilled(searchValue)) {
                 if (Strings.isFilled(primaryLang)) {
                     return ilookup(primaryLang, fallbackLang, searchPaths, searchValue, pathsToQuery);
                 } else {
                     return lookup(searchPaths, searchValue, pathsToQuery);
                 }
-            }
-
-            if (Strings.isFilled(searchPaths)) {
-                return Optional.empty();
             }
 
             return execute(Limit.singleItem(), pathsToQuery).stream().findFirst();
