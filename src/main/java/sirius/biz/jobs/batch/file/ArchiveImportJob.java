@@ -62,6 +62,8 @@ public abstract class ArchiveImportJob extends FileImportJob {
     @Override
     public void execute() throws Exception {
         VirtualFile file = process.require(FileImportJob.FILE_PARAMETER);
+        auxiliaryFileMode = process.getParameter(AUX_FILE_MODE_PARAMETER).orElse(AuxiliaryFileMode.IGNORE);
+        flattenAuxiliaryFileDirs = process.getParameter(AUX_FILE_FLATTEN_DIRS_PARAMETER).orElse(false);
 
         if (canHandleFileExtension(file.fileExtension())) {
             process.log(ProcessLog.info()
