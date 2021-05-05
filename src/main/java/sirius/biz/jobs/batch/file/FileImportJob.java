@@ -270,6 +270,7 @@ public abstract class FileImportJob extends ImportJob {
                                      .to(Log.BACKGROUND)
                                      .withNLSKey("FileImportJob.copyAuxiliaryFileFailed")
                                      .set("file", extractedFile.getFilePath())
+                                     .set("message", e.getMessage())
                                      .handle());
             return false;
         }
