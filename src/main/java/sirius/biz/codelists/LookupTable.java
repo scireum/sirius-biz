@@ -199,7 +199,7 @@ public abstract class LookupTable {
     /**
      * Fetches the requested field for the given code.
      * <p>
-     * This interprets <tt>1</tt> as <tt>true</tt> in case the underlying table doesn't know booleans and instead store
+     * This interprets <tt>1</tt> as <tt>true</tt> in case the underlying table doesn't know booleans and instead stores
      * integers.
      *
      * @param code        the code to fetch the field for
