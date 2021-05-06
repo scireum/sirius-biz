@@ -197,6 +197,32 @@ public abstract class LookupTable {
     }
 
     /**
+     * Fetches the requested field for the given code.
+     * <p>
+     * This interprets <tt>1</tt> as <tt>true</tt> in case the underlying table doesn't know booleans and instead store
+     * integers.
+     *
+     * @param code        the code to fetch the field for
+     * @param targetField the field to fetch
+     * @return the boolean value of the field or an empty optional if the code is unknown. Note that this will only
+     * resolve the main code. When in doubt, the code must be normalized via {@link #normalize(String)} before invoking
+     * this method.
+     */
+    public Optional<Boolean> fetchFieldBoolean(String code, String targetField) {
+        if (Strings.isEmpty(code)) {
+            return Optional.empty();
+        }
+
+        Value fieldValue = performFetchField(normalizeCodeValue(code), targetField);
+
+        if (fieldValue.is(Integer.class)) {
+            return fieldValue.map(value -> Integer.valueOf(1).equals(value.getInteger()));
+        }
+
+        return fieldValue.asOptional(Boolean.class);
+    }
+
+    /**
      * Fetches the mapping for the given code.
      * <p>
      * Mappings are most probably only supported by IDB backed tables. If <tt>acme</tt> is given, this will
