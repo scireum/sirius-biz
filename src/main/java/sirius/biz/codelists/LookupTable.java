@@ -216,7 +216,7 @@ public abstract class LookupTable {
         Value fieldValue = performFetchField(normalizeCodeValue(code), targetField);
 
         if (fieldValue.isNumeric()) {
-            return fieldValue.map(value -> Integer.valueOf(1).equals(value.getInteger()));
+            return fieldValue.map(value -> value.asInt(0) == 1);
         }
 
         return fieldValue.asOptional(Boolean.class);
