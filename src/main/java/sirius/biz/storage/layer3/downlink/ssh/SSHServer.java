@@ -98,7 +98,7 @@ public class SSHServer implements Startable, Stoppable, Killable {
             installSFTPSubsystem();
 
             server.start();
-            StorageUtils.LOG.WARN("Layer 3/SSH: Successfully started the SSH server on port %s", port);
+            StorageUtils.LOG.INFO("Layer 3/SSH: Successfully started the SSH server on port %s", port);
         } catch (IOException e) {
             StorageUtils.LOG.WARN("Layer 3/SSH: Failed to start the SSH server: %s", e.getMessage());
         }
