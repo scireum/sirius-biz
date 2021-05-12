@@ -25,6 +25,8 @@ import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nullable;
+
 /**
  * Provides a helper to process line based values using a {@link ImportDictionary}.
  * <p>
@@ -45,10 +47,12 @@ public class DictionaryBasedImport {
     private static final String MESSAGE_PARAM_FILE = "file";
 
     protected final ProcessContext process;
-    protected final boolean ignoreEmptyValues;
     protected final ImportDictionary dictionary;
     protected final String filename;
     protected Callback<Tuple<Integer, Context>> rowHandler;
+
+    protected boolean ignoreEmptyValues;
+    protected String rowCounterName = "$LineBasedJob.row";
 
     /**
      * Creates a new job for the given factory, name and process.
@@ -59,13 +63,23 @@ public class DictionaryBasedImport {
     protected DictionaryBasedImport(String filename,
                                     ImportDictionary dictionary,
                                     ProcessContext process,
-                                    boolean ignoreEmptyValues,
                                     Callback<Tuple<Integer, Context>> rowHandler) {
         this.filename = filename;
         this.dictionary = dictionary;
         this.process = process;
-        this.ignoreEmptyValues = ignoreEmptyValues;
         this.rowHandler = rowHandler;
+    }
+
+    protected DictionaryBasedImport withRowCounterName(@Nullable String rowCounterName) {
+        if (Strings.isFilled(rowCounterName)) {
+            this.rowCounterName = rowCounterName;
+        }
+        return this;
+    }
+
+    protected DictionaryBasedImport withIgnoreEmptyValues(boolean ignoreEmptyValues) {
+        this.ignoreEmptyValues = ignoreEmptyValues;
+        return this;
     }
 
     /**
@@ -150,7 +164,7 @@ public class DictionaryBasedImport {
                                      .set(MESSAGE_PARAM_MESSAGE, e.getMessage())
                                      .handle());
         } finally {
-            process.addTiming(NLS.get("LineBasedJob.row"), watch.elapsedMillis());
+            process.addTiming(NLS.smartGet(rowCounterName), watch.elapsedMillis());
         }
     }
 

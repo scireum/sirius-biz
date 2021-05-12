@@ -44,10 +44,9 @@ public abstract class DictionaryBasedImportJob extends LineBasedImportJob {
         this.dictionaryBasedImport = new DictionaryBasedImport(file.name(),
                                                                dictionary,
                                                                process,
-                                                               process.getParameter(DictionaryBasedImport.IGNORE_EMPTY_PARAMETER)
-                                                                      .orElse(false),
                                                                indexAndRow -> handleRow(indexAndRow.getFirst(),
-                                                                                        indexAndRow.getSecond()));
+                                                                                        indexAndRow.getSecond())).withIgnoreEmptyValues(
+                process.getParameter(DictionaryBasedImport.IGNORE_EMPTY_PARAMETER).orElse(false));
         super.execute();
     }
 

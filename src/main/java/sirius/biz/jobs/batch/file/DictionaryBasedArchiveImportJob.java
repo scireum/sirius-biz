@@ -10,6 +10,7 @@ package sirius.biz.jobs.batch.file;
 
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.util.ExtractedFile;
 import sirius.kernel.commons.Callback;
 import sirius.kernel.commons.Context;
@@ -41,6 +42,7 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
         protected boolean ignoreEmptyFields;
         protected Callback<Tuple<Integer, Context>> rowHandler;
         protected UnitOfWork completionHandler;
+        protected String rowCounterName;
 
         /**
          * Creates a new instance for the given name.
@@ -85,6 +87,19 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
         @CheckReturnValue
         public ImportFile ignoreEmptyFields() {
             this.ignoreEmptyFields = true;
+            return this;
+        }
+
+        /**
+         * Specifies a custom counter name to be used for each processed row.
+         *
+         * @param rowCounterName the name of the coutner which will be smart translated using
+         *                       {@link sirius.kernel.nls.NLS#smartGet(String)}.
+         * @return the file itself for fluent method calls
+         */
+        @CheckReturnValue
+        public ImportFile withRowCounterName(String rowCounterName) {
+            this.rowCounterName = rowCounterName;
             return this;
         }
 
@@ -138,11 +153,14 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
     }
 
     private void handleFile(ImportFile importFile, ExtractedFile extractedFile) throws Exception {
+        process.log(ProcessLog.info()
+                              .withNLSKey("DictionaryBasedArchiveImportJob.msgImportFile")
+                              .withContext("file", importFile.filename));
         DictionaryBasedImport dictionaryBasedImport = new DictionaryBasedImport(importFile.filename,
                                                                                 importFile.dictionary,
                                                                                 process,
-                                                                                importFile.ignoreEmptyFields,
-                                                                                importFile.rowHandler);
+                                                                                importFile.rowHandler).withIgnoreEmptyValues(
+                importFile.ignoreEmptyFields).withRowCounterName(importFile.rowCounterName);
 
         try (InputStream stream = extractedFile.openInputStream()) {
             LineBasedProcessor.create(importFile.filename, stream, false)
