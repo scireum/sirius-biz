@@ -16,6 +16,7 @@ import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nullable;
@@ -90,71 +91,134 @@ class IDBLookupTable extends LookupTable {
 
     @Override
     protected Value performFetchField(String code, String targetField) {
-        return jupiter.fetchFromSmallCache(CACHE_PREFIX_FETCH_FIELD + table.getName() + "-" + code + "-" + targetField,
-                                           () -> table.query()
-                                                      .lookupPaths(codeField)
-                                                      .searchValue(code)
-                                                      .singleRow(targetField)
-                                                      .map(row -> row.at(0))
-                                                      .filter(Value::isFilled)
-                                                      .orElse(Value.EMPTY));
+        try {
+            return jupiter.fetchFromSmallCache(CACHE_PREFIX_FETCH_FIELD
+                                               + table.getName()
+                                               + "-"
+                                               + code
+                                               + "-"
+                                               + targetField,
+                                               () -> table.query()
+                                                          .lookupPaths(codeField)
+                                                          .searchValue(code)
+                                                          .singleRow(targetField)
+                                                          .map(row -> row.at(0))
+                                                          .filter(Value::isFilled)
+                                                          .orElse(Value.EMPTY));
+        } catch (Exception e) {
+            Exceptions.createHandled()
+                      .to(Jupiter.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Error on fetch field with code '%s' field '%s' table '%s': %s (%s)",
+                                              code,
+                                              targetField,
+                                              table.getName())
+                      .handle();
+            return Value.EMPTY;
+        }
     }
 
     @Override
     protected Optional<String> performFetchTranslatedField(String code, String targetField, String lang) {
-        return jupiter.fetchFromSmallCache(CACHE_PREFIX_FETCH_TRANSLATED_FIELD
-                                           + table.getName()
-                                           + "-"
-                                           + code
-                                           + "-"
-                                           + targetField
-                                           + "-"
-                                           + lang,
-                                           () -> table.query()
-                                                      .lookupPaths(codeField)
-                                                      .searchValue(code)
-                                                      .translate(lang)
-                                                      .singleRow(targetField)
-                                                      .map(row -> row.at(0).asString())
-                                                      .filter(Strings::isFilled));
+        try {
+            return jupiter.fetchFromSmallCache(CACHE_PREFIX_FETCH_TRANSLATED_FIELD
+                                               + table.getName()
+                                               + "-"
+                                               + code
+                                               + "-"
+                                               + targetField
+                                               + "-"
+                                               + lang,
+                                               () -> table.query()
+                                                          .lookupPaths(codeField)
+                                                          .searchValue(code)
+                                                          .translate(lang)
+                                                          .singleRow(targetField)
+                                                          .map(row -> row.at(0).asString())
+                                                          .filter(Strings::isFilled));
+        } catch (Exception e) {
+            Exceptions.createHandled()
+                      .to(Jupiter.LOG)
+                      .error(e)
+                      .withSystemErrorMessage(
+                              "Error on fetch translated field code '%s' field '%s' lang '%s' table '%s': %s (%s)",
+                              code,
+                              targetField,
+                              lang,
+                              table.getName())
+                      .handle();
+            return Optional.empty();
+        }
     }
 
     @Override
     protected Optional<String> performNormalize(String code) {
-        return jupiter.fetchFromSmallCache(CACHE_PREFIX_NORMALIZE + table.getName() + "-" + code,
-                                           () -> table.query()
-                                                      .lookupPaths(aliasCodeFields)
-                                                      .searchValue(code)
-                                                      .singleRow(codeField)
-                                                      .map(row -> row.at(0).asString())
-                                                      .filter(Strings::isFilled));
+        try {
+            return jupiter.fetchFromSmallCache(CACHE_PREFIX_NORMALIZE + table.getName() + "-" + code,
+                                               () -> table.query()
+                                                          .lookupPaths(aliasCodeFields)
+                                                          .searchValue(code)
+                                                          .singleRow(codeField)
+                                                          .map(row -> row.at(0).asString())
+                                                          .filter(Strings::isFilled));
+        } catch (Exception e) {
+            Exceptions.createHandled()
+                      .to(Jupiter.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Error on normalize code '%s' table '%s': %s (%s)", code, table.getName())
+                      .handle();
+            return Optional.empty();
+        }
     }
 
     @Override
     protected Optional<String> performNormalizeWithMapping(String code, String mapping) {
-        return jupiter.fetchFromSmallCache(CACHE_PREFIX_NORMALIZE_WITH_MAPPING
-                                           + table.getName()
-                                           + "-"
-                                           + code
-                                           + "-"
-                                           + mapping,
-                                           () -> table.query()
-                                                      .lookupPaths(mapping)
-                                                      .searchValue(code)
-                                                      .singleRow(codeField)
-                                                      .map(row -> row.at(0).asString())
-                                                      .filter(Strings::isFilled));
+        try {
+            return jupiter.fetchFromSmallCache(CACHE_PREFIX_NORMALIZE_WITH_MAPPING
+                                               + table.getName()
+                                               + "-"
+                                               + code
+                                               + "-"
+                                               + mapping,
+                                               () -> table.query()
+                                                          .lookupPaths(mapping)
+                                                          .searchValue(code)
+                                                          .singleRow(codeField)
+                                                          .map(row -> row.at(0).asString())
+                                                          .filter(Strings::isFilled));
+        } catch (Exception e) {
+            Exceptions.createHandled()
+                      .to(Jupiter.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Error on normalize code '%s' mapping '%s' table '%s': %s (%s)",
+                                              code,
+                                              mapping,
+                                              table.getName())
+                      .handle();
+            return Optional.empty();
+        }
     }
 
     @Override
     protected Optional<String> performReverseLookup(String name) {
-        return jupiter.fetchFromSmallCache(CACHE_PREFIX_REVERSE_LOOKUP + table.getName() + "-" + name,
-                                           () -> table.query()
-                                                      .searchPaths(nameField)
-                                                      .searchValue(name.toLowerCase())
-                                                      .singleRow(codeField)
-                                                      .map(row -> row.at(0).asString())
-                                                      .filter(Strings::isFilled));
+        try {
+            return jupiter.fetchFromSmallCache(CACHE_PREFIX_REVERSE_LOOKUP + table.getName() + "-" + name,
+                                               () -> table.query()
+                                                          .searchPaths(nameField)
+                                                          .searchValue(name.toLowerCase())
+                                                          .singleRow(codeField)
+                                                          .map(row -> row.at(0).asString())
+                                                          .filter(Strings::isFilled));
+        } catch (Exception e) {
+            Exceptions.createHandled()
+                      .to(Jupiter.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Error on reverse lookup name '%s' table '%s': %s (%s)",
+                                              name,
+                                              table.getName())
+                      .handle();
+            return Optional.empty();
+        }
     }
 
     @Override
@@ -168,11 +232,23 @@ class IDBLookupTable extends LookupTable {
     }
 
     private <T> Optional<T> fetchObjectFromIDB(Class<T> type, String code) {
-        return table.query()
-                    .lookupPaths(codeField)
-                    .searchValue(code)
-                    .singleRow(".")
-                    .map(row -> makeObject(type, JSON.parseObject(row.at(0).asString())));
+        try {
+            return table.query()
+                        .lookupPaths(codeField)
+                        .searchValue(code)
+                        .singleRow(".")
+                        .map(row -> makeObject(type, JSON.parseObject(row.at(0).asString())));
+        } catch (Exception e) {
+            Exceptions.createHandled()
+                      .to(Jupiter.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Error on fetch object type '%s' code '%s' table '%s': %s (%s)",
+                                              type.getName(),
+                                              code,
+                                              table.getName())
+                      .handle();
+            return Optional.empty();
+        }
     }
 
     protected <T> T makeObject(Class<T> type, JSONObject jsonData) {
@@ -188,25 +264,46 @@ class IDBLookupTable extends LookupTable {
 
     @Override
     protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String lang) {
-        return table.query()
-                    .searchInAllFields()
-                    .searchValue(searchTerm)
-                    .translate(lang)
-                    .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED)
-                    .filter(row -> !row.at(3).asBoolean())
-                    .map(row -> new LookupTableEntry(row.at(0).asString(),
-                                                     row.at(1).asString(),
-                                                     row.at(2).getString()));
+        try {
+            return table.query()
+                        .searchInAllFields()
+                        .searchValue(searchTerm)
+                        .translate(lang)
+                        .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED)
+                        .filter(row -> !row.at(3).asBoolean())
+                        .map(row -> new LookupTableEntry(row.at(0).asString(),
+                                                         row.at(1).asString(),
+                                                         row.at(2).getString()));
+        } catch (Exception e) {
+            Exceptions.createHandled()
+                      .to(Jupiter.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Error on suggest searchterm '%s' lang '%s' table '%s': %s (%s)",
+                                              searchTerm,
+                                              lang,
+                                              table.getName())
+                      .handle();
+            return Stream.empty();
+        }
     }
 
     @Override
     protected Stream<LookupTableEntry> performScan(String lang) {
-        return table.query()
-                    .translate(lang)
-                    .allRows(codeField, nameField, descriptionField, COL_DEPRECATED)
-                    .filter(row -> !row.at(3).asBoolean())
-                    .map(row -> new LookupTableEntry(row.at(0).asString(),
-                                                     row.at(1).asString(),
-                                                     row.at(2).getString()));
+        try {
+            return table.query()
+                        .translate(lang)
+                        .allRows(codeField, nameField, descriptionField, COL_DEPRECATED)
+                        .filter(row -> !row.at(3).asBoolean())
+                        .map(row -> new LookupTableEntry(row.at(0).asString(),
+                                                         row.at(1).asString(),
+                                                         row.at(2).getString()));
+        } catch (Exception e) {
+            Exceptions.createHandled()
+                      .to(Jupiter.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Error scanning lang '%s' table '%s': %s (%s)", lang, table.getName())
+                      .handle();
+            return Stream.empty();
+        }
     }
 }
