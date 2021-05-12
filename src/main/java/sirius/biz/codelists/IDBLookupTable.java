@@ -141,7 +141,7 @@ class IDBLookupTable extends LookupTable {
                       .to(Jupiter.LOG)
                       .error(e)
                       .withSystemErrorMessage(
-                              "Error on fetch translated field code '%s' field '%s' lang '%s' table '%s': %s (%s)",
+                              "Error on fetch translated field with code '%s' field '%s' lang '%s' table '%s': %s (%s)",
                               code,
                               targetField,
                               lang,
