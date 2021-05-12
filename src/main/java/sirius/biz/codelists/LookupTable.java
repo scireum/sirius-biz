@@ -13,7 +13,6 @@ import com.alibaba.fastjson.JSONObject;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
-import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.util.JSONPath;
@@ -125,12 +124,7 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        try {
-            return performResolveName(normalizeCodeValue(code), lang);
-        } catch (Exception e) {
-            Exceptions.handle(e);
-            return Optional.empty();
-        }
+        return performResolveName(normalizeCodeValue(code), lang);
     }
 
     protected abstract Optional<String> performResolveName(@Nonnull String code, String lang);
@@ -165,12 +159,7 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        try {
-            return performResolveDescription(normalizeCodeValue(code), lang);
-        } catch (Exception e) {
-            Exceptions.handle(e);
-            return Optional.empty();
-        }
+        return performResolveDescription(normalizeCodeValue(code), lang);
     }
 
     protected abstract Optional<String> performResolveDescription(@Nonnull String code, String lang);
@@ -188,7 +177,7 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        return safePerformFetchField(normalizeCodeValue(code), targetField).asOptionalString();
+        return performFetchField(normalizeCodeValue(code), targetField).asOptionalString();
     }
 
     /**
@@ -204,7 +193,7 @@ public abstract class LookupTable {
             return Value.EMPTY;
         }
 
-        return safePerformFetchField(normalizeCodeValue(code), targetField);
+        return performFetchField(normalizeCodeValue(code), targetField);
     }
 
     /**
@@ -224,7 +213,7 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        Value fieldValue = safePerformFetchField(normalizeCodeValue(code), targetField);
+        Value fieldValue = performFetchField(normalizeCodeValue(code), targetField);
 
         if (fieldValue.isNumeric()) {
             return fieldValue.map(value -> value.asInt(0) == 1);
@@ -249,7 +238,7 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        return safePerformFetchField(normalizeCodeValue(code), mappingsField + "." + mapping).asOptionalString();
+        return performFetchField(normalizeCodeValue(code), mappingsField + "." + mapping).asOptionalString();
     }
 
     /**
@@ -286,14 +275,13 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        Optional<String> result = safePerformFetchField(normalizeCodeValue(code),
-                                                        mappingsField + "." + primaryMapping).asOptionalString();
+        Optional<String> result =
+                performFetchField(normalizeCodeValue(code), mappingsField + "." + primaryMapping).asOptionalString();
         if (result.isPresent()) {
             return result;
         }
 
-        return safePerformFetchField(normalizeCodeValue(code),
-                                     mappingsField + "." + secondaryMapping).asOptionalString();
+        return performFetchField(normalizeCodeValue(code), mappingsField + "." + secondaryMapping).asOptionalString();
     }
 
     /**
@@ -315,15 +303,6 @@ public abstract class LookupTable {
     }
 
     protected abstract Value performFetchField(@Nonnull String code, String targetField);
-
-    private Value safePerformFetchField(@Nonnull String code, String targetField) {
-        try {
-            return performFetchField(code, targetField);
-        } catch (Exception e) {
-            Exceptions.handle(e);
-            return Value.EMPTY;
-        }
-    }
 
     /**
      * Fetches the translated value of the requested field for the given code.
@@ -353,12 +332,7 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        try {
-            return performFetchTranslatedField(normalizeCodeValue(code), targetField, lang);
-        } catch (Exception e) {
-            Exceptions.handle(e);
-            return Optional.empty();
-        }
+        return performFetchTranslatedField(normalizeCodeValue(code), targetField, lang);
     }
 
     protected abstract Optional<String> performFetchTranslatedField(@Nonnull String code,
@@ -382,19 +356,10 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        return safePerformNormalize(normalizeCodeValue(code));
+        return performNormalize(normalizeCodeValue(code));
     }
 
     protected abstract Optional<String> performNormalize(@Nonnull String code);
-
-    private Optional<String> safePerformNormalize(@Nonnull String code) {
-        try {
-            return performNormalize(code);
-        } catch (Exception e) {
-            Exceptions.handle(e);
-            return Optional.empty();
-        }
-    }
 
     /**
      * Attempts to normalize the given code or returns the input itself.
@@ -423,24 +388,15 @@ public abstract class LookupTable {
         }
 
         String normalizedCodeValue = normalizeCodeValue(code);
-        Optional<String> result = safePerformNormalizeWithMapping(normalizedCodeValue, mappingsField + "." + mapping);
+        Optional<String> result = performNormalizeWithMapping(normalizedCodeValue, mappingsField + "." + mapping);
         if (result.isPresent()) {
             return result;
         }
 
-        return safePerformNormalize(normalizedCodeValue);
+        return performNormalize(normalizedCodeValue);
     }
 
     protected abstract Optional<String> performNormalizeWithMapping(@Nonnull String code, String mapping);
-
-    private Optional<String> safePerformNormalizeWithMapping(@Nonnull String code, String mapping) {
-        try {
-            return performNormalizeWithMapping(code, mapping);
-        } catch (Exception e) {
-            Exceptions.handle(e);
-            return Optional.empty();
-        }
-    }
 
     /**
      * Attempts to normalize the given code using the given mapping or returns the input itself.
@@ -478,16 +434,16 @@ public abstract class LookupTable {
 
         String normalizedCodeValue = normalizeCodeValue(code);
         Optional<String> result =
-                safePerformNormalizeWithMapping(normalizedCodeValue, mappingsField + "." + primaryMapping);
+                performNormalizeWithMapping(normalizedCodeValue, mappingsField + "." + primaryMapping);
         if (result.isPresent()) {
             return result;
         }
-        result = safePerformNormalizeWithMapping(normalizedCodeValue, mappingsField + "." + secondaryMapping);
+        result = performNormalizeWithMapping(normalizedCodeValue, mappingsField + "." + secondaryMapping);
         if (result.isPresent()) {
             return result;
         }
 
-        return safePerformNormalize(normalizedCodeValue);
+        return performNormalize(normalizedCodeValue);
     }
 
     /**
@@ -515,12 +471,7 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        try {
-            return performReverseLookup(name);
-        } catch (Exception e) {
-            Exceptions.handle(e);
-            return Optional.empty();
-        }
+        return performReverseLookup(name);
     }
 
     protected abstract Optional<String> performReverseLookup(String name);
@@ -559,7 +510,7 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        return safePerformFetchObject(type, code, true);
+        return performFetchObject(type, code, true);
     }
 
     /**
@@ -576,19 +527,10 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        return safePerformFetchObject(type, code, false);
+        return performFetchObject(type, code, false);
     }
 
     protected abstract <T> Optional<T> performFetchObject(Class<T> type, @Nonnull String code, boolean useCache);
-
-    private <T> Optional<T> safePerformFetchObject(Class<T> type, @Nonnull String code, boolean useCache) {
-        try {
-            return performFetchObject(type, code, useCache);
-        } catch (Exception e) {
-            Exceptions.handle(e);
-            return Optional.empty();
-        }
-    }
 
     /**
      * Provides a helper method to extract a translation table as used by Jupiter.
@@ -599,7 +541,7 @@ public abstract class LookupTable {
      *
      * @param root the JSON object to query
      * @param path the path to the field to query
-     * @return the parsed translation map. Note that this also gracefully handles single string values
+     * @return the parsed translation map. Note that this also gracefully handles sindle string values
      */
     public static Map<String, String> parseTranslationTable(JSONObject root, String path) {
         Value translations = JSONPath.queryValue(root, path);
@@ -743,12 +685,7 @@ public abstract class LookupTable {
      * be used on the result as this might yield quite a bunch of suggestions in order to optimize internal queries.
      */
     public Stream<LookupTableEntry> suggest(String searchTerm, String lang) {
-        try {
-            return performSuggest(new Limit(0, MAX_SUGGESTIONS), searchTerm, lang);
-        } catch (Exception e) {
-            Exceptions.handle(e);
-            return Stream.empty();
-        }
+        return performSuggest(new Limit(0, MAX_SUGGESTIONS), searchTerm, lang);
     }
 
     /**
@@ -790,12 +727,7 @@ public abstract class LookupTable {
             return Stream.empty();
         }
 
-        try {
-            return performScan(lang);
-        } catch (Exception e) {
-            Exceptions.handle(e);
-            return Stream.empty();
-        }
+        return performScan(lang);
     }
 
     protected abstract Stream<LookupTableEntry> performScan(String lang);
