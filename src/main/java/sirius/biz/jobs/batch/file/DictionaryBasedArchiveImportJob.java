@@ -93,7 +93,7 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
         /**
          * Specifies a custom counter name to be used for each processed row.
          *
-         * @param rowCounterName the name of the coutner which will be smart translated using
+         * @param rowCounterName the name of the counter which will be smart translated using
          *                       {@link sirius.kernel.nls.NLS#smartGet(String)}.
          * @return the file itself for fluent method calls
          */
