@@ -73,7 +73,7 @@ public class DelegateJournalData extends Composite {
      * @param entityRef the entity reference under which the journal message will be created
      */
     public DelegateJournalData(BaseEntity<?> owner, @Nonnull BaseEntityRef<?, ?> entityRef) {
-        this(owner, entityRef::getIdAsString, () -> Mixing.getNameForType(entityRef.getType()));
+        this(owner, () -> Mixing.getNameForType(entityRef.getType()), entityRef::getIdAsString);
     }
 
     /**
