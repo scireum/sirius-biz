@@ -20,8 +20,8 @@ import sirius.biz.model.PersonData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantData;
 import sirius.biz.tenants.TenantUserManager;
-import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
+import sirius.biz.web.TenantAware;
 import sirius.db.jdbc.batch.FindQuery;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Property;
@@ -80,7 +80,7 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
         queryConsumer.accept(user -> Strings.isFilled(user.getUserAccountData().getLogin().getUsername()),
                              () -> context.getBatchContext()
                                           .findQuery(SQLUserAccount.class,
-                                                     SQLUserAccount.TENANT,
+                                                     TenantAware.TENANT,
                                                      SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                                      .inner(LoginData.USERNAME)));
     }
@@ -121,7 +121,7 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
         SQLUserAccount account = super.loadForFind(data);
 
         if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)) {
-            load(data, account, SQLUserAccount.TENANT);
+            load(data, account, TenantAware.TENANT);
         }
 
         if (account.getTenant().isEmpty()) {
@@ -136,7 +136,7 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
 
     @Override
     protected boolean parseComplexProperty(SQLUserAccount entity, Property property, Value value, Context data) {
-        if (UserAccount.TENANT.getName().equals(property.getName())) {
+        if (TenantAware.TENANT.getName().equals(property.getName())) {
             ImportContext lookupContext = ImportContext.create();
             lookupContext.set(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER), value.get());
 
@@ -156,7 +156,7 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
         SQLUserAccount result = super.load(data, entity);
 
         if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)) {
-            load(data, result, SQLUserAccount.TENANT);
+            load(data, result, TenantAware.TENANT);
         }
 
         return result;

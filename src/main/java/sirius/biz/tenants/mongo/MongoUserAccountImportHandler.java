@@ -20,9 +20,10 @@ import sirius.biz.model.PersonData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantData;
 import sirius.biz.tenants.TenantUserManager;
-import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
 import sirius.biz.tenants.jdbc.SQLUserAccount;
+import sirius.biz.web.TenantAware;
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
@@ -75,14 +76,14 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
     @Override
     protected MongoUserAccount loadForFind(Context data) {
         MongoUserAccount userAccount = load(data,
-                                            MongoUserAccount.ID,
-                                            MongoUserAccount.TENANT,
+                                            BaseEntity.ID,
+                                            TenantAware.TENANT,
                                             SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL),
                                             MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN)
                                                                               .inner(LoginData.USERNAME));
 
         if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)) {
-            load(data, userAccount, MongoUserAccount.TENANT);
+            load(data, userAccount, TenantAware.TENANT);
         }
 
         if (userAccount.getTenant().isEmpty()) {
@@ -99,7 +100,7 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
         MongoUserAccount result = super.load(data, entity);
 
         if (UserContext.getCurrentUser().hasPermission(TenantUserManager.PERMISSION_SYSTEM_TENANT_MEMBER)) {
-            load(data, result, SQLUserAccount.TENANT);
+            load(data, result, TenantAware.TENANT);
         }
 
         return result;
@@ -109,8 +110,8 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
     protected Optional<MongoUserAccount> tryFindByExample(MongoUserAccount example) {
         if (Strings.isFilled(example.getId())) {
             return mango.select(MongoUserAccount.class)
-                        .eq(MongoUserAccount.ID, example.getId())
-                        .eq(MongoUserAccount.TENANT, example.getTenant())
+                        .eq(BaseEntity.ID, example.getId())
+                        .eq(TenantAware.TENANT, example.getTenant())
                         .one();
         }
 
@@ -118,7 +119,7 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
             return mango.select(MongoUserAccount.class)
                         .eq(MongoUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.LOGIN).inner(LoginData.USERNAME),
                             example.getUserAccountData().getLogin().getUsername())
-                        .eq(MongoUserAccount.TENANT, example.getTenant())
+                        .eq(TenantAware.TENANT, example.getTenant())
                         .one();
         }
 
@@ -127,7 +128,7 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
 
     @Override
     protected boolean parseComplexProperty(MongoUserAccount entity, Property property, Value value, Context data) {
-        if (UserAccount.TENANT.getName().equals(property.getName())) {
+        if (TenantAware.TENANT.getName().equals(property.getName())) {
             ImportContext lookupContext = ImportContext.create();
             lookupContext.set(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER), value.get());
 
