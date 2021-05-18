@@ -30,7 +30,6 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.health.Exceptions;
 import sirius.web.security.UserContext;
 
 import javax.annotation.Nullable;
@@ -133,14 +132,11 @@ public class MongoUserAccountImportHandler extends MongoEntityImportHandler<Mong
             lookupContext.set(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER), value.get());
 
             ImportHandler<MongoTenant> importHandler = context.findHandler(MongoTenant.class);
-            entity.getTenant()
-                  .setValue(importHandler.tryFind(lookupContext)
-                                         .orElseThrow(() -> Exceptions.createHandled()
-                                                                      .withSystemErrorMessage(
-                                                                              "Cannot find a tenant with account number: '%s'",
-                                                                              value.getString())
-                                                                      .handle()));
-            return true;
+            Optional<MongoTenant> tenant = importHandler.tryFind(lookupContext);
+            if (tenant.isPresent()) {
+                entity.getTenant().setValue(tenant.get());
+                return true;
+            }
         }
 
         return super.parseComplexProperty(entity, property, value, data);
