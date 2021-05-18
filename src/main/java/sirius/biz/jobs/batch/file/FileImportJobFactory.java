@@ -37,6 +37,7 @@ public abstract class FileImportJobFactory extends ImportBatchProcessFactory {
         parameterCollector.accept(createFileParameter());
         if (supportsAuxiliaryFiles()) {
             parameterCollector.accept(FileImportJob.AUX_FILE_MODE_PARAMETER);
+            parameterCollector.accept(FileImportJob.AUX_FILE_FLATTEN_DIRS_PARAMETER);
         }
     }
 
