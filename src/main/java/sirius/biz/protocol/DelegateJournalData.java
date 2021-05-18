@@ -12,6 +12,7 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
+import sirius.db.mixing.Property;
 import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.AfterSave;
 import sirius.db.mixing.annotations.Transient;
@@ -20,9 +21,11 @@ import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Provides a hook which records custom messages into the system journal which can be embedded into other entities
@@ -52,6 +55,9 @@ public class DelegateJournalData extends Composite {
 
     @Transient
     private Supplier<String> deleteMessageSupplier;
+
+    @Transient
+    private Supplier<String> ownerKeySupplier;
 
     /**
      * Creates a new instance for the given id and type suppliers.
@@ -83,7 +89,7 @@ public class DelegateJournalData extends Composite {
      * or delivers empty results, no protocol message is written.
      * <p>
      * The {@link EntityDescriptor#getLabel() label} of the entity will be automatically
-     * preppend to the generated message.
+     * prepend to the generated message.
      *
      * @param changeMessageSupplier the supplier of the journal message
      * @return the object itself for fluent calls.
@@ -100,13 +106,26 @@ public class DelegateJournalData extends Composite {
      * or delivers empty results, no protocol message is written.
      * <p>
      * The {@link EntityDescriptor#getLabel() label} of the entity will be automatically
-     * preppend to the generated message.
+     * prepend to the generated message.
      *
      * @param deleteMessageSupplier the supplier of the journal message
      * @return the object itself for fluent calls.
      */
     public DelegateJournalData withDeleteMessageSupplier(Supplier<String> deleteMessageSupplier) {
         this.deleteMessageSupplier = deleteMessageSupplier;
+        return this;
+    }
+
+    /**
+     * Defines the supplier responsible to deliver an identification text for the entity.
+     * <p>
+     * This is usually made of key-fields which uniquely identify the entity (without its parent).
+     *
+     * @param ownerKeySupplier the supplier of the key
+     * @return the object itself for fluent calls
+     */
+    public DelegateJournalData withKeySupplier(Supplier<String> ownerKeySupplier) {
+        this.ownerKeySupplier = ownerKeySupplier;
         return this;
     }
 
@@ -148,12 +167,20 @@ public class DelegateJournalData extends Composite {
 
     @AfterSave
     protected void onSave() {
-        createJournalEntry(changeMessageSupplier);
+        if (changeMessageSupplier != null) {
+            createJournalEntry(changeMessageSupplier);
+        } else {
+            createJournalEntry(this::buildChangeJournal);
+        }
     }
 
     @AfterDelete
     protected void onDelete() {
-        createJournalEntry(deleteMessageSupplier);
+        if (deleteMessageSupplier != null) {
+            createJournalEntry(deleteMessageSupplier);
+        } else {
+            createJournalEntry(this::buildDeleteJournal);
+        }
     }
 
     private void createJournalEntry(Supplier<String> messageSupplier) {
@@ -173,5 +200,53 @@ public class DelegateJournalData extends Composite {
         } catch (Exception e) {
             Exceptions.handle(e);
         }
+    }
+
+    private Stream<Property> fetchJournaledProperties() {
+        return owner.getDescriptor()
+                    .getProperties()
+                    .stream()
+                    .filter(property -> !property.getAnnotation(NoJournal.class).isPresent());
+    }
+
+    private String buildChangeJournal() {
+        if (ownerKeySupplier == null) {
+            return null;
+        }
+
+        StringBuilder changes = new StringBuilder(ownerKeySupplier.get());
+        changes.append("\n");
+        fetchJournaledProperties().filter(property -> property.getDescriptor().isChanged(owner, property))
+                                  .forEach(property -> {
+                                      changes.append("- ");
+                                      changes.append(property.getName());
+                                      changes.append(": ");
+                                      changes.append(NLS.toUserString(owner.getPersistedValue(property),
+                                                                      NLS.getDefaultLanguage()));
+                                      changes.append(" -> ");
+                                      changes.append(NLS.toUserString(property.getValue(owner),
+                                                                      NLS.getDefaultLanguage()));
+                                      changes.append("\n");
+                                  });
+
+        return changes.toString();
+    }
+
+    private String buildDeleteJournal() {
+        if (ownerKeySupplier == null) {
+            return null;
+        }
+
+        StringBuilder changes = new StringBuilder("Deleted: " + ownerKeySupplier.get());
+        changes.append("\n");
+        fetchJournaledProperties().forEach(property -> {
+            changes.append("- ");
+            changes.append(property.getName());
+            changes.append(": ");
+            changes.append(NLS.toUserString(owner.getPersistedValue(property), NLS.getDefaultLanguage()));
+            changes.append("\n");
+        });
+
+        return changes.toString();
     }
 }
