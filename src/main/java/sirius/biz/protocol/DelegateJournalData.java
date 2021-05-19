@@ -18,6 +18,7 @@ import sirius.db.mixing.annotations.AfterSave;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.Sirius;
+import sirius.kernel.commons.Monoflop;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
@@ -214,10 +215,13 @@ public class DelegateJournalData extends Composite {
             return null;
         }
 
+        Monoflop changesFound = Monoflop.create();
         StringBuilder changes = new StringBuilder(ownerKeySupplier.get());
         changes.append("\n");
         fetchJournaledProperties().filter(property -> property.getDescriptor().isChanged(owner, property))
                                   .forEach(property -> {
+                                      changesFound.toggle();
+
                                       changes.append("- ");
                                       changes.append(property.getName());
                                       changes.append(": ");
@@ -229,7 +233,11 @@ public class DelegateJournalData extends Composite {
                                       changes.append("\n");
                                   });
 
-        return changes.toString();
+        if (changesFound.isToggled()) {
+            return changes.toString();
+        } else {
+            return null;
+        }
     }
 
     private String buildDeleteJournal() {
