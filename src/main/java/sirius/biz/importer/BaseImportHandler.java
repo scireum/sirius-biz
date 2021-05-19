@@ -170,6 +170,14 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
      * @param data     the full context which is being imported
      */
     protected void parseProperty(E entity, Property property, Value value, Context data) {
+        if (property instanceof BaseEntityRefProperty) {
+            Class<?> referencedType = ((BaseEntityRefProperty<?, ?, ?>) property).getReferencedType();
+            if (value.is(referencedType)) {
+                property.parseValueFromImport(entity, value);
+                return;
+            }
+        }
+
         if (parseComplexProperty(entity, property, value, data)) {
             return;
         }
