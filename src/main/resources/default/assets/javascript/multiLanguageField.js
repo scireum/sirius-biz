@@ -525,9 +525,15 @@ MultiLanguageField.prototype.renderFlag = function (langCode) {
     } else {
         const _flag = document.createElement('img');
         _flag.classList.add('mls-language-flag');
-        _flag.src = '/assets/images/flags/' + langCode + '.png';
+        _flag.src = '/assets/images/flags/languages/' + langCode + '.png';
         _flag.alt = langCode;
         _flag.title = langCode;
+        // renders the question mark icon ('rest of world') if the requested flag can't be found
+        _flag.onerror = function imgError() {
+            this.onerror = '';
+            this.src = '/assets/images/flags/row.png';
+            return true;
+        }
         return _flag;
     }
 }
