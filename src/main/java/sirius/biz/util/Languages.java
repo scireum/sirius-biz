@@ -26,7 +26,7 @@ public class Languages {
     /**
      * Contains the name of the main lookup table which contains all known languages.
      */
-    private static final String LOOKUP_TABLE_ALL_LANGUAGES = "languages";
+    public static final String LOOKUP_TABLE_ALL_LANGUAGES = "languages";
 
     /**
      * Contains the name of the lookup table which contains all languages which are "active" / "shown to the user".
@@ -35,7 +35,7 @@ public class Languages {
      * be provided in select lists etc. Note that applications can also define their own sub sets for custom purposes
      * and still use the helper methods provided here.
      */
-    private static final String LOOKUP_TABLE_ACTIVE_LANGUAGES = "active-languages";
+    public static final String LOOKUP_TABLE_ACTIVE_LANGUAGES = "active-languages";
 
     /**
      * Contains the ISO 639-1 code to be used with {@link LookupTable#fetchMapping(String, String)} etc.
