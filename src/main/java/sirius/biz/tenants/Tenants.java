@@ -521,6 +521,7 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
                                                        .withUsername("Administrator")
                                                        .withTenantId(tenantId)
                                                        .withTenantName(tenantName)
+                                                       .withEveryPermission(true)
                                                        .build());
             return task.create();
         } finally {
