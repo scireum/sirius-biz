@@ -454,7 +454,7 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
     }
 
     /**
-     * Executes the given code as "Administrator".
+     * Executes the given code as (System-)"Administrator".
      * <p>
      * Like {@link UserInfo#NOBODY} this is an artificial user which belongs to the system tenant. Note that
      * this user has no proper user id but rather only supplies a tenant id and name. This can be used e.g.
@@ -463,6 +463,8 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
      *
      * @param task the task to execute
      * @throws Exception any exception which is thrown within the task will be propagated to the outside
+     * @see #asAdmin(Producer)
+     * @see #runAsAdminOfTenant(String, String, UnitOfWork)
      */
     public void runAsAdmin(UnitOfWork task) throws Exception {
         asAdmin(() -> {
@@ -472,21 +474,54 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
     }
 
     /**
-     * Executes the given code as "Administrator" and permits to return a value.
+     * Executes the given code as (System-)"Administrator" and permits to return a value.
      *
      * @param task the task to execute
      * @return the value as returned by the given task
      * @throws Exception any exception which is thrown within the task will be propagated to the outside
      * @see #runAsAdmin(UnitOfWork)
+     * @see #asAdminOfTenant(String, String, Producer)
      */
     public <R> R asAdmin(Producer<R> task) throws Exception {
+        return asAdminOfTenant(getSystemTenantId(), getSystemTenantName(), task);
+    }
+
+    /**
+     * Executes the given code as (Tenant-)"Administrator".
+     * <p>
+     * Like {@link UserInfo#NOBODY} this is an artificial user which belongs to the given tenant. Note that
+     * this user has no proper user id but rather only supplies a tenant id and name.
+     *
+     * @param task the task to execute
+     * @throws Exception any exception which is thrown within the task will be propagated to the outside
+     * @see #runAsAdmin(UnitOfWork)
+     * @see #asAdminOfTenant(String, String, Producer)
+     */
+    public void runAsAdminOfTenant(String tenantId, String tenantName, UnitOfWork task) throws Exception {
+        asAdminOfTenant(tenantId, tenantName, () -> {
+            task.execute();
+            return null;
+        });
+    }
+
+    /**
+     * Executes the given code as (Tenant-)"Administrator" and permits to return a value.
+     *
+     * @param task the task to execute
+     * @return the value as returned by the given task
+     * @throws Exception any exception which is thrown within the task will be propagated to the outside
+     * @see #runAsAdminOfTenant(String, String, UnitOfWork)
+     * @see #asAdmin(Producer)
+     */
+    public <R> R asAdminOfTenant(String tenantId, String tenantName, Producer<R> task) throws Exception {
         UserContext userContext = UserContext.get();
         UserInfo currentUser = userContext.getUser();
         try {
             userContext.setCurrentUser(UserInfo.Builder.createUser("ADMIN")
                                                        .withUsername("Administrator")
-                                                       .withTenantId(getSystemTenantId())
-                                                       .withTenantName(getSystemTenantName())
+                                                       .withTenantId(tenantId)
+                                                       .withTenantName(tenantName)
+                                                       .withEveryPermission(true)
                                                        .build());
             return task.create();
         } finally {
