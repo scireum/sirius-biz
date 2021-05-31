@@ -12,6 +12,7 @@ import sirius.biz.codelists.LookupValue;
 import sirius.biz.util.Countries;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
@@ -69,6 +70,11 @@ public class InternationalAddressData extends AddressData {
                                        LookupValue.CustomValues.ACCEPT,
                                        LookupValue.Display.NAME,
                                        LookupValue.Export.CODE);
+    }
+
+    @BeforeSave
+    protected void migrateLegacyCodes() {
+        country.setValue(countries.all().forcedNormalizeWithMapping(country.getValue(), Countries.MAPPING_LEGACY));
     }
 
     @Override

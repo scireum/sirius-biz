@@ -53,6 +53,11 @@ public class Countries {
      */
     public static final String MAPPING_ISO3 = "isoAlpha3";
 
+    /**
+     * Provides the name of a mapping used to migrate legacy language codes
+     */
+    public static final String MAPPING_LEGACY = "legacy";
+
     private static final String FIELD_ZIP_REGEX = "zipCodeRegEx";
 
     @Part

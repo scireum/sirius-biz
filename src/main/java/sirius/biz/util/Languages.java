@@ -52,13 +52,18 @@ public class Languages {
      */
     public static final String MAPPING_ISO_639_2T = "iso639-2T";
 
+    /**
+     * Provides the name of a mapping used to migrate legacy language codes
+     */
+    public static final String MAPPING_LEGACY = "legacy";
+
     @Part
     private LookupTables lookupTables;
 
     /**
      * Provides access to the underlying lookup table for all languages
      *
-     * @return the lookup table for all langauges
+     * @return the lookup table for all languages
      */
     public LookupTable all() {
         return lookupTables.fetchTable(LOOKUP_TABLE_ALL_LANGUAGES);
