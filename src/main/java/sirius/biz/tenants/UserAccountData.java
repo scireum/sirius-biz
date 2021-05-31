@@ -8,10 +8,12 @@
 
 package sirius.biz.tenants;
 
+import sirius.biz.codelists.LookupValue;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
+import sirius.biz.util.Languages;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
@@ -46,6 +48,8 @@ import java.util.function.Consumer;
  * Serveral users are grouped together by their company, which is referred to as {@link Tenant}.
  */
 public class UserAccountData extends Composite implements MessageProvider {
+    @Part
+    private static Languages languages;
 
     @Transient
     private final BaseEntity<?> userObject;
@@ -106,7 +110,7 @@ public class UserAccountData extends Composite implements MessageProvider {
     @Autoloaded
     @NullAllowed
     @Length(2)
-    private String lang;
+    private final LookupValue lang = new LookupValue(Languages.LOOKUP_TABLE_ACTIVE_LANGUAGES);
 
     @Part
     private static Mails ms;
@@ -361,12 +365,12 @@ public class UserAccountData extends Composite implements MessageProvider {
         this.externalLoginRequired = externalLoginRequired;
     }
 
-    public String getLang() {
+    public LookupValue getLang() {
         return lang;
     }
 
     public void setLang(String lang) {
-        this.lang = lang;
+        this.lang.setValue(lang);
     }
 
     public StringList getSubScopes() {
