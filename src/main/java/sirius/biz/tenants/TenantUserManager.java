@@ -175,18 +175,20 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     private static final String REMOVE_BY_TENANT_UNIQUE_NAME = "tenant-unique-name";
 
     protected static Cache<String, Tuple<Set<String>, String>> rolesCache =
-            CacheManager.<Tuple<Set<String>, String>>createCoherentCache("tenants-roles").addRemover(
-                    REMOVE_BY_TENANT_UNIQUE_NAME,
-                    (uniqueTenantName, entry) -> Strings.areEqual(uniqueTenantName, entry.getValue().getSecond()));
+            CacheManager.<Tuple<Set<String>, String>>createCoherentCache("tenants-roles")
+                        .addRemover(REMOVE_BY_TENANT_UNIQUE_NAME,
+                                    (uniqueTenantName, entry) -> Strings.areEqual(uniqueTenantName,
+                                                                                  entry.getValue().getSecond()));
 
     protected static Cache<String, UserAccount<?, ?>> userAccountCache =
             CacheManager.createCoherentCache("tenants-users");
     protected static Cache<String, Tenant<?>> tenantsCache = CacheManager.createCoherentCache("tenants-tenants");
 
     protected static Cache<String, Tuple<UserSettings, String>> configCache =
-            CacheManager.<Tuple<UserSettings, String>>createCoherentCache("tenants-configs").addRemover(
-                    REMOVE_BY_TENANT_UNIQUE_NAME,
-                    (uniqueTenantName, entry) -> Strings.areEqual(uniqueTenantName, entry.getValue().getSecond()));
+            CacheManager.<Tuple<UserSettings, String>>createCoherentCache("tenants-configs")
+                        .addRemover(REMOVE_BY_TENANT_UNIQUE_NAME,
+                                    (uniqueTenantName, entry) -> Strings.areEqual(uniqueTenantName,
+                                                                                  entry.getValue().getSecond()));
 
     protected TenantUserManager(ScopeInfo scope, Extension config) {
         super(scope, config);
@@ -345,7 +347,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             U currentUser = originalUser.getUserObject(getUserClass());
             U modifiedUser = getUserClass().getDeclaredConstructor().newInstance();
             modifiedUser.setId(currentUser.getId());
-            modifiedUser.getUserAccountData().setLang(currentUser.getUserAccountData().getLang());
+            modifiedUser.getUserAccountData().setLang(currentUser.getUserAccountData().getLang().getValue());
             modifiedUser.getUserAccountData()
                         .getLogin()
                         .setUsername(currentUser.getUserAccountData().getLogin().getUsername());
@@ -1018,8 +1020,8 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         if (userAccount == null) {
             return NLS.getDefaultLanguage();
         }
-        return Strings.firstFilled(userAccount.getUserAccountData().getLang(),
-                                   userAccount.getTenant().fetchValue().getTenantData().getLang(),
+        return Strings.firstFilled(userAccount.getUserAccountData().getLang().getValue(),
+                                   userAccount.getTenant().fetchValue().getTenantData().getLang().getValue(),
                                    NLS.getDefaultLanguage());
     }
 }
