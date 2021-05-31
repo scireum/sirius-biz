@@ -126,6 +126,11 @@ public class UserAccountData extends Composite implements MessageProvider {
     }
 
     @BeforeSave
+    protected void migrateLegacyCodes() {
+        lang.setValue(languages.all().forcedNormalizeWithMapping(lang.getValue(), Languages.MAPPING_LEGACY));
+    }
+
+    @BeforeSave
     protected void verifyData() {
         userObject.ifChangedAndFilled(UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                    .inner(PersonData.SALUTATION),

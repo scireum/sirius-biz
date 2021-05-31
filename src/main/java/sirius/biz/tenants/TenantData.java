@@ -300,6 +300,11 @@ public class TenantData extends Composite implements Journaled {
         tenants.flushTenantChildrenCache();
     }
 
+    @BeforeSave
+    protected void migrateLegacyCodes() {
+        lang.setValue(languages.all().forcedNormalizeWithMapping(lang.getValue(), Languages.MAPPING_LEGACY));
+    }
+
     @OnValidate
     protected void validate(Consumer<String> validationConsumer) {
         address.validateCountry(null, validationConsumer);
