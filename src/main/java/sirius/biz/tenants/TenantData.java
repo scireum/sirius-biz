@@ -10,12 +10,14 @@ package sirius.biz.tenants;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import sirius.biz.codelists.LookupValue;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.model.InternationalAddressData;
 import sirius.biz.mongo.PrefixSearchContent;
 import sirius.biz.packages.PackageData;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.protocol.Journaled;
+import sirius.biz.util.Languages;
 import sirius.biz.web.Autoloaded;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
@@ -49,6 +51,9 @@ import java.util.function.Consumer;
  * Represents a tenant using the system.
  */
 public class TenantData extends Composite implements Journaled {
+
+    @Part
+    private static Languages languages;
 
     @Transient
     private final BaseEntity<?> tenantObject;
@@ -260,7 +265,7 @@ public class TenantData extends Composite implements Journaled {
     @NullAllowed
     @Autoloaded
     @Length(2)
-    private String lang;
+    private final LookupValue lang = new LookupValue(Languages.LOOKUP_TABLE_ACTIVE_LANGUAGES);
 
     @Part
     @Nullable
@@ -546,12 +551,12 @@ public class TenantData extends Composite implements Journaled {
         return journal;
     }
 
-    public String getLang() {
+    public LookupValue getLang() {
         return lang;
     }
 
     public void setLang(String lang) {
-        this.lang = lang;
+        this.lang.setValue(lang);
     }
 
     public PackageData getPackageData() {
