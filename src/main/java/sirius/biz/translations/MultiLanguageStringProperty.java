@@ -130,7 +130,8 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                                .filter(value -> Strings.isFilled(value) && value.length() > this.length)
                                .findFirst()
                                .ifPresent(value -> {
-                                   throw Exceptions.createHandled().withNLSKey("StringProperty.dataTruncation")
+                                   throw Exceptions.createHandled()
+                                                   .withNLSKey("StringProperty.dataTruncation")
                                                    .set("value", Strings.limit(value, 30))
                                                    .set(PARAM_FIELD, this.getFullLabel())
                                                    .set("length", value.length())
@@ -157,13 +158,14 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                                .entrySet()
                                .stream()
                                .filter(entry -> Strings.isEmpty(entry.getValue()))
-                               .findAny().ifPresent(entry -> {
-                throw Exceptions.createHandled()
-                                .error(new InvalidFieldException(getName()))
-                                .withNLSKey("MultiLanguageStringProperty.empty")
-                                .set(PARAM_FIELD, getFullLabel())
-                                .handle();
-            });
+                               .findAny()
+                               .ifPresent(entry -> {
+                                   throw Exceptions.createHandled()
+                                                   .error(new InvalidFieldException(getName()))
+                                                   .withNLSKey("MultiLanguageStringProperty.empty")
+                                                   .set(PARAM_FIELD, getFullLabel())
+                                                   .handle();
+                               });
         }
     }
 
