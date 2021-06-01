@@ -11,6 +11,8 @@ package sirius.biz.translations;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.bson.Document;
+import sirius.biz.codelists.LookupTable;
+import sirius.biz.util.Languages;
 import sirius.biz.web.ComplexLoadProperty;
 import sirius.db.es.ESPropertyInfo;
 import sirius.db.es.IndexMappings;
@@ -30,6 +32,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
@@ -59,6 +62,9 @@ import java.util.function.Consumer;
  */
 public class MultiLanguageStringProperty extends BaseMapProperty
         implements SQLPropertyInfo, ESPropertyInfo, ComplexLoadProperty {
+
+    @Part
+    private static Languages languages;
 
     private static final String LANGUAGE_PROPERTY = "lang";
     private static final String TEXT_PROPERTY = "text";
@@ -111,22 +117,11 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     @Override
     protected void onBeforeSaveChecks(Object entity) {
         MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
-        if (!multiLanguageString.getValidLanguages().isEmpty()) {
-            multiLanguageString.data()
-                               .entrySet()
-                               .stream()
-                               .filter(entry -> !Strings.areEqual(entry.getKey(), MultiLanguageString.FALLBACK_KEY))
-                               .filter(entry -> !multiLanguageString.getValidLanguages().contains(entry.getKey()))
-                               .findAny()
-                               .ifPresent(entry -> {
-                                   throw Exceptions.createHandled()
-                                                   .withNLSKey("MultiLanguageString.invalidLanguage")
-                                                   .set("language", entry.getKey())
-                                                   .set("text", entry.getValue())
-                                                   .set(PARAM_FIELD, getField().getName())
-                                                   .handle();
-                               });
-        }
+        Map<String, String> migratedMap = new LinkedHashMap<>();
+        multiLanguageString.data().forEach((key, value) -> migratedMap.put(migrateLanguageCode(key), value));
+        multiLanguageString.setData(migratedMap);
+
+        validateLanguages(multiLanguageString);
 
         if (this.length > 0) {
             multiLanguageString.data()
@@ -135,8 +130,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                                .filter(value -> Strings.isFilled(value) && value.length() > this.length)
                                .findFirst()
                                .ifPresent(value -> {
-                                   throw Exceptions.createHandled()
-                                                   .withNLSKey("StringProperty.dataTruncation")
+                                   throw Exceptions.createHandled().withNLSKey("StringProperty.dataTruncation")
                                                    .set("value", Strings.limit(value, 30))
                                                    .set(PARAM_FIELD, this.getFullLabel())
                                                    .set("length", value.length())
@@ -163,15 +157,40 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                                .entrySet()
                                .stream()
                                .filter(entry -> Strings.isEmpty(entry.getValue()))
-                               .findAny()
-                               .ifPresent(entry -> {
-                                   throw Exceptions.createHandled()
-                                                   .error(new InvalidFieldException(getName()))
-                                                   .withNLSKey("MultiLanguageStringProperty.empty")
-                                                   .set(PARAM_FIELD, getFullLabel())
-                                                   .handle();
-                               });
+                               .findAny().ifPresent(entry -> {
+                throw Exceptions.createHandled()
+                                .error(new InvalidFieldException(getName()))
+                                .withNLSKey("MultiLanguageStringProperty.empty")
+                                .set(PARAM_FIELD, getFullLabel())
+                                .handle();
+            });
         }
+    }
+
+    private String migrateLanguageCode(String lang) {
+        return languages.all().forcedNormalizeWithMapping(lang, Languages.MAPPING_LEGACY);
+    }
+
+    private void validateLanguages(MultiLanguageString multiLanguageString) {
+        LookupTable lookupTable = multiLanguageString.getLookupTable();
+        if (lookupTable == null && multiLanguageString.getValidLanguages().isEmpty()) {
+            return;
+        }
+        multiLanguageString.data()
+                           .entrySet()
+                           .stream()
+                           .filter(entry -> !Strings.areEqual(entry.getKey(), MultiLanguageString.FALLBACK_KEY))
+                           .filter(entry -> !multiLanguageString.getValidLanguages().contains(entry.getKey()))
+                           .filter(entry -> lookupTable == null || !lookupTable.normalize(entry.getKey()).isPresent())
+                           .findAny()
+                           .ifPresent(entry -> {
+                               throw Exceptions.createHandled()
+                                               .withNLSKey("MultiLanguageString.invalidLanguage")
+                                               .set("language", entry.getKey())
+                                               .set("text", entry.getValue())
+                                               .set(PARAM_FIELD, getField().getName())
+                                               .handle();
+                           });
     }
 
     /**
@@ -212,7 +231,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
             for (Document document : (List<Document>) valueObject) {
                 Object textValue = document.get(TEXT_PROPERTY);
                 if (textValue != null) {
-                    texts.put(document.get(LANGUAGE_PROPERTY).toString(), textValue.toString());
+                    texts.put(migrateLanguageCode(document.get(LANGUAGE_PROPERTY).toString()), textValue.toString());
                 }
             }
         }
@@ -225,7 +244,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
         List<Document> texts = new ArrayList<>();
         ((Map<String, String>) object).forEach((language, text) -> {
             Document doc = new Document();
-            doc.put(LANGUAGE_PROPERTY, language);
+            doc.put(LANGUAGE_PROPERTY, migrateLanguageCode(language));
             doc.put(TEXT_PROPERTY, text);
             texts.add(doc);
         });
@@ -239,7 +258,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
         if (value instanceof JSONObject) {
             ((JSONObject) value).forEach((language, text) -> {
                 if (text instanceof String) {
-                    result.put(language, (String) text);
+                    result.put(migrateLanguageCode(language), (String) text);
                 }
             });
         }
@@ -250,7 +269,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     @SuppressWarnings("unchecked")
     protected Object transformToElastic(Object object) {
         JSONObject texts = new JSONObject();
-        ((Map<String, String>) object).forEach(texts::put);
+        ((Map<String, String>) object).forEach((key, value) -> texts.put(migrateLanguageCode(key), value));
         return texts;
     }
 
@@ -265,9 +284,8 @@ public class MultiLanguageStringProperty extends BaseMapProperty
         }
 
         if (Strings.isFilled(fallbackAndMap.getSecond())) {
-            JSON.parseObject(fallbackAndMap.getSecond()).forEach((key, value) -> {
-                texts.put(key, value.toString());
-            });
+            JSON.parseObject(fallbackAndMap.getSecond())
+                .forEach((key, value) -> texts.put(migrateLanguageCode(key), value.toString()));
         }
 
         return texts;
@@ -287,7 +305,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
             texts.entrySet()
                  .stream()
                  .filter(entry -> !MultiLanguageString.FALLBACK_KEY.equals(entry.getKey()))
-                 .forEach(entry -> textMap.put(entry.getKey(), entry.getValue()));
+                 .forEach(entry -> textMap.put(migrateLanguageCode(entry.getKey()), entry.getValue()));
             data.append(I18N_MAP_SEPARATOR);
             data.append(textMap.toJSONString());
         }
@@ -327,6 +345,13 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                 String parameterName = getPropertyName() + "-" + code;
                 if (webContext.hasParameter(parameterName)) {
                     multiLanguageString.addText(code, webContext.getParameter(parameterName));
+                } else {
+                    languages.all().fetchMapping(code, Languages.MAPPING_LEGACY).ifPresent(legacyCode -> {
+                        String legacyParameterName = getPropertyName() + "-" + legacyCode;
+                        if (webContext.hasParameter(legacyParameterName)) {
+                            multiLanguageString.addText(code, webContext.getParameter(legacyParameterName));
+                        }
+                    });
                 }
             });
         }
@@ -339,5 +364,4 @@ public class MultiLanguageStringProperty extends BaseMapProperty
         MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
         multiLanguageString.setFallback(values.at(0).getString());
     }
-
 }
