@@ -48,8 +48,6 @@ import java.util.function.Consumer;
  * Serveral users are grouped together by their company, which is referred to as {@link Tenant}.
  */
 public class UserAccountData extends Composite implements MessageProvider {
-    @Part
-    private static Languages languages;
 
     @Transient
     private final BaseEntity<?> userObject;
@@ -123,11 +121,6 @@ public class UserAccountData extends Composite implements MessageProvider {
     public UserAccountData(BaseEntity<?> userObject) {
         this.userObject = userObject;
         this.permissions = new PermissionData(userObject);
-    }
-
-    @BeforeSave
-    protected void migrateLegacyCodes() {
-        lang.setValue(languages.all().forcedNormalizeWithMapping(lang.getValue(), Languages.MAPPING_LEGACY));
     }
 
     @BeforeSave
