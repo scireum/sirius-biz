@@ -347,7 +347,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
             U currentUser = originalUser.getUserObject(getUserClass());
             U modifiedUser = getUserClass().getDeclaredConstructor().newInstance();
             modifiedUser.setId(currentUser.getId());
-            modifiedUser.getUserAccountData().setLang(currentUser.getUserAccountData().getLang().getValue());
+            modifiedUser.getUserAccountData().getLang().setValue(currentUser.getUserAccountData().getLang().getValue());
             modifiedUser.getUserAccountData()
                         .getLogin()
                         .setUsername(currentUser.getUserAccountData().getLogin().getUsername());

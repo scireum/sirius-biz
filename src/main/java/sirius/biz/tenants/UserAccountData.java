@@ -276,7 +276,7 @@ public class UserAccountData extends Composite implements MessageProvider {
      * @return a short string used to address the person
      */
     public String getAddressableName() {
-        if (hasName() && (Strings.isFilled(getPerson().getSalutation()) || Strings.isFilled(getPerson().getTitle()))) {
+        if (hasName() && (getPerson().getSalutation().isFilled() || Strings.isFilled(getPerson().getTitle()))) {
             return getPerson().getAddressableName();
         }
         return toString();
@@ -365,10 +365,6 @@ public class UserAccountData extends Composite implements MessageProvider {
 
     public LookupValue getLang() {
         return lang;
-    }
-
-    public void setLang(String lang) {
-        this.lang.setValue(lang);
     }
 
     public StringList getSubScopes() {
