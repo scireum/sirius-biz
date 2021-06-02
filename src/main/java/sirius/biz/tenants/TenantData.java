@@ -552,10 +552,6 @@ public class TenantData extends Composite implements Journaled {
         return lang;
     }
 
-    public void setLang(String lang) {
-        this.lang.setValue(lang);
-    }
-
     public PackageData getPackageData() {
         return packageData;
     }
