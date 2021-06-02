@@ -52,9 +52,6 @@ import java.util.function.Consumer;
  */
 public class TenantData extends Composite implements Journaled {
 
-    @Part
-    private static Languages languages;
-
     @Transient
     private final BaseEntity<?> tenantObject;
 
@@ -298,11 +295,6 @@ public class TenantData extends Composite implements Journaled {
     protected void onDelete() {
         TenantUserManager.flushCacheForTenant((Tenant<?>) tenantObject);
         tenants.flushTenantChildrenCache();
-    }
-
-    @BeforeSave
-    protected void migrateLegacyCodes() {
-        lang.setValue(languages.all().forcedNormalizeWithMapping(lang.getValue(), Languages.MAPPING_LEGACY));
     }
 
     @OnValidate

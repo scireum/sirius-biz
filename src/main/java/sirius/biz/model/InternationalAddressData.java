@@ -72,11 +72,6 @@ public class InternationalAddressData extends AddressData {
                                        LookupValue.Export.CODE);
     }
 
-    @BeforeSave
-    protected void migrateLegacyCodes() {
-        country.setValue(countries.all().forcedNormalizeWithMapping(country.getValue(), Countries.MAPPING_LEGACY));
-    }
-
     @Override
     public boolean areAllFieldsEmpty() {
         return super.areAllFieldsEmpty() && Strings.isEmpty(country);
