@@ -8,6 +8,7 @@
 
 package sirius.biz.translations
 
+import sirius.biz.tenants.TenantsHelper
 import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.async.CallContext
@@ -20,6 +21,7 @@ class SQLMultiLanguageStringPropertySpec extends BaseSpecification {
 
     def "store retrieve and validate"() {
         given:
+        TenantsHelper.installTestTenant()
         def entity = new SQLMultiLanguageStringEntity()
         entity.getMultiLangText().addText("de", "Schmetterling")
         entity.getMultiLangText().addText("en", "Butterfly")
