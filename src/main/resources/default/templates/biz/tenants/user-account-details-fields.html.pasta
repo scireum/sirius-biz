@@ -12,7 +12,7 @@
 
 <div class="row">
     <w:codelistSelect span="3" name="userAccountData_person_salutation" list="salutations"
-                      value="@account.getUserAccountData().getPerson().getSalutation()"
+                      value="@account.getUserAccountData().getPerson().getSalutation().getValue()"
                       labelKey="PersonData.salutation" optional="true"/>
     <w:textfield span="3" name="userAccountData_person_title"
                  value="@account.getUserAccountData().getPerson().getTitle()" labelKey="PersonData.title"/>

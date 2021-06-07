@@ -59,7 +59,7 @@
                     <w:codelistSelect
                             span="6"
                             name="userAccountData_person_salutation"
-                            value="@userAccount.getUserAccountData().getPerson().getSalutation()"
+                            value="@userAccount.getUserAccountData().getPerson().getSalutation().getValue()"
                             labelKey="PersonData.salutation"
                             list="salutations"
                             optional="true"/>
