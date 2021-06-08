@@ -8,6 +8,7 @@
 
 package sirius.biz.translations;
 
+import sirius.biz.codelists.LookupTables;
 import sirius.biz.util.Languages;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.mixing.Mapping;
@@ -19,9 +20,10 @@ import sirius.kernel.di.std.Part;
  */
 public class SQLMultiLanguageStringEntity extends SQLEntity {
     @Part
-    private static Languages languages;
+    private static LookupTables lookupTables;
 
-    private final MultiLanguageString multiLangTextWithLookupTable = new MultiLanguageString().withLookupTable(languages.all());
+    private final MultiLanguageString multiLangTextWithLookupTable =
+            new MultiLanguageString().withLookupTable(lookupTables.fetchTable(Languages.LOOKUP_TABLE_ALL_LANGUAGES));
 
     public static final Mapping MULTILANGTEXT = Mapping.named("multiLangText");
     @NullAllowed
