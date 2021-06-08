@@ -124,6 +124,6 @@ public abstract class BaseEntityBatchEmitter<I, C extends Constraint, B extends 
             queryExtender.accept(query);
         }
 
-        ((Query<?, E, C>) query).queryList().forEach(entityConsumer);
+        ((Query<?, E, C>) query).iterateAll(entityConsumer);
     }
 }
