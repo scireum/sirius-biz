@@ -26,6 +26,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
 
     def "invalid language"() {
         given:
+        TenantsHelper.installTestTenant()
         def entity = new MongoMultiLanguageStringEntity()
         entity.getMultiLangTextWithValidLanguages().addText("00", "some text")
 
@@ -38,6 +39,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
 
     def "invalid language in composite"() {
         given:
+        TenantsHelper.installTestTenant()
         def entity = new MongoMultiLanguageStringEntity()
         entity.getMultiLangComposite().getCompositeMultiLangTextWithValidLanguages().addText("00", "some text")
 
@@ -50,6 +52,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
 
     def "invalid language in mixin"() {
         given:
+        TenantsHelper.installTestTenant()
         def entity = new MongoMultiLanguageStringEntityWithMixin()
         entity.as(MongoMultiLanguageStringMixin.class).getMixinMultiLangTextWithValidLanguages().addText("00", "some text")
 
