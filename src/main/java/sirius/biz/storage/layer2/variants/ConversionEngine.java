@@ -178,55 +178,60 @@ public class ConversionEngine {
         Watch queueWatch = Watch.start();
         tasks.executor(EXECUTOR_STORAGE_CONVERSION)
              .dropOnOverload(() -> result.fail(new IllegalStateException("Conversion subsystem overloaded!")))
-             .fork(() -> {
-                 try {
-                     conversionProcess.recordQueueDuration(queueWatch.elapsedMillis());
-                     Converter converter = fetchConverter(conversionProcess.getVariantName());
-                     if (converter == null) {
-                         // We use a handled exception here as the error has already been reported and we do not want to jam
-                         // the logs with additional error reports for the same problem.
-                         throw Exceptions.createHandled()
-                                         .withSystemErrorMessage("A configuration problem is present for: %s",
-                                                                 conversionProcess.getVariantName())
-                                         .handle();
-                     }
-
-                     converter.performConversion(conversionProcess);
-                     FileHandle resultFileHandle = conversionProcess.getResultFileHandle();
-                     if (resultFileHandle == null
-                         || !resultFileHandle.exists()
-                         || resultFileHandle.getFile().length() == 0) {
-                         if (resultFileHandle != null) {
-                             resultFileHandle.close();
-                         }
-                         processes.executeInStandbyProcessForCurrentTenant("conversion",
-                                                                           () -> NLS.get("ConversionEngine.processTitle"),
-                                                                           processContext -> processContext.log(
-                                                                                   ProcessLog.error()
-                                                                                             .withNLSKey(
-                                                                                                     "ConversionEngine.emptyResult")
-                                                                                             .withContext("variantName",
-                                                                                                          conversionProcess
-                                                                                                                  .getVariantName())
-                                                                                             .withContext("filename",
-                                                                                                          conversionProcess
-                                                                                                                  .getBlobToConvert()
-                                                                                                                  .getFilename())));
-                         throw new IllegalArgumentException(Strings.apply(
-                                 "The conversion engine created an empty result for variant %s of %s (%s)",
-                                 conversionProcess.getVariantName(),
-                                 conversionProcess.getBlobToConvert().getFilename(),
-                                 conversionProcess.getBlobToConvert().getBlobKey()));
-                     }
-
-                     conversionDuration.addValue(conversionProcess.getConversionDuration());
-                     result.success();
-                 } catch (Exception e) {
-                     result.fail(e);
-                 }
-             });
+             .fork(() -> doConversion(conversionProcess, result, queueWatch));
 
         return result;
+    }
+
+    private void doConversion(ConversionProcess conversionProcess, Future result, Watch queueWatch) {
+        try {
+            conversionProcess.recordQueueDuration(queueWatch.elapsedMillis());
+            Converter converter = fetchConverter(conversionProcess.getVariantName());
+            if (converter == null) {
+                // We use a handled exception here as the error has already been reported and we do not want to jam
+                // the logs with additional error reports for the same problem.
+                throw Exceptions.createHandled()
+                                .withSystemErrorMessage("A configuration problem is present for: %s",
+                                                        conversionProcess.getVariantName())
+                                .handle();
+            }
+
+            converter.performConversion(conversionProcess);
+            FileHandle resultFileHandle = conversionProcess.getResultFileHandle();
+            if (resultFileHandle == null || !resultFileHandle.exists() || resultFileHandle.getFile().length() == 0) {
+                handleEmptyResult(conversionProcess, resultFileHandle);
+            }
+
+            conversionDuration.addValue(conversionProcess.getConversionDuration());
+            result.success();
+        } catch (Exception e) {
+            result.fail(e);
+        }
+    }
+
+    private void handleEmptyResult(ConversionProcess conversionProcess, FileHandle resultFileHandle) {
+        if (resultFileHandle != null) {
+            resultFileHandle.close();
+        }
+        processes.executeInStandbyProcessForCurrentTenant("conversion",
+                                                          () -> NLS.get("ConversionEngine.processTitle"),
+                                                          processContext -> processContext.log(ProcessLog.error()
+                                                                                                         .withNLSKey(
+                                                                                                                 "ConversionEngine.emptyResult")
+                                                                                                         .withContext(
+                                                                                                                 "variantName",
+                                                                                                                 conversionProcess
+                                                                                                                         .getVariantName())
+                                                                                                         .withContext(
+                                                                                                                 "filename",
+                                                                                                                 conversionProcess
+                                                                                                                         .getBlobToConvert()
+                                                                                                                         .getFilename())));
+        throw new IllegalArgumentException(Strings.apply(
+                "The conversion engine created an empty result for variant %s of %s (%s)",
+                conversionProcess.getVariantName(),
+                conversionProcess.getBlobToConvert().getFilename(),
+                conversionProcess.getBlobToConvert().getBlobKey()));
     }
 
     /**
