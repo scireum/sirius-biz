@@ -8,10 +8,12 @@
 
 package sirius.biz.storage.layer2.variants;
 
+import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.biz.tenants.Tenants;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.Future;
 import sirius.kernel.async.Tasks;
@@ -64,6 +66,9 @@ public class ConversionEngine {
 
     @Part
     private Processes processes;
+
+    @Part
+    private Tenants<?, ?, ?> tenants;
 
     /**
      * When delivering files (e.g. preview images to be shown in the browser), we normally don't bother to lookup the
@@ -213,25 +218,24 @@ public class ConversionEngine {
         if (resultFileHandle != null) {
             resultFileHandle.close();
         }
-        processes.executeInStandbyProcessForCurrentTenant("conversion",
-                                                          () -> NLS.get("ConversionEngine.processTitle"),
-                                                          processContext -> processContext.log(ProcessLog.error()
-                                                                                                         .withNLSKey(
-                                                                                                                 "ConversionEngine.emptyResult")
-                                                                                                         .withContext(
-                                                                                                                 "variantName",
-                                                                                                                 conversionProcess
-                                                                                                                         .getVariantName())
-                                                                                                         .withContext(
-                                                                                                                 "filename",
-                                                                                                                 conversionProcess
-                                                                                                                         .getBlobToConvert()
-                                                                                                                         .getFilename())));
+        processes.executeInStandbyProcess("conversion",
+                                          () -> NLS.get("ConversionEngine.processTitle"),
+                                          conversionProcess.getBlobToConvert().getTenantId(),
+                                          () -> tenants.fetchCachedTenantName(conversionProcess.getBlobToConvert()
+                                                                                               .getTenantId()),
+                                          processContext -> createErrorLog(conversionProcess, processContext));
         throw new IllegalArgumentException(Strings.apply(
                 "The conversion engine created an empty result for variant %s of %s (%s)",
                 conversionProcess.getVariantName(),
                 conversionProcess.getBlobToConvert().getFilename(),
                 conversionProcess.getBlobToConvert().getBlobKey()));
+    }
+
+    private void createErrorLog(ConversionProcess conversionProcess, ProcessContext processContext) {
+        processContext.log(ProcessLog.error()
+                                     .withNLSKey("ConversionEngine.emptyResult")
+                                     .withContext("variantName", conversionProcess.getVariantName())
+                                     .withContext("filename", conversionProcess.getBlobToConvert().getFilename()));
     }
 
     /**
