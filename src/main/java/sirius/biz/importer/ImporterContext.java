@@ -79,7 +79,7 @@ public class ImporterContext {
         ImportHandler<E> result = (ImportHandler<E>) handlers.get(type);
         if (result == null) {
             // Note: computeIfAbsent cannot be used as a handler might reference other handlers. Those handler's
-            // resolution would result in a ConcurrentModificationException in the #helpers Map.
+            // resolution would result in a ConcurrentModificationException in the #handlers Map.
             // This leads to cyclic handler dependencies not being resolvable here.
             result = (ImportHandler<E>) lookupHandler(type, type);
             handlers.put(type, result);
