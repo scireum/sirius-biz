@@ -30,18 +30,18 @@ import java.util.Map;
  */
 public class ImporterContext {
 
-    private Importer importer;
+    private final Importer importer;
     private BatchContext batchContext;
 
     @PriorityParts(ImportHandlerFactory.class)
     private static List<ImportHandlerFactory> factories;
 
-    private Map<Class<?>, ImportHandler<?>> handlers = new HashMap<>();
-    private Map<Class<?>, ImportHelper> helpers = new HashMap<>();
+    private final Map<Class<?>, ImportHandler<?>> handlers = new HashMap<>();
+    private final Map<Class<?>, ImportHelper> helpers = new HashMap<>();
 
-    private Cache<Tuple<Class<?>, String>, Object> localCache = CacheBuilder.newBuilder().maximumSize(256).build();
+    private final Cache<Tuple<Class<?>, String>, Object> localCache = CacheBuilder.newBuilder().maximumSize(256).build();
 
-    private List<Runnable> postCommitCallbacks = new ArrayList<>();
+    private final List<Runnable> postCommitCallbacks = new ArrayList<>();
 
     /**
      * Specifies the maximum number of post commit callbacks to keep around before a {@link #commit()} is forced.
