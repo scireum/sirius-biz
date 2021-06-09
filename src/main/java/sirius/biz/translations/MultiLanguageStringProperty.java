@@ -341,6 +341,13 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                 String parameterName = getPropertyName() + "-" + code;
                 if (webContext.hasParameter(parameterName)) {
                     multiLanguageString.addText(code, webContext.getParameter(parameterName));
+                } else {
+                    languages.all().fetchMapping(code, Languages.MAPPING_LEGACY).ifPresent(legacyCode -> {
+                        String legacyParameterName = getPropertyName() + "-" + legacyCode;
+                        if (webContext.hasParameter(legacyParameterName)) {
+                            multiLanguageString.addText(code, webContext.getParameter(legacyParameterName));
+                        }
+                    });
                 }
             });
         }
@@ -353,5 +360,4 @@ public class MultiLanguageStringProperty extends BaseMapProperty
         MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
         multiLanguageString.setFallback(values.at(0).getString());
     }
-
 }
