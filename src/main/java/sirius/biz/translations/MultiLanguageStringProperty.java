@@ -11,6 +11,8 @@ package sirius.biz.translations;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.bson.Document;
+import sirius.biz.codelists.LookupTable;
+import sirius.biz.util.Languages;
 import sirius.biz.web.ComplexLoadProperty;
 import sirius.db.es.ESPropertyInfo;
 import sirius.db.es.IndexMappings;
@@ -30,6 +32,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
@@ -59,6 +62,9 @@ import java.util.function.Consumer;
  */
 public class MultiLanguageStringProperty extends BaseMapProperty
         implements SQLPropertyInfo, ESPropertyInfo, ComplexLoadProperty {
+
+    @Part
+    private static Languages languages;
 
     private static final String LANGUAGE_PROPERTY = "lang";
     private static final String TEXT_PROPERTY = "text";
@@ -111,22 +117,8 @@ public class MultiLanguageStringProperty extends BaseMapProperty
     @Override
     protected void onBeforeSaveChecks(Object entity) {
         MultiLanguageString multiLanguageString = getMultiLanguageString(entity);
-        if (!multiLanguageString.getValidLanguages().isEmpty()) {
-            multiLanguageString.data()
-                               .entrySet()
-                               .stream()
-                               .filter(entry -> !Strings.areEqual(entry.getKey(), MultiLanguageString.FALLBACK_KEY))
-                               .filter(entry -> !multiLanguageString.getValidLanguages().contains(entry.getKey()))
-                               .findAny()
-                               .ifPresent(entry -> {
-                                   throw Exceptions.createHandled()
-                                                   .withNLSKey("MultiLanguageString.invalidLanguage")
-                                                   .set("language", entry.getKey())
-                                                   .set("text", entry.getValue())
-                                                   .set(PARAM_FIELD, getField().getName())
-                                                   .handle();
-                               });
-        }
+
+        validateLanguages(multiLanguageString);
 
         if (this.length > 0) {
             multiLanguageString.data()
@@ -172,6 +164,28 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                                                    .handle();
                                });
         }
+    }
+
+    private void validateLanguages(MultiLanguageString multiLanguageString) {
+        LookupTable lookupTable = multiLanguageString.getLookupTable();
+        if (lookupTable == null && multiLanguageString.getValidLanguages().isEmpty()) {
+            return;
+        }
+        multiLanguageString.data()
+                           .entrySet()
+                           .stream()
+                           .filter(entry -> !Strings.areEqual(entry.getKey(), MultiLanguageString.FALLBACK_KEY))
+                           .filter(entry -> !multiLanguageString.getValidLanguages().contains(entry.getKey()))
+                           .filter(entry -> lookupTable == null || !lookupTable.normalize(entry.getKey()).isPresent())
+                           .findAny()
+                           .ifPresent(entry -> {
+                               throw Exceptions.createHandled()
+                                               .withNLSKey("MultiLanguageString.invalidLanguage")
+                                               .set("language", entry.getKey())
+                                               .set("text", entry.getValue())
+                                               .set(PARAM_FIELD, getField().getName())
+                                               .handle();
+                           });
     }
 
     /**
