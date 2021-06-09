@@ -54,7 +54,7 @@ public class Countries {
     public static final String MAPPING_ISO3 = "isoAlpha3";
 
     /**
-     * Provides the name of a mapping used to migrate legacy language codes
+     * Provides the name of a mapping used to migrate legacy country codes
      */
     public static final String MAPPING_LEGACY = "legacy";
 
