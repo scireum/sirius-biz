@@ -8,6 +8,7 @@
 
 package sirius.biz.translations
 
+import sirius.biz.tenants.TenantsHelper
 import sirius.db.mongo.Mango
 import sirius.db.mongo.Mongo
 import sirius.kernel.BaseSpecification
@@ -25,6 +26,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
 
     def "invalid language"() {
         given:
+        TenantsHelper.installTestTenant()
         def entity = new MongoMultiLanguageStringEntity()
         entity.getMultiLangTextWithValidLanguages().addText("00", "some text")
 
@@ -37,6 +39,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
 
     def "invalid language in composite"() {
         given:
+        TenantsHelper.installTestTenant()
         def entity = new MongoMultiLanguageStringEntity()
         entity.getMultiLangComposite().getCompositeMultiLangTextWithValidLanguages().addText("00", "some text")
 
@@ -49,6 +52,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
 
     def "invalid language in mixin"() {
         given:
+        TenantsHelper.installTestTenant()
         def entity = new MongoMultiLanguageStringEntityWithMixin()
         entity.as(MongoMultiLanguageStringMixin.class).getMixinMultiLangTextWithValidLanguages().addText("00", "some text")
 
@@ -90,6 +94,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
 
     def "store retrieve and validate"() {
         given:
+        TenantsHelper.installTestTenant()
         def entity = new MongoMultiLanguageStringEntity()
         entity.getMultiLangText().addText("de", "Schmetterling")
         entity.getMultiLangText().addText("en", "Butterfly")
@@ -127,6 +132,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
 
     def "store using default language"() {
         given:
+        TenantsHelper.installTestTenant()
         CallContext.getCurrent().setLang("en")
         def entity = new MongoMultiLanguageStringEntity()
         entity.getMultiLangText().addText("Butterfly")
@@ -142,6 +148,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
 
     def "raw data check"() {
         given:
+        TenantsHelper.installTestTenant()
         def entity = new MongoMultiLanguageStringEntity()
         entity.getMultiLangText().addText("pt", "Borboleta")
         entity.getMultiLangText().addText("es", "Mariposa")
@@ -174,6 +181,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
 
     def "fallback can be added and retrieved"() {
         given:
+        TenantsHelper.installTestTenant()
         def entity = new MongoMultiLanguageStringEntity()
         entity.getMultiLangTextWithFallback().addText("de", "In Ordnung")
         entity.getMultiLangTextWithFallback().addText("en", "Fine")
@@ -217,6 +225,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
 
     def "new null values are not stored"() {
         given:
+        TenantsHelper.installTestTenant()
         CallContext.getCurrent().setLang("en")
         def entity = new MongoMultiLanguageStringEntity()
         entity.getMultiLangTextWithFallback().addText(null)
@@ -236,6 +245,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
 
     def "keys with null values are removed from the underlying map if a key already exists"() {
         given:
+        TenantsHelper.installTestTenant()
         CallContext.getCurrent().setLang("en")
         def entity = new MongoMultiLanguageStringEntity()
         entity.getMultiLangText().addText("en", "Super")
@@ -258,6 +268,7 @@ class MongoMultiLanguageStringPropertySpec extends BaseSpecification {
 
     def "asserts setData removes null keys before persisting"() {
         given:
+        TenantsHelper.installTestTenant()
         CallContext.getCurrent().setLang("en")
         def entity = new MongoMultiLanguageStringEntity()
         Map<String, String> data = new LinkedHashMap<>()
