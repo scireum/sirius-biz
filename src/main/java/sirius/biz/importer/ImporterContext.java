@@ -75,7 +75,15 @@ public class ImporterContext {
      */
     @SuppressWarnings("unchecked")
     public <E extends BaseEntity<?>> ImportHandler<E> findHandler(Class<E> type) {
-        return (ImportHandler<E>) handlers.computeIfAbsent(type, aType -> lookupHandler(aType, aType));
+        ImportHandler<E> result = (ImportHandler<E>) handlers.get(type);
+        if (result == null) {
+            // Note: computeIfAbsent cannot be used as a handler might reference other handlers. Those handler's
+            // resolution would result in a ConcurrentModificationException in the #helpers Map.
+            // This leads to cyclic handler dependencies not being resolvable here.
+            result = (ImportHandler<E>) lookupHandler(type, type);
+            handlers.put(type, result);
+        }
+        return result;
     }
 
     private ImportHandler<?> lookupHandler(Class<?> type, Class<?> baseType) {
