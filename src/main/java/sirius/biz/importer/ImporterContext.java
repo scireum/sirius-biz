@@ -107,7 +107,15 @@ public class ImporterContext {
      */
     @SuppressWarnings("unchecked")
     public <H extends ImportHelper> H findHelper(Class<H> type) {
-        return (H) helpers.computeIfAbsent(type, this::instantiateHelper);
+        ImportHelper result = helpers.get(type);
+        if (result == null) {
+            // Note: computeIfAbsent cannot be used as a helper might reference other helpers. Those helper's
+            // resolution would result in a ConcurrentModificationException in the #helpers Map.
+            // This leads to cyclic helper dependencies not being resolvable here.
+            result = instantiateHelper(type);
+            helpers.put(type, result);
+        }
+        return (H) result;
     }
 
     private ImportHelper instantiateHelper(Class<?> aClass) {
