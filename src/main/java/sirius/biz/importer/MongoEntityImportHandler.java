@@ -121,6 +121,7 @@ public abstract class MongoEntityImportHandler<E extends MongoEntity> extends Ba
 
         if (isChanged(entity)) {
             mango.update(entity);
+            context.purgeFromLocalCache(entity);
         }
 
         return entity;

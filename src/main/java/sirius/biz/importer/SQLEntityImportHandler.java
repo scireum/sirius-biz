@@ -278,6 +278,7 @@ public abstract class SQLEntityImportHandler<E extends SQLEntity> extends BaseIm
     protected E updateIfChanged(E entity, boolean batch) {
         if (isChanged(entity)) {
             getUpdateQuery().update(entity, true, batch);
+            context.purgeFromLocalCache(entity);
         }
 
         return entity;
