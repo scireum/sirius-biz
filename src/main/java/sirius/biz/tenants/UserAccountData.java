@@ -8,10 +8,12 @@
 
 package sirius.biz.tenants;
 
+import sirius.biz.codelists.LookupValue;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
+import sirius.biz.util.Languages;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
@@ -106,7 +108,7 @@ public class UserAccountData extends Composite implements MessageProvider {
     @Autoloaded
     @NullAllowed
     @Length(2)
-    private String lang;
+    private final LookupValue lang = new LookupValue(Languages.LOOKUP_TABLE_ACTIVE_LANGUAGES);
 
     @Part
     private static Mails ms;
@@ -274,7 +276,7 @@ public class UserAccountData extends Composite implements MessageProvider {
      * @return a short string used to address the person
      */
     public String getAddressableName() {
-        if (hasName() && (Strings.isFilled(getPerson().getSalutation()) || Strings.isFilled(getPerson().getTitle()))) {
+        if (hasName() && (getPerson().getSalutation().isFilled() || Strings.isFilled(getPerson().getTitle()))) {
             return getPerson().getAddressableName();
         }
         return toString();
@@ -361,12 +363,8 @@ public class UserAccountData extends Composite implements MessageProvider {
         this.externalLoginRequired = externalLoginRequired;
     }
 
-    public String getLang() {
+    public LookupValue getLang() {
         return lang;
-    }
-
-    public void setLang(String lang) {
-        this.lang = lang;
     }
 
     public StringList getSubScopes() {

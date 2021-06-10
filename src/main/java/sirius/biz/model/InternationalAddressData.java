@@ -206,7 +206,7 @@ public class InternationalAddressData extends AddressData {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getStreet(), getZip(), getCity(), getCountry());
+        return Objects.hash(getStreet(), getZip(), getCity(), getCountry().getValue());
     }
 
     /**
@@ -218,11 +218,7 @@ public class InternationalAddressData extends AddressData {
         return country.getTable().resolveName(country.getValue()).orElse(country.getValue());
     }
 
-    public String getCountry() {
-        return country.getValue();
-    }
-
-    public void setCountry(String country) {
-        this.country.setValue(country);
+    public LookupValue getCountry() {
+        return country;
     }
 }
