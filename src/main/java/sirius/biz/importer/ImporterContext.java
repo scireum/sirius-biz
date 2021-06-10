@@ -156,6 +156,21 @@ public class ImporterContext {
     }
 
     /**
+     * Purges the given entity from the local cache.
+     * <p>
+     * This is useful if the entity is updated, forcing the cache to load a fresh instance in the next call
+     *
+     * @param entity the entity to purge
+     */
+    public <E extends BaseEntity<?>> void purgeFromLocalCache(E entity) {
+        localCache.asMap().forEach((key, entry) -> {
+            if (entry instanceof BaseEntity && ((BaseEntity<?>) entry).getIdAsString().equals(entity.getIdAsString())) {
+                localCache.invalidate(key);
+            }
+        });
+    }
+
+    /**
      * Closes this context and completes all running batches.
      *
      * @throws IOException in case of an io error. Most probably this won't happen, as we only use
