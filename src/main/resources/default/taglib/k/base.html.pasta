@@ -19,13 +19,13 @@
 <i:extraBlock name="chapter">@chapter</i:extraBlock>
 <i:extraBlock name="requiredPermissions">@permissions</i:extraBlock>
 
-<i:local name="kba" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
-<i:if test="kba != null">
-    <t:page title="@kba.getTitle()" ignoreDisasterMode="true">
+<i:local name="article" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
+<i:if test="article != null">
+    <t:page title="@article.getTitle()" ignoreDisasterMode="true">
         <i:block name="head">
-            <meta property="og:title" content="@kba.getTitle()">
-            <i:if test="isFilled(kba.getDescription())">
-                <meta property="og:description" content="@kba.getDescription()">
+            <meta property="og:title" content="@article.getTitle()">
+            <i:if test="isFilled(article.getDescription())">
+                <meta property="og:description" content="@article.getDescription()">
             </i:if>
             <link rel="stylesheet" type="text/css" href="/assets/libs/prettify/skins/desert.css">
             <script type="text/javascript" src="/assets/libs/prettify/prettify.js"></script>
@@ -33,18 +33,18 @@
 
         <i:block name="breadcrumbs">
             <li>
-                <a href="/kb/@kba.getLanguage()">@i18n('KnowledgeBase.kb')</a>
+                <a href="/kb/@article.getLanguage()">@i18n('KnowledgeBase.kb')</a>
             </li>
-            <i:if test="'00000' != kba.getArticleId()">
+            <i:if test="'00000' != article.getArticleId()">
                 <li>
-                    <a href="/kba/@kba.getLanguage()/@kba.getArticleId()">@kba.getTitle()</a>
+                    <a href="/kba/@article.getLanguage()/@article.getArticleId()">@article.getTitle()</a>
                 </li>
             </i:if>
         </i:block>
 
-        <i:if test="'00000' != kba.getArticleId()">
-            <t:pageHeader title="@kba.getTitle()">
-                <i:local name="parent" value="@kba.queryParent().orElse(null)"/>
+        <i:if test="'00000' != article.getArticleId()">
+            <t:pageHeader title="@article.getTitle()">
+                <i:local name="parent" value="@article.queryParent().orElse(null)"/>
                 <i:if test="parent != null">
                     <t:inlineInfo>
                         <a href="/kba/@parent.getLanguage()/@parent.getArticleId()">
@@ -54,7 +54,7 @@
                 </i:if>
                 <t:inlineInfo>
                     <span class="text-muted text-monospace">
-                        <i class="fa fa-tag"></i> @kba.getArticleId()
+                        <i class="fa fa-tag"></i> @article.getArticleId()
                     </span>
                 </t:inlineInfo>
 
@@ -66,7 +66,7 @@
                         <div class="dropdown-menu dropdown-menu-right p-4" style="width: 400px">
                             <div class="mb-3">
                                 <label class="form-label">URL</label>
-                                <input type="text" class="form-control" id="urlField" readonly value="@kba.getPresignedUrl()">
+                                <input type="text" class="form-control" id="urlField" readonly value="@article.getPresignedUrl()">
                                 <small id="copy-msg" class="form-text text-muted text-sirius-green-dark"></small>
                             </div>
                             <div>@i18n('KnowledgeBase.urlCopyInfo')</div>
@@ -102,24 +102,24 @@
 
         <div class="row">
             <div class="col-xl-9 col-lg-12">
-                <i:local name="references" value="kba.queryCrossReferences()"/>
+                <i:local name="references" value="article.queryCrossReferences()"/>
                 <i:if test="!references.isEmpty()">
                     <k:section heading="@i18n('KnowledgeBase.crossReferencesLabel')">
-                        <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="article" items="references">
+                        <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="reference" items="references">
                             <div class="pb-1">
                                 <div>
-                                    <a href="/kba/@article.getLanguage()/@article.getArticleId()">
-                                        <i:if test="article.isChapter()">
+                                    <a href="/kba/@reference.getLanguage()/@reference.getArticleId()">
+                                        <i:if test="reference.isChapter()">
                                             <i class="fa fa-book"></i>
                                             <i:else>
                                                 <i class="fa fa-file-alt"></i>
                                             </i:else>
                                         </i:if>
-                                        @article.getTitle()
+                                        @reference.getTitle()
                                     </a>
                                 </div>
                                 <div class="text-muted">
-                                    @article.getDescription()
+                                    @reference.getDescription()
                                 </div>
                             </div>
                         </i:for>

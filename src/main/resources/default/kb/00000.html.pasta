@@ -6,10 +6,10 @@
         permissions="flag-logged-in"
         chapter="true">
 
-    <i:local name="kba" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
+    <i:local name="article" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
     <k:section>
-        <i:if test="part(sirius.pasta.tagliatelle.Tagliatelle.class).resolve('/templates/biz/tycho/kb/welcome_' + kba.getLanguage() + '.html.pasta').isPresent()">
-            <i:dynamicInvoke template="@apply('/templates/biz/tycho/kb/welcome_%s.html.pasta', kba.getLanguage())" />
+        <i:if test="part(sirius.pasta.tagliatelle.Tagliatelle.class).resolve('/templates/biz/tycho/kb/welcome_' + article.getLang() + '.html.pasta').isPresent()">
+            <i:dynamicInvoke template="@apply('/templates/biz/tycho/kb/welcome_%s.html.pasta', article.getLanguage())" />
             <i:else>
                 <i:invoke template="/templates/biz/tycho/kb/welcome.html.pasta" />
             </i:else>
@@ -20,18 +20,18 @@
 
     <div class="row">
         <div class="col-12 @if (languages.size() > 1) { col-lg-8 } else { col-lg-12 }">
-            <i:local name="childChapters" value="kba.queryChildChapters()"/>
+            <i:local name="childChapters" value="article.queryChildChapters()"/>
             <i:if test="!childChapters.isEmpty()">
                 <k:section heading="Kapitel">
-                    <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="article" items="childChapters">
+                    <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="chapter" items="childChapters">
                         <div class="pb-1">
                             <div>
-                                <a href="/kba/@article.getLanguage()/@article.getArticleId()">
-                                    <i class="fa fa-book"></i> @article.getTitle()
+                                <a href="/kba/@chapter.getLanguage()/@chapter.getArticleId()">
+                                    <i class="fa fa-book"></i> @chapter.getTitle()
                                 </a>
                             </div>
                             <div class="text-muted">
-                                @article.getDescription()
+                                @chapter.getDescription()
                             </div>
                         </div>
                     </i:for>
@@ -42,13 +42,13 @@
         <i:if test="languages.size() > 1">
             <div class="col-12 col-lg-4">
                 <k:section heading="Verfügbare Sprachen">
-                    <i:for type="String" var="lang"
+                    <i:for type="String" var="language"
                            items="@part(sirius.biz.tycho.kb.KnowledgeBase.class).queryLanguages()">
                         <div class="pb-1">
                             <div>
-                                <a href="/kb/@lang">
-                                    <t:langFlag lang="@lang"/>
-                                    <span class="@if (lang == kba.getLanguage()) { font-weight-bold }">
+                                <a href="/kb/@language">
+                                    <t:langFlag lang="@language"/>
+                                    <span class="@if (language == article.getLanguage()) { font-weight-bold }">
                                             @part(sirius.biz.util.Languages.class).all().resolveName(lang, lang).orElse(lang)
                                     </span>
                                 </a>

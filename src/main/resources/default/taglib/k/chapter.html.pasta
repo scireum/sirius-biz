@@ -30,37 +30,37 @@
 
     <i:render name="body"/>
 
-    <i:local name="kba" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
-    <i:local name="childChapters" value="kba.queryChildChapters()"/>
+    <i:local name="article" value="user.getHelper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
+    <i:local name="childChapters" value="article.queryChildChapters()"/>
     <i:if test="!childChapters.isEmpty()">
         <k:section heading="@i18n('KnowledgeBase.chaptersLabel')">
-            <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="article" items="childChapters">
+            <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="chapter" items="childChapters">
                 <div class="pb-1">
                     <div>
-                        <a href="/kba/@article.getLanguage()/@article.getArticleId()">
-                            <i class="fa fa-book"></i> @article.getTitle()
+                        <a href="/kba/@chapter.getLanguage()/@chapter.getArticleId()">
+                            <i class="fa fa-book"></i> @chapter.getTitle()
                         </a>
                     </div>
                     <div class="text-muted">
-                        @article.getDescription()
+                        @chapter.getDescription()
                     </div>
                 </div>
             </i:for>
         </k:section>
     </i:if>
 
-    <i:local name="children" value="kba.queryChildren()"/>
+    <i:local name="children" value="article.queryChildren()"/>
     <i:if test="!children.isEmpty()">
         <k:section heading="@i18n('KnowledgeBase.articlesLabel')">
-            <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="article" items="children">
+            <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="child" items="children">
                 <div class="pb-1">
                     <div>
-                        <a href="/kba/@article.getLanguage()/@article.getArticleId()">
-                            <i class="fa fa-file-alt"></i> @article.getTitle()
+                        <a href="/kba/@child.getLanguage()/@child.getArticleId()">
+                            <i class="fa fa-file-alt"></i> @child.getTitle()
                         </a>
                     </div>
                     <div class="text-muted">
-                        @article.getDescription()
+                        @child.getDescription()
                     </div>
                 </div>
             </i:for>

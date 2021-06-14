@@ -141,36 +141,36 @@ public class KnowledgeBase {
                       .collect(Collectors.toList());
     }
 
-    protected List<KnowledgeBaseArticle> queryChildChapters(KnowledgeBaseArticle kba) {
-        return queryChildren(kba, true);
+    protected List<KnowledgeBaseArticle> queryChildChapters(KnowledgeBaseArticle article) {
+        return queryChildren(article, true);
     }
 
-    protected List<KnowledgeBaseArticle> queryChildArticles(KnowledgeBaseArticle kba) {
-        return queryChildren(kba, false);
+    protected List<KnowledgeBaseArticle> queryChildArticles(KnowledgeBaseArticle article) {
+        return queryChildren(article, false);
     }
 
-    private List<KnowledgeBaseArticle> queryChildren(KnowledgeBaseArticle kba, boolean chapter) {
+    private List<KnowledgeBaseArticle> queryChildren(KnowledgeBaseArticle article, boolean chapter) {
         List<KnowledgeBaseArticle> result = new ArrayList<>();
         elastic.select(KnowledgeBaseEntry.class)
-               .eq(KnowledgeBaseEntry.LANG, kba.getLanguage())
-               .eq(KnowledgeBaseEntry.PARENT_ID, kba.getArticleId())
+               .eq(KnowledgeBaseEntry.LANG, article.getLanguage())
+               .eq(KnowledgeBaseEntry.PARENT_ID, article.getArticleId())
                .eq(KnowledgeBaseEntry.CHAPTER, chapter)
                .iterateAll(entry -> {
                    if (entry.checkPermissions()) {
-                       result.add(new KnowledgeBaseArticle(entry, kba.getLanguage(), this));
+                       result.add(new KnowledgeBaseArticle(entry, article.getLanguage(), this));
                    }
                });
 
-        if (!Strings.areEqual(kba.getLanguage(), fallbackLang)) {
+        if (!Strings.areEqual(article.getLanguage(), fallbackLang)) {
             elastic.select(KnowledgeBaseEntry.class)
                    .eq(KnowledgeBaseEntry.LANG, fallbackLang)
-                   .eq(KnowledgeBaseEntry.PARENT_ID, kba.getArticleId())
+                   .eq(KnowledgeBaseEntry.PARENT_ID, article.getArticleId())
                    .eq(KnowledgeBaseEntry.CHAPTER, chapter)
                    .iterateAll(entry -> {
                        if (entry.checkPermissions() && result.stream()
                                                              .noneMatch(existingEntry -> Strings.areEqual(existingEntry.getArticleId(),
                                                                                                           entry.getArticleId()))) {
-                           result.add(new KnowledgeBaseArticle(entry, kba.getLanguage(), this));
+                           result.add(new KnowledgeBaseArticle(entry, article.getLanguage(), this));
                        }
                    });
         }
@@ -181,37 +181,37 @@ public class KnowledgeBase {
         return result;
     }
 
-    protected List<KnowledgeBaseArticle> queryCrossReferences(KnowledgeBaseArticle kba) {
+    protected List<KnowledgeBaseArticle> queryCrossReferences(KnowledgeBaseArticle article) {
         List<KnowledgeBaseArticle> result = new ArrayList<>();
-        kba.getEntry()
-           .getRelatesTo()
-           .data()
-           .stream()
-           .map(articleId -> resolve(kba.getLanguage(), articleId, false))
-           .filter(Optional::isPresent)
-           .map(Optional::get)
-           .forEach(result::add);
+        article.getEntry()
+               .getRelatesTo()
+               .data()
+               .stream()
+               .map(articleId -> resolve(article.getLanguage(), articleId, false))
+               .filter(Optional::isPresent)
+               .map(Optional::get)
+               .forEach(result::add);
 
         elastic.select(KnowledgeBaseEntry.class)
-               .eq(KnowledgeBaseEntry.LANG, kba.getLanguage())
-               .eq(KnowledgeBaseEntry.RELATES_TO, kba.getArticleId())
+               .eq(KnowledgeBaseEntry.LANG, article.getLanguage())
+               .eq(KnowledgeBaseEntry.RELATES_TO, article.getArticleId())
                .iterateAll(entry -> {
                    if (entry.checkPermissions() && result.stream()
                                                          .noneMatch(existingEntry -> Strings.areEqual(existingEntry.getArticleId(),
                                                                                                       entry.getArticleId()))) {
-                       result.add(new KnowledgeBaseArticle(entry, kba.getLanguage(), this));
+                       result.add(new KnowledgeBaseArticle(entry, article.getLanguage(), this));
                    }
                });
 
-        if (!Strings.areEqual(kba.getLanguage(), fallbackLang)) {
+        if (!Strings.areEqual(article.getLanguage(), fallbackLang)) {
             elastic.select(KnowledgeBaseEntry.class)
                    .eq(KnowledgeBaseEntry.LANG, fallbackLang)
-                   .eq(KnowledgeBaseEntry.RELATES_TO, kba.getArticleId())
+                   .eq(KnowledgeBaseEntry.RELATES_TO, article.getArticleId())
                    .iterateAll(entry -> {
                        if (entry.checkPermissions() && result.stream()
                                                              .noneMatch(existingEntry -> Strings.areEqual(existingEntry.getArticleId(),
                                                                                                           entry.getArticleId()))) {
-                           result.add(new KnowledgeBaseArticle(entry, kba.getLanguage(), this));
+                           result.add(new KnowledgeBaseArticle(entry, article.getLanguage(), this));
                        }
                    });
         }
