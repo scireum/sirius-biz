@@ -8,8 +8,8 @@
 
     <i:local name="kba" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
     <k:section>
-        <i:if test="part(sirius.pasta.tagliatelle.Tagliatelle.class).resolve('/templates/biz/tycho/kb/welcome_' + kba.getLang() + '.html.pasta').isPresent()">
-            <i:dynamicInvoke template="@apply('/templates/biz/tycho/kb/welcome_%s.html.pasta', kba.getLang())" />
+        <i:if test="part(sirius.pasta.tagliatelle.Tagliatelle.class).resolve('/templates/biz/tycho/kb/welcome_' + kba.getLanguage() + '.html.pasta').isPresent()">
+            <i:dynamicInvoke template="@apply('/templates/biz/tycho/kb/welcome_%s.html.pasta', kba.getLanguage())" />
             <i:else>
                 <i:invoke template="/templates/biz/tycho/kb/welcome.html.pasta" />
             </i:else>
@@ -26,7 +26,7 @@
                     <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="article" items="childChapters">
                         <div class="pb-1">
                             <div>
-                                <a href="/kba/@article.getLang()/@article.getArticleId()">
+                                <a href="/kba/@article.getLanguage()/@article.getArticleId()">
                                     <i class="fa fa-book"></i> @article.getTitle()
                                 </a>
                             </div>
@@ -48,7 +48,7 @@
                             <div>
                                 <a href="/kb/@lang">
                                     <t:langFlag lang="@lang"/>
-                                    <span class="@if (lang == kba.getLang()) { font-weight-bold }">
+                                    <span class="@if (lang == kba.getLanguage()) { font-weight-bold }">
                                             @part(sirius.biz.util.Languages.class).all().resolveName(lang, lang).orElse(lang)
                                     </span>
                                 </a>

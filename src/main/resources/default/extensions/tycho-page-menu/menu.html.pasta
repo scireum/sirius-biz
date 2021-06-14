@@ -30,7 +30,7 @@
                 </div>
             </li>
         </t:permission>
-        <t:menuDropdown menuClasses="dropdown-menu-right" icon="fa-cogs">
+        <t:menuDropdown class="dropdown-menu-right" icon="fa-cogs">
             <i:extensions target="biz-tycho-menu" point="system"/>
         </t:menuDropdown>
     </i:block>

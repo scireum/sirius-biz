@@ -33,11 +33,11 @@
 
         <i:block name="breadcrumbs">
             <li>
-                <a href="/kb/@kba.getLang()">@i18n('KnowledgeBase.kb')</a>
+                <a href="/kb/@kba.getLanguage()">@i18n('KnowledgeBase.kb')</a>
             </li>
             <i:if test="'00000' != kba.getArticleId()">
                 <li>
-                    <a href="/kba/@kba.getLang()/@kba.getArticleId()">@kba.getTitle()</a>
+                    <a href="/kba/@kba.getLanguage()/@kba.getArticleId()">@kba.getTitle()</a>
                 </li>
             </i:if>
         </i:block>
@@ -47,7 +47,7 @@
                 <i:local name="parent" value="@kba.queryParent().orElse(null)"/>
                 <i:if test="parent != null">
                     <t:inlineInfo>
-                        <a href="/kba/@parent.getLang()/@parent.getArticleId()">
+                        <a href="/kba/@parent.getLanguage()/@parent.getArticleId()">
                             <i class="fa fa-book"></i> @parent.getTitle()
                         </a>
                     </t:inlineInfo>
@@ -108,7 +108,7 @@
                         <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="article" items="references">
                             <div class="pb-1">
                                 <div>
-                                    <a href="/kba/@article.getLang()/@article.getArticleId()">
+                                    <a href="/kba/@article.getLanguage()/@article.getArticleId()">
                                         <i:if test="article.isChapter()">
                                             <i class="fa fa-book"></i>
                                             <i:else>

@@ -30,14 +30,14 @@
 
     <i:render name="body"/>
 
-    <i:local name="kba" value="user.getHelper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
+    <i:local name="kba" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
     <i:local name="childChapters" value="kba.queryChildChapters()"/>
     <i:if test="!childChapters.isEmpty()">
         <k:section heading="@i18n('KnowledgeBase.chaptersLabel')">
             <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="article" items="childChapters">
                 <div class="pb-1">
                     <div>
-                        <a href="/kba/@article.getLang()/@article.getArticleId()">
+                        <a href="/kba/@article.getLanguage()/@article.getArticleId()">
                             <i class="fa fa-book"></i> @article.getTitle()
                         </a>
                     </div>
@@ -55,7 +55,7 @@
             <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="article" items="children">
                 <div class="pb-1">
                     <div>
-                        <a href="/kba/@article.getLang()/@article.getArticleId()">
+                        <a href="/kba/@article.getLanguage()/@article.getArticleId()">
                             <i class="fa fa-file-alt"></i> @article.getTitle()
                         </a>
                     </div>
