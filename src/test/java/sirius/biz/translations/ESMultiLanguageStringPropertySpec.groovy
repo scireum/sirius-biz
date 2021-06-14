@@ -8,6 +8,7 @@
 
 package sirius.biz.translations
 
+import sirius.biz.tenants.TenantsHelper
 import sirius.db.es.Elastic
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
@@ -18,6 +19,8 @@ class ESMultiLanguageStringPropertySpec extends BaseSpecification {
     private static Elastic elastic
 
     def "reading and writing works"() {
+        given:
+        TenantsHelper.installTestTenant()
         when:
         def test = new ESMultiLanguageStringEntity()
         test.getMultiLang().put("de", "Das ist ein Test").put("en", "This is a test")

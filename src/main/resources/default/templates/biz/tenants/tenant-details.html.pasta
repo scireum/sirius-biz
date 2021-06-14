@@ -14,7 +14,8 @@
                          labelKey="TenantData.accountNumber"/>
             <w:singleSelect name="tenantData_lang" labelKey="Model.lang" required="true">
                 <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
-                    <option value="@language.getFirst()" @selected="language.getFirst() == tenant.getTenantData().getLang()">
+                    <option value="@language.getFirst()"
+                            @selected="language.getFirst() == tenant.getTenantData().getLang().getValue()">
                         @language.getSecond()
                     </option>
                 </i:for>
@@ -34,7 +35,7 @@
             <w:textfield name="tenantData_address_city" value="@tenant.getTenantData().getAddress().getCity()"
                          labelKey="AddressData.city"/>
             <w:codelistSelect span="4" list="countries" name="tenantData_address_country"
-                              value="@tenant.getTenantData().getAddress().getCountry()"
+                              value="@tenant.getTenantData().getAddress().getCountry().getValue()"
                               labelKey="InternationalAddressData.country"/>
         </div>
 

@@ -255,12 +255,8 @@ public class PersonData extends Composite {
         this.title = title;
     }
 
-    public String getSalutation() {
-        return salutation.getValue();
-    }
-
-    public void setSalutation(String salutation) {
-        this.salutation.setValue(salutation);
+    public LookupValue getSalutation() {
+        return salutation;
     }
 
     public String getFirstname() {

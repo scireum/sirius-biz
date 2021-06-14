@@ -12,7 +12,7 @@
 
 <div class="row">
     <w:codelistSelect span="3" name="userAccountData_person_salutation" list="salutations"
-                      value="@account.getUserAccountData().getPerson().getSalutation()"
+                      value="@account.getUserAccountData().getPerson().getSalutation().getValue()"
                       labelKey="PersonData.salutation" optional="true"/>
     <w:textfield span="3" name="userAccountData_person_title"
                  value="@account.getUserAccountData().getPerson().getTitle()" labelKey="PersonData.title"/>
@@ -26,7 +26,7 @@
     <w:singleSelect name="userAccountData_lang" labelKey="Model.lang" required="true">
         <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
             <option value="@language.getFirst()"
-                    @selected="language.getFirst() == account.getUserAccountData().getLang()">
+                    @selected="language.getFirst() == account.getUserAccountData().getLang().getValue()">
                 @language.getSecond()
             </option>
         </i:for>
