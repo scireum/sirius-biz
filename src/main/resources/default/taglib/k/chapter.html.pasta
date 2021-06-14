@@ -1,0 +1,70 @@
+<i:arg type="String" name="code" description="Contains the unique five-letter code of this chapter."/>
+<i:arg type="String" name="lang" description="Contains the two-letter ISO language code this chapter is written in"/>
+<i:arg type="String" name="title" description="Contains a short and concise title of the chapter"/>
+<i:arg type="String" name="parent" default=""
+       description="May contain the five-letter code of the chapter this article is placed in"/>
+<i:arg type="int" name="priority" default="100"
+       description="Contains the sort priority which listing the contents of its parent"/>
+<i:arg type="String" name="crossReferences" default=""
+       description="May contain a list of comma separated five-letter codes which relate to this chapter"/>
+<i:arg type="String" name="permissions" description="Contains the permissions required to view this chapter"/>
+
+
+<i:pragma name="description">
+    Renders a knowledge base chapter. Note that an i:block with name "description" is recommended to provide a short
+    description text to be shown next to the title. Also note that contents should be put into
+    "k:section" blocks for proper rendering.
+</i:pragma>
+<k:base code="@code"
+        title="@title"
+        parent="@parent"
+        priority="@priority"
+        lang="@lang"
+        crossReferences="@crossReferences"
+        permissions="@permissions"
+        chapter="true">
+
+    <i:block name="description">
+        <i:render name="description"/>
+    </i:block>
+
+    <i:render name="body"/>
+
+    <i:local name="kba" value="user.getHelper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
+    <i:local name="childChapters" value="kba.queryChildChapters()"/>
+    <i:if test="!childChapters.isEmpty()">
+        <k:section heading="@i18n('KnowledgeBase.chaptersLabel')">
+            <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="article" items="childChapters">
+                <div class="pb-1">
+                    <div>
+                        <a href="/kba/@article.getLang()/@article.getArticleId()">
+                            <i class="fa fa-book"></i> @article.getTitle()
+                        </a>
+                    </div>
+                    <div class="text-muted">
+                        @article.getDescription()
+                    </div>
+                </div>
+            </i:for>
+        </k:section>
+    </i:if>
+
+    <i:local name="children" value="kba.queryChildren()"/>
+    <i:if test="!children.isEmpty()">
+        <k:section heading="@i18n('KnowledgeBase.articlesLabel')">
+            <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="article" items="children">
+                <div class="pb-1">
+                    <div>
+                        <a href="/kba/@article.getLang()/@article.getArticleId()">
+                            <i class="fa fa-file-alt"></i> @article.getTitle()
+                        </a>
+                    </div>
+                    <div class="text-muted">
+                        @article.getDescription()
+                    </div>
+                </div>
+            </i:for>
+        </k:section>
+    </i:if>
+
+</k:base>

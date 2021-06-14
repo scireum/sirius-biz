@@ -1,0 +1,22 @@
+<i:arg type="String" name="code" />
+<i:arg type="String" name="format" default="%2$s" />
+
+<i:local name="pattern" value="@renderToString('body')" />
+<i:local name="currentArticle" value="@part(sirius.biz.tycho.kb.KnowledgeBase.class).currentArticle()"/>
+<i:local name="referencedArticle" value="@part(sirius.biz.tycho.kb.KnowledgeBase.class).resolve(currentArticle != null ? currentArticle.getLang() : NLS.getCurrentLang(), code, true).orElse(null.as(sirius.biz.tycho.kb.KnowledgeBaseArticle.class))"/>
+<i:if test="referencedArticle != null">
+    <i:local name="label" value="@apply(format, code, referencedArticle.getTitle())" />
+    <i:local name="url" value="currentArticle != null ? apply('/kba/%s/%s', currentArticle.getLang(), code) : apply('/kba/%s', code)" />
+    <i:local name="link" value="apply('<a href=\"%s\" title=\"[%s] %s\">%s</a>', url, code, referencedArticle.getTitle(), label)"/>
+    <i:if test="isFilled(pattern)">
+        <i:raw>@apply(pattern, link)</i:raw>
+        <i:else>
+            <i:raw>@link</i:raw>
+        </i:else>
+    </i:if>
+    <i:else>
+        <i:if test="currentArticle != null">
+            @currentArticle.addUnresolvedReference(code)
+        </i:if>
+    </i:else>
+</i:if>

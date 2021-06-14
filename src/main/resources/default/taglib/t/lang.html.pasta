@@ -1,0 +1,10 @@
+<i:arg type="String" name="lang" />
+<i:arg type="boolean" name="short" default="false" />
+
+<t:langFlag lang="@lang" />
+<i:if test="short">
+    @lang.toUpperCase()
+    <i:else>
+        @part(sirius.biz.util.Languages.class).all().resolveName(lang).orElse(lang)
+    </i:else>
+</i:if>

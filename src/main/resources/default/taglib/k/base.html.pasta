@@ -1,0 +1,137 @@
+<i:arg type="String" name="code"/>
+<i:arg type="String" name="title"/>
+<i:arg type="String" name="parent" default=""/>
+<i:arg type="int" name="priority"/>
+<i:arg type="String" name="lang"/>
+<i:arg type="String" name="crossReferences" default=""/>
+<i:arg type="String" name="permissions"/>
+<i:arg type="boolean" name="chapter"/>
+
+<i:extraBlock name="code">@code</i:extraBlock>
+<i:extraBlock name="title">@title</i:extraBlock>
+<i:extraBlock name="description">
+    <i:render name="description"/>
+</i:extraBlock>
+<i:extraBlock name="lang">@lang</i:extraBlock>
+<i:extraBlock name="parent">@parent</i:extraBlock>
+<i:extraBlock name="priority">@priority</i:extraBlock>
+<i:extraBlock name="crossReferences">@crossReferences</i:extraBlock>
+<i:extraBlock name="chapter">@chapter</i:extraBlock>
+<i:extraBlock name="requiredPermissions">@permissions</i:extraBlock>
+
+<i:local name="kba" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
+<i:if test="kba != null">
+    <t:page title="@kba.getTitle()" ignoreDisasterMode="true">
+        <i:block name="head">
+            <meta property="og:title" content="@kba.getTitle()">
+            <i:if test="isFilled(kba.getDescription())">
+                <meta property="og:description" content="@kba.getDescription()">
+            </i:if>
+            <link rel="stylesheet" type="text/css" href="/assets/libs/prettify/skins/desert.css">
+            <script type="text/javascript" src="/assets/libs/prettify/prettify.js"></script>
+        </i:block>
+
+        <i:block name="breadcrumbs">
+            <li>
+                <a href="/kb/@kba.getLang()">@i18n('KnowledgeBase.kb')</a>
+            </li>
+            <i:if test="'00000' != kba.getArticleId()">
+                <li>
+                    <a href="/kba/@kba.getLang()/@kba.getArticleId()">@kba.getTitle()</a>
+                </li>
+            </i:if>
+        </i:block>
+
+        <i:if test="'00000' != kba.getArticleId()">
+            <t:pageHeader title="@kba.getTitle()">
+                <i:local name="parent" value="@kba.queryParent().orElse(null)"/>
+                <i:if test="parent != null">
+                    <t:inlineInfo>
+                        <a href="/kba/@parent.getLang()/@parent.getArticleId()">
+                            <i class="fa fa-book"></i> @parent.getTitle()
+                        </a>
+                    </t:inlineInfo>
+                </i:if>
+                <t:inlineInfo>
+                    <span class="text-muted text-monospace">
+                        <i class="fa fa-tag"></i> @kba.getArticleId()
+                    </span>
+                </t:inlineInfo>
+
+                <i:block name="actions">
+                    <div class="dropdown d-none d-md-inline" id="urlDropdown">
+                        <a class="btn btn-link dropdown-toggle" data-toggle="dropdown">
+                            <i class="fa fa-link"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right p-4" style="width: 400px">
+                            <div class="mb-3">
+                                <label class="form-label">URL</label>
+                                <input type="text" class="form-control" id="urlField" readonly value="@kba.getPresignedUrl()">
+                                <small id="copy-msg" class="form-text text-muted text-sirius-green-dark"></small>
+                            </div>
+                            <div>@i18n('KnowledgeBase.urlCopyInfo')</div>
+                        </div>
+                        <script>
+                            sirius.ready(function() {
+                                $('#urlDropdown').on('shown.bs.dropdown', function () {
+                                    const copyMsg = document.querySelector('#copy-msg');
+                                    const copyTextarea = document.querySelector('#urlField');
+                                    copyTextarea.focus();
+                                    copyTextarea.select();
+
+                                    try {
+                                        if (document.execCommand('copy')) {
+                                            copyMsg.textContent = "@i18n('KnowledgeBase.urlClipboardSuccess')";
+                                        }
+                                    } catch (err) {
+                                        console.log('Failed to copy to clipboard', err);
+                                    }
+                                });
+                            })
+                        </script>
+                    </div>
+                </i:block>
+            </t:pageHeader>
+        </i:if>
+
+        <div class="row">
+            <div class="col-xl-9 col-lg-12">
+                <i:render name="body"/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xl-9 col-lg-12">
+                <i:local name="references" value="kba.queryCrossReferences()"/>
+                <i:if test="!references.isEmpty()">
+                    <k:section heading="@i18n('KnowledgeBase.crossReferencesLabel')">
+                        <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="article" items="references">
+                            <div class="pb-1">
+                                <div>
+                                    <a href="/kba/@article.getLang()/@article.getArticleId()">
+                                        <i:if test="article.isChapter()">
+                                            <i class="fa fa-book"></i>
+                                            <i:else>
+                                                <i class="fa fa-file-alt"></i>
+                                            </i:else>
+                                        </i:if>
+                                        @article.getTitle()
+                                    </a>
+                                </div>
+                                <div class="text-muted">
+                                    @article.getDescription()
+                                </div>
+                            </div>
+                        </i:for>
+                    </k:section>
+                </i:if>
+            </div>
+        </div>
+
+        <script>
+            sirius.ready(function () {
+                PR.prettyPrint();
+            });
+        </script>
+    </t:page>
+</i:if>

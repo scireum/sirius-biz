@@ -1,0 +1,33 @@
+<i:arg type="String" name="code" description="Contains the unique five-letter code of this article."/>
+<i:arg type="String" name="lang" description="Contains the two-letter ISO language code this article is written in"/>
+<i:arg type="String" name="title" description="Contains a short and concise title of the article"/>
+<i:arg type="String" name="parent" default=""
+       description="May contain the five-letter code of the chapter this article is placed in"/>
+<i:arg type="int" name="priority" default="100"
+       description="Contains the sort priority which listing the contents of its parent"/>
+<i:arg type="String" name="crossReferences" default=""
+       description="May contain a list of comma separated five-letter codes which relate to this article"/>
+<i:arg type="String" name="permissions" description="Contains the permissions required to view this article"/>
+
+<i:pragma name="description">
+    Renders a knowledge base article. Note that an i:block with name "description" is recommended to provide a short
+    description text to be shown next to the title. Also note that contents should be put into
+    "k:section" blocks for proper rendering.
+</i:pragma>
+
+<k:base code="@code"
+        title="@title"
+        parent="@parent"
+        priority="@priority"
+        lang="@lang"
+        crossReferences="@crossReferences"
+        permissions="@permissions"
+        chapter="false">
+
+    <i:block name="description">
+        <i:render name="description"/>
+    </i:block>
+
+    <i:render name="body"/>
+</k:base>
+
