@@ -56,6 +56,7 @@ public class ClusterController extends BasicController {
     public static final String RESPONSE_DESCRIPTION = "description";
     public static final String RESPONSE_NODE_STATE = "nodeState";
     public static final String RESPONSE_VERSION = "version";
+    public static final String RESPONSE_DETAILED_VERSION = "detailedVersion";
     public static final String RESPONSE_UPTIME = "uptime";
     public static final String RESPONSE_BLEEDING = "bleeding";
     public static final String RESPONSE_METRICS = "metrics";
@@ -102,9 +103,9 @@ public class ClusterController extends BasicController {
     /**
      * Reports all metrics of this node as JSON.
      *
-     * @param webContext   the request to handle
-     * @param out   the output to write the JSON to
-     * @param token the cluster authentication token
+     * @param webContext the request to handle
+     * @param out        the output to write the JSON to
+     * @param token      the cluster authentication token
      */
     @Routed(value = "/system/cluster/state/:1", jsonCall = true)
     public void nodeInfo(WebContext webContext, JSONStructuredOutput out, String token) {
@@ -134,8 +135,8 @@ public class ClusterController extends BasicController {
      * Reports all background activities of this node as JSON.
      *
      * @param webContext the request to handle
-     * @param out the output to write the JSON to
-     * @param token the cluster authentication token
+     * @param out        the output to write the JSON to
+     * @param token      the cluster authentication token
      */
     @Routed(value = "/system/cluster/background/:1", jsonCall = true)
     public void backgroundInfo(WebContext webContext, JSONStructuredOutput out, String token) {
@@ -147,6 +148,7 @@ public class ClusterController extends BasicController {
         out.property(RESPONSE_NAME, CallContext.getNodeName());
         out.property(RESPONSE_NODE_STATE, cluster.getNodeState().toString());
         out.property(RESPONSE_VERSION, Product.getProduct().getVersion());
+        out.property(RESPONSE_DETAILED_VERSION, Product.getProduct().getDetails());
         out.property(RESPONSE_UPTIME, NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false));
         out.property(RESPONSE_BLEEDING, neighborhoodWatch.isBleeding());
 
@@ -184,7 +186,7 @@ public class ClusterController extends BasicController {
                                                                                 e -> e.getValue().getDescription(),
                                                                                 (a, b) -> a));
         webContext.respondWith()
-           .template("/templates/biz/cluster/cluster.html.pasta", jobKeys, descriptions, clusterInfo, locks);
+                  .template("/templates/biz/cluster/cluster.html.pasta", jobKeys, descriptions, clusterInfo, locks);
     }
 
     /**
@@ -193,8 +195,8 @@ public class ClusterController extends BasicController {
      * Note that this should only be used to remove a non-existing node as an active node will be re-discovered
      * almost instantly.
      *
-     * @param webContext  the request to handle
-     * @param node the node to remove
+     * @param webContext the request to handle
+     * @param node       the node to remove
      */
     @Routed("/system/cluster/kill/:1")
     @Permission(PERMISSION_SYSTEM_CLUSTER)
@@ -211,9 +213,9 @@ public class ClusterController extends BasicController {
     /**
      * Enables or disables bleeding out a node (disabling all upcoming background activities).
      *
-     * @param webContext     the request to handle
-     * @param setting either "enable" or "disable" to control what to do
-     * @param node    the node to change the setting for
+     * @param webContext the request to handle
+     * @param setting    either "enable" or "disable" to control what to do
+     * @param node       the node to change the setting for
      * @see NeighborhoodWatch#changeBleeding(String, boolean)
      */
     @Routed("/system/cluster/bleed/:1/:2")
@@ -226,10 +228,10 @@ public class ClusterController extends BasicController {
     /**
      * Provides an API to enable or disable bleeding out a node (disabling all upcoming background activities).
      *
-     * @param webContext     the request to handle
-     * @param setting either "enable" or "disable" to control what to do
-     * @param node    the node to change the setting for
-     * @param token   the security token (verified against {@link InterconnectClusterManager#getClusterAPIToken()})
+     * @param webContext the request to handle
+     * @param setting    either "enable" or "disable" to control what to do
+     * @param node       the node to change the setting for
+     * @param token      the security token (verified against {@link InterconnectClusterManager#getClusterAPIToken()})
      * @see NeighborhoodWatch#changeBleeding(String, boolean)
      */
     @Routed("/system/cluster/bleed/:1/:2/:3")
@@ -277,17 +279,17 @@ public class ClusterController extends BasicController {
             webContext.respondWith().direct(HttpResponseStatus.OK, "OK");
         } else {
             webContext.respondWith()
-               .direct(HttpResponseStatus.EXPECTATION_FAILED,
-                       "Tasks running: " + distributedTasks.getNumberOfActiveTasks());
+                      .direct(HttpResponseStatus.EXPECTATION_FAILED,
+                              "Tasks running: " + distributedTasks.getNumberOfActiveTasks());
         }
     }
 
     /**
      * Enables or disables a background job globally.
      *
-     * @param webContext     the request to handle
-     * @param setting either "enable" or "disable" to control what to do
-     * @param jobKey  the jobKey to change
+     * @param webContext the request to handle
+     * @param setting    either "enable" or "disable" to control what to do
+     * @param jobKey     the jobKey to change
      */
     @Routed("/system/cluster/global/:1/:2")
     @Permission(PERMISSION_SYSTEM_CLUSTER)
@@ -299,10 +301,10 @@ public class ClusterController extends BasicController {
     /**
      * Enables or disables a background job globally.
      *
-     * @param webContext     the request to handle
-     * @param setting either "enable" or "disable" to control what to do
-     * @param node    the node to change the setting for
-     * @param jobKey  the jobKey to change
+     * @param webContext the request to handle
+     * @param setting    either "enable" or "disable" to control what to do
+     * @param node       the node to change the setting for
+     * @param jobKey     the jobKey to change
      */
     @Routed("/system/cluster/local/:1/:2/:3")
     @Permission(PERMISSION_SYSTEM_CLUSTER)
