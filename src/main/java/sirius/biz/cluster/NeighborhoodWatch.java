@@ -456,6 +456,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         BackgroundInfo result = new BackgroundInfo(CallContext.getNodeName(),
                                                    isBleeding(),
                                                    NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false),
+                                                   Product.getProduct().getVersion(),
                                                    Product.getProduct().getDetails());
 
         for (Map.Entry<String, SynchronizeType> job : syncSettings.entrySet()) {
@@ -475,13 +476,15 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
             return new BackgroundInfo(jsonObject.getString(InterconnectClusterManager.RESPONSE_NODE_NAME),
                                       false,
                                       "-",
+                                      "-",
                                       "-");
         }
 
         BackgroundInfo result = new BackgroundInfo(jsonObject.getString(InterconnectClusterManager.RESPONSE_NODE_NAME),
                                                    jsonObject.getBooleanValue(ClusterController.RESPONSE_BLEEDING),
                                                    jsonObject.getString(ClusterController.RESPONSE_UPTIME),
-                                                   jsonObject.getString(ClusterController.RESPONSE_VERSION));
+                                                   jsonObject.getString(ClusterController.RESPONSE_VERSION),
+                                                   jsonObject.getString(ClusterController.RESPONSE_DETAILED_VERSION));
         jsonObject.getJSONArray(ClusterController.RESPONSE_JOBS).forEach(job -> {
             try {
                 JSONObject jobJson = (JSONObject) job;
