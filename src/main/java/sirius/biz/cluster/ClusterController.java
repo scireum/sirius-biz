@@ -146,7 +146,7 @@ public class ClusterController extends BasicController {
 
         out.property(RESPONSE_NAME, CallContext.getNodeName());
         out.property(RESPONSE_NODE_STATE, cluster.getNodeState().toString());
-        out.property(RESPONSE_VERSION, Product.getProduct().getDetails());
+        out.property(RESPONSE_VERSION, Product.getProduct().getVersion());
         out.property(RESPONSE_UPTIME, NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false));
         out.property(RESPONSE_BLEEDING, neighborhoodWatch.isBleeding());
 

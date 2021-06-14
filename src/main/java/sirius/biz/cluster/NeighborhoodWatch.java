@@ -456,7 +456,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         BackgroundInfo result = new BackgroundInfo(CallContext.getNodeName(),
                                                    isBleeding(),
                                                    NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false),
-                                                   Product.getProduct().getDetails());
+                                                   Product.getProduct().getVersion());
 
         for (Map.Entry<String, SynchronizeType> job : syncSettings.entrySet()) {
             result.jobs.put(job.getKey(),
