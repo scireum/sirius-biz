@@ -8,7 +8,7 @@
 
     <i:local name="article" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
     <k:section>
-        <i:if test="part(sirius.pasta.tagliatelle.Tagliatelle.class).resolve('/templates/biz/tycho/kb/welcome_' + article.getLang() + '.html.pasta').isPresent()">
+        <i:if test="part(sirius.pasta.tagliatelle.Tagliatelle.class).resolve('/templates/biz/tycho/kb/welcome_' + article.getLanguage() + '.html.pasta').isPresent()">
             <i:dynamicInvoke template="@apply('/templates/biz/tycho/kb/welcome_%s.html.pasta', article.getLanguage())" />
             <i:else>
                 <i:invoke template="/templates/biz/tycho/kb/welcome.html.pasta" />
@@ -49,7 +49,7 @@
                                 <a href="/kb/@language">
                                     <t:langFlag lang="@language"/>
                                     <span class="@if (language == article.getLanguage()) { font-weight-bold }">
-                                            @part(sirius.biz.util.Languages.class).all().resolveName(lang, lang).orElse(lang)
+                                            @part(sirius.biz.util.Languages.class).all().resolveName(language, language).orElse(language)
                                     </span>
                                 </a>
                             </div>

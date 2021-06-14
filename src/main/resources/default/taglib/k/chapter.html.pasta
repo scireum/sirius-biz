@@ -30,7 +30,7 @@
 
     <i:render name="body"/>
 
-    <i:local name="article" value="user.getHelper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
+    <i:local name="article" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
     <i:local name="childChapters" value="article.queryChildChapters()"/>
     <i:if test="!childChapters.isEmpty()">
         <k:section heading="@i18n('KnowledgeBase.chaptersLabel')">
