@@ -1,0 +1,5 @@
+<k:chapter code="SLEOK" lang="de" priority="100" title="Benutzerhandbuch" permissions="" parent="00000">
+    <i:block name="description">
+        Enthält Anleitungen für Benutzer des Systems.
+    </i:block>
+</k:chapter>
