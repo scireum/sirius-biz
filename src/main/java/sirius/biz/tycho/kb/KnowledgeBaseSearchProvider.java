@@ -12,6 +12,7 @@ import sirius.biz.tycho.search.OpenSearchProvider;
 import sirius.biz.tycho.search.OpenSearchResult;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.nls.NLS;
 import sirius.web.security.UserContext;
 
 import javax.annotation.Nullable;
@@ -20,7 +21,7 @@ import java.util.function.Consumer;
 /**
  * Links the {@link KnowledgeBase} to the {@link sirius.biz.tycho.search.OpenSearchController}.
  * <p>
- * Permits to search in KBAs using the open search facility.
+ * Permits searching in {@link KnowledgeBaseEntry knowledge base articles} using the open search facility.
  */
 @Register
 public class KnowledgeBaseSearchProvider implements OpenSearchProvider {
@@ -30,7 +31,7 @@ public class KnowledgeBaseSearchProvider implements OpenSearchProvider {
 
     @Override
     public String getLabel() {
-        return "Knowledgebase";
+        return NLS.get("KnowledgeBase.kb");
     }
 
     @Nullable

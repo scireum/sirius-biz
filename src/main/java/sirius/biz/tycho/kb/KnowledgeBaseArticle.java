@@ -25,7 +25,7 @@ import java.util.Optional;
  */
 public class KnowledgeBaseArticle {
 
-    private final String lang;
+    private final String language;
     private final KnowledgeBaseEntry entry;
     private final KnowledgeBase knowledgeBase;
 
@@ -33,17 +33,13 @@ public class KnowledgeBaseArticle {
      * Creates a new article.
      *
      * @param entry         the entry to wrap
-     * @param lang          the language code which has been used to lookup the article
+     * @param language      the language code which has been used to lookup the article
      * @param knowledgeBase the instance of the knowledge base used to perform further lookups
      */
-    public KnowledgeBaseArticle(KnowledgeBaseEntry entry, String lang, KnowledgeBase knowledgeBase) {
+    public KnowledgeBaseArticle(KnowledgeBaseEntry entry, String language, KnowledgeBase knowledgeBase) {
         this.entry = entry;
-        this.lang = lang;
+        this.language = language;
         this.knowledgeBase = knowledgeBase;
-    }
-
-    public int getPriority() {
-        return entry.getPriority();
     }
 
     /**
@@ -52,7 +48,13 @@ public class KnowledgeBaseArticle {
      * @return the pre-signed absolute URL to this article
      */
     public String getPresignedUrl() {
-        return BizController.getBaseUrl() + "/kba/" + lang + "/" + getArticleId() + "/" + getAuthSignature(true);
+        return BizController.getBaseUrl()
+               + "/kba/"
+               + language
+               + "/"
+               + getArticleId()
+               + "/"
+               + computeAuthenticationSignature(true);
     }
 
     /**
@@ -62,7 +64,7 @@ public class KnowledgeBaseArticle {
      *                  (<tt>false</tt>)
      * @return the authentication signature for this article
      */
-    public String getAuthSignature(boolean thisMonth) {
+    public String computeAuthenticationSignature(boolean thisMonth) {
         LocalDate date = LocalDate.now();
         if (!thisMonth) {
             date = date.minusMonths(1);
@@ -107,7 +109,7 @@ public class KnowledgeBaseArticle {
      * not placed in any chapter at all.
      */
     public Optional<KnowledgeBaseArticle> queryParent() {
-        return knowledgeBase.resolve(lang, entry.getParentId(), false);
+        return knowledgeBase.resolve(language, entry.getParentId(), false);
     }
 
     public String getArticleId() {
@@ -126,8 +128,8 @@ public class KnowledgeBaseArticle {
         return entry.getTemplatePath();
     }
 
-    public String getLang() {
-        return lang;
+    public String getLanguage() {
+        return language;
     }
 
     protected KnowledgeBaseEntry getEntry() {
@@ -136,5 +138,9 @@ public class KnowledgeBaseArticle {
 
     public boolean isChapter() {
         return entry.isChapter();
+    }
+
+    public int getPriority() {
+        return entry.getPriority();
     }
 }

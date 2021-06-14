@@ -594,6 +594,17 @@ public class BizController extends BasicController {
         return Hasher.md5().hash(uri + secret + unixTimeInDays).toHexString();
     }
 
+    /**
+     * Verifies the given signature for the given URI.
+     * <p>
+     * This signature was previously computed using {@link #computeURISignature(String)}.
+     *
+     * @param webContext the request to verify the uri for. This will be completed with a <tt>FORBIDDEN</tt>
+     *                   HTTP error if the signature is invalid
+     * @param uri        the uri to verify
+     * @param givenHash  the given signature to verify
+     * @return <tt>true</tt> if the signature is valid, <tt>false</tt> otherwise
+     */
     public static boolean verifyURISignature(WebContext webContext, String uri, String givenHash) {
         String hash = computeURISignature(uri);
         if (!Strings.areEqual(hash, givenHash)) {

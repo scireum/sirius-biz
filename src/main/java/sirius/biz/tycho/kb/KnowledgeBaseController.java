@@ -82,8 +82,8 @@ public class KnowledgeBaseController extends BizController {
     public void langArticle(WebContext webContext, String lang, String articleId, String authKey) {
         KnowledgeBaseArticle article = knowledgeBase.resolve(lang, articleId, true).orElse(null);
         if (article != null && (article.getEntry().checkPermissions()
-                                || Strings.areEqual(article.getAuthSignature(true), authKey)
-                                || Strings.areEqual(article.getAuthSignature(false), authKey))) {
+                                || Strings.areEqual(article.computeAuthenticationSignature(true), authKey)
+                                || Strings.areEqual(article.computeAuthenticationSignature(false), authKey))) {
             UserContext.getHelper(KBHelper.class).installCurrentArticle(article);
             webContext.respondWith().template(article.getTemplatePath());
         } else {

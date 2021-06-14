@@ -41,6 +41,16 @@ import java.util.regex.Pattern;
 @Register(framework = KnowledgeBase.FRAMEWORK_KNOWLEDGE_BASE)
 public class SynchronizeArticlesTask implements EndOfDayTask {
 
+    private static final String BLOCK_CODE = "code";
+    private static final String BLOCK_LANG = "lang";
+    private static final String BLOCK_CHAPTER = "chapter";
+    private static final String BLOCK_PARENT = "parent";
+    private static final String BLOCK_PRIORITY = "priority";
+    private static final String BLOCK_TITLE = "title";
+    private static final String BLOCK_DESCRIPTION = "description";
+    private static final String BLOCK_REQUIRED_PERMISSIONS = "requiredPermissions";
+    private static final String BLOCK_CROSS_REFERENCES = "crossReferences";
+
     private boolean executed = false;
 
     @Part
@@ -85,7 +95,7 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
               .find(Pattern.compile("(default/|customizations/[^/]+/)?kb/.*\\.pasta"))
               .forEach(matcher -> updateArticle(cleanupTemplatePath(matcher.group(0)), syncId));
 
-        elastic.getLowLevelClient().refresh(mixing.getDescriptor(KnowledgeBaseEntry.class).getRelationName());
+        elastic.refresh(KnowledgeBaseEntry.class);
         cleanupOldEntries(syncId);
         if (!Sirius.isDev()) {
             // We only remove empty chapters from production instances as in development systems it might
@@ -109,18 +119,18 @@ public class SynchronizeArticlesTask implements EndOfDayTask {
             GlobalRenderContext context = tagliatelle.createRenderContext();
             template.render(context);
 
-            String articleId = Value.of(context.getExtraBlock("code")).toUpperCase();
-            String lang = context.getExtraBlock("lang");
+            String articleId = Value.of(context.getExtraBlock(BLOCK_CODE)).toUpperCase();
+            String lang = context.getExtraBlock(BLOCK_LANG);
             KnowledgeBaseEntry entry = findOrCreateEntry(templatePath, articleId, lang);
 
             entry.setSyncId(syncId);
-            entry.setChapter(Value.of(context.getExtraBlock("chapter")).asBoolean());
-            entry.setParentId(Value.of(context.getExtraBlock("parent")).toUpperCase());
-            entry.setPriority(Value.of(context.getExtraBlock("priority")).asInt(Priorized.DEFAULT_PRIORITY));
-            entry.setTitle(context.getExtraBlock("title"));
-            entry.setDescription(context.getExtraBlock("description"));
-            entry.setRequiredPermissions(context.getExtraBlock("requiredPermissions"));
-            Arrays.stream(context.getExtraBlock("crossReferences").split(","))
+            entry.setChapter(Value.of(context.getExtraBlock(BLOCK_CHAPTER)).asBoolean());
+            entry.setParentId(Value.of(context.getExtraBlock(BLOCK_PARENT)).toUpperCase());
+            entry.setPriority(Value.of(context.getExtraBlock(BLOCK_PRIORITY)).asInt(Priorized.DEFAULT_PRIORITY));
+            entry.setTitle(context.getExtraBlock(BLOCK_TITLE));
+            entry.setDescription(context.getExtraBlock(BLOCK_DESCRIPTION));
+            entry.setRequiredPermissions(context.getExtraBlock(BLOCK_REQUIRED_PERMISSIONS));
+            Arrays.stream(context.getExtraBlock(BLOCK_CROSS_REFERENCES).split(","))
                   .map(String::trim)
                   .map(String::toUpperCase)
                   .filter(Strings::isFilled)

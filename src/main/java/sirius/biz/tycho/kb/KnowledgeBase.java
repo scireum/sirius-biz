@@ -60,39 +60,39 @@ public class KnowledgeBase {
     /**
      * Resolves the code into an article.
      *
-     * @param lang                the language to resolve the article for. Note that this will also consider the
+     * @param language            the language to resolve the article for. Note that this will also consider the
      *                            {@link #fallbackLang}
-     * @param kbaId               the code or id of the article to resolve
+     * @param articleId           the code or id of the article to resolve
      * @param skipPermissionCheck determines if the permissions for the article should be enforced (<tt>false</tt>)
      *                            or skipped (<tt>true</tt>).
      * @return the resolved article, or an empty optional if the article doesn't exist or if the current user isn't
      * permitted to view it
      */
-    public Optional<KnowledgeBaseArticle> resolve(String lang, String kbaId, boolean skipPermissionCheck) {
-        if (Strings.isEmpty(kbaId)) {
+    public Optional<KnowledgeBaseArticle> resolve(String language, String articleId, boolean skipPermissionCheck) {
+        if (Strings.isEmpty(articleId)) {
             return Optional.empty();
         }
 
         Optional<KnowledgeBaseEntry> candidate = elastic.select(KnowledgeBaseEntry.class)
-                                                        .eq(KnowledgeBaseEntry.LANG, lang)
-                                                        .eq(KnowledgeBaseEntry.ARTICLE_ID, kbaId.toUpperCase())
+                                                        .eq(KnowledgeBaseEntry.LANG, language)
+                                                        .eq(KnowledgeBaseEntry.ARTICLE_ID, articleId.toUpperCase())
                                                         .first();
-        if (!Strings.areEqual(lang, fallbackLang)) {
+        if (!Strings.areEqual(language, fallbackLang)) {
             candidate = candidate.or(() -> elastic.select(KnowledgeBaseEntry.class)
                                                   .eq(KnowledgeBaseEntry.LANG, fallbackLang)
-                                                  .eq(KnowledgeBaseEntry.ARTICLE_ID, kbaId.toUpperCase())
+                                                  .eq(KnowledgeBaseEntry.ARTICLE_ID, articleId.toUpperCase())
                                                   .first());
         }
         if (!skipPermissionCheck) {
             candidate = candidate.filter(KnowledgeBaseEntry::checkPermissions);
         }
-        return candidate.map(entry -> new KnowledgeBaseArticle(entry, lang, this));
+        return candidate.map(entry -> new KnowledgeBaseArticle(entry, language, this));
     }
 
     /**
      * Determines the fallback or default lang of the knowledge base.
      *
-     * @return the default language as two letter ISO code
+     * @return the default language as two-letter ISO code
      */
     public String getFallbackLang() {
         return fallbackLang;
@@ -101,7 +101,7 @@ public class KnowledgeBase {
     /**
      * Queries the list of all languages for which at least one article is present.
      *
-     * @return the list of languages (two letter ISO codes) for which articles are present
+     * @return the list of languages (two-letter ISO codes) for which articles are present
      */
     public List<String> queryLanguages() {
         if (languages == null) {
@@ -127,12 +127,12 @@ public class KnowledgeBase {
     /**
      * Queries the list of language codes in which a given article is available.
      *
-     * @param kbaId the id or code of the article to check
-     * @return the list of two letter ISO codes in which this article is available
+     * @param articleId the id or code of the article to check
+     * @return the list of two-letter ISO codes in which this article is available
      */
-    public List<String> queryLanguageVersions(String kbaId) {
+    public List<String> queryLanguageVersions(String articleId) {
         return elastic.select(KnowledgeBaseEntry.class)
-                      .eq(KnowledgeBaseEntry.ARTICLE_ID, kbaId.toUpperCase())
+                      .eq(KnowledgeBaseEntry.ARTICLE_ID, articleId.toUpperCase())
                       .orderAsc(KnowledgeBaseEntry.LANG)
                       .queryList()
                       .stream()
@@ -152,16 +152,16 @@ public class KnowledgeBase {
     private List<KnowledgeBaseArticle> queryChildren(KnowledgeBaseArticle kba, boolean chapter) {
         List<KnowledgeBaseArticle> result = new ArrayList<>();
         elastic.select(KnowledgeBaseEntry.class)
-               .eq(KnowledgeBaseEntry.LANG, kba.getLang())
+               .eq(KnowledgeBaseEntry.LANG, kba.getLanguage())
                .eq(KnowledgeBaseEntry.PARENT_ID, kba.getArticleId())
                .eq(KnowledgeBaseEntry.CHAPTER, chapter)
                .iterateAll(entry -> {
                    if (entry.checkPermissions()) {
-                       result.add(new KnowledgeBaseArticle(entry, kba.getLang(), this));
+                       result.add(new KnowledgeBaseArticle(entry, kba.getLanguage(), this));
                    }
                });
 
-        if (!Strings.areEqual(kba.getLang(), fallbackLang)) {
+        if (!Strings.areEqual(kba.getLanguage(), fallbackLang)) {
             elastic.select(KnowledgeBaseEntry.class)
                    .eq(KnowledgeBaseEntry.LANG, fallbackLang)
                    .eq(KnowledgeBaseEntry.PARENT_ID, kba.getArticleId())
@@ -170,7 +170,7 @@ public class KnowledgeBase {
                        if (entry.checkPermissions() && result.stream()
                                                              .noneMatch(existingEntry -> Strings.areEqual(existingEntry.getArticleId(),
                                                                                                           entry.getArticleId()))) {
-                           result.add(new KnowledgeBaseArticle(entry, kba.getLang(), this));
+                           result.add(new KnowledgeBaseArticle(entry, kba.getLanguage(), this));
                        }
                    });
         }
@@ -187,23 +187,23 @@ public class KnowledgeBase {
            .getRelatesTo()
            .data()
            .stream()
-           .map(articleId -> resolve(kba.getLang(), articleId, false))
+           .map(articleId -> resolve(kba.getLanguage(), articleId, false))
            .filter(Optional::isPresent)
            .map(Optional::get)
            .forEach(result::add);
 
         elastic.select(KnowledgeBaseEntry.class)
-               .eq(KnowledgeBaseEntry.LANG, kba.getLang())
+               .eq(KnowledgeBaseEntry.LANG, kba.getLanguage())
                .eq(KnowledgeBaseEntry.RELATES_TO, kba.getArticleId())
                .iterateAll(entry -> {
                    if (entry.checkPermissions() && result.stream()
                                                          .noneMatch(existingEntry -> Strings.areEqual(existingEntry.getArticleId(),
                                                                                                       entry.getArticleId()))) {
-                       result.add(new KnowledgeBaseArticle(entry, kba.getLang(), this));
+                       result.add(new KnowledgeBaseArticle(entry, kba.getLanguage(), this));
                    }
                });
 
-        if (!Strings.areEqual(kba.getLang(), fallbackLang)) {
+        if (!Strings.areEqual(kba.getLanguage(), fallbackLang)) {
             elastic.select(KnowledgeBaseEntry.class)
                    .eq(KnowledgeBaseEntry.LANG, fallbackLang)
                    .eq(KnowledgeBaseEntry.RELATES_TO, kba.getArticleId())
@@ -211,7 +211,7 @@ public class KnowledgeBase {
                        if (entry.checkPermissions() && result.stream()
                                                              .noneMatch(existingEntry -> Strings.areEqual(existingEntry.getArticleId(),
                                                                                                           entry.getArticleId()))) {
-                           result.add(new KnowledgeBaseArticle(entry, kba.getLang(), this));
+                           result.add(new KnowledgeBaseArticle(entry, kba.getLanguage(), this));
                        }
                    });
         }
@@ -225,32 +225,32 @@ public class KnowledgeBase {
     /**
      * Tries to find matching articles for the given query.
      *
-     * @param lang       the language to query in (the fallback language is also considered)
+     * @param language   the language to query in (the fallback language is also considered)
      * @param query      the query to perform (the keyword to search for)
      * @param maxResults the maximal number of results to fetch
      * @return a list of matching articles
      */
-    public List<KnowledgeBaseArticle> query(String lang, String query, int maxResults) {
+    public List<KnowledgeBaseArticle> query(String language, String query, int maxResults) {
         List<KnowledgeBaseArticle> result = new ArrayList<>();
         elastic.select(KnowledgeBaseEntry.class)
-               .eq(KnowledgeBaseEntry.LANG, lang)
+               .eq(KnowledgeBaseEntry.LANG, language)
                .queryString(query, QueryField.contains(KnowledgeBaseEntry.SEARCH_FIELD))
                .limit(maxResults * 5)
                .iterateAll(entry -> {
                    if (entry.checkPermissions()) {
-                       result.add(new KnowledgeBaseArticle(entry, lang, this));
+                       result.add(new KnowledgeBaseArticle(entry, language, this));
                    }
                });
-        if (!Strings.areEqual(lang, fallbackLang)) {
+        if (!Strings.areEqual(language, fallbackLang)) {
             elastic.select(KnowledgeBaseEntry.class)
-                   .eq(KnowledgeBaseEntry.LANG, lang)
+                   .eq(KnowledgeBaseEntry.LANG, language)
                    .queryString(query, QueryField.contains(KnowledgeBaseEntry.SEARCH_FIELD))
                    .limit(maxResults * 5)
                    .iterateAll(entry -> {
                        if (entry.checkPermissions() && result.stream()
                                                              .noneMatch(existingEntry -> Strings.areEqual(existingEntry.getArticleId(),
                                                                                                           entry.getArticleId()))) {
-                           result.add(new KnowledgeBaseArticle(entry, lang, this));
+                           result.add(new KnowledgeBaseArticle(entry, language, this));
                        }
                    });
         }
