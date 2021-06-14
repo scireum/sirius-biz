@@ -17,6 +17,7 @@ import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.query.Query;
 import sirius.db.mixing.query.constraints.Constraint;
+import sirius.db.mongo.MongoQuery;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Watch;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -100,18 +102,17 @@ public class QueryController extends BizController {
                 ((ElasticQuery<?>) baseQuery).deliberatelyUnrouted();
             }
 
-            // We need to count before we apply a limit...
-            long numberOfEntites = baseQuery.count();
+            long numberOfEntities = getTotalCount(limit, baseQuery);
 
             // Actually perform the query...
             List<BaseEntity<?>> result = new ArrayList<>();
-            if (numberOfEntites > 0) {
+            if (numberOfEntities > 0) {
                 Watch watch = Watch.start();
                 baseQuery.limit(limit).iterateAll(result::add);
 
                 UserContext.message(Message.info(Strings.apply("Showing %s of %s results - Query took %sms",
                                                                result.size(),
-                                                               numberOfEntites,
+                                                               numberOfEntities,
                                                                watch.elapsedMillis())));
             }
 
@@ -125,6 +126,20 @@ public class QueryController extends BizController {
         }
 
         return Collections.emptyList();
+    }
+
+    private <C extends Constraint, Q extends Query<Q, ?, C>> long getTotalCount(int limit, Q baseQuery) {
+        if (baseQuery instanceof MongoQuery) {
+            Optional<Long> count = ((MongoQuery<?>) baseQuery).count(false, 5000);
+
+            if (count.isPresent()) {
+                return count.get();
+            }
+            UserContext.message(Message.warn(Strings.apply("Fetching total result count timed out.")));
+            return limit;
+        }
+
+        return baseQuery.count();
     }
 
     @Nonnull

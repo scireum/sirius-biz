@@ -9,7 +9,7 @@
 
 
     <i:for type="sirius.biz.process.logs.ProcessLog" var="chart" items="charts.getItems()">
-        <i:local name="id" value="@call.generateLocalId()" />
+        <i:local name="id" value="@generateId()" />
         <div class="well">
             <canvas id="chart-@id" class="chart" style="display: block" height="400"></canvas>
         </div>

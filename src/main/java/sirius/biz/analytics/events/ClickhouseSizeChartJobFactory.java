@@ -11,13 +11,13 @@ package sirius.biz.analytics.events;
 import sirius.biz.analytics.charts.Dataset;
 import sirius.biz.analytics.reports.Cell;
 import sirius.biz.jobs.JobCategory;
-import sirius.biz.jobs.JobFactory;
 import sirius.biz.jobs.interactive.LinearChartJobFactory;
 import sirius.biz.jobs.params.EntityDescriptorParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.jdbc.Row;
 import sirius.db.jdbc.SQLQuery;
+import sirius.db.mixing.EntityDescriptor;
 import sirius.kernel.commons.Amount;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -48,8 +48,9 @@ public class ClickhouseSizeChartJobFactory extends LinearChartJobFactory {
     @Part
     private EventRecorder recorder;
 
-    private EntityDescriptorParameter entityDescriptorParameter =
-            new EntityDescriptorParameter().withFilter(descriptor -> Event.class.isAssignableFrom(descriptor.getType()));
+    private final Parameter<EntityDescriptor> entityDescriptorParameter =
+            new EntityDescriptorParameter().withFilter(descriptor -> Event.class.isAssignableFrom(descriptor.getType()))
+                                           .build();
 
     @Override
     public String getLabel() {
@@ -130,7 +131,7 @@ public class ClickhouseSizeChartJobFactory extends LinearChartJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(entityDescriptorParameter);
     }
 

@@ -23,6 +23,7 @@ import sirius.web.security.SAMLResponse;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -35,7 +36,7 @@ import java.util.UUID;
  * @param <U> specifies the effective entity type used to represent UserAccounts
  */
 @Register(framework = Tenants.FRAMEWORK_TENANTS)
-public class SAMLController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {
 
     /**

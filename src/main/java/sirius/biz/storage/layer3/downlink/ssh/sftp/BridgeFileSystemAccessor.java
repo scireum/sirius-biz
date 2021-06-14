@@ -11,7 +11,6 @@ package sirius.biz.storage.layer3.downlink.ssh.sftp;
 import org.apache.sshd.server.session.ServerSession;
 import org.apache.sshd.server.subsystem.sftp.DirectoryHandle;
 import org.apache.sshd.server.subsystem.sftp.FileHandle;
-import org.apache.sshd.server.subsystem.sftp.SftpEventListenerManager;
 import org.apache.sshd.server.subsystem.sftp.SftpFileSystemAccessor;
 import org.apache.sshd.server.subsystem.sftp.SftpSubsystemProxy;
 import sirius.biz.storage.layer3.VirtualFile;

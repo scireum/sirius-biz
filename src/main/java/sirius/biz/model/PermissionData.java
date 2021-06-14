@@ -183,10 +183,10 @@ public class PermissionData extends Composite {
      */
     @Nonnull
     public Settings getSettings() {
-        Config config = getConfig();
+        Config innerConfig = getConfig();
 
-        if (config != null) {
-            return new Settings(config, false);
+        if (innerConfig != null) {
+            return new Settings(innerConfig, false);
         }
 
         return new Settings(ConfigFactory.empty(), false);

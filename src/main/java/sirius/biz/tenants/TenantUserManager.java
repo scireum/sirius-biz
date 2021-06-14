@@ -32,6 +32,7 @@ import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 import sirius.web.http.WebContext;
 import sirius.web.security.GenericUserManager;
+import sirius.web.security.Permissions;
 import sirius.web.security.ScopeInfo;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
@@ -40,10 +41,12 @@ import sirius.web.security.UserSettings;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -66,7 +69,7 @@ import java.util.stream.Collectors;
  * @param <T> specifies the effective entity type used to represent Tenants
  * @param <U> specifies the effective entity type used to represent UserAccounts
  */
-public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+public abstract class TenantUserManager<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends GenericUserManager {
 
     /**
@@ -172,18 +175,20 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
     private static final String REMOVE_BY_TENANT_UNIQUE_NAME = "tenant-unique-name";
 
     protected static Cache<String, Tuple<Set<String>, String>> rolesCache =
-            CacheManager.<Tuple<Set<String>, String>>createCoherentCache("tenants-roles").addRemover(
-                    REMOVE_BY_TENANT_UNIQUE_NAME,
-                    (uniqueTenantName, entry) -> Strings.areEqual(uniqueTenantName, entry.getValue().getSecond()));
+            CacheManager.<Tuple<Set<String>, String>>createCoherentCache("tenants-roles")
+                        .addRemover(REMOVE_BY_TENANT_UNIQUE_NAME,
+                                    (uniqueTenantName, entry) -> Strings.areEqual(uniqueTenantName,
+                                                                                  entry.getValue().getSecond()));
 
     protected static Cache<String, UserAccount<?, ?>> userAccountCache =
             CacheManager.createCoherentCache("tenants-users");
     protected static Cache<String, Tenant<?>> tenantsCache = CacheManager.createCoherentCache("tenants-tenants");
 
     protected static Cache<String, Tuple<UserSettings, String>> configCache =
-            CacheManager.<Tuple<UserSettings, String>>createCoherentCache("tenants-configs").addRemover(
-                    REMOVE_BY_TENANT_UNIQUE_NAME,
-                    (uniqueTenantName, entry) -> Strings.areEqual(uniqueTenantName, entry.getValue().getSecond()));
+            CacheManager.<Tuple<UserSettings, String>>createCoherentCache("tenants-configs")
+                        .addRemover(REMOVE_BY_TENANT_UNIQUE_NAME,
+                                    (uniqueTenantName, entry) -> Strings.areEqual(uniqueTenantName,
+                                                                                  entry.getValue().getSecond()));
 
     protected TenantUserManager(ScopeInfo scope, Extension config) {
         super(scope, config);
@@ -342,7 +347,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
             U currentUser = originalUser.getUserObject(getUserClass());
             U modifiedUser = getUserClass().getDeclaredConstructor().newInstance();
             modifiedUser.setId(currentUser.getId());
-            modifiedUser.getUserAccountData().setLang(currentUser.getUserAccountData().getLang());
+            modifiedUser.getUserAccountData().getLang().setValue(currentUser.getUserAccountData().getLang().getValue());
             modifiedUser.getUserAccountData()
                         .getLogin()
                         .setUsername(currentUser.getUserAccountData().getLogin().getUsername());
@@ -592,10 +597,21 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                                .withTenantName(account.getTenant().fetchValue().getTenantData().getName())
                                .withLang(computeLang(null, account.getUniqueName()))
                                .withPermissions(roles)
-                               .withSettingsSupplier(ui -> getUserSettings(getScopeSettings(), ui))
-                               .withUserSupplier(u -> account)
+                               .withSettingsSupplier(user -> getUserSettings(getScopeSettings(), user))
+                               .withUserSupplier(ignored -> account)
                                .withNameAppendixSupplier(appendixSupplier)
+                               .withSubScopeCheck(this::checkSubScope)
                                .build();
+    }
+
+    @Override
+    protected boolean checkSubScope(UserInfo user, String scope) {
+        if (!user.isLoggedIn()) {
+            return true;
+        }
+
+        UserAccountData userAccountData = user.getUserObject(UserAccount.class).getUserAccountData();
+        return userAccountData.getSubScopes().isEmpty() || userAccountData.getSubScopes().contains(scope);
     }
 
     @Override
@@ -625,6 +641,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         LoginData loginData = account.getUserAccountData().getLogin();
         if (acceptApiTokens && checkApiToken(loginData, password)) {
             completeAuditLogForUser(auditLog.neutral("AuditLog.apiTokenLogin"), account);
+            recordLogin(result, false);
             return result;
         }
 
@@ -639,6 +656,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
                 return rehashingResult.get();
             }
 
+            recordLogin(result, false);
             return result;
         }
 
@@ -736,7 +754,7 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
 
     @Override
     protected void recordUserLogin(WebContext ctx, UserInfo user) {
-        recordLogin(user, false);
+        // Ignored, as findUserByCredentials already records all logins.
     }
 
     /**
@@ -886,6 +904,32 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         return transformedRoles;
     }
 
+    /**
+     * Extends the list of permissions for the given tenant with what each available {@link AdditionalRolesProvider}
+     * has to offer.
+     *
+     * @param tenant              the tenant to compute additional roles for
+     * @param readOnlyPermissions the permissions which have been fetched so far.
+     * @return the effective set of permissions for this tenant
+     */
+    public static Set<String> computeEffectiveTenantPermissions(Tenant<?> tenant, Set<String> readOnlyPermissions) {
+        Collection<AdditionalRolesProvider> parts = additionalRolesProviders.getParts();
+        if (parts.isEmpty()) {
+            return readOnlyPermissions;
+        }
+
+        Set<String> result = new TreeSet<>(readOnlyPermissions);
+        for (AdditionalRolesProvider rolesProvider : additionalRolesProviders) {
+            rolesProvider.addAdditionalTenantRoles(tenant, result::add);
+        }
+
+        // also apply profiles and revokes to additional roles
+        Permissions.applyProfiles(result);
+        result.removeAll(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
+
+        return result;
+    }
+
     @Override
     protected Set<String> computeRoles(WebContext ctx, String accountUniqueName) {
         Tuple<Set<String>, String> cachedRoles = rolesCache.get(accountUniqueName);
@@ -976,8 +1020,8 @@ public abstract class TenantUserManager<I, T extends BaseEntity<I> & Tenant<I>, 
         if (userAccount == null) {
             return NLS.getDefaultLanguage();
         }
-        return Strings.firstFilled(userAccount.getUserAccountData().getLang(),
-                                   userAccount.getTenant().fetchValue().getTenantData().getLang(),
+        return Strings.firstFilled(userAccount.getUserAccountData().getLang().getValue(),
+                                   userAccount.getTenant().fetchValue().getTenantData().getLang().getValue(),
                                    NLS.getDefaultLanguage());
     }
 }

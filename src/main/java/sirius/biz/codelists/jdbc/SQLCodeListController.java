@@ -13,9 +13,11 @@ import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListData;
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListEntryData;
+import sirius.biz.codelists.mongo.MongoCodeListEntry;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.SQLPageHelper;
 import sirius.db.mixing.query.QueryField;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 
 import javax.annotation.Nonnull;
@@ -58,6 +60,10 @@ public class SQLCodeListController extends CodeListController<Long, SQLCodeList,
 
     @Override
     protected SQLCodeListEntry findOrCreateEntry(SQLCodeList codeList, String code) {
+        if (Strings.isEmpty(code)) {
+            return new SQLCodeListEntry();
+        }
+
         SQLCodeListEntry cle = oma.select(SQLCodeListEntry.class)
                                   .eq(SQLCodeListEntry.CODE_LIST, codeList)
                                   .eq(SQLCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE), code)

@@ -14,14 +14,11 @@ import sirius.biz.importer.ImportHandlerFactory;
 import sirius.biz.importer.ImporterContext;
 import sirius.biz.importer.MongoEntityImportHandler;
 import sirius.biz.model.AddressData;
-import sirius.biz.model.LoginData;
-import sirius.biz.model.PermissionData;
-import sirius.biz.model.PersonData;
 import sirius.biz.packages.PackageData;
 import sirius.biz.tenants.TenantData;
-import sirius.biz.tenants.UserAccountData;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
@@ -64,17 +61,38 @@ public class MongoTenantImportHandler extends MongoEntityImportHandler<MongoTena
     }
 
     @Override
-    public Optional<MongoTenant> tryFind(Context data) {
-        if (data.containsKey(MongoTenant.ID.getName())) {
-            return mango.select(MongoTenant.class)
-                        .eq(MongoTenant.ID, data.getValue(MongoTenant.ID.getName()).asString())
-                        .one();
+    protected MongoTenant loadForFind(Context data) {
+        return load(data,
+                    MongoTenant.ID,
+                    MongoTenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER),
+                    MongoTenant.TENANT_DATA.inner(TenantData.NAME),
+                    MongoTenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.STREET),
+                    MongoTenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.ZIP));
+    }
+
+    @Override
+    protected Optional<MongoTenant> tryFindByExample(MongoTenant example) {
+        if (Strings.isFilled(example.getId())) {
+            return mango.select(MongoTenant.class).eq(MongoTenant.ID, example.getId()).one();
         }
 
-        if (data.containsKey(MongoTenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER).toString())) {
+        if (Strings.isFilled(example.getTenantData().getAccountNumber())) {
             return mango.select(MongoTenant.class)
                         .eq(MongoTenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER),
-                            data.getValue(MongoTenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER).toString()))
+                            example.getTenantData().getAccountNumber())
+                        .one();
+        }
+        if (Strings.isFilled(example.getTenantData().getName())
+            && Strings.isFilled(example.getTenantData()
+                                       .getAddress()
+                                       .getStreet())
+            && Strings.isFilled(example.getTenantData().getAddress().getZip())) {
+            return mango.select(MongoTenant.class)
+                        .eq(MongoTenant.TENANT_DATA.inner(TenantData.NAME), example.getTenantData().getName())
+                        .eq(MongoTenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.STREET),
+                            example.getTenantData().getAddress().getStreet())
+                        .eq(MongoTenant.TENANT_DATA.inner(TenantData.ADDRESS).inner(AddressData.ZIP),
+                            example.getTenantData().getAddress().getZip())
                         .one();
         }
 

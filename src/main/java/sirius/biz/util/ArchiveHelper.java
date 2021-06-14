@@ -16,6 +16,7 @@ import net.sf.sevenzipjbinding.SevenZip;
 import net.sf.sevenzipjbinding.SevenZipException;
 import net.sf.sevenzipjbinding.SevenZipNativeInitializationException;
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
+import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
@@ -88,6 +89,11 @@ public class ArchiveHelper {
                                 false,
                                 new LocalArchiveExtractCallback(archive, filter, progressAndStopProvider));
             }
+        } catch (SevenZipException e) {
+            if (e.getCause() instanceof HandledException) {
+                throw (HandledException) e.getCause();
+            }
+            throw e;
         }
     }
 

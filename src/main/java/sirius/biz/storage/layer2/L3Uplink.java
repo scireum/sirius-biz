@@ -15,6 +15,7 @@ import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VFSRoot;
 import sirius.biz.storage.layer3.VirtualFile;
+import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
@@ -39,7 +40,7 @@ import java.util.function.Supplier;
  * {@link #wrapBlob(VirtualFile, Blob, boolean)} and {@link #wrapDirectory(VirtualFile, Directory, boolean)} might be
  * used by custom VFS roots which also access blobs under the hoods.
  */
-@Register(classes = {VFSRoot.class, L3Uplink.class})
+@Register(classes = {VFSRoot.class, L3Uplink.class}, framework = StorageUtils.FRAMEWORK_STORAGE)
 public class L3Uplink implements VFSRoot {
 
     @Part

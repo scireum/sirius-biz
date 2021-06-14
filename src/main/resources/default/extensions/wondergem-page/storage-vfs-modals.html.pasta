@@ -2,195 +2,218 @@
 
 <i:switch test="@point">
     <i:block name="footer">
-        <w:modal name="select-directory-modal" titleKey="VFSController.selectDirectory">
-            <w:modalBody>
-                <div class="row">
-                    <div class="col-md-12">
-                        <ol class="breadcrumb">
-                        </ol>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <table class="table table-striped select-directory-table">
-                        </table>
-                    </div>
-                </div>
-                <div class="row">
-                    <w:textfield name="select-directory-path"
-                                 labelKey="VFSController.directory"
-                                 value=""
-                                 span="12"
-                                 readonly="true"/>
-                </div>
-                <w:modalFooter cancelKey="NLS.cancel">
-                    <button type="submit" class="btn btn-primary ok-btn">@i18n("NLS.ok")</button>
-                </w:modalFooter>
-            </w:modalBody>
-        </w:modal>
-
-        <script type="text/javascript">
-            function selectVFSDirectory(path) {
-                return new Promise(function (resolve, reject) {
-                    var $modal = $("#select-directory-modal");
-
-                    function update() {
-                        $modal.find("input[name='select-directory-path']").val(path);
-                        $.getJSON('/fs/list', {path: path, onlyDirectories: true}, function (json) {
-                            var $table = $modal.find('.select-directory-table');
-                            $table.html('');
-                            for (var i = 0; i < json.children.length; i++) {
-                                var child = json.children[i];
-                                var $tr = $('<tr>' +
-                                    '<td><a class="file-link" href="#" data-path="' + child.path + '">' +
-                                    '<i class="fa fa-folder-open"></i>&nbsp;' + child.name + '</a></td>' +
-                                    '</tr>');
-
-                                $tr.find('.file-link').click(function () {
-                                    path = $(this).data('path');
-                                    update();
-                                });
-                                $tr.appendTo($table);
-                            }
-
-                            var $breadcrumbs = $modal.find('.breadcrumb');
-                            $breadcrumbs.html('');
-                            for (var i = 0; i < json.path.length; i++) {
-                                var element = json.path[i];
-                                var name = element.name === '/' ? '<i class="fa fa-home"></i>' : element.name;
-                                var $li = $('<li><a class="file-link" href="#" data-path="' + element.path + '">' + name + '</a></li>');
-                                $li.find('.file-link').click(function () {
-                                    path = $(this).data('path');
-                                    update();
-                                });
-                                $li.appendTo($breadcrumbs);
-                            }
-                        });
-
-                    }
-
-                    update();
-
-                    $modal.find('.ok-btn').off('click').click(function () {
-                        $modal.modal('hide');
-                        resolve(path);
-                    });
-
-                    $modal.modal('show');
-                });
-            }
-        </script>
-
         <w:modal name="select-file-modal" titleKey="VFSController.selectFile">
             <w:modalBody>
                 <div class="row">
                     <div class="col-md-12">
-                        <ol class="breadcrumb">
+                        <ol class="breadcrumb breadcrumb-js">
                         </ol>
                     </div>
                 </div>
-                <div class="row">
+                <div class="row upload-container-js">
                     <div class="col-md-12">
-                        <div class="uploadBox"></div>
+                        <div class="upload-box-js"></div>
                     </div>
                 </div>
+                <form class="row search-form-js">
+                    <div class="col-md-12 form-group">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="@i18n('NLS.search')">
+                            <span class="input-group-addon search-btn-js"><i class="fa fa-search"></i></span>
+                        </div>
+                    </div>
+                </form>
                 <div class="row">
+                    <label class="search-result-js col-md-12" hidden>@i18n("NLS.searchResult")</label>
                     <div class="col-md-12">
                         <table class="table table-striped select-file-table">
+                            <tbody class="select-file-table-js">
+                            </tbody>
                         </table>
                     </div>
                 </div>
-                <w:modalFooter cancelKey="NLS.cancel"/>
+                <div class="row">
+                    <nav aria-label="Pop-up pagination"
+                         class="text-center pagination-controls pagination-controls-js col-md-12"></nav>
+                </div>
             </w:modalBody>
+            <w:modalFooter cancelKey="NLS.cancel">
+                <button type="submit" class="btn btn-primary ok-btn-js">@i18n("NLS.ok")</button>
+            </w:modalFooter>
         </w:modal>
 
         <script type="text/javascript">
-            function selectVFSFile(initialPath, restrictToPath) {
-                return new Promise(function (resolve, reject) {
-                    var $modal = $("#select-file-modal");
+            function selectVFSDirectory(path) {
+                document.querySelector("#select-file-modal .modal-title").textContent = "___i18n('VFSController.selectDirectory')";
+                return selectFileOrDirectoryModal({
+                    path: path,
+                    onlyDirectories: true,
+                    pathRestriction: undefined,
+                    allowUpload: false,
+                    filter: function (child) {
+                        return true;
+                    },
+                    createRow: function (child, _modal, resolve, changeDirectory) {
+                        const self = this;
 
-                    function update(path) {
-                        $.getJSON('/fs/list', {path: path, onlyDirectories: false}, function (json) {
-                            var $table = $modal.find('.select-file-table');
-                            $table.html('');
-                            for (var i = 0; i < json.children.length; i++) {
-                                var child = json.children[i];
+                        const _tr = document.createElement("tr");
+                        _tr.innerHTML = Mustache.render("<td><a class='file-link' href='#' data-path='{{path}}'>" +
+                            "<i class='fa fa-folder-open'></i>&nbsp;{{name}}</a></td>", child);
+                        _tr.querySelector(".file-link").addEventListener("click", function () {
+                            changeDirectory(this.dataset.path);
+                        });
+                        return _tr;
+                    }
+                });
+            }
 
-                                if (restrictToPath !== undefined && !child.path.startsWith(restrictToPath)) {
-                                    continue;
-                                }
+            function selectVFSFile(path, pathRestriction) {
+                document.querySelector("#select-file-modal .modal-title").textContent = "___i18n('VFSController.selectFile')";
+                return selectFileOrDirectoryModal({
+                    path: path,
+                    onlyDirectories: false,
+                    pathRestriction: pathRestriction,
+                    allowUpload: true,
+                    filter: function (child) {
+                        return pathRestriction === undefined || child.path.startsWith(pathRestriction);
+                    },
+                    createRow: function (child, _modal, resolve, changeDirectory) {
+                        const _self = this;
+                        child.icon = child.directory ? "fa-folder-open" : "fa-file";
 
-                                var $tr = $('<tr>' +
-                                    '<td><a class="file-link" href="#" data-dir="' + child.directory +
-                                    '" data-path="' + child.path + '">' +
-                                    '<i class="fa"></i>&nbsp;' + child.name + '</a></td>' +
-                                    '<td class="align-right">' + child.sizeString + '</td>' +
-                                    '<td class="align-right">' + child.lastModifiedString + '</td>' +
-                                    '</tr>');
+                        const _tr = document.createElement("tr");
+                        _tr.innerHTML = Mustache.render(
+                            '<td><a class="file-link" href="#" data-dir="{{directory}}" data-path="{{path}}"><i class="fa {{icon}}"></i>&nbsp;{{name}}</a></td>' +
+                            '<td class="align-right">{{sizeString}}</td>' +
+                            '<td class="align-right">{{lastModifiedString}}</td>', child);
 
-                                if (child.directory) {
-                                    $tr.find('.file-link i.fa').addClass('fa-folder-open');
-                                } else {
-                                    $tr.find('.file-link i.fa').addClass('fa-file');
-                                }
-
-                                $tr.find('.file-link').click(function () {
-                                    if ($(this).data('dir')) {
-                                        update($(this).data('path'));
-                                    } else {
-                                        $modal.modal('hide');
-                                        resolve($(this).data('path'));
-                                    }
-                                });
-                                $tr.appendTo($table);
-                            }
-
-                            var $breadcrumbs = $modal.find('.breadcrumb');
-                            $breadcrumbs.html('');
-                            for (var i = 0; i < json.path.length; i++) {
-                                var element = json.path[i];
-                                var name = element.name === '/' ? '<i class="fa fa-home"></i>' : element.name;
-
-                                if (restrictToPath !== undefined && !element.path.startsWith(restrictToPath)) {
-                                    continue;
-                                }
-
-                                var $li = $('<li><a class="file-link" href="#" data-path="' + element.path + '">' + name + '</a></li>');
-                                $li.find('.file-link').click(function () {
-                                    update($(this).data('path'));
-                                });
-                                $li.appendTo($breadcrumbs);
-                            }
-
-                            if (json.canCreateChildren) {
-                                $modal.find('.uploadBox').each(function (index) {
-                                    fileUpload('/fs/upload?path=' + encodeURIComponent(path),
-                                        this, undefined, [], 3, function (response) {
-                                            $modal.modal('hide');
-                                            if (response.error) {
-                                                clearMessages();
-                                                addError(response.message);
-                                            } else {
-                                                resolve(response.file);
-                                            }
-                                        });
-                                });
+                        _tr.querySelector(".file-link").addEventListener("click", function () {
+                            if (this.dataset.dir === "true") {
+                                changeDirectory(this.dataset.path);
                             } else {
-                                $modal.find('.uploadBox').html('');
+                                $(_modal).modal("hide");
+                                resolve(this.dataset.path);
+                            }
+                        });
+                        return _tr;
+                    }
+                });
+            }
+
+            function selectFileOrDirectoryModal(config) {
+                return new Promise(function (resolve, reject) {
+                    const _modal = document.getElementById("select-file-modal");
+                    const _table = _modal.querySelector('.select-file-table-js');
+                    const _searchForm = _modal.querySelector('.search-form-js input');
+                    const pageSize = 25;
+
+                    _searchForm.value = "";
+
+                    const pagination = new Pagination(_modal.querySelector(".pagination-controls-js"), pageSize, function (page, pagination) {
+                        if (page <= 0) {
+                            pagination._previousBtn.classList.add("disabled");
+                        } else {
+                            pagination._previousBtn.classList.remove("disabled");
+                        }
+                        const url = Mustache.render("/fs/list?path={{path}}&onlyDirectories={{onlyDirectories}}&skip={{skip}}&maxItems={{maxItems}}&filter={{filter}}", {
+                            path: encodeURIComponent(config.path),
+                            onlyDirectories: config.onlyDirectories,
+                            skip: page * pageSize,
+                            maxItems: pageSize + 1,
+                            filter: encodeURIComponent(_searchForm.value)
+                        });
+                        fetch(url).then(function (response) {
+                            if (!response.ok) {
+                                throw "Http response status was " + response.status;
+                            }
+                            return response.json();
+                        }).then(function (json) {
+                            _table.textContent = "";
+                            let numItems = Math.min(json.children.length, pageSize);
+                            for (let i = 0; i < numItems; i++) {
+                                let child = json.children[i];
+                                if (config.filter(child)) {
+                                    _table.appendChild(config.createRow(child, _modal, resolve, function (newPath) {
+                                        config.path = newPath;
+                                        _searchForm.value = "";
+                                        pagination.reset();
+                                    }));
+                                }
+                            }
+                            pagination.setPageLabel((page * pageSize + 1) + " - " + (page * pageSize + numItems));
+
+                            _modal.querySelector(".search-result-js").style.display = _searchForm.value ? "block" : "none";
+
+                            if (json.children.length <= pageSize) {
+                                pagination._nextBtn.classList.add("disabled");
+                            } else {
+                                pagination._nextBtn.classList.remove("disabled");
+                            }
+
+                            const _breadcrumbs = _modal.querySelector('.breadcrumb-js');
+                            _breadcrumbs.textContent = '';
+                            for (let i = 0; i < json.path.length; i++) {
+                                const element = json.path[i];
+                                if (!config.filter(element)) {
+                                    continue;
+                                }
+                                const _li = document.createElement("li");
+                                _li.innerHTML = Mustache.render('<a class="file-link" href="#" data-path={{path}}>{{{name}}}</a>', {
+                                    path: element.path,
+                                    name: element.name === "/" ? "<i class='fa fa-home'></i>" : element.name
+                                });
+                                _li.querySelector('.file-link').addEventListener("click", function () {
+                                    config.path = this.dataset.path;
+                                    pagination.reset();
+                                });
+                                _breadcrumbs.appendChild(_li);
+                            }
+
+                            if (config.allowUpload && json.canCreateChildren) {
+                                const _uploadBox = _modal.querySelector('.upload-box-js');
+                                fileUpload('/fs/upload?path=' + encodeURIComponent(config.path),
+                                    _uploadBox, undefined, [], 3, function (response) {
+                                        $(_modal).modal('hide');
+                                        if (response.error) {
+                                            clearMessages();
+                                            addError(response.message);
+                                        } else {
+                                            resolve(response.file);
+                                        }
+                                    });
+                            } else {
+                                _modal.querySelector('.upload-box-js').textContent = '';
                             }
                         });
 
-                    }
-
-                    update(initialPath);
-
-                    $modal.find('.ok-btn').off('click').click(function () {
-                        $modal.modal('hide');
-                        resolve(path);
                     });
 
-                    $modal.modal('show');
+                    replaceEventHandlers(_modal.querySelector('.search-form-js .search-btn-js'), "click", function () {
+                        pagination.reset();
+                    });
+                    replaceEventHandlers(_modal.querySelector('.search-form-js'), 'submit', function (event) {
+                        event.preventDefault();
+                        pagination.reset();
+                    });
+                    replaceEventHandlers(_modal.querySelector('.ok-btn-js'), 'click', function () {
+                        $(_modal).modal('hide');
+                        resolve(config.path);
+                    });
+
+                    _modal.querySelector(".ok-btn-js").style.display = config.onlyDirectories ? "inline-block" : "none";
+
+                    $(_modal).modal('show');
                 });
+            }
+
+            function replaceEventHandlers(_elem, eventName, handler) {
+                const _clonedElem = _elem.cloneNode(false);
+                while (_elem.hasChildNodes()) {
+                    _clonedElem.appendChild(_elem.firstChild);
+                }
+                _elem.parentNode.replaceChild(_clonedElem, _elem);
+                _clonedElem.addEventListener(eventName, handler);
+                return _clonedElem;
             }
         </script>
     </i:block>

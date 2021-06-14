@@ -45,7 +45,7 @@ public class RateLimitEventsReportJobFactory extends ReportJobFactory {
     @Part
     private OMA oma;
 
-    private static final StringParameter SCOPE_PARAMETER = new StringParameter("scope", "Scope").hidden();
+    private static final Parameter<String> SCOPE_PARAMETER = new StringParameter("scope", "Scope").hidden().build();
 
     @Override
     protected boolean hasPresetFor(QueryString queryString, Object targetObject) {
@@ -115,7 +115,7 @@ public class RateLimitEventsReportJobFactory extends ReportJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(SCOPE_PARAMETER);
     }
 

@@ -8,136 +8,49 @@
 
 package sirius.biz.jobs.params;
 
+import sirius.biz.jobs.JobFactory;
+import sirius.biz.process.ProcessContext;
 import sirius.kernel.commons.Value;
-import sirius.kernel.health.Exceptions;
+import sirius.kernel.di.transformers.Composable;
 import sirius.kernel.nls.NLS;
 
 import java.util.Map;
 import java.util.Optional;
 
 /**
- * Defines a parameter which can be rendered in the UI and verify and extract a value from a context.
+ * Defines a parameter which queries a value for a {@link JobFactory} as parameter.
+ * <p>
+ * A new parameter is created via one of the subclasses of {@link ParameterBuilder}. These are mainly separated so
+ * that a resulting parameter is immutable and can be safely shared as a global constant.
+ * <p>
+ * The parameters for a job are returned in {@link JobFactory#getParameters()} and are most probably collected via
+ * {@link sirius.biz.jobs.BasicJobFactory#collectParameters(Consumer)}.
+ * <p>
+ * The value can either be fetched via {@link #get(Map)} or with a helper like
+ * {@link ProcessContext#getParameter(Parameter)} or {@link ProcessContext#require(Parameter)}.
+ * <p>
+ * Note that the underlying builder can be accessed using {@code parameter.as(ParameterBuilderClass.class)}. However,
+ * this must only be used in templates to invoke non-mutating methods when rendering the parameter template. A
+ * <tt>Parameter</tt> itself should remain immutable once created.
  *
  * @param <V> the type of values produced by this parameter
- * @param <P> recursive type reference to support fluent method calls
  */
-public abstract class Parameter<V, P extends Parameter<V, P>> {
-
-    /**
-     * Provides a tri-state value for the visibility of a parameter.
-     */
-    private enum Visibility {NORMAL, ONLY_WITH_VALUE, HIDDEN}
+public class Parameter<V> extends Composable {
 
     /**
      * Provides a tri-state value indicating in which log the parameter can appear.
      */
     public enum LogVisibility {NORMAL, SYSTEM, NONE}
 
-    private static final String HIDDEN_TEMPLATE_NAME = "/templates/biz/jobs/params/hidden.html.pasta";
+    private final ParameterBuilder<V, ?> delegate;
 
-    protected String name;
-    protected String label;
-    protected String description;
-    protected boolean required;
-    protected Visibility visibility = Visibility.NORMAL;
-    protected LogVisibility logVisibility = LogVisibility.NORMAL;
-
-    /**
-     * Creates a new parameter with the given name and label.
-     *
-     * @param name  the name of the parameter
-     * @param label the label of the parameter, which will be {@link NLS#smartGet(String) auto translated}
-     */
-    protected Parameter(String name, String label) {
-        this.name = name;
-        this.label = label;
-    }
-
-    @SuppressWarnings("unchecked")
-    protected P self() {
-        return (P) this;
-    }
-
-    /**
-     * Specifies the label for the parameter.
-     *
-     * @param label the label of the parameter, which will be {@link NLS#smartGet(String) auto translated}
-     * @return the parameter itself for fluent method calls
-     */
-    public P withLabel(String label) {
-        this.label = label;
-        return self();
-    }
-
-    /**
-     * Specifies a short description for the parameter.
-     *
-     * @param description the description for the parameter, which will be {@link NLS#smartGet(String) auto translated}
-     * @return the parameter itself for fluent method calls
-     */
-    public P withDescription(String description) {
-        this.description = description;
-        return self();
-    }
-
-    /**
-     * Marks the parameter as required.
-     *
-     * @return the parameter itself for fluent method calls
-     */
-    public P markRequired() {
-        this.required = true;
-        return self();
-    }
-
-    /**
-     * Marks this parameter as visible.
-     *
-     * @return the parameter itself for fluent method calls
-     */
-    public P visible() {
-        this.visibility = Visibility.NORMAL;
-        return self();
-    }
-
-    /**
-     * Marks this parameter as hidden.
-     *
-     * @return the parameter itself for fluent method calls
-     */
-    public P hidden() {
-        this.visibility = Visibility.HIDDEN;
-        return self();
-    }
-
-    /**
-     * Marks this parameter as hidden if no value is present.
-     *
-     * @return the parameter itself for fluent method calls
-     */
-    public P hiddenIfEmpty() {
-        this.visibility = Visibility.ONLY_WITH_VALUE;
-        return self();
-    }
-
-    /**
-     * Marks this parameter that it should only be logged in the system log.
-     *
-     * @return the parameter itself for fluent method calls
-     */
-    public P logInSystem() {
-        this.logVisibility = LogVisibility.SYSTEM;
-        return self();
-    }
-
-    /**
-     * Marks this parameter that it should not be logged.
-     *
-     * @return the parameter itself for fluent method calls
-     */
-    public P doNotLog() {
-        this.logVisibility = LogVisibility.NONE;
-        return self();
+    protected Parameter(ParameterBuilder<V, ?> delegate) {
+        this.delegate = delegate;
+        Class<?> delegateClass = delegate.getClass();
+        while (delegateClass != null && delegateClass != ParameterBuilder.class) {
+            attach(delegateClass, delegate);
+            delegateClass = delegateClass.getSuperclass();
+        }
     }
 
     /**
@@ -147,15 +60,7 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      * @return <tt>true</tt> if the parameter is visible, <tt>false</tt> otherwise
      */
     public boolean isVisible(Map<String, String> context) {
-        if (this.visibility == Visibility.HIDDEN) {
-            return false;
-        }
-
-        if (this.visibility == Visibility.NORMAL) {
-            return true;
-        }
-
-        return get(context).isPresent();
+        return delegate.isVisible(context);
     }
 
     /**
@@ -163,7 +68,9 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      *
      * @return the name or path of the template used to render the parameter
      */
-    public abstract String getTemplateName();
+    public String getTemplateName() {
+        return delegate.getTemplateName();
+    }
 
     /**
      * Returns the name of the template used to render the parameter in the UI.
@@ -175,10 +82,7 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      * @return the name or path of the template used to render the parameter
      */
     public String getEffectiveTemplateName(Map<String, String> context) {
-        if (!isVisible(context)) {
-            return HIDDEN_TEMPLATE_NAME;
-        }
-        return getTemplateName();
+        return delegate.getEffectiveTemplateName(context);
     }
 
     /**
@@ -186,40 +90,11 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      *
      * @param input the input wrapped as <tt>Value</tt>
      * @return a serialized string version of the given input which can later be resolved using
-     * {@link #resolveFromString(Value)}
+     * {@link ParameterBuilder#resolveFromString(Value)}
      */
     public String checkAndTransform(Value input) {
-        try {
-            return checkAndTransformValue(input);
-        } catch (IllegalArgumentException e) {
-            throw Exceptions.createHandled()
-                            .withNLSKey("Parameter.invalidValue")
-                            .set("name", getLabel())
-                            .set("message", e.getMessage())
-                            .handle();
-        }
+        return delegate.checkAndTransform(input);
     }
-
-    /**
-     * Checks and transforms the given value.
-     *
-     * @param input the input wrapped as <tt>Value</tt>
-     *              * @return a serialized string version of the given input which can later be resolved using
-     *              * {@link #resolveFromString(Value)}
-     * @return the value represented as string
-     * @throws IllegalArgumentException in case of invalid data
-     */
-    protected abstract String checkAndTransformValue(Value input);
-
-    /**
-     * Resolves the previously created string representation into the actual parameter value.
-     * <p>
-     * The string value will be created by {@link #checkAndTransformValue(Value)}.
-     *
-     * @param input the string value wrapped as <tt>Value</tt>
-     * @return the resolved value wrapped as optional or an empty optional if the value couldn't be resolved
-     */
-    protected abstract Optional<V> resolveFromString(Value input);
 
     /**
      * Reads and resolves the value for this parameter from the given context.
@@ -228,7 +103,7 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      * @return the resolved value wrapped as optional or an empty optional if there is no value available
      */
     public Optional<V> get(Map<String, String> context) {
-        return resolveFromString(Value.of(context.get(getName())));
+        return delegate.get(context);
     }
 
     /**
@@ -241,10 +116,7 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      * @throws sirius.kernel.health.HandledException if no value for this parameter is available in the given context
      */
     public V require(Map<String, String> context) {
-        return get(context).orElseThrow(() -> Exceptions.createHandled()
-                                                        .withNLSKey("Parameter.required")
-                                                        .set("name", getLabel())
-                                                        .handle());
+        return delegate.require(context);
     }
 
     /**
@@ -253,7 +125,7 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      * @return the name of the parameter
      */
     public String getName() {
-        return name;
+        return delegate.getName();
     }
 
     /**
@@ -262,7 +134,7 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      * @return the {@link NLS#smartGet(String) auto translated} label of the parameter
      */
     public String getLabel() {
-        return NLS.smartGet(label);
+        return delegate.getLabel();
     }
 
     /**
@@ -271,7 +143,7 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      * @return the {@link NLS#smartGet(String) auto translated} description of the parameter
      */
     public String getDescription() {
-        return NLS.smartGet(description);
+        return delegate.getDescription();
     }
 
     /**
@@ -280,15 +152,25 @@ public abstract class Parameter<V, P extends Parameter<V, P>> {
      * @return <tt>true</tt> if a value has to be present for this parameter, <tt>false</tt> otherwise
      */
     public boolean isRequired() {
-        return required;
+        return delegate.isRequired();
     }
 
     /**
-     * Returns a {@link LogVisibility} value which indicates in which log this parameter should be logged.
+     * Returns a {@link Parameter.LogVisibility} value which indicates in which log this parameter should be logged.
      *
      * @return an enum value indicating the log behavior of this parameter
      */
     public LogVisibility getLogVisibility() {
-        return logVisibility;
+        return delegate.getLogVisibility();
+    }
+
+    /**
+     * Reveals the type of the underlying parameter builder to determine what type of parameter is present.
+     *
+     * @return the type of the builder which was used to create this parameter.
+     */
+    @SuppressWarnings("unchecked")
+    public Class<? extends ParameterBuilder<?, ?>> getBuilderType() {
+        return (Class<? extends ParameterBuilder<?, ?>>) delegate.getClass();
     }
 }

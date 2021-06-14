@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 /**
  * Provides a parameter which accepts {@link EntityDescriptor}.
  */
-public class EntityDescriptorParameter extends Parameter<EntityDescriptor, EntityDescriptorParameter> {
+public class EntityDescriptorParameter extends ParameterBuilder<EntityDescriptor, EntityDescriptorParameter> {
 
     @Part
     protected static Mixing mixing;

@@ -1,0 +1,34 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="120"/>
+
+<i:switch test="@point">
+    <i:block name="system">
+        <t:dropdownSection>
+            <t:dropdownItem titleKey="DisasterController.title" icon="fa-info-circle" url="/system/disaster"
+                        permission="permission-control-disaster-mode"/>
+        </t:dropdownSection>
+        <t:dropdownSection>
+            <t:dropdownItem title="State" icon="fa-info-circle" url="/system/state"
+                        permission="flag-system-tenant-member"/>
+            <t:dropdownItem title="System Load" icon="fa-tachometer-alt" url="/system/load"
+                        permission="flag-system-tenant-member"/>
+            <t:dropdownItem title="Console" icon="fa-terminal" url="/system/console"
+                        permission="permission-system-console"/>
+            <t:dropdownItem title="Timing" icon="fa-stopwatch" url="/system/timing"
+                        permission="permission-system-timing"/>
+            <t:dropdownItem title="Schema" icon="fa-table" url="/system/schema"
+                        permission="flag-system-administrator"/>
+            <t:dropdownItem title="SQL" icon="fa-database" url="/system/sql"
+                        permission="flag-system-administrator"/>
+            <t:dropdownItem title="Redis" icon="fa-database" url="/system/redis"
+                        permission="flag-system-administrator"/>
+            <t:dropdownItem title="DB Query Tool" icon="fa-search" url="/system/query"
+                        permission="flag-system-administrator"/>
+            <t:dropdownItem title="Cluster" icon="fa-sitemap" url="/system/cluster"
+                        permission="permission-system-cluster"/>
+            <t:dropdownItem title="Scripting" icon="fa-terminal" url="/system/scripting"
+                        permission="permission-sytem-scripting"/>
+        </t:dropdownSection>
+    </i:block>
+</i:switch>
+

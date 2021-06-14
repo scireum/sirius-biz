@@ -76,16 +76,21 @@ class BridgeSeekableByteChannel implements SeekableByteChannel {
             return this;
         }
 
-        if (newPosition < currentPosition || out == null) {
+        if (newPosition < currentPosition) {
             throw new IOException("Cannot skip to " + newPosition);
         }
 
         if (in != null) {
             currentPosition += in.skip(newPosition - currentPosition);
-            if (currentPosition != newPosition) {
-                throw new IOException("Cannot skip forward to " + newPosition);
-            }
             position.set(currentPosition);
+        } else if (out != null) {
+            long remaining = newPosition - currentPosition;
+            while (remaining > 0) {
+                byte[] buffer = new byte[(int) Math.min(8192, remaining)];
+                out.write(buffer, 0, buffer.length);
+                remaining -= buffer.length;
+                position.addAndGet(buffer.length);
+            }
         }
 
         return this;
@@ -93,7 +98,7 @@ class BridgeSeekableByteChannel implements SeekableByteChannel {
 
     @Override
     public long size() throws IOException {
-        return virtualFile.size();
+        return Math.max(position.get(), virtualFile.size());
     }
 
     @Override
@@ -111,6 +116,7 @@ class BridgeSeekableByteChannel implements SeekableByteChannel {
         if (in != null) {
             try {
                 in.close();
+                in = null;
             } catch (IOException e) {
                 Exceptions.ignore(e);
             }
@@ -118,6 +124,7 @@ class BridgeSeekableByteChannel implements SeekableByteChannel {
         if (out != null) {
             try {
                 out.close();
+                out = null;
             } catch (IOException e) {
                 Exceptions.ignore(e);
             }

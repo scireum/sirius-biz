@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  * This way we limit the max number of events being recorded, as in an overload condition, we rather want to simply
  * interrupt tracking instead of taking the whole system down.
  */
-@Register(classes = {TouchWritebackLoop.class, BackgroundLoop.class})
+@Register(classes = {TouchWritebackLoop.class, BackgroundLoop.class}, framework = StorageUtils.FRAMEWORK_STORAGE)
 public class TouchWritebackLoop extends BackgroundLoop {
 
     private BlockingQueue<Tuple<String, String>> touchedBlobs = new LinkedBlockingQueue<>(32768);

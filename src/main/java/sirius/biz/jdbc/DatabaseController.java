@@ -8,6 +8,7 @@
 
 package sirius.biz.jdbc;
 
+import sirius.biz.jobs.Jobs;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.jdbc.Database;
 import sirius.db.jdbc.Databases;
@@ -28,6 +29,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.BasicController;
+import sirius.web.controller.DefaultRoute;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
@@ -38,6 +40,7 @@ import javax.annotation.Nullable;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -51,6 +54,16 @@ public class DatabaseController extends BasicController {
      */
     private static final int DEFAULT_LIMIT = 1000;
 
+    private static final String PARAM_DATABASE = "database";
+    private static final String PARAM_QUERY = "query";
+    private static final String PARAM_EXPORT_QUERY = "exportQuery";
+    private static final String KEYWORD_UPDATE = "update";
+    private static final String KEYWORD_INSERT = "insert";
+    private static final String KEYWORD_ALTER = "alter";
+    private static final String KEYWORD_DROP = "drop";
+    private static final String KEYWORD_CREATE = "create";
+    private static final String KEYWORD_DELETE = "delete";
+
     @Part
     private Schema schema;
 
@@ -63,6 +76,9 @@ public class DatabaseController extends BasicController {
     @ConfigValue("jdbc.selectableDatabases")
     private List<String> selectableDatabases;
 
+    @Part
+    private Jobs jobs;
+
     /**
      * Renders the UI to execute SQL queries.
      *
@@ -70,6 +86,7 @@ public class DatabaseController extends BasicController {
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed("/system/sql")
+    @DefaultRoute
     public void sql(WebContext ctx) {
         // Only display selectable databases which are properly configured..
         List<String> availableDatabases = selectableDatabases.stream()
@@ -81,32 +98,32 @@ public class DatabaseController extends BasicController {
     /**
      * Executes the given sql query.
      *
-     * @param ctx the current request
-     * @param out the JSON response
+     * @param webContext the current request
+     * @param out        the JSON response
      * @throws SQLException in case of a database error
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
     @Routed(value = "/system/sql/api/execute", jsonCall = true)
-    public void executeQuery(WebContext ctx, JSONStructuredOutput out) throws SQLException {
+    public void executeQuery(WebContext webContext, JSONStructuredOutput out) throws SQLException {
         Watch w = Watch.start();
 
         try {
-            String database = ctx.get("db").asString(defaultDatabase);
+            String database = webContext.get(PARAM_DATABASE).asString(defaultDatabase);
             Database db = determineDatabase(database);
-            String sqlStatement = ctx.get("query").asString();
+            String sqlStatement = webContext.get(PARAM_QUERY).asString();
             SQLQuery qry = db.createQuery(sqlStatement).markAsLongRunning();
 
             OMA.LOG.INFO("Executing SQL (via /system/sql, authored by %s): %s",
                          UserContext.getCurrentUser().getUserName(),
                          sqlStatement);
 
-            if (isDDSStatement(sqlStatement)) {
+            if (isDDLStatement(sqlStatement)) {
                 // To prevent accidential damage, we try to filter DDL queries (modifying the database structure) and
                 // only permit them against our system database.
                 if (!Strings.areEqual(database, defaultDatabase)) {
                     throw Exceptions.createHandled()
                                     .withSystemErrorMessage(
-                                            "Cannot execute a DDS query against this database. This can be only done for '%s'",
+                                            "Cannot execute a DDL statement against this database. This can be only done for '%s'",
                                             database)
                                     .handle();
                 }
@@ -116,7 +133,8 @@ public class DatabaseController extends BasicController {
                 out.property("rowModified", qry.executeUpdate());
             } else {
                 Monoflop monoflop = Monoflop.create();
-                qry.iterateAll(r -> outputRow(out, monoflop, r), new Limit(0, ctx.get("limit").asInt(DEFAULT_LIMIT)));
+                qry.iterateAll(r -> outputRow(out, monoflop, r),
+                               new Limit(0, webContext.get("limit").asInt(DEFAULT_LIMIT)));
                 if (monoflop.successiveCall()) {
                     out.endArray();
                 }
@@ -125,8 +143,55 @@ public class DatabaseController extends BasicController {
         } catch (SQLException exception) {
             // In case of an invalid query, we do not want to log this into the syslog but
             // rather just directly output the message to the user....
-            throw Exceptions.createHandled().error(exception).withSystemErrorMessage("%s").handle();
+            throw Exceptions.createHandled().error(exception).withDirectMessage(exception.getMessage()).handle();
         }
+    }
+
+    /**
+     * Exports the given SQL query
+     *
+     * @param webContext the current request
+     */
+    @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
+    @Routed("/system/sql/export")
+    public void exportQuery(WebContext webContext) {
+        if (!webContext.isSafePOST()) {
+            throw Exceptions.createHandled().withSystemErrorMessage("Unsafe or missing POST detected!").handle();
+        }
+
+        String database = webContext.get(PARAM_DATABASE).asString(defaultDatabase);
+        String sqlStatement = webContext.get(PARAM_EXPORT_QUERY).asString();
+
+        if (isDDLStatement(sqlStatement)) {
+            throw Exceptions.createHandled().withDirectMessage("A DDL statement cannot be exported.").handle();
+        } else  if (isModifyStatement(sqlStatement)) {
+            throw Exceptions.createHandled().withDirectMessage("A modifying statement cannot be exported.").handle();
+        } else {
+            ExportQueryResultJobFactory jobFactory =
+                    jobs.findFactory(ExportQueryResultJobFactory.FACTORY_NAME, ExportQueryResultJobFactory.class);
+            String processId = jobFactory.startInBackground(createJobParameterSupplier(database, sqlStatement));
+            webContext.respondWith().redirectToGet("/ps/" + processId);
+        }
+    }
+
+    /**
+     * Transforms the parameters from the names used here to the ones expected by {@link ExportQueryResultJobFactory}.
+     *
+     * @param database     the selected database
+     * @param sqlStatement the query to execute
+     * @return a parameter supplier as expected by the job factory
+     */
+    private Function<String, Value> createJobParameterSupplier(String database, String sqlStatement) {
+        return parameterName -> {
+            switch (parameterName) {
+                case PARAM_DATABASE:
+                    return Value.of(database);
+                case PARAM_QUERY:
+                    return Value.of(sqlStatement);
+                default:
+                    return Value.EMPTY;
+            }
+        };
     }
 
     protected Database determineDatabase(String database) {
@@ -138,14 +203,14 @@ public class DatabaseController extends BasicController {
 
     private boolean isModifyStatement(String query) {
         String lowerCaseQuery = query.toLowerCase().trim();
-        return lowerCaseQuery.startsWith("update") || lowerCaseQuery.startsWith("insert") || lowerCaseQuery.startsWith(
-                "delete");
+        return lowerCaseQuery.startsWith(KEYWORD_UPDATE) || lowerCaseQuery.startsWith(KEYWORD_INSERT) || lowerCaseQuery.startsWith(
+                KEYWORD_DELETE);
     }
 
-    private boolean isDDSStatement(String qry) {
+    private boolean isDDLStatement(String qry) {
         String lowerCaseQuery = qry.toLowerCase().trim();
-        return lowerCaseQuery.startsWith("alter") || lowerCaseQuery.startsWith("drop") || lowerCaseQuery.startsWith(
-                "create");
+        return lowerCaseQuery.startsWith(KEYWORD_ALTER) || lowerCaseQuery.startsWith(KEYWORD_DROP) || lowerCaseQuery.startsWith(
+                KEYWORD_CREATE);
     }
 
     private void outputRow(JSONStructuredOutput out, Monoflop monoflop, Row row) {

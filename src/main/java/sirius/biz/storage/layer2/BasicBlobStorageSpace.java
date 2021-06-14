@@ -15,16 +15,20 @@ import sirius.biz.storage.layer1.ObjectStorage;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
 import sirius.biz.storage.layer2.variants.BlobVariant;
 import sirius.biz.storage.layer2.variants.ConversionEngine;
+import sirius.biz.storage.layer2.variants.ConversionProcess;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.KeyGenerator;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Callback;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Processor;
 import sirius.kernel.commons.Producer;
+import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Wait;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
@@ -38,15 +42,20 @@ import sirius.web.security.UserContext;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
@@ -64,6 +73,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * Specifies the total number of attempts for the optimistic locking strategies used by this class.
      */
     private static final int NUMBER_OF_ATTEMPTS_FOR_OPTIMISTIC_LOCKS = 5;
+
+    /**
+     * Specifies the total number of attempts to wait for a conversion result.
+     */
+    private static final int NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION = 4;
+
+    /**
+     * Specifies the number of milliseconds to wait for a conversion (note that we do this up to
+     * NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION times).
+     */
+    private static final int TIMEOUT_FOR_WAITING_FOR_CONVERSION_RESULT_MILLIS = 500;
 
     /**
      * Specifies the interval (in minutes) after which a conversion is retried for a given blob variant.
@@ -121,11 +141,29 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private static final String CONFIG_KEY_TOUCH_TRACKING = "touchTracking";
 
     /**
+     * Determines if we should sort by the last modification date instead of "by name".
+     */
+    private static final String CONFIG_KEY_SORT_BY_LAST_MODIFIED = "sortByLastModified";
+
+    /**
      * Contains the name of the executor in which requests are moved which might be blocked while waiting for
      * a conversion to happen. We do not want to jam our main executor of the web server for this, therefore
      * a separator one is used.
      */
     private static final String EXECUTOR_STORAGE_CONVERSION_DELIVERY = "storage-conversion-delivery";
+
+    private static final String HEADER_VARIANT_SOURCE = "X-VariantSource";
+    private static final String HEADER_VARIANT_COMPUTER = "X-VariantComputer";
+
+    /**
+     * Connect timeout for delegated blob downloads
+     */
+    private static final int CONNECT_TIMEOUT = (int) TimeUnit.MILLISECONDS.convert(15, TimeUnit.SECONDS);
+
+    /**
+     * Read timeout for delegated blob downloads
+     */
+    private static final int READ_TIMEOUT = (int) TimeUnit.MILLISECONDS.convert(15, TimeUnit.SECONDS);
 
     @Part
     protected static ObjectStorage objectStorage;
@@ -137,6 +175,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected static StorageUtils utils;
 
     @Part
+    @Nullable
     private static Locks locks;
 
     @Part
@@ -146,6 +185,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected static Tasks tasks;
 
     @Part
+    @Nullable
     protected static TouchWritebackLoop touchWritebackLoop;
 
     @ConfigValue("storage.layer2.conversion.enabled")
@@ -187,6 +227,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     protected boolean useNormalizedNames;
     protected int retentionDays;
     protected boolean touchTracking;
+    protected boolean sortByLastModified;
     protected ObjectStorageSpace objectStorageSpace;
 
     /**
@@ -205,6 +246,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         this.description = config.get(CONFIG_KEY_DESCRIPTION).getString();
         this.retentionDays = config.get(CONFIG_KEY_RETENTION_DAYS).asInt(0);
         this.touchTracking = config.get(CONFIG_KEY_TOUCH_TRACKING).asBoolean();
+        this.sortByLastModified = config.get(CONFIG_KEY_SORT_BY_LAST_MODIFIED).asBoolean();
     }
 
     @Override
@@ -273,7 +315,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                     return result;
                 }
 
-                Wait.randomMillis(50, 250);
+                Wait.randomMillis(0, 250);
             }
 
             throw errorHandler.apply(new IllegalStateException(Strings.apply(
@@ -325,21 +367,23 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     @Override
     public Optional<? extends Blob> findByPath(String tenantId, String path) {
-        if (Strings.isEmpty(path)) {
+        String sanitizedPath = utils.sanitizePath(path);
+
+        if (Strings.isEmpty(sanitizedPath)) {
             return Optional.empty();
         }
 
-        return Optional.ofNullable(blobByPathCache.get(determinePathCacheKey(tenantId, path),
-                                                       ignored -> fetchByPath(tenantId, path)));
+        return Optional.ofNullable(blobByPathCache.get(determinePathCacheKey(tenantId, sanitizedPath),
+                                                       ignored -> fetchByPath(tenantId, sanitizedPath)));
     }
 
     @Nonnull
     private String determinePathCacheKey(String tenantId, String path) {
-        return spaceName + "-" + tenantId + "-" + ensureRelativePath(path);
+        return spaceName + "-" + tenantId + "-" + path;
     }
 
     protected Blob fetchByPath(String tenantId, @Nonnull String path) {
-        String[] parts = ensureRelativePath(path).split("/");
+        String[] parts = path.split("/");
         Directory currentDirectory = getRoot(tenantId);
         int index = 0;
         while (currentDirectory != null && index < parts.length - 1) {
@@ -354,14 +398,6 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
     }
 
-    protected String ensureRelativePath(String path) {
-        if (path.startsWith("/")) {
-            return path.substring(1);
-        }
-
-        return path;
-    }
-
     @Override
     public Optional<? extends Blob> findByPath(String path) {
         return findByPath(UserContext.getCurrentUser().getTenantId(), path);
@@ -369,21 +405,26 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
 
     @Override
     public Blob findOrCreateByPath(String tenantId, String path) {
-        if (Strings.isEmpty(path)) {
+        String sanitizedPath = utils.sanitizePath(path);
+
+        if (Strings.isEmpty(sanitizedPath)) {
             throw new IllegalArgumentException("An empty path was provided!");
         }
 
-        String key = determinePathCacheKey(tenantId, path);
+        String key = determinePathCacheKey(tenantId, sanitizedPath);
         Blob blob = blobByPathCache.get(key);
         if (blob == null) {
+            // Ensure the cache entry is invalidated on all nodes
             blobByPathCache.remove(key);
-            blob = fetchOrCreateByPath(tenantId, path);
+
+            blob = fetchOrCreateByPath(tenantId, sanitizedPath);
+            blobByPathCache.put(key, blob);
         }
         return blob;
     }
 
     protected Blob fetchOrCreateByPath(String tenantId, @Nonnull String path) {
-        String[] parts = ensureRelativePath(path).split("/");
+        String[] parts = path.split("/");
         Directory currentDirectory = getRoot(tenantId);
         int index = 0;
         while (index < parts.length - 1) {
@@ -461,8 +502,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                               this::rollbackBlob,
                                               error -> Exceptions.handle()
                                                                  .to(StorageUtils.LOG)
+                                                                 .error(error)
                                                                  .withSystemErrorMessage(
-                                                                         "Layer 2: Failed to create the attached blob for space '%s' and reference '%s' with filename '%s%'.",
+                                                                         "Layer 2: Failed to create the attached blob for space '%s' and reference '%s' with filename '%s': %s (%s)",
                                                                          spaceName,
                                                                          referencingEntity,
                                                                          filename)
@@ -541,8 +583,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                               this::rollbackDirectory,
                                               error -> Exceptions.handle()
                                                                  .to(StorageUtils.LOG)
+                                                                 .error(error)
                                                                  .withSystemErrorMessage(
-                                                                         "Layer 2: Failed to create the child directory for space '%s' and parent directory '%s' with name '%s%'.",
+                                                                         "Layer 2: Failed to create the child directory for space '%s' and parent directory '%s' with name '%s': %s (%s)",
                                                                          spaceName,
                                                                          parent,
                                                                          childName)
@@ -600,8 +643,9 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                               this::rollbackBlob,
                                               error -> Exceptions.handle()
                                                                  .to(StorageUtils.LOG)
+                                                                 .error(error)
                                                                  .withSystemErrorMessage(
-                                                                         "Layer 2: Failed to create the child blob for space '%s' and parent directory '%s' with name '%s%'.",
+                                                                         "Layer 2: Failed to create the child blob for space '%s' and parent directory '%s' with name '%s': %s (%s)",
                                                                          spaceName,
                                                                          parent,
                                                                          childName)
@@ -904,6 +948,78 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     /**
+     * Downloads and provides the contents of the requested blob with the given variant.
+     * <p>
+     * Note: This method will not be able to return a file if the blob doesn't yet exist in the requested variant and
+     * the conversion is disabled on this node (see {@link #conversionEnabled}).
+     *
+     * @param blobKey the blob key of the blob to download
+     * @param variant the variant of the blob to download. Use {@link URLBuilder#VARIANT_RAW} to download the blob itself
+     * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist or couldn't
+     * be converted
+     */
+    @Override
+    public Optional<FileHandle> download(String blobKey, String variant) {
+        touch(blobKey);
+
+        try {
+            Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, false);
+
+            if (physicalKey == null) {
+                return tryDelegateDownload(blobKey, variant);
+            }
+
+            return getPhysicalSpace().download(physicalKey.getFirst());
+        } catch (Exception e) {
+            handleFailedConversion(blobKey, variant, e);
+
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Used if the requested variant doesn't exist but the local node is not permitted to perform the conversion itself.
+     * <p>
+     * In this case, we attempt to download the variant from one of our known conversion servers.
+     *
+     * @param blobKey the blob key of the blob to download
+     * @param variant the variant of the blob to download
+     * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist or couldn't
+     * be converted
+     * @throws IOException in case of an IO error
+     */
+    private Optional<FileHandle> tryDelegateDownload(String blobKey, String variant) throws IOException {
+        Optional<URL> url = determineDelegateConversionUrl(blobKey, variant);
+
+        if (!url.isPresent()) {
+            return Optional.empty();
+        }
+
+        URLConnection connection = url.get().openConnection();
+        connection.setConnectTimeout(CONNECT_TIMEOUT);
+        connection.setReadTimeout(READ_TIMEOUT);
+        connection.connect();
+
+        File temporaryFile = File.createTempFile("delegate-", null);
+
+        try (FileOutputStream out = new FileOutputStream(temporaryFile); InputStream in = connection.getInputStream()) {
+            Streams.transfer(in, out);
+        }
+
+        return Optional.of(FileHandle.temporaryFileHandle(temporaryFile));
+    }
+
+    private void handleFailedConversion(String blobKey, String variant, Exception e) {
+        Exceptions.handle()
+                  .error(e)
+                  .to(StorageUtils.LOG)
+                  .withSystemErrorMessage("Layer2: Failed to perform conversion of %s for %s: %s (%s)",
+                                          blobKey,
+                                          variant)
+                  .handle();
+    }
+
+    /**
      * Provides read access via an {@link InputStream}.
      *
      * @param blob the blob to fetch the data for
@@ -1063,14 +1179,27 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     }
 
     @Override
-    public void deliver(String blobKey, String variant, Response response) {
+    public void deliver(String blobKey, String variant, Response response, Runnable markAsLongRunning) {
         touch(blobKey);
 
-        String physicalKey = resolvePhysicalKey(blobKey, variant, true);
-        if (physicalKey != null) {
-            getPhysicalSpace().deliver(response, physicalKey);
-        } else {
-            deliverAsync(blobKey, variant, response);
+        try {
+            Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, true);
+            if (physicalKey != null) {
+                response.addHeader(HEADER_VARIANT_SOURCE,
+                                   Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "lookup");
+                getPhysicalSpace().deliver(response, physicalKey.getFirst());
+            } else {
+                if (markAsLongRunning != null) {
+                    markAsLongRunning.run();
+                }
+
+                deliverAsync(blobKey, variant, response);
+            }
+        } catch (IllegalArgumentException e) {
+            response.notCached().error(HttpResponseStatus.BAD_REQUEST, e.getMessage());
+        } catch (Exception e) {
+            handleFailedConversion(blobKey, variant, e);
+            response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -1104,22 +1233,24 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param variantName the variant of the blob to find
      * @param nonblocking <tt>true</tt> to directly respond and rather return <tt>null</tt> instead of generating the
      *                    requested variant on demand, <tt>false</tt> to generate the variant if possible.
-     * @return the physical key or <tt>null</tt> if the appropriate variant wasn't found
+     * @return the physical key or <tt>null</tt> if the appropriate variant wasn't found. We also return an indicator
+     * if the key was read from the internal cache or if a lookup was required.
      */
     @Nullable
-    protected String resolvePhysicalKey(String blobKey, String variantName, boolean nonblocking) {
+    protected Tuple<String, Boolean> resolvePhysicalKey(String blobKey, String variantName, boolean nonblocking) {
         String cacheKey = buildPhysicalKey(blobKey, variantName);
         String cachedPhysicalKey = blobKeyToPhysicalCache.get(cacheKey);
         if (Strings.isFilled(cachedPhysicalKey)) {
-            return cachedPhysicalKey;
+            return Tuple.create(cachedPhysicalKey, true);
         }
 
         String physicalKey = lookupPhysicalKey(blobKey, variantName, nonblocking);
         if (physicalKey != null) {
             blobKeyToPhysicalCache.put(cacheKey, physicalKey);
+            return Tuple.create(physicalKey, false);
+        } else {
+            return null;
         }
-
-        return physicalKey;
     }
 
     private String buildPhysicalKey(String blobKey, String variantName) {
@@ -1148,7 +1279,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
 
         if (!conversionEngine.isKnownVariant(variantName)) {
-            return null;
+            throw new IllegalArgumentException(Strings.apply("Unknown variant type: %s", variantName));
         }
 
         V variant = findOrCreateVariant(blob, variantName, nonblocking);
@@ -1165,7 +1296,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * <p>
      * Note that there this is an recursive optimistic locking algorithm at work where
      * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)} and
-     * {@link #retryToFindOrCreateVariant(Blob, String, int)} build the "loop".
+     * {@link #awaitConversionResultAndRetryToFindVariant(Blob, String, int)} build the "loop".
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
@@ -1205,13 +1336,24 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @throws Exception in case of an error while searching or creating the variant
      */
     @Nullable
+    @SuppressWarnings("java:S3776")
+    @Explain("This is a complex beast but we rather keep the whole logik in one place.")
     private V attemptToFindOrCreateVariant(B blob, String variantName, boolean nonblocking, int retries)
             throws Exception {
-        V variant = findVariant(blob, variantName);
-        if (variant != null && Strings.isFilled(variant.getPhysicalObjectKey())) {
-            // We hit the nail on the head - we found a variant which has successfully been converted already.
-            // -> use it
-            return variant;
+        V variant = findAnyVariant(blob, variantName);
+        if (variant != null) {
+            if (Strings.isFilled(variant.getPhysicalObjectKey())) {
+                // We hit the nail on the head - we found a variant which has successfully been converted already.
+                // -> use it
+                return variant;
+            }
+            if (!variant.isQueuedForConversion() && retryLimitReached(variant)) {
+                // The conversion has failed - signal that the to client. We use a handled exception here, as the problem
+                // has already been logged...
+                throw Exceptions.createHandled()
+                                .withSystemErrorMessage("Failed to create the requested variant from the given image.")
+                                .handle();
+            }
         }
 
         if (nonblocking) {
@@ -1224,21 +1366,29 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             if (conversionEnabled) {
                 // No variant is present, therefore we spawn a thread which will create it and start a conversion
                 // pipeline
-                tryCreateVariantAsync(blob, variantName);
-
-                // In parallel we park this thread and then retry if we can already use this variant. As this is
-                // an optimistic locking algorithm anyway which can wait on another node / thread to create the variant
-                // we can also use the same approach if we ourself triggered the conversion task....
-                return retryToFindOrCreateVariant(blob, variantName, retries);
+                if (tryCreateVariantAsync(blob, variantName)) {
+                    // We sucessfully created a variant and forked a conversion... Await its result...
+                    return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
+                } else {
+                    // An optimistic lock error occured (another thread or node attempted the same). So we backup,
+                    // wait a short and random amount of time and retry...
+                    return retryFindVariant(blob, variantName, retries);
+                }
             } else {
                 // No variant is present and no conversion is possible -> give up
-                return null;
+                throw Exceptions.handle()
+                                .to(StorageUtils.LOG)
+                                .withSystemErrorMessage(
+                                        "Layer 2: Failed to create a conversion for %s to %s: Conversion is disabled on this node!",
+                                        blob.getBlobKey(),
+                                        variantName)
+                                .handle();
             }
         }
 
         if (!shouldRetryConversion(variant)) {
             // A variant exists but didn't yield a useable result yet - try to wait and retry...
-            return retryToFindOrCreateVariant(blob, variantName, retries);
+            return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
         }
 
         if (conversionEnabled && !retryLimitReached(variant)) {
@@ -1246,20 +1396,25 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             if (markConversionAttempt(variant)) {
                 // We successfully marked this as "in conversion" -> fork a conversion task in parallel
                 invokeConversionPipelineAsync(blob, variant);
+                return awaitConversionResultAndRetryToFindVariant(blob, variantName, retries);
+            } else {
+                // An optimistic lock error occured (another thread or node attempted the same). So we backup,
+                // wait a short and random amount of time and retry...
+                return retryFindVariant(blob, variantName, retries);
             }
-
-            // ...and no we wait on either our or another conversion task to finish so that we can use
-            // the result
-            return retryToFindOrCreateVariant(blob, variantName, retries);
         }
 
-        // A variant exists but we either gave up on trying to create the actual physical object or we're simply
-        // not capable of doing so...
+        // The variant is still being queued for conversion but didn't finish in time. We return null here,
+        // so that we send an appropriate response to the client so that the browser might perform a retry...
+        //
+        // Note the check for "no conversion queued and also no result present" aka "conversion failed permanently"
+        // is handled in the beginning of this method...
         return null;
     }
 
     /**
-     * Handles the retry path of {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)}.
+     * Handles the retry (after an optimistic lock error) path of
+     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)}.
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
@@ -1267,23 +1422,58 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @return either the result of the next attempt or <tt>null</tt> if we ran out of retries
      * @throws Exception if case of any error when performing the next attempt
      */
-    private V retryToFindOrCreateVariant(B blob, String variantName, int retries) throws Exception {
-        if (retries == 0) {
-            return null;
-        }
-        Wait.randomMillis(100, 500);
+    private V retryFindVariant(B blob, String variantName, int retries) throws Exception {
+        // An optimistic lock error occured (another thread or node attempted the same). So we backup,
+        // wait a short and random amount of time and retry...
+        Wait.randomMillis(0, 150);
         return attemptToFindOrCreateVariant(blob, variantName, false, retries - 1);
     }
 
     /**
-     * Tries to find the requeted variant in the database.
+     * Handles the retry (when waiting for a conversion result) path of
+     * {@link #attemptToFindOrCreateVariant(Blob, String, boolean, int)}.
+     *
+     * @param blob        the blob for which the variant is to be resolved
+     * @param variantName the variant of the blob to find
+     * @param retries     the number of retries left
+     * @return either the result of the next attempt or <tt>null</tt> if we ran out of retries
+     * @throws Exception if case of any error when performing the next attempt
+     */
+    private V awaitConversionResultAndRetryToFindVariant(B blob, String variantName, int retries) throws Exception {
+        if (retries == 0) {
+            return null;
+        }
+
+        // Give the conversion pipeline some time to perform the conversion. Note that we fix the number of retries
+        // here as no more optimistic lock problems can occur - we simply have to wait for the conversion to finish..
+        Wait.millis(TIMEOUT_FOR_WAITING_FOR_CONVERSION_RESULT_MILLIS);
+        return attemptToFindOrCreateVariant(blob,
+                                            variantName,
+                                            false,
+                                            Math.min(retries - 1, NUMBER_OF_ATTEMPTS_TO_WAIT_FOR_CONVERSION - 1));
+    }
+
+    /**
+     * Tries to find the requested and converted variant in the database.
      *
      * @param blob        the blob for which the variant is to be resolved
      * @param variantName the variant of the blob to find
      * @return the variant or <tt>null</tt> if no matching variant exists
      */
     @Nullable
-    protected abstract V findVariant(B blob, String variantName);
+    protected abstract V findCompletedVariant(B blob, String variantName);
+
+    /**
+     * Tries to find the requested variant in the database.
+     * <p>
+     * Note: This will also return variants where the conversion is not completed yet.
+     *
+     * @param blob        the blob for which the variant is to be resolved
+     * @param variantName the variant of the blob to find
+     * @return the variant or <tt>null</tt> if no matching variant exists
+     */
+    @Nullable
+    protected abstract V findAnyVariant(B blob, String variantName);
 
     /**
      * Marks the variant as queued for conversion.
@@ -1302,35 +1492,39 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param variant the variant to generate
      */
     private void invokeConversionPipelineAsync(B blob, V variant) {
-        conversionEngine.performConversion(blob, variant.getVariantName()).onSuccess(handle -> {
-            try (FileHandle automaticHandle = handle) {
+        ConversionProcess conversionProcess = new ConversionProcess(blob, variant.getVariantName());
+        conversionEngine.performConversion(conversionProcess).onSuccess(ignored -> {
+            try (FileHandle automaticHandle = conversionProcess.getResultFileHandle()) {
                 String physicalKey = keyGenerator.generateId();
-                getPhysicalSpace().upload(physicalKey, automaticHandle.getFile());
-                markConversionSuccess(variant, physicalKey, automaticHandle.getFile().length());
+                conversionProcess.upload(() -> {
+                    getPhysicalSpace().upload(physicalKey, automaticHandle.getFile());
+                });
+
+                markConversionSuccess(variant, physicalKey, conversionProcess);
             }
         }).onFailure(e -> {
-            Exceptions.handle()
-                      .error(e)
-                      .to(StorageUtils.LOG)
-                      .withSystemErrorMessage("Layer 2/Conversion: Failed to create %s (%s) of %s (%s): %s (%s)",
-                                              variant.getVariantName(),
-                                              variant.getIdAsString(),
-                                              blob.getBlobKey(),
-                                              blob.getFilename())
-                      .handle();
-
             markConversionFailure(variant);
+
+            throw Exceptions.handle()
+                            .error(e)
+                            .to(StorageUtils.LOG)
+                            .withSystemErrorMessage("Layer 2/Conversion: Failed to create %s (%s) of %s (%s): %s (%s)",
+                                                    variant.getVariantName(),
+                                                    variant.getIdAsString(),
+                                                    blob.getBlobKey(),
+                                                    blob.getFilename())
+                            .handle();
         });
     }
 
     /**
      * Marks the variant as successfully generated by supplying a physical object which contains the result.
      *
-     * @param variant     the variant to update
-     * @param physicalKey the physical object which contains the new data
-     * @param size        the size of the data sored in the physical object
+     * @param variant           the variant to update
+     * @param physicalKey       the physical object which contains the new data
+     * @param conversionProcess the process to determine the metadata from
      */
-    protected abstract void markConversionSuccess(V variant, String physicalKey, long size);
+    protected abstract void markConversionSuccess(V variant, String physicalKey, ConversionProcess conversionProcess);
 
     /**
      * Records a failed conversion attempt for the given variant.
@@ -1367,12 +1561,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      *
      * @param blob        the blob for which the variant is to be created
      * @param variantName the variant to generate
+     * @return <tt>true</tt> if the variant was created and a conversion has been forked, <tt>false</tt>
+     * if the variant existed already...
      */
-    private void tryCreateVariantAsync(B blob, String variantName) {
+    private boolean tryCreateVariantAsync(B blob, String variantName) {
         V variant = createVariant(blob, variantName);
 
-        if (!detectAndRemoveDuplicateVariant(variant, blob, variantName)) {
+        if (detectAndRemoveDuplicateVariant(variant, blob, variantName)) {
+            return false;
+        } else {
             invokeConversionPipelineAsync(blob, variant);
+            return true;
         }
     }
 
@@ -1410,14 +1609,21 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      */
     private void deliverAsync(String blobKey, String variant, Response response) {
         tasks.executor(EXECUTOR_STORAGE_CONVERSION_DELIVERY)
-             .dropOnOverload(() -> response.error(HttpResponseStatus.TOO_MANY_REQUESTS))
+             .dropOnOverload(() -> response.notCached().error(HttpResponseStatus.TOO_MANY_REQUESTS))
              .fork(() -> {
                  if (conversionEnabled) {
-                     String physicalKey = resolvePhysicalKey(blobKey, variant, false);
-                     if (physicalKey != null) {
-                         getPhysicalSpace().deliver(response, physicalKey);
-                     } else {
-                         response.error(HttpResponseStatus.NOT_FOUND);
+                     try {
+                         Tuple<String, Boolean> physicalKey = resolvePhysicalKey(blobKey, variant, false);
+                         if (physicalKey == null) {
+                             response.notCached().error(HttpResponseStatus.SERVICE_UNAVAILABLE);
+                         } else {
+                             response.addHeader(HEADER_VARIANT_SOURCE,
+                                                Boolean.TRUE.equals(physicalKey.getSecond()) ? "cache" : "computed");
+                             getPhysicalSpace().deliver(response, physicalKey.getFirst());
+                         }
+                     } catch (Exception e) {
+                         handleFailedConversion(blobKey, variant, e);
+                         response.notCached().error(HttpResponseStatus.INTERNAL_SERVER_ERROR);
                      }
                  } else {
                      delegateConversion(blobKey, variant, response);
@@ -1435,18 +1641,37 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param variant  the variant of the blob to deliver
      * @param response the response to populate
      */
-    private void delegateConversion(String blobKey, @Nullable String variant, Response response) {
-        if (conversionEnabled || conversionHosts.isEmpty()) {
+    private void delegateConversion(String blobKey, String variant, Response response) {
+        Optional<URL> url = determineDelegateConversionUrl(blobKey, variant);
+
+        if (!url.isPresent()) {
             response.error(HttpResponseStatus.NOT_FOUND);
             return;
         }
 
-        String conversionHost = conversionHosts.get(ThreadLocalRandom.current().nextInt(conversionHosts.size()));
-        // Generates an appropriate URL as URLBuilder would do which will then handled by the BlobDispatcher
-        // of the conversion server. Note that this will be a call within the cluster, therefore http is fine
-        // (or even required as we're behind the SSL offload server).
+        response.addHeader(HEADER_VARIANT_SOURCE, "delegated");
+        response.addHeader(HEADER_VARIANT_COMPUTER, url.get().getHost());
+        response.tunnel(url.get().toString());
+    }
+
+    /**
+     * Generates an appropriate URL as URLBuilder would do which will then be handled by the BlobDispatcher of a
+     * conversion server.
+     * <p>
+     * Note that this will be a call within the cluster, therefore http is fine (or even required as
+     * we're behind the SSL offload server).
+     *
+     * @param blobKey the blob to deliver
+     * @param variant the variant of the blob to deliver
+     * @return the URL for requesting the variant from one of our conversion servers
+     */
+    private Optional<URL> determineDelegateConversionUrl(String blobKey, String variant) {
+        if (conversionEnabled || conversionHosts.isEmpty()) {
+            return Optional.empty();
+        }
+
         String conversionUrl = "http://"
-                               + conversionHost
+                               + conversionHosts.get(ThreadLocalRandom.current().nextInt(conversionHosts.size()))
                                + BlobDispatcher.URI_PREFIX
                                + "/"
                                + BlobDispatcher.FLAG_VIRTUAL
@@ -1459,7 +1684,11 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
                                + "/"
                                + blobKey;
 
-        response.tunnel(conversionUrl);
+        try {
+            return Optional.of(new URL(conversionUrl));
+        } catch (MalformedURLException e) {
+            throw Exceptions.handle(e);
+        }
     }
 
     /**

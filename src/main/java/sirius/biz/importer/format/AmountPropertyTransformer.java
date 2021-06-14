@@ -12,8 +12,6 @@ import sirius.db.mixing.annotations.Numeric;
 import sirius.db.mixing.properties.AmountProperty;
 import sirius.kernel.di.std.Register;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Optional;
 
 /**
@@ -33,5 +31,4 @@ public class AmountPropertyTransformer extends BaseFieldDefinitionTransformer<Am
         return FieldDefinition.typeNumber(numeric.map(Numeric::precision).orElse(0),
                                           numeric.map(Numeric::scale).orElse(0));
     }
-
 }

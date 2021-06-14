@@ -12,7 +12,7 @@
 
 <i:pragma name="description" value="Renders a selection for a file in the storage and offers an upload" />
 
-<i:local name="localId" value="call.generateLocalId()" />
+<i:local name="localId" value="@generateId()" />
 
 <div class="col-md-@span form-group">
     <div class="row">
@@ -46,7 +46,7 @@
                 var file = event.target.files[0];
                 formData.append('file', file, file.name);
                 var xhr = new XMLHttpRequest();
-                xhr.open('POST', '/storage/upload-reference/@objectRef.getBucket()/@(objectRef.getReference() | '-')/?filename=' + encodeURIComponent(file.name), true);
+                xhr.open('POST', '/storage/upload-reference/@objectRef.getBucket()/@(isFilled(objectRef.getReference()) ? objectRef.getReference() : '-')/?filename=' + encodeURIComponent(file.name), true);
                 xhr.onload = function () {
                     if (xhr.status === 200) {
                         var jsonResponse = JSON.parse(xhr.responseText);

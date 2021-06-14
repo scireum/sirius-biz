@@ -8,8 +8,8 @@
 
 package sirius.biz.mongo;
 
+import sirius.biz.translations.MultiLanguageString;
 import sirius.db.mixing.annotations.NullAllowed;
-import sirius.db.mixing.types.MultiLanguageString;
 import sirius.db.mixing.types.StringList;
 import sirius.db.mixing.types.StringMap;
 
@@ -22,6 +22,7 @@ public class PrefixSearchableTestEntity extends PrefixSearchableEntity {
     private final StringMap map = new StringMap();
 
     @PrefixSearchContent
+    @NullAllowed
     private final MultiLanguageString multiLanguageText = new MultiLanguageString();
 
     @PrefixSearchContent

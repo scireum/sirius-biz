@@ -16,10 +16,12 @@
 
 <w:multiSelect span="@span" name="@name" label="@label" help="@help" required="@required"
                 readonly="@readonly" adminOnly="@adminOnly">
-    <i:for var="entry" type="sirius.biz.codelists.CodeListEntry" items="@codeLists.getEntries(list)">
+    <i:for var="entry"
+           type="sirius.biz.codelists.CodeListEntry"
+           items="@Injector.context().getPart(CodeLists.class).getEntries(list)">
         <option value="@entry.getCodeListEntryData().getCode()"
                 @selected="value.contains(entry.getCodeListEntryData().getCode())">
-            @entry.getCodeListEntryData().getTranslatedValue()
+            @entry.getCodeListEntryData().getTranslatedValue(NLS.getCurrentLang())
         </option>
     </i:for>
 </w:multiSelect>

@@ -135,7 +135,7 @@ public class ClickhousePartsReportJobFactory extends ReportJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         // there are no parameters for this job...
     }
 

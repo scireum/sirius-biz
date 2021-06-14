@@ -14,6 +14,7 @@ import org.apache.ftpserver.ftplet.FtpException;
 import org.apache.ftpserver.ftplet.User;
 import org.apache.ftpserver.ftplet.UserManager;
 import org.apache.ftpserver.usermanager.UsernamePasswordAuthentication;
+import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
@@ -94,6 +95,11 @@ class BridgeUserManager implements UserManager {
                 StorageUtils.LOG.FINE("Layer 3/FTP: Invalid credentails...");
                 throw new AuthenticationFailedException("Invalid credentials.");
             }
+
+            if (!authUser.isSubScopeEnabled(VirtualFileSystem.SUB_SCOPE_VFS)) {
+                throw new AuthenticationFailedException("The required sub scope is not enabled for this user.");
+            }
+
             StorageUtils.LOG.FINE("Layer 3/FTP: User is authorized...");
             return new BridgeUser(authUser, UserContext.getCurrentScope().getScopeId());
         } catch (Exception e) {

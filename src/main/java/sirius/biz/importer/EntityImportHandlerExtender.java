@@ -8,7 +8,6 @@
 
 package sirius.biz.importer;
 
-import com.google.j2objc.annotations.AutoreleasePool;
 import sirius.biz.importer.format.FieldDefinition;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;

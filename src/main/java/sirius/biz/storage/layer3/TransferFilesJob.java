@@ -14,6 +14,7 @@ import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
+import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -26,7 +27,7 @@ import java.util.function.Consumer;
 /**
  * Provides a generic job to copy or move {@link VirtualFile virtual files} in the background.
  */
-@Register
+@Register(framework = StorageUtils.FRAMEWORK_STORAGE)
 public class TransferFilesJob extends SimpleBatchProcessJobFactory {
 
     /**
@@ -66,15 +67,17 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
         }
     }
 
-    private FileOrDirectoryParameter sourceParameter =
-            new FileOrDirectoryParameter(SOURCE_PARAMETER_NAME, "$TransferFilesJob.source").markRequired();
-    private FileOrDirectoryParameter destinationParameter =
-            new FileOrDirectoryParameter(DESTINATION_PARAMETER_NAME, "$TransferFilesJob.destination").markRequired();
-    private EnumParameter<TransferMode> modeParameter =
+    private Parameter<VirtualFile> sourceParameter =
+            new FileOrDirectoryParameter(SOURCE_PARAMETER_NAME, "$TransferFilesJob.source").markRequired().build();
+    private Parameter<VirtualFile> destinationParameter =
+            new FileOrDirectoryParameter(DESTINATION_PARAMETER_NAME, "$TransferFilesJob.destination").markRequired()
+                                                                                                     .build();
+    private Parameter<TransferMode> modeParameter =
             new EnumParameter<>(MODE_PARAMETER_NAME, "$TransferFilesJob.mode", TransferMode.class).withDefault(
-                    TransferMode.COPY).markRequired();
-    private BooleanParameter smartTransferParameter =
-            new BooleanParameter(SMART_TRANSFER_PARAMETER_NAME, "$TransferFilesJob.smartTransfer").withDefaultTrue();
+                    TransferMode.COPY).markRequired().build();
+    private Parameter<Boolean> smartTransferParameter =
+            new BooleanParameter(SMART_TRANSFER_PARAMETER_NAME, "$TransferFilesJob.smartTransfer").withDefaultTrue()
+                                                                                                  .build();
 
     @Part
     private VirtualFileSystem virtualFileSystem;
@@ -130,7 +133,7 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(sourceParameter);
         parameterCollector.accept(destinationParameter);
         parameterCollector.accept(modeParameter);

@@ -8,7 +8,9 @@
 
 package sirius.biz.storage.layer2;
 
+import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer1.ObjectStorageSpace;
+import sirius.biz.tenants.Tenants;
 import sirius.web.http.Response;
 
 import javax.annotation.Nonnull;
@@ -57,6 +59,9 @@ public interface BlobStorageSpace {
 
     /**
      * Returns the root directory for the given tenant.
+     * <p>
+     * Note that {@link Tenants#getSystemTenantId()} can be used for system related files (as long as the
+     * <tt>tenants</tt> framework is used.
      *
      * @param tenantId the tenant to determine the directory for
      * @return the root directory for the given tenant
@@ -66,6 +71,9 @@ public interface BlobStorageSpace {
 
     /**
      * Resolves the given path into a blob.
+     * <p>
+     * Note that {@link Tenants#getSystemTenantId()} can be used for system related files (as long as the
+     * <tt>tenants</tt> framework is used.
      *
      * @param tenantId the tenant which owns the directory structure to search in
      * @param path     the path to resolve (may start with a "/" but not with the space name itself)
@@ -85,6 +93,9 @@ public interface BlobStorageSpace {
      * Resolves or creates the blob with the given path.
      * <p>
      * Note that all intermediate directories will be auto-created.
+     * <p>
+     * Note that {@link Tenants#getSystemTenantId()} can be used for system related files (as long as the
+     * <tt>tenants</tt> framework is used.
      *
      * @param tenantId the tenant which owns the directory structure to search in
      * @param path     the path to resolve (may start with a "/" but not with the space name itself)
@@ -242,6 +253,16 @@ public interface BlobStorageSpace {
     boolean isReadonly();
 
     /**
+     * Downloads and provides the contents of the requested blob with the given variant.
+     *
+     * @param blobKey the blob key of the blob to download
+     * @param variant the variant of the blob to download. Use {@link URLBuilder#VARIANT_RAW} to download the blob itself
+     * @return a handle to the given object wrapped as optional or an empty one if the object doesn't exist or couldn't
+     * be converted
+     */
+    Optional<FileHandle> download(String blobKey, String variant);
+
+    /**
      * Resolves the filename of the given blob.
      *
      * @param blobKey the blob to lookup the filename for
@@ -252,11 +273,16 @@ public interface BlobStorageSpace {
     /**
      * Delivers the requested blob to the given HTTP response.
      *
-     * @param response the response to populate
-     * @param blobKey  the {@link Blob#getBlobKey()} of the {@link Blob} to deliver
-     * @param variant  the variant to deliver. Use {@link URLBuilder#VARIANT_RAW} to deliver the blob itself
+     * @param response              the response to populate
+     * @param blobKey               the {@link Blob#getBlobKey()} of the {@link Blob} to deliver
+     * @param variant               the variant to deliver. Use {@link URLBuilder#VARIANT_RAW} to deliver the blob itself
+     * @param markCallAsLongRunning invoked if we know that the call will take longer than expected as we need to
+     *                              invoke the {@link sirius.biz.storage.layer2.variants.ConversionEngine} first.
      */
-    void deliver(@Nonnull String blobKey, @Nonnull String variant, @Nonnull Response response);
+    void deliver(@Nonnull String blobKey,
+                 @Nonnull String variant,
+                 @Nonnull Response response,
+                 @Nullable Runnable markCallAsLongRunning);
 
     /**
      * Delivers the contents of the given blob by using the already known physicalKey.

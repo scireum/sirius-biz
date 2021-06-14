@@ -1,9 +1,9 @@
-<i:arg type="sirius.biz.codelists.CodeList" name="codeList" />
-<i:arg type="Page" name="entries" />
+<i:arg type="sirius.biz.codelists.CodeList" name="codeList"/>
+<i:arg type="Page" name="entries"/>
 
-<i:invoke template="/templates/biz/codelists/code-list.html.pasta" codeList="codeList" page="entries" >
+<i:invoke template="/templates/biz/codelists/code-list.html.pasta" codeList="codeList" page="entries">
     <w:tableSearchHeader page="entries" baseUrl="@apply('/code-list/%s', codeList.getIdAsString())">
-        <a class="btn btn-primary" href="#" onclick="createEntry()">@i18n("Model.create")</a>
+        <a class="btn btn-primary" href="/code-list/@codeList.getIdAsString()/entry">@i18n("Model.create")</a>
     </w:tableSearchHeader>
 
     <w:table data="entries">
@@ -20,95 +20,35 @@
             <th>
                 @i18n("Model.description")
             </th>
-            <th class="col-md-2" />
+            <th class="col-md-2"/>
         </tr>
         </thead>
         <tbody>
         <i:for type="sirius.biz.codelists.CodeListEntry" var="entry" items="entries.getItems()">
             <tr>
                 <td>
-                    <a href="#" onclick="editEntry('@entry.getCodeListEntryData().getCode()', '@entry.getCodeListEntryData().getValue()', '@entry.getCodeListEntryData().getAdditionalValue()', '@entry.getCodeListEntryData().getDescription()', @entry.getCodeListEntryData().getPriority())">@entry.getCodeListEntryData().getCode()</a><br>
+                    <a href="/code-list/@codeList.getIdAsString()/entry?codeListEntryData_code=@urlEncode(entry.getCodeListEntryData().getCode())">
+                        @entry.getCodeListEntryData().getCode()
+                    </a><br>
                     <small class="muted">@entry.getCodeListEntryData().getPriority()</small>
                 </td>
                 <td>
-                    @entry.getCodeListEntryData().getValue()<br />
+                    @entry.getCodeListEntryData().getValue()<br/>
                     <small class="muted">@entry.getCodeListEntryData().getAdditionalValue()</small>
                 </td>
                 <td>
                     @entry.getCodeListEntryData().getDescription()
                 </td>
                 <td class="col-md-2 align-center">
-                    <w:deleteLink url="@apply('/code-list/%s/delete-entry/%s', codeList.getIdAsString(), entry.getIdAsString())" page="entries" />
+                    <w:deleteLink
+                            url="@apply('/code-list/%s/delete-entry/%s', codeList.getIdAsString(), entry.getIdAsString())"
+                            page="entries"/>
                 </td>
             </tr>
         </i:for>
         </tbody>
     </w:table>
 
-    <w:pagination page="entries" baseUrl="@apply('/code-list/%s', codeList.getIdAsString())" />
-
-    <script type="text/javascript">
-
-        function field(name) {
-            return $('*[name='+name+']');
-        }
-
-        function createEntry() {
-            field('code').val('');
-            field('value').val('');
-            field('additionalValue').val('');
-            field('description').val('');
-            field('priority').val('');
-            $('#dlgMessageBox').hide();
-
-            $('#editEntry').on('shown.bs.modal', function () {
-                field('code').focus();
-            }).modal('show');
-        }
-
-        function editEntry(code, value, additionalValue, description, priority) {
-            field('code').val(code);
-            field('value').val(value);
-            field('additionalValue').val(additionalValue);
-            field('description').val(description);
-            field('priority').val(priority);
-            $('#dlgMessageBox').hide();
-
-            $('#editEntry').on('shown.bs.modal', function () {
-                field('code').focus();
-            }).modal('show');
-        }
-
-        function updateEntry() {
-            if (field('code').val() == '') {
-                $('#dlgMessageBox .alert').text('@i18n("CodeListController.codeMustBeFilled")');
-                $('#dlgMessageBox').show();
-            } else {
-                $('#editForm').submit();
-            }
-        }
-
-    </script>
-
-    <w:modal name="editEntry" titleKey="Model.codeListEntry">
-        <w:modalBody>
-            <div id="dlgMessageBox" style="display: none">
-                <div class="alert alert-danger"></div>
-            </div>
-
-            <w:editForm url="@apply('/code-list/%s/entry', codeList.getIdAsString())">
-                <fieldset>
-                    <w:textfield name="code" value="" labelKey="Model.code" required="true" />
-                    <w:textfield name="priority" value="" labelKey="Model.priority" />
-                    <w:textfield span="12" name="value" value="" labelKey="CodeListEntryData.value" />
-                    <w:textfield span="12" name="additionalValue" value="" labelKey="CodeListEntryData.additionalValue" />
-                    <w:textarea span="12" rows="5" name="description" value="" labelKey="Model.description" />
-                </fieldset>
-            </w:editForm>
-        </w:modalBody>
-        <w:modalFooter cancelKey="NLS.cancel">
-            <a onclick="updateEntry()" class="btn btn-primary"><i class="icon-ok"></i> @i18n("NLS.save")</a>
-        </w:modalFooter>
-    </w:modal>
+    <w:pagination page="entries" baseUrl="@apply('/code-list/%s', codeList.getIdAsString())"/>
 </i:invoke>
 

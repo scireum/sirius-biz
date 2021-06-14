@@ -168,6 +168,6 @@ class BridgeFileSystemProvider extends FileSystemProvider {
 
     @Override
     public void setAttribute(Path path, String attribute, Object value, LinkOption... options) throws IOException {
-        throw new UnsupportedOperationException("setAttribute");
+        // We cannot change any attributes - therefore we simply ignore this...
     }
 }

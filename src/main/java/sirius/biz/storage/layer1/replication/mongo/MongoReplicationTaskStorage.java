@@ -95,7 +95,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
     }
 
     @Override
-    public void notifyAboutUpdate(String primarySpace, String objectId) {
+    public void notifyAboutUpdate(String primarySpace, String objectId, long contentLength) {
         mango.select(MongoReplicationTask.class)
              .eq(MongoReplicationTask.PRIMARY_SPACE, primarySpace)
              .eq(MongoReplicationTask.OBJECT_KEY, objectId)
@@ -104,6 +104,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
         MongoReplicationTask task = new MongoReplicationTask();
         task.setPrimarySpace(primarySpace);
         task.setObjectKey(objectId);
+        task.setContentLength(contentLength);
         task.setPerformDelete(false);
         task.setEarliestExecution(LocalDateTime.now().plus(replicateUpdateDelay));
         mango.update(task);
@@ -132,13 +133,14 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
         try {
             mongo.update()
                  .set(MongoReplicationTask.SCHEDULED, LocalDateTime.now())
+                 .where(MongoReplicationTask.FAILED, false)
                  .where(MongoReplicationTask.SCHEDULED, null)
                  .where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
                  .where(QueryBuilder.FILTERS.gte(MongoReplicationTask.ID,
                                                  batch.getString(MongoEntityBatchEmitter.START_ID)))
                  .where(QueryBuilder.FILTERS.lte(MongoReplicationTask.ID,
                                                  batch.getString(MongoEntityBatchEmitter.END_ID)))
-                 .executeFor(MongoReplicationTask.class);
+                 .executeForMany(MongoReplicationTask.class);
         } catch (Exception e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
@@ -173,7 +175,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
     public int countNumberOfExecutableTasks() {
         return (int) mango.select(MongoReplicationTask.class)
                           .eq(MongoReplicationTask.FAILED, false)
-                          .where(QueryBuilder.FILTERS.gt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
+                          .where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
                           .count();
     }
 
@@ -186,6 +188,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
         try {
             replicationManager.executeReplicationTask(task.getPrimarySpace(),
                                                       task.getObjectKey(),
+                                                      task.getContentLength(),
                                                       task.isPerformDelete());
             mango.delete(task);
         } catch (Exception ex) {
@@ -193,6 +196,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
                 Updater updater = mongo.update()
                                        .where(MongoReplicationTask.ID, task.getId())
                                        .set(MongoReplicationTask.LAST_EXECUTION, LocalDateTime.now())
+                                       .set(MongoReplicationTask.SCHEDULED, null)
                                        .set(MongoReplicationTask.EARLIEST_EXECUTION,
                                             LocalDateTime.now().plus(retryReplicationDelay))
                                        .inc(MongoReplicationTask.FAILURE_COUNTER, 1);
@@ -209,7 +213,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
                               .handle();
                 }
 
-                updater.executeFor(MongoReplicationTask.class);
+                updater.executeForOne(MongoReplicationTask.class);
             } catch (Exception e) {
                 Exceptions.handle(StorageUtils.LOG, e);
             }

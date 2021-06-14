@@ -236,7 +236,9 @@ public class MongoPageHelper<E extends MongoEntity>
 
     @Override
     protected void fillPage(Watch w, Page<E> result, List<E> items) {
-        baseQuery.executeFacets();
+        if (!baseQuery.isForceFail()) {
+            baseQuery.executeFacets();
+        }
         super.fillPage(w, result, items);
     }
 

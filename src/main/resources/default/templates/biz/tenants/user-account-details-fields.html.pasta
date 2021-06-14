@@ -12,7 +12,7 @@
 
 <div class="row">
     <w:codelistSelect span="3" name="userAccountData_person_salutation" list="salutations"
-                      value="@account.getUserAccountData().getPerson().getSalutation()"
+                      value="@account.getUserAccountData().getPerson().getSalutation().getValue()"
                       labelKey="PersonData.salutation" optional="true"/>
     <w:textfield span="3" name="userAccountData_person_title"
                  value="@account.getUserAccountData().getPerson().getTitle()" labelKey="PersonData.title"/>
@@ -26,7 +26,7 @@
     <w:singleSelect name="userAccountData_lang" labelKey="Model.lang" required="true">
         <i:for var="language" items="controller.getAvailableLanguages()" type="Tuple">
             <option value="@language.getFirst()"
-                    @selected="language.getFirst() == account.getUserAccountData().getLang()">
+                    @selected="language.getFirst() == account.getUserAccountData().getLang().getValue()">
                 @language.getSecond()
             </option>
         </i:for>
@@ -44,7 +44,24 @@
                              labelKey="LoginData.accountLocked"
                              helpKey="LoginData.accountLocked.help"/>
         </div>
-
+        <i:if test="!controller.getSubScopes().isEmpty()">
+            <div class="row">
+                <w:singleSelect span="12"
+                                name="userAccountData_subScopes"
+                                labelKey="UserAccountData.subScopes"
+                                helpKey="UserAccountData.subScopes.help"
+                                optional="true"
+                                required="false">
+                    <i:for var="subScope"
+                           type="String"
+                           items="@controller.getSubScopes()">
+                        <option value="@subScope" @selected="account.getUserAccountData().getSubScopes().contains(subScope)">
+                            @controller.getSubScopeName(subScope)
+                        </option>
+                    </i:for>
+                </w:singleSelect>
+            </div>
+        </i:if>
     </div>
     <div class="col-md-6">
         <w:heading labelKey="UserAccount.roles"/>

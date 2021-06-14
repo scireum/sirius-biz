@@ -8,7 +8,7 @@
 
 package sirius.biz.model;
 
-import sirius.biz.codelists.CodeLists;
+import sirius.biz.codelists.LookupValue;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.Composite;
@@ -18,11 +18,11 @@ import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Trim;
 import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.Formatter;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -41,10 +41,14 @@ import java.util.function.Consumer;
 public class PersonData extends Composite {
 
     /**
+     * Contains the name of the lookup table which contains all known salutations.
+     */
+    public static final String LOOKUP_TABLE_SALUTATIONS = "salutations";
+
+    /**
      * Contains a title.
      */
     public static final Mapping TITLE = Mapping.named("title");
-    public static final String CODE_LIST_SALUTATIONS = "salutations";
     @Length(50)
     @Trim
     @Autoloaded
@@ -61,9 +65,11 @@ public class PersonData extends Composite {
     @Length(20)
     @Autoloaded
     @NullAllowed
-    @Trim
     @AutoImport
-    private String salutation;
+    private final LookupValue salutation = new LookupValue(LOOKUP_TABLE_SALUTATIONS,
+                                                           LookupValue.CustomValues.ACCEPT,
+                                                           LookupValue.Display.NAME,
+                                                           LookupValue.Export.NAME);
 
     /**
      * Contains the first name of the person.
@@ -87,12 +93,8 @@ public class PersonData extends Composite {
     @AutoImport
     private String lastname;
 
-    @Part
-    @Nullable
-    private static CodeLists<?, ?, ?> codeLists;
-
     /**
-     * Verifies that the given salutation is part of the underlying code list.
+     * Verifies that the given salutation is part of the underlying lookup table.
      * <p>
      * This is intended to be invoked within a {@link sirius.db.mixing.annotations.BeforeSave} handler.
      * Note that this will skip empty values.
@@ -101,7 +103,7 @@ public class PersonData extends Composite {
      */
     public void verifySalutation() {
         try {
-            codeLists.verifyValue(CODE_LIST_SALUTATIONS, salutation);
+            salutation.verifyValue();
         } catch (Exception e) {
             throw Exceptions.createHandled()
                             .withNLSKey("PersonData.invalidSalutation")
@@ -111,7 +113,7 @@ public class PersonData extends Composite {
     }
 
     /**
-     * Validates that the given salutation is part of the underlying code list.
+     * Validates that the given salutation is part of the underlying lookup table.
      * <p>
      * This is intended to be invoked within a {@link sirius.db.mixing.annotations.OnValidate} handler.
      * Note that this will skip empty values.
@@ -121,7 +123,7 @@ public class PersonData extends Composite {
      */
     public void validateSalutation(Consumer<String> validationMessageConsumer) {
         try {
-            codeLists.verifyValue(CODE_LIST_SALUTATIONS, salutation);
+            salutation.verifyValue();
         } catch (Exception e) {
             validationMessageConsumer.accept(NLS.fmtr("PersonData.invalidSalutation")
                                                 .set("error", e.getMessage())
@@ -137,11 +139,23 @@ public class PersonData extends Composite {
      * @return a short string (salutation, title and last name) used to address the person
      */
     public String getAddressableName() {
+        return getAddressableName(NLS.getCurrentLang());
+    }
+
+    /**
+     * Generates a string which is used to address the person in the given language.
+     * <p>
+     * An example would be <tt>Mr. Prof. Skip</tt>
+     *
+     * @param langCode the language code to translate to
+     * @return a short string (salutation, title and last name) used to address the person in the given language
+     */
+    public String getAddressableName(@Nonnull String langCode) {
         if (Strings.isEmpty(lastname)) {
             return "";
         }
         return Formatter.create("[${salutation} ][${title} ]${lastname}")
-                        .set("salutation", getTranslatedSalutation())
+                        .set("salutation", getTranslatedSalutation(langCode))
                         .set("title", title)
                         .set("lastname", lastname)
                         .smartFormat();
@@ -169,8 +183,19 @@ public class PersonData extends Composite {
      */
     @Override
     public String toString() {
+        return toTranslatedString(null);
+    }
+
+    /**
+     * Generates a string representation of the full name, tranlated corresponding to the given language code.
+     *
+     * @param langCode the language code to translate to
+     * @return the full name (if filled)
+     */
+    public String toTranslatedString(@Nullable String langCode) {
         return Formatter.create("[${salutation} ][${title} ][${firstname} ]${lastname}")
-                        .set("salutation", getTranslatedSalutation())
+                        .set("salutation",
+                             (langCode == null ? getTranslatedSalutation() : getTranslatedSalutation(langCode)))
                         .set("title", title)
                         .set("firstname", firstname)
                         .set("lastname", lastname)
@@ -209,7 +234,17 @@ public class PersonData extends Composite {
      * @return the value for <tt>salutation</tt> from the <tt>salutations</tt> code list
      */
     public String getTranslatedSalutation() {
-        return codeLists.getTranslatedValue(CODE_LIST_SALUTATIONS, salutation);
+        return salutation.getTable().resolveName(salutation.getValue()).orElse(salutation.getValue());
+    }
+
+    /**
+     * Returns the value (by langCode specified translated name) of the salutation.
+     *
+     * @param langCode the language code to translate to
+     * @return the value for <tt>salutation</tt> from the <tt>salutations</tt> code list
+     */
+    public String getTranslatedSalutation(String langCode) {
+        return salutation.getTable().resolveName(salutation.getValue(), langCode).orElse(salutation.getValue());
     }
 
     public String getTitle() {
@@ -220,12 +255,8 @@ public class PersonData extends Composite {
         this.title = title;
     }
 
-    public String getSalutation() {
+    public LookupValue getSalutation() {
         return salutation;
-    }
-
-    public void setSalutation(String salutation) {
-        this.salutation = salutation;
     }
 
     public String getFirstname() {

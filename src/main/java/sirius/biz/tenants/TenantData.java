@@ -10,12 +10,14 @@ package sirius.biz.tenants;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import sirius.biz.codelists.LookupValue;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.model.InternationalAddressData;
 import sirius.biz.mongo.PrefixSearchContent;
 import sirius.biz.packages.PackageData;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.protocol.Journaled;
+import sirius.biz.util.Languages;
 import sirius.biz.web.Autoloaded;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
@@ -251,7 +253,6 @@ public class TenantData extends Composite implements Journaled {
     /**
      * Used to record changes on fields of the tenant.
      */
-    public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal;
 
     /**
@@ -261,7 +262,7 @@ public class TenantData extends Composite implements Journaled {
     @NullAllowed
     @Autoloaded
     @Length(2)
-    private String lang;
+    private final LookupValue lang = new LookupValue(Languages.LOOKUP_TABLE_ACTIVE_LANGUAGES);
 
     @Part
     @Nullable
@@ -398,10 +399,10 @@ public class TenantData extends Composite implements Journaled {
      */
     @Nonnull
     public Settings getSettings() {
-        Config config = getConfig();
+        Config tenantConfig = getConfig();
 
-        if (config != null) {
-            return new Settings(config, false);
+        if (tenantConfig != null) {
+            return new Settings(tenantConfig, false);
         }
 
         return new Settings(ConfigFactory.empty(), false);
@@ -547,12 +548,8 @@ public class TenantData extends Composite implements Journaled {
         return journal;
     }
 
-    public String getLang() {
+    public LookupValue getLang() {
         return lang;
-    }
-
-    public void setLang(String lang) {
-        this.lang = lang;
     }
 
     public PackageData getPackageData() {

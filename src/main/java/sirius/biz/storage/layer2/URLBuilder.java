@@ -12,6 +12,7 @@ import sirius.biz.storage.layer2.variants.ConversionEngine;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 
@@ -330,7 +331,13 @@ public class URLBuilder {
             return blob.getPhysicalObjectKey();
         }
 
-        return ((BasicBlobStorageSpace<?, ?, ?>) space).resolvePhysicalKey(blobKey, variant, true);
+        Tuple<String, Boolean>
+                result = ((BasicBlobStorageSpace<?, ?, ?>) space).resolvePhysicalKey(blobKey, variant, true);
+        if (result != null) {
+            return result.getFirst();
+        } else {
+            return null;
+        }
     }
 
     private String computeAccessToken(String authToken) {

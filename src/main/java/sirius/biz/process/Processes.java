@@ -16,6 +16,7 @@ import sirius.biz.process.logs.ProcessLogType;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.storage.layer2.Blob;
+import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
 import sirius.db.mixing.IntegrityConstraintFailedException;
 import sirius.db.mixing.OptimisticLockException;
@@ -220,6 +221,9 @@ public class Processes {
      * Executes the given task in the standby process of the given type, for the given tenant.
      * <p>
      * If no matching standby process exists, one will be created.
+     * <p>
+     * Note that {@link Tenants#getSystemTenantId()} and {@link Tenants#getSystemTenantName()} can be used for
+     * system tasks.
      *
      * @param type               the type of the standby process to find or create
      * @param titleSupplier      a supplier which generates a title if the process has to be created
@@ -484,6 +488,7 @@ public class Processes {
                                     @Nullable Map<String, Average> adminTimings) {
         return modify(processId, process -> process.getState() != ProcessState.TERMINATED, process -> {
             if (process.getState() != ProcessState.STANDBY) {
+                process.setErrorneous(process.isErrorneous() || !TaskContext.get().isActive());
                 process.setState(ProcessState.TERMINATED);
                 process.setCompleted(LocalDateTime.now());
                 process.setExpires(process.getPersistencePeriod().plus(LocalDate.now()));
@@ -716,12 +721,15 @@ public class Processes {
         taskContext.setAdapter(env);
         try {
             if (env.isActive()) {
+                CallContext.getCurrent().resetLang();
                 installUserOfProcess(userContext, env);
                 task.accept(env);
             }
         } catch (Exception e) {
             throw env.handle(e);
         } finally {
+            env.awaitCompletion();
+            CallContext.getCurrent().resetLang();
             taskContext.setAdapter(taskContextAdapterBackup);
             userContext.setCurrentUser(userInfoBackup);
             if (complete) {

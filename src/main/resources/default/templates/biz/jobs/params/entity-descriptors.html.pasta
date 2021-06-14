@@ -1,4 +1,4 @@
-<i:arg type="sirius.biz.jobs.params.EntityDescriptorParameter" name="param"/>
+<i:arg type="sirius.biz.jobs.params.Parameter" name="param"/>
 <i:arg type="Map" name="context"/>
 
 <w:singleSelect span="12"
@@ -8,7 +8,7 @@
                 help="@param.getDescription()"
                 optional="@!param.isRequired()"
                 required="@param.isRequired()">
-    <i:for var="descriptor" type="sirius.db.mixing.EntityDescriptor" items="@param.getValues()">
-        <option value="@param.getLookupName(descriptor)" @selected="descriptor == param.get(context).orElse(null)">@descriptor.getType().getSimpleName()</option>
+    <i:for var="descriptor" type="sirius.db.mixing.EntityDescriptor" items="@param.as(sirius.biz.jobs.params.EntityDescriptorParameter.class).getValues()">
+        <option value="@param.as(sirius.biz.jobs.params.EntityDescriptorParameter.class).getLookupName(descriptor)" @selected="descriptor == param.get(context).orElse(null)">@descriptor.getType().getSimpleName()</option>
     </i:for>
 </w:singleSelect>

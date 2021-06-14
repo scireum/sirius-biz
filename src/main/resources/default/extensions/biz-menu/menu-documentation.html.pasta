@@ -1,0 +1,12 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="130"/>
+
+<i:switch test="@point">
+    <i:block name="system">
+        <w:menuSection>
+            <w:menuItem title="Tags" icon="fa-book" url="/system/tags"
+                        permission="permission-system-tags"/>
+        </w:menuSection>
+    </i:block>
+</i:switch>
+

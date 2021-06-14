@@ -103,24 +103,24 @@ public class DistributedTasks implements MetricProvider {
     /**
      * Contains the concurrency tokens which limit the parallelism of one or more queues.
      */
-    private Map<String, Semaphore> concurrencyTokens = new ConcurrentHashMap<>();
+    private final Map<String, Semaphore> concurrencyTokens = new ConcurrentHashMap<>();
 
     /**
      * Contains the index of the queue in {@link #sortedTaskQueues} to pull work from.
      * <p>
      * Work is pulled in a round-robin fasion and this index contains the next queue to try to poll.
      */
-    private AtomicInteger nextQueueToFetchWorkFrom = new AtomicInteger(0);
+    private final AtomicInteger nextQueueToFetchWorkFrom = new AtomicInteger(0);
 
     /**
      * Contains all FIFO queues by their name.
      */
-    private Map<String, FifoQueue> fifos = new ConcurrentHashMap<>();
+    private final Map<String, FifoQueue> fifos = new ConcurrentHashMap<>();
 
     /**
      * Contains all prioritized queues by their name.
      */
-    private Map<String, PrioritizedQueue> prioritizedQueues = new ConcurrentHashMap<>();
+    private final Map<String, PrioritizedQueue> prioritizedQueues = new ConcurrentHashMap<>();
 
     /**
      * Contains the counters for each penalty token used by prioritized queues.

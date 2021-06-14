@@ -12,14 +12,13 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.health.CachingLoadInfoProvider;
 import sirius.web.health.LoadInfo;
-import sirius.web.health.LoadInfoProvider;
 
 import java.util.function.Consumer;
 
 /**
  * Provides {@link LoadInfo load infos} for all distributed task queues.
  */
-@Register(classes = LoadInfoProvider.class)
+@Register
 public class DistributedQueueLoadInfo extends CachingLoadInfoProvider {
 
     @Part

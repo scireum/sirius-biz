@@ -8,7 +8,6 @@
 
 package sirius.biz.web;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mixing;
@@ -16,10 +15,10 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Parts;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.health.HandledException;
-import sirius.web.controller.Controller;
+import sirius.web.controller.BasicController;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
+import sirius.web.security.LoginRequired;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.util.Collection;
@@ -30,18 +29,13 @@ import java.util.Collection;
  * Provides an JSON service which collects all suggestions provided by the available suggesters.
  */
 @Register
-public class QueryTagController implements Controller {
+public class QueryTagController extends BasicController {
 
     @Part
     private Mixing mixing;
 
     @Parts(QueryTagSuggester.class)
     private Collection<QueryTagSuggester> suggesters;
-
-    @Override
-    public void onError(WebContext ctx, HandledException error) {
-        ctx.respondWith().error(HttpResponseStatus.INTERNAL_SERVER_ERROR, error);
-    }
 
     /**
      * Provides suggestions for the given entity type and query.
@@ -50,6 +44,7 @@ public class QueryTagController implements Controller {
      * @param out  the JSON response
      * @param type the entity type for provide suggestions for
      */
+    @LoginRequired
     @SuppressWarnings("unchecked")
     @Routed(value = "/system/search/suggestions/:1", jsonCall = true)
     public void suggestions(WebContext ctx, JSONStructuredOutput out, String type) {

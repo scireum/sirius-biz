@@ -14,6 +14,7 @@ import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.EntityDescriptorParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.es.Elastic;
@@ -35,7 +36,7 @@ import java.util.function.Consumer;
 /**
  * Implements a job which reindexes a given index in elastic.
  */
-@Register
+@Register(framework = Processes.FRAMEWORK_PROCESSES)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
 
@@ -45,12 +46,14 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     @Part
     private IndexMappings mappings;
 
-    private EntityDescriptorParameter entityDescriptorParameter =
-            new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity).markRequired();
+    private final Parameter<EntityDescriptor> entityDescriptorParameter =
+            new EntityDescriptorParameter().withFilter(EntityDescriptorParameter::isElasticEntity)
+                                           .markRequired()
+                                           .build();
 
     @Override
     public String getLabel() {
-        return "Re-Index Elasticseach Entity";
+        return "Re-Index Elasticsearch Entity";
     }
 
     @Nullable
@@ -113,7 +116,7 @@ public class ReindexJobFactory extends SimpleBatchProcessJobFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(entityDescriptorParameter);
     }
 

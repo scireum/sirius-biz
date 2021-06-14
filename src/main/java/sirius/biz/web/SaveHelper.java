@@ -25,8 +25,8 @@ import java.util.function.Consumer;
  */
 public class SaveHelper {
 
-    private BizController bizController;
-    private WebContext ctx;
+    private final BizController bizController;
+    private final WebContext ctx;
     private Consumer<Boolean> preSaveHandler;
     private Consumer<Boolean> postSaveHandler;
     private String createdURI;

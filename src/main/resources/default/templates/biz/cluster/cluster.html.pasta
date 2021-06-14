@@ -15,6 +15,7 @@
         <tr>
             <th>Node</th>
             <th>Uptime</th>
+            <th>Version</th>
             <th>Bleeding</th>
             <th/>
         </tr>
@@ -26,6 +27,9 @@
                 </td>
                 <td>
                     @node.getUptime()
+                </td>
+                <td>
+                    @node.getVersion()
                 </td>
                 <td>
                     <i:if test="node.isBleeding()">

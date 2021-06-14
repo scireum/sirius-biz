@@ -12,7 +12,6 @@ import sirius.biz.importer.ImportContext;
 import sirius.biz.importer.Importer;
 import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.infos.JobInfoCollector;
-import sirius.biz.jobs.params.EnumParameter;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.db.mixing.BaseEntity;
@@ -28,25 +27,6 @@ import java.util.function.Consumer;
  */
 public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFactory {
 
-    /**
-     * Determines the {@link ImportMode}.
-     */
-    protected final EnumParameter<ImportMode> importModeParameter = createImportModeParameter();
-
-    /**
-     * Creates the parameter which determines the import mode to use.
-     * <p>
-     * This is provided as a helper method so that other / similar jobs can re-use it.
-     * We do not re-use the same parameter, as a parameter isn't immutable, so a global constant could
-     * be easily set into an inconsistent state.
-     *
-     * @return the completely initialized parameter.
-     */
-    public static EnumParameter<ImportMode> createImportModeParameter() {
-        return new EnumParameter<>("importMode", "$EntityImportJobFactory.importMode", ImportMode.class).withDefault(
-                ImportMode.NEW_AND_UPDATES).markRequired().withDescription("$EntityImportJobFactory.importMode.help");
-    }
-
     @Override
     protected DictionaryBasedImportJob createJob(ProcessContext process) {
         // We only resolve the parameters once and keep the final values around in a local context...
@@ -59,10 +39,7 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     @SuppressWarnings("squid:S2095")
     @Explain("The job must not be closed here as it is returned and managed by the caller.")
     protected DictionaryBasedImportJob createImportJob(ProcessContext process, ImportContext parameterContext) {
-        return new EntityImportJob<>(fileParameter,
-                                     ignoreEmptyParameter,
-                                     importModeParameter,
-                                     getImportType(),
+        return new EntityImportJob<>(getImportType(),
                                      getDictionary(),
                                      process,
                                      getName()).withContextExtender(context -> context.putAll(parameterContext));
@@ -120,8 +97,8 @@ public abstract class EntityImportJobFactory extends DictionaryBasedImportJobFac
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         super.collectParameters(parameterCollector);
-        parameterCollector.accept(importModeParameter);
+        parameterCollector.accept(EntityImportJob.IMPORT_MODE_PARAMETER);
     }
 }

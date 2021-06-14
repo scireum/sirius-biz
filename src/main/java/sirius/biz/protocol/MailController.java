@@ -41,13 +41,13 @@ public class MailController extends BizController {
         ph.addTermAggregation(MailProtocol.TYPE);
         ph.addTimeAggregation(MailProtocol.TOD,
                               false,
-                              DateRange.lastFiveMinutes(),
-                              DateRange.lastFiveteenMinutes(),
-                              DateRange.lastTwoHours(),
-                              DateRange.today(),
-                              DateRange.yesterday(),
-                              DateRange.thisWeek(),
-                              DateRange.lastWeek());
+                              DateRange.LAST_FIVE_MINUTES,
+                              DateRange.LAST_FIFTEEN_MINUTES,
+                              DateRange.LAST_TWO_HOURS,
+                              DateRange.TODAY,
+                              DateRange.YESTERDAY,
+                              DateRange.THIS_WEEK,
+                              DateRange.LAST_WEEK);
         ph.withSearchFields(QueryField.contains(MailProtocol.SEARCH_FIELD));
 
         ctx.respondWith().template("/templates/biz/protocol/mails.html.pasta", ph.asPage());

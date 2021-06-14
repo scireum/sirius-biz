@@ -9,7 +9,6 @@
 package sirius.biz.tenants.jdbc;
 
 import sirius.biz.analytics.flags.PerformanceFlag;
-import sirius.biz.analytics.metrics.MonthlyMetricComputer;
 import sirius.biz.tenants.UserAccountActivityMetricComputer;
 import sirius.kernel.di.std.Register;
 
@@ -18,11 +17,6 @@ import sirius.kernel.di.std.Register;
  */
 @Register
 public class SQLUserAccountActivityMetricComputer extends UserAccountActivityMetricComputer<SQLUserAccount> {
-
-    @Override
-    public Class<SQLUserAccount> getType() {
-        return SQLUserAccount.class;
-    }
 
     /**
      * Marks active users.
@@ -35,6 +29,11 @@ public class SQLUserAccountActivityMetricComputer extends UserAccountActivityMet
      */
     public static final PerformanceFlag FREQUENT_USER =
             PerformanceFlag.register(SQLUserAccount.class, "frequent-user", 1).makeVisible().markAsFilter();
+
+    @Override
+    public Class<SQLUserAccount> getType() {
+        return SQLUserAccount.class;
+    }
 
     @Override
     protected PerformanceFlag getActiveUserFlag() {

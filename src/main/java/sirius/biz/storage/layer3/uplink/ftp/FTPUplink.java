@@ -214,7 +214,7 @@ public class FTPUplink extends ConfigBasedUplink {
                 FTPFile[] ftpFiles = list(connector.connector(),
                                           file.parent().as(RemotePath.class),
                                           ftpFile -> Strings.areEqual(ftpFile.getName(), file.name()));
-                if (ftpFiles.length == 1) {
+                if (ftpFiles.length > 0) {
                     file.attach(ftpFiles[0]);
                     return Optional.of(ftpFiles[0]);
                 } else {

@@ -25,6 +25,8 @@ import sirius.db.mixing.types.NestedList;
 import sirius.db.mixing.types.StringIntMap;
 import sirius.db.mixing.types.StringList;
 import sirius.db.mixing.types.StringMap;
+import sirius.kernel.commons.Amount;
+import sirius.kernel.commons.NumberFormat;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
@@ -32,6 +34,7 @@ import sirius.kernel.health.Average;
 import sirius.kernel.nls.NLS;
 import sirius.web.security.UserContext;
 
+import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -261,6 +264,7 @@ public class Process extends SearchableEntity {
     private ProcessState state;
 
     @Part
+    @Nullable
     private static Processes processes;
 
     @BeforeSave
@@ -449,7 +453,8 @@ public class Process extends SearchableEntity {
      * @return the count value of the given counter
      */
     public String getCounterValue(String name) {
-        return String.valueOf(performanceCounters.get(name).orElse(adminPerformanceCounters.get(name).orElse(0)));
+        Integer value = performanceCounters.get(name).orElse(adminPerformanceCounters.get(name).orElse(0));
+        return Amount.of(value).toString(NumberFormat.NO_DECIMAL_PLACES).asString();
     }
 
     /**
@@ -485,8 +490,8 @@ public class Process extends SearchableEntity {
     /**
      * Adds or updates the timing with the given name.
      *
-     * @param name      the name of the timing
-     * @param average   contains the count and average time of the events
+     * @param name    the name of the timing
+     * @param average contains the count and average time of the events
      */
     public void addTiming(String name, Average average) {
         performanceCounters.put(name, (int) average.getCount());
@@ -496,8 +501,8 @@ public class Process extends SearchableEntity {
     /**
      * Adds or updates the timing with the given name which is only visible to administrators.
      *
-     * @param name      the name of the timing
-     * @param average   contains the count and average time of the events
+     * @param name    the name of the timing
+     * @param average contains the count and average time of the events
      */
     public void addAdminTiming(String name, Average average) {
         adminPerformanceCounters.put(name, (int) average.getCount());

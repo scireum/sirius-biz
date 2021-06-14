@@ -12,6 +12,7 @@ import sirius.biz.jobs.batch.SimpleBatchProcessJobFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.tenants.TenantUserManager;
 import sirius.db.jdbc.schema.Schema;
@@ -32,7 +33,7 @@ import java.util.function.Consumer;
 /**
  * Exports all required schema changes as defined by {@link Schema#getSchemaUpdateActions()}.
  */
-@Register
+@Register(framework = Processes.FRAMEWORK_PROCESSES)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ExportSchemaChangesJobFactory extends SimpleBatchProcessJobFactory {
 
@@ -79,7 +80,7 @@ public class ExportSchemaChangesJobFactory extends SimpleBatchProcessJobFactory 
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         // No parameters required
     }
 

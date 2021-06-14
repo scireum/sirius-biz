@@ -20,6 +20,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.function.Consumer;
@@ -56,6 +57,7 @@ public class BlobHardRefProperty extends BlobRefProperty {
     }
 
     @Part
+    @Nullable
     private static BlobStorage storage;
 
     private BlobHardRefProperty(@Nonnull EntityDescriptor descriptor,

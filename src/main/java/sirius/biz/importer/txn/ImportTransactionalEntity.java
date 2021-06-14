@@ -12,16 +12,16 @@ import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Explain;
 
 /**
- * Marks entities which support import transactions by containin a {@link ImportTransactionData}.
+ * Marks entities which support import transactions by containing a {@link ImportTransactionData}.
  *
  * @see ImportTransactionHelper
  */
 @SuppressWarnings("squid:S1214")
-@Explain("This constants belongs here as there is no point in defining it in each user of the API or somwhere else.")
+@Explain("The constant is best kept here for consistency reasons.")
 public interface ImportTransactionalEntity {
 
     /**
-     * Contains the import transaction id wrapped as composite so that it can be easily embedded.
+     * Provides the default mapping for accessing the import transaction data.
      */
     Mapping IMPORT_TRANSACTION_DATA = Mapping.named("importTransactionData");
 

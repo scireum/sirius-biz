@@ -12,6 +12,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.storage.layer1.transformer.ByteBlockTransformer;
 import sirius.biz.storage.layer1.transformer.TransformingInputStream;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.async.Promise;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.commons.Strings;
@@ -31,6 +32,8 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 
@@ -52,7 +55,7 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
     @Part
     private static StorageUtils utils;
 
-    private File baseDir;
+    private final File baseDir;
 
     /**
      * Creates a new instance based on the given config.
@@ -192,16 +195,22 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
     @Nullable
     @Override
     protected FileHandle getData(String objectKey) throws IOException {
-        if (Strings.isEmpty(objectKey)) {
-            return null;
-        }
-
         File file = getFile(objectKey);
         if (file.exists()) {
             return FileHandle.permanentFileHandle(file);
         }
 
         return null;
+    }
+
+    @Override
+    protected Promise<FileHandle> getDataAsync(String objectId) {
+        File file = getFile(objectId);
+        if (file.exists()) {
+            return new Promise<>(FileHandle.permanentFileHandle(file));
+        } else {
+            return new Promise<>(null);
+        }
     }
 
     @Nullable
@@ -226,6 +235,19 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
                                     objectKey)
                             .handle();
         }
+    }
+
+    @Override
+    protected Promise<FileHandle> getDataAsync(String objectId, ByteBlockTransformer transformer) {
+        // We actually perform a synchronous call here, as the IO involved is negligible...
+        Promise<FileHandle> result = new Promise<>();
+        try {
+            result.success(getData(objectId, transformer));
+        } catch (IOException e) {
+            result.fail(e);
+        }
+
+        return result;
     }
 
     @Override
@@ -259,18 +281,23 @@ public class FSObjectStorageSpace extends ObjectStorageSpace {
     }
 
     @Override
-    public void iterateObjects(Predicate<String> physicalKeyHandler) throws IOException {
+    public void iterateObjects(Predicate<ObjectMetadata> objectHandler) throws IOException {
         java.nio.file.Files.walkFileTree(baseDir.toPath(), new SimpleFileVisitor<Path>() {
             @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (file.toFile().isFile()) {
-                    if (physicalKeyHandler.test(file.toFile().getName())) {
+            public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+                File file = path.toFile();
+                if (file.isFile()) {
+                    if (objectHandler.test(new ObjectMetadata(file.getName(),
+                                                              Instant.ofEpochMilli(file.lastModified())
+                                                                     .atZone(ZoneId.systemDefault())
+                                                                     .toLocalDateTime(),
+                                                              file.length()))) {
                         return FileVisitResult.CONTINUE;
                     } else {
                         return FileVisitResult.TERMINATE;
                     }
                 }
-                return super.visitFile(file, attrs);
+                return super.visitFile(path, attrs);
             }
         });
     }

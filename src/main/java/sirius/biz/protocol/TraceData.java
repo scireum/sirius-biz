@@ -108,15 +108,15 @@ public class TraceData extends Composite {
      * @see sirius.biz.web.ElasticPageHelper#addTimeAggregation(Mapping, boolean, DateRange...)
      */
     public static DateRange[] defaultChangeFilterRanges() {
-        return new DateRange[]{DateRange.today(),
-                               DateRange.yesterday(),
-                               DateRange.thisWeek(),
-                               DateRange.lastWeek(),
-                               DateRange.thisMonth(),
-                               DateRange.lastMonth(),
-                               DateRange.thisYear(),
-                               DateRange.lastYear(),
-                               DateRange.beforeLastYear()};
+        return new DateRange[]{DateRange.TODAY,
+                               DateRange.YESTERDAY,
+                               DateRange.THIS_WEEK,
+                               DateRange.LAST_WEEK,
+                               DateRange.THIS_MONTH,
+                               DateRange.LAST_MONTH,
+                               DateRange.THIS_YEAR,
+                               DateRange.LAST_YEAR,
+                               DateRange.BEFORE_LAST_YEAR};
     }
 
     @BeforeSave

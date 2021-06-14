@@ -11,9 +11,10 @@ package sirius.biz.jobs.batch.file;
 import sirius.biz.jobs.batch.ExportBatchProcessFactory;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
-import sirius.biz.storage.layer3.FileOrDirectoryParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -22,35 +23,41 @@ import java.util.function.Consumer;
  */
 public abstract class FileExportJobFactory extends ExportBatchProcessFactory {
 
-    protected FileOrDirectoryParameter destinationParameter = createDestinationParameter();
-
-    /**
-     * Creates the parameter which is used to specify the destination for the generated output file.
-     * <p>
-     * This is provided as a helper method so that other / similar jobs can re-use it.
-     * We do not re-use the same parameter, as a parameter isn't immutable, so a global constant could
-     * be easily set into an inconsistent state.
-     *
-     * @return the completely initialized parameter.
-     */
-    public static FileOrDirectoryParameter createDestinationParameter() {
-        return new FileOrDirectoryParameter("destination", "$FileExportJobFactory.destination").withDescription(
-                "$FileExportJobFactory.destination.help").withBasePath("/work");
-    }
-
     @Override
     protected String createProcessTitle(Map<String, String> context) {
-        return getLabel() + destinationParameter.get(context)
-                                                .filter(VirtualFile::isFile)
-                                                .map(VirtualFile::toString)
-                                                .map(filename -> ": " + filename)
-                                                .orElse("");
+        return getLabel() + FileExportJob.DESTINATION_PARAMETER.get(context)
+                                                               .filter(VirtualFile::isFile)
+                                                               .map(VirtualFile::toString)
+                                                               .map(filename -> ": " + filename)
+                                                               .orElse("");
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
-        parameterCollector.accept(destinationParameter);
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
+        parameterCollector.accept(getDestinationParameter());
     }
+
+    /**
+     * Can be overwritten to create a customer parameter to select the export destination.
+     * <p>
+     * Note that this should use {@link FileExportJob#createDestinationParameter(List)} to ensure that
+     * the custom parameter and the actual parameter used to retrieve the value match properly.
+     *
+     * @return the parameter used to select the export destination
+     */
+    protected Parameter<VirtualFile> getDestinationParameter() {
+        List<String> fileExtensions = new ArrayList<>();
+        collectAcceptedFileExtensions(fileExtensions::add);
+
+        return FileExportJob.createDestinationParameter(fileExtensions);
+    }
+
+    /**
+     * Collects the supported file extensions for the export destination files.
+     *
+     * @param fileExtensionConsumer a collector to be supplied with all supported file extensions
+     */
+    protected abstract void collectAcceptedFileExtensions(Consumer<String> fileExtensionConsumer);
 
     @Override
     protected abstract FileExportJob createJob(ProcessContext process);

@@ -25,6 +25,7 @@ import sirius.db.mixing.annotations.Unique;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 
@@ -110,6 +111,15 @@ public class CodeListData extends Composite {
         if (!codeList.isNew()) {
             codeLists.valueCache.clear();
         }
+    }
+
+    @Override
+    public String toString() {
+        if (Strings.isEmpty(name)) {
+            return NLS.get("CodeList.new");
+        }
+
+        return name;
     }
 
     public TraceData getTrace() {

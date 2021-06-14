@@ -38,6 +38,8 @@ import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 import sirius.web.services.JSONStructuredOutput;
 
+import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -49,7 +51,7 @@ import java.util.Optional;
  * @param <T> specifies the effective entity type used to represent Tenants
  * @param <U> specifies the effective entity type used to represent UserAccounts
  */
-public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+public abstract class UserAccountController<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {
 
     /**
@@ -89,6 +91,9 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
 
     @ConfigValue("security.roles")
     protected List<String> roles;
+
+    @ConfigValue("security.subScopes")
+    protected List<String> subScopes;
 
     @Part
     protected AuditLog auditLog;
@@ -131,13 +136,24 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     public static void assertProperUserManagementPermission() {
         UserInfo currentUser = UserContext.getCurrentUser();
+        currentUser.assertPermission(getUserManagementPermission());
+    }
+
+    /**
+     * Determines the permission to check for when determining if the current user can manage other users.
+     * <p>
+     * For the system tenant a user needs "permission-manage-system-users" for all others
+     * "permission-manage-user-accounts".
+     */
+    public static String getUserManagementPermission() {
+        UserInfo currentUser = UserContext.getCurrentUser();
         boolean isCurrentTenantSystemTenant = currentUser.tryAs(Tenant.class)
                                                          .map(tenant -> tenant.hasPermission(Tenant.PERMISSION_SYSTEM_TENANT))
                                                          .orElse(false);
         if (isCurrentTenantSystemTenant) {
-            currentUser.assertPermission(PERMISSION_MANAGE_SYSTEM_USERS);
+            return PERMISSION_MANAGE_SYSTEM_USERS;
         } else {
-            currentUser.assertPermission(PERMISSION_MANAGE_USER_ACCOUNTS);
+            return PERMISSION_MANAGE_USER_ACCOUNTS;
         }
     }
 
@@ -295,6 +311,20 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     public String getRoleDescription(String role) {
         return Permissions.getPermissionDescription(role);
+    }
+
+    public List<String> getSubScopes() {
+        return Collections.unmodifiableList(subScopes);
+    }
+
+    /**
+     * Returns the name of the given sub scope.
+     *
+     * @param scope the technical name of the sub scope
+     * @return the sub scope name as shown to the user
+     */
+    public String getSubScopeName(String scope) {
+        return NLS.get("SubScope." + scope + ".name");
     }
 
     /**

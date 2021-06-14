@@ -12,7 +12,6 @@ import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.Part;
-import sirius.kernel.di.std.Priorized;
 import sirius.kernel.nls.Formatter;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.DefaultRoute;
@@ -20,6 +19,8 @@ import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
+
+import java.io.Serializable;
 
 /**
  * Provides the database independent controller for code lists.
@@ -30,7 +31,7 @@ import sirius.web.security.Permission;
  * @param <L> the effective entity type used to represent code lists
  * @param <E> the effective entity type used to represent code list entries
  */
-public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L, ?>>
+public abstract class CodeListController<I extends Serializable, L extends BaseEntity<I> & CodeList, E extends BaseEntity<I> & CodeListEntry<I, L>>
         extends BizController {
 
     /**
@@ -109,7 +110,8 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
         BasePageHelper<E, ?, ?, ?> pageHelper = getEntriesAsPage(codeList);
         pageHelper.withContext(ctx);
         applyCodeListEntrySearchFields(pageHelper);
-        ctx.respondWith().template("/templates/biz/codelists/code-list-entries.html.pasta", codeList, pageHelper.asPage());
+        ctx.respondWith()
+           .template("/templates/biz/codelists/code-list-entries.html.pasta", codeList, pageHelper.asPage());
     }
 
     protected abstract BasePageHelper<E, ?, ?, ?> getEntriesAsPage(L codeList);
@@ -127,24 +129,22 @@ public abstract class CodeListController<I, L extends BaseEntity<I> & CodeList, 
     @LoginRequired
     @Permission(PERMISSION_MANAGE_CODELISTS)
     @Routed("/code-list/:1/entry")
-    public void codeListEntry(WebContext ctx, String codeListId) {
-        L cl = findForTenant(codeLists.getListType(), codeListId);
-        assertNotNew(cl);
+    public void codeListEntry(WebContext webContext, String codeListId) {
+        L codeList = findForTenant(codeLists.getListType(), codeListId);
+        assertNotNew(codeList);
 
-        if (ctx.ensureSafePOST() && ctx.get(PARAM_CODE).isFilled()) {
-            String code = ctx.get(PARAM_CODE).asString();
-            E cle = findOrCreateEntry(cl, code);
+        String code =
+                webContext.get(CodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE).toString()).asString();
+        E codeListEntry = findOrCreateEntry(codeList, code);
+        setOrVerify(codeListEntry, codeListEntry.getCodeList(), codeList);
 
-            cle.getCodeListEntryData().setPriority(ctx.get(PARAM_PRIORITY).asInt(Priorized.DEFAULT_PRIORITY));
-            cle.getCodeListEntryData().setValue(ctx.get(PARAM_VALUE).replaceEmptyWith(null).getString());
-            cle.getCodeListEntryData()
-               .setAdditionalValue(ctx.get(PARAM_ADDITIONAL_VALUE).replaceEmptyWith(null).getString());
-            cle.getCodeListEntryData().setDescription(ctx.get(PARAM_DESCRIPTION).replaceEmptyWith(null).getString());
-
-            cle.getMapper().update(cle);
-            showSavedMessage();
+        boolean requestHandled =
+                prepareSave(webContext).withAfterSaveURI("/code-list/" + codeListId).saveEntity(codeListEntry);
+        if (!requestHandled) {
+            validate(codeListEntry);
+            webContext.respondWith()
+                      .template("/templates/biz/codelists/code-list-entry.html.pasta", codeList, codeListEntry);
         }
-        renderCodeList(ctx, cl);
     }
 
     protected abstract E findOrCreateEntry(L codeList, String code);

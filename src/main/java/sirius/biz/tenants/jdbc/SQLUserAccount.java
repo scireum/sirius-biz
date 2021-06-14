@@ -39,10 +39,10 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
     /**
      * Used to record changes on fields of the user.
      */
-    public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal = new JournalData(this);
 
     private final SQLPerformanceData performanceData = new SQLPerformanceData(this);
+
     @Override
     public <A> Optional<A> tryAs(Class<A> adapterType) {
         if (getUserAccountData().is(adapterType)) {

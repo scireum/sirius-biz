@@ -65,6 +65,10 @@ public class SQLUserAccountController extends UserAccountController<Long, SQLTen
                                                           UserAccount.TENANT.join(Tenant.TENANT_DATA.inner(TenantData.NAME)),
                                                           UserAccount.TENANT.join(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)),
                                                           UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
+                                                                                       .inner(PersonData.TITLE),
+                                                          UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
+                                                                                       .inner(PersonData.SALUTATION),
+                                                          UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                        .inner(PersonData.LASTNAME),
                                                           UserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.PERSON)
                                                                                        .inner(PersonData.FIRSTNAME),

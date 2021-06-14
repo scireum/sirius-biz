@@ -8,18 +8,20 @@
 
 package sirius.biz.codelists.mongo;
 
+import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListEntryData;
 import sirius.biz.importer.ImportHandler;
 import sirius.biz.importer.ImportHandlerFactory;
 import sirius.biz.importer.ImporterContext;
 import sirius.biz.importer.MongoEntityImportHandler;
-import sirius.biz.tenants.mongo.MongoTenants;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.commons.Context;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * Provides an import handler for {@link MongoCodeListEntry code list entries}.
@@ -29,7 +31,7 @@ public class MongoCodeListEntryImportHandler extends MongoEntityImportHandler<Mo
     /**
      * Provides the factory to instantiate this import handler.
      */
-    @Register(framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
+    @Register(framework = MongoCodeLists.FRAMEWORK_CODE_LISTS_MONGO)
     public static class MongoCodeListImportHandlerFactory implements ImportHandlerFactory {
 
         @Override
@@ -53,21 +55,20 @@ public class MongoCodeListEntryImportHandler extends MongoEntityImportHandler<Mo
         super(clazz, context);
     }
 
-    /**
-     * Tries to find an entity using the supplied <tt>data</tt>.
-     *
-     * @param data the data used to describe the entity to find
-     * @return a matching entity wrapped as optional or an empty optional if there is no matching entity
-     */
     @Override
-    public Optional<MongoCodeListEntry> tryFind(Context data) {
-        if (data.containsKey(MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE).getName())
-            && data.containsKey(MongoCodeListEntry.CODE_LIST.getName())) {
+    protected MongoCodeListEntry loadForFind(Context data) {
+        return load(data,
+                    MongoCodeListEntry.CODE_LIST,
+                    MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE));
+    }
+
+    @Override
+    protected Optional<MongoCodeListEntry> tryFindByExample(MongoCodeListEntry example) {
+        if (example.getCodeList().isFilled() && Strings.isFilled(example.getCodeListEntryData().getCode())) {
             return mango.select(MongoCodeListEntry.class)
                         .eq(MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE),
-                            data.getValue(MongoCodeListEntry.CODE_LIST_ENTRY_DATA.inner(CodeListEntryData.CODE)
-                                                                                 .getName()))
-                        .eq(MongoCodeListEntry.CODE_LIST, data.getValue(MongoCodeListEntry.CODE_LIST.getName()))
+                            example.getCodeListEntryData().getCode())
+                        .eq(MongoCodeListEntry.CODE_LIST, example.getCodeList())
                         .one();
         }
 

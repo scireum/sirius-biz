@@ -16,6 +16,7 @@ import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.health.Exceptions;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -56,7 +57,9 @@ public abstract class ImportJob extends BatchJob {
      * @throws sirius.kernel.health.HandledException if the entities do no match
      * @see BaseEntityRef#hasWriteOnceSemantics
      */
-    protected <I, E extends BaseEntity<I>> void setOrVerify(BaseEntity<?> owner, BaseEntityRef<I, E> ref, E target) {
+    protected <I extends Serializable, E extends BaseEntity<I>> void setOrVerify(BaseEntity<?> owner,
+                                                                                 BaseEntityRef<I, E> ref,
+                                                                                 E target) {
         if (!Objects.equals(ref.getId(), target.getId())) {
             if (owner.isNew()) {
                 ref.setValue(target);

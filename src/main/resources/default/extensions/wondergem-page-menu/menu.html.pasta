@@ -10,7 +10,7 @@
     <i:block name="right">
         <w:permission permission="flag-logged-in">
             <i:local name="currentUser"
-                     value="user.getCurrentUser()"/>
+                     value="UserContext.getCurrentUser()"/>
             <i:local name="userName"
                      value="currentUser.is(sirius.biz.tenants.UserAccount.class) ? currentUser.as(sirius.biz.tenants.UserAccount.class).getUserAccountData().getShortName() : currentUser.getUserName()"/>
             <i:local name="tenantName" value="currentUser.getTenantName()"/>

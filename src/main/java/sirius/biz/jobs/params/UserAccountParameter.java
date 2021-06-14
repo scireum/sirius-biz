@@ -21,7 +21,7 @@ import java.util.Optional;
 /**
  * Permits to select a {@link UserAccount} as parameter.
  */
-public class UserAccountParameter extends Parameter<UserAccount<?, ?>, UserAccountParameter> {
+public class UserAccountParameter extends ParameterBuilder<UserAccount<?, ?>, UserAccountParameter> {
 
     @Part
     @Nullable

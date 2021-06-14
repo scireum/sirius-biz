@@ -11,10 +11,7 @@ package sirius.biz.importer;
 import sirius.biz.tenants.TenantData;
 import sirius.biz.tenants.jdbc.SQLTenant;
 import sirius.db.jdbc.batch.FindQuery;
-import sirius.db.mixing.Property;
-import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Register;
 
 import java.util.function.BiConsumer;
