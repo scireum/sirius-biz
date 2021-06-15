@@ -9,10 +9,11 @@
 package sirius.biz.codelists;
 
 import sirius.db.mixing.types.StringList;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Represents a string list value backed by a {@link LookupTable} to be used in database entities.
@@ -95,15 +96,14 @@ public class LookupValues extends StringList {
     }
 
     /**
-     * Resolves a String to present to the User for each value according to {@link #display}
+     * Resolves a string to present to the user for each value according to {@link #display}.
      *
-     * @return a map of the value codes, along with their display Strings
+     * @return a list of tuples containing the value codes, along with their display strings
+     * @see LookupValue.Display#resolveDisplayString()
      */
-    public Map<String, String> resolveDisplayStrings() {
-        Map<String, String> codeAndDisplays = new HashMap<>();
-        data().forEach(code -> {
-            codeAndDisplays.put(code, display.resolveDisplayString(getTable(), code));
-        });
-        return codeAndDisplays;
+    public List<Tuple<String, String>> resolveDisplayStrings() {
+        return data().stream()
+                     .map(code -> Tuple.create(code, display.resolveDisplayString(getTable(), code)))
+                     .collect(Collectors.toList());
     }
 }

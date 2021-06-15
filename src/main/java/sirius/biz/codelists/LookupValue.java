@@ -203,9 +203,10 @@ public class LookupValue {
     }
 
     /**
-     * Resolves a String to present to the User for this value according to {@link #display}
+     * Resolves a string to present to the user for this value according to {@link #display}.
      *
      * @return a string to represent this value, its name or code or a combination
+     * @see Display#resolveDisplayString()
      */
     public String resolveDisplayString() {
         return display.resolveDisplayString(getTable(), getValue());
