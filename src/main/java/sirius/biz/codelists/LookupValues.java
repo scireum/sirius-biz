@@ -11,6 +11,9 @@ package sirius.biz.codelists;
 import sirius.db.mixing.types.StringList;
 import sirius.kernel.di.std.Part;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Represents a string list value backed by a {@link LookupTable} to be used in database entities.
  * Note that for single strings, {@link LookupValue} can be used. Also note that internally the values are stored
@@ -72,7 +75,6 @@ public class LookupValues extends StringList {
         if (table == null) {
             table = lookupTables.fetchTable(lookupTableName);
         }
-
         return table;
     }
 
@@ -86,5 +88,22 @@ public class LookupValues extends StringList {
 
     public LookupValue.CustomValues getCustomValues() {
         return customValues;
+    }
+
+    public String getTableName() {
+        return lookupTableName;
+    }
+
+    /**
+     * Resolves a String to present to the User for each value according to {@link #display}
+     *
+     * @return a map of the value codes, along with their display Strings
+     */
+    public Map<String, String> resolveDisplayStrings() {
+        Map<String, String> codeAndDisplays = new HashMap<>();
+        data().forEach(code -> {
+            codeAndDisplays.put(code, display.resolveDisplayString(getTable(), code));
+        });
+        return codeAndDisplays;
     }
 }
