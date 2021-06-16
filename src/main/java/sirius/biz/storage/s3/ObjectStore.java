@@ -461,7 +461,7 @@ public class ObjectStore {
     }
 
     /**
-     * Performs an async downlod of the given object in the given bucket.
+     * Performs an async download of the given object in the given bucket.
      *
      * @param bucket   the bucket in which the object resides
      * @param objectId the object to download
@@ -661,7 +661,7 @@ public class ObjectStore {
      * Synchronously uploads the given input stream as an object.
      * <p>
      * If the total content-length is known in advance use {@link #upload(BucketName, String, InputStream, long)} which
-     * migth use a more efficient API. If a file is to be uploaded use {@link #upload(BucketName, String, File)} which
+     * might use a more efficient API. If a file is to be uploaded use {@link #upload(BucketName, String, File)} which
      * can upload chunks in parallel.
      *
      * @param bucket      the bucket to upload the file to
