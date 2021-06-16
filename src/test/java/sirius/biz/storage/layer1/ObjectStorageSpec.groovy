@@ -11,7 +11,6 @@ package sirius.biz.storage.layer1
 import sirius.kernel.BaseSpecification
 import sirius.kernel.commons.Streams
 import sirius.kernel.di.std.Part
-import spock.lang.Ignore
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -21,14 +20,13 @@ class ObjectStorageSpec extends BaseSpecification {
     @Part
     private static ObjectStorage storage
 
-    private byte[] generateRandomData(int length) {
+    private static byte[] generateRandomData(int length) {
         Random rnd = new Random()
         byte[] result = new byte[length]
         rnd.nextBytes(result)
         return result
     }
 
-    @Ignore
     def "storing and fetching data works as expected"(int length, String space) {
         given:
         def testData = generateRandomData(length)
