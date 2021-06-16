@@ -9,7 +9,6 @@
 package sirius.biz.storage.layer1
 
 import sirius.biz.storage.layer1.replication.ReplicationBackgroundLoop
-import sirius.biz.storage.layer1.replication.ReplicationManager
 import sirius.kernel.BaseSpecification
 import sirius.kernel.Scope
 import sirius.kernel.async.BackgroundLoop
@@ -24,16 +23,15 @@ class ReplicationSpec extends BaseSpecification {
     @Part
     private static ObjectStorage storage
 
-    @Part
-    private static ReplicationManager replicationManager
-
     def awaitReplication() {
         BackgroundLoop.nextExecution(ReplicationBackgroundLoop.class).await(Duration.ofMinutes(1))
+        // extra wait required due to asynchronous data transfers in replication
+        Thread.sleep(500)
     }
 
     def "updates are replicated correctly"() {
         given:
-        def testData = "test".getBytes(Charsets.UTF_8)
+        def testData = "test".getBytes(StandardCharsets.UTF_8)
         when:
         storage.getSpace("repl-primary").upload("repl-update-test", new ByteArrayInputStream(testData), testData.length)
         and:
@@ -42,7 +40,7 @@ class ReplicationSpec extends BaseSpecification {
         then:
         downloaded.isPresent()
         and:
-        CharStreams.toString(new InputStreamReader(downloaded.get().getInputStream(), StandardCharsets.UTF_8)) == "test"
+        new InputStreamReader(downloaded.get().getInputStream(), StandardCharsets.UTF_8).readLine() == "test"
     }
 
     def "deletes are replicated correctly"() {
