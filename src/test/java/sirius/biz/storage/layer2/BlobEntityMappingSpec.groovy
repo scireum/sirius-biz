@@ -8,25 +8,21 @@
 
 package sirius.biz.storage.layer2
 
-import sirius.biz.storage.layer2.jdbc.SQLBlob
+
 import sirius.biz.tenants.TenantsHelper
 import sirius.db.jdbc.OMA
 import sirius.kernel.BaseSpecification
 import sirius.kernel.di.std.Part
-import sirius.web.resources.Resources
 
 import java.nio.file.Paths
 
 class BlobEntityMappingSpec extends BaseSpecification {
 
     @Part
-    private static OMA oma;
+    private static OMA oma
 
     @Part
-    private static BlobStorage blobStorage;
-
-    @Part
-    private static Resources resources;
+    private static BlobStorage blobStorage
 
     def "store entity with blob hard ref must make the blob non-temporary"() {
         given: 'an entity and a blob'
@@ -83,9 +79,4 @@ class BlobEntityMappingSpec extends BaseSpecification {
         then: 'blob with deleted referring entity should be gone'
         !blobStorage.getSpace("blob-files").findByBlobKey(blob.getBlobKey()).isPresent()
     }
-
-
-
-
-
 }
