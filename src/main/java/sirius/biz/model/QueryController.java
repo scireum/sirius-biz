@@ -94,7 +94,7 @@ public class QueryController extends BizController {
 
             // Log effective query if desired...
             if (Boolean.TRUE.equals(constraintAndDebugFlag.getSecond())) {
-                UserContext.message(Message.info("Effective Query: " + baseQuery.toString()));
+                UserContext.message(Message.info("Effective Query: " + baseQuery));
             }
 
             // Elastic entities might be routed - we ignore this here and access all shards anyway...

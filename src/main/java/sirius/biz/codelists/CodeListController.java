@@ -40,10 +40,6 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
     public static final String PERMISSION_MANAGE_CODELISTS = "permission-manage-code-lists";
 
     private static final String PARAM_CODE = "code";
-    private static final String PARAM_PRIORITY = "priority";
-    private static final String PARAM_VALUE = "value";
-    private static final String PARAM_ADDITIONAL_VALUE = "additionalValue";
-    private static final String PARAM_DESCRIPTION = "description";
 
     @Part
     private CodeLists<I, L, E> codeLists;
@@ -123,7 +119,7 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
     /**
      * Provides an editor for a code list entry.
      *
-     * @param ctx        the current request
+     * @param webContext        the current request
      * @param codeListId the code list of the entry
      */
     @LoginRequired

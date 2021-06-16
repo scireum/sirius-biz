@@ -136,7 +136,7 @@ public class MongoPageHelper<E extends MongoEntity>
                     item.withCount(numberOfHits);
                 } else {
                     // If the item has no matches and isn't an active filter - remove as
-                    // it is unneccessary...
+                    // it is unnecessary...
                     iter.remove();
                 }
             }
@@ -181,7 +181,7 @@ public class MongoPageHelper<E extends MongoEntity>
                     item.withCount(numberOfHits);
                 } else {
                     // If the item has no matches and isn't an active filter - remove as
-                    // it is unneccessary...
+                    // it is unnecessary...
                     iter.remove();
                 }
             }

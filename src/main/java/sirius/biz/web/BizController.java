@@ -436,7 +436,7 @@ public class BizController extends BasicController {
             }
         }
         Optional<E> result = mixing.getDescriptor(type).getMapper().find(type, id);
-        if (!result.isPresent()) {
+        if (result.isEmpty()) {
             throw entityNotFoundException(type, id);
         }
         return result.get();
