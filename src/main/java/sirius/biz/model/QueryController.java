@@ -171,21 +171,22 @@ public class QueryController extends BizController {
     public void entityTypeAutocomplete(WebContext webContext) {
         AutocompleteHelper.handle(webContext, ((query, result) -> {
             String effectiveQuery = query.toLowerCase();
-            fetchRelevantDescriptors().map(this::createCompletion)
-                                      .filter(completion -> filterMatch(effectiveQuery, completion))
+            fetchRelevantDescriptors().filter(descriptor -> filterMatch(effectiveQuery, descriptor))
+                                      .map(this::createCompletion)
+
                                       .forEach(result);
         }));
     }
 
-    private AutocompleteHelper.Completion createCompletion(EntityDescriptor descriptor) {
-        return new AutocompleteHelper.Completion(descriptor.getName(),
-                                                 descriptor.getType().getSimpleName(),
-                                                 descriptor.getType().getSimpleName());
+    private boolean filterMatch(String effectiveQuery, EntityDescriptor descriptor) {
+        return descriptor.getName().toLowerCase().contains(effectiveQuery) || descriptor.getType()
+                                                                                        .getSimpleName()
+                                                                                        .toLowerCase()
+                                                                                        .contains(effectiveQuery);
     }
 
-    private boolean filterMatch(String effectiveQuery, AutocompleteHelper.Completion completion) {
-        return completion.getLabel().toLowerCase().contains(effectiveQuery) || completion.getDescription()
-                                                                                         .toLowerCase()
-                                                                                         .contains(effectiveQuery);
+    private AutocompleteHelper.Completion createCompletion(EntityDescriptor descriptor) {
+        return AutocompleteHelper.suggest(descriptor.getName()).withFieldLabel(descriptor.getType().getSimpleName());
     }
+
 }

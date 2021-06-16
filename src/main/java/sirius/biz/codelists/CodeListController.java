@@ -205,17 +205,13 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
 
             pageHelper.asPage().getItems().forEach(codeList -> {
                 CodeListData codeListData = codeList.getCodeListData();
-                result.accept(new AutocompleteHelper.Completion(codeListData.getCode(),
-                                                                Formatter.create("${code}[ (${name})]")
-                                                                         .set(PARAM_CODE, codeListData.getCode())
-                                                                         .set("name", codeListData.getName())
-                                                                         .smartFormat(),
-                                                                Formatter.create("${code}[ (${name})] - ${description}")
-                                                                         .set(PARAM_CODE, codeListData.getCode())
-                                                                         .set("name", codeListData.getName())
-                                                                         .set(PARAM_DESCRIPTION,
-                                                                              codeListData.getDescription())
-                                                                         .smartFormat()));
+                String label = Formatter.create("${code}[ (${name})]")
+                                        .set(PARAM_CODE, codeListData.getCode())
+                                        .set("name", codeListData.getName())
+                                        .smartFormat();
+                result.accept(AutocompleteHelper.suggest(codeListData.getCode())
+                                                .withFieldLabel(label)
+                                                .withCompletionDescription(codeListData.getDescription()));
             });
         });
     }
