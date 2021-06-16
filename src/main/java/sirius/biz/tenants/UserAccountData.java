@@ -285,8 +285,11 @@ public class UserAccountData extends Composite implements MessageProvider {
     @Override
     public void addMessages(Consumer<Message> messageConsumer) {
         if (Strings.isFilled(getLogin().getGeneratedPassword())) {
-            messageConsumer.accept(Message.warn(NLS.get("UserAccount.warnAboutGeneratedPassword"))
-                                          .withAction("/profile/password", NLS.get("UserAccount.changePassword")));
+            messageConsumer.accept(Message.warn()
+                                          .withTextAndLink(NLS.get("UserAccount.warnAboutGeneratedPassword"),
+                                                           NLS.get("UserAccount.changePassword"),
+                                                           "/profile/password",
+                                                           null));
         }
 
         warnAboutForcedLogout(messageConsumer);

@@ -240,9 +240,11 @@ public class VFSController extends BizController {
             if (newParent.exists() && newParent.isDirectory()) {
                 Optional<String> processId = file.transferTo(newParent).move();
                 if (processId.isPresent()) {
-                    UserContext.message(Message.info(NLS.get("VFSController.movedInProcess"))
-                                               .withAction("/ps/" + processId.get(),
-                                                           NLS.get("VFSController.moveProcess")));
+                    UserContext.message(Message.info()
+                                               .withTextAndLink(NLS.get("VFSController.movedInProcess"),
+                                                                NLS.get("VFSController.moveProcess"),
+                                                                "/ps/" + processId.get(),
+                                                                null));
                 } else {
                     UserContext.message(Message.info(NLS.get("VFSController.moved")));
                 }
