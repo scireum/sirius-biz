@@ -22,6 +22,7 @@ import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.Facet;
+import sirius.web.controller.FacetItem;
 import sirius.web.controller.Message;
 import sirius.web.controller.Page;
 import sirius.web.http.WebContext;
@@ -291,7 +292,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
             // Make all sort options visible and mark the first as selected if no other is active
             f.addItems(sortOptions);
             if (f.getValue() == null) {
-                f.getItems().stream().findFirst().ifPresent(item -> item.setActive(true));
+             f.getItems().stream().findFirst().ifPresent(FacetItem::forceActive);
             }
         });
     }

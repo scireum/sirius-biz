@@ -233,7 +233,7 @@ public class ElasticPageHelper<E extends ElasticEntity>
             FacetItem item = iter.next();
             int numberOfHits = counters.getOrDefault(item.getKey(), 0);
             if (numberOfHits > 0 || item.isActive()) {
-                item.setCount(numberOfHits);
+                item.withCount(numberOfHits);
             } else {
                 // If the item has no matches and isn't an active filter - remove as
                 // it is unneccessary...

@@ -133,7 +133,7 @@ public class MongoPageHelper<E extends MongoEntity>
                                              .findFirst()
                                              .orElse(0);
                 if (numberOfHits > 0 || item.isActive()) {
-                    item.setCount(numberOfHits);
+                    item.withCount(numberOfHits);
                 } else {
                     // If the item has no matches and isn't an active filter - remove as
                     // it is unneccessary...
@@ -178,7 +178,7 @@ public class MongoPageHelper<E extends MongoEntity>
                 int numberOfHits =
                         Strings.areEqual(item.getKey(), "true") ? mongoFacet.getNumTrue() : mongoFacet.getNumFalse();
                 if (numberOfHits > 0 || item.isActive()) {
-                    item.setCount(numberOfHits);
+                    item.withCount(numberOfHits);
                 } else {
                     // If the item has no matches and isn't an active filter - remove as
                     // it is unneccessary...
