@@ -14,7 +14,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 /**
- * Provides a helper class to query the <tt>countries</tt> {@link LookupTable}.
+ * Provides a helper class to query the <tt>languages</tt> {@link LookupTable}.
  * <p>
  * Note that the table can be backed by either a {@link sirius.biz.codelists.CodeLists code list} or a
  * {@link sirius.biz.jupiter.Jupiter IDB table}. For most of the additional fields to work properly,
