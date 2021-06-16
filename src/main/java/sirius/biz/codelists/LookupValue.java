@@ -178,6 +178,25 @@ public class LookupValue {
         return !isFilled();
     }
 
+    /**
+     * Resolves a string to present to the user for this value according to {@link #display}.
+     *
+     * @return a string to represent this value, its name or code or a combination
+     * @see Display#resolveDisplayString()
+     */
+    public String resolveDisplayString() {
+        return display.resolveDisplayString(getTable(), getValue());
+    }
+
+    @Override
+    public String toString() {
+        if (Strings.isEmpty(value)) {
+            return lookupTableName + ": empty";
+        } else {
+            return Strings.apply("%s: %s (%s)", lookupTableName, value, fetchName().orElse("unknown"));
+        }
+    }
+
     public String getValue() {
         return value;
     }
@@ -200,24 +219,5 @@ public class LookupValue {
 
     public String getTableName() {
         return lookupTableName;
-    }
-
-    /**
-     * Resolves a string to present to the user for this value according to {@link #display}.
-     *
-     * @return a string to represent this value, its name or code or a combination
-     * @see Display#resolveDisplayString()
-     */
-    public String resolveDisplayString() {
-        return display.resolveDisplayString(getTable(), getValue());
-    }
-
-    @Override
-    public String toString() {
-        if (Strings.isEmpty(value)) {
-            return lookupTableName + ": empty";
-        } else {
-            return Strings.apply("%s: %s (%s)", lookupTableName, value, fetchName().orElse("unknown"));
-        }
     }
 }

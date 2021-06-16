@@ -79,6 +79,18 @@ public class LookupValues extends StringList {
         return table;
     }
 
+    /**
+     * Resolves a string to present to the user for each value according to {@link #display}.
+     *
+     * @return a list of tuples containing the value codes, along with their display strings
+     * @see LookupValue.Display#resolveDisplayString()
+     */
+    public List<Tuple<String, String>> resolveDisplayStrings() {
+        return data().stream()
+                     .map(code -> Tuple.create(code, display.resolveDisplayString(getTable(), code)))
+                     .collect(Collectors.toList());
+    }
+
     public LookupValue.Display getDisplay() {
         return display;
     }
@@ -93,17 +105,5 @@ public class LookupValues extends StringList {
 
     public String getTableName() {
         return lookupTableName;
-    }
-
-    /**
-     * Resolves a string to present to the user for each value according to {@link #display}.
-     *
-     * @return a list of tuples containing the value codes, along with their display strings
-     * @see LookupValue.Display#resolveDisplayString()
-     */
-    public List<Tuple<String, String>> resolveDisplayStrings() {
-        return data().stream()
-                     .map(code -> Tuple.create(code, display.resolveDisplayString(getTable(), code)))
-                     .collect(Collectors.toList());
     }
 }
