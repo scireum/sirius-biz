@@ -11,7 +11,7 @@ the requested langauge, the default language (specified in the system config as 
 used.
 
 Note that the articles can be placed in chapters to provide a hierarchical navigation. **Sirius**
-itself provides a sef of default base chapters where core help topics are placed. These chapters can be extended by
+itself provides a set of default base chapters where core help topics are placed. These chapters can be extended by
 applications.
 
 To create an article, use the **k:article** tag, for chapters use **k:chapter**.
@@ -19,4 +19,3 @@ To create an article, use the **k:article** tag, for chapters use **k:chapter**.
 Note that articles are not imediatelly available after a system restart as the end of day task
 **synchronize-knowledgebase** has to run. This can be forced by running `eod synchronize-knowledgebase`
 in the console.
-
