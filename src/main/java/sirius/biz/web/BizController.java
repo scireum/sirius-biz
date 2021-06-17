@@ -580,7 +580,7 @@ public class BizController extends BasicController {
      * Computes a signature used by {@link #signLink(String)} and {@link #verifySignedLink(WebContext)}.
      *
      * @param uri the uri to sign
-     * @return a signature (hash) based an the given URL, a timestamp and <tt>controller.secret</tt> from the
+     * @return a signature (hash) based on the given URL, a timestamp and <tt>controller.secret</tt> from the
      * system configuration
      * @see SignLinkMacro
      * @see ComputeAuthSignatureMacro
@@ -592,6 +592,27 @@ public class BizController extends BasicController {
 
         long unixTimeInDays = TimeUnit.DAYS.convert(System.currentTimeMillis(), TimeUnit.MILLISECONDS);
         return Hasher.md5().hash(uri + secret + unixTimeInDays).toHexString();
+    }
+
+    /**
+     * Verifies the given signature for the given URI.
+     * <p>
+     * This signature was previously computed using {@link #computeURISignature(String)}.
+     *
+     * @param webContext the request to verify the uri for. This will be completed with a <tt>FORBIDDEN</tt>
+     *                   HTTP error if the signature is invalid
+     * @param uri        the uri to verify
+     * @param givenHash  the given signature to verify
+     * @return <tt>true</tt> if the signature is valid, <tt>false</tt> otherwise
+     */
+    public static boolean verifyURISignature(WebContext webContext, String uri, String givenHash) {
+        String hash = computeURISignature(uri);
+        if (!Strings.areEqual(hash, givenHash)) {
+            webContext.respondWith().error(HttpResponseStatus.FORBIDDEN, "Security hash does not match!");
+            return false;
+        } else {
+            return true;
+        }
     }
 
     /**
@@ -627,12 +648,8 @@ public class BizController extends BasicController {
      * @see ComputeAuthSignatureMacro
      */
     public static boolean verifySignedLink(WebContext webContext) {
-        String hash = computeURISignature(webContext.getRequestedURI());
-        if (!Strings.areEqual(hash, webContext.get("controllerAuthHash").asString())) {
-            webContext.respondWith().error(HttpResponseStatus.FORBIDDEN, "Security hash does not match!");
-            return false;
-        }
-
-        return true;
+        return verifyURISignature(webContext,
+                                  webContext.getRequestedURI(),
+                                  webContext.get("controllerAuthHash").asString());
     }
 }

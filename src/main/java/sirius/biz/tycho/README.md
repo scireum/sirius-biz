@@ -7,4 +7,5 @@ UI and permits to quickly add custom functionality. Also Tycho provides a set of
 frameworks:
 
 * [OpenSearch](search/README.md)
+* [Knowledge Base](kb/README.md)
 

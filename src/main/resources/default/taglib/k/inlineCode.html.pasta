@@ -1,0 +1,4 @@
+<i:pragma name="description">
+    Renders a piece of text as code (monospaced and slightly highlighted).
+</i:pragma>
+<span class="kb-inline-code"><i:render name="body" /></span>

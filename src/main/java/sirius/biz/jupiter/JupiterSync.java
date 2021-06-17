@@ -145,7 +145,7 @@ public class JupiterSync implements Startable, EndOfDayTask {
 
     @Override
     public String getName() {
-        return "Jupiter Sync";
+        return "sync-jupiter";
     }
 
     @Override
