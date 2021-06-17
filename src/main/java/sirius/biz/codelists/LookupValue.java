@@ -93,7 +93,7 @@ public class LookupValue {
      * @throws IllegalArgumentException if the currently stored code is invalid
      */
     public void verifyValue() {
-        if (Strings.isFilled(value) && !getTable().normalize(value).isPresent()) {
+        if (Strings.isFilled(value) && getTable().normalize(value).isEmpty()) {
             throw new IllegalArgumentException(NLS.fmtr("LookupValue.invalidValue").set("value", value).format());
         }
     }

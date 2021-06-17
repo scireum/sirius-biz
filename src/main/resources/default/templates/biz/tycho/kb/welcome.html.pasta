@@ -1,0 +1,19 @@
+<div class="pb-4">
+    <img src="/assets/images/login_logo.png" style="max-height: 100px"/>
+</div>
+
+<p>
+    Welcome to the knowledge base of @sirius.kernel.info.Product.getProduct().getName()
+</p>
+<p>
+    This provides you with an overview of all articles and tutorials we provide. Please note that you can use the
+    <a href="/tycho/search"><i class="fa fa-search"></i> System-wide Search</a> to find articles for a given keyword.
+
+    Also note that matching articles and tutorials are also directly shown in the applications. Lookout for this
+    symbol <a class="btn btn-outline-secondary"><i class="fa fa-file-alt"></i></a> im in the upper right area.
+
+    Keep in mind that articles are only visible to authenticated users with the appropriate permissions. If you want
+    to forward a link to an article who doesn't have access to the system, use this button, which will generated
+    a pre-authorized link: <a class="btn btn-outline-secondary"><i class="fa fa-link"></i></a>. You'll find this
+    button in the upper right area of every page.
+</p>

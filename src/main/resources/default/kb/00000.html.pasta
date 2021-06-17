@@ -1,0 +1,62 @@
+<k:base code="00000"
+        lang="@part(sirius.biz.tycho.kb.KnowledgeBase.class).getFallbackLang()"
+        title="@i18n('KnowledgeBase.kb')"
+        parent=""
+        priority="0"
+        permissions="flag-logged-in"
+        chapter="true">
+
+    <i:local name="article" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
+    <k:section>
+        <i:if test="part(sirius.pasta.tagliatelle.Tagliatelle.class).resolve('/templates/biz/tycho/kb/welcome_' + article.getLanguage() + '.html.pasta').isPresent()">
+            <i:dynamicInvoke template="@apply('/templates/biz/tycho/kb/welcome_%s.html.pasta', article.getLanguage())" />
+            <i:else>
+                <i:invoke template="/templates/biz/tycho/kb/welcome.html.pasta" />
+            </i:else>
+        </i:if>
+    </k:section>
+
+    <i:local name="languages" value="@part(sirius.biz.tycho.kb.KnowledgeBase.class).queryLanguages()"/>
+
+    <div class="row">
+        <div class="col-12 @if (languages.size() > 1) { col-lg-8 } else { col-lg-12 }">
+            <i:local name="childChapters" value="article.queryChildChapters()"/>
+            <i:if test="!childChapters.isEmpty()">
+                <k:section heading="Kapitel">
+                    <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="chapter" items="childChapters">
+                        <div class="pb-1">
+                            <div>
+                                <a href="/kba/@chapter.getLanguage()/@chapter.getArticleId()">
+                                    <i class="fa fa-book"></i> @chapter.getTitle()
+                                </a>
+                            </div>
+                            <div class="text-muted">
+                                @chapter.getDescription()
+                            </div>
+                        </div>
+                    </i:for>
+                </k:section>
+            </i:if>
+        </div>
+
+        <i:if test="languages.size() > 1">
+            <div class="col-12 col-lg-4">
+                <k:section heading="Verfügbare Sprachen">
+                    <i:for type="String" var="language"
+                           items="@part(sirius.biz.tycho.kb.KnowledgeBase.class).queryLanguages()">
+                        <div class="pb-1">
+                            <div>
+                                <a href="/kb/@language">
+                                    <t:langFlag lang="@language"/>
+                                    <span class="@if (language == article.getLanguage()) { font-weight-bold }">
+                                            @part(sirius.biz.util.Languages.class).all().resolveName(language, language).orElse(language)
+                                    </span>
+                                </a>
+                            </div>
+                        </div>
+                    </i:for>
+                </k:section>
+            </div>
+        </i:if>
+    </div>
+</k:base>

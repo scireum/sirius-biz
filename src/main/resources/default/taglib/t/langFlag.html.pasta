@@ -1,0 +1,2 @@
+<i:arg type="String" name="lang" />
+<img src="/assets/images/flags/languages/@(lang.toLowerCase()).png" />
