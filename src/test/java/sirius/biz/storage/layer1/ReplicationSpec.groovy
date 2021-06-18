@@ -26,7 +26,7 @@ class ReplicationSpec extends BaseSpecification {
     def awaitReplication() {
         BackgroundLoop.nextExecution(ReplicationBackgroundLoop.class).await(Duration.ofMinutes(1))
         // extra wait required due to asynchronous data transfers in replication
-        Thread.sleep(500)
+        Thread.sleep(10000)
     }
 
     def "updates are replicated correctly"() {
