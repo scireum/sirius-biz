@@ -422,8 +422,8 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
         assertPermission(TenantUserManager.PERMISSION_SELECT_TENANT);
 
         Optional<T> tenant = resolveAccessibleTenant(tenantId, determineCurrentTenant(webContext));
-        if (!tenant.isPresent()) {
-            UserContext.get().addMessage(Message.error(NLS.get("TenantController.cannotBecomeTenant")));
+        if (tenant.isEmpty()) {
+            UserContext.get().addMessage(Message.error().withTextMessage(NLS.get("TenantController.cannotBecomeTenant")));
             selectTenants(webContext);
             return;
         }

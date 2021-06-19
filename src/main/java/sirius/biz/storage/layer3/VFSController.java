@@ -68,7 +68,7 @@ public class VFSController extends BizController {
         VirtualFile file = vfs.resolve(path);
         if (!file.exists()) {
             UserContext.get()
-                       .addMessage(Message.error(NLS.fmtr("VFSController.unknownPath").set("path", path).format()));
+                       .addMessage(Message.error().withTextMessage(NLS.fmtr("VFSController.unknownPath").set("path", path).format()));
 
             while (file != null && !file.exists()) {
                 file = file.parent();
@@ -182,7 +182,7 @@ public class VFSController extends BizController {
                 String name = ctx.get("name").asString();
                 if (file.exists() && Strings.isFilled(name)) {
                     file.rename(name);
-                    UserContext.message(Message.info(NLS.get("VFSController.renamed")));
+                    UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.renamed")));
                 }
             } catch (Exception e) {
                 UserContext.handle(e);
@@ -210,7 +210,7 @@ public class VFSController extends BizController {
                 String name = ctx.get("name").asString();
                 VirtualFile newDirectory = parent.resolve(name);
                 newDirectory.createAsDirectory();
-                UserContext.message(Message.info(NLS.get("VFSController.directoryCreated")));
+                UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.directoryCreated")));
                 ctx.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", newDirectory.path()).toString());
             } catch (Exception e) {
                 UserContext.handle(e);
@@ -246,7 +246,7 @@ public class VFSController extends BizController {
                                                                 "/ps/" + processId.get(),
                                                                 null));
                 } else {
-                    UserContext.message(Message.info(NLS.get("VFSController.moved")));
+                    UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.moved")));
                 }
             }
         } catch (Exception e) {

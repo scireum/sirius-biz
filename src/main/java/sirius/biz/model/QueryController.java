@@ -94,7 +94,7 @@ public class QueryController extends BizController {
 
             // Log effective query if desired...
             if (Boolean.TRUE.equals(constraintAndDebugFlag.getSecond())) {
-                UserContext.message(Message.info("Effective Query: " + baseQuery));
+                UserContext.message(Message.info().withTextMessage("Effective Query: " + baseQuery));
             }
 
             // Elastic entities might be routed - we ignore this here and access all shards anyway...
@@ -110,7 +110,7 @@ public class QueryController extends BizController {
                 Watch watch = Watch.start();
                 baseQuery.limit(limit).iterateAll(result::add);
 
-                UserContext.message(Message.info(Strings.apply("Showing %s of %s results - Query took %sms",
+                UserContext.message(Message.info().withTextMessage(Strings.apply("Showing %s of %s results - Query took %sms",
                                                                result.size(),
                                                                numberOfEntities,
                                                                watch.elapsedMillis())));
@@ -120,7 +120,7 @@ public class QueryController extends BizController {
         } catch (IllegalArgumentException e) {
             // The QueryCompiler generates an IllegalArgumentException for invalid fields and tokens.
             // In our case we don't want to write them into the syslog but just output the message...
-            UserContext.message(Message.error(e.getMessage()));
+            UserContext.message(Message.error().withTextMessage(e.getMessage()));
         } catch (Exception e) {
             handle(e);
         }
@@ -135,7 +135,7 @@ public class QueryController extends BizController {
             if (count.isPresent()) {
                 return count.get();
             }
-            UserContext.message(Message.warn(Strings.apply("Fetching total result count timed out.")));
+            UserContext.message(Message.warn().withTextMessage(Strings.apply("Fetching total result count timed out.")));
             return limit;
         }
 

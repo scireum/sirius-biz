@@ -177,7 +177,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     }
 
     protected Facet createTimeFacet(String name, String title, boolean useLocalDate, DateRange[] ranges) {
-        Facet facet = new Facet(title, name, null, null);
+        Facet facet = new Facet(title, name);
         addFacet(facet, (f, q) -> {
             for (DateRange range : ranges) {
                 if (Strings.areEqual(f.getValue(), range.getKey())) {
@@ -200,8 +200,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
      * @return the helper itself for fluent method calls
      */
     public B addBooleanFacet(String name, String title) {
-        String facetValue = getParameterValue(name).getString();
-        Facet facet = new Facet(title, name, facetValue, null);
+        Facet facet = new Facet(title, name);
         facet.addItem("true", NLS.get("NLS.yes"), -1);
         facet.addItem("false", NLS.get("NLS.no"), -1);
 
@@ -224,7 +223,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
      * @return the helper itself for fluent method calls
      */
     public B addEnumFacet(String name, String title, Class<? extends Enum<?>> enumType) {
-        Facet facet = new Facet(title, name, getParameterValue(name).getString(), null);
+        Facet facet = new Facet(title, name);
         Arrays.stream(enumType.getEnumConstants()).forEach(e -> facet.addItem(e.name(), e.toString(), -1));
 
         return addFilterFacet(facet);
@@ -253,12 +252,12 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
         String value = getParameterValue(parameterName).getString();
 
         if (Strings.isFilled(value)) {
-            Facet facet = new Facet(title, parameterName, value, translator);
+            Facet facet = new Facet(title, parameterName).withTranslator(translator);
             Value labelAsValue = webContext.get(labelParameterName);
             facet.addItem(value, labelAsValue.getString(), -1);
             addFacet(facet, (f, q) -> q.eqIgnoreNull(filterField, f.getValue()));
             if (labelAsValue.isFilled()) {
-                addFacet(new Facet(title, labelParameterName, labelAsValue.asString(), translator),
+                addFacet(new Facet(title, labelParameterName).withTranslator(translator),
                          (ignoredFacet, ignoredQuery) -> {
                          });
             }
@@ -278,10 +277,9 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     public B addSortFacet(@Nonnull List<String> sortOptions,
                           @Nullable ValueComputer<String, String> translator,
                           BiConsumer<String, Q> sortFunction) {
-        return addFacet(new Facet(NLS.get("BasePageHelper.sort"),
-                                  "sort",
-                                  null,
-                                  translator == null ? NLS::smartGet : translator), (f, q) -> {
+        return addFacet(new Facet(NLS.get("BasePageHelper.sort"), "sort").withTranslator(translator == null ?
+                                                                                         NLS::smartGet :
+                                                                                         translator), (f, q) -> {
             if (f.getValue() != null) {
                 sortFunction.accept(f.getValue(), q);
             } else {
@@ -292,7 +290,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
             // Make all sort options visible and mark the first as selected if no other is active
             f.addItems(sortOptions);
             if (f.getValue() == null) {
-             f.getItems().stream().findFirst().ifPresent(FacetItem::forceActive);
+                f.getItems().stream().findFirst().ifPresent(FacetItem::forceActive);
             }
         });
     }
@@ -361,7 +359,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
             fillPage(w, result, items);
 
             if (debugging) {
-                UserContext.message(Message.info(Strings.apply("Effective Query: %s (Matches: %s, Duration: %s ms)",
+                UserContext.message(Message.info().withTextMessage(Strings.apply("Effective Query: %s (Matches: %s, Duration: %s ms)",
                                                                baseQuery,
                                                                baseQuery.count(),
                                                                w.elapsedMillis())));

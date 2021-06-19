@@ -64,7 +64,7 @@ public class SQLPageHelper<E extends SQLEntity>
     public SQLPageHelper<E> addQueryFacet(String name,
                                           String title,
                                           Function<SmartQuery<E>, SQLQuery> queryTransformer) {
-        return addFacet(new Facet(title, name, null, null), (f, q) -> {
+        return addFacet(new Facet(title, name), (f, q) -> {
             if (Strings.isFilled(f.getValue())) {
                 q.eq(Mapping.named(f.getName()), f.getValue());
             }

@@ -74,7 +74,7 @@ public class SQLPerformanceData extends PerformanceData {
      * @param pageHelper the helper to append the facet to
      */
     public static void addFilterFacet(SQLPageHelper<? extends PerformanceFlagged> pageHelper) {
-        Facet facet = new Facet(NLS.get("PerformanceData.flags"), FACET_NAME_PERFORMANCE_FLAGS, null, null);
+        Facet facet = new Facet(NLS.get("PerformanceData.flags"), FACET_NAME_PERFORMANCE_FLAGS);
         Class<?> type = pageHelper.getBaseQuery().getDescriptor().getType();
 
         pageHelper.addFacet(facet, (currentFacet, query) -> {

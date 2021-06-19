@@ -407,7 +407,7 @@ public class BizController extends BasicController {
                   .validate(entity)
                   .stream()
                   .findFirst()
-                  .ifPresent(message -> userCtx.addMessage(Message.warn(message)));
+                  .ifPresent(message -> userCtx.addMessage(Message.warn().withTextMessage(message)));
         }
     }
 

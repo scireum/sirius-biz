@@ -153,9 +153,7 @@ public class MongoPageHelper<E extends MongoEntity>
      */
     public MongoPageHelper<E> addBooleanAggregation(Mapping field) {
         Facet facet = new Facet(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
-                                field.toString(),
-                                null,
-                                null);
+                                field.toString());
 
         return addFacet(facet, (f, q) -> {
             f.addItem("true", NLS.get("NLS.yes"), -1);
@@ -201,7 +199,7 @@ public class MongoPageHelper<E extends MongoEntity>
                                                  ValueComputer<String, String> translator) {
         ValueComputer<String, String> nonNullTranslator = translator == null ? key -> key : translator;
 
-        Facet facet = new Facet(title, field.toString(), null, translator);
+        Facet facet = new Facet(title, field.toString()).withTranslator(translator);
         addFilterFacet(facet);
 
         baseQuery.addFacet(new MongoTermFacet(field).onComplete(mongoFacet -> {
