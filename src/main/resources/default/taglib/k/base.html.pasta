@@ -42,57 +42,59 @@
             </i:if>
         </i:block>
 
-        <i:if test="'00000' != article.getArticleId()">
-            <t:pageHeader title="@article.getTitle()">
-                <i:local name="parent" value="@article.queryParent().orElse(null)"/>
-                <i:if test="parent != null">
+        <i:block name="page-header">
+            <i:if test="'00000' != article.getArticleId()">
+                <t:pageHeader title="@article.getTitle()">
+                    <i:local name="parent" value="@article.queryParent().orElse(null)"/>
+                    <i:if test="parent != null">
+                        <t:inlineInfo>
+                            <a href="/kba/@parent.getLanguage()/@parent.getArticleId()">
+                                <i class="fa fa-book"></i> @parent.getTitle()
+                            </a>
+                        </t:inlineInfo>
+                    </i:if>
                     <t:inlineInfo>
-                        <a href="/kba/@parent.getLanguage()/@parent.getArticleId()">
-                            <i class="fa fa-book"></i> @parent.getTitle()
-                        </a>
+                        <span class="text-muted text-monospace">
+                            <i class="fa fa-tag"></i> @article.getArticleId()
+                        </span>
                     </t:inlineInfo>
-                </i:if>
-                <t:inlineInfo>
-                    <span class="text-muted text-monospace">
-                        <i class="fa fa-tag"></i> @article.getArticleId()
-                    </span>
-                </t:inlineInfo>
 
-                <i:block name="actions">
-                    <div class="dropdown d-none d-md-inline" id="urlDropdown">
-                        <a class="btn btn-link dropdown-toggle" data-toggle="dropdown">
-                            <i class="fa fa-link"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right p-4" style="width: 400px">
-                            <div class="mb-3">
-                                <label class="form-label">URL</label>
-                                <input type="text" class="form-control" id="urlField" readonly value="@article.getPresignedUrl()">
-                                <small id="copy-msg" class="form-text text-muted text-sirius-green-dark"></small>
+                    <i:block name="actions">
+                        <div class="dropdown d-none d-md-inline" id="urlDropdown">
+                            <a class="btn btn-link dropdown-toggle" data-toggle="dropdown">
+                                <i class="fa fa-link"></i>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right p-4" style="width: 400px">
+                                <div class="mb-3">
+                                    <label class="form-label">URL</label>
+                                    <input type="text" class="form-control" id="urlField" readonly value="@article.getPresignedUrl()">
+                                    <small id="copy-msg" class="form-text text-muted text-sirius-green-dark"></small>
+                                </div>
+                                <div>@i18n('KnowledgeBase.urlCopyInfo')</div>
                             </div>
-                            <div>@i18n('KnowledgeBase.urlCopyInfo')</div>
-                        </div>
-                        <script>
-                            sirius.ready(function() {
-                                $('#urlDropdown').on('shown.bs.dropdown', function () {
-                                    const copyMsg = document.querySelector('#copy-msg');
-                                    const copyTextarea = document.querySelector('#urlField');
-                                    copyTextarea.focus();
-                                    copyTextarea.select();
+                            <script>
+                                sirius.ready(function() {
+                                    $('#urlDropdown').on('shown.bs.dropdown', function () {
+                                        const copyMsg = document.querySelector('#copy-msg');
+                                        const copyTextarea = document.querySelector('#urlField');
+                                        copyTextarea.focus();
+                                        copyTextarea.select();
 
-                                    try {
-                                        if (document.execCommand('copy')) {
-                                            copyMsg.textContent = "@i18n('KnowledgeBase.urlClipboardSuccess')";
+                                        try {
+                                            if (document.execCommand('copy')) {
+                                                copyMsg.textContent = "@i18n('KnowledgeBase.urlClipboardSuccess')";
+                                            }
+                                        } catch (err) {
+                                            console.log('Failed to copy to clipboard', err);
                                         }
-                                    } catch (err) {
-                                        console.log('Failed to copy to clipboard', err);
-                                    }
-                                });
-                            })
-                        </script>
-                    </div>
-                </i:block>
-            </t:pageHeader>
-        </i:if>
+                                    });
+                                })
+                            </script>
+                        </div>
+                    </i:block>
+                </t:pageHeader>
+            </i:if>
+        </i:block>
 
         <div class="row">
             <div class="col-xl-9 col-lg-12">
