@@ -69,32 +69,33 @@ class ObjectStoresSpec extends BaseSpecification {
         and:
         expectedContents == downloadedContents
         cleanup:
-        sirius.kernel.commons.Files.delete(file)
-        sirius.kernel.commons.Files.delete((File) download)
+        Files.delete(file)
+        Files.delete((File) download)
     }
 
     def "ensureBucketExists"() {
         when:
         stores.store().ensureBucketExists(stores.store().getBucketName("exists"))
         then:
-        stores.store().doesBucketExist(stores.store().getBucketName("exists")) == true
+        stores.store().doesBucketExist(stores.store().getBucketName("exists"))
         stores.bucketCache.get(Tuple.create(stores.store().name,
-                                            stores.store().getBucketName("exists").getName())) == true
-        stores.store().doesBucketExist(stores.store().getBucketName("not-exists")) == false
+                stores.store().getBucketName("exists").getName()))
+        !stores.store().doesBucketExist(stores.store().getBucketName("not-exists"))
         stores.bucketCache.get(Tuple.create(stores.store().name,
-                                            stores.store().getBucketName("not-exists").getName())) == null
+                stores.store().getBucketName("not-exists").getName())) == null
     }
 
     def "deleteBucket"() {
         when:
         stores.store().ensureBucketExists(stores.store().getBucketName("deleted"))
         then:
-        stores.store().doesBucketExist(stores.store().getBucketName("deleted")) == true
+        stores.store().doesBucketExist(stores.store().getBucketName("deleted"))
         when:
         stores.store().deleteBucket(stores.store().getBucketName("deleted"))
         then:
-        stores.store().doesBucketExist(stores.store().getBucketName("deleted")) == false
+        !stores.store().doesBucketExist(stores.store().getBucketName("deleted"))
         stores.bucketCache.get(Tuple.create(stores.store().name,
-                                            stores.store().getBucketName("deleted").getName())) == null
+                stores.store().getBucketName("deleted").getName())) == null
     }
+
 }

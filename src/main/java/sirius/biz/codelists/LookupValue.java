@@ -48,7 +48,22 @@ public class LookupValue {
      * Controls what is shown in the UI when rendering a value.
      */
     public enum Display {
-        CODE, NAME, CODE_AND_NAME
+        CODE, NAME, CODE_AND_NAME;
+
+        /**
+         * Resolves the correct display string for the given table and code using this display mode.
+         *
+         * @param table the table from where to fetch the name from
+         * @param code  the code of the value
+         * @return a display string for the given code in the given table
+         */
+        public String resolveDisplayString(LookupTable table, String code) {
+            return switch (this) {
+                case NAME -> table.resolveName(code).orElse(code);
+                case CODE -> code;
+                case CODE_AND_NAME -> table.resolveName(code).map(name -> name + "(" + code + ")").orElse(code);
+            };
+        }
     }
 
     @Part
@@ -93,7 +108,7 @@ public class LookupValue {
      * @throws IllegalArgumentException if the currently stored code is invalid
      */
     public void verifyValue() {
-        if (Strings.isFilled(value) && !getTable().normalize(value).isPresent()) {
+        if (Strings.isFilled(value) && getTable().normalize(value).isEmpty()) {
             throw new IllegalArgumentException(NLS.fmtr("LookupValue.invalidValue").set("value", value).format());
         }
     }
@@ -156,10 +171,30 @@ public class LookupValue {
 
     /**
      * Determines if no value is present.
+     *
      * @return <tt>true</tt> if the value is null or empty, <tt>false otherwise</tt>
      */
     public boolean isEmpty() {
         return !isFilled();
+    }
+
+    /**
+     * Resolves a string to present to the user for this value according to {@link #display}.
+     *
+     * @return a string to represent this value, its name or code or a combination
+     * @see Display#resolveDisplayString()
+     */
+    public String resolveDisplayString() {
+        return display.resolveDisplayString(getTable(), getValue());
+    }
+
+    @Override
+    public String toString() {
+        if (Strings.isEmpty(value)) {
+            return lookupTableName + ": empty";
+        } else {
+            return Strings.apply("%s: %s (%s)", lookupTableName, value, fetchName().orElse("unknown"));
+        }
     }
 
     public String getValue() {
@@ -182,12 +217,7 @@ public class LookupValue {
         return customValues;
     }
 
-    @Override
-    public String toString() {
-        if (Strings.isEmpty(value)) {
-            return lookupTableName + ": empty";
-        } else {
-            return Strings.apply("%s: %s (%s)", lookupTableName, value, fetchName().orElse("unknown"));
-        }
+    public String getTableName() {
+        return lookupTableName;
     }
 }
