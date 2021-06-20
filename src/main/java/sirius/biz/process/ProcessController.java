@@ -78,20 +78,7 @@ public class ProcessController extends BizController {
     @Routed("/ps")
     @LoginRequired
     public void processes(WebContext ctx) {
-        ElasticQuery<Process> query = elastic.select(Process.class).orderDesc(Process.STARTED);
-
-        UserInfo user = UserContext.getCurrentUser();
-        if (!user.hasPermission(PERMISSION_MANAGE_ALL_PROCESSES)) {
-            query.eq(Process.TENANT_ID, user.getTenantId());
-        }
-
-        if (!user.hasPermission(PERMISSION_MANAGE_PROCESSES)) {
-            query.eq(Process.USER_ID, user.getUserId());
-        }
-
-        query.where(Elastic.FILTERS.oneInField(Process.REQUIRED_PERMISSION, new ArrayList<>(user.getPermissions()))
-                                   .orEmpty()
-                                   .build());
+        ElasticQuery<Process> query = processes.queryProcessesForCurrentUser();
 
         ElasticPageHelper<Process> pageHelper = ElasticPageHelper.withQuery(query);
         pageHelper.withContext(ctx);
