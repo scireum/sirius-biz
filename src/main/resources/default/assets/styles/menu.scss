@@ -1,0 +1,55 @@
+li.right-menu-icon {
+  margin-top: -0.5rem;
+  margin-bottom: -0.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-left: 0.75rem;
+
+  img {
+    height: 1.5rem;
+  }
+
+  &:not(:last-child) {
+    border-right: 1px solid #ddd;
+    padding-right: 0.75rem;
+  }
+
+}
+
+@media (max-width: 768px) {
+  // Make fa icons the same size as our provided pngs in the collapsed (hamburger) menu...
+  .right-menu-icon svg{
+    width: 1.5rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  // Make the user icon a bit more prominent in the expanded (normal) menu...
+  li.right-large-menu-icon {
+    a {
+      padding-top: 0.25rem;
+
+      img {
+        height: 2rem;
+      }
+    }
+  }
+}
+
+.menu-search-form {
+  padding-top: 0.25rem;
+
+  input {
+    border: none;
+    border-bottom: 1px solid #ddd;
+    border-radius: 0px;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    box-shadow: none !important;
+  }
+
+  input::placeholder {
+    color: rgba(0,0,0, 0.5);
+    font-weight: lighter;
+  }
+}

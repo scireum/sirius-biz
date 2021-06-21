@@ -1,0 +1,47 @@
+<i:arg type="String" name="framework" default=""/>
+<i:arg type="String" name="permission" default=""/>
+<i:arg type="String" name="class" default=""/>
+<i:arg type="boolean" name="active" default="false"/>
+<i:arg type="String" name="icon"/>
+<i:arg type="String" name="title" default=""/>
+<i:arg type="String" name="activeIcon" default=""/>
+<i:arg type="String" name="smallLabel" default=""/>
+
+<i:local name="contents" value="@renderToString('body')" />
+<i:if test="isFrameworkEnabled(framework) && isFilled(contents)">
+    <t:permission permission="@permission">
+        <li class="nav-item dropdown right-menu-icon @class">
+            <a class="nav-link"
+               href="#"
+               role="button"
+               data-toggle="dropdown"
+               aria-haspopup="true"
+               aria-expanded="false">
+                <i:if test="@active">
+                    <img src="@staticAssetUri()@activeIcon"
+                         @if (isFilled(title)) {
+                            data-toggle="tooltip"
+                            data-placement="left"
+                            data-html="true"
+                            title="@title"
+                         }
+                    />
+                    <i:else>
+                        <img src="@staticAssetUri()@icon"
+                             @if (isFilled(title)) {
+                                data-toggle="tooltip"
+                                data-placement="left"
+                                data-html="true"
+                                title="@title"
+                             }
+                        />
+                    </i:else>
+                </i:if>
+                <span class="d-lg-none">@smallLabel</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                <i:raw>@contents</i:raw>
+            </div>
+        </li>
+    </t:permission>
+</i:if>

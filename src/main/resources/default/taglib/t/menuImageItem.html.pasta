@@ -1,0 +1,26 @@
+<i:arg type="String" name="framework" default=""/>
+<i:arg type="String" name="permission" default=""/>
+<i:arg type="String" name="class" default=""/>
+<i:arg type="boolean" name="active" default="false"/>
+<i:arg type="String" name="icon"/>
+<i:arg type="String" name="activeIcon" default=""/>
+<i:arg type="String" name="link"/>
+
+<i:if test="isFrameworkEnabled(framework)">
+    <t:permission permission="@permission">
+        <li class="nav-item right-menu-icon @class">
+            <a class="nav-link"
+               href="@link"
+               role="button"
+               aria-haspopup="false"
+               aria-expanded="false">
+                <i:if test="@active">
+                    <img src="@staticAssetUri()@activeIcon"/>
+                    <i:else>
+                        <img src="@staticAssetUri()@icon"/>
+                    </i:else>
+                </i:if>
+            </a>
+        </li>
+    </t:permission>
+</i:if>
