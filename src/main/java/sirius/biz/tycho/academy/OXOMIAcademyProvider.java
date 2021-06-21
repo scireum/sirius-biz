@@ -17,19 +17,29 @@ import sirius.kernel.xml.XMLCall;
 import javax.annotation.Nonnull;
 import java.util.function.Consumer;
 
+/**
+ * Provides {@link AcademyVideoData academy videos} by loading them from OXOMI.
+ */
 @Register
 public class OXOMIAcademyProvider implements AcademyProvider {
 
     @Override
     public void fetchVideos(String academy, Extension config, Consumer<AcademyVideoData> videoConsumer)
             throws Exception {
-        XMLCall call = XMLCall.to(new URLBuilder("http://oxomi.test.scireum.com/service/xml/academy/videos").addParameter("portal", "HYPE")
-                                                                                  .addParameter("user", "_showcase")
-                                                                                  .addParameter("accessToken",
-                                                                                                "d697f9a372cb4bb8835e881b30d93b01")
-                                                                                  .addParameter("academyId",
-                                                                                                "F3N6EED54NIARS42AINB2SG1K8")
-                                                                                  .asURL());
+        XMLCall call =
+                XMLCall.to(new URLBuilder("http://oxomi.test.scireum.com/service/xml/academy/videos").addParameter(
+                        "portal",
+                        "HYPE")
+                                                                                                     .addParameter(
+                                                                                                             "user",
+                                                                                                             "_showcase")
+                                                                                                     .addParameter(
+                                                                                                             "accessToken",
+                                                                                                             "d697f9a372cb4bb8835e881b30d93b01")
+                                                                                                     .addParameter(
+                                                                                                             "academyId",
+                                                                                                             "F3N6EED54NIARS42AINB2SG1K8")
+                                                                                                     .asURL());
         for (StructuredNode node : call.getInput().getNode(".").queryNodeList("list/entry")) {
             AcademyVideoData video = new AcademyVideoData();
             video.setVideoId(node.queryString("id"));

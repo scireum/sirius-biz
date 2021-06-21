@@ -8,6 +8,7 @@
 
 package sirius.biz.tycho.academy;
 
+import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.BeforeSave;
@@ -16,61 +17,122 @@ import sirius.db.mixing.annotations.NullAllowed;
 
 import java.time.LocalDateTime;
 
+/**
+ * Contains the database independent part of an {@link OnboardingVideo}.
+ */
 public class OnboardingVideoData extends Composite {
 
+    /**
+     * Contains the academy this video belongs to.
+     */
     public static final Mapping ACADEMY = Mapping.named("academy");
     @Length(50)
     private String academy;
 
+    /**
+     * Contains the id of the onboarding participant.
+     * <p>
+     * This will most probably be a {@link BaseEntity#getUniqueName()}.
+     */
     public static final Mapping OWNER = Mapping.named("owner");
     @Length(64)
     private String owner;
 
+    /**
+     * Contains the priority copied from {@link AcademyVideoData#PRIORITY}.
+     */
     public static final Mapping PRIORITY = Mapping.named("priority");
     private int priority;
 
+    /**
+     * Assigns a random priority which is updated frequently by a {@link RecomputeOnboardingVideosCheck}.
+     * <p>
+     * This is used to suggest random but not constantly changing videos. Using this approach we recommend
+     * the same video for a day or so instead of suggesting another video for every page load.
+     */
     public static final Mapping RANDOM_PRIORITY = Mapping.named("randomPriority");
     private int randomPriority;
 
+    /**
+     * Determines when the recommendation was created.
+     */
     public static final Mapping CREATED = Mapping.named("created");
     private LocalDateTime created;
 
+    /**
+     * Stores when the recommendation was last updated.
+     */
     public static final Mapping LAST_UPDATED = Mapping.named("lastUpdated");
     private LocalDateTime lastUpdated;
 
+    /**
+     * Determines if this video has been shown (recommended) in the UI.
+     */
     public static final Mapping LAST_SHOWN_IN_UI = Mapping.named("lastShownInUI");
     @NullAllowed
     private LocalDateTime lastShownInUI;
 
+    /**
+     * Counts how often this video has been shown (recommended) in the UI.
+     */
     public static final Mapping NUM_SHOWN_IN_UI = Mapping.named("numShownInUI");
     private int numShownInUI;
 
+    /**
+     * Stores when this video was last recommended per mail.
+     */
     public static final Mapping LAST_RECOMMENDED_PER_MAIL = Mapping.named("lastRecommendedPerMail");
     @NullAllowed
     private LocalDateTime lastRecommendedPerMail;
 
+    /**
+     * Counts how often this video has been recommended per mail.
+     */
     public static final Mapping NUM_RECOMMENDED_PER_MAIL = Mapping.named("numRecommendedPerMail");
     private int numRecommendedPerMail;
 
+    /**
+     * Stores when this video was last watched by the owner.
+     */
     public static final Mapping LAST_WATCHED = Mapping.named("lastWatched");
     @NullAllowed
     private LocalDateTime lastWatched;
 
+    /**
+     * Counts how often this video has been watched.
+     */
     public static final Mapping NUM_WATCHED = Mapping.named("numWatched");
     private int numWatched;
 
+    /**
+     * Determines how many percent (of the length) of the video has been watched.
+     */
     public static final Mapping PERCENT_WATCHED = Mapping.named("percentWatched");
     private int percentWatched;
 
+    /**
+     * Records if this video has been watched.
+     */
     public static final Mapping WATCHED = Mapping.named("watched");
     private boolean watched;
 
+    /**
+     * Records if this video has been skipped by the user.
+     */
     public static final Mapping SKIPPED = Mapping.named("skipped");
     private boolean skipped;
 
+    /**
+     * Stores if this video has been deleted (e.g. because it was removed from the academy).
+     */
     public static final Mapping DELETED = Mapping.named("deleted");
     private boolean deleted;
 
+    /**
+     * Determines if this video is recommended for watching.
+     * <p>
+     * This is a computed field which speeds of common queries.
+     */
     public static final Mapping RECOMMENDED = Mapping.named("recommended");
     private boolean recommended;
 

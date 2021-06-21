@@ -16,6 +16,15 @@ import sirius.kernel.di.std.Part;
 import java.util.Set;
 import java.util.function.Consumer;
 
+/**
+ * Provides a base implementation of a {@link DailyCheck} which recomputes {@link OnboardingVideo onboarding videos}.
+ * <p>
+ * This is the actual work horse which collects all available videos for an academy as {@link AcademyVideo} and
+ * then multiplies them out into {@link OnboardingVideo onboarding videos} - one for each entity which happens
+ * to be an {@link OnboardingParticipant}.
+ *
+ * @param <E> the entity type which represents the onboarding participant
+ */
 public abstract class RecomputeOnboardingVideosCheck<E extends BaseEntity<?> & OnboardingParticipant>
         extends DailyCheck<E> {
 
