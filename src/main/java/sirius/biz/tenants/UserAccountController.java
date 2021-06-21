@@ -341,7 +341,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         U userAccount = findForTenant(getUserClass(), accountId);
 
         generateNewPassword(userAccount);
-        UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
+        UserContext.message(Message.info().withTextMessage(NLS.get("UserAccountConroller.passwordGenerated")));
 
         webContext.respondWith().redirectToGet(LIST_ROUTE);
     }
@@ -362,9 +362,11 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         generateNewPassword(userAccount);
 
         if (userAccount.getUserAccountData().canSendGeneratedPassword()) {
-            UserContext.message(Message.info(NLS.fmtr("UserAccountConroller.passwordGeneratedAndSent")
-                                                .set(PARAM_EMAIL, userAccount.getUserAccountData().getEmail())
-                                                .format()));
+            UserContext.message(Message.info()
+                                       .withTextMessage(NLS.fmtr("UserAccountConroller.passwordGeneratedAndSent")
+                                                           .set(PARAM_EMAIL,
+                                                                userAccount.getUserAccountData().getEmail())
+                                                           .format()));
             UserContext userContext = UserContext.get();
             userContext.runAs(userContext.getUserManager().findUserByUserId(userAccount.getUniqueName()), () -> {
                 Context mailContext = Context.create();
@@ -389,7 +391,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
                      .send();
             });
         } else {
-            UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
+            UserContext.message(Message.info().withTextMessage(NLS.get("UserAccountConroller.passwordGenerated")));
         }
 
         webContext.respondWith().redirectToGet(LIST_ROUTE);
@@ -580,9 +582,8 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         AutocompleteHelper.handle(webContext, (query, result) -> {
             Page<U> accounts = getUsersAsPage(webContext).asPage();
             accounts.getItems().forEach(userAccount -> {
-                result.accept(new AutocompleteHelper.Completion(userAccount.getUniqueName(),
-                                                                userAccount.toString(),
-                                                                userAccount.toString()));
+                result.accept(AutocompleteHelper.suggest(userAccount.getUniqueName())
+                                                .withFieldLabel(userAccount.toString()));
             });
         });
     }
@@ -659,7 +660,8 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
 
         U user = mixing.getDescriptor(getUserClass()).getMapper().find(getUserClass(), accountId).orElse(null);
         if (user == null) {
-            UserContext.get().addMessage(Message.error(NLS.get("UserAccountController.cannotBecomeUser")));
+            UserContext.get()
+                       .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
             selectUserAccounts(webContext);
             return;
         }
@@ -669,7 +671,8 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         // access rights - right up to the system management level...)
         if (Strings.areEqual(tenants.getTenantUserManager().getSystemTenantId(), user.getTenant().getIdAsString())
             && !getUser().hasPermission(PERMISSION_MANAGE_SYSTEM_USERS)) {
-            UserContext.get().addMessage(Message.error(NLS.get("UserAccountController.cannotBecomeUser")));
+            UserContext.get()
+                       .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
             selectUserAccounts(webContext);
             return;
         }

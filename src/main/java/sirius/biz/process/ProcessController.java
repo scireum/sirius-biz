@@ -284,7 +284,7 @@ public class ProcessController extends BizController {
     }
 
     private void updateStateAndReturn(WebContext ctx, ProcessLog log, ProcessLogState state, String returnUrl) {
-        UserContext.message(Message.info(NLS.get("ProcessController.logUpdated")));
+        UserContext.message(Message.info().withTextMessage(NLS.get("ProcessController.logUpdated")));
         processes.updateProcessLogStateAndReturn(log, state, ctx, returnUrl);
     }
 
@@ -322,9 +322,10 @@ public class ProcessController extends BizController {
                 }
             }
 
-            UserContext.message(Message.error(NLS.fmtr("ProcessController.unknownOutput")
-                                                 .set("output", name)
-                                                 .format()));
+            UserContext.message(Message.error()
+                                       .withTextMessage(NLS.fmtr("ProcessController.unknownOutput")
+                                                           .set("output", name)
+                                                           .format()));
         } catch (Exception e) {
             UserContext.handle(e);
         }
@@ -363,7 +364,7 @@ public class ProcessController extends BizController {
                                                UserContext.getCurrentUser().getTenantId(),
                                                exportSpec);
 
-        UserContext.message(Message.info(NLS.get("ProcessController.exportStarted")));
+        UserContext.message(Message.info().withTextMessage(NLS.get("ProcessController.exportStarted")));
         ctx.respondWith().redirectToGet("/ps/" + process.getId());
     }
 

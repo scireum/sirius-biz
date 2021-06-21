@@ -3,4 +3,4 @@
     Renders a chunk of code with appropriate highlighting.
 </i:pragma>
 
-<pre class="prettyprint @class"><i:render name="body" /></pre>
+<pre class="prettyprint p-2 @class"><i:render name="body" /></pre>

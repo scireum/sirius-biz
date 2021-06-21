@@ -20,6 +20,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.Formatter;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.DefaultRoute;
@@ -421,8 +422,8 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
         assertPermission(TenantUserManager.PERMISSION_SELECT_TENANT);
 
         Optional<T> tenant = resolveAccessibleTenant(tenantId, determineCurrentTenant(webContext));
-        if (!tenant.isPresent()) {
-            UserContext.get().addMessage(Message.error(NLS.get("TenantController.cannotBecomeTenant")));
+        if (tenant.isEmpty()) {
+            UserContext.get().addMessage(Message.error().withTextMessage(NLS.get("TenantController.cannotBecomeTenant")));
             selectTenants(webContext);
             return;
         }
@@ -453,9 +454,13 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
             Page<T> tenants = getSelectableTenantsAsPage(webContext, determineCurrentTenant(webContext)).asPage();
 
             tenants.getItems().forEach(tenant -> {
-                result.accept(new AutocompleteHelper.Completion(tenant.getIdAsString(),
-                                                                tenant.toString(),
-                                                                tenant.toString()));
+                String description = Formatter.create("[${zip}][ ${city}]")
+                                              .set("zip", tenant.getTenantData().getAddress().getZip())
+                                              .set("city", tenant.getTenantData().getAddress().getCity())
+                                              .format();
+                result.accept(AutocompleteHelper.suggest(tenant.getIdAsString())
+                                                .withFieldLabel(tenant.toString())
+                                                .withCompletionDescription(description));
             });
         });
     }

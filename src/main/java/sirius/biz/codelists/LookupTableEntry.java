@@ -58,11 +58,10 @@ public class LookupTableEntry {
      * @return the completion which represents this entry
      */
     public AutocompleteHelper.Completion toAutocompletion() {
-        return new AutocompleteHelper.Completion(code,
-                                                 Formatter.create("${code}[ (${name})]")
-                                                          .set("code", code)
-                                                          .set("name", name)
-                                                          .smartFormat(),
-                                                 description);
+        return AutocompleteHelper.suggest(code).withFieldLabel(name).withCompletionLabel(Formatter.create("${code}[ (${name})]")
+                                                                                    .set("code", code)
+                                                                                    .set("name", name)
+                                                                                    .smartFormat())
+                                                      .withCompletionDescription(description);
     }
 }
