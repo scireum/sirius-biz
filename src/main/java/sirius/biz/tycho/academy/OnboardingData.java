@@ -10,30 +10,63 @@ package sirius.biz.tycho.academy;
 
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
+import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.Transient;
 import sirius.kernel.di.std.Part;
 
+/**
+ * Contains a bunch of metrics stored for each {@link OnboardingParticipant}.
+ */
 public class OnboardingData extends Composite {
 
+    /**
+     * Contains the ratio of watched (vs. available) videos.
+     */
+    public static final Mapping PERCENT_WATCHED = Mapping.named("percentWatched");
     private int percentWatched;
 
+    /**
+     * Contains the ratio of skipped (vs. available) videos.
+     */
+    public static final Mapping PERCENT_SKIPPED = Mapping.named("percentSkipped");
     private int percentSkipped;
 
+    /**
+     * Contains the ratio of watched (vs. available) recommended videos.
+     */
+    public static final Mapping EDUCATION_LEVEL_PERCENT = Mapping.named("educationLevelPercent");
     private int educationLevelPercent;
 
+    /**
+     * Contains the total number of available unwatched videos.
+     */
+    public static final Mapping NUM_WATCHABLE_VIDEOS = Mapping.named("numWatchableVideos");
     private int numWatchableVideos;
 
+    /**
+     * Contains the total number of available videos.
+     */
+    public static final Mapping NUM_AVAILABLE_VIDEOS = Mapping.named("numAvailableVideos");
     private int numAvailableVideos;
 
+    /**
+     * Contains the total number of available recommended/mandatory videos.
+     */
+    public static final Mapping NUM_MANDATORY_AVAILABLE_VIDEOS = Mapping.named("numMandatoryAvailableVideos");
     private int numMandatoryAvailableVideos;
 
     @Transient
-    private BaseEntity<?> owner;
+    private final BaseEntity<?> owner;
 
     @Part
     private static OnboardingEngine onboardingEngine;
 
+    /**
+     * Creates a new composite for the given owner.
+     *
+     * @param owner the owner which is the actual participant
+     */
     public OnboardingData(BaseEntity<?> owner) {
         this.owner = owner;
     }

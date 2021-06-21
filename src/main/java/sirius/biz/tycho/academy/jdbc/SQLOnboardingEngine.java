@@ -126,11 +126,11 @@ public class SQLOnboardingEngine extends OnboardingEngine {
         AcademyVideoData academyVideoData = academyVideo.getAcademyVideoData();
         OnboardingVideoData onboardingVideoData = onboardingVideo.getOnboardingVideoData();
         onboardingVideoData.setAcademy(academyVideoData.getAcademy());
+        onboardingVideoData.setPriority(academyVideoData.getPriority());
         onboardingVideoData.setLastUpdated(LocalDateTime.now());
         onboardingVideoData.setRandomPriority(ThreadLocalRandom.current().nextInt(99999));
         onboardingVideoData.setDeleted(false);
         onboardingVideoData.setOwner(owner);
-        onboardingVideoData.setPriority(academyVideoData.getPriority());
 
         oma.update(onboardingVideo);
 
@@ -245,7 +245,7 @@ public class SQLOnboardingEngine extends OnboardingEngine {
     }
 
     @Override
-    public void updateWachedPercent(String owner, String videoId, int seenInPercent) {
+    public void updateWatchedPercent(String owner, String videoId, int seenInPercent) {
         try {
             SQLOnboardingVideo video = oma.select(SQLOnboardingVideo.class)
                                           .fields(SQLOnboardingVideo.ID,

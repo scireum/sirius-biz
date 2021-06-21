@@ -11,7 +11,6 @@ package sirius.biz.tycho.academy;
 import sirius.biz.web.BizController;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.services.JSONStructuredOutput;
@@ -126,7 +125,7 @@ public class OnboardingController extends BizController {
         }
 
         if (webContext.hasParameter(PARAM_SEEN_IN_PERCENT)) {
-            onboardingEngine.updateWachedPercent(target, videoId, webContext.require(PARAM_SEEN_IN_PERCENT).asInt(0));
+            onboardingEngine.updateWatchedPercent(target, videoId, webContext.require(PARAM_SEEN_IN_PERCENT).asInt(0));
         } else if (webContext.get(PARAM_STARTED).asBoolean()) {
             onboardingEngine.recordVideoStarted(target, videoId);
         } else if (webContext.get(PARAM_SKIP).asBoolean()) {

@@ -17,65 +17,120 @@ import sirius.kernel.commons.Strings;
 
 import java.time.LocalDateTime;
 
+/**
+ * Describes the metadata of an academy video.
+ */
 public class AcademyVideoData extends Composite {
 
+    /**
+     * Contains the academy this video belongs to.
+     */
     public static final Mapping ACADEMY = Mapping.named("academy");
     @Length(150)
     private String academy;
 
+    /**
+     * Contains the internal video id.
+     */
     public static final Mapping VIDEO_ID = Mapping.named("videoId");
     @Length(50)
     private String videoId;
 
+    /**
+     * Contains the track id, this video is part of.
+     */
     public static final Mapping TRACK_ID = Mapping.named("trackId");
     @Length(50)
     private String trackId;
 
+    /**
+     * Contains the name of the track to which this video belongs.
+     */
     public static final Mapping TRACK_NAME = Mapping.named("trackName");
     @Length(255)
     private String trackName;
 
+    /**
+     * Contains the title of this video.
+     */
     public static final Mapping TITLE = Mapping.named("title");
     @Length(255)
     private String title;
 
+    /**
+     * Contains the URL to the preview image of this video.
+     */
     public static final Mapping PREVIEW_URL = Mapping.named("previewUrl");
     @Length(512)
     private String previewUrl;
 
+    /**
+     * Contains a short and concise description of the video.
+     */
     public static final Mapping DESCRIPTION = Mapping.named("description");
     @Lob
     @NullAllowed
     private String description;
 
+    /**
+     * Contains the video duration in seconds.
+     */
     public static final Mapping DURATION = Mapping.named("duration");
     private int duration;
 
+    /**
+     * Contains the sort priority of the video.
+     */
     public static final Mapping PRIORITY = Mapping.named("priority");
     private int priority;
 
+    /**
+     * Contains the feature required to view this video.
+     */
     public static final Mapping REQUIRED_FEATURE = Mapping.named("requiredFeature");
     @Length(255)
     @NullAllowed
     private String requiredFeature;
 
+    /**
+     * Contains the permission required to view this video.
+     */
     public static final Mapping REQUIRED_PERMISSION = Mapping.named("requiredPermission");
     @Length(255)
     @NullAllowed
     private String requiredPermission;
 
+    /**
+     * Determines if this is a mandatory (recommended) video or if it is optional.
+     */
     public static final Mapping MANDATORY = Mapping.named("mandatory");
     private boolean mandatory;
 
+    /**
+     * Stores when this video was first imported/created.
+     */
     public static final Mapping CREATED = Mapping.named("created");
     private LocalDateTime created;
 
+    /**
+     * Stores when this video was last changed.
+     */
     public static final Mapping LAST_UPDATED = Mapping.named("lastUpdated");
     private LocalDateTime lastUpdated;
 
+    /**
+     * Marks if the video has been deleted from the academy.
+     * <p>
+     * We still keep deleted videos around to not loose any statistics.
+     */
     public static final Mapping DELETED = Mapping.named("deleted");
     private boolean deleted = false;
 
+    /**
+     * Copies all data from the given object.
+     *
+     * @param other the object to copy all data from
+     */
     public void loadFrom(AcademyVideoData other) {
         this.academy = other.academy;
         this.videoId = other.videoId;

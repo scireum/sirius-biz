@@ -102,7 +102,7 @@ public abstract class OnboardingEngine {
 
     public abstract void recordVideoStarted(String owner, String videoId);
 
-    public abstract void updateWachedPercent(String owner, String videoId, int seenInPercent);
+    public abstract void updateWatchedPercent(String owner, String videoId, int seenInPercent);
 
     public abstract void markAsSkipped(String owner, String videoId);
 }

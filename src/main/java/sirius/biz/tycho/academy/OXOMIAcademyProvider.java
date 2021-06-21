@@ -26,22 +26,22 @@ public class OXOMIAcademyProvider implements AcademyProvider {
         XMLCall call = XMLCall.to(new URLBuilder("http://oxomi.test.scireum.com/service/xml/academy/videos").addParameter("portal", "HYPE")
                                                                                   .addParameter("user", "_showcase")
                                                                                   .addParameter("accessToken",
-                                                                                                "e073e70443e9c974d4e1b216d07f80b7")
+                                                                                                "d697f9a372cb4bb8835e881b30d93b01")
                                                                                   .addParameter("academyId",
-                                                                                                "JFPS7F1AQ13P7VO8JDU7MEBL18")
+                                                                                                "F3N6EED54NIARS42AINB2SG1K8")
                                                                                   .asURL());
         for (StructuredNode node : call.getInput().getNode(".").queryNodeList("list/entry")) {
             AcademyVideoData video = new AcademyVideoData();
             video.setVideoId(node.queryString("id"));
-            video.setTitle(node.queryString("title").replaceAll("[^a-zA-Z0-9]","-"));
+            video.setTitle(node.queryString("title"));
             video.setDescription(node.queryString("description"));
             video.setMandatory(node.queryValue("mandatory").asBoolean());
             video.setPriority(node.queryValue("priority").asInt(100));
             video.setDuration(node.queryValue("duration").asInt(0));
-            video.setRequiredPermission(node.queryValue("requiredRole").asString().replaceAll("[^a-zA-Z0-9]","-"));
-            video.setRequiredFeature(node.queryValue("requiredFeature").asString().replaceAll("[a-zA-Z0-9]","-"));
+            video.setRequiredPermission(node.queryString("requiredRole"));
+            video.setRequiredFeature(node.queryString("requiredFeature"));
             video.setTrackId(node.queryString("trackId"));
-            video.setTrackName(node.queryString("track").replaceAll("[^a-zA-Z0-9]","-"));
+            video.setTrackName(node.queryString("track"));
             video.setPreviewUrl(node.queryString("previewImage"));
             videoConsumer.accept(video);
         }
