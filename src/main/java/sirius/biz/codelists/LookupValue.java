@@ -38,7 +38,7 @@ public class LookupValue {
     }
 
     /**
-     * Determines if the code itself or the (potentially translated) name are put into export files.
+     * Determines if the code itself, or the (potentially translated) name are put into export files.
      */
     public enum Export {
         CODE, NAME

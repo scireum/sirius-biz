@@ -20,7 +20,7 @@ class RedisUserMessageCacheTest extends BaseSpecification {
     @Part
     private static DistributedUserMessageCache cache
 
-    def "test put value and then get value works, but second get is null"() {
+    def "test put value and then get value works, but second get is empty"() {
         given:
         String key = "key" + System.currentTimeMillis()
         when:
@@ -28,9 +28,9 @@ class RedisUserMessageCacheTest extends BaseSpecification {
         then:
         List<Message> result = cache.getAndRemove(key)
         result.size() == 1
-        result.get(0).getMessage() == "Test error message"
+        result.get(0).getHtml().contains("Test error message")
         result.get(0).getType() == MessageLevel.PROBLEM
         and:
-        cache.getAndRemove(key) == null
+        cache.getAndRemove(key).isEmpty()
     }
 }

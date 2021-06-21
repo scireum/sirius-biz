@@ -164,10 +164,7 @@ public class ElasticPageHelper<E extends ElasticEntity>
      * @return the helper itself for fluent method calls
      */
     public ElasticPageHelper<E> addBooleanAggregation(Mapping field) {
-        Facet facet = new Facet(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
-                                field.toString(),
-                                null,
-                                null);
+        Facet facet = new Facet(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(), field.toString());
 
         aggregatingFacets.add(Tuple.create(facet, null));
         baseQuery.addTermAggregation(field.toString(), field, 3);
@@ -196,7 +193,7 @@ public class ElasticPageHelper<E extends ElasticEntity>
                                                    Mapping field,
                                                    ValueComputer<String, String> translator,
                                                    int numberOfBuckets) {
-        Facet facet = new Facet(title, field.toString(), null, translator);
+        Facet facet = new Facet(title, field.toString()).withTranslator(translator);
         addFilterFacet(facet);
         aggregatingFacets.add(Tuple.create(facet, translator));
         baseQuery.addTermAggregation(field.toString(), field, numberOfBuckets);
@@ -233,7 +230,7 @@ public class ElasticPageHelper<E extends ElasticEntity>
             FacetItem item = iter.next();
             int numberOfHits = counters.getOrDefault(item.getKey(), 0);
             if (numberOfHits > 0 || item.isActive()) {
-                item.setCount(numberOfHits);
+                item.withCount(numberOfHits);
             } else {
                 // If the item has no matches and isn't an active filter - remove as
                 // it is unneccessary...

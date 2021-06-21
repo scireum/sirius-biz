@@ -386,8 +386,10 @@ public class BizController extends BasicController {
             process.log(ProcessLog.success().withNLSKey("BizController.deleteCompleted"));
         }));
 
-        UserContext.message(Message.info(NLS.get("BizController.deletingInBackground"))
-                                   .withAction("/ps/" + processId, NLS.get("BizController.deleteProcess")));
+        UserContext.message(Message.info()
+                                   .withTextAndLink(NLS.get("BizController.deletingInBackground"),
+                                                    NLS.get("BizController.deleteProcess"),
+                                                    "/ps/" + processId));
     }
 
     /**
@@ -404,7 +406,7 @@ public class BizController extends BasicController {
                   .validate(entity)
                   .stream()
                   .findFirst()
-                  .ifPresent(message -> userCtx.addMessage(Message.warn(message)));
+                  .ifPresent(message -> userCtx.addMessage(Message.warn().withTextMessage(message)));
         }
     }
 
@@ -433,7 +435,7 @@ public class BizController extends BasicController {
             }
         }
         Optional<E> result = mixing.getDescriptor(type).getMapper().find(type, id);
-        if (!result.isPresent()) {
+        if (result.isEmpty()) {
             throw entityNotFoundException(type, id);
         }
         return result.get();

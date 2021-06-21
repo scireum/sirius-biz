@@ -9,15 +9,22 @@
 package sirius.biz.cluster;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import sirius.db.redis.Redis;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.Message;
+import sirius.web.controller.MessageLevel;
 import sirius.web.http.DistributedUserMessageCache;
 import sirius.web.http.WebContext;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Provides a distributed cache to store not yet shown user messages.
@@ -31,15 +38,21 @@ public class RedisUserMessageCache implements DistributedUserMessageCache {
 
     private static final String CACHE_NAME = "user-messages-";
     private static final long DEFAULT_TTL = Duration.ofMinutes(1).getSeconds();
+    private static final String FIELD_TYPE = "type";
+    private static final String FIELD_HTML = "html";
 
     @Part
     private Redis redis;
 
     @Override
     public void put(String key, List<Message> value) {
-        String jsonString = JSON.toJSONString(value);
+        JSONArray array = new JSONArray();
+        for (Message message : value) {
+            array.add(new JSONObject().fluentPut(FIELD_HTML, message.getHtml()).fluentPut(FIELD_TYPE, message.getType()));
+        }
+
         redis.exec(() -> "Write to RedisUserMessageCache",
-                   jedis -> jedis.setex(CACHE_NAME + key, (int) DEFAULT_TTL, jsonString));
+                   jedis -> jedis.setex(CACHE_NAME + key, (int) DEFAULT_TTL, array.toJSONString()));
     }
 
     @Override
@@ -50,7 +63,17 @@ public class RedisUserMessageCache implements DistributedUserMessageCache {
             return response;
         });
 
-        return JSON.parseArray(json, Message.class);
+        if (Strings.isEmpty(json)) {
+            return Collections.emptyList();
+        }
+
+        return JSON.parseArray(json)
+                   .stream()
+                   .map(JSONObject.class::cast)
+                   .map(object -> new Message(Value.of(object.getString(FIELD_TYPE))
+                                                   .getEnum(MessageLevel.class)
+                                                   .orElse(MessageLevel.INFO), object.getString(FIELD_HTML)))
+                   .collect(Collectors.toList());
     }
 
     @Override

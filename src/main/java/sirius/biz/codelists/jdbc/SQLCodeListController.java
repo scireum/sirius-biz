@@ -13,7 +13,6 @@ import sirius.biz.codelists.CodeListController;
 import sirius.biz.codelists.CodeListData;
 import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListEntryData;
-import sirius.biz.codelists.mongo.MongoCodeListEntry;
 import sirius.biz.web.BasePageHelper;
 import sirius.biz.web.SQLPageHelper;
 import sirius.db.mixing.query.QueryField;

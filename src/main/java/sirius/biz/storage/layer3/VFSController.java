@@ -68,7 +68,7 @@ public class VFSController extends BizController {
         VirtualFile file = vfs.resolve(path);
         if (!file.exists()) {
             UserContext.get()
-                       .addMessage(Message.error(NLS.fmtr("VFSController.unknownPath").set("path", path).format()));
+                       .addMessage(Message.error().withTextMessage(NLS.fmtr("VFSController.unknownPath").set("path", path).format()));
 
             while (file != null && !file.exists()) {
                 file = file.parent();
@@ -182,7 +182,7 @@ public class VFSController extends BizController {
                 String name = ctx.get("name").asString();
                 if (file.exists() && Strings.isFilled(name)) {
                     file.rename(name);
-                    UserContext.message(Message.info(NLS.get("VFSController.renamed")));
+                    UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.renamed")));
                 }
             } catch (Exception e) {
                 UserContext.handle(e);
@@ -210,7 +210,7 @@ public class VFSController extends BizController {
                 String name = ctx.get("name").asString();
                 VirtualFile newDirectory = parent.resolve(name);
                 newDirectory.createAsDirectory();
-                UserContext.message(Message.info(NLS.get("VFSController.directoryCreated")));
+                UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.directoryCreated")));
                 ctx.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", newDirectory.path()).toString());
             } catch (Exception e) {
                 UserContext.handle(e);
@@ -240,11 +240,12 @@ public class VFSController extends BizController {
             if (newParent.exists() && newParent.isDirectory()) {
                 Optional<String> processId = file.transferTo(newParent).move();
                 if (processId.isPresent()) {
-                    UserContext.message(Message.info(NLS.get("VFSController.movedInProcess"))
-                                               .withAction("/ps/" + processId.get(),
-                                                           NLS.get("VFSController.moveProcess")));
+                    UserContext.message(Message.info()
+                                               .withTextAndLink(NLS.get("VFSController.movedInProcess"),
+                                                                NLS.get("VFSController.moveProcess"),
+                                                                "/ps/" + processId.get()));
                 } else {
-                    UserContext.message(Message.info(NLS.get("VFSController.moved")));
+                    UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.moved")));
                 }
             }
         } catch (Exception e) {
@@ -260,7 +261,7 @@ public class VFSController extends BizController {
      * This is used by the selectVFSFile or selectVFSDirectory JavaScript calls/modals.
      *
      * @param webContext the request to handle
-     * @param out the JSON response to populate
+     * @param out        the JSON response to populate
      */
     @LoginRequired
     @Routed(value = "/fs/list", jsonCall = true)

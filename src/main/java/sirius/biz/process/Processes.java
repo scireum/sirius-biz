@@ -18,6 +18,7 @@ import sirius.biz.protocol.JournalData;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.tenants.Tenants;
 import sirius.db.es.Elastic;
+import sirius.db.es.ElasticQuery;
 import sirius.db.mixing.IntegrityConstraintFailedException;
 import sirius.db.mixing.OptimisticLockException;
 import sirius.kernel.async.CallContext;
@@ -47,6 +48,7 @@ import java.io.OutputStream;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -101,20 +103,21 @@ public class Processes {
      * (most probably without even waiting for the "1 second" delay, as long as only one node concurrently modifies
      * a process - which should be quite common).
      */
-    private Cache<String, Process> process1stLevelCache = CacheManager.createLocalCache("processes-first-level");
+    private final Cache<String, Process> process1stLevelCache = CacheManager.createLocalCache("processes-first-level");
 
     /**
      * This is a longer lived "read" cache to pull data from. This is mostly used by the {@link ProcessEnvironment}
      * to fetch "static" data (context, user, ...).
      */
-    private Cache<String, Process> process2ndLevelCache = CacheManager.createCoherentCache("processes-second-level");
+    private final Cache<String, Process> process2ndLevelCache =
+            CacheManager.createCoherentCache("processes-second-level");
 
     /**
      * Due to the write delay in Elasticsearch, we need to cache processes of type {@link ProcessState#STANDBY} separately.
      * <p>
      * We don't provide a layered cache structure in this case as standby processes are long living and a limited set.
      */
-    private Cache<String, Process> standbyProcessCache = CacheManager.createCoherentCache("standby-processes");
+    private final Cache<String, Process> standbyProcessCache = CacheManager.createCoherentCache("standby-processes");
 
     /**
      * Creates a new process.
@@ -844,22 +847,55 @@ public class Processes {
     }
 
     /**
+     * Determines if the current user has any active processes.
+     *
+     * @return <tt>true</tt> if there are any active processes visible for the current user, <tt>false</tt> otherwise
+     */
+    public boolean hasActiveProcesses() {
+        return queryProcessesForCurrentUser().eq(Process.STATE, ProcessState.RUNNING).exists();
+    }
+
+    /**
+     * Builds a query to obtain all processes visible to the current user.
+     *
+     * @return a query for all processes visible to the current user
+     */
+    public ElasticQuery<Process> queryProcessesForCurrentUser() {
+        ElasticQuery<Process> query = elastic.select(Process.class).orderDesc(Process.STARTED);
+
+        UserInfo user = UserContext.getCurrentUser();
+        if (!user.hasPermission(ProcessController.PERMISSION_MANAGE_ALL_PROCESSES)) {
+            query.eq(Process.TENANT_ID, user.getTenantId());
+        }
+
+        if (user.hasPermission(ProcessController.PERMISSION_MANAGE_PROCESSES)) {
+            query.where(Elastic.FILTERS.oneInField(Process.REQUIRED_PERMISSION, new ArrayList<>(user.getPermissions()))
+                                       .orEmpty()
+                                       .build());
+        } else {
+            query.eq(Process.USER_ID, user.getUserId());
+        }
+
+        return query;
+    }
+
+    /**
      * Resolves the id into a process while ensuring that the current user may access it.
      * <p>
      * Note that this will not utilize the 1st and 2nd level cache as it is intended for UI (read) access.
      *
      * @param processId the id to resolve into a process
-     * @return the resolved process wrapped as optional or an empty optional if there is no such process
+     * @return the resolved process wrapped as optional, or an empty optional if there is no such process
      * or the user may not access it.
      */
     public Optional<Process> fetchProcessForUser(String processId) {
         Optional<Process> process = elastic.find(Process.class, processId);
-        if (!process.isPresent()) {
+        if (process.isEmpty()) {
             // Maybe the given process id was just created and not visible in ES.
             // Wait for a good second and retry once...
             Wait.millis(1200);
             process = elastic.find(Process.class, processId);
-            if (!process.isPresent()) {
+            if (process.isEmpty()) {
                 return Optional.empty();
             }
         }
@@ -891,10 +927,10 @@ public class Processes {
      */
     public Optional<ProcessLog> fetchProcessLogForUser(String processLogId) {
         Optional<ProcessLog> processLog = elastic.find(ProcessLog.class, processLogId);
-        if (!processLog.isPresent()) {
+        if (processLog.isEmpty()) {
             return Optional.empty();
         }
-        if (!fetchProcessForUser(processLog.get().getProcess().getId()).isPresent()) {
+        if (fetchProcessForUser(processLog.get().getProcess().getId()).isEmpty()) {
             return Optional.empty();
         }
 
