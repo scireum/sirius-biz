@@ -38,7 +38,7 @@
                              active="part(sirius.biz.process.Processes.class).hasActiveProcesses()"
                              link="/ps"/>
 
-            <w:menuImageDropdownItem icon="@UserContext.getCurrentUser().tryAs(sirius.biz.web.UserIconProvider.class).flatMap(|provider| provider.getUserIcon()).orElse('/images/icons/d.png')"
+            <w:menuImageDropdownItem icon="@UserContext.getCurrentUser().tryAs(sirius.biz.web.UserIconProvider.class).flatMap(|provider| provider.getUserIcon()).orElse('/images/icons/user_avatar_d.png')"
                                      title="@format('${user}[ ${tenant}]').set('user', userName).set('tenant', tenantName).smartFormat()"
                                      class="right-large-menu-icon">
                 <i:extensions target="biz-menu" point="user"/>
