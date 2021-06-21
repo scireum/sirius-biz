@@ -389,8 +389,7 @@ public class BizController extends BasicController {
         UserContext.message(Message.info()
                                    .withTextAndLink(NLS.get("BizController.deletingInBackground"),
                                                     NLS.get("BizController.deleteProcess"),
-                                                    "/ps/" + processId,
-                                                    null));
+                                                    "/ps/" + processId));
     }
 
     /**

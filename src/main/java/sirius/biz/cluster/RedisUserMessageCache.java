@@ -12,6 +12,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import sirius.db.redis.Redis;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -21,6 +22,7 @@ import sirius.web.http.DistributedUserMessageCache;
 import sirius.web.http.WebContext;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -60,6 +62,10 @@ public class RedisUserMessageCache implements DistributedUserMessageCache {
             jedis.del(CACHE_NAME + key);
             return response;
         });
+
+        if (Strings.isEmpty(json)) {
+            return Collections.emptyList();
+        }
 
         return JSON.parseArray(json)
                    .stream()
