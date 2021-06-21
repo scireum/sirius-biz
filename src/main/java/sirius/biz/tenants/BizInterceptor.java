@@ -24,12 +24,12 @@ import sirius.web.security.UserContext;
 public class BizInterceptor implements Interceptor {
 
     @Override
-    public boolean before(WebContext ctx, Route route) throws Exception {
+    public boolean before(WebContext webContext, Route route) throws Exception {
         return false;
     }
 
     @Override
-    public boolean beforePermissionError(String permission, WebContext ctx, Route route) throws Exception {
+    public boolean beforePermissionError(String permission, WebContext webContext, Route route) throws Exception {
         if (!ScopeInfo.DEFAULT_SCOPE.equals(UserContext.getCurrentScope())) {
             return false;
         }
@@ -37,9 +37,9 @@ public class BizInterceptor implements Interceptor {
             return false;
         }
         if (!UserContext.getCurrentUser().isLoggedIn()) {
-            ctx.respondWith().template("/templates/biz/login.html.pasta", ctx.getRequest().uri());
+            webContext.respondWith().template("/templates/biz/login.html.pasta", webContext.getRequest().uri());
         } else {
-            ctx.respondWith()
+            webContext.respondWith()
                .template("/templates/tycho/error.html.pasta",
                          NLS.fmtr("BizInterceptor.missingPermission")
                             .set("permission", Permissions.getTranslatedPermission(permission))
@@ -49,7 +49,7 @@ public class BizInterceptor implements Interceptor {
     }
 
     @Override
-    public boolean shouldExecuteRoute(WebContext ctx, Route route) {
+    public boolean shouldExecuteRoute(WebContext webContext, Route route) {
         return true;
     }
 }

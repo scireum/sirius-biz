@@ -243,8 +243,7 @@ public class VFSController extends BizController {
                     UserContext.message(Message.info()
                                                .withTextAndLink(NLS.get("VFSController.movedInProcess"),
                                                                 NLS.get("VFSController.moveProcess"),
-                                                                "/ps/" + processId.get(),
-                                                                null));
+                                                                "/ps/" + processId.get()));
                 } else {
                     UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.moved")));
                 }

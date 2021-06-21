@@ -64,13 +64,13 @@ public class SQLPageHelper<E extends SQLEntity>
     public SQLPageHelper<E> addQueryFacet(String name,
                                           String title,
                                           Function<SmartQuery<E>, SQLQuery> queryTransformer) {
-        return addFacet(new Facet(title, name), (f, q) -> {
-            if (Strings.isFilled(f.getValue())) {
-                q.eq(Mapping.named(f.getName()), f.getValue());
+        return addFacet(new Facet(title, name), (facet, query) -> {
+            if (Strings.isFilled(facet.getValue())) {
+                query.eq(Mapping.named(facet.getName()), facet.getValue());
             }
-        }, (f, q) -> {
+        }, (facet, query) -> {
             try {
-                SQLQuery qry = queryTransformer.apply(q);
+                SQLQuery qry = queryTransformer.apply(query);
                 qry.iterateAll(r -> {
                     Iterator<Tuple<String, Object>> iter = r.getFieldsList().iterator();
                     if (!iter.hasNext()) {
@@ -81,7 +81,7 @@ public class SQLPageHelper<E extends SQLEntity>
                     if (iter.hasNext()) {
                         label = Value.of(iter.next().getSecond()).asString();
                     }
-                    f.addItem(key, label, -1);
+                    facet.addItem(key, label, -1);
                 }, new Limit(0, 100));
             } catch (SQLException e) {
                 Exceptions.handle(OMA.LOG, e);
