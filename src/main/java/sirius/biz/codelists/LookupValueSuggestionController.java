@@ -18,7 +18,7 @@ import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 
 /**
- * Endpoint for autocomplete suggestions for {@link LookupValue} and {@link LookupValues} fields
+ * Provides autocomplete suggestions for {@link LookupValue} and {@link LookupValues} fields
  */
 @Register
 public class LookupValueSuggestionController extends BizController {
