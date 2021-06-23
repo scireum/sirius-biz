@@ -16,12 +16,21 @@ import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 
+/**
+ * Endpoint for autocomplete suggestions for {@link LookupValue} and {@link LookupValues} fields
+ */
 @Register
 public class LookupValueSuggestionController extends BizController {
 
     @Part
     private LookupTables lookupTables;
 
+    /**
+     * Responds with possible suggestions from the given {@link LookupTable} using {@link AutocompleteHelper}.
+     *
+     * @param webContext the web requests calling the autocomplete service
+     * @param tableName  the name of the table for which suggestions should be gathered
+     */
     @LoginRequired
     @Routed("/autocomplete/lookuptable/:1")
     public void suggestFromLookupTable(WebContext webContext, String tableName) {
