@@ -34,13 +34,17 @@ public class LookupValueSuggestionController extends BizController {
     @LoginRequired
     @Routed("/autocomplete/lookuptable/:1")
     public void suggestFromLookupTable(WebContext webContext, String tableName) {
-        //TODO use new AutocompleteHelper syntax + respect display settings of field
         AutocompleteHelper.handle(webContext,
                                   (query, result) -> lookupTables.fetchTable(tableName)
                                                                  .suggest(query)
-                                                                 .forEach(entry -> result.accept(new AutocompleteHelper.Completion(
-                                                                         entry.getCode(),
-                                                                         entry.getName(),
-                                                                         entry.getDescription()))));
+                                                                 .forEach(entry -> result.accept(makeSuggestion(entry))));
+    }
+
+    private AutocompleteHelper.Completion makeSuggestion(LookupTableEntry entry) {
+        //TODO respect display settings of field
+        return AutocompleteHelper.suggest(entry.getCode())
+                                 .withFieldLabel(entry.getName())
+                                 .withCompletionLabel(entry.getName())
+                                 .withCompletionDescription(entry.getDescription());
     }
 }
