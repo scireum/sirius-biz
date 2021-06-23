@@ -43,7 +43,7 @@
             selector: '#@id',
             noMatchesText: '@i18n("template.html.selects.noMatches")',
             placeholderText: '@i18n("template.html.selects.selection")',
-            suggestionsUri: '/autocomplete/lookuptable/' + '@value.getTableName()'
+            suggestionsUri: '/autocomplete/lookuptable/@value.getTableName()/@value.getDisplay()'
         });
     });
 </script>

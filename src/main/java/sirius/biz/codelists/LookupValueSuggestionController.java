@@ -9,6 +9,7 @@
 package sirius.biz.codelists;
 
 import sirius.biz.web.BizController;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.controller.AutocompleteHelper;
@@ -30,21 +31,24 @@ public class LookupValueSuggestionController extends BizController {
      *
      * @param webContext the web requests calling the autocomplete service
      * @param tableName  the name of the table for which suggestions should be gathered
+     * @param display    the requested {@link sirius.biz.codelists.LookupValue.Display display mode} for the label
      */
     @LoginRequired
-    @Routed("/autocomplete/lookuptable/:1")
-    public void suggestFromLookupTable(WebContext webContext, String tableName) {
+    @Routed("/autocomplete/lookuptable/:1/:2")
+    public void suggestFromLookupTable(WebContext webContext, String tableName, String display) {
+        LookupValue.Display displayMode =
+                Value.of(display).getEnum(LookupValue.Display.class).orElse(LookupValue.Display.NAME);
         AutocompleteHelper.handle(webContext,
                                   (query, result) -> lookupTables.fetchTable(tableName)
                                                                  .suggest(query)
-                                                                 .forEach(entry -> result.accept(makeSuggestion(entry))));
+                                                                 .forEach(entry -> result.accept(makeSuggestion(entry,
+                                                                                                                displayMode))));
     }
 
-    private AutocompleteHelper.Completion makeSuggestion(LookupTableEntry entry) {
-        //TODO respect display settings of field
+    private AutocompleteHelper.Completion makeSuggestion(LookupTableEntry entry, LookupValue.Display displayMode) {
         return AutocompleteHelper.suggest(entry.getCode())
-                                 .withFieldLabel(entry.getName())
-                                 .withCompletionLabel(entry.getName())
+                                 .withFieldLabel(displayMode.makeDisplayString(entry))
+                                 .withCompletionLabel(displayMode.makeDisplayString(entry))
                                  .withCompletionDescription(entry.getDescription());
     }
 }

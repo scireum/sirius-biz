@@ -9,9 +9,11 @@
 package sirius.biz.codelists;
 
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nonnull;
 import java.util.Optional;
 
 /**
@@ -61,8 +63,31 @@ public class LookupValue {
             return switch (this) {
                 case NAME -> table.resolveName(code).orElse(code);
                 case CODE -> code;
-                case CODE_AND_NAME -> table.resolveName(code).map(name -> name + "(" + code + ")").orElse(code);
+                case CODE_AND_NAME -> table.resolveName(code)
+                                           .map(name -> buildCodeAndNameString(name, code))
+                                           .orElse(code);
             };
+        }
+
+        /**
+         * Makes the correct display string for the given table entry using this display mode.
+         *
+         * @param entry the tableentry to be displayed
+         * @return a display string for the given table entry
+         */
+        public String makeDisplayString(LookupTableEntry entry) {
+            return switch (this) {
+                case NAME -> Value.of(entry.getName()).asString(entry.getCode());
+                case CODE -> entry.getCode();
+                case CODE_AND_NAME -> Value.of(entry.getName())
+                                           .map(name -> buildCodeAndNameString(name.asString(), entry.getCode()))
+                                           .orElse(entry.getCode());
+            };
+        }
+
+        @Nonnull
+        private String buildCodeAndNameString(String name, String code) {
+            return name + "(" + code + ")";
         }
     }
 
