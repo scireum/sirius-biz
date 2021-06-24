@@ -159,7 +159,7 @@ public class IDBTable {
         }
 
         /**
-         * Uses the currently active languages for transaltable fields.
+         * Uses the currently active languages for translatable fields.
          * <p>
          * This is boilerplate for {@code translate(NLS.getCurrentLang(), NLS.getFallbackLanguage())}.
          *
