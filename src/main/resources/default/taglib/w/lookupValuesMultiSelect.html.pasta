@@ -21,16 +21,14 @@
             @label
         </span>
     </label>
-    <div class="input-group">
-        <div id="@id" class="sirius-select multi-select">
-            <i:for var="tuple"
-                   type="Tuple"
-                   items="values.resolveDisplayStrings()">
-                <option value="@tuple.getFirst()" selected>
-                    @tuple.getSecond()
-                </option>
-            </i:for>
-        </div>
+    <div id="@id" class="sirius-select multi-select form-control input-block-level">
+        <i:for var="tuple"
+               type="Tuple"
+               items="values.resolveDisplayStrings()">
+            <option value="@tuple.getFirst()" selected>
+                @tuple.getSecond()
+            </option>
+        </i:for>
     </div>
     <i:if test="isFilled(help)">
         <span class="help-block"><i:raw>@help</i:raw></span>
