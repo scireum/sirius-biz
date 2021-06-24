@@ -21,12 +21,10 @@
             @label
         </span>
     </label>
-    <div class="input-group">
-        <div id="@id" class="sirius-select single-select">
-                <option value="@value.getValue()" selected>
-                    @value.resolveDisplayString()
-                </option>
-        </div>
+    <div id="@id" class="sirius-select single-select form-control input-block-level">
+        <option value="@value.getValue()" selected>
+            @value.resolveDisplayString()
+        </option>
     </div>
     <i:if test="isFilled(help)">
         <span class="help-block"><i:raw>@help</i:raw></span>
