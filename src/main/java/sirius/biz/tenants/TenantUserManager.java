@@ -194,9 +194,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         super(scope, config);
         this.systemTenant = config.get("system-tenant").asString();
         this.acceptApiTokens = config.get("accept-api-tokens").asBoolean(true);
-        this.availableLanguages = config.getStringList("available-languages").isEmpty() ?
-                                  Collections.singletonList(NLS.getDefaultLanguage()) :
-                                  config.getStringList("available-languages");
+        this.availableLanguages = scope.getAvailableLanguages().stream().toList();
     }
 
     /**
@@ -211,7 +209,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
     }
 
     /**
-     * Flushes all cahes for the given tenant.
+     * Flushes all caches for the given tenant.
      *
      * @param tenant the tenant to flush
      */
