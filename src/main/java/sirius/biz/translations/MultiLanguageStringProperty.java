@@ -36,7 +36,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 import sirius.web.http.WebContext;
-import sirius.web.security.UserContext;
+import sirius.web.security.ScopeInfo;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -335,7 +335,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
 
         if (i18nEnabled && multiLanguageString.isEnabledForCurrentUser()) {
             Collection<String> languagesToLoad = multiLanguageString.getValidLanguages().isEmpty() ?
-                                                 UserContext.getCurrentScope().getAvailableLanguages() :
+                                                 ScopeInfo.DEFAULT_SCOPE.getAvailableLanguages() :
                                                  multiLanguageString.getValidLanguages();
             languagesToLoad.forEach(code -> {
                 String parameterName = getPropertyName() + "-" + code;
