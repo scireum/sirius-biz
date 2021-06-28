@@ -38,6 +38,7 @@
         new TokenAutocomplete({
             name: '@name',
             selectMode: SelectModes.SINGLE,
+            allowCustomEntries: false,
             selector: '#@id',
             noMatchesText: '@i18n("template.html.selects.noMatches")',
             placeholderText: '@i18n("template.html.selects.selection")',
