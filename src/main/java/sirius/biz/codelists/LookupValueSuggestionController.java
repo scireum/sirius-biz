@@ -9,6 +9,7 @@
 package sirius.biz.codelists;
 
 import sirius.biz.web.BizController;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -17,11 +18,16 @@ import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
 /**
  * Provides autocomplete suggestions for {@link LookupValue} and {@link LookupValues} fields
  */
 @Register
 public class LookupValueSuggestionController extends BizController {
+
+    public static final int MAX_SUGGESTIONS_ITEMS = 25;
 
     @Part
     private LookupTables lookupTables;
@@ -38,11 +44,21 @@ public class LookupValueSuggestionController extends BizController {
     public void suggestFromLookupTable(WebContext webContext, String tableName, String display) {
         LookupValue.Display displayMode =
                 Value.of(display).getEnum(LookupValue.Display.class).orElse(LookupValue.Display.NAME);
-        AutocompleteHelper.handle(webContext,
-                                  (query, result) -> lookupTables.fetchTable(tableName)
-                                                                 .suggest(query)
-                                                                 .forEach(entry -> result.accept(makeSuggestion(entry,
-                                                                                                                displayMode))));
+        AutocompleteHelper.handle(webContext, (query, result) -> performSuggest(tableName, displayMode, query, result));
+    }
+
+    private void performSuggest(String tableName,
+                                LookupValue.Display displayMode,
+                                String query,
+                                Consumer<AutocompleteHelper.Completion> result) {
+        Stream<LookupTableEntry> entryStream;
+        if (Strings.isEmpty(query)) {
+            entryStream = lookupTables.fetchTable(tableName).scan();
+        } else {
+            entryStream = lookupTables.fetchTable(tableName).suggest(query);
+        }
+
+        entryStream.limit(MAX_SUGGESTIONS_ITEMS).forEach(entry -> result.accept(makeSuggestion(entry, displayMode)));
     }
 
     private AutocompleteHelper.Completion makeSuggestion(LookupTableEntry entry, LookupValue.Display displayMode) {
