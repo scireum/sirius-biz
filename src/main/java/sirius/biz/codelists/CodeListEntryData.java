@@ -27,7 +27,6 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
 import sirius.kernel.nls.NLS;
-import sirius.web.security.UserContext;
 
 import javax.annotation.Nullable;
 
@@ -74,8 +73,6 @@ public class CodeListEntryData extends Composite {
     @Autoloaded
     @PrefixSearchContent
     private final MultiLanguageString value = new MultiLanguageString().withFallback()
-                                                                       .withValidLanguages(UserContext.getCurrentScope()
-                                                                                                      .getAvailableLanguages())
                                                                        .withConditionName("code-lists");
 
     /**
@@ -87,8 +84,6 @@ public class CodeListEntryData extends Composite {
     @Autoloaded
     @PrefixSearchContent
     private final MultiLanguageString additionalValue = new MultiLanguageString().withFallback()
-                                                                                 .withValidLanguages(UserContext.getCurrentScope()
-                                                                                                                .getAvailableLanguages())
                                                                                  .withConditionName("code-lists");
 
     /**
