@@ -156,6 +156,15 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                                   .format());
 
         Watch watch = Watch.start();
+
+        if (extractedFile.size() == 0) {
+            process.log(ProcessLog.warn()
+                                  .withNLSKey("ExtractArchiveJob.emptyFile")
+                                  .withContext("filename", extractedFile.getFilePath()));
+            process.addTiming(NLS.get("ExtractArchiveJob.fileSkipped"), watch.elapsedMillis());
+            return;
+        }
+
         String targetPath = getTargetPath(extractedFile, flattenDirectory);
         VirtualFile targetFile = targetDirectory.resolve(targetPath);
         ArchiveExtractor.UpdateResult result = extractor.updateFile(extractedFile, targetFile, overrideMode);
