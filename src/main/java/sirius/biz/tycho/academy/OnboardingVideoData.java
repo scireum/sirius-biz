@@ -30,6 +30,13 @@ public class OnboardingVideoData extends Composite {
     private String academy;
 
     /**
+     * Contains a random token to detect outdated videos after a sync.
+     */
+    public static final Mapping SYNC_TOKEN = Mapping.named("syncToken");
+    @Length(50)
+    private String syncToken;
+
+    /**
      * Contains the id of the onboarding participant.
      * <p>
      * This will most probably be a {@link BaseEntity#getUniqueName()}.
@@ -275,5 +282,13 @@ public class OnboardingVideoData extends Composite {
 
     public void setRandomPriority(int randomPriority) {
         this.randomPriority = randomPriority;
+    }
+
+    public String getSyncToken() {
+        return syncToken;
+    }
+
+    public void setSyncToken(String syncToken) {
+        this.syncToken = syncToken;
     }
 }

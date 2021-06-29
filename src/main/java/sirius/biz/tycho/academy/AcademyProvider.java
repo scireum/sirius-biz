@@ -27,4 +27,11 @@ public interface AcademyProvider extends Named {
      * @throws Exception in case of an error while fetching videos
      */
     void fetchVideos(String academy, Extension config, Consumer<AcademyVideoData> videoConsumer) throws Exception;
+
+    /**
+     * Selects the template which actually renders the video.
+     *
+     * @return the name of the template which contains the actual video player
+     */
+    String getVideoTemplate();
 }

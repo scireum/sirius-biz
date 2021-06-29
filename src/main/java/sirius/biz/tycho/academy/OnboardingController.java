@@ -9,117 +9,137 @@
 package sirius.biz.tycho.academy;
 
 import sirius.biz.web.BizController;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.settings.Extension;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
+import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
+/**
+ * Provides the UI for the onboarding / video academy framework.
+ */
 @Register
 public class OnboardingController extends BizController {
-
-    private static final String RESPONSE_FOUND = "found";
-    private static final String PRESONSE_ID = "id";
-    private static final String RESPONSE_TITLE = "title";
-    private static final String RESPONSE_DESCRIPTION = "description";
-    private static final String RESPONSE_DURATION = "duration";
-    private static final String RESPONSE_PREVIEW_URL = "previewUrl";
 
     private static final String PARAM_SEEN_IN_PERCENT = "seenInPercent";
     private static final String PARAM_STARTED = "started";
     private static final String PARAM_SKIP = "skip";
 
     @Part
+    @Nullable
     private OnboardingEngine onboardingEngine;
 
-    @Routed("/academy/:1/:2")
+    /**
+     * Renders an overview of the available track of the video academy for the given owner.
+     *
+     * @param webContext  the request to respond to
+     * @param target      the target entity
+     * @param accessToken the security token to authenticate the target
+     */
+    @Routed(value = "/academy/:1/:2", priority = 999)
     public void academy(WebContext webContext, String target, String accessToken) {
-        verifyAccessToken(target, accessToken);
-
-        List<AcademyTrackInfo> allTracks =
-                onboardingEngine != null ? onboardingEngine.fetchTracks(target) : Collections.emptyList();
-        List<AcademyTrackInfo> recommendedTracks = allTracks.stream()
-                                                            .filter(track -> track.getNumberOfRecommendedVideos() > 0)
-                                                            .collect(Collectors.toList());
-        List<AcademyTrackInfo> seenTracks = allTracks.stream()
-                                                     .filter(track -> track.getNumberOfRecommendedVideos() == 0)
-                                                     .collect(Collectors.toList());
+        if (!verifyURISignature(webContext, target, accessToken)) {
+            return;
+        }
 
         webContext.respondWith()
                   .template("/templates/biz/tycho/academy/tracks.html.pasta",
-                            recommendedTracks,
-                            seenTracks,
+                            onboardingEngine != null ? onboardingEngine.fetchTracks(target) : Collections.emptyList(),
                             target,
-                            accessToken);
+                            computeURISignature(target),
+                            onboardingEngine.fetchSomeVideo(target).orElse(null));
     }
 
-    private void verifyAccessToken(String target, String accessToken) {
-        //TODO implement!!
-    }
-
-    @Routed("/academy/:1/:2/track/:3")
+    /**
+     * Lists all videos fo the given track.
+     *
+     * @param webContext  the request to respond to
+     * @param target      the target entity
+     * @param accessToken the security token to authenticate the target
+     * @param track       the track to list the videos for
+     */
+    @Routed(value = "/academy/:1/:2/track/:3", priority = 999)
     public void track(WebContext webContext, String target, String accessToken, String track) {
-        verifyAccessToken(target, accessToken);
+        if (!verifyURISignature(webContext, target, accessToken)) {
+            return;
+        }
+
+        AcademyTrackInfo trackInfo =
+                onboardingEngine != null ? onboardingEngine.fetchTrack(target, track).orElse(null) : null;
+        assertNotNull(trackInfo);
+
         List<? extends OnboardingVideo> videos =
                 onboardingEngine != null ? onboardingEngine.fetchVideos(target, track) : Collections.emptyList();
 
-        webContext.respondWith().template("/templates/biz/tycho/academy/track.html.pasta", videos, target, accessToken);
+        webContext.respondWith()
+                  .template("/templates/biz/tycho/academy/track.html.pasta",
+                            videos,
+                            trackInfo,
+                            target,
+                            computeURISignature(target));
     }
 
-    @Routed("/academy/:1/:2/video/:3")
+    /**
+     * Displays the requested video
+     *
+     * @param webContext  the request to respond to
+     * @param target      the target entity
+     * @param accessToken the security token to authenticate the target
+     * @param videoId     the id of the video to show
+     */
+    @Routed(value = "/academy/:1/:2/video/:3", priority = 999)
     public void video(WebContext webContext, String target, String accessToken, String videoId) {
-        verifyAccessToken(target, accessToken);
-        OnboardingVideo video = onboardingEngine != null ? onboardingEngine.fetchVideo(target, videoId) : null;
+        if (!verifyURISignature(webContext, target, accessToken)) {
+            return;
+        }
+
+        assertNotNull(onboardingEngine);
+
+        OnboardingVideo video = onboardingEngine.fetchVideo(target, videoId);
         assertNotNull(video);
 
         List<? extends OnboardingVideo> otherRecommendations =
-                onboardingEngine.fetchOtherRecommendations(target, videoId);
+                onboardingEngine.fetchOtherRecommendations(target, videoId, video.fetchAcademyVideoData().getTrackId());
+
+        Tuple<Extension, AcademyProvider> settings =
+                onboardingEngine.fetchAcademySettings(video.fetchAcademyVideoData().getAcademy());
+
         webContext.respondWith()
                   .template("/templates/biz/tycho/academy/video.html.pasta",
                             video,
                             otherRecommendations,
                             target,
-                            accessToken);
+                            accessToken,
+                            settings.getFirst(),
+                            settings.getSecond());
     }
 
-    @Routed(value = "/academy/:1/:2/recommend", jsonCall = true)
-    public void recommendVideo(WebContext webContext,JSONStructuredOutput out,
-                            String target,
-                            String accessToken) {
-        if (onboardingEngine == null) {
-            out.property(RESPONSE_FOUND, false);
-            return;
-        }
-
-        Optional<? extends OnboardingVideo> recommendedVideo = onboardingEngine.fetchSomeVideo(target);
-        if (!recommendedVideo.isPresent()) {
-            out.property(RESPONSE_FOUND, false);
-            return;
-        }
-
-        onboardingEngine.recordVideoShown(target,recommendedVideo.get().getIdAsString());
-        AcademyVideoData videoData = recommendedVideo.get().fetchAcademyVideoData();
-        out.property(RESPONSE_FOUND, true);
-        out.property(PRESONSE_ID, videoData.getVideoId());
-        out.property(RESPONSE_TITLE, videoData.getTitle());
-        out.property(RESPONSE_DESCRIPTION, videoData.getDescription());
-        out.property(RESPONSE_DURATION, videoData.getDurationAsString());
-        out.property(RESPONSE_PREVIEW_URL, videoData.getPreviewUrl());
-    }
-
-
-    @Routed(value = "/academy/:1/:2/update/:3", jsonCall = true)
+    /**
+     * Provides a JSON API to update the statistics which record which video has been viewed or skipped.
+     *
+     * @param webContext  the request to respond to
+     * @param out         the JSON response
+     * @param target      the target entity
+     * @param accessToken the security token to authenticate the target
+     * @param videoId     the id of the onboarding video to update
+     */
+    @Routed(value = "/academy/:1/:2/update/:3", priority = 999)
+    @InternalService
     public void updateVideo(WebContext webContext,
                             JSONStructuredOutput out,
                             String target,
                             String accessToken,
                             String videoId) {
-        verifyAccessToken(target, accessToken);
+        if (!verifyURISignature(webContext, target, accessToken)) {
+            return;
+        }
         if (onboardingEngine == null) {
             return;
         }

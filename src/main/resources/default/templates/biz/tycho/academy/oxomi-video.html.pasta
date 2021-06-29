@@ -1,0 +1,77 @@
+<i:arg type="sirius.biz.tycho.academy.OnboardingVideo" name="video"/>
+<i:arg type="String" name="owner"/>
+<i:arg type="String" name="accessToken"/>
+<i:arg type="sirius.kernel.settings.Extension" name="providerConfig"/>
+<i:arg type="sirius.biz.tycho.academy.OXOMIAcademyProvider" name="provider"/>
+
+<script type="text/javascript">
+    oxomi_server = '@provider.getHostName(providerConfig)';
+
+    function createProgressMonitor() {
+        let lastSubmit = Date.now();
+        let submitTimer;
+        let seenInPercent = 0;
+        let lastSubmittedSeen = 0;
+        let submitRequired = false;
+
+        function submitSeen() {
+            if (lastSubmittedSeen < seenInPercent) {
+                lastSubmittedSeen = seenInPercent;
+                lastSubmit = Date.now();
+                sirius.postJSON('/academy/@owner/@accessToken/update/@video.getIdAsString()',
+                    {seenInPercent: seenInPercent});
+            }
+        }
+
+        function handleProgress(played, duration) {
+            clearTimeout(submitTimer);
+
+            seenInPercent = Math.round(100 * played / duration);
+
+            // Every ten seconds we force a submit
+            if (Date.now() - lastSubmit > 10000) {
+                submitSeen();
+            } else {
+                // Otherwise we set a timer so that after a second after the
+                // last update was received, we also submit...
+                submitTimer = setTimeout(submitSeen, 1000);
+            }
+        }
+
+        return handleProgress;
+    }
+
+    function oxomi_ready() {
+        const progressMonitor = createProgressMonitor();
+
+        oxomi.init({
+            portal: '@provider.getPortalId(providerConfig)',
+            user: '@provider.getUserName(providerConfig)',
+            accessToken: '@provider.computeAccessToken(providerConfig)',
+            userActionHandler: function (event) {
+                if (event.type === 'video-playing') {
+                    progressMonitor(event.data.played, event.data.duration);
+                } else if (event.type === 'video-started') {
+                    sirius.postJSON('/academy/@owner/@accessToken/update/@video.getIdAsString()', {started: true});
+                }
+            }
+        });
+
+        oxomi.embedVideo({
+            video: '@video.fetchAcademyVideoData().getVideoId()',
+            mode: 'embed',
+            size: 'large',
+            width: 'inherit',
+            target: '#video-target'
+        });
+    }
+</script>
+<script type="text/javascript">
+    setTimeout(function () {
+        const script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = "https://" + oxomi_server + "/assets/frontend/oxomi.js";
+        document.getElementsByTagName("head")[0].appendChild(script);
+    }, 0);
+</script>
+

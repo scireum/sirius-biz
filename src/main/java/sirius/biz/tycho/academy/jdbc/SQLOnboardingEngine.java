@@ -8,7 +8,6 @@
 
 package sirius.biz.tycho.academy.jdbc;
 
-import sirius.biz.tycho.academy.AcademyTrackInfo;
 import sirius.biz.tycho.academy.AcademyVideo;
 import sirius.biz.tycho.academy.AcademyVideoData;
 import sirius.biz.tycho.academy.OnboardingEngine;
@@ -22,29 +21,25 @@ import sirius.kernel.health.Log;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
+import java.util.function.Consumer;
 
-@Register(classes = OnboardingEngine.class)
+/**
+ * Provides an implementation of the {@link OnboardingEngine} based on a JDBC/SQL database.
+ */
+@Register(classes = OnboardingEngine.class, framework = SQLOnboardingEngine.FRAMEWORK_TYCHO_JDBC_ACADEMIES)
 public class SQLOnboardingEngine extends OnboardingEngine {
+
+    /**
+     * Specifies the framework which must be enabled to use JDBC/SQL based video academies.
+     */
+    public static final String FRAMEWORK_TYCHO_JDBC_ACADEMIES = "tycho.academies-jdbc";
 
     @Part
     private OMA oma;
-
-    @Override
-    protected Set<String> fetchCurrentAcademyVideoIds(String academy) {
-        return oma.select(SQLAcademyVideo.class)
-                  .eq(SQLAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.ACADEMY), academy)
-                  .fields(SQLAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.VIDEO_ID))
-                  .queryList()
-                  .stream()
-                  .map(v -> v.getAcademyVideoData().getVideoId())
-                  .collect(Collectors.toSet());
-    }
 
     @Override
     protected void persistAcademyVideo(AcademyVideoData videoData) {
@@ -65,30 +60,30 @@ public class SQLOnboardingEngine extends OnboardingEngine {
     }
 
     @Override
-    protected void markOutdatedAcademyVideosAsDeleted(String academy, Set<String> videoIds) {
-        for (String videoId : videoIds) {
-            oma.select(SQLAcademyVideo.class)
-               .eq(SQLAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.ACADEMY), academy)
-               .eq(SQLAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.VIDEO_ID), videoId)
-               .first()
-               .ifPresent(video -> {
-                   try {
-                       video.getAcademyVideoData().setLastUpdated(LocalDateTime.now());
-                       video.getAcademyVideoData().setDeleted(true);
-                       oma.update(video);
-                   } catch (Exception e) {
-                       Exceptions.handle(Log.BACKGROUND, e);
-                   }
-               });
-        }
+    protected void markOutdatedAcademyVideosAsDeleted(String academy, String tokenToSkip) {
+        oma.select(SQLAcademyVideo.class)
+           .eq(SQLAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.ACADEMY), academy)
+           .ne(SQLAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.SYNC_TOKEN), tokenToSkip)
+           .iterateAll(video -> {
+               try {
+                   video.getAcademyVideoData().setLastUpdated(LocalDateTime.now());
+                   video.getAcademyVideoData().setDeleted(true);
+                   oma.update(video);
+               } catch (Exception e) {
+                   Exceptions.handle(Log.BACKGROUND, e);
+               }
+           });
     }
 
     @Override
     protected List<? extends AcademyVideo> queryAcademyVideos(String academy) {
-        return oma.select(SQLAcademyVideo.class)
-                  .eq(SQLAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.ACADEMY), academy)
-                  .eq(SQLAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.DELETED), false)
-                  .queryList();
+        List<SQLAcademyVideo> videos = new ArrayList<>();
+        oma.select(SQLAcademyVideo.class)
+           .eq(SQLAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.ACADEMY), academy)
+           .eq(SQLAcademyVideo.ACADEMY_VIDEO_DATA.inner(AcademyVideoData.DELETED), false)
+           .iterateAll(videos::add);
+
+        return videos;
     }
 
     @Override
@@ -97,19 +92,7 @@ public class SQLOnboardingEngine extends OnboardingEngine {
     }
 
     @Override
-    public Set<String> fetchCurrentOnboardingVideoIds(String academy, String owner) {
-        return oma.select(SQLOnboardingVideo.class)
-                  .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.ACADEMY), academy)
-                  .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
-                  .fields(SQLOnboardingVideo.ID)
-                  .queryList()
-                  .stream()
-                  .map(SQLOnboardingVideo::getIdAsString)
-                  .collect(Collectors.toSet());
-    }
-
-    @Override
-    protected OnboardingVideo createOrUpdateOnboardingVideo(String owner, AcademyVideo academyVideo) {
+    protected OnboardingVideo createOrUpdateOnboardingVideo(String owner, AcademyVideo academyVideo, String syncToken) {
         SQLOnboardingVideo onboardingVideo = oma.select(SQLOnboardingVideo.class)
                                                 .eq(SQLOnboardingVideo.ACADEMY_VIDEO, academyVideo)
                                                 .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER),
@@ -131,6 +114,7 @@ public class SQLOnboardingEngine extends OnboardingEngine {
         onboardingVideoData.setRandomPriority(ThreadLocalRandom.current().nextInt(99999));
         onboardingVideoData.setDeleted(false);
         onboardingVideoData.setOwner(owner);
+        onboardingVideoData.setSyncToken(syncToken);
 
         oma.update(onboardingVideo);
 
@@ -138,18 +122,20 @@ public class SQLOnboardingEngine extends OnboardingEngine {
     }
 
     @Override
-    public void markOutdatedOnboardingVideosAsDeleted(String academy, String owner, Set<String> videoIds) {
-        for (String videoId : videoIds) {
-            oma.find(SQLOnboardingVideo.class, videoId).ifPresent(video -> {
-                try {
-                    video.getOnboardingVideoData().setLastUpdated(LocalDateTime.now());
-                    video.getOnboardingVideoData().setDeleted(true);
-                    oma.update(video);
-                } catch (Exception e) {
-                    Exceptions.handle(Log.BACKGROUND, e);
-                }
-            });
-        }
+    public void markOutdatedOnboardingVideosAsDeleted(String academy, String owner, String tokenToSkip) {
+        oma.select(SQLOnboardingVideo.class)
+           .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.ACADEMY), academy)
+           .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
+           .ne(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.SYNC_TOKEN), tokenToSkip)
+           .iterateAll(video -> {
+               try {
+                   video.getOnboardingVideoData().setLastUpdated(LocalDateTime.now());
+                   video.getOnboardingVideoData().setDeleted(true);
+                   oma.update(video);
+               } catch (Exception e) {
+                   Exceptions.handle(Log.BACKGROUND, e);
+               }
+           });
     }
 
     @Override
@@ -157,6 +143,15 @@ public class SQLOnboardingEngine extends OnboardingEngine {
         oma.select(SQLOnboardingVideo.class)
            .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
            .delete();
+    }
+
+    @Override
+    protected void forAllVideos(String owner, Consumer<? super OnboardingVideo> videoCallback) {
+        oma.select(SQLOnboardingVideo.class)
+           .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
+           .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.DELETED), false)
+           .orderAsc(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.PRIORITY))
+           .iterateAll(videoCallback::accept);
     }
 
     @Override
@@ -180,11 +175,6 @@ public class SQLOnboardingEngine extends OnboardingEngine {
     }
 
     @Override
-    public List<AcademyTrackInfo> fetchTracks(String target) {
-        return Collections.singletonList(new AcademyTrackInfo("track", "Track", 1, 1));
-    }
-
-    @Override
     public OnboardingVideo fetchVideo(String owner, String videoId) {
         return oma.select(SQLOnboardingVideo.class)
                   .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
@@ -194,13 +184,13 @@ public class SQLOnboardingEngine extends OnboardingEngine {
     }
 
     @Override
-    public List<? extends OnboardingVideo> fetchOtherRecommendations(String owner, String videoId) {
+    public List<? extends OnboardingVideo> fetchOtherRecommendations(String owner, String videoId, String tackId) {
         return oma.select(SQLOnboardingVideo.class)
                   .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.OWNER), owner)
                   .ne(SQLOnboardingVideo.ID, Long.parseLong(videoId))
                   .eq(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.RECOMMENDED), true)
                   .orderAsc(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.RANDOM_PRIORITY))
-                  .limit(5)
+                  .limit(NUMBER_OF_VIDEOS_TO_RECOMMEND)
                   .queryList();
     }
 
@@ -265,7 +255,7 @@ public class SQLOnboardingEngine extends OnboardingEngine {
                 return;
             }
 
-            boolean markAsWatched = seenInPercent >= 40;
+            boolean markAsWatched = seenInPercent >= MIN_PERCENT_TO_CONSIDER_VIDEO_WATCHED;
             oma.updateStatement(SQLOnboardingVideo.class)
                .set(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.PERCENT_WATCHED), seenInPercent)
                .set(SQLOnboardingVideo.ONBOARDING_VIDEO_DATA.inner(OnboardingVideoData.SKIPPED), false)

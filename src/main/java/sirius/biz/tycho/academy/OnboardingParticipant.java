@@ -9,7 +9,7 @@
 package sirius.biz.tycho.academy;
 
 /**
- * Marks an participant of the {@link OnboardingEngine} by ensuring it has a {@link OnboardingData}.
+ * Marks a participant of the {@link OnboardingEngine} by ensuring it has a {@link OnboardingData}.
  */
 public interface OnboardingParticipant {
 

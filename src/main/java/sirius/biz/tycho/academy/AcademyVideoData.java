@@ -30,6 +30,13 @@ public class AcademyVideoData extends Composite {
     private String academy;
 
     /**
+     * Contains a random token to detect outdated videos after a sync.
+     */
+    public static final Mapping SYNC_TOKEN = Mapping.named("syncToken");
+    @Length(50)
+    private String syncToken;
+
+    /**
      * Contains the internal video id.
      */
     public static final Mapping VIDEO_ID = Mapping.named("videoId");
@@ -49,6 +56,14 @@ public class AcademyVideoData extends Composite {
     public static final Mapping TRACK_NAME = Mapping.named("trackName");
     @Length(255)
     private String trackName;
+
+    /**
+     * Contains the description of the track to which this video belongs.
+     */
+    public static final Mapping TRACK_DESCRIPTION = Mapping.named("trackDescription");
+    @Lob
+    @NullAllowed
+    private String trackDescription;
 
     /**
      * Contains the title of this video.
@@ -136,6 +151,7 @@ public class AcademyVideoData extends Composite {
         this.videoId = other.videoId;
         this.trackId = other.trackId;
         this.trackName = other.trackName;
+        this.trackDescription = other.trackDescription;
         this.title = other.title;
         this.description = other.description;
         this.previewUrl = other.previewUrl;
@@ -145,6 +161,7 @@ public class AcademyVideoData extends Composite {
         this.requiredPermission = other.requiredPermission;
         this.mandatory = other.mandatory;
         this.deleted = other.deleted;
+        this.syncToken = other.syncToken;
     }
 
     public String getDurationAsString() {
@@ -272,5 +289,21 @@ public class AcademyVideoData extends Composite {
 
     public void setPreviewUrl(String previewUrl) {
         this.previewUrl = previewUrl;
+    }
+
+    public String getTrackDescription() {
+        return trackDescription;
+    }
+
+    public void setTrackDescription(String trackDescription) {
+        this.trackDescription = trackDescription;
+    }
+
+    public String getSyncToken() {
+        return syncToken;
+    }
+
+    public void setSyncToken(String syncToken) {
+        this.syncToken = syncToken;
     }
 }

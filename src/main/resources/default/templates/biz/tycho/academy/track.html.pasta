@@ -1,17 +1,34 @@
 <i:arg type="List" name="videos"/>
+<i:arg type="sirius.biz.tycho.academy.AcademyTrackInfo" name="track"/>
 <i:arg type="String" name="owner"/>
 <i:arg type="String" name="accessToken"/>
 
-<w:page titleKey="OnboardingController.academy">
-    <w:subHeading label="Videos" />
-    <i:for type="sirius.biz.tycho.academy.OnboardingVideo" var="video" items="videos">
-        <div class="well">
-            <a href="/academy/@owner/@accessToken/video/@video.getIdAsString()">
-                @video.fetchAcademyVideoData().getTitle()
-            </a>
-            @video.fetchAcademyVideoData().getDescription()
-            Watched: @video.getOnboardingVideoData().isWatched() (@video.getOnboardingVideoData().getPercentWatched()%)
-            Skipped: @video.getOnboardingVideoData().isSkipped()
-        </div>
-    </i:for>
-</w:page>
+<t:page titleKey="OnboardingController.academy">
+
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/academy/@owner/@accessToken">@i18n("OnboardingController.academy")</a>
+        </li>
+        <li>
+            <a href="/academy/@owner/@accessToken/track/@track.getTrackId()">@track.getTrackName()</a>
+        </li>
+    </i:block>
+    <i:block name="page-header">
+        <t:pageHeader>
+            <i:block name="title">@i18n("OnboardingController.academy") - @track.getTrackName()</i:block>
+            <t:inlineInfo label="Verfügbare Videos">@track.getNumberOfVideos()</t:inlineInfo>
+            <t:inlineInfo label="Gesamtspielzeit">@track.getTotalDurationAsString()</t:inlineInfo>
+        </t:pageHeader>
+    </i:block>
+
+    <t:datacards size="small">
+        <i:for type="sirius.biz.tycho.academy.OnboardingVideo" var="video" items="videos">
+            <i:invoke template="/templates/biz/tycho/academy/video-card.html.pasta"
+                      video="@video"
+                      owner="@owner"
+                      accessToken="@accessToken" />
+        </i:for>
+    </t:datacards>
+
+    <t:formBar btnLabel="" />
+</t:page>

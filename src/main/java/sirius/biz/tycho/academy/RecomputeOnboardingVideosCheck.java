@@ -11,9 +11,10 @@ package sirius.biz.tycho.academy;
 import sirius.biz.analytics.checks.DailyCheck;
 import sirius.biz.protocol.Traced;
 import sirius.db.mixing.BaseEntity;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 
-import java.util.Set;
+import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 /**
@@ -29,13 +30,17 @@ public abstract class RecomputeOnboardingVideosCheck<E extends BaseEntity<?> & O
         extends DailyCheck<E> {
 
     @Part
-    private OnboardingEngine onboardingEngine;
+    @Nullable
+    protected static OnboardingEngine onboardingEngine;
 
+    /**
+     * Wraps the whole process of creating onboarding videos for once participant to carry along some state.
+     */
     private class Computation {
 
-        private String academy;
-        private E entity;
-        private Set<String> currentVideoIds;
+        private final String academy;
+        private final E entity;
+        private final String syncToken;
 
         private int available = 0;
         private int watchable = 0;
@@ -47,26 +52,24 @@ public abstract class RecomputeOnboardingVideosCheck<E extends BaseEntity<?> & O
         protected Computation(String academy, E entity) {
             this.academy = academy;
             this.entity = entity;
-            this.currentVideoIds = onboardingEngine.fetchCurrentOnboardingVideoIds(academy, entity.getUniqueName());
-        }
-
-        protected boolean checkPermission(String permission) {
-            return RecomputeOnboardingVideosCheck.this.checkPermission(entity, permission);
+            this.syncToken = Strings.generateCode(32);
         }
 
         protected void perform() {
             onboardingEngine.fetchAcademyVideos(academy)
                             .stream()
-                            .filter(video -> checkPermission(video.getAcademyVideoData().getRequiredPermission()))
-                            .filter(video -> checkPermission(video.getAcademyVideoData().getRequiredFeature()))
+                            .filter(video -> checkPermission(entity,
+                                                             video.getAcademyVideoData().getRequiredPermission()))
+                            .filter(video -> checkPermission(entity, video.getAcademyVideoData().getRequiredFeature()))
                             .forEach(video -> {
                                 OnboardingVideo onboardingVideo =
-                                        onboardingEngine.createOrUpdateOnboardingVideo(entity.getUniqueName(), video);
-                                currentVideoIds.remove(onboardingVideo.getIdAsString());
+                                        onboardingEngine.createOrUpdateOnboardingVideo(entity.getUniqueName(),
+                                                                                       video,
+                                                                                       syncToken);
                                 updateCounters(video, onboardingVideo.getOnboardingVideoData());
                             });
 
-            onboardingEngine.markOutdatedOnboardingVideosAsDeleted(academy, entity.getUniqueName(), currentVideoIds);
+            onboardingEngine.markOutdatedOnboardingVideosAsDeleted(academy, entity.getUniqueName(), syncToken);
             updateStatistics();
             persistStatistics();
         }
@@ -124,8 +127,26 @@ public abstract class RecomputeOnboardingVideosCheck<E extends BaseEntity<?> & O
         determineAcademies(entity, academy -> new Computation(academy, entity).perform());
     }
 
+    @Override
+    public boolean isEnabled() {
+        return onboardingEngine != null;
+    }
+
+    /**
+     * Checks if the given entity fulfills the given permission string.
+     *
+     * @param entity     the entity to check the permissions for
+     * @param permission the permissions to check
+     * @return <tt>true</tt> if the requested permissions are available, <tt>false</tt> otherwise
+     */
     protected abstract boolean checkPermission(E entity, String permission);
 
+    /**
+     * Determines which academies are relevant for the given entity.
+     *
+     * @param entity          the entity to check the academies for
+     * @param academyConsumer the consumer to be supplied with the enabled academies
+     */
     protected abstract void determineAcademies(E entity, Consumer<String> academyConsumer);
 }
 

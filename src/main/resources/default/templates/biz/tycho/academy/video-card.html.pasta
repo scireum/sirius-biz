@@ -1,0 +1,41 @@
+<i:arg type="String" name="owner" />
+<i:arg type="String" name="accessToken" />
+<i:arg type="sirius.biz.tycho.academy.OnboardingVideo" name="video" />
+
+<t:datacard title="@video.fetchAcademyVideoData().getTitle()"
+            link="@apply('/academy/%s/%s/video/%s',  owner, accessToken, video.getIdAsString())">
+    <i:block name="header">
+        <img class="card-img-top" src="@video.fetchAcademyVideoData().getPreviewUrl()"/>
+    </i:block>
+    <i:block name="subtitle">
+        <i class="fa fa-film"></i> @video.fetchAcademyVideoData().getDurationAsString()
+    </i:block>
+    <i:block name="actions">
+        <i:if test="video.getOnboardingVideoData().isRecommended()">
+            <t:menuItem title="Überspringen" url="@apply('javascript:skipVideo%s()', video.getIdAsString())" />
+            <script type="text/javascript">
+                function skipVideo@(video.getIdAsString())(videoId) {
+                    sirius.postJSON('/academy/@owner/@accessToken/update/@video.getIdAsString()', {
+                        skip: true
+                    }).then(function () {
+                        window.location.reload();
+                    });
+                }
+            </script>
+        </i:if>
+    </i:block>
+
+    @video.fetchAcademyVideoData().getDescription()
+
+    <i:block name="footer">
+        <i:if test="video.getOnboardingVideoData().isRecommended()">
+            <t:dot color="green">Empfohlen</t:dot>
+        </i:if>
+        <i:if test="video.getOnboardingVideoData().isWatched()">
+            <t:dot color="gray">Bereits angesehen</t:dot>
+        </i:if>
+        <i:if test="video.getOnboardingVideoData().isSkipped()">
+            <t:dot color="violet">Übersprungen</t:dot>
+        </i:if>
+    </i:block>
+</t:datacard>
