@@ -105,6 +105,7 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
         MultiMap<Class<?>, AnalyticalTask<?>> result = MultiMap.create();
         context.getParts((Class<AnalyticalTask<?>>) getAnalyticalTaskType())
                .stream()
+               .filter(AnalyticalTask::isEnabled)
                .filter(this::isMatchingEntityType)
                .forEach(task -> result.put(task.getType(), task));
 
