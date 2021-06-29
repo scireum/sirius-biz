@@ -213,6 +213,15 @@ public class LookupValue {
         return display.resolveDisplayString(getTable(), getValue());
     }
 
+    /**
+     * Provides access to {@link #customValues} as a simple boolean.
+     *
+     * @return true if the field {@link CustomValues#ACCEPT accepts} custom values, false otherwise
+     */
+    public boolean acceptsCustomValues() {
+        return customValues == CustomValues.ACCEPT;
+    }
+
     @Override
     public String toString() {
         if (Strings.isEmpty(value)) {

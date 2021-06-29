@@ -42,6 +42,7 @@
         new TokenAutocomplete({
             name: '@name',
             selector: '#@id',
+            allowCustomEntries: @values.acceptsCustomValues(),
             noMatchesText: '@i18n("template.html.selects.noMatches")',
             placeholderText: '@i18n("template.html.selects.selection")',
             suggestionsUri: '/autocomplete/lookuptable/@values.getTableName()/@values.getDisplay()'

@@ -91,6 +91,15 @@ public class LookupValues extends StringList {
                      .collect(Collectors.toList());
     }
 
+    /**
+     * Provides access to {@link #customValues} as a simple boolean.
+     *
+     * @return true if the field {@link sirius.biz.codelists.LookupValue.CustomValues#ACCEPT accepts} custom values, false otherwise
+     */
+    public boolean acceptsCustomValues() {
+        return customValues == LookupValue.CustomValues.ACCEPT;
+    }
+
     public LookupValue.Display getDisplay() {
         return display;
     }
