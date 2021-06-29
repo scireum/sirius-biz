@@ -34,10 +34,15 @@ public abstract class MonthlyMetricComputer<E extends BaseEntity<?>> implements 
     @Nullable
     protected Metrics metrics;
 
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+
     /**
      * Determines if best effort scheduling should be skipped.
      *
-     * @return <tt>true</tt> to suppress best effort scheduling, <tt>false</tt> otherwise (default)
+     * @return <tt>true</tt> to suppress the best effort scheduling, <tt>false</tt> otherwise (default)
      */
     public boolean suppressBestEffortScheduling() {
         return false;

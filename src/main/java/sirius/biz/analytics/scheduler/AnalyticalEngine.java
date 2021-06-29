@@ -176,7 +176,7 @@ public class AnalyticalEngine implements EveryDay {
      * @param scheduler   the scheduler to queue
      * @param force       determines if execution is forced
      * @param contextDate the context date to execute within - this can be used to execute a scheduler for a different
-     *                    date than now, e.g. to manualy compute old / outdated metrics etc.
+     *                    date than now, e.g. to manually compute old / outdated metrics etc.
      */
     protected void queueScheduler(AnalyticsScheduler scheduler, boolean force, @Nullable LocalDate contextDate) {
         if (!force && contextDate == null && !shouldExecuteAgain(scheduler)) {

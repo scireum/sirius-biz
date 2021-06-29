@@ -41,9 +41,9 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
     private Boolean active;
 
     /**
-     * Specifies the type of analytical tasks processed by this schedulder.
+     * Specifies the type of analytical tasks processed by this scheduler.
      *
-     * @return the class of analytical tasks handled by this schedulder
+     * @return the class of analytical tasks handled by this scheduler
      */
     protected abstract Class<?> getAnalyticalTaskType();
 
@@ -115,7 +115,7 @@ abstract class BaseAnalyticalTaskScheduler<B extends BaseEntity<?>> implements A
      * Determines if the given task (and its associated entity type) is accepted by this scheduler.
      *
      * @param task the task to check
-     * @return <tt>true</tt> if the task is processed by this schedulder, <tt>false</tt> otherwise
+     * @return <tt>true</tt> if the task is processed by this scheduler, <tt>false</tt> otherwise
      */
     protected abstract boolean isMatchingEntityType(AnalyticalTask<?> task);
 
