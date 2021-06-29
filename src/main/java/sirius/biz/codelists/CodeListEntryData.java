@@ -73,7 +73,6 @@ public class CodeListEntryData extends Composite {
     @Autoloaded
     @PrefixSearchContent
     private final MultiLanguageString value = new MultiLanguageString().withFallback()
-                                                                       .withValidLanguages(NLS.getSupportedLanguages())
                                                                        .withConditionName("code-lists");
 
     /**
@@ -85,7 +84,6 @@ public class CodeListEntryData extends Composite {
     @Autoloaded
     @PrefixSearchContent
     private final MultiLanguageString additionalValue = new MultiLanguageString().withFallback()
-                                                                                 .withValidLanguages(NLS.getSupportedLanguages())
                                                                                  .withConditionName("code-lists");
 
     /**
