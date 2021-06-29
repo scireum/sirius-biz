@@ -14,7 +14,7 @@ import sirius.biz.protocol.JournalData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
-import sirius.db.mixing.Mapping;
+import sirius.biz.tycho.academy.OnboardingData;
 import sirius.db.mixing.annotations.Index;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.TranslationSource;
@@ -37,15 +37,10 @@ import java.util.function.Consumer;
 @TranslationSource(UserAccount.class)
 public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, SQLTenant> {
 
-    public static final Mapping USER_ACCOUNT_DATA = Mapping.named("userAccountData");
     private final UserAccountData userAccountData = new UserAccountData(this);
-
-    /**
-     * Used to record changes on fields of the user.
-     */
     private final JournalData journal = new JournalData(this);
-
     private final SQLPerformanceData performanceData = new SQLPerformanceData(this);
+    private final OnboardingData onboardingData = new OnboardingData(this);
 
     @Transient
     private ValueHolder<String> userIcon;
@@ -68,11 +63,6 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
     }
 
     @Override
-    public UserAccountData getUserAccountData() {
-        return userAccountData;
-    }
-
-    @Override
     @SuppressWarnings("squid:S1185")
     @Explain("This method must be overridden, because it is defined with a generic parameter in UserAccount")
     public void setId(Long id) {
@@ -80,13 +70,21 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
     }
 
     @Override
-    public JournalData getJournal() {
-        return journal;
+    public void addMessages(Consumer<Message> consumer) {
+        getUserAccountData().addMessages(consumer);
     }
 
     @Override
-    public void addMessages(Consumer<Message> consumer) {
-        getUserAccountData().addMessages(consumer);
+    public Optional<String> getUserIcon() {
+        if (userIcon == null) {
+            LookupValue salutation = getUserAccountData().getPerson().getSalutation();
+            userIcon = new ValueHolder<>(salutation.getTable()
+                                                   .fetchField(salutation.getValue(), "icon")
+                                                   .filter(Strings::isFilled)
+                                                   .orElse(null));
+        }
+
+        return userIcon.asOptional();
     }
 
     @Override
@@ -105,15 +103,17 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
     }
 
     @Override
-    public Optional<String> getUserIcon() {
-        if (userIcon == null) {
-            LookupValue salutation = getUserAccountData().getPerson().getSalutation();
-            userIcon = new ValueHolder<>(salutation.getTable()
-                                                   .fetchField(salutation.getValue(), "icon")
-                                                   .filter(Strings::isFilled)
-                                                   .orElse(null));
-        }
+    public OnboardingData getOnboardingData() {
+        return onboardingData;
+    }
 
-        return userIcon.asOptional();
+    @Override
+    public UserAccountData getUserAccountData() {
+        return userAccountData;
+    }
+
+    @Override
+    public JournalData getJournal() {
+        return journal;
     }
 }
