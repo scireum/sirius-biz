@@ -335,7 +335,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
 
         if (i18nEnabled && multiLanguageString.isEnabledForCurrentUser()) {
             Collection<String> languagesToLoad = multiLanguageString.getValidLanguages().isEmpty() ?
-                                                 ScopeInfo.DEFAULT_SCOPE.getAvailableLanguages() :
+                                                 ScopeInfo.DEFAULT_SCOPE.getKnownLanguages() :
                                                  multiLanguageString.getValidLanguages();
             languagesToLoad.forEach(code -> {
                 String parameterName = getPropertyName() + "-" + code;

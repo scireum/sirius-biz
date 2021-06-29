@@ -325,8 +325,7 @@ public class FieldDefinition {
             return this;
         }
 
-        UserContext.getCurrentScope()
-                   .getAvailableLanguages()
+        UserContext.getCurrentScope().getDisplayLanguages()
                    .stream()
                    .map(lang -> NLS.smartGet(alias, lang))
                    .filter(text -> !text.equals(getLabel()))
