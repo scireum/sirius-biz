@@ -84,7 +84,7 @@ public class AnalyticsCommand implements Command {
                                                                                   params[0],
                                                                                   scheduler.getName()))
                                                                           .findFirst();
-        if (!analyticsScheduler.isPresent()) {
+        if (analyticsScheduler.isEmpty()) {
             output.apply("Unknown scheduler: %s", params[0]);
         } else {
             output.apply("Executing scheduler '%s' manually...", params[0]);
