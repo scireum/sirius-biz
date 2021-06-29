@@ -156,6 +156,11 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
                                   .format());
 
         Watch watch = Watch.start();
+
+        if (checkEmptyFile(extractedFile, process, watch)) {
+            return;
+        }
+
         String targetPath = getTargetPath(extractedFile, flattenDirectory);
         VirtualFile targetFile = targetDirectory.resolve(targetPath);
         ArchiveExtractor.UpdateResult result = extractor.updateFile(extractedFile, targetFile, overrideMode);
@@ -174,6 +179,17 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         }
 
         log(process, extractedFile, targetFile, result.name());
+    }
+
+    private boolean checkEmptyFile(ExtractedFile extractedFile, ProcessContext process, Watch watch) {
+        if (extractedFile.size() > 0) {
+            return false;
+        }
+        process.log(ProcessLog.warn()
+                              .withNLSKey("ExtractArchiveJob.emptyFile")
+                              .withContext("filename", extractedFile.getFilePath()));
+        process.addTiming(NLS.get("ExtractArchiveJob.fileSkipped"), watch.elapsedMillis());
+        return true;
     }
 
     private String getTargetPath(ExtractedFile extractedFile, boolean flattenDirectory) {
