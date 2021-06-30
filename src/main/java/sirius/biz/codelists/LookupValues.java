@@ -44,7 +44,7 @@ public class LookupValues extends StringList {
      * @param export          determines how values are rendered in exports
      * @deprecated use the new constructor with all fields instead
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     public LookupValues(String lookupTableName,
                         LookupValue.CustomValues customValues,
                         LookupValue.Display display,

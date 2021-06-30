@@ -35,9 +35,10 @@ public class LookupValueSuggestionController extends BizController {
     /**
      * Responds with possible suggestions from the given {@link LookupTable} using {@link AutocompleteHelper}.
      *
-     * @param webContext the web requests calling the autocomplete service
-     * @param tableName  the name of the table for which suggestions should be gathered
-     * @param display    the requested {@link sirius.biz.codelists.LookupValue.Display display mode} for the label
+     * @param webContext      the web requests calling the autocomplete service
+     * @param tableName       the name of the table for which suggestions should be gathered
+     * @param display         the requested {@link sirius.biz.codelists.LookupValue.Display display mode} for the field label
+     * @param extendedDisplay the requested {@link sirius.biz.codelists.LookupValue.Display display mode} for the completion label
      */
     @LoginRequired
     @Routed("/autocomplete/lookuptable/:1/:2/:3")
