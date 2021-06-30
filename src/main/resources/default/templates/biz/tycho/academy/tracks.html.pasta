@@ -26,7 +26,7 @@
                 </div>
             </div>
             <div class="col-12 col-lg-6">
-                <t:heading title="OnboardingController.allTracks"/>
+                <t:heading titleKey="OnboardingController.allTracks"/>
                 <t:datacards size="large">
                     <i:for type="sirius.biz.tycho.academy.AcademyTrackInfo" var="track" items="tracks">
                         <t:datacard title="@track.getTrackName()"
