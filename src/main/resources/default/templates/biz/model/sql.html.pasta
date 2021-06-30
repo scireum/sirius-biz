@@ -1,5 +1,5 @@
-<i:arg type="List" name="dbs" />
-<i:arg type="String" name="defaultDB" />
+<i:arg type="List" name="dbs"/>
+<i:arg type="String" name="defaultDB"/>
 <w:page titleKey="DatabaseController.sql">
     <i:block name="breadcrumbs">
         <li>
@@ -7,22 +7,39 @@
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="DatabaseController.sql"/>
+    <w:pageHeader>
+        <div class="row">
+            <div class="col-md-8">
+                @i18n("DatabaseController.sql")
+            </div>
+            <div class="col-md-4 align-right">
+                <a id="exportBtn" class="btn btn-default" style="display: none" href="#">
+                    <i class="fa fa-save"></i> @i18n("DatabaseController.export")
+                </a>
+            </div>
+        </div>
+    </w:pageHeader>
 
     <div class="well">
-        <div class="row">
-            <div class="col-md-10">
-                <div class="input-group">
-                    <input type="text" id="query" class="form-control" placeholder="@i18n('NLS.searchkey')" autofocus />
-                    <span class="input-group-addon" onclick="execute()"><i class="fa fa-search"></i></span>
+        <form id="exportForm" action="/system/sql/export" method="post">
+            <div class="row">
+                <div class="col-md-10">
+                    <div class="input-group">
+                        <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
+                               type="hidden"/>
+                        <input type="hidden" id="exportQuery" name="exportQuery"/>
+                        <input type="text" id="query" name="query" class="form-control"
+                               placeholder="@i18n('NLS.searchkey')" autofocus/>
+                        <span class="input-group-addon" onclick="execute()"><i class="fa fa-search"></i></span>
+                    </div>
                 </div>
+                <w:singleSelect name="database" id="db" span="2">
+                    <i:for type="String" var="db" items="dbs">
+                        <option value="@db" @selected="defaultDB == db">@db</option>
+                    </i:for>
+                </w:singleSelect>
             </div>
-            <w:singleSelect name="db" id="db" span="2">
-                <i:for type="String" var="db" items="dbs">
-                    <option value="@db" @selected="defaultDB == db">@db</option>
-                </i:for>
-            </w:singleSelect>
-        </div>
+        </form>
     </div>
 
     <table class="table table-striped">
@@ -37,23 +54,20 @@
     </p>
 
     <script type="text/javascript">
-
-
-        $('#db').on('change', function() {
-            console.log($('[name=db]').val());
-        });
-
         function execute() {
             clearMessages();
             var $columns = $('#columns');
             var $rows = $('#rows');
             var $info = $('#info');
+            var exportBtn = $('#exportBtn');
+
+            exportBtn.hide();
             $info.html('');
             $rows.html('<tr><td class="align-center"><i class="fa fa-spin fa-spinner"></i></td></tr>');
             $.getJSON('/system/sql/api/execute',
                 {
                     query: $('#query').val(),
-                    db: $('[name=db]').val()
+                    database: $('[name=database]').val()
                 },
                 function (data) {
                     $columns.html('');
@@ -63,6 +77,11 @@
                         addError(data.message);
                         return;
                     }
+                    if (data.rows.length > 0) {
+                        $('#exportQuery').val($('#query').val());
+                        exportBtn.show();
+                    }
+
                     if (data.rows !== null && data.rows.length === 1 && data.columns !== null) {
                         outputDetails($rows, data);
                     } else {
@@ -115,6 +134,14 @@
                 if (e.keyCode === 13) {
                     execute();
                     return false;
+                }
+            });
+
+            $('#exportBtn').click(function () {
+                if ($('#exportQuery').val() === "") {
+                    addError("Cannot export empty query");
+                } else {
+                    $('#exportForm').submit();
                 }
             });
         });

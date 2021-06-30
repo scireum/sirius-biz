@@ -8,10 +8,12 @@
 
 package sirius.biz.tenants;
 
+import sirius.biz.codelists.LookupValue;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
+import sirius.biz.util.Languages;
 import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
@@ -20,9 +22,11 @@ import sirius.db.mixing.annotations.AfterDelete;
 import sirius.db.mixing.annotations.AfterSave;
 import sirius.db.mixing.annotations.BeforeSave;
 import sirius.db.mixing.annotations.Length;
+import sirius.db.mixing.annotations.Lob;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
+import sirius.db.mixing.types.StringList;
 import sirius.kernel.Sirius;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
@@ -78,6 +82,18 @@ public class UserAccountData extends Composite implements MessageProvider {
     private final PermissionData permissions;
 
     /**
+     * Contains all sub scopes to user is restricted to.
+     * <p>
+     * If this field is empty, the user has access to <b>ALL</b> sub scopes as this is the common case.
+     */
+    public static final Mapping SUB_SCOPES = Mapping.named("subScopes");
+    @Autoloaded
+    @NullAllowed
+    @AutoImport
+    @Lob
+    private final StringList subScopes = new StringList();
+
+    /**
      * Determines if an external login is required from time to time.
      */
     public static final Mapping EXTERNAL_LOGIN_REQUIRED = Mapping.named("externalLoginRequired");
@@ -92,7 +108,7 @@ public class UserAccountData extends Composite implements MessageProvider {
     @Autoloaded
     @NullAllowed
     @Length(2)
-    private String lang;
+    private final LookupValue lang = new LookupValue(Languages.LOOKUP_TABLE_ACTIVE_LANGUAGES);
 
     @Part
     private static Mails ms;
@@ -260,7 +276,7 @@ public class UserAccountData extends Composite implements MessageProvider {
      * @return a short string used to address the person
      */
     public String getAddressableName() {
-        if (hasName() && (Strings.isFilled(getPerson().getSalutation()) || Strings.isFilled(getPerson().getTitle()))) {
+        if (hasName() && (getPerson().getSalutation().isFilled() || Strings.isFilled(getPerson().getTitle()))) {
             return getPerson().getAddressableName();
         }
         return toString();
@@ -269,8 +285,10 @@ public class UserAccountData extends Composite implements MessageProvider {
     @Override
     public void addMessages(Consumer<Message> messageConsumer) {
         if (Strings.isFilled(getLogin().getGeneratedPassword())) {
-            messageConsumer.accept(Message.warn(NLS.get("UserAccount.warnAboutGeneratedPassword"))
-                                          .withAction("/profile/password", NLS.get("UserAccount.changePassword")));
+            messageConsumer.accept(Message.warn()
+                                          .withTextAndLink(NLS.get("UserAccount.warnAboutGeneratedPassword"),
+                                                           NLS.get("UserAccount.changePassword"),
+                                                           "/profile/password"));
         }
 
         warnAboutForcedLogout(messageConsumer);
@@ -279,12 +297,12 @@ public class UserAccountData extends Composite implements MessageProvider {
     private void warnAboutForcedLogout(Consumer<Message> messageConsumer) {
         if (isExternalLoginRequired() && isNearInterval(getLogin().getLastExternalLogin(),
                                                         getTenant().getTenantData().getExternalLoginIntervalDays())) {
-            messageConsumer.accept(Message.info(NLS.get("UserAccount.forcedExternalLoginNear")));
+            messageConsumer.accept(Message.info().withTextMessage(NLS.get("UserAccount.forcedExternalLoginNear")));
             return;
         }
 
         if (isNearInterval(getLogin().getLastLogin(), getTenant().getTenantData().getLoginIntervalDays())) {
-            messageConsumer.accept(Message.info(NLS.get("UserAccount.forcedLogoutNear")));
+            messageConsumer.accept(Message.info().withTextMessage(NLS.get("UserAccount.forcedLogoutNear")));
         }
     }
 
@@ -347,11 +365,11 @@ public class UserAccountData extends Composite implements MessageProvider {
         this.externalLoginRequired = externalLoginRequired;
     }
 
-    public String getLang() {
+    public LookupValue getLang() {
         return lang;
     }
 
-    public void setLang(String lang) {
-        this.lang = lang;
+    public StringList getSubScopes() {
+        return subScopes;
     }
 }

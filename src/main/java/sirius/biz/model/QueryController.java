@@ -17,6 +17,7 @@ import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Property;
 import sirius.db.mixing.query.Query;
 import sirius.db.mixing.query.constraints.Constraint;
+import sirius.db.mongo.MongoQuery;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.Watch;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -92,7 +94,7 @@ public class QueryController extends BizController {
 
             // Log effective query if desired...
             if (Boolean.TRUE.equals(constraintAndDebugFlag.getSecond())) {
-                UserContext.message(Message.info("Effective Query: " + baseQuery.toString()));
+                UserContext.message(Message.info().withTextMessage("Effective Query: " + baseQuery));
             }
 
             // Elastic entities might be routed - we ignore this here and access all shards anyway...
@@ -100,18 +102,17 @@ public class QueryController extends BizController {
                 ((ElasticQuery<?>) baseQuery).deliberatelyUnrouted();
             }
 
-            // We need to count before we apply a limit...
-            long numberOfEntites = baseQuery.count();
+            long numberOfEntities = getTotalCount(limit, baseQuery);
 
             // Actually perform the query...
             List<BaseEntity<?>> result = new ArrayList<>();
-            if (numberOfEntites > 0) {
+            if (numberOfEntities > 0) {
                 Watch watch = Watch.start();
                 baseQuery.limit(limit).iterateAll(result::add);
 
-                UserContext.message(Message.info(Strings.apply("Showing %s of %s results - Query took %sms",
+                UserContext.message(Message.info().withTextMessage(Strings.apply("Showing %s of %s results - Query took %sms",
                                                                result.size(),
-                                                               numberOfEntites,
+                                                               numberOfEntities,
                                                                watch.elapsedMillis())));
             }
 
@@ -119,12 +120,26 @@ public class QueryController extends BizController {
         } catch (IllegalArgumentException e) {
             // The QueryCompiler generates an IllegalArgumentException for invalid fields and tokens.
             // In our case we don't want to write them into the syslog but just output the message...
-            UserContext.message(Message.error(e.getMessage()));
+            UserContext.message(Message.error().withTextMessage(e.getMessage()));
         } catch (Exception e) {
             handle(e);
         }
 
         return Collections.emptyList();
+    }
+
+    private <C extends Constraint, Q extends Query<Q, ?, C>> long getTotalCount(int limit, Q baseQuery) {
+        if (baseQuery instanceof MongoQuery) {
+            Optional<Long> count = ((MongoQuery<?>) baseQuery).count(false, 5000);
+
+            if (count.isPresent()) {
+                return count.get();
+            }
+            UserContext.message(Message.warn().withTextMessage(Strings.apply("Fetching total result count timed out.")));
+            return limit;
+        }
+
+        return baseQuery.count();
     }
 
     @Nonnull
@@ -156,21 +171,22 @@ public class QueryController extends BizController {
     public void entityTypeAutocomplete(WebContext webContext) {
         AutocompleteHelper.handle(webContext, ((query, result) -> {
             String effectiveQuery = query.toLowerCase();
-            fetchRelevantDescriptors().map(this::createCompletion)
-                                      .filter(completion -> filterMatch(effectiveQuery, completion))
+            fetchRelevantDescriptors().filter(descriptor -> filterMatch(effectiveQuery, descriptor))
+                                      .map(this::createCompletion)
+
                                       .forEach(result);
         }));
     }
 
-    private AutocompleteHelper.Completion createCompletion(EntityDescriptor descriptor) {
-        return new AutocompleteHelper.Completion(descriptor.getName(),
-                                                 descriptor.getType().getSimpleName(),
-                                                 descriptor.getType().getSimpleName());
+    private boolean filterMatch(String effectiveQuery, EntityDescriptor descriptor) {
+        return descriptor.getName().toLowerCase().contains(effectiveQuery) || descriptor.getType()
+                                                                                        .getSimpleName()
+                                                                                        .toLowerCase()
+                                                                                        .contains(effectiveQuery);
     }
 
-    private boolean filterMatch(String effectiveQuery, AutocompleteHelper.Completion completion) {
-        return completion.getLabel().toLowerCase().contains(effectiveQuery) || completion.getDescription()
-                                                                                         .toLowerCase()
-                                                                                         .contains(effectiveQuery);
+    private AutocompleteHelper.Completion createCompletion(EntityDescriptor descriptor) {
+        return AutocompleteHelper.suggest(descriptor.getName()).withFieldLabel(descriptor.getType().getSimpleName());
     }
+
 }

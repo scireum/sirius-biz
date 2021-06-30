@@ -1,4 +1,4 @@
-<i:arg name="param" type="sirius.biz.jobs.params.SelectParameter"/>
+<i:arg name="param" type="sirius.biz.jobs.params.Parameter"/>
 <i:arg name="context" type="Map"/>
 
 <w:singleSelect span="12"
@@ -8,7 +8,7 @@
                 help="@param.getDescription()"
                 optional="@!param.isRequired()"
                 required="@param.isRequired()">
-    <i:for var="entry" type="Tuple" items="@param.getValues()">
+    <i:for var="entry" type="Tuple" items="@param.as(sirius.biz.jobs.params.SelectParameter.class).getValues()">
         <option value="@entry.getFirst()" @selected="entry.getFirst() == context.get(param.getName())">@entry.getSecond()</option>
     </i:for>
 </w:singleSelect>

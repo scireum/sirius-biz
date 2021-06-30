@@ -9,7 +9,6 @@
 package sirius.biz.analytics.checks;
 
 import sirius.biz.analytics.scheduler.AnalyticsBatchExecutor;
-import sirius.biz.analytics.scheduler.AnalyticsScheduler;
 import sirius.biz.analytics.scheduler.AnalyticsSchedulerExecutor;
 import sirius.biz.analytics.scheduler.MongoAnalyticalTaskScheduler;
 import sirius.biz.analytics.scheduler.ScheduleInterval;

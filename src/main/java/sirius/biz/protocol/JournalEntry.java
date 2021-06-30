@@ -12,6 +12,8 @@ import sirius.biz.elastic.SearchContent;
 import sirius.biz.elastic.SearchableEntity;
 import sirius.db.es.annotations.ESOption;
 import sirius.db.es.annotations.IndexMode;
+import sirius.db.mixing.BaseEntity;
+import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.di.std.Framework;
@@ -53,25 +55,30 @@ public class JournalEntry extends SearchableEntity {
     private String subsystem;
 
     /**
-     * Contains the type name of the entity which was changed.
+     * Contains the type name of the entity which owns this change record.
      */
     public static final Mapping TARGET_TYPE = Mapping.named("targetType");
     @SearchContent
     private String targetType;
 
     /**
-     * Contains the ID of entity which was changed.
+     * Contains the ID of entity which owns this change record.
      */
     public static final Mapping TARGET_ID = Mapping.named("targetId");
     @SearchContent
     private String targetId;
 
     /**
-     * Contains the {@code toString()} of the entity which was changed.
+     * Contains the identifier of the changed entity.
+     * <p>
+     * The identifier is composed of {@link EntityDescriptor#getType()}-{@link BaseEntity#getIdAsString()}
+     * For entities using {@link JournalData}, it is equal to the {@link #TARGET_TYPE}-{@link #TARGET_ID}
+     * For entities using {@link DelegateJournalData}, it will contain the type and if of the entity which
+     * caused the journal entry, since the target fields contains the parent entity owning this record.
      */
-    public static final Mapping TARGET_NAME = Mapping.named("targetName");
+    public static final Mapping CONTENT_IDENTIFIER = Mapping.named("contentIdentifier");
     @SearchContent
-    private String targetName;
+    private String contentIdentifier;
 
     /**
      * Contains all changed fields as <tt>name: value</tt>.
@@ -131,12 +138,12 @@ public class JournalEntry extends SearchableEntity {
         this.targetId = targetId;
     }
 
-    public String getTargetName() {
-        return targetName;
+    public String getContentIdentifier() {
+        return contentIdentifier;
     }
 
-    public void setTargetName(String targetName) {
-        this.targetName = targetName;
+    public void setContentIdentifier(String contentIdentifier) {
+        this.contentIdentifier = contentIdentifier;
     }
 
     public String getChanges() {

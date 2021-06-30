@@ -8,6 +8,7 @@
 
 package sirius.biz.codelists.jdbc;
 
+import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListEntryData;
 import sirius.biz.importer.ImportHandler;
 import sirius.biz.importer.ImportHandlerFactory;
@@ -19,6 +20,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 

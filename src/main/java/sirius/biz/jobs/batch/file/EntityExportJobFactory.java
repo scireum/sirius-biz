@@ -14,7 +14,6 @@ import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.jobs.infos.JobInfoCollector;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
-import sirius.biz.storage.layer3.FileParameter;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.query.Query;
 import sirius.kernel.commons.Explain;
@@ -34,30 +33,10 @@ import java.util.function.Consumer;
 public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends Query<Q, E, ?>>
         extends LineBasedExportJobFactory {
 
-    protected final FileParameter templateFileParameter;
-
-    protected EntityExportJobFactory() {
-        this.templateFileParameter = createTemplateFileParameter();
-    }
-
-    /**
-     * Creates the parameter which determines the template file which determines the desired export format (if present).
-     * <p>
-     * This is provided as a helper method so that other / similar jobs can re-use it.
-     * We do not re-use the same parameter, as a parameter isn't immutable, so a global constant could
-     * be easily set into an inconsistent state.
-     *
-     * @return the completely initialized parameter.
-     */
-    public static FileParameter createTemplateFileParameter() {
-        return new FileParameter("templateFile", "$EntityExportJobFactory.templateFile").withDescription(
-                "$EntityExportJobFactory.templateFile.help").withBasePath("/work");
-    }
-
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         super.collectParameters(parameterCollector);
-        parameterCollector.accept(templateFileParameter);
+        parameterCollector.accept(EntityExportJob.TEMPLATE_FILE_PARAMETER);
     }
 
     @SuppressWarnings("squid:S2095")
@@ -68,10 +47,7 @@ public abstract class EntityExportJobFactory<E extends BaseEntity<?>, Q extends 
         ImportContext paramterContext = new ImportContext();
         transferParameters(paramterContext, process);
 
-        return new EntityExportJob<E, Q>(templateFileParameter,
-                                         destinationParameter,
-                                         fileTypeParameter,
-                                         getExportType(),
+        return new EntityExportJob<E, Q>(getExportType(),
                                          getDictionary(),
                                          getDefaultMapping(),
                                          process,

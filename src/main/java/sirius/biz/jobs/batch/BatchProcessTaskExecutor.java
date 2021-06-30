@@ -18,6 +18,8 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
+
 /**
  * Provides a base implementation for an executor which receives a scheduled task, created by a
  * {@link BatchProcessJobFactory}, resolves the attached process and invokes
@@ -26,6 +28,7 @@ import sirius.kernel.di.std.Part;
 public abstract class BatchProcessTaskExecutor implements DistributedTaskExecutor {
 
     @Part
+    @Nullable
     private Processes processes;
 
     @Part

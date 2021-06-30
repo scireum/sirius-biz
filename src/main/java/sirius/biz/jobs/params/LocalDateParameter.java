@@ -18,7 +18,7 @@ import java.util.function.Supplier;
 /**
  * Provides a parameter which accepts local dates.
  */
-public class LocalDateParameter extends Parameter<LocalDate, LocalDateParameter> {
+public class LocalDateParameter extends ParameterBuilder<LocalDate, LocalDateParameter> {
 
     private Supplier<LocalDate> defaultValueSupplier;
 

@@ -35,7 +35,7 @@ import java.util.Optional;
  * @param <P> recursive type reference to support fluent method calls
  */
 public abstract class EntityParameter<V extends BaseEntity<?>, P extends EntityParameter<V, P>>
-        extends Parameter<V, P> {
+        extends ParameterBuilder<V, P> {
 
     @Part
     protected static Mixing mixing;

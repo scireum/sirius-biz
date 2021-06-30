@@ -78,24 +78,12 @@ public class ProcessController extends BizController {
     @Routed("/ps")
     @LoginRequired
     public void processes(WebContext ctx) {
-        ElasticQuery<Process> query = elastic.select(Process.class).orderDesc(Process.STARTED);
-
-        UserInfo user = UserContext.getCurrentUser();
-        if (!user.hasPermission(PERMISSION_MANAGE_ALL_PROCESSES)) {
-            query.eq(Process.TENANT_ID, user.getTenantId());
-        }
-
-        if (!user.hasPermission(PERMISSION_MANAGE_PROCESSES)) {
-            query.eq(Process.USER_ID, user.getUserId());
-        }
-
-        query.where(Elastic.FILTERS.oneInField(Process.REQUIRED_PERMISSION, new ArrayList<>(user.getPermissions()))
-                                   .orEmpty()
-                                   .build());
+        ElasticQuery<Process> query = processes.queryProcessesForCurrentUser();
 
         ElasticPageHelper<Process> pageHelper = ElasticPageHelper.withQuery(query);
         pageHelper.withContext(ctx);
         pageHelper.addTermAggregation(Process.STATE, ProcessState.class);
+        pageHelper.addBooleanAggregation(Process.ERRORNEOUS);
         pageHelper.addParameterFacet("reference",
                                      "reference-label",
                                      Process.REFERENCES,
@@ -104,13 +92,13 @@ public class ProcessController extends BizController {
         pageHelper.addTermAggregation(Process.PROCESS_TYPE, value -> NLS.getIfExists(value, null).orElse(null));
         pageHelper.addTimeAggregation(Process.STARTED,
                                       false,
-                                      DateRange.lastFiveMinutes(),
-                                      DateRange.lastFiveteenMinutes(),
-                                      DateRange.lastTwoHours(),
-                                      DateRange.today(),
-                                      DateRange.yesterday(),
-                                      DateRange.thisWeek(),
-                                      DateRange.lastWeek());
+                                      DateRange.LAST_FIVE_MINUTES,
+                                      DateRange.LAST_FIFTEEN_MINUTES,
+                                      DateRange.LAST_TWO_HOURS,
+                                      DateRange.TODAY,
+                                      DateRange.YESTERDAY,
+                                      DateRange.THIS_WEEK,
+                                      DateRange.LAST_WEEK);
         pageHelper.withSearchFields(QueryField.contains(ProcessLog.SEARCH_FIELD));
 
         ctx.respondWith().template("/templates/biz/process/processes.html.pasta", pageHelper.asPage());
@@ -170,9 +158,9 @@ public class ProcessController extends BizController {
         }
         ph.addTimeAggregation(ProcessLog.TIMESTAMP,
                               false,
-                              DateRange.lastFiveMinutes(),
-                              DateRange.lastFiveteenMinutes(),
-                              DateRange.lastTwoHours());
+                              DateRange.LAST_FIVE_MINUTES,
+                              DateRange.LAST_FIFTEEN_MINUTES,
+                              DateRange.LAST_TWO_HOURS);
         ph.addTermAggregation(ProcessLog.NODE);
         ph.addSortFacet(Tuple.create("$ProcessController.sortDesc", qry -> qry.orderDesc(ProcessLog.SORT_KEY)),
                         Tuple.create("$ProcessController.sortAsc", qry -> qry.orderAsc(ProcessLog.SORT_KEY)));
@@ -283,7 +271,7 @@ public class ProcessController extends BizController {
     }
 
     private void updateStateAndReturn(WebContext ctx, ProcessLog log, ProcessLogState state, String returnUrl) {
-        UserContext.message(Message.info(NLS.get("ProcessController.logUpdated")));
+        UserContext.message(Message.info().withTextMessage(NLS.get("ProcessController.logUpdated")));
         processes.updateProcessLogStateAndReturn(log, state, ctx, returnUrl);
     }
 
@@ -321,9 +309,10 @@ public class ProcessController extends BizController {
                 }
             }
 
-            UserContext.message(Message.error(NLS.fmtr("ProcessController.unknownOutput")
-                                                 .set("output", name)
-                                                 .format()));
+            UserContext.message(Message.error()
+                                       .withTextMessage(NLS.fmtr("ProcessController.unknownOutput")
+                                                           .set("output", name)
+                                                           .format()));
         } catch (Exception e) {
             UserContext.handle(e);
         }
@@ -362,7 +351,7 @@ public class ProcessController extends BizController {
                                                UserContext.getCurrentUser().getTenantId(),
                                                exportSpec);
 
-        UserContext.message(Message.info(NLS.get("ProcessController.exportStarted")));
+        UserContext.message(Message.info().withTextMessage(NLS.get("ProcessController.exportStarted")));
         ctx.respondWith().redirectToGet("/ps/" + process.getId());
     }
 

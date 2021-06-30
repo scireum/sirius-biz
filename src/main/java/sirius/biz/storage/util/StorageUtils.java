@@ -18,6 +18,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.Log;
 import sirius.kernel.settings.Extension;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,6 +31,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Collection;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 /**
  * Provides various helpers for the storage framework.
@@ -48,6 +50,18 @@ public class StorageUtils {
      * Represents the central logger for the whole storage framework.
      */
     public static final Log LOG = Log.get("storage");
+
+    /**
+     * Pattern for cleaning up consecutive slashes and removing backslashes.
+     */
+    public static final Pattern SANITIZE_SLASHES = Pattern.compile("[/\\\\]+");
+
+    /**
+     * Regular Expressions that matches any character that is not allowed in a file.
+     * <p>
+     * These chars are prohibited as they might be reserved by the file system as indicated here: https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words
+     */
+    public static final Pattern SANITIZE_ILLEGAL_FILE_CHARS = Pattern.compile("[?%*:|\"<>]");
 
     /**
      * Lists the layers which are placed in the config as <tt>storage.layer1.spaces</tt> etc. Each of
@@ -150,27 +164,49 @@ public class StorageUtils {
     }
 
     /**
-     * Normalizes the given path.
+     * Sanitizes the given path.
+     * <p>
+     * This will replace backslashes with forward slashes, and remove successive slashes. Trailing slashes are removed
+     * from directory paths, and absolute paths are made relative by removing leading slashes. Also replaces chars that
+     * may be illegal in file systems with {@code _}.
      *
      * @param path the path to cleanup
-     * @return the normalized path without \ or // or " "
+     * @return the sanitized path without illegal characters
      */
-    @Nullable
-    public static String normalizePath(@Nullable String path) {
+    @Nonnull
+    public String sanitizePath(@Nullable String path) {
+        path = Strings.trim(path);
+
         if (Strings.isEmpty(path)) {
-            return null;
+            return "";
         }
 
-        String normalizedPath = path.trim().replace(" ", "").replace("\\", "/").replaceAll("/+", "/").toLowerCase();
-        if (normalizedPath.length() == 0) {
-            return null;
+        path = replaceIllegalFileChars(path, false);
+
+        if (path.startsWith("/")) {
+            path = path.substring(1);
         }
 
-        if (!normalizedPath.startsWith("/")) {
-            normalizedPath = "/" + normalizedPath;
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
         }
 
-        return normalizedPath;
+        return path;
+    }
+
+    /**
+     * Can be used to replace chars in a path or file name that might be reserved by the file system.
+     * <p>
+     * Also cleans up multiple slashes and replaces backslashes. These can either be kept as a single forward slash
+     * or also be replaced by {@code _}, depending on the replaceSlashes parameter.
+     *
+     * @param path           the path or filename to clean up
+     * @param replaceSlashes if slashes should be replaced or only cleaned up
+     * @return the path or file name without illegal chars
+     */
+    public String replaceIllegalFileChars(String path, boolean replaceSlashes) {
+        path = SANITIZE_SLASHES.matcher(path).replaceAll(replaceSlashes ? "_" : "/");
+        return SANITIZE_ILLEGAL_FILE_CHARS.matcher(path).replaceAll("_");
     }
 
     /**

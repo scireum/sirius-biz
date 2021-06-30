@@ -9,14 +9,18 @@
 package sirius.biz.tenants.jdbc;
 
 import sirius.biz.analytics.flags.jdbc.SQLPerformanceData;
+import sirius.biz.codelists.LookupValue;
 import sirius.biz.protocol.JournalData;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.Index;
+import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.ValueHolder;
 import sirius.kernel.di.std.Framework;
 import sirius.web.controller.Message;
 
@@ -39,10 +43,13 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
     /**
      * Used to record changes on fields of the user.
      */
-    public static final Mapping JOURNAL = Mapping.named("journal");
     private final JournalData journal = new JournalData(this);
 
     private final SQLPerformanceData performanceData = new SQLPerformanceData(this);
+
+    @Transient
+    private ValueHolder<String> userIcon;
+
     @Override
     public <A> Optional<A> tryAs(Class<A> adapterType) {
         if (getUserAccountData().is(adapterType)) {
@@ -95,5 +102,18 @@ public class SQLUserAccount extends SQLTenantAware implements UserAccount<Long, 
     @Override
     public SQLPerformanceData getPerformanceData() {
         return performanceData;
+    }
+
+    @Override
+    public Optional<String> getUserIcon() {
+        if (userIcon == null) {
+            LookupValue salutation = getUserAccountData().getPerson().getSalutation();
+            userIcon = new ValueHolder<>(salutation.getTable()
+                                                   .fetchField(salutation.getValue(), "icon")
+                                                   .filter(Strings::isFilled)
+                                                   .orElse(null));
+        }
+
+        return userIcon.asOptional();
     }
 }

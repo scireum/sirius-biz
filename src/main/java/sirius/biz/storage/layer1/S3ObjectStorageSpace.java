@@ -15,6 +15,8 @@ import sirius.biz.storage.s3.BucketName;
 import sirius.biz.storage.s3.ObjectStore;
 import sirius.biz.storage.s3.ObjectStores;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.async.Promise;
+import sirius.kernel.async.Tasks;
 import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Streams;
 import sirius.kernel.di.std.Part;
@@ -29,6 +31,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.ZoneId;
 import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 
@@ -42,10 +45,20 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
      */
     public static final String CONFIG_KEY_LAYER1_STORE = "store";
 
+    /**
+     * Contains the bucket name within the S3 store to use. By default the name of the space will
+     * be used.
+     */
+    private static final String CONFIG_KEY_LAYER1_BUCKET_NAME = "bucketName";
+
     @Part
     private static ObjectStores objectStores;
 
-    private ObjectStore store;
+    @Part
+    private static Tasks tasks;
+
+    private final String bucketName;
+    private final ObjectStore store;
 
     /**
      * Creates a new instance based on the given config.
@@ -56,6 +69,7 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     protected S3ObjectStorageSpace(String name, Extension extension) throws Exception {
         super(name, extension);
         this.store = resolveObjectStore(extension);
+        this.bucketName = extension.get(CONFIG_KEY_LAYER1_BUCKET_NAME).replaceEmptyWithNull().asString(name);
     }
 
     private ObjectStore resolveObjectStore(Extension extension) {
@@ -73,7 +87,7 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     }
 
     private BucketName bucketName() {
-        return store.getBucketName(name);
+        return store.getBucketName(bucketName);
     }
 
     @Override
@@ -140,6 +154,16 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
         }
     }
 
+    @Override
+    protected Promise<FileHandle> getDataAsync(String objectId) {
+        try {
+            return store.downloadAsync(bucketName(), objectId);
+        } catch (FileNotFoundException ex) {
+            Exceptions.ignore(ex);
+            return new Promise<>(null);
+        }
+    }
+
     @Nullable
     @Override
     protected FileHandle getData(String objectKey, ByteBlockTransformer transformer) throws IOException {
@@ -164,6 +188,30 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
         }
     }
 
+    @Override
+    protected Promise<FileHandle> getDataAsync(String objectId, ByteBlockTransformer transformer) {
+        Promise<FileHandle> result = new Promise<>();
+
+        // We cannot use the AWS TransferManager for an async download here, as we have to apply our transfomer.
+        // Therefore we run the whole task in a separate thread...
+        tasks.executor(ObjectStore.EXECUTOR_S3).fork(() -> {
+            try {
+                result.success(getData(objectId, transformer));
+            } catch (Exception ex) {
+                result.fail(Exceptions.handle()
+                                      .error(ex)
+                                      .to(StorageUtils.LOG)
+                                      .withSystemErrorMessage(
+                                              "Layer 1/S3: An error occurred when downloading %s (%s): %s (%s)",
+                                              objectId,
+                                              name)
+                                      .handle());
+            }
+        });
+
+        return result;
+    }
+
     @Nullable
     @Override
     protected InputStream getAsStream(String objectKey) throws IOException {
@@ -179,9 +227,14 @@ public class S3ObjectStorageSpace extends ObjectStorageSpace {
     }
 
     @Override
-    public void iterateObjects(Predicate<String> physicalKeyHandler) throws IOException {
+    public void iterateObjects(Predicate<ObjectMetadata> objectHandler) throws IOException {
         store.listObjects(bucketName(), null, s3Object -> {
-            return physicalKeyHandler.test(s3Object.getKey());
+            return objectHandler.test(new ObjectMetadata(s3Object.getKey(),
+                                                         s3Object.getLastModified()
+                                                                 .toInstant()
+                                                                 .atZone(ZoneId.systemDefault())
+                                                                 .toLocalDateTime(),
+                                                         s3Object.getSize()));
         });
     }
 }

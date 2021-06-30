@@ -10,7 +10,6 @@ package sirius.biz.storage.layer3.downlink.ssh;
 
 import org.apache.sshd.common.file.FileSystemFactory;
 import org.apache.sshd.common.io.IoSession;
-import org.apache.sshd.common.session.Session;
 import org.apache.sshd.common.session.SessionContext;
 import org.apache.sshd.server.ServerFactoryManager;
 import org.apache.sshd.server.SshServer;
@@ -18,6 +17,7 @@ import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
 import org.apache.sshd.server.session.ServerSession;
 import org.apache.sshd.server.session.ServerSessionImpl;
 import org.apache.sshd.server.session.SessionFactory;
+import sirius.biz.storage.layer3.VirtualFileSystem;
 import sirius.biz.storage.layer3.downlink.ssh.scp.BridgeScpCommandFactory;
 import sirius.biz.storage.layer3.downlink.ssh.sftp.BridgeSftpSubsystemFactory;
 import sirius.biz.storage.util.StorageUtils;
@@ -98,7 +98,7 @@ public class SSHServer implements Startable, Stoppable, Killable {
             installSFTPSubsystem();
 
             server.start();
-            StorageUtils.LOG.WARN("Layer 3/SSH: Successfully started the SSH server on port %s", port);
+            StorageUtils.LOG.INFO("Layer 3/SSH: Successfully started the SSH server on port %s", port);
         } catch (IOException e) {
             StorageUtils.LOG.WARN("Layer 3/SSH: Failed to start the SSH server: %s", e.getMessage());
         }
@@ -137,7 +137,6 @@ public class SSHServer implements Startable, Stoppable, Killable {
             username = scopeAndUsername.getSecond();
         }
 
-
         boolean locked =
                 UserContext.getCurrentScope().tryAs(MaintenanceInfo.class).map(MaintenanceInfo::isLocked).orElse(false);
         if (locked) {
@@ -145,17 +144,27 @@ public class SSHServer implements Startable, Stoppable, Killable {
         }
 
         if (StorageUtils.LOG.isFINE()) {
-            StorageUtils.LOG.FINE("Layer 3/FTP: Trying to authenticate user: " + username);
+            StorageUtils.LOG.FINE("Layer 3/SSH: Trying to authenticate user: " + username);
         }
 
         UserInfo authUser = UserContext.get().getUserManager().findUserByCredentials(null, username, password);
+
+        if (authUser == null) {
+            return false;
+        }
+
+        if (!authUser.isSubScopeEnabled(VirtualFileSystem.SUB_SCOPE_VFS)) {
+            StorageUtils.LOG.FINE("Layer 3/SSH: The required sub scope is not enabled for: " + username);
+            return false;
+        }
+
         ((BridgeSession) session).attachUser(authUser);
 
         if (!ScopeInfo.DEFAULT_SCOPE.equals(UserContext.getCurrentScope())) {
             ((BridgeSession) session).attachScope(UserContext.getCurrentScope().getScopeId());
         }
 
-        return authUser != null;
+        return true;
     }
 
     protected void installFileSystemFactory() {

@@ -8,8 +8,8 @@
 
 package sirius.biz.tenants.jdbc;
 
-import sirius.biz.analytics.flags.PerformanceData;
 import sirius.biz.analytics.flags.PerformanceDataImportExtender;
+import sirius.biz.importer.ImportContext;
 import sirius.biz.importer.ImportHandler;
 import sirius.biz.importer.ImportHandlerFactory;
 import sirius.biz.importer.ImporterContext;
@@ -17,15 +17,23 @@ import sirius.biz.importer.SQLEntityImportHandler;
 import sirius.biz.model.LoginData;
 import sirius.biz.model.PermissionData;
 import sirius.biz.model.PersonData;
+import sirius.biz.tenants.Tenant;
+import sirius.biz.tenants.TenantData;
 import sirius.biz.tenants.TenantUserManager;
+import sirius.biz.tenants.UserAccount;
 import sirius.biz.tenants.UserAccountData;
 import sirius.db.jdbc.batch.FindQuery;
 import sirius.db.mixing.Mapping;
+import sirius.db.mixing.Property;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
+import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
+import sirius.kernel.health.Exceptions;
 import sirius.web.security.UserContext;
 
+import javax.annotation.Nullable;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -34,6 +42,10 @@ import java.util.function.Supplier;
  * Provides an import handler for {@link SQLUserAccount user accounts}.
  */
 public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserAccount> {
+
+    @Part
+    @Nullable
+    private static SQLTenants tenants;
 
     /**
      * Provides the factory to instantiate this import handler.
@@ -112,10 +124,34 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
             load(data, account, SQLUserAccount.TENANT);
         }
 
+        if (account.getTenant().isEmpty()) {
+            account.getTenant().setValue(tenants.getRequiredTenant());
+        }
+
         load(data, account, SQLUserAccount.USER_ACCOUNT_DATA.inner(UserAccountData.EMAIL));
         account.getUserAccountData().transferEmailToLoginIfEmpty();
 
         return account;
+    }
+
+    @Override
+    protected boolean parseComplexProperty(SQLUserAccount entity, Property property, Value value, Context data) {
+        if (UserAccount.TENANT.getName().equals(property.getName())) {
+            ImportContext lookupContext = ImportContext.create();
+            lookupContext.set(Tenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER), value.get());
+
+            ImportHandler<SQLTenant> importHandler = context.findHandler(SQLTenant.class);
+            entity.getTenant()
+                  .setValue(importHandler.tryFind(lookupContext)
+                                         .orElseThrow(() -> Exceptions.createHandled()
+                                                                      .withSystemErrorMessage(
+                                                                              "Cannot find a tenant with account number: '%s'",
+                                                                              value.getString())
+                                                                      .handle()));
+            return true;
+        }
+
+        return super.parseComplexProperty(entity, property, value, data);
     }
 
     @Override
@@ -128,5 +164,4 @@ public class SQLUserAccountImportHandler extends SQLEntityImportHandler<SQLUserA
 
         return result;
     }
-
 }

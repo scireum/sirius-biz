@@ -64,6 +64,16 @@ public class SQLTenantImportHandler extends SQLEntityImportHandler<SQLTenant> {
                              () -> context.getBatchContext()
                                           .findQuery(SQLTenant.class,
                                                      SQLTenant.TENANT_DATA.inner(TenantData.ACCOUNT_NUMBER)));
+        queryConsumer.accept(tenant -> Strings.isFilled(tenant.getTenantData().getName())
+                                       && Strings.isFilled(tenant.getTenantData().getAddress().getStreet())
+                                       && Strings.isFilled(tenant.getTenantData().getAddress().getZip()),
+                             () -> context.getBatchContext()
+                                          .findQuery(SQLTenant.class,
+                                                     SQLTenant.TENANT_DATA.inner(TenantData.NAME),
+                                                     SQLTenant.TENANT_DATA.inner(TenantData.ADDRESS)
+                                                                          .inner(AddressData.STREET),
+                                                     SQLTenant.TENANT_DATA.inner(TenantData.ADDRESS)
+                                                                          .inner(AddressData.ZIP)));
     }
 
     @Override

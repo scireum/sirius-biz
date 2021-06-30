@@ -19,10 +19,12 @@ import sirius.biz.storage.layer1.transformer.CompressionLevel;
 import sirius.biz.storage.layer1.transformer.DeflateTransformer;
 import sirius.biz.storage.layer1.transformer.InflateTransformer;
 import sirius.biz.storage.util.StorageUtils;
+import sirius.kernel.async.Promise;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Counter;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 import sirius.web.http.Response;
@@ -32,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 
@@ -52,10 +55,19 @@ public abstract class ObjectStorageSpace {
     private ObjectStorageSpace replicationSpace;
 
     @Part
+    @Nullable
     private static ReplicationManager replicationManager;
 
     @Part
     private static GlobalContext globalContext;
+
+    private static final Counter UPLOADS = new Counter();
+    private static final Counter DOWNLOADS = new Counter();
+    private static final Counter STREAMS = new Counter();
+    private static final Counter DELIVERIES = new Counter();
+    private static final Counter FALLBACKS = new Counter();
+    private static final Counter DELIVERY_CLIENT_FAILURES = new Counter();
+    private static final Counter DELIVERY_SERVER_FAILURES = new Counter();
 
     /**
      * Creates a new instance with the given name and configuration.
@@ -186,12 +198,14 @@ public abstract class ObjectStorageSpace {
      */
     public void upload(String objectId, File file) {
         try {
+            UPLOADS.inc();
             if (hasTransformer()) {
                 storePhysicalObject(objectId, file, createWriteTransformer());
+                replicationManager.notifyAboutUpdate(this, objectId, 0);
             } else {
                 storePhysicalObject(objectId, file);
+                replicationManager.notifyAboutUpdate(this, objectId, file.length());
             }
-            replicationManager.notifyAboutUpdate(this, objectId);
         } catch (IOException e) {
             throw Exceptions.handle()
                             .error(e)
@@ -229,16 +243,18 @@ public abstract class ObjectStorageSpace {
      *
      * @param objectId      the physical storage key (a key is always only used once)
      * @param inputStream   the data to store
-     * @param contentLength the byte length of the data
+     * @param contentLength the byte length of the data or 0 to indicate that the length is unknown
      */
     public void upload(String objectId, InputStream inputStream, long contentLength) {
         try {
+            UPLOADS.inc();
             if (hasTransformer()) {
                 storePhysicalObject(objectId, inputStream, createWriteTransformer());
+                replicationManager.notifyAboutUpdate(this, objectId, 0);
             } else {
                 storePhysicalObject(objectId, inputStream, contentLength);
+                replicationManager.notifyAboutUpdate(this, objectId, contentLength);
             }
-            replicationManager.notifyAboutUpdate(this, objectId);
         } catch (IOException e) {
             throw Exceptions.handle()
                             .error(e)
@@ -255,7 +271,7 @@ public abstract class ObjectStorageSpace {
      *
      * @param objectKey the physical storage key (a key is always only used once)
      * @param data      the data to store
-     * @param size      the byte length of the data
+     * @param size      the byte length of the data or 0 to indicate that the length is unknown
      * @throws IOException in case of an IO error
      */
     protected abstract void storePhysicalObject(String objectKey, InputStream data, long size) throws IOException;
@@ -282,6 +298,7 @@ public abstract class ObjectStorageSpace {
             if (Strings.isEmpty(objectId)) {
                 return Optional.empty();
             }
+            DOWNLOADS.inc();
             if (hasTransformer()) {
                 return Optional.ofNullable(getData(objectId, createReadTransformer()));
             } else {
@@ -299,6 +316,47 @@ public abstract class ObjectStorageSpace {
     }
 
     /**
+     * Tries to perform the download asynchronous and yields an appropriate promise.
+     *
+     * @param objectId the object to download
+     * @return a promise which is fulfilled with the downloaded data. Note that an empty optional is used to signal
+     * that the object with the given ID doesnt exist
+     */
+    public Promise<Optional<FileHandle>> downloadAsync(String objectId) {
+        Promise<Optional<FileHandle>> promise = new Promise<>();
+        if (Strings.isEmpty(objectId)) {
+            promise.success(Optional.empty());
+        } else if (hasTransformer()) {
+            getDataAsync(objectId, createReadTransformer()).mapChain(promise, Optional::ofNullable);
+        } else {
+            getDataAsync(objectId).mapChain(promise, Optional::ofNullable);
+        }
+
+        return promise;
+    }
+
+    /**
+     * Creates a new {@link DownloadManager} for this storage space.
+     *
+     * @param completionConsumer the handler which is supplied with all downloaded objects
+     * @param failureHandler     the handler which is  invoked if an error occurs
+     * @param <P>                the payload type which is carried along so that the callbacks have some context
+     * @return a new download manager for this space
+     */
+    public <P> DownloadManager<P> downloadManager(BiConsumer<P, Optional<FileHandle>> completionConsumer,
+                                                  BiConsumer<P, Exception> failureHandler) {
+        return new DownloadManager<>(this, completionConsumer, (payload, innerError) -> {
+            failureHandler.accept(payload,
+                                  Exceptions.handle()
+                                            .error(innerError)
+                                            .to(StorageUtils.LOG)
+                                            .withSystemErrorMessage(
+                                                    "Layer 1: Failed to perform a download using the DownloadManager: %s (%s)")
+                                            .handle());
+        });
+    }
+
+    /**
      * Downloads an provides the contents of the requested object.
      *
      * @param objectKey the id of the object
@@ -307,6 +365,15 @@ public abstract class ObjectStorageSpace {
      */
     @Nullable
     protected abstract FileHandle getData(String objectKey) throws IOException;
+
+    /**
+     * Downloads and provides the contents of the requested object asynchronous.
+     *
+     * @param objectKey the id of the object
+     * @return a a promise which is fulfilled with the handle for the given object once it is downloaded. If the object
+     * doesn't exist, the promise will be fulfilled with <tt>null</tt>.
+     */
+    protected abstract Promise<FileHandle> getDataAsync(String objectKey);
 
     /**
      * Downloads an provides the contents of the requested object.
@@ -320,6 +387,16 @@ public abstract class ObjectStorageSpace {
     protected abstract FileHandle getData(String objectKey, ByteBlockTransformer transformer) throws IOException;
 
     /**
+     * Downloads and provides the contents of the requested object asynchronous.
+     *
+     * @param objectKey   the id of the object
+     * @param transformer the transform to apply when reading data
+     * @return a promise which is fulfilled with the handle for the given object once it is downloaded. If the object
+     * doesn't exist, the promise will be fulfilled with <tt>null</tt>.
+     */
+    protected abstract Promise<FileHandle> getDataAsync(String objectKey, ByteBlockTransformer transformer);
+
+    /**
      * Provides direct access to the contents of the requested object.
      *
      * @param objectId the physical storage key
@@ -330,6 +407,8 @@ public abstract class ObjectStorageSpace {
             if (Strings.isEmpty(objectId)) {
                 return Optional.empty();
             }
+
+            STREAMS.inc();
             if (hasTransformer()) {
                 return Optional.ofNullable(getAsStream(objectId, createReadTransformer()));
             } else {
@@ -378,6 +457,8 @@ public abstract class ObjectStorageSpace {
      */
     public void deliver(Response response, String objectId) {
         try {
+            DELIVERIES.inc();
+
             if (hasTransformer()) {
                 deliverPhysicalObject(response,
                                       objectId,
@@ -400,10 +481,15 @@ public abstract class ObjectStorageSpace {
 
     private void handleHttpError(Response response, String objectId, int status) {
         if (replicationSpace != null) {
-            //TODO bump stats + record event
+            FALLBACKS.inc();
             replicationSpace.deliver(response, objectId);
         } else {
-            //TODO bump stats + record event
+            if (status >= 500) {
+                DELIVERY_SERVER_FAILURES.inc();
+            } else if (status >= 400) {
+                DELIVERY_CLIENT_FAILURES.inc();
+            }
+
             response.error(HttpResponseStatus.valueOf(status));
         }
     }
@@ -479,11 +565,11 @@ public abstract class ObjectStorageSpace {
      * Note that this is most probably a very inefficient operation and should only be used for maintenance or
      * debugging tasks.
      *
-     * @param physicalKeyHandler a handler to be invoked for every key found in this space. Returns <tt>true</tt>
-     *                           to continue iterating and <tt>false</tt> to abort.
+     * @param objectHandler a handler to be invoked for every object found in this space. Returns <tt>true</tt>
+     *                      to continue iterating and <tt>false</tt> to abort.
      * @throws IOException in case of an IO error
      */
-    public abstract void iterateObjects(Predicate<String> physicalKeyHandler) throws IOException;
+    public abstract void iterateObjects(Predicate<ObjectMetadata> objectHandler) throws IOException;
 
     /**
      * Returns the configuration block which was used to setup this space.
@@ -522,5 +608,82 @@ public abstract class ObjectStorageSpace {
      */
     public boolean hasReplicationSpace() {
         return replicationSpace != null;
+    }
+
+    /**
+     * Counts the number of uploads performed on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the number of uploads on this node
+     */
+    public static long getUploads() {
+        return UPLOADS.getCount();
+    }
+
+    /**
+     * Counts the number of downloads performed on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the number of downloads on this node
+     */
+    public static long getDownloads() {
+        return DOWNLOADS.getCount();
+    }
+
+    /**
+     * Counts the number of stream fetches performed on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the number of stream fetches on this node
+     */
+    public static long getStreams() {
+        return STREAMS.getCount();
+    }
+
+    /**
+     * Counts the number of deliveries performed on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the number of deliveries on this node
+     */
+    public static long getDeliveries() {
+        return DELIVERIES.getCount();
+    }
+
+    /**
+     * Counts the number of deliveries which had to use the fallback repository on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the number of fallbacks on this node
+     */
+    public static long getFallbacks() {
+        return FALLBACKS.getCount();
+    }
+
+    /**
+     * Counts the number of client errors during deliveries on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the number of client errors on this node
+     */
+    public static long getDeliveryClientFailures() {
+        return DELIVERY_CLIENT_FAILURES.getCount();
+    }
+
+    /**
+     * Counts the number of server errors during deliveries on this node.
+     * <p>
+     * This is mainly exposed by the used by {@link sirius.biz.storage.util.StorageMetrics}.
+     *
+     * @return the number of server errors on this node
+     */
+    public static long getDeliveryServerFailures() {
+        return DELIVERY_SERVER_FAILURES.getCount();
     }
 }

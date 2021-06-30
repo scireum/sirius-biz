@@ -1,0 +1,106 @@
+<i:arg type="String" name="query"/>
+<t:page titleKey="OpenSearchController.label">
+    <i:block name="head">
+        <script type="text/javascript" src="/assets/lib/oboe/oboe.min.js"></script>
+    </i:block>
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/open-search">@i18n('OpenSearchController.label')</a>
+        </li>
+    </i:block>
+
+    <i:block name="page-header">
+        <t:pageHeader titleKey="OpenSearchController.label"/>
+    </i:block>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-8 col-lg-9">
+                    <div class="input-group">
+                        <input type="text" id="queryField" class="form-control primary-autofocus"
+                               value="@query"
+                               placeholder="@i18n('NLS.searchkey')"/>
+                        <div class="input-group-append">
+                            <a id="searchBtn" class="btn btn-outline-secondary" href="#">
+                                <i class="fa fa-search"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="results"></div>
+
+    <script type="text/javascript">
+        sirius.ready(function () {
+            document.querySelector('#searchBtn').addEventListener('click', submitQuery);
+            sirius.addEnterListener(document.querySelector('#queryField'), submitQuery);
+
+            submitQuery();
+        });
+
+        function submitQuery() {
+            document.querySelector('#results').innerHTML = '';
+
+            const query = document.querySelector('#queryField').value;
+            if (sirius.isEmpty(query)) {
+                return;
+            }
+
+            oboe("/open-search/api?query=" + encodeURIComponent(query))
+                .start(function () {
+                   let searchBtnIcon = document.querySelector('#searchBtn svg');
+                   searchBtnIcon.classList.add('fa-spin');
+                    searchBtnIcon.classList.add('fa-spinner');
+                    searchBtnIcon.classList.remove('fa-search');
+                })
+                .node('!', function (node) {
+                    if (node.completed) {
+                        let searchBtnIcon = document.querySelector('#searchBtn svg');
+                        searchBtnIcon.classList.remove('fa-spin');
+                        searchBtnIcon.classList.add('fa-search');
+                        searchBtnIcon.classList.remove('fa-spinner');
+                        return;
+                    }
+
+                    try {
+                        let category = $('#results').find('[data-category="' + node.category + '"]');
+                        if (category.length === 0) {
+                            category = $(Mustache.render('' +
+                                '<div class="category" data-category="{{category}}" data-priority="{{priority}}">' +
+                                '   <div><h2>{{category}}</h2>  </div>' +
+                                '   <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 items"></div>'
+                                , node));
+                            var inserted = false;
+                            $('#results .category').each(function () {
+                                if ($(this).data('priority') > node.priority) {
+                                    category.insertBefore($(this));
+                                    inserted = true;
+                                    return false;
+                                }
+                            });
+                            if (!inserted) {
+                                $('#results').append(category);
+                            }
+                        }
+                        category.find('.items').append($(Mustache.render(
+                            '<div class="col mb-4">' +
+                            '   <div class="card card-border h-100">' +
+                            '       <div class="card-body">' +
+                            '           <h5 class="card-title">{{label}}</h5>' +
+                            '           <div class="mb-4">{{description}}</div>' +
+                            '           {{#actions}}<a href="{{url}}" class="card-link">{{label}}</a>{{/actions}}' +
+                            '           <a href="{{url}}" class="stretched-link"></a>' +
+                            '        </div>' +
+                            '    </div>' +
+                            '</div>', node)));
+                    } catch(e) {
+                        console.log(e);
+                    }
+                });
+        }
+    </script>
+</t:page>

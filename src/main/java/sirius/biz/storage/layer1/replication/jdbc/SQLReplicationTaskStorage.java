@@ -91,7 +91,7 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
     }
 
     @Override
-    public void notifyAboutUpdate(String primarySpace, String objectId) {
+    public void notifyAboutUpdate(String primarySpace, String objectId, long contentLength) {
         oma.select(SQLReplicationTask.class)
            .eq(SQLReplicationTask.PRIMARY_SPACE, primarySpace)
            .eq(SQLReplicationTask.OBJECT_KEY, objectId)
@@ -101,6 +101,7 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
         task.setPrimarySpace(primarySpace);
         task.setObjectKey(objectId);
         task.setPerformDelete(false);
+        task.setContentLength(contentLength);
         task.setEarliestExecution(LocalDateTime.now().plus(replicateUpdateDelay));
         oma.update(task);
     }
@@ -166,7 +167,7 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
     public int countNumberOfExecutableTasks() {
         return (int) oma.select(SQLReplicationTask.class)
                         .eq(SQLReplicationTask.FAILED, false)
-                        .where(OMA.FILTERS.gt(SQLReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
+                        .where(OMA.FILTERS.lt(SQLReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
                         .count();
     }
 
@@ -179,6 +180,7 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
         try {
             replicationManager.executeReplicationTask(task.getPrimarySpace(),
                                                       task.getObjectKey(),
+                                                      task.getContentLength(),
                                                       task.isPerformDelete());
             oma.delete(task);
         } catch (Exception ex) {
@@ -187,6 +189,7 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
                 task.setLastExecution(LocalDateTime.now());
                 task.setEarliestExecution(LocalDateTime.now().plus(retryReplicationDelay));
                 task.setFailureCounter(task.getFailureCounter() + 1);
+                task.setScheduled(null);
                 if (task.getFailureCounter() > maxReplicationAttempts) {
                     task.setFailed(true);
                     Exceptions.handle()

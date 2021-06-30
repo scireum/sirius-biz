@@ -38,6 +38,8 @@ import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
 import sirius.web.services.JSONStructuredOutput;
 
+import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -49,7 +51,7 @@ import java.util.Optional;
  * @param <T> specifies the effective entity type used to represent Tenants
  * @param <U> specifies the effective entity type used to represent UserAccounts
  */
-public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+public abstract class UserAccountController<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {
 
     /**
@@ -89,6 +91,9 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
 
     @ConfigValue("security.roles")
     protected List<String> roles;
+
+    @ConfigValue("security.subScopes")
+    protected List<String> subScopes;
 
     @Part
     protected AuditLog auditLog;
@@ -131,13 +136,24 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
      */
     public static void assertProperUserManagementPermission() {
         UserInfo currentUser = UserContext.getCurrentUser();
+        currentUser.assertPermission(getUserManagementPermission());
+    }
+
+    /**
+     * Determines the permission to check for when determining if the current user can manage other users.
+     * <p>
+     * For the system tenant a user needs "permission-manage-system-users" for all others
+     * "permission-manage-user-accounts".
+     */
+    public static String getUserManagementPermission() {
+        UserInfo currentUser = UserContext.getCurrentUser();
         boolean isCurrentTenantSystemTenant = currentUser.tryAs(Tenant.class)
                                                          .map(tenant -> tenant.hasPermission(Tenant.PERMISSION_SYSTEM_TENANT))
                                                          .orElse(false);
         if (isCurrentTenantSystemTenant) {
-            currentUser.assertPermission(PERMISSION_MANAGE_SYSTEM_USERS);
+            return PERMISSION_MANAGE_SYSTEM_USERS;
         } else {
-            currentUser.assertPermission(PERMISSION_MANAGE_USER_ACCOUNTS);
+            return PERMISSION_MANAGE_USER_ACCOUNTS;
         }
     }
 
@@ -297,6 +313,20 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         return Permissions.getPermissionDescription(role);
     }
 
+    public List<String> getSubScopes() {
+        return Collections.unmodifiableList(subScopes);
+    }
+
+    /**
+     * Returns the name of the given sub scope.
+     *
+     * @param scope the technical name of the sub scope
+     * @return the sub scope name as shown to the user
+     */
+    public String getSubScopeName(String scope) {
+        return NLS.get("SubScope." + scope + ".name");
+    }
+
     /**
      * Generates a new password for the given account.
      *
@@ -311,7 +341,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         U userAccount = findForTenant(getUserClass(), accountId);
 
         generateNewPassword(userAccount);
-        UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
+        UserContext.message(Message.info().withTextMessage(NLS.get("UserAccountConroller.passwordGenerated")));
 
         webContext.respondWith().redirectToGet(LIST_ROUTE);
     }
@@ -332,9 +362,11 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         generateNewPassword(userAccount);
 
         if (userAccount.getUserAccountData().canSendGeneratedPassword()) {
-            UserContext.message(Message.info(NLS.fmtr("UserAccountConroller.passwordGeneratedAndSent")
-                                                .set(PARAM_EMAIL, userAccount.getUserAccountData().getEmail())
-                                                .format()));
+            UserContext.message(Message.info()
+                                       .withTextMessage(NLS.fmtr("UserAccountConroller.passwordGeneratedAndSent")
+                                                           .set(PARAM_EMAIL,
+                                                                userAccount.getUserAccountData().getEmail())
+                                                           .format()));
             UserContext userContext = UserContext.get();
             userContext.runAs(userContext.getUserManager().findUserByUserId(userAccount.getUniqueName()), () -> {
                 Context mailContext = Context.create();
@@ -359,7 +391,7 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
                      .send();
             });
         } else {
-            UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
+            UserContext.message(Message.info().withTextMessage(NLS.get("UserAccountConroller.passwordGenerated")));
         }
 
         webContext.respondWith().redirectToGet(LIST_ROUTE);
@@ -550,9 +582,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         AutocompleteHelper.handle(webContext, (query, result) -> {
             Page<U> accounts = getUsersAsPage(webContext).asPage();
             accounts.getItems().forEach(userAccount -> {
-                result.accept(new AutocompleteHelper.Completion(userAccount.getUniqueName(),
-                                                                userAccount.toString(),
-                                                                userAccount.toString()));
+                result.accept(AutocompleteHelper.suggest(userAccount.getUniqueName())
+                                                .withFieldLabel(userAccount.toString()));
             });
         });
     }
@@ -629,7 +660,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
 
         U user = mixing.getDescriptor(getUserClass()).getMapper().find(getUserClass(), accountId).orElse(null);
         if (user == null) {
-            UserContext.get().addMessage(Message.error(NLS.get("UserAccountController.cannotBecomeUser")));
+            UserContext.get()
+                       .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
             selectUserAccounts(webContext);
             return;
         }
@@ -639,7 +671,8 @@ public abstract class UserAccountController<I, T extends BaseEntity<I> & Tenant<
         // access rights - right up to the system management level...)
         if (Strings.areEqual(tenants.getTenantUserManager().getSystemTenantId(), user.getTenant().getIdAsString())
             && !getUser().hasPermission(PERMISSION_MANAGE_SYSTEM_USERS)) {
-            UserContext.get().addMessage(Message.error(NLS.get("UserAccountController.cannotBecomeUser")));
+            UserContext.get()
+                       .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
             selectUserAccounts(webContext);
             return;
         }

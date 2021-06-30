@@ -66,7 +66,7 @@ public class MongoSequenceStrategy implements SequenceStrategy {
                                    .where(MongoSequenceCounter.NAME, sequence)
                                    .where(MongoSequenceCounter.NEXT_VALUE, result)
                                    .set(MongoSequenceCounter.NEXT_VALUE, result + 1)
-                                   .executeFor(MongoSequenceCounter.class)
+                                   .executeForOne(MongoSequenceCounter.class)
                                    .getModifiedCount();
 
         if (numRowsChanged == 1) {
@@ -136,7 +136,7 @@ public class MongoSequenceStrategy implements SequenceStrategy {
             updater.where(QueryBuilder.FILTERS.lt(MongoSequenceCounter.NEXT_VALUE, nextValue));
         }
 
-        UpdateResult updateResult = updater.executeFor(MongoSequenceCounter.class);
+        UpdateResult updateResult = updater.executeForOne(MongoSequenceCounter.class);
 
         if (updateResult.getMatchedCount() != 1) {
             throw Exceptions.handle()

@@ -7,8 +7,14 @@ services:
       - "6379"
     hostname: redis
 
+  redis-jupiter:
+    image: scireum/jupiter-io:0.3.0
+    ports:
+      - "2410"
+    hostname: redis-jupiter
+
   mongo:
-    image: mongo:4.0.20
+    image: mongo:4.4.3
     ports:
       - "27017"
     hostname: mongo
@@ -35,7 +41,7 @@ services:
       - discovery.type=single-node
     hostname: es
   s3-system:
-    image: scireum/s3-ninja:6.0.2
+    image: scireum/s3-ninja:7.0
     ports:
       - 9000
     hostname: s3ninja

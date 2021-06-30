@@ -47,10 +47,15 @@ import java.util.Optional;
  */
 @Framework(SQLBlobStorage.FRAMEWORK_JDBC_BLOB_STORAGE)
 @ComplexDelete(false)
+@Index(name = "blob_key_lookup", columns = "blobKey", unique = true)
 @Index(name = "blob_normalized_filename_lookup",
-        columns = {"spaceName", "deleted", "normalizedFilename", "parent", "committed"})
+        columns = {"spaceName", "deleted", "parent", "normalizedFilename", "committed"})
+@Index(name = "blob_sort_by_last_modified", columns = {"spaceName", "deleted", "parent", "lastModified"})
 @Index(name = "blob_filename_lookup", columns = {"spaceName", "deleted", "filename", "parent", "committed"})
 @Index(name = "blob_reference_lookup", columns = {"spaceName", "deleted", "reference", "referenceDesignator"})
+@Index(name = "blob_created_renamed_loop", columns = "createdOrRenamed")
+@Index(name = "blob_deleted_loop", columns = "deleted")
+@Index(name = "blob_parent_changed_loop", columns = "parentChanged")
 public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Transient
@@ -144,6 +149,12 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
             SQLEntityRef.on(SQLDirectory.class, BaseEntityRef.OnDelete.IGNORE);
 
     /**
+     * Stores if the blob was moved into another folder.
+     */
+    public static final Mapping PARENT_CHANGED = Mapping.named("parentChanged");
+    private boolean parentChanged;
+
+    /**
      * Stores if the blob was (is still) marked as temporary.
      */
     public static final Mapping TEMPORARY = Mapping.named("temporary");
@@ -184,12 +195,19 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
     private boolean deleted;
 
     /**
+     * Stores if the blob was inserted or renamed.
+     */
+    public static final Mapping CREATED_OR_RENAMED = Mapping.named("createdOrRenamed");
+    private boolean createdOrRenamed;
+
+    /**
      * Stores if the blob was marked as hidden.
      */
     public static final Mapping HIDDEN = Mapping.named("hidden");
     private boolean hidden;
 
     @Part
+    @Nullable
     private static BlobStorage layer2;
 
     @Part
@@ -202,6 +220,19 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
         }
 
         updateFilenameFields();
+
+        if (isNew() || isChanged(FILENAME, NORMALIZED_FILENAME, FILE_EXTENSION)) {
+            createdOrRenamed = true;
+        }
+
+        if (!isNew() && isChanged(PARENT)) {
+            parentChanged = true;
+        }
+
+        if (deleted) {
+            createdOrRenamed = false;
+            parentChanged = false;
+        }
     }
 
     protected void updateFilenameFields() {
@@ -249,7 +280,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Override
     public void deliver(Response response) {
-        getStorageSpace().deliver(getBlobKey(), URLBuilder.VARIANT_RAW, response);
+        getStorageSpace().deliver(getBlobKey(), URLBuilder.VARIANT_RAW, response, null);
     }
 
     @Override
@@ -309,7 +340,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     @Override
     public Optional<BlobVariant> findVariant(String name) {
-        return Optional.ofNullable(getStorageSpace().findVariant(this, name));
+        return Optional.ofNullable(getStorageSpace().findCompletedVariant(this, name));
     }
 
     @Override
@@ -424,6 +455,14 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
 
     public boolean isDeleted() {
         return deleted;
+    }
+
+    public boolean isCreatedOrRenamed() {
+        return createdOrRenamed;
+    }
+
+    public boolean isParentChanged() {
+        return parentChanged;
     }
 
     public boolean isHidden() {

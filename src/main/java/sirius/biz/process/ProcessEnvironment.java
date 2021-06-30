@@ -17,9 +17,15 @@ import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableOutput;
 import sirius.biz.process.output.TableProcessOutputType;
 import sirius.db.mixing.types.StringMap;
+import sirius.kernel.async.CombinedFuture;
+import sirius.kernel.async.Future;
+import sirius.kernel.async.Promise;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.RateLimit;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.UnitOfWork;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Average;
@@ -32,11 +38,12 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.Duration;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -46,14 +53,17 @@ import java.util.stream.Collectors;
  */
 class ProcessEnvironment implements ProcessContext {
 
-    private String processId;
+    private final String processId;
 
-    private RateLimit logLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
-    private RateLimit timingLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
+    private final RateLimit logLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
+    private final RateLimit timingLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
+    private final CombinedFuture barrier = new CombinedFuture();
+    private final RateLimit stateUpdate = RateLimit.timeInterval(5, TimeUnit.SECONDS);
     private Map<String, Average> timings;
     private Map<String, Average> adminTimings;
 
     @Part
+    @Nullable
     private static Processes processes;
 
     @Part
@@ -117,25 +127,29 @@ class ProcessEnvironment implements ProcessContext {
         addTiming(counter, -1L, adminOnly);
     }
 
-    protected Map<String, Average> getTimings() {
+    private Map<String, Average> getTimings() {
         if (timings == null) {
-            timings = new HashMap<>();
-            loadPreviousTimings();
+            initializeTimings();
         }
 
         return timings;
     }
 
-    protected Map<String, Average> getAdminTimings() {
+    private Map<String, Average> getAdminTimings() {
         if (adminTimings == null) {
-            adminTimings = new HashMap<>();
-            loadPreviousTimings();
+            initializeTimings();
         }
 
         return adminTimings;
     }
 
-    private void loadPreviousTimings() {
+    private synchronized void initializeTimings() {
+        if (timings != null) {
+            return;
+        }
+
+        timings = new ConcurrentHashMap<>();
+        adminTimings = new ConcurrentHashMap<>();
         processes.fetchProcess(processId).ifPresent(process -> {
             process.getPerformanceCounters().data().keySet().forEach(key -> {
                 int counter = process.getPerformanceCounters().get(key).orElse(0);
@@ -225,9 +239,49 @@ class ProcessEnvironment implements ProcessContext {
         // ignored
     }
 
+    /**
+     * Invoked if {@link sirius.kernel.async.TaskContext#setState(String, Object...)} is called in the attached
+     * context.
+     *
+     * @param message the message to set as state
+     * @deprecated Use either {@link #forceUpdateState(String)} or {@link #tryUpdateState(String)}
+     */
     @Override
-    public void setState(String state) {
+    @Deprecated
+    public void setState(String message) {
+        processes.setStateMessage(processId, message);
+    }
+
+    /**
+     * Updates the "current state" message of the process.
+     * <p>
+     * Note that this doesn't perform any rate limiting etc. Therefore {@link TaskContext#shouldUpdateState()}
+     * along with {@link TaskContext#setState(String, Object...)} is most probably a better choice.
+     *
+     * @param state the new state message to show
+     * @deprecated Use either {@link #tryUpdateState(String)} or {@link #forceUpdateState(String)}.
+     */
+    @Override
+    @Deprecated
+    public void setCurrentStateMessage(String state) {
         processes.setStateMessage(processId, state);
+    }
+
+    @Override
+    public RateLimit shouldUpdateState() {
+        return stateUpdate;
+    }
+
+    @Override
+    public void tryUpdateState(String message) {
+        if (shouldUpdateState().check()) {
+            forceUpdateState(message);
+        }
+    }
+
+    @Override
+    public void forceUpdateState(String message) {
+        processes.setStateMessage(processId, message);
     }
 
     @Override
@@ -258,11 +312,6 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
-    public void setCurrentStateMessage(String state) {
-        processes.setStateMessage(processId, state);
-    }
-
-    @Override
     public Map<String, String> getContext() {
         return processes.fetchProcess(processId)
                         .map(Process::getContext)
@@ -276,12 +325,12 @@ class ProcessEnvironment implements ProcessContext {
     }
 
     @Override
-    public <V, P extends Parameter<V, P>> Optional<V> getParameter(Parameter<V, P> parameter) {
+    public <V> Optional<V> getParameter(Parameter<V> parameter) {
         return parameter.get(getContext());
     }
 
     @Override
-    public <V, P extends Parameter<V, P>> V require(Parameter<V, P> parameter) {
+    public <V> V require(Parameter<V> parameter) {
         return parameter.require(getContext());
     }
 
@@ -340,5 +389,42 @@ class ProcessEnvironment implements ProcessContext {
     @Override
     public TableOutput.ColumnBuilder addTable(String name, String label) {
         return new TableOutput.ColumnBuilder(this, name, label);
+    }
+
+    @Override
+    public <P> Promise<P> computeInSideTask(Producer<P> parallelTask) {
+        Promise<P> promise = new Promise<>();
+        performInSideTask(() -> promise.success(parallelTask.create())).onFailure(promise::fail);
+
+        return promise;
+    }
+
+    @Override
+    public Future performInSideTask(UnitOfWork parallelTask) {
+        Future future = new Future();
+        tasks.executor("process-sidetask").fork(() -> {
+            try {
+                parallelTask.execute();
+                future.success();
+            } catch (Exception e) {
+                future.fail(e);
+            }
+        }).onFailure(future::fail);
+
+        barrier.add(future);
+
+        return future;
+    }
+
+    protected void awaitCompletion() {
+        Future completionFuture = barrier.asFuture();
+        if (!completionFuture.isCompleted()) {
+            log(ProcessLog.info().withNLSKey("Process.awaitingSideTaskCompletion"));
+            while (TaskContext.get().isActive()) {
+                if (completionFuture.await(Duration.ofSeconds(1))) {
+                    return;
+                }
+            }
+        }
     }
 }

@@ -13,7 +13,6 @@ import sirius.biz.analytics.flags.PerformanceFlag;
 import sirius.biz.analytics.flags.PerformanceFlagModifier;
 import sirius.biz.analytics.flags.PerformanceFlagged;
 import sirius.biz.web.MongoPageHelper;
-import sirius.db.jdbc.constraints.SQLConstraint;
 import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mixing.types.StringList;
 import sirius.db.mongo.MongoEntity;
@@ -79,7 +78,7 @@ public class MongoPerformanceData extends PerformanceData {
      * @param pageHelper the helper to append the facet to
      */
     public static void addFilterFacet(MongoPageHelper<? extends PerformanceFlagged> pageHelper) {
-        Facet facet = new Facet(NLS.get("PerformanceData.flags"), FACET_NAME_PERFORMANCE_FLAGS, null, null);
+        Facet facet = new Facet(NLS.get("PerformanceData.flags"), FACET_NAME_PERFORMANCE_FLAGS);
         Class<?> type = pageHelper.getBaseQuery().getDescriptor().getType();
 
         pageHelper.addFacet(facet, (currentFacet, query) -> {

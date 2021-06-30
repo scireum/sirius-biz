@@ -10,11 +10,7 @@ package sirius.biz.importer.format;
 
 import sirius.db.mixing.properties.BooleanProperty;
 import sirius.kernel.di.std.Register;
-import sirius.kernel.di.transformers.Transformer;
 import sirius.kernel.nls.NLS;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * Generates a {@link FieldDefinition} for a {@link BooleanProperty}.

@@ -11,7 +11,6 @@ package sirius.biz.storage.layer3;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
@@ -20,8 +19,8 @@ import java.util.function.Consumer;
  */
 class VirtualFileWalker implements Spliterator<VirtualFile> {
 
-    private TreeVisitorBuilder settings;
-    private LinkedList<Iterator<VirtualFile>> stack = new LinkedList<>();
+    private final TreeVisitorBuilder settings;
+    private final LinkedList<Iterator<VirtualFile>> stack = new LinkedList<>();
     private Iterator<VirtualFile> children;
     private int filesScanned = 0;
 

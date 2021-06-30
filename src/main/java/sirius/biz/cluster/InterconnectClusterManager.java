@@ -30,6 +30,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,11 +59,14 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
     public static final String RESPONSE_ERROR_MESAGE = "errorMesage";
     private static final int HTTP_DEFAULT_PORT = 80;
 
-    private Map<String, String> members = new ConcurrentHashMap<>();
+    private final Map<String, String> members = new ConcurrentHashMap<>();
     private LocalDateTime lastPing = null;
 
     @Part
     private Interconnect interconnect;
+
+    @ConfigValue("sirius.clusterToken")
+    private String clusterAPIToken;
 
     @ConfigValue("sirius.nodeAddress")
     private String localNodeAddress;
@@ -71,6 +75,29 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
     @Override
     public String getName() {
         return "cluster";
+    }
+
+    /**
+     * Returns the cluster API token which is used to authenticate nodes against each other and also
+     * maintenance workers (e.g. systems which start bleeding of nodes before a system update).
+     *
+     * @return the cluster token to use
+     */
+    public String getClusterAPIToken() {
+        if (Strings.isEmpty(clusterAPIToken)) {
+            clusterAPIToken = Strings.generateCode(32);
+        }
+        return clusterAPIToken;
+    }
+
+    /**
+     * Determines if the given token matches the cluster token.
+     *
+     * @param token the token to check
+     * @return <tt>true</tt> if the given token is the cluster token, <tt>false</tt> otherwise
+     */
+    public boolean isClusterAPIToken(String token) {
+        return Strings.areEqual(token, clusterAPIToken);
     }
 
     protected void sendPing() {
@@ -129,6 +156,8 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
 
     /**
      * Invokes the URI on each cluster member and returns the received JSON.
+     * <p>
+     * Note that this will not include the local node.
      *
      * @param uri the uri to invoke
      * @return the JSON per node as stream
@@ -168,7 +197,9 @@ public class InterconnectClusterManager implements ClusterManager, InterconnectH
             sendPing();
         }
 
-        return callEachNode("/system/cluster/state").map(this::parseNodeState).collect(Collectors.toList());
+        return callEachNode("/system/cluster/state/" + getClusterAPIToken()).map(this::parseNodeState)
+                                                                            .sorted(Comparator.comparing(NodeInfo::getName))
+                                                                            .collect(Collectors.toList());
     }
 
     private NodeInfo parseNodeState(JSONObject response) {

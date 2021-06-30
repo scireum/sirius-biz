@@ -127,7 +127,7 @@ public class StorageController extends BizController {
         }
 
         if (query.toLowerCase().startsWith("http")) {
-            result.accept(new AutocompleteHelper.Completion(query, query, query));
+            result.accept(AutocompleteHelper.suggest(query));
             return;
         }
 
@@ -141,8 +141,8 @@ public class StorageController extends BizController {
 
         applyQuery(query, baseQuery, bucket.isAlwaysUseLikeSearch(), true);
         for (VirtualObject object : baseQuery.queryList()) {
-            result.accept(new AutocompleteHelper.Completion(object.getObjectKey(),
-                                                            object.getFilename(),
+            result.accept(AutocompleteHelper.suggest(object.getObjectKey()).withFieldLabel(
+                                                            object.getFilename()).withCompletionDescription(
                                                             object.getPath()));
         }
     }

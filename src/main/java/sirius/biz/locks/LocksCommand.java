@@ -20,7 +20,7 @@ import javax.annotation.Nonnull;
  *
  * @see Locks
  */
-@Register
+@Register(framework = Locks.FRAMEWORK_LOCKS)
 public class LocksCommand implements Command {
 
     @Part

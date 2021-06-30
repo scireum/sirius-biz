@@ -30,23 +30,24 @@ import java.util.Map;
  */
 public class ImporterContext {
 
-    private Importer importer;
-    private BatchContext batchContext;
-
-    @PriorityParts(ImportHandlerFactory.class)
-    private static List<ImportHandlerFactory> factories;
-
-    private Map<Class<?>, ImportHandler<?>> handlers = new HashMap<>();
-    private Map<Class<?>, ImportHelper> helpers = new HashMap<>();
-
-    private Cache<Tuple<Class<?>, String>, Object> localCache = CacheBuilder.newBuilder().maximumSize(256).build();
-
-    private List<Runnable> postCommitCallbacks = new ArrayList<>();
-
     /**
      * Specifies the maximum number of post commit callbacks to keep around before a {@link #commit()} is forced.
      */
     private static final int MAX_POST_COMMIT_CALLBACKS = 256;
+
+    @PriorityParts(ImportHandlerFactory.class)
+    private static List<ImportHandlerFactory> factories;
+
+    private final Importer importer;
+    private BatchContext batchContext;
+
+    private final Map<Class<?>, ImportHandler<?>> handlers = new HashMap<>();
+    private final Map<Class<?>, ImportHelper> helpers = new HashMap<>();
+
+    private final Cache<Tuple<Class<?>, String>, Object> localCache =
+            CacheBuilder.newBuilder().maximumSize(256).build();
+
+    private final List<Runnable> postCommitCallbacks = new ArrayList<>();
 
     /**
      * Creates a new context for the given importer.
@@ -75,7 +76,15 @@ public class ImporterContext {
      */
     @SuppressWarnings("unchecked")
     public <E extends BaseEntity<?>> ImportHandler<E> findHandler(Class<E> type) {
-        return (ImportHandler<E>) handlers.computeIfAbsent(type, aType -> lookupHandler(aType, aType));
+        ImportHandler<E> result = (ImportHandler<E>) handlers.get(type);
+        if (result == null) {
+            // Note: computeIfAbsent cannot be used as a handler might reference other handlers. Those handler's
+            // resolution would result in a ConcurrentModificationException in the #handlers Map.
+            // This leads to cyclic handler dependencies not being resolvable here.
+            result = (ImportHandler<E>) lookupHandler(type, type);
+            handlers.put(type, result);
+        }
+        return result;
     }
 
     private ImportHandler<?> lookupHandler(Class<?> type, Class<?> baseType) {
@@ -107,7 +116,15 @@ public class ImporterContext {
      */
     @SuppressWarnings("unchecked")
     public <H extends ImportHelper> H findHelper(Class<H> type) {
-        return (H) helpers.computeIfAbsent(type, this::instantiateHelper);
+        ImportHelper result = helpers.get(type);
+        if (result == null) {
+            // Note: computeIfAbsent cannot be used as a helper might reference other helpers. Those helper's
+            // resolution would result in a ConcurrentModificationException in the #helpers Map.
+            // This leads to cyclic helper dependencies not being resolvable here.
+            result = instantiateHelper(type);
+            helpers.put(type, result);
+        }
+        return (H) result;
     }
 
     private ImportHelper instantiateHelper(Class<?> aClass) {

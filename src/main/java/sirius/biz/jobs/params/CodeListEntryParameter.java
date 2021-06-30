@@ -22,13 +22,13 @@ import java.util.Optional;
 /**
  * Permits to select a {@link CodeListEntry} as parameter.
  */
-public class CodeListEntryParameter extends Parameter<CodeListEntry<?, ?, ?>, CodeListEntryParameter> {
+public class CodeListEntryParameter extends ParameterBuilder<CodeListEntry<?, ?>, CodeListEntryParameter> {
 
     @Part
     @Nullable
     private static CodeLists<?, ?, ?> codeLists;
 
-    private String codelist;
+    private final String codelist;
 
     /**
      * Creates a new parameter with the given name and label.
@@ -48,8 +48,8 @@ public class CodeListEntryParameter extends Parameter<CodeListEntry<?, ?, ?>, Co
      * @return the list of entries defined by the codelist
      */
     @SuppressWarnings("unchecked")
-    public List<CodeListEntry<?, ?, ?>> getValues() {
-        return (List<CodeListEntry<?, ?, ?>>) codeLists.getEntries(codelist);
+    public List<CodeListEntry<?, ?>> getValues() {
+        return (List<CodeListEntry<?, ?>>) codeLists.getEntries(codelist);
     }
 
     /**
@@ -72,10 +72,10 @@ public class CodeListEntryParameter extends Parameter<CodeListEntry<?, ?, ?>, Co
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Optional<CodeListEntry<?, ?, ?>> resolveFromString(@Nonnull Value input) {
+    protected Optional<CodeListEntry<?, ?>> resolveFromString(@Nonnull Value input) {
         if (input.isEmptyString()) {
             return Optional.empty();
         }
-        return (Optional<CodeListEntry<?, ?, ?>>) codeLists.getEntry(codelist, input.asString());
+        return (Optional<CodeListEntry<?, ?>>) codeLists.getEntry(codelist, input.asString());
     }
 }

@@ -1,4 +1,4 @@
-<i:arg name="param" type="sirius.biz.jobs.params.DateRangeParameter"/>
+<i:arg type="sirius.biz.jobs.params.Parameter" name="param"/>
 <i:arg name="context" type="Map"/>
 
 <w:singleSelect span="12"
@@ -8,7 +8,7 @@
                 help="@param.getDescription()"
                 optional="@!param.isRequired()"
                 required="@param.isRequired()">
-<i:for var="value" type="sirius.db.mixing.DateRange" items="@param.getValues()">
+<i:for var="value" type="sirius.db.mixing.DateRange" items="@param.as(sirius.biz.jobs.params.DateRangeParameter.class).getValues()">
     <option value="@value.getKey()" @selected="value == param.get(context).orElse(null)">@value</option>
 </i:for>
 </w:singleSelect>

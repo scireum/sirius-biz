@@ -12,6 +12,7 @@ import sirius.biz.storage.layer2.BasicBlobStorageSpace;
 import sirius.biz.storage.layer2.Blob;
 import sirius.biz.storage.layer2.Directory;
 import sirius.biz.storage.layer2.variants.BlobVariant;
+import sirius.biz.storage.layer2.variants.ConversionProcess;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.mixing.Mapping;
 import sirius.db.mixing.Mixing;
@@ -112,7 +113,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         mongo.update()
              .set(MongoDirectory.COMMITTED, true)
              .where(MongoDirectory.ID, directory.getId())
-             .executeFor(MongoDirectory.class);
+             .executeForOne(MongoDirectory.class);
     }
 
     @Override
@@ -204,7 +205,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .where(MongoBlob.SPACE_NAME, spaceName)
              .where(MongoBlob.REFERENCE, referencingEntity)
              .where(MongoBlob.REFERENCE_DESIGNATOR, null)
-             .executeFor(MongoBlob.class);
+             .executeForMany(MongoBlob.class);
     }
 
     @Override
@@ -229,7 +230,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
             updater.where(QueryBuilder.FILTERS.ne(MongoBlob.BLOB_KEY, excludedBlobKey));
         }
 
-        updater.executeFor(MongoBlob.class);
+        updater.executeForMany(MongoBlob.class);
     }
 
     @Override
@@ -256,7 +257,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .where(MongoBlob.TEMPORARY, false)
              .where(MongoBlob.COMMITTED, true)
              .where(MongoBlob.DELETED, false)
-             .executeFor(MongoBlob.class);
+             .executeForMany(MongoBlob.class);
 
         // Place new reference...
         long numChanges = mongo.update()
@@ -269,7 +270,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                                .where(MongoBlob.TEMPORARY, false)
                                .where(MongoBlob.COMMITTED, true)
                                .where(MongoBlob.DELETED, false)
-                               .executeFor(MongoBlob.class)
+                               .executeForOne(MongoBlob.class)
                                .getModifiedCount();
         if (numChanges == 0) {
             throw Exceptions.handle()
@@ -315,7 +316,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .where(MongoBlob.SPACE_NAME, spaceName)
              .where(MongoBlob.BLOB_KEY, objectKey)
              .where(MongoBlob.TEMPORARY, true)
-             .executeFor(MongoBlob.class);
+             .executeForOne(MongoBlob.class);
     }
 
     @Override
@@ -329,12 +330,12 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .where(MongoBlob.SPACE_NAME, spaceName)
              .where(MongoBlob.ID, ((MongoBlob) blob).getId())
              .where(MongoBlob.TEMPORARY, true)
-             .executeFor(MongoBlob.class);
+             .executeForOne(MongoBlob.class);
     }
 
     @Override
     protected void markBlobAsDeleted(MongoBlob blob) {
-        mongo.update().set(MongoBlob.DELETED, true).where(MongoBlob.ID, blob.getId()).executeFor(MongoBlob.class);
+        mongo.update().set(MongoBlob.DELETED, true).where(MongoBlob.ID, blob.getId()).executeForOne(MongoBlob.class);
     }
 
     @Override
@@ -356,7 +357,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         mongo.update()
              .set(MongoDirectory.DELETED, true)
              .where(MongoDirectory.ID, directory.getId())
-             .executeFor(MongoDirectory.class);
+             .executeForOne(MongoDirectory.class);
     }
 
     @Override
@@ -402,7 +403,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
 
             long numUpdated = updater.where(MongoBlob.ID, blob.getId())
                                      .where(MongoBlob.PHYSICAL_OBJECT_KEY, blob.getPhysicalObjectKey())
-                                     .executeFor(MongoBlob.class)
+                                     .executeForOne(MongoBlob.class)
                                      .getModifiedCount();
             if (numUpdated == 1) {
                 // Also update in-memory to avoid an additional database fetch...
@@ -492,6 +493,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
              .eq(MongoDirectory.DELETED, false)
              .where(QueryBuilder.FILTERS.prefix(MongoDirectory.NORMALIZED_DIRECTORY_NAME, prefixFilter))
              .limit(maxResults)
+             .orderAsc(MongoDirectory.NORMALIZED_DIRECTORY_NAME)
              .iterate(childProcessor::test);
     }
 
@@ -547,7 +549,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
 
         // Use a direct update as there is no need to trigger a change log or to update the last
         // modified timestamps.
-        mongo.update().set(MongoBlob.COMMITTED, true).where(MongoBlob.ID, blob.getId()).executeFor(MongoBlob.class);
+        mongo.update().set(MongoBlob.COMMITTED, true).where(MongoBlob.ID, blob.getId()).executeForOne(MongoBlob.class);
     }
 
     @Override
@@ -595,14 +597,26 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                                   Set<String> fileTypes,
                                   int maxResults,
                                   Predicate<? super Blob> childProcessor) {
-        mango.select(MongoBlob.class)
-             .eq(MongoBlob.SPACE_NAME, spaceName)
-             .eq(MongoBlob.PARENT, parent)
-             .eq(MongoBlob.DELETED, false)
-             .where(QueryBuilder.FILTERS.prefix(MongoBlob.NORMALIZED_FILENAME, prefixFilter))
-             .where(QueryBuilder.FILTERS.containsOne(MongoBlob.FILE_EXTENSION, fileTypes.toArray()).build())
-             .limit(maxResults)
-             .iterate(childProcessor::test);
+        MongoQuery<MongoBlob> blobsQuery = mango.select(MongoBlob.class)
+                                                .eq(MongoBlob.SPACE_NAME, spaceName)
+                                                .eq(MongoBlob.PARENT, parent)
+                                                .eq(MongoBlob.DELETED, false)
+                                                .where(QueryBuilder.FILTERS.prefix(MongoBlob.NORMALIZED_FILENAME,
+                                                                                   prefixFilter));
+
+        if (fileTypes != null && !fileTypes.isEmpty()) {
+            blobsQuery.where(QueryBuilder.FILTERS.containsOne(MongoBlob.FILE_EXTENSION, fileTypes.toArray()).build());
+        }
+
+        blobsQuery.limit(maxResults);
+
+        if (sortByLastModified) {
+            blobsQuery.orderDesc(MongoBlob.LAST_MODIFIED);
+        } else {
+            blobsQuery.orderAsc(MongoBlob.NORMALIZED_FILENAME);
+        }
+
+        blobsQuery.iterate(childProcessor::test);
     }
 
     protected List<? extends BlobVariant> fetchVariants(MongoBlob blob) {
@@ -614,10 +628,18 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
-    protected MongoVariant findVariant(MongoBlob blob, String variantName) {
+    protected MongoVariant findCompletedVariant(MongoBlob blob, String variantName) {
         return mango.select(MongoVariant.class)
                     .eq(MongoVariant.BLOB, blob)
                     .ne(MongoVariant.PHYSICAL_OBJECT_KEY, null)
+                    .eq(MongoVariant.VARIANT_NAME, variantName)
+                    .queryFirst();
+    }
+
+    @Override
+    protected MongoVariant findAnyVariant(MongoBlob blob, String variantName) {
+        return mango.select(MongoVariant.class)
+                    .eq(MongoVariant.BLOB, blob)
                     .eq(MongoVariant.VARIANT_NAME, variantName)
                     .queryFirst();
     }
@@ -659,7 +681,7 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                     .inc(MongoVariant.NUM_ATTEMPTS, 1)
                     .where(MongoVariant.ID, variant.getId())
                     .where(MongoVariant.NUM_ATTEMPTS, variant.getNumAttempts())
-                    .executeFor(MongoVariant.class)
+                    .executeForOne(MongoVariant.class)
                     .getModifiedCount() == 1;
     }
 
@@ -670,10 +692,16 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
     }
 
     @Override
-    protected void markConversionSuccess(MongoVariant variant, String physicalKey, long size) {
+    protected void markConversionSuccess(MongoVariant variant,
+                                         String physicalKey,
+                                         ConversionProcess conversionProcess) {
         variant.setQueuedForConversion(false);
-        variant.setSize(size);
+        variant.setSize(conversionProcess.getResultFileHandle().getFile().length());
         variant.setPhysicalObjectKey(physicalKey);
+        variant.setConversionDuration(conversionProcess.getConversionDuration());
+        variant.setQueueDuration(conversionProcess.getQueueDuration());
+        variant.setTransferDuration(conversionProcess.getTransferDuration());
+
         mango.update(variant);
     }
 
@@ -691,11 +719,12 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         try {
             mango.select(MongoBlob.class)
                  .eq(MongoBlob.SPACE_NAME, spaceName)
+                 .eq(MongoBlob.DELETED, false)
                  .where(QueryBuilder.FILTERS.lt(MongoBlob.LAST_MODIFIED, LocalDateTime.now().minusDays(retentionDays)))
                  .where(QueryBuilder.FILTERS.ltOrEmpty(MongoBlob.LAST_TOUCHED,
                                                        LocalDateTime.now().minusDays(retentionDays)))
                  .limit(256)
-                 .delete();
+                 .iterateAll(this::markBlobAsDeleted);
         } catch (Exception e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
@@ -709,10 +738,11 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         try {
             mango.select(MongoBlob.class)
                  .eq(MongoBlob.SPACE_NAME, spaceName)
+                 .eq(MongoBlob.DELETED, false)
                  .eq(MongoBlob.TEMPORARY, true)
                  .where(QueryBuilder.FILTERS.lt(MongoBlob.LAST_MODIFIED, LocalDateTime.now().minusHours(4)))
                  .limit(256)
-                 .delete();
+                 .iterateAll(this::markBlobAsDeleted);
         } catch (Exception e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)

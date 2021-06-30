@@ -8,6 +8,7 @@
 
 package sirius.biz.storage.layer2;
 
+import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.async.Tasks;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -20,7 +21,7 @@ import sirius.kernel.timer.EndOfDayTask;
  *
  * @see BlobStorageSpace#runCleanup()
  */
-@Register
+@Register(framework = StorageUtils.FRAMEWORK_STORAGE)
 public class StorageCleanupTask implements EndOfDayTask {
 
     @Part

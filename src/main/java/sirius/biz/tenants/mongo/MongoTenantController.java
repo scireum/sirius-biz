@@ -8,7 +8,6 @@
 
 package sirius.biz.tenants.mongo;
 
-import sirius.biz.analytics.flags.jdbc.SQLPerformanceData;
 import sirius.biz.analytics.flags.mongo.MongoPerformanceData;
 import sirius.biz.packages.PackageData;
 import sirius.biz.packages.Packages;

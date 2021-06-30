@@ -411,7 +411,10 @@ public class ProcessLog extends SearchableEntity {
         }
 
         if (message.startsWith("$")) {
-            return NLS.fmtr(message.substring(1)).set((Map<String, Object>) (Object) context.data()).format();
+            return NLS.fmtr(message.substring(1))
+                      .set((Map<String, Object>) (Object) context.data())
+                      .ignoreMissingParameters()
+                      .format();
         }
 
         return message;

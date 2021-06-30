@@ -11,6 +11,8 @@ package sirius.biz.codelists;
 import sirius.biz.importer.AutoImport;
 import sirius.biz.mongo.PrefixSearchContent;
 import sirius.biz.protocol.TraceData;
+import sirius.biz.translations.MultiLanguageString;
+import sirius.biz.web.Autoloaded;
 import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.Composite;
 import sirius.db.mixing.Mapping;
@@ -21,9 +23,10 @@ import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Trim;
 import sirius.db.mixing.annotations.Unique;
-import sirius.kernel.commons.Value;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Priorized;
+import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
 
@@ -48,6 +51,7 @@ public class CodeListEntryData extends Composite {
     @Length(50)
     @Unique(within = "codeList")
     @AutoImport
+    @Autoloaded
     @PrefixSearchContent
     private String code;
 
@@ -56,6 +60,7 @@ public class CodeListEntryData extends Composite {
      */
     public static final Mapping PRIORITY = Mapping.named("priority");
     @AutoImport
+    @Autoloaded
     private int priority = Priorized.DEFAULT_PRIORITY;
 
     /**
@@ -63,21 +68,23 @@ public class CodeListEntryData extends Composite {
      */
     public static final Mapping VALUE = Mapping.named("value");
     @Trim
-    @Length(512)
     @NullAllowed
     @AutoImport
+    @Autoloaded
     @PrefixSearchContent
-    private String value;
+    private final MultiLanguageString value = new MultiLanguageString().withFallback()
+                                                                       .withConditionName("code-lists");
 
     /**
      * Contains the additional value associated with the code of this entry.
      */
     public static final Mapping ADDITIONAL_VALUE = Mapping.named("additionalValue");
-    @Length(512)
     @NullAllowed
     @AutoImport
+    @Autoloaded
     @PrefixSearchContent
-    private String additionalValue;
+    private final MultiLanguageString additionalValue = new MultiLanguageString().withFallback()
+                                                                                 .withConditionName("code-lists");
 
     /**
      * Contains a description of the value or the entry.
@@ -86,6 +93,7 @@ public class CodeListEntryData extends Composite {
     @Length(1024)
     @NullAllowed
     @AutoImport
+    @Autoloaded
     @PrefixSearchContent
     private String description;
 
@@ -94,7 +102,7 @@ public class CodeListEntryData extends Composite {
     private static CodeLists<?, ?, ?> codeLists;
 
     @Transient
-    private BaseEntity<?> codeListEntry;
+    private final BaseEntity<?> codeListEntry;
 
     /**
      * Creates a new instance referenced by the given entity.
@@ -108,27 +116,36 @@ public class CodeListEntryData extends Composite {
     @AfterSave
     @AfterDelete
     protected void flushCache() {
-        if (!codeListEntry.isNew()) {
-            codeLists.clearCache();
-        }
+        codeLists.clearCache();
     }
 
     /**
-     * Returns the value of the entry which is translated via
-     * {@link Value#translate()}.
+     * Fetches the translation of the value for the given language.
      *
-     * @return the translated value
+     * @param lang the language to translate to
+     * @return the value for the given language or the fallback value
      */
-    public String getTranslatedValue() {
-        return Value.of(value).translate().getString();
+    public String getTranslatedValue(String lang) {
+        return value.getText(lang).map(NLS::smartGet).orElse(null);
     }
 
-    public String getValue() {
-        return value;
+    /**
+     * Fetches the translation of the additional value for the given language.
+     *
+     * @param lang the language to translate to
+     * @return the additional value for the given language or the fallback value
+     */
+    public String getTranslatedAdditionalValue(String lang) {
+        return additionalValue.getText(lang).map(NLS::smartGet).orElse(null);
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    @Override
+    public String toString() {
+        if (Strings.isEmpty(code)) {
+            return NLS.get("CodeListEntry.new");
+        }
+
+        return code;
     }
 
     public String getCode() {
@@ -139,20 +156,20 @@ public class CodeListEntryData extends Composite {
         this.code = code;
     }
 
-    public String getAdditionalValue() {
-        return additionalValue;
-    }
-
-    public void setAdditionalValue(String additionalValue) {
-        this.additionalValue = additionalValue;
-    }
-
     public String getDescription() {
         return description;
     }
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public MultiLanguageString getValue() {
+        return value;
+    }
+
+    public MultiLanguageString getAdditionalValue() {
+        return additionalValue;
     }
 
     public int getPriority() {

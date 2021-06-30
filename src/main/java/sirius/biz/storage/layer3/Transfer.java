@@ -38,7 +38,7 @@ public class Transfer {
     /**
      * Contains the max total size (in bytes) of files which can be copied / Moved interactively.
      */
-    private static final long MAX_SIZE_THRESHOLD = 32_768 * 1024;
+    private static final long MAX_SIZE_THRESHOLD = 32_768L * 1024L;
 
     private final VirtualFile source;
     private final VirtualFile destination;
@@ -196,9 +196,9 @@ public class Transfer {
 
     private Optional<String> createTransferFilesJob(boolean delete) {
         return Optional.of(jobs.findFactory(TransferFilesJob.NAME, TransferFilesJob.class)
-                               .startInBackground(createParameterSource(delete ?
-                                                                        TransferFilesJob.TransferMode.MOVE :
-                                                                        TransferFilesJob.TransferMode.COPY)));
+                               .startInBackground(determineParameterValue(delete ?
+                                                                          TransferFilesJob.TransferMode.MOVE :
+                                                                          TransferFilesJob.TransferMode.COPY)));
     }
 
     /**
@@ -269,12 +269,12 @@ public class Transfer {
 
     private Optional<String> createTransferDirectoryContentsJob(boolean delete) {
         return Optional.of(jobs.findFactory(TransferFilesJob.NAME, TransferFilesJob.class)
-                               .startInBackground(createParameterSource(delete ?
-                                                                        TransferFilesJob.TransferMode.MOVE_CONTENTS :
-                                                                        TransferFilesJob.TransferMode.COPY_CONTENTS)));
+                               .startInBackground(determineParameterValue(delete ?
+                                                                          TransferFilesJob.TransferMode.MOVE_CONTENTS :
+                                                                          TransferFilesJob.TransferMode.COPY_CONTENTS)));
     }
 
-    private Function<String, Value> createParameterSource(TransferFilesJob.TransferMode mode) {
+    private Function<String, Value> determineParameterValue(TransferFilesJob.TransferMode mode) {
         return param -> {
             switch (param) {
                 case TransferFilesJob.SOURCE_PARAMETER_NAME:

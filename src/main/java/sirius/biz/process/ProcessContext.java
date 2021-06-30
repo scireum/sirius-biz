@@ -13,14 +13,19 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.process.output.ChartOutput;
 import sirius.biz.process.output.ProcessOutput;
 import sirius.biz.process.output.TableOutput;
+import sirius.kernel.async.Future;
+import sirius.kernel.async.Promise;
 import sirius.kernel.async.TaskContext;
 import sirius.kernel.async.TaskContextAdapter;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.UnitOfWork;
 import sirius.kernel.commons.Value;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 
 import javax.annotation.Nonnull;
+import javax.annotation.concurrent.ThreadSafe;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,6 +42,7 @@ import java.util.function.Supplier;
  * install this using {@link sirius.kernel.async.TaskContext#setAdapter(TaskContextAdapter)} so that calls to
  * {@link sirius.kernel.async.TaskContext} will be delegated to the processes framework.
  */
+@ThreadSafe
 public interface ProcessContext extends TaskContextAdapter {
 
     /**
@@ -99,7 +105,7 @@ public interface ProcessContext extends TaskContextAdapter {
     /**
      * Increments the given performance counter by one.
      *
-     * @param counter the counter to increment
+     * @param counter   the counter to increment
      * @param adminOnly whether to show the timing only to administrators instead of all users
      */
     void incCounter(String counter, boolean adminOnly);
@@ -165,7 +171,9 @@ public interface ProcessContext extends TaskContextAdapter {
      * along with {@link TaskContext#setState(String, Object...)} is most probably a better choice.
      *
      * @param state the new state message to show
+     * @deprecated Use either {@link #tryUpdateState(String)} or {@link #forceUpdateState(String)}.
      */
+    @Deprecated
     void setCurrentStateMessage(String state);
 
     /**
@@ -191,12 +199,11 @@ public interface ProcessContext extends TaskContextAdapter {
      *
      * @param parameter the parameter used to read and convert
      * @param <V>       the type of the returned value
-     * @param <P>       the generic type of the parameter
      * @return the value read from the process context wrapped as optional or an empty optional if there was no data or
      * a conversion error
      */
     @Nonnull
-    <V, P extends Parameter<V, P>> Optional<V> getParameter(Parameter<V, P> parameter);
+    <V> Optional<V> getParameter(Parameter<V> parameter);
 
     /**
      * Uses the given parameter to read and convert a value from the context of the process.
@@ -205,11 +212,10 @@ public interface ProcessContext extends TaskContextAdapter {
      *
      * @param parameter the parameter used to read and convert
      * @param <V>       the type of the returned value
-     * @param <P>       the generic type of the parameter
      * @return the value read from the process context
      */
     @Nonnull
-    <V, P extends Parameter<V, P>> V require(Parameter<V, P> parameter);
+    <V> V require(Parameter<V> parameter);
 
     /**
      * Adds an external link to the process.
@@ -289,4 +295,39 @@ public interface ProcessContext extends TaskContextAdapter {
      * @throws IOException in case of a local IO error
      */
     OutputStream addFile(String filename) throws IOException;
+
+    /**
+     * Executes the given task in parallel to the main thread of this process.
+     * <p>
+     * If no "work stealing" threads are available the main thread is blocked and the task is executed there.
+     * <p>
+     * Note that the process will await the completion of all of its forked side tasks. However, once this state has
+     * been reached no further tasks may be started. Therefore when processing the results of this task, a
+     * {@link sirius.kernel.async.CombinedFuture} has to be used in the main thread, rather than a simple completion
+     * handler attached to the promise.
+     *
+     * @param parallelTask the task to execute in parallel
+     * @param <P>          the type of result being produced by the given task
+     * @return a promise which represents the result of this task. Note that the main thread can wait for the completion
+     * of one or many tasks using {@link sirius.kernel.async.CombinedFuture}. However, a sideTask must not fork another
+     * side task in the completion handler of the promise, as the process might have already ended / being shutdown then.
+     */
+    <P> Promise<P> computeInSideTask(Producer<P> parallelTask);
+
+    /**
+     * Executes the given task in parallel to the main thread of this process.
+     * <p>
+     * If no "work stealing" threads are available the main thread is blocked and the task is executed there.
+     * <p>
+     * Note that the process will await the completion of all of its forked side tasks. However, once this state has
+     * been reached no further tasks may be started. Therefore when processing the results of this task, a
+     * {@link sirius.kernel.async.CombinedFuture} has to be used in the main thread, rather than a simple completion
+     * handler attached to the future.
+     *
+     * @param parallelTask the task to execute in parallel
+     * @return a future which is fulfilled once the task is completed.
+     * @see #computeInSideTask(Producer) for a description why the completion handler of the future must not fork
+     * additional sideTasks (other than using a {@link sirius.kernel.async.CombinedFuture} in the main thread).
+     */
+    Future performInSideTask(UnitOfWork parallelTask);
 }

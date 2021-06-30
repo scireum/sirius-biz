@@ -23,6 +23,7 @@ import sirius.web.security.UserInfo;
 
 import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -48,10 +49,11 @@ public class AuditLog implements Initializable {
      */
     public class AuditLogBuilder {
 
-        private AuditLogEntry entry = new AuditLogEntry();
+        private final AuditLogEntry entry = new AuditLogEntry();
 
         protected AuditLogBuilder(String message, boolean negative) {
             entry.setTimestamp(LocalDateTime.now());
+            entry.setDate(LocalDate.now());
             entry.setNegative(negative);
             entry.setMessage(message);
             entry.setIp(getCurrentIP());
@@ -159,11 +161,29 @@ public class AuditLog implements Initializable {
                     || Sirius.isStartedAsTest()) {
                     return;
                 }
-                elastic.update(entry);
-                logToSyslog();
+
+                if (!canSkip()) {
+                    elastic.update(entry);
+                    logToSyslog();
+                }
             } catch (Exception e) {
                 Exceptions.ignore(e);
             }
+        }
+
+        private boolean canSkip() {
+            if (entry.isNegative()) {
+                return false;
+            }
+
+            return elastic.select(AuditLogEntry.class)
+                          .eq(AuditLogEntry.DATE, entry.getDate())
+                          .eq(AuditLogEntry.CAUSED_BY_USER, entry.getCausedByUser())
+                          .eq(AuditLogEntry.USER, entry.getUser())
+                          .eq(AuditLogEntry.TENANT, entry.getTenant())
+                          .eq(AuditLogEntry.IP, entry.getIp())
+                          .eq(AuditLogEntry.MESSAGE, entry.getMessage())
+                          .exists();
         }
 
         protected void logToSyslog() {

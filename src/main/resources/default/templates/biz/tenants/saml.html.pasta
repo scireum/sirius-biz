@@ -21,10 +21,10 @@
         <i:for type="sirius.biz.tenants.Tenant" var="tenant" items="tenants">
             <tr>
                 <td>
-                    <i:local name="id" value="call.generateLocalId()"/>
+                    <i:local name="id" value="@generateId()"/>
                     <form class="samlForm" id="@id" method="post" action="@tenant.getTenantData().getSamlIssuerUrl()">
                         <input type="hidden" name="SAMLRequest"
-                               value="@saml.generateAuthenticationRequest(tenant.getTenantData().getSamlRequestIssuerName(), tenant.getTenantData().getSamlIssuerIndex())"/>
+                               value="@part(sirius.web.security.SAMLHelper.class).generateAuthenticationRequest(tenant.getTenantData().getSamlRequestIssuerName(), tenant.getTenantData().getSamlIssuerIndex())"/>
                     </form>
 
                     <a class="link" href="javascript:$('#@id').submit()">@tenant.getTenantData().getName()</a>
@@ -34,7 +34,7 @@
         </tbody>
     </w:table>
 
-    <i:if test="tenants.size() == 1 && !user.getUser().isLoggedIn()">
+    <i:if test="tenants.size() == 1 && !user().isLoggedIn()">
         <script type="text/javascript">
             $(document).ready(function() {
                 $('form.samlForm').submit();

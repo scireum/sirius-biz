@@ -22,7 +22,7 @@ import java.util.Optional;
  *
  * @param <E> the enum type to select from
  */
-public class EnumParameter<E extends Enum<E>> extends Parameter<E, EnumParameter<E>> {
+public class EnumParameter<E extends Enum<E>> extends ParameterBuilder<E, EnumParameter<E>> {
 
     private final Class<E> type;
     private E defaultValue;

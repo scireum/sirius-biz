@@ -12,7 +12,9 @@ import sirius.kernel.commons.Lambdas;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
 import sirius.kernel.nls.NLS;
+import sirius.web.security.UserContext;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -288,11 +290,51 @@ public class FieldDefinition {
      * Aliases are used by {@link ImportDictionary#determineMappingFromHeadings(Values, boolean)} to "learn" which
      * field is provided in which column.
      *
-     * @param alias the alias to add
+     * @param alias the alias to add, which will be {@link sirius.kernel.nls.NLS#smartGet(String) auto translated}
      * @return the field itself for fluent method calls
      */
     public FieldDefinition addAlias(String alias) {
         aliases.add(NLS.smartGet(alias));
+        return this;
+    }
+
+    /**
+     * Removes an alias for the field.
+     *
+     * @param alias the alias to remove
+     */
+    public void removeAlias(String alias) {
+        aliases.remove(alias);
+    }
+
+    /**
+     * Adds an alias for the field resolving all available translations.
+     * <p>
+     * Aliases are used by {@link ImportDictionary#determineMappingFromHeadings(Values, boolean)} to "learn" which
+     * field is provided in which column.
+     * <p>
+     * Opposed to {@link #addAlias(String)}, this method resolves all available translations and not only
+     * the one in the current language context.
+     *
+     * @param alias the alias to add, which will be expanced to all available translations
+     * @return the field itself for fluent method calls
+     */
+    public FieldDefinition addTranslatedAliases(@Nonnull String alias) {
+        if (alias.charAt(0) != '$') {
+            aliases.add(alias);
+            return this;
+        }
+
+        UserContext.getCurrentScope().getDisplayLanguages()
+                   .stream()
+                   .map(lang -> NLS.smartGet(alias, lang))
+                   .filter(text -> !text.equals(getLabel()))
+                   .filter(text -> !aliases.stream()
+                                           .map(String::toLowerCase)
+                                           .collect(Collectors.toSet())
+                                           .contains(text.toLowerCase()))
+                   .distinct()
+                   .forEach(aliases::add);
 
         return this;
     }

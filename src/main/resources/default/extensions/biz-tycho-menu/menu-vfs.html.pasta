@@ -1,0 +1,10 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="105"/>
+
+<i:switch test="@point">
+    <i:block name="settings">
+        <t:dropdownSection>
+            <t:dropdownItem titleKey="VFSController.root" url="/fs"/>
+        </t:dropdownSection>
+    </i:block>
+</i:switch>

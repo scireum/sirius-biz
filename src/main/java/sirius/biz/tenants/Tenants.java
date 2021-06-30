@@ -17,7 +17,9 @@ import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.cache.Cache;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.commons.Explain;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.UnitOfWork;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.transformers.Composable;
 import sirius.kernel.health.Exceptions;
@@ -28,6 +30,7 @@ import sirius.web.security.UserInfo;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -40,7 +43,7 @@ import java.util.Optional;
  * @param <T> specifies the effective entity type used to represent Tenants
  * @param <U> specifies the effective entity type used to represent UserAccounts
  */
-public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends Composable {
 
     /**
@@ -189,7 +192,7 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      * @param tenantId the id to be checked
      */
     @SuppressWarnings("squid:S1612")
-    @Explain("Using a method reference here leads to a BootstrapMethod error due to a JDK bug " 
+    @Explain("Using a method reference here leads to a BootstrapMethod error due to a JDK bug "
              + "see https://bugs.openjdk.java.net/browse/JDK-8058112 (seems to be also present in OracleJDK)")
     public void assertTenant(@Nullable String tenantId) {
         String currentTenantId = getCurrentTenant().map(tenant -> tenant.getIdAsString()).orElse(null);
@@ -213,11 +216,11 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
 
         String currentTenantId = getCurrentTenant().map(tenant -> tenant.getIdAsString()).orElse(null);
         if (!Strings.areEqual(tenantAware.getTenantAsString(), currentTenantId)
-                && !Objects.equals(tenantAware.getTenantAsString(),
-                getCurrentTenant().map(tenant -> tenant.getParent())
-                        .filter(BaseEntityRef::isFilled)
-                        .map(entityRef -> entityRef.getIdAsString())
-                        .orElse(null))) {
+            && !Objects.equals(tenantAware.getTenantAsString(),
+                               getCurrentTenant().map(tenant -> tenant.getParent())
+                                                 .filter(BaseEntityRef::isFilled)
+                                                 .map(entityRef -> entityRef.getIdAsString())
+                                                 .orElse(null))) {
             throw Exceptions.createHandled().withNLSKey("Tenants.invalidTenant").handle();
         }
     }
@@ -426,5 +429,103 @@ public abstract class Tenants<I, T extends BaseEntity<I> & Tenant<I>, U extends 
      */
     public String fetchCachedUserName(BaseEntityRef<I, U> userRef) {
         return fetchCachedUserAccount(userRef).map(UserAccount::toString).orElse("");
+    }
+
+    /**
+     * Returns the id of the system tenant.
+     * <p>
+     * This is boilerplate for {@code getTenantUserManager().getSystemTenantId()}.
+     *
+     * @return the id of the system tenant
+     */
+    public String getSystemTenantId() {
+        return getTenantUserManager().getSystemTenantId();
+    }
+
+    /**
+     * Returns the name of the system tenant.
+     * <p>
+     * This is boilerplate for {@code fetchCachedTenantName(getSystemTenantId())}.
+     *
+     * @return the name of the system tenant
+     */
+    public String getSystemTenantName() {
+        return fetchCachedTenantName(getSystemTenantId());
+    }
+
+    /**
+     * Executes the given code as (System-)"Administrator".
+     * <p>
+     * Like {@link UserInfo#NOBODY} this is an artificial user which belongs to the system tenant. Note that
+     * this user has no proper user id but rather only supplies a tenant id and name. This can be used e.g.
+     * to create standby processes or use the {@link sirius.biz.storage.layer2.BlobStorageSpace blob storage APIs}
+     * in a tenant independent manner.
+     *
+     * @param task the task to execute
+     * @throws Exception any exception which is thrown within the task will be propagated to the outside
+     * @see #asAdmin(Producer)
+     * @see #runAsAdminOfTenant(String, String, UnitOfWork)
+     */
+    public void runAsAdmin(UnitOfWork task) throws Exception {
+        asAdmin(() -> {
+            task.execute();
+            return null;
+        });
+    }
+
+    /**
+     * Executes the given code as (System-)"Administrator" and permits to return a value.
+     *
+     * @param task the task to execute
+     * @return the value as returned by the given task
+     * @throws Exception any exception which is thrown within the task will be propagated to the outside
+     * @see #runAsAdmin(UnitOfWork)
+     * @see #asAdminOfTenant(String, String, Producer)
+     */
+    public <R> R asAdmin(Producer<R> task) throws Exception {
+        return asAdminOfTenant(getSystemTenantId(), getSystemTenantName(), task);
+    }
+
+    /**
+     * Executes the given code as (Tenant-)"Administrator".
+     * <p>
+     * Like {@link UserInfo#NOBODY} this is an artificial user which belongs to the given tenant. Note that
+     * this user has no proper user id but rather only supplies a tenant id and name.
+     *
+     * @param task the task to execute
+     * @throws Exception any exception which is thrown within the task will be propagated to the outside
+     * @see #runAsAdmin(UnitOfWork)
+     * @see #asAdminOfTenant(String, String, Producer)
+     */
+    public void runAsAdminOfTenant(String tenantId, String tenantName, UnitOfWork task) throws Exception {
+        asAdminOfTenant(tenantId, tenantName, () -> {
+            task.execute();
+            return null;
+        });
+    }
+
+    /**
+     * Executes the given code as (Tenant-)"Administrator" and permits to return a value.
+     *
+     * @param task the task to execute
+     * @return the value as returned by the given task
+     * @throws Exception any exception which is thrown within the task will be propagated to the outside
+     * @see #runAsAdminOfTenant(String, String, UnitOfWork)
+     * @see #asAdmin(Producer)
+     */
+    public <R> R asAdminOfTenant(String tenantId, String tenantName, Producer<R> task) throws Exception {
+        UserContext userContext = UserContext.get();
+        UserInfo currentUser = userContext.getUser();
+        try {
+            userContext.setCurrentUser(UserInfo.Builder.createUser("ADMIN")
+                                                       .withUsername("Administrator")
+                                                       .withTenantId(tenantId)
+                                                       .withTenantName(tenantName)
+                                                       .withEveryPermission(true)
+                                                       .build());
+            return task.create();
+        } finally {
+            userContext.setCurrentUser(currentUser);
+        }
     }
 }

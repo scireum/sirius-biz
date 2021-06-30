@@ -20,17 +20,21 @@ import java.util.function.Consumer;
  */
 public abstract class XMLExportJobFactory extends FileExportJobFactory {
 
-    protected final BooleanParameter requireValidFile =
-            new BooleanParameter("requireValidFile", "$XMLExportJobFactory.requireValidFile").hidden()
-                                                                                             .withDescription(
-                                                                                                     "$XMLExportJobFactory.requireValidFile.help");
+    protected static final Parameter<Boolean> VALID_FILE_PARAMETER =
+            new BooleanParameter("requireValidFile", "$XMLExportJobFactory.requireValidFile").withDescription(
+                    "$XMLExportJobFactory.requireValidFile.help").build();
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         if (getXsdResourcePath() != null) {
-            parameterCollector.accept(requireValidFile);
+            parameterCollector.accept(VALID_FILE_PARAMETER);
         }
         super.collectParameters(parameterCollector);
+    }
+
+    @Override
+    protected void collectAcceptedFileExtensions(Consumer<String> fileExtensionConsumer) {
+        fileExtensionConsumer.accept("xml");
     }
 
     @Override

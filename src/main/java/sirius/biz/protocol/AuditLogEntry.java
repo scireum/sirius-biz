@@ -16,6 +16,7 @@ import sirius.db.mixing.Mapping;
 import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.di.std.Framework;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -29,6 +30,15 @@ public class AuditLogEntry extends SearchableEntity {
      */
     public static final Mapping TIMESTAMP = Mapping.named("timestamp");
     private LocalDateTime timestamp;
+
+    /**
+     * Contains the date when the event happened.
+     * <p>
+     * We use this to de-duplicate positive events (e.g. API calls).
+     */
+    public static final Mapping DATE = Mapping.named("date");
+    @NullAllowed
+    private LocalDate date;
 
     /**
      * Contains the id of the tenant for which this event was recorded.
@@ -106,7 +116,6 @@ public class AuditLogEntry extends SearchableEntity {
     public static final Mapping MESSAGE = Mapping.named("message");
     @NullAllowed
     @SearchContent
-    @IndexMode(indexed = ESOption.FALSE, docValues = ESOption.FALSE)
     private String message;
 
     public LocalDateTime getTimestamp() {
@@ -115,6 +124,14 @@ public class AuditLogEntry extends SearchableEntity {
 
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
     }
 
     public String getTenant() {

@@ -43,6 +43,11 @@ public class BridgeSession extends ServerSessionImpl {
         this.user = user;
     }
 
+    /**
+     * Attaches to the given scope.
+     *
+     * @param scopeId the id of the scope to attach to
+     */
     public void attachScope(String scopeId) {
         this.scopeId = scopeId;
     }

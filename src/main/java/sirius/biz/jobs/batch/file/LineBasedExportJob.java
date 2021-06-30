@@ -9,8 +9,8 @@
 package sirius.biz.jobs.batch.file;
 
 import sirius.biz.jobs.params.EnumParameter;
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
-import sirius.biz.storage.layer3.FileOrDirectoryParameter;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
@@ -26,6 +26,17 @@ import java.util.Optional;
 public abstract class LineBasedExportJob extends FileExportJob {
 
     /**
+     * Contains the parameter which select the export type.
+     */
+    public static final Parameter<ExportFileType> FILE_TYPE_PARAMETER =
+            new EnumParameter<>("fileType", "$LineBasedExportJobFactory.fileType", ExportFileType.class).withDefault(
+                    ExportFileType.XLSX)
+                                                                                                        .withDescription(
+                                                                                                                "$LineBasedExportJobFactory.fileType.help")
+                                                                                                        .markRequired()
+                                                                                                        .build();
+
+    /**
      * Used to write the generated rows in a format independent manner
      */
     protected LineBasedExport export;
@@ -34,15 +45,11 @@ public abstract class LineBasedExportJob extends FileExportJob {
     /**
      * Creates a new job which writes line based data into the given destination.
      *
-     * @param destinationParameter the parameter used to select the destination for the file being written
-     * @param fileTypeParameter    the file type to use when writing the line based data
-     * @param process              the context in which the process will be executed
+     * @param process the context in which the process will be executed
      */
-    protected LineBasedExportJob(FileOrDirectoryParameter destinationParameter,
-                                 EnumParameter<ExportFileType> fileTypeParameter,
-                                 ProcessContext process) {
-        super(destinationParameter, process);
-        this.fileType = process.getParameter(fileTypeParameter).orElse(null);
+    protected LineBasedExportJob(ProcessContext process) {
+        super(process);
+        this.fileType = process.getParameter(FILE_TYPE_PARAMETER).orElse(null);
     }
 
     @Override

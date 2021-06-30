@@ -44,6 +44,7 @@ import sirius.web.util.LinkBuilder;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -159,7 +160,9 @@ public class BizController extends BasicController {
      * @throws sirius.kernel.health.HandledException if the entities do no match
      * @see BaseEntityRef#hasWriteOnceSemantics
      */
-    protected <I, E extends BaseEntity<I>> void setOrVerify(BaseEntity<?> owner, BaseEntityRef<I, E> ref, E target) {
+    protected <I extends Serializable, E extends BaseEntity<I>> void setOrVerify(BaseEntity<?> owner,
+                                                                                 BaseEntityRef<I, E> ref,
+                                                                                 E target) {
         if (!Objects.equals(ref.getId(), target.getId())) {
             if (owner.isNew()) {
                 ref.setValue(target);
@@ -266,25 +269,29 @@ public class BizController extends BasicController {
     }
 
     private boolean tryLoadProperty(WebContext webContext, BaseEntity<?> entity, Property property) {
-        String propertyName = property.getName();
+        if (property instanceof ComplexLoadProperty) {
+            return ((ComplexLoadProperty) property).loadFromWebContext(webContext, entity);
+        } else {
+            String propertyName = property.getName();
+            if (!webContext.hasParameter(propertyName) && !webContext.hasParameter(propertyName
+                                                                                   + CHECKBOX_PRESENCE_MARKER)) {
+                // If the parameter is not present in the request we just skip it to prevent resetting the field to null
+                return true;
+            }
+            Value parameterValue = webContext.get(propertyName);
+            try {
+                property.parseValues(entity,
+                                     Values.of(parameterValue.get(List.class,
+                                                                  Collections.singletonList(parameterValue.get()))));
+                ensureTenantMatch(entity, property);
+            } catch (HandledException exception) {
+                UserContext.setFieldError(propertyName, parameterValue);
+                UserContext.setErrorMessage(propertyName, exception.getMessage());
+                return false;
+            }
 
-        if (!webContext.hasParameter(propertyName) && !webContext.hasParameter(propertyName
-                                                                               + CHECKBOX_PRESENCE_MARKER)) {
-            // If the parameter is not present in the request we just skip it to prevent resetting the field to null
             return true;
         }
-        Value parameterValue = webContext.get(propertyName);
-        try {
-            property.parseValues(entity,
-                                 Values.of(parameterValue.get(List.class,
-                                                              Collections.singletonList(parameterValue.get()))));
-            ensureTenantMatch(entity, property);
-        } catch (HandledException exception) {
-            UserContext.setFieldError(propertyName, parameterValue);
-            UserContext.setErrorMessage(propertyName, exception.getMessage());
-            return false;
-        }
-        return true;
     }
 
     private void ensureTenantMatch(BaseEntity<?> entity, Property property) {
@@ -379,8 +386,10 @@ public class BizController extends BasicController {
             process.log(ProcessLog.success().withNLSKey("BizController.deleteCompleted"));
         }));
 
-        UserContext.message(Message.info(NLS.get("BizController.deletingInBackground"))
-                                   .withAction("/ps/" + processId, NLS.get("BizController.deleteProcess")));
+        UserContext.message(Message.info()
+                                   .withTextAndLink(NLS.get("BizController.deletingInBackground"),
+                                                    NLS.get("BizController.deleteProcess"),
+                                                    "/ps/" + processId));
     }
 
     /**
@@ -397,7 +406,7 @@ public class BizController extends BasicController {
                   .validate(entity)
                   .stream()
                   .findFirst()
-                  .ifPresent(message -> userCtx.addMessage(Message.warn(message)));
+                  .ifPresent(message -> userCtx.addMessage(Message.warn().withTextMessage(message)));
         }
     }
 
@@ -426,7 +435,7 @@ public class BizController extends BasicController {
             }
         }
         Optional<E> result = mixing.getDescriptor(type).getMapper().find(type, id);
-        if (!result.isPresent()) {
+        if (result.isEmpty()) {
             throw entityNotFoundException(type, id);
         }
         return result.get();
@@ -563,7 +572,7 @@ public class BizController extends BasicController {
      */
     protected void handle(Exception exception) {
         if (exception.getCause() instanceof InvalidFieldException) {
-            UserContext.get().signalFieldError(((InvalidFieldException) exception.getCause()).getField());
+            UserContext.get().addFieldError(((InvalidFieldException) exception.getCause()).getField(), "");
         }
 
         UserContext.handle(exception);
@@ -573,9 +582,8 @@ public class BizController extends BasicController {
      * Computes a signature used by {@link #signLink(String)} and {@link #verifySignedLink(WebContext)}.
      *
      * @param uri the uri to sign
-     * @return a signature (hash) based an the given URL, a timestamp and <tt>controller.secret</tt> from the
+     * @return a signature (hash) based on the given URL, a timestamp and <tt>controller.secret</tt> from the
      * system configuration
-     *
      * @see SignLinkMacro
      * @see ComputeAuthSignatureMacro
      */
@@ -589,6 +597,27 @@ public class BizController extends BasicController {
     }
 
     /**
+     * Verifies the given signature for the given URI.
+     * <p>
+     * This signature was previously computed using {@link #computeURISignature(String)}.
+     *
+     * @param webContext the request to verify the uri for. This will be completed with a <tt>FORBIDDEN</tt>
+     *                   HTTP error if the signature is invalid
+     * @param uri        the uri to verify
+     * @param givenHash  the given signature to verify
+     * @return <tt>true</tt> if the signature is valid, <tt>false</tt> otherwise
+     */
+    public static boolean verifyURISignature(WebContext webContext, String uri, String givenHash) {
+        String hash = computeURISignature(uri);
+        if (!Strings.areEqual(hash, givenHash)) {
+            webContext.respondWith().error(HttpResponseStatus.FORBIDDEN, "Security hash does not match!");
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    /**
      * Signs the given link by appending an authentication hash.
      * <p>
      * This can be used to pre-sign url which then can be processed by other controllers without
@@ -598,7 +627,6 @@ public class BizController extends BasicController {
      * @param link the link to enhance
      * @return the link with an appropriate <tt>controllerAuthHash</tt> as generated by
      * {@link #computeURISignature(String)} and therefore accepted by {@link #verifySignedLink(WebContext)}.
-     *
      * @see SignLinkMacro
      * @see ComputeAuthSignatureMacro
      */
@@ -618,17 +646,12 @@ public class BizController extends BasicController {
      * @param webContext the current request
      * @return <tt>true</tt> if the link if properly signed, <tt>false</tt> otherwise. In this case a response has
      * already been sent.
-     *
      * @see SignLinkMacro
      * @see ComputeAuthSignatureMacro
      */
     public static boolean verifySignedLink(WebContext webContext) {
-        String hash = computeURISignature(webContext.getRequestedURI());
-        if (!Strings.areEqual(hash, webContext.get("controllerAuthHash").asString())) {
-            webContext.respondWith().error(HttpResponseStatus.FORBIDDEN, "Security hash does not match!");
-            return false;
-        }
-
-        return true;
+        return verifyURISignature(webContext,
+                                  webContext.getRequestedURI(),
+                                  webContext.get("controllerAuthHash").asString());
     }
 }

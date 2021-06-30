@@ -38,6 +38,7 @@ import java.util.Optional;
 @Register
 public class VFSController extends BizController {
 
+    public static final String PARENT_DIR = "..";
     @Part
     private VirtualFileSystem vfs;
 
@@ -67,7 +68,7 @@ public class VFSController extends BizController {
         VirtualFile file = vfs.resolve(path);
         if (!file.exists()) {
             UserContext.get()
-                       .addMessage(Message.error(NLS.fmtr("VFSController.unknownPath").set("path", path).format()));
+                       .addMessage(Message.error().withTextMessage(NLS.fmtr("VFSController.unknownPath").set("path", path).format()));
 
             while (file != null && !file.exists()) {
                 file = file.parent();
@@ -181,7 +182,7 @@ public class VFSController extends BizController {
                 String name = ctx.get("name").asString();
                 if (file.exists() && Strings.isFilled(name)) {
                     file.rename(name);
-                    UserContext.message(Message.info(NLS.get("VFSController.renamed")));
+                    UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.renamed")));
                 }
             } catch (Exception e) {
                 UserContext.handle(e);
@@ -209,7 +210,7 @@ public class VFSController extends BizController {
                 String name = ctx.get("name").asString();
                 VirtualFile newDirectory = parent.resolve(name);
                 newDirectory.createAsDirectory();
-                UserContext.message(Message.info(NLS.get("VFSController.directoryCreated")));
+                UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.directoryCreated")));
                 ctx.respondWith().redirectToGet(new LinkBuilder("/fs").append("path", newDirectory.path()).toString());
             } catch (Exception e) {
                 UserContext.handle(e);
@@ -239,11 +240,12 @@ public class VFSController extends BizController {
             if (newParent.exists() && newParent.isDirectory()) {
                 Optional<String> processId = file.transferTo(newParent).move();
                 if (processId.isPresent()) {
-                    UserContext.message(Message.info(NLS.get("VFSController.movedInProcess"))
-                                               .withAction("/ps/" + processId.get(),
-                                                           NLS.get("VFSController.moveProcess")));
+                    UserContext.message(Message.info()
+                                               .withTextAndLink(NLS.get("VFSController.movedInProcess"),
+                                                                NLS.get("VFSController.moveProcess"),
+                                                                "/ps/" + processId.get()));
                 } else {
-                    UserContext.message(Message.info(NLS.get("VFSController.moved")));
+                    UserContext.message(Message.info().withTextMessage(NLS.get("VFSController.moved")));
                 }
             }
         } catch (Exception e) {
@@ -258,26 +260,54 @@ public class VFSController extends BizController {
      * <p>
      * This is used by the selectVFSFile or selectVFSDirectory JavaScript calls/modals.
      *
-     * @param ctx the request to handle
-     * @param out the JSON response to populate
+     * @param webContext the request to handle
+     * @param out        the JSON response to populate
      */
     @LoginRequired
     @Routed(value = "/fs/list", jsonCall = true)
-    public void listAPI(WebContext ctx, JSONStructuredOutput out) {
-        VirtualFile parent = vfs.resolve(ctx.get("path").asString("/"));
+    public void listAPI(WebContext webContext, JSONStructuredOutput out) {
+        VirtualFile parent = vfs.resolve(webContext.get("path").asString("/"));
         if (parent.exists() && !parent.isDirectory()) {
             parent = parent.parent();
         }
         parent.assertExistingDirectory();
 
-        FileSearch search = FileSearch.iterateAll(child -> outputFile(out, child.name(), child));
+        outputPath(out, parent);
+        outputChildren(webContext, out, parent);
 
-        if (ctx.get("onlyDirectories").asBoolean()) {
+        out.property("canCreateChildren", parent.canCreateChildren());
+    }
+
+    private void outputChildren(WebContext webContext, JSONStructuredOutput out, VirtualFile parent) {
+        out.beginArray("children");
+
+        FileSearch search = FileSearch.iterateAll(child -> outputFile(out, child.name(), child));
+        if (webContext.get("onlyDirectories").asBoolean()) {
             search.withOnlyDirectories();
         }
+        search.withPrefixFilter(webContext.get("filter").asString());
 
-        search.withPrefixFilter(ctx.get("filter").asString());
-        search.withLimit(new Limit(0, 1000));
+        // because of the additional ".."-entry for the parent, we need to adjust the pagination skip/limit
+        boolean hasParent = parent.parent() != null;
+        int skip = webContext.get("skip").asInt(0);
+        Integer limit = webContext.get("maxItems").getInteger();
+        if (hasParent) {
+            if (skip > 0) {
+                skip--;
+            } else {
+                outputFile(out, PARENT_DIR, parent.parent());
+                if (limit != null) {
+                    limit--;
+                }
+            }
+        }
+        search.withLimit(new Limit(skip, limit));
+
+        parent.children(search);
+        out.endArray();
+    }
+
+    private void outputPath(JSONStructuredOutput out, VirtualFile parent) {
         out.beginArray("path");
         for (VirtualFile element : parent.pathList()) {
             out.beginObject("element");
@@ -286,13 +316,6 @@ public class VFSController extends BizController {
             out.endObject();
         }
         out.endArray();
-        out.beginArray("children");
-        if (parent.parent() != null) {
-            outputFile(out, "..", parent.parent());
-        }
-        parent.children(search);
-        out.endArray();
-        out.property("canCreateChildren", parent.canCreateChildren());
     }
 
     private void outputFile(JSONStructuredOutput out, String name, VirtualFile child) {

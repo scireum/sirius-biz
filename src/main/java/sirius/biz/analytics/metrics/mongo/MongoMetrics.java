@@ -19,9 +19,7 @@ import sirius.db.mongo.Updater;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * Stores metrics into the appropriate collections of the underlying MongoDB.
@@ -99,7 +97,7 @@ public class MongoMetrics extends BasicMetrics<MongoEntity> {
                                    .whereIgnoreNull(MonthlyMetric.MONTH, month)
                                    .whereIgnoreNull(DailyMetric.DAY, day);
 
-        return updateQuery.set(Fact.VALUE, value).executeFor(type).getMatchedCount() > 0;
+        return updateQuery.set(Fact.VALUE, value).executeForOne(type).getMatchedCount() > 0;
     }
 
     @Override

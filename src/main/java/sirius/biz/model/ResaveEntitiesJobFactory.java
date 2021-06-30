@@ -17,9 +17,12 @@ import sirius.biz.jobs.params.Parameter;
 import sirius.biz.mongo.PrefixSearchableEntity;
 import sirius.biz.process.PersistencePeriod;
 import sirius.biz.process.ProcessContext;
+import sirius.biz.process.Processes;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.protocol.Traced;
 import sirius.biz.tenants.TenantUserManager;
+import sirius.db.es.ElasticEntity;
+import sirius.db.es.ElasticQuery;
 import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.BaseEntity;
@@ -46,27 +49,23 @@ import java.util.function.Consumer;
  * @see sirius.db.mixing.annotations.BeforeSave
  * @see sirius.db.mixing.annotations.OnValidate
  */
-@Register
+@Register(framework = Processes.FRAMEWORK_PROCESSES)
 @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
 public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
 
-    private EntityDescriptorParameter descriptorParameter = new EntityDescriptorParameter().markRequired();
-    private BooleanParameter executeSaveParameter;
-    private BooleanParameter performValidationParameter;
+    private final Parameter<EntityDescriptor> descriptorParameter =
+            new EntityDescriptorParameter().markRequired().build();
 
-    /**
-     * Creates a new instance of the job factory.
-     */
-    public ResaveEntitiesJobFactory() {
-        this.executeSaveParameter = new BooleanParameter("executeSave", "Execute Save");
-        this.executeSaveParameter.withDefaultTrue();
-        this.executeSaveParameter.withDescription(
-                "Determines if the update method of the underlying mapper should be invoked so that all BeforeSave handlers are executed.");
-
-        this.performValidationParameter = new BooleanParameter("performValidation", "Perform Validation");
-        this.performValidationParameter.withDefaultTrue();
-        this.performValidationParameter.withDescription("Determines if all OnValidate handlers should be invoked.");
-    }
+    private final Parameter<Boolean> executeSaveParameter =
+            new BooleanParameter("executeSave", "Execute Save").withDefaultTrue()
+                                                               .withDescription(
+                                                                       "Determines if the update method of the underlying mapper should be invoked so that all BeforeSave handlers are executed.")
+                                                               .build();
+    private final Parameter<Boolean> performValidationParameter =
+            new BooleanParameter("performValidation", "Perform Validation").withDefaultTrue()
+                                                                           .withDescription(
+                                                                                   "Determines if all OnValidate handlers should be invoked.")
+                                                                           .build();
 
     @Override
     protected BatchJob createJob(ProcessContext process) throws Exception {
@@ -90,6 +89,8 @@ public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
             Query<?, ?, ?> query = descriptor.getMapper().select((descriptor.getType().asSubclass(BaseEntity.class)));
             if (query instanceof SmartQuery) {
                 ((SmartQuery<? extends SQLEntity>) query).iterateBlockwiseAll(this::processEntity);
+            } else if (query instanceof ElasticQuery) {
+                ((ElasticQuery<? extends ElasticEntity>) query).deliberatelyUnrouted().iterateAll(this::processEntity);
             } else {
                 query.iterateAll(this::processEntity);
             }
@@ -148,7 +149,7 @@ public class ResaveEntitiesJobFactory extends DefaultBatchProcessFactory {
     }
 
     @Override
-    protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
+    protected void collectParameters(Consumer<Parameter<?>> parameterCollector) {
         parameterCollector.accept(descriptorParameter);
         parameterCollector.accept(executeSaveParameter);
         parameterCollector.accept(performValidationParameter);

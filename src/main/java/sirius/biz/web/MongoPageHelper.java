@@ -133,10 +133,10 @@ public class MongoPageHelper<E extends MongoEntity>
                                              .findFirst()
                                              .orElse(0);
                 if (numberOfHits > 0 || item.isActive()) {
-                    item.setCount(numberOfHits);
+                    item.withCount(numberOfHits);
                 } else {
                     // If the item has no matches and isn't an active filter - remove as
-                    // it is unneccessary...
+                    // it is unnecessary...
                     iter.remove();
                 }
             }
@@ -153,9 +153,7 @@ public class MongoPageHelper<E extends MongoEntity>
      */
     public MongoPageHelper<E> addBooleanAggregation(Mapping field) {
         Facet facet = new Facet(baseQuery.getDescriptor().findProperty(field.toString()).getLabel(),
-                                field.toString(),
-                                null,
-                                null);
+                                field.toString());
 
         return addFacet(facet, (f, q) -> {
             f.addItem("true", NLS.get("NLS.yes"), -1);
@@ -178,10 +176,10 @@ public class MongoPageHelper<E extends MongoEntity>
                 int numberOfHits =
                         Strings.areEqual(item.getKey(), "true") ? mongoFacet.getNumTrue() : mongoFacet.getNumFalse();
                 if (numberOfHits > 0 || item.isActive()) {
-                    item.setCount(numberOfHits);
+                    item.withCount(numberOfHits);
                 } else {
                     // If the item has no matches and isn't an active filter - remove as
-                    // it is unneccessary...
+                    // it is unnecessary...
                     iter.remove();
                 }
             }
@@ -201,7 +199,7 @@ public class MongoPageHelper<E extends MongoEntity>
                                                  ValueComputer<String, String> translator) {
         ValueComputer<String, String> nonNullTranslator = translator == null ? key -> key : translator;
 
-        Facet facet = new Facet(title, field.toString(), null, translator);
+        Facet facet = new Facet(title, field.toString()).withTranslator(translator);
         addFilterFacet(facet);
 
         baseQuery.addFacet(new MongoTermFacet(field).onComplete(mongoFacet -> {
@@ -236,7 +234,9 @@ public class MongoPageHelper<E extends MongoEntity>
 
     @Override
     protected void fillPage(Watch w, Page<E> result, List<E> items) {
-        baseQuery.executeFacets();
+        if (!baseQuery.isForceFail()) {
+            baseQuery.executeFacets();
+        }
         super.fillPage(w, result, items);
     }
 

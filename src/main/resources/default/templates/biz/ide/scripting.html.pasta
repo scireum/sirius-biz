@@ -1,0 +1,125 @@
+<i:arg type="List" name="nodes"/>
+<w:page title="Scripting Console">
+    <i:block name="head">
+        <script src="/assets/wondergem/ace/ace.js" type="text/javascript"></script>
+
+        <style>
+            #transcript {
+                background: #323232;
+                color: white;
+                padding: 8px;
+                margin-bottom: 20px;
+                overflow: auto;
+                height: 300px;
+            }
+
+            #transcript .transcript-message {
+                font-family: monospace;
+                white-space: pre;
+            }
+        </style>
+    </i:block>
+
+    <i:block name="breadcrumbs">
+        <li><a href="/system/scripting">Scripting Console</a></li>
+    </i:block>
+
+    <w:pageHeader title="Scripting Console"/>
+
+    <w:codeEditor id="editor" height="300" mode="javascript" useWorker="false">log('Good Morning Dave');</w:codeEditor>
+
+    <div class="form-actions">
+        <div class="row">
+            <div class="col-md-8">
+                <a id="execute" class="btn btn-success btn-lg">Execute</a>
+            </div>
+            <w:singleSelect span="4"
+                            smallSpan="4"
+                            id="node"
+                            name="node"
+                            label="">
+                <i:for var="node" type="Tuple" items="@nodes">
+                    <option value="@node.getSecond()">@node.getFirst()</option>
+                </i:for>
+            </w:singleSelect>
+        </div>
+    </div>
+
+    <div>
+        <w:subHeading label="Transcript"/>
+        <div id="transcript">
+            <div id="output">
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        let lastCheckedScript = '';
+        let $output = $('#output');
+        let $transcript = $('#transcript');
+        let lastLog = 0;
+
+        $(document).ready(function () {
+            setTimeout(updateState, 1000);
+        });
+
+        function limitNumberOfLogs() {
+            let numberOfRows = $('div', $output).length;
+            let rowsToRemove = numberOfRows - 256;
+            while (rowsToRemove > 0) {
+                $('div:last', $output).remove();
+                rowsToRemove--;
+            }
+        }
+
+        function updateState() {
+            let script = editor.getSession().getDocument().getValue();
+            if (script !== lastCheckedScript) {
+                lastCheckedScript = script;
+
+                $.getJSON('/system/scripting/api/compile',
+                    {script: editor.getSession().getDocument().getValue()},
+                    function (data) {
+                        if (data.problems != null && data.problems.length > 0) {
+                            editor.getSession().setAnnotations(data.problems);
+                        } else {
+                            editor.getSession().setAnnotations([]);
+                        }
+                    });
+            }
+            $.getJSON('/system/scripting/api/transcript',
+                {minTimestamp: lastLog},
+                function (data) {
+                    if (data.messages != null) {
+                        for (i = 0; i < data.messages.length; i++) {
+                            let msg = data.messages[i];
+                            let row = $('<div class="transcript-message"></div>').text("[" + msg.timestampString + "] " + msg.job + "/" + msg.node + ": " + msg.message);
+                            lastLog = Math.max(lastLog, msg.timestamp);
+                            row.appendTo($output);
+                        }
+                        if (data.messages.length > 0) {
+                            limitNumberOfLogs();
+                            $transcript.animate({scrollTop: $transcript[0].scrollHeight}, 600);
+                        }
+                    }
+
+                    setTimeout(updateState, 1000);
+                }
+            );
+        }
+
+        $('#execute').click(function () {
+            $.getJSON('/system/scripting/api/submit',
+                {script: editor.getSession().getDocument().getValue(), node: $('#node').next('select').val()},
+                function (data) {
+                    clearMessages();
+
+                    if (data.error) {
+                        addError(data.message);
+                    } else {
+                        addInfo(data.jobMessage)
+                    }
+                });
+        });
+    </script>
+</w:page>

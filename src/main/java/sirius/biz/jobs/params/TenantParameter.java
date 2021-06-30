@@ -11,7 +11,6 @@ package sirius.biz.jobs.params;
 import sirius.biz.tenants.Tenant;
 import sirius.biz.tenants.TenantController;
 import sirius.biz.tenants.Tenants;
-import sirius.db.mixing.annotations.NullAllowed;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 
@@ -21,7 +20,7 @@ import java.util.Optional;
 /**
  * Permits to select a {@link Tenant} as parameter.
  */
-public class TenantParameter extends Parameter<Tenant<?>, TenantParameter> {
+public class TenantParameter extends ParameterBuilder<Tenant<?>, TenantParameter> {
 
     @Part
     @Nullable

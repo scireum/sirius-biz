@@ -10,13 +10,10 @@ package sirius.biz.storage.layer2;
 
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.mixing.BaseEntity;
-import sirius.db.mixing.annotations.AfterDelete;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nonnull;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -79,5 +76,4 @@ public class BlobReferenceContainer extends BaseBlobContainer {
 
         getSpace().attachBlobByType(blob.getBlobKey(), owner.getUniqueName(), type);
     }
-
 }

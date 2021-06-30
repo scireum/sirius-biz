@@ -40,6 +40,7 @@ import java.util.function.Predicate;
 @Index(name = "directory_name_lookup", columns = {"spaceName", "parent", "deleted", "directoryName"})
 @Index(name = "directory_normalized_name_lookup",
         columns = {"spaceName", "parent", "deleted", "normalizedDirectoryName"})
+@Index(name = "directory_renamed_loop", columns = "renamed")
 public class SQLDirectory extends SQLEntity implements Directory, OptimisticCreate {
 
     /**
@@ -98,7 +99,14 @@ public class SQLDirectory extends SQLEntity implements Directory, OptimisticCrea
     public static final Mapping DELETED = Mapping.named("deleted");
     private boolean deleted;
 
+    /**
+     * Stores if the directory has been renamed.
+     */
+    public static final Mapping RENAMED = Mapping.named("renamed");
+    private boolean renamed;
+
     @Part
+    @Nullable
     private static BlobStorage layer2;
 
     @Transient
@@ -122,6 +130,10 @@ public class SQLDirectory extends SQLEntity implements Directory, OptimisticCrea
                 this.directoryName = null;
                 this.normalizedDirectoryName = null;
             }
+        }
+
+        if (!isNew() && isChanged(DIRECTORY_NAME)) {
+            renamed = true;
         }
     }
 
@@ -245,5 +257,9 @@ public class SQLDirectory extends SQLEntity implements Directory, OptimisticCrea
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public boolean isRenamed() {
+        return renamed;
     }
 }

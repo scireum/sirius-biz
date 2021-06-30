@@ -20,6 +20,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.Formatter;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.DefaultRoute;
@@ -34,6 +35,7 @@ import sirius.web.security.UserContext;
 import sirius.web.services.JSONStructuredOutput;
 import sirius.web.util.LinkBuilder;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -47,7 +49,7 @@ import java.util.Optional;
  * @param <T> specifies the effective entity type used to represent Tenants
  * @param <U> specifies the effective entity type used to represent UserAccounts
  */
-public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
+public abstract class TenantController<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends BizController {
 
     /**
@@ -420,8 +422,8 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
         assertPermission(TenantUserManager.PERMISSION_SELECT_TENANT);
 
         Optional<T> tenant = resolveAccessibleTenant(tenantId, determineCurrentTenant(webContext));
-        if (!tenant.isPresent()) {
-            UserContext.get().addMessage(Message.error(NLS.get("TenantController.cannotBecomeTenant")));
+        if (tenant.isEmpty()) {
+            UserContext.get().addMessage(Message.error().withTextMessage(NLS.get("TenantController.cannotBecomeTenant")));
             selectTenants(webContext);
             return;
         }
@@ -452,9 +454,13 @@ public abstract class TenantController<I, T extends BaseEntity<I> & Tenant<I>, U
             Page<T> tenants = getSelectableTenantsAsPage(webContext, determineCurrentTenant(webContext)).asPage();
 
             tenants.getItems().forEach(tenant -> {
-                result.accept(new AutocompleteHelper.Completion(tenant.getIdAsString(),
-                                                                tenant.toString(),
-                                                                tenant.toString()));
+                String description = Formatter.create("[${zip}][ ${city}]")
+                                              .set("zip", tenant.getTenantData().getAddress().getZip())
+                                              .set("city", tenant.getTenantData().getAddress().getCity())
+                                              .format();
+                result.accept(AutocompleteHelper.suggest(tenant.getIdAsString())
+                                                .withFieldLabel(tenant.toString())
+                                                .withCompletionDescription(description));
             });
         });
     }

@@ -12,14 +12,14 @@ import org.apache.commons.io.input.CloseShieldInputStream;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
-import sirius.biz.storage.layer3.FileOrDirectoryParameter;
+import sirius.biz.storage.layer3.VirtualFile;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -29,16 +29,16 @@ import java.util.zip.ZipOutputStream;
  */
 public abstract class ArchiveExportJob extends FileExportJob {
 
+    private static final String ZIP_FILE_EXTENSION = "zip";
     private ZipOutputStream zipOutputStream;
 
     /**
      * Creates a new job which writes into the given destination.
      *
-     * @param destinationParameter the parameter used to select the destination for the file being written
-     * @param process              the context in which the process will be executed
+     * @param process the context in which the process will be executed
      */
-    protected ArchiveExportJob(FileOrDirectoryParameter destinationParameter, ProcessContext process) {
-        super(destinationParameter, process);
+    protected ArchiveExportJob(ProcessContext process) {
+        super(process);
     }
 
     /**
@@ -62,7 +62,7 @@ public abstract class ArchiveExportJob extends FileExportJob {
 
     @Override
     protected final String determineFileExtension() {
-        return "zip";
+        return ZIP_FILE_EXTENSION;
     }
 
     @Override
@@ -78,9 +78,8 @@ public abstract class ArchiveExportJob extends FileExportJob {
      */
     public abstract static class ArchiveExportJobFactory extends FileExportJobFactory {
         @Override
-        protected void collectParameters(Consumer<Parameter<?, ?>> parameterCollector) {
-            destinationParameter.withAcceptedExtensions("zip");
-            super.collectParameters(parameterCollector);
+        protected Parameter<VirtualFile> getDestinationParameter() {
+            return FileExportJob.createDestinationParameter(Collections.singletonList(ZIP_FILE_EXTENSION));
         }
     }
 

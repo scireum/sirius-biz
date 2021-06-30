@@ -9,6 +9,7 @@
 package sirius.biz.jobs.batch.file;
 
 import sirius.biz.jobs.batch.BatchJob;
+import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.Processes;
 import sirius.biz.storage.layer3.FileOrDirectoryParameter;
@@ -18,10 +19,12 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -33,7 +36,17 @@ import java.util.function.Supplier;
  */
 public abstract class FileExportJob extends BatchJob {
 
+    /**
+     * Contains the default parameter which specifies the destination of the export.
+     * <p>
+     * Note that even if another instance is used in {@link FileExportJobFactory#collectParameters(Consumer)}, this
+     * will still work out as long as the parameter names are the same. Therefore both parameters should be
+     * created using {@link #createDestinationParameter(List)}.
+     */
+    public static final Parameter<VirtualFile> DESTINATION_PARAMETER = createDestinationParameter(null);
+
     @Part
+    @Nullable
     private static Processes processes;
 
     protected final VirtualFile destination;
@@ -42,12 +55,27 @@ public abstract class FileExportJob extends BatchJob {
     /**
      * Creates a new job which writes into the given destination.
      *
-     * @param destinationParameter the parameter used to select the destination for the file being written
-     * @param process              the context in which the process will be executed
+     * @param process the context in which the process will be executed
      */
-    protected FileExportJob(FileOrDirectoryParameter destinationParameter, ProcessContext process) {
+    protected FileExportJob(ProcessContext process) {
         super(process);
-        this.destination = process.getParameter(destinationParameter).orElse(null);
+        this.destination = process.getParameter(DESTINATION_PARAMETER).orElse(null);
+    }
+
+    /**
+     * Helps to create a custom destination parameter with an appropriate file extension filter.
+     *
+     * @param acceptedFileExtensions the file extensions to accept.
+     * @return the parameter used as destination
+     */
+    public static Parameter<VirtualFile> createDestinationParameter(@Nullable List<String> acceptedFileExtensions) {
+        FileOrDirectoryParameter result =
+                new FileOrDirectoryParameter("destination", "$FileExportJobFactory.destination").withDescription(
+                        "$FileExportJobFactory.destination.help").withBasePath("/work");
+        if (acceptedFileExtensions != null && !acceptedFileExtensions.isEmpty()) {
+            result.withAcceptedExtensionsList(acceptedFileExtensions);
+        }
+        return result.build();
     }
 
     /**

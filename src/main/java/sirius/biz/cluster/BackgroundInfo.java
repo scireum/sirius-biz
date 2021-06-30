@@ -16,15 +16,19 @@ import java.util.Map;
  * Contains infomation about all background jobs or processes running on a node.
  */
 public class BackgroundInfo {
-    private String nodeName;
-    private boolean bleeding;
-    private String uptime;
-    protected Map<String, BackgroundJobInfo> jobs = new HashMap<>();
+    private final String nodeName;
+    private final boolean bleeding;
+    private final String uptime;
+    private final String version;
+    private final String detailedVersion;
+    protected final Map<String, BackgroundJobInfo> jobs = new HashMap<>();
 
-    protected BackgroundInfo(String nodeName, boolean bleeding, String uptime) {
+    protected BackgroundInfo(String nodeName, boolean bleeding, String uptime, String version, String detailedVersion) {
         this.nodeName = nodeName;
         this.bleeding = bleeding;
         this.uptime = uptime;
+        this.version = version;
+        this.detailedVersion = detailedVersion;
     }
 
     /**
@@ -47,6 +51,14 @@ public class BackgroundInfo {
 
     public boolean isBleeding() {
         return bleeding;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public String getDetailedVersion() {
+        return detailedVersion;
     }
 
     /**

@@ -37,8 +37,8 @@ public class AutoBatchLoop extends BackgroundLoop {
     private static final int MAX_ENTITIES_PER_RUN = 5000;
     private static final int MAX_QUEUED_ENTITIES = 20000;
     private LocalDateTime frozenUntil;
-    private ConcurrentLinkedDeque<ElasticEntity> entities = new ConcurrentLinkedDeque<>();
-    private AtomicInteger queuedEntities = new AtomicInteger();
+    private final ConcurrentLinkedDeque<ElasticEntity> entities = new ConcurrentLinkedDeque<>();
+    private final AtomicInteger queuedEntities = new AtomicInteger();
 
     @Part
     private Elastic elastic;

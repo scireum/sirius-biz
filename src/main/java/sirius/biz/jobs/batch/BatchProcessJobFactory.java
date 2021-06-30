@@ -25,6 +25,7 @@ import sirius.kernel.nls.NLS;
 import sirius.web.http.WebContext;
 import sirius.web.security.UserContext;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -59,6 +60,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     public static final String HIDDEN_PARAMETER_CUSTOM_PERSISTENCE_PERIOD = "_customPersistencePeriod";
 
     @Part
+    @Nullable
     protected Processes processes;
 
     @Part
@@ -112,7 +114,6 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
      * @return the id of the newly created process
      */
     protected String startWithContext(Map<String, String> context) {
-
         String processId = processes.createProcessForCurrentUser(getClass().getSimpleName() + ".label",
                                                                  createProcessTitle(context),
                                                                  getIcon(),
@@ -216,7 +217,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     protected abstract BatchJob createJob(ProcessContext process) throws Exception;
 
     protected void logParameters(ProcessContext process) {
-        List<Parameter<?, ?>> parameters = getParameters();
+        List<Parameter<?>> parameters = getParameters();
 
         makeParameterLog(process, parameters, Parameter.LogVisibility.NORMAL).ifPresent(process::log);
         makeParameterLog(process, parameters, Parameter.LogVisibility.SYSTEM).ifPresent(processLog -> process.log(
@@ -224,7 +225,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
     }
 
     private Optional<ProcessLog> makeParameterLog(ProcessContext process,
-                                                  List<Parameter<?, ?>> parameters,
+                                                  List<Parameter<?>> parameters,
                                                   Parameter.LogVisibility logVisibility) {
         if (parameters.stream().noneMatch(parameter -> logVisibility == parameter.getLogVisibility())) {
             return Optional.empty();
@@ -240,6 +241,7 @@ public abstract class BatchProcessJobFactory extends BasicJobFactory {
             output.append(value);
             output.append("\n");
         });
+
         return Optional.of(ProcessLog.info().withMessage(output.toString().trim()));
     }
 }

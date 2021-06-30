@@ -39,13 +39,13 @@ public class JournalController extends BizController {
         ph.addTermAggregation(JournalEntry.TARGET_TYPE);
         ph.addTimeAggregation(JournalEntry.TOD,
                               false,
-                              DateRange.lastFiveMinutes(),
-                              DateRange.lastFiveteenMinutes(),
-                              DateRange.lastTwoHours(),
-                              DateRange.today(),
-                              DateRange.yesterday(),
-                              DateRange.thisWeek(),
-                              DateRange.lastWeek());
+                              DateRange.LAST_FIVE_MINUTES,
+                              DateRange.LAST_FIFTEEN_MINUTES,
+                              DateRange.LAST_TWO_HOURS,
+                              DateRange.TODAY,
+                              DateRange.YESTERDAY,
+                              DateRange.THIS_WEEK,
+                              DateRange.LAST_WEEK);
         ph.withSearchFields(QueryField.contains(JournalEntry.SEARCH_FIELD));
 
         ctx.respondWith().template("/templates/biz/protocol/protocol.html.pasta", ph.asPage());
@@ -71,13 +71,13 @@ public class JournalController extends BizController {
         ph.withContext(ctx);
         ph.addTimeAggregation(JournalEntry.TOD,
                               false,
-                              DateRange.lastFiveMinutes(),
-                              DateRange.lastFiveteenMinutes(),
-                              DateRange.lastTwoHours(),
-                              DateRange.today(),
-                              DateRange.yesterday(),
-                              DateRange.thisWeek(),
-                              DateRange.lastWeek());
+                              DateRange.LAST_FIVE_MINUTES,
+                              DateRange.LAST_FIFTEEN_MINUTES,
+                              DateRange.LAST_TWO_HOURS,
+                              DateRange.TODAY,
+                              DateRange.YESTERDAY,
+                              DateRange.THIS_WEEK,
+                              DateRange.LAST_WEEK);
         ph.withSearchFields(QueryField.contains(JournalEntry.SEARCH_FIELD));
 
         ctx.respondWith().template("/templates/biz/protocol/entity_protocol.html.pasta", type, id, ph.asPage());

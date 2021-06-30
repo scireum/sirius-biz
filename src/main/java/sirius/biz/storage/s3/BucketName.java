@@ -21,7 +21,7 @@ import java.util.Objects;
  */
 public class BucketName {
 
-    private String name;
+    private final String name;
 
     /**
      * Creates a new bucket name for the given bucket and suffix.
@@ -36,7 +36,7 @@ public class BucketName {
     /**
      * Creates a new bucket name for the given bucket, suffix and year.
      *
-     * @param year         the year to prepent to the bucket
+     * @param year         the year to prepend to the bucket
      * @param name         the name of the bucket
      * @param bucketSuffix the suffix to append
      */

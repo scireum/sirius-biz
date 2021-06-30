@@ -22,7 +22,6 @@ import javax.annotation.Nonnull;
  * Provides an import job for {@link MongoUserAccount user accounts} stored in MongoDB.
  */
 @Register(framework = MongoTenants.FRAMEWORK_TENANTS_MONGO)
-@Permission(UserAccountController.PERMISSION_MANAGE_USER_ACCOUNTS)
 public class MongoUserAccountImportJobFactory extends EntityImportJobFactory {
 
     @Part
