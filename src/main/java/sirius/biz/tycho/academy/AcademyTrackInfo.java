@@ -35,12 +35,16 @@ public class AcademyTrackInfo {
         this.trackDescription = trackDescription;
     }
 
-    public void incRecommendedVideos() {
+    protected void incRecommendedVideos() {
         numberOfRecommendedVideos++;
     }
 
-    public void incVideos() {
+    protected void incVideos() {
         numberOfVideos++;
+    }
+
+    protected void incDuration(int duration) {
+        this.totalDuration += duration;
     }
 
     public String getTrackId() {
@@ -61,10 +65,6 @@ public class AcademyTrackInfo {
 
     public int getNumberOfRecommendedVideos() {
         return numberOfRecommendedVideos;
-    }
-
-    public void incDuration(int duration) {
-        this.totalDuration += duration;
     }
 
     public int getTotalDuration() {
