@@ -21,7 +21,7 @@
                         copyToClipboard(window.location.protocol + window.location.host + '/tenants/select/@user().getTenantId()?goto=' + encodeURI(window.location.href));
 
                         clearMessages();
-                        addSuccessMessage('Support-Link in Zwischenablage kopiert');
+                        addSuccessMessage('@i18n("footer.html.supportLinkCopiedSuccessfully")');
                     }
                 </script>
             </i:if>
