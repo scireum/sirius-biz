@@ -69,6 +69,7 @@ public class PersonData extends Composite {
     private final LookupValue salutation = new LookupValue(LOOKUP_TABLE_SALUTATIONS,
                                                            LookupValue.CustomValues.ACCEPT,
                                                            LookupValue.Display.NAME,
+                                                           LookupValue.Display.NAME,
                                                            LookupValue.Export.NAME);
 
     /**
