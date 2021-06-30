@@ -50,7 +50,7 @@ public class KnowledgeBaseSearchProvider implements OpenSearchProvider {
         knowledgeBase.query(UserContext.getCurrentUser().getLang(), query, maxResults).forEach(article -> {
             resultCollector.accept(new OpenSearchResult().withLabel(article.getTitle())
                                                          .withDescription(article.getDescription())
-                                                         .withURL("/kb/" + article.getArticleId()));
+                                                         .withURL("/kba/" + article.getLanguage()+ "/" + article.getArticleId()));
         });
     }
 
