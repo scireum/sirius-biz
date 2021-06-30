@@ -91,7 +91,7 @@ class SevenZipAdapter implements IArchiveExtractCallback {
         }
 
         currentLastModified = Optional.ofNullable((Date) inArchive.getProperty(index, PropID.LAST_MODIFICATION_TIME))
-                                      .map(lastModificationTime -> Instant.ofEpochSecond(lastModificationTime.getTime()))
+                                      .map(lastModificationTime -> Instant.ofEpochMilli(lastModificationTime.getTime()))
                                       .orElse(Instant.now());
 
         // We actually want to extract this file - setup the shared buffer properly.
