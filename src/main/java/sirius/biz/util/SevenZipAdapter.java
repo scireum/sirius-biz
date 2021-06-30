@@ -26,6 +26,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -89,9 +90,9 @@ class SevenZipAdapter implements IArchiveExtractCallback {
             return null;
         }
 
-        Date lastModificationTime = (Date) inArchive.getProperty(index, PropID.LAST_MODIFICATION_TIME);
-        currentLastModified =
-                lastModificationTime == null ? Instant.now() : Instant.ofEpochSecond(lastModificationTime.getTime());
+        currentLastModified = Optional.ofNullable((Date) inArchive.getProperty(index, PropID.LAST_MODIFICATION_TIME))
+                                      .map(lastModificationTime -> Instant.ofEpochSecond(lastModificationTime.getTime()))
+                                      .orElse(Instant.now());
 
         // We actually want to extract this file - setup the shared buffer properly.
         // Note that this might (sooner or later) create a temporary file. Therefore it is essential that this stream
