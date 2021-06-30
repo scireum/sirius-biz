@@ -33,8 +33,39 @@ public abstract class RecomputeOnboardingVideosCheck<E extends BaseEntity<?> & O
     @Nullable
     protected static OnboardingEngine onboardingEngine;
 
+    @Override
+    protected void execute(E entity) {
+        if (onboardingEngine == null) {
+            return;
+        }
+
+        determineAcademies(entity, academy -> new Computation(academy, entity).perform());
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return onboardingEngine != null;
+    }
+
     /**
-     * Wraps the whole process of creating onboarding videos for once participant to carry along some state.
+     * Checks if the given entity fulfills the given permission string.
+     *
+     * @param entity     the entity to check the permissions for
+     * @param permission the permissions to check
+     * @return <tt>true</tt> if the requested permissions are available, <tt>false</tt> otherwise
+     */
+    protected abstract boolean checkPermission(E entity, String permission);
+
+    /**
+     * Determines which academies are relevant for the given entity.
+     *
+     * @param entity          the entity to check the academies for
+     * @param academyConsumer the consumer to be supplied with the enabled academies
+     */
+    protected abstract void determineAcademies(E entity, Consumer<String> academyConsumer);
+
+    /**
+     * Wraps the whole process of creating onboarding videos for one participant to carry along some state.
      */
     private class Computation {
 
@@ -118,36 +149,6 @@ public abstract class RecomputeOnboardingVideosCheck<E extends BaseEntity<?> & O
         }
     }
 
-    @Override
-    protected void execute(E entity) {
-        if (onboardingEngine == null) {
-            return;
-        }
-
-        determineAcademies(entity, academy -> new Computation(academy, entity).perform());
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return onboardingEngine != null;
-    }
-
-    /**
-     * Checks if the given entity fulfills the given permission string.
-     *
-     * @param entity     the entity to check the permissions for
-     * @param permission the permissions to check
-     * @return <tt>true</tt> if the requested permissions are available, <tt>false</tt> otherwise
-     */
-    protected abstract boolean checkPermission(E entity, String permission);
-
-    /**
-     * Determines which academies are relevant for the given entity.
-     *
-     * @param entity          the entity to check the academies for
-     * @param academyConsumer the consumer to be supplied with the enabled academies
-     */
-    protected abstract void determineAcademies(E entity, Consumer<String> academyConsumer);
 }
 
 
