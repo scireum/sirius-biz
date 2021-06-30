@@ -20,6 +20,17 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * Provides a base class which computes {@link sirius.biz.tycho.academy.OnboardingVideo onboarding videos}
+ * for {@link UserAccount user accounts}.
+ * <p>
+ * This uses the academies as given in <tt>tycho.onboarding.tenants-academies</tt> and computes the onboarding
+ * videos for each active user.
+ *
+ * @param <I> the generic ID type of the user accounts
+ * @param <T> the generic type of the tenants being used
+ * @param <U> the generic type of the user account being targeted
+ */
 public abstract class UserAccountVideosCheck<I extends Serializable, T extends BaseEntity<I> & Tenant<I>, U extends BaseEntity<I> & UserAccount<I, T>>
         extends RecomputeOnboardingVideosCheck<U> {
 

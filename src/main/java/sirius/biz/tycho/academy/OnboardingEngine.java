@@ -32,7 +32,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
- * Manages{@link OnboardingVideo onboarding videos} and {@link AcademyVideo academy videos}.
+ * Manages {@link OnboardingVideo onboarding videos} and {@link AcademyVideo academy videos}.
  * <p>
  * Note that this is actually entity agnostic. The target entities are determined by subclassing
  * {@link RecomputeOnboardingVideosCheck}.
