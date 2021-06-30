@@ -8,6 +8,7 @@
 
 package sirius.biz.tycho.academy;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
@@ -19,7 +20,6 @@ import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -49,9 +49,11 @@ public class OnboardingController extends BizController {
             return;
         }
 
+        assertNotNull(onboardingEngine);
+
         webContext.respondWith()
                   .template("/templates/biz/tycho/academy/tracks.html.pasta",
-                            onboardingEngine != null ? onboardingEngine.fetchTracks(target) : Collections.emptyList(),
+                            onboardingEngine.fetchTracks(target),
                             target,
                             computeURISignature(target),
                             onboardingEngine.fetchSomeVideo(target).orElse(null));
@@ -71,16 +73,14 @@ public class OnboardingController extends BizController {
             return;
         }
 
-        AcademyTrackInfo trackInfo =
-                onboardingEngine != null ? onboardingEngine.fetchTrack(target, track).orElse(null) : null;
-        assertNotNull(trackInfo);
+        assertNotNull(onboardingEngine);
 
-        List<? extends OnboardingVideo> videos =
-                onboardingEngine != null ? onboardingEngine.fetchVideos(target, track) : Collections.emptyList();
+        AcademyTrackInfo trackInfo = onboardingEngine.fetchTrack(target, track).orElse(null);
+        assertNotNull(trackInfo);
 
         webContext.respondWith()
                   .template("/templates/biz/tycho/academy/track.html.pasta",
-                            videos,
+                            onboardingEngine.fetchVideos(target, track),
                             trackInfo,
                             target,
                             computeURISignature(target));
@@ -140,9 +140,7 @@ public class OnboardingController extends BizController {
         if (!verifyURISignature(webContext, target, accessToken)) {
             return;
         }
-        if (onboardingEngine == null) {
-            return;
-        }
+        assertNotNull(onboardingEngine);
 
         if (webContext.hasParameter(PARAM_SEEN_IN_PERCENT)) {
             onboardingEngine.updateWatchedPercent(target, videoId, webContext.require(PARAM_SEEN_IN_PERCENT).asInt(0));
