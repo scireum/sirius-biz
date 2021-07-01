@@ -71,15 +71,6 @@ public class LookupValueSuggestionController extends BizController {
         }
 
         entryStream.limit(MAX_SUGGESTIONS_ITEMS)
-                   .forEach(entry -> result.accept(makeSuggestion(entry, fieldDisplayMode, completionDisplayMode)));
-    }
-
-    private AutocompleteHelper.Completion makeSuggestion(LookupTableEntry entry,
-                                                         LookupValue.Display fieldDisplayMode,
-                                                         LookupValue.Display completionDisplayMode) {
-        return AutocompleteHelper.suggest(entry.getCode())
-                                 .withFieldLabel(fieldDisplayMode.makeDisplayString(entry))
-                                 .withCompletionLabel(completionDisplayMode.makeDisplayString(entry))
-                                 .withCompletionDescription(entry.getDescription());
+                   .forEach(entry -> result.accept(entry.toAutocompletion(fieldDisplayMode, completionDisplayMode)));
     }
 }
