@@ -41,6 +41,7 @@
             selectMode: SelectModes.SINGLE,
             allowCustomEntries: @value.acceptsCustomValues(),
             optional: @optional,
+            readonly: @readonly,
             enableTabulator: false,
             selector: '#@id',
             noMatchesText: '@i18n("template.html.selects.noMatches")',
