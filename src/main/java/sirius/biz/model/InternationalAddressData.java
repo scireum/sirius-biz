@@ -68,6 +68,7 @@ public class InternationalAddressData extends AddressData {
         this.country = new LookupValue(countriesLookupTable,
                                        LookupValue.CustomValues.ACCEPT,
                                        LookupValue.Display.NAME,
+                                       LookupValue.Display.NAME,
                                        LookupValue.Export.CODE);
     }
 

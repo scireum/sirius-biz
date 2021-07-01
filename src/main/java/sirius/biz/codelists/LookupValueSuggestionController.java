@@ -35,20 +35,32 @@ public class LookupValueSuggestionController extends BizController {
     /**
      * Responds with possible suggestions from the given {@link LookupTable} using {@link AutocompleteHelper}.
      *
-     * @param webContext the web requests calling the autocomplete service
-     * @param tableName  the name of the table for which suggestions should be gathered
-     * @param display    the requested {@link sirius.biz.codelists.LookupValue.Display display mode} for the label
+     * @param webContext      the web requests calling the autocomplete service
+     * @param tableName       the name of the table for which suggestions should be gathered
+     * @param display         the requested {@link sirius.biz.codelists.LookupValue.Display display mode} for the field label
+     * @param extendedDisplay the requested {@link sirius.biz.codelists.LookupValue.Display display mode} for the completion label
      */
     @LoginRequired
-    @Routed("/autocomplete/lookuptable/:1/:2")
-    public void suggestFromLookupTable(WebContext webContext, String tableName, String display) {
-        LookupValue.Display displayMode =
+    @Routed("/autocomplete/lookuptable/:1/:2/:3")
+    public void suggestFromLookupTable(WebContext webContext,
+                                       String tableName,
+                                       String display,
+                                       String extendedDisplay) {
+        LookupValue.Display fieldDisplayMode =
                 Value.of(display).getEnum(LookupValue.Display.class).orElse(LookupValue.Display.NAME);
-        AutocompleteHelper.handle(webContext, (query, result) -> performSuggest(tableName, displayMode, query, result));
+        LookupValue.Display completionDisplayMode =
+                Value.of(extendedDisplay).getEnum(LookupValue.Display.class).orElse(LookupValue.Display.NAME);
+        AutocompleteHelper.handle(webContext,
+                                  (query, result) -> performSuggest(tableName,
+                                                                    fieldDisplayMode,
+                                                                    completionDisplayMode,
+                                                                    query,
+                                                                    result));
     }
 
     private void performSuggest(String tableName,
-                                LookupValue.Display displayMode,
+                                LookupValue.Display fieldDisplayMode,
+                                LookupValue.Display completionDisplayMode,
                                 String query,
                                 Consumer<AutocompleteHelper.Completion> result) {
         Stream<LookupTableEntry> entryStream;
@@ -58,13 +70,16 @@ public class LookupValueSuggestionController extends BizController {
             entryStream = lookupTables.fetchTable(tableName).suggest(query);
         }
 
-        entryStream.limit(MAX_SUGGESTIONS_ITEMS).forEach(entry -> result.accept(makeSuggestion(entry, displayMode)));
+        entryStream.limit(MAX_SUGGESTIONS_ITEMS)
+                   .forEach(entry -> result.accept(makeSuggestion(entry, fieldDisplayMode, completionDisplayMode)));
     }
 
-    private AutocompleteHelper.Completion makeSuggestion(LookupTableEntry entry, LookupValue.Display displayMode) {
+    private AutocompleteHelper.Completion makeSuggestion(LookupTableEntry entry,
+                                                         LookupValue.Display fieldDisplayMode,
+                                                         LookupValue.Display completionDisplayMode) {
         return AutocompleteHelper.suggest(entry.getCode())
-                                 .withFieldLabel(displayMode.makeDisplayString(entry))
-                                 .withCompletionLabel(displayMode.makeDisplayString(entry))
+                                 .withFieldLabel(fieldDisplayMode.makeDisplayString(entry))
+                                 .withCompletionLabel(completionDisplayMode.makeDisplayString(entry))
                                  .withCompletionDescription(entry.getDescription());
     }
 }

@@ -43,10 +43,11 @@
             name: '@name',
             selector: '#@id',
             minCharactersForSuggestion: 0,
+            enableTabulator: false,
             allowCustomEntries: @values.acceptsCustomValues(),
             noMatchesText: '@i18n("template.html.selects.noMatches")',
             placeholderText: '@i18n("template.html.selects.selection")',
-            suggestionsUri: '/autocomplete/lookuptable/@values.getTableName()/@values.getDisplay()'
+            suggestionsUri: '/autocomplete/lookuptable/@values.getTableName()/@values.getDisplay()/@values.getExtendedDisplay()'
         });
     });
 </script>
