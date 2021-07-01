@@ -16,8 +16,8 @@
     <i:block name="page-header">
         <t:pageHeader>
             <i:block name="title">@i18n("OnboardingController.academy") - @track.getTrackName()</i:block>
-            <t:inlineInfo label="Verfügbare Videos">@track.getNumberOfVideos()</t:inlineInfo>
-            <t:inlineInfo label="Gesamtspielzeit">@track.getTotalDurationAsString()</t:inlineInfo>
+            <t:inlineInfo labelKey="OnboardingController.availableVideos">@track.getNumberOfVideos()</t:inlineInfo>
+            <t:inlineInfo labelKey="OnboardingController.totalDuration">@track.generateDurationString()</t:inlineInfo>
         </t:pageHeader>
     </i:block>
 

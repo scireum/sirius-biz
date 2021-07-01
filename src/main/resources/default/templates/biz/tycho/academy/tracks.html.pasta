@@ -32,14 +32,14 @@
                         <t:datacard title="@track.getTrackName()"
                                     link="@apply('/academy/%s/%s/track/%s',  owner, accessToken, track.getTrackId())">
                             <i:block name="subtitle">
-                                @track.getNumberOfVideos() Videos (@track.getTotalDurationAsString() Laufzeit)
+                                @track.getNumberOfVideos() @i18n('OnboardingController.videos') (@track.generateDurationString() @i18n('OnboardingController.duration'))
                             </i:block>
 
                             @track.getTrackDescription()
 
                             <i:block name="footer">
                                 <i:if test="track.getNumberOfRecommendedVideos() > 0">
-                                    <t:dot color="green">@track.getNumberOfRecommendedVideos() empfohlene Videos</t:dot>
+                                    <t:dot color="green">@i18n('OnboardingController.recommendedVideos', track.getNumberOfRecommendedVideos())</t:dot>
                                 </i:if>
                             </i:block>
                         </t:datacard>
@@ -54,14 +54,14 @@
                     <t:datacard title="@track.getTrackName()"
                                 link="@apply('/academy/%s/%s/track/%s',  owner, accessToken, track.getTrackId())">
                         <i:block name="subtitle">
-                            @track.getNumberOfVideos() Videos (@track.getTotalDurationAsString() Laufzeit)
+                            @track.getNumberOfVideos() @i18n('OnboardingController.videos') (@track.generateDurationString() @i18n('OnboardingController.duration'))
                         </i:block>
 
                         @track.getTrackDescription()
 
                         <i:block name="footer">
                             <i:if test="track.getNumberOfRecommendedVideos() > 0">
-                                <t:dot color="green">@track.getNumberOfRecommendedVideos() empfohlene Videos</t:dot>
+                                <t:dot color="green">@i18n('OnboardingController.recommendedVideos', track.getNumberOfRecommendedVideos())</t:dot>
                             </i:if>
                         </i:block>
                     </t:datacard>

@@ -30,7 +30,7 @@
         <i:if test="sirius.biz.tenants.UserAccountVideosCheck.isTenantOnboardingEnabled()">
             <t:dropdownSection framework="biz.tenants">
                 <t:dropdownItem titleKey="OnboardingController.academy"
-                                url="@apply('/academy/%s/%s', user().getUserId(), computeAuthSignature(user().getUserId()))" />
+                                url="/academy" />
             </t:dropdownSection>
         </i:if>
     </i:block>

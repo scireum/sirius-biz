@@ -8,7 +8,6 @@
 
 package sirius.biz.tycho.academy;
 
-import io.netty.handler.codec.http.HttpResponseStatus;
 import sirius.biz.web.BizController;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Part;
@@ -16,6 +15,7 @@ import sirius.kernel.di.std.Register;
 import sirius.kernel.settings.Extension;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
+import sirius.web.security.LoginRequired;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
@@ -23,7 +23,9 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 /**
- * Provides the UI for the onboarding / video academy framework.
+ * Provides the UI for the {@link OnboardingVideo onboarding} / {@link AcademyVideo video academy} framework.
+ *
+ * @see OnboardingEngine
  */
 @Register
 public class OnboardingController extends BizController {
@@ -35,6 +37,25 @@ public class OnboardingController extends BizController {
     @Part
     @Nullable
     private OnboardingEngine onboardingEngine;
+
+    /**
+     * Provides a special entry point for users of the tenant framework.
+     * <p>
+     * It will be quite common, that {@link sirius.biz.tenants.UserAccount users} of the tenants framework will
+     * be the participants of the video academy. Therefore, we provide a link which hasn't any authentication
+     * data embedded and rather rely on the user cookie itself.
+     *
+     * @param webContext the request to respond to
+     */
+    @LoginRequired
+    @Routed(value = "/academy", priority = 999)
+    public void tenantAcademy(WebContext webContext) {
+        webContext.respondWith()
+                  .redirectToGet("/academy/"
+                                 + getUser().getUserId()
+                                 + "/"
+                                 + computeURISignature(getUser().getUserId()));
+    }
 
     /**
      * Renders an overview of the available track of the video academy for the given owner.

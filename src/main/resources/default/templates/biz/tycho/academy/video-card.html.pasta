@@ -8,7 +8,7 @@
         <img class="card-img-top" src="@video.fetchAcademyVideoData().getPreviewUrl()"/>
     </i:block>
     <i:block name="subtitle">
-        <i class="fa fa-film"></i> @video.fetchAcademyVideoData().getDurationAsString()
+        <i class="fa fa-film"></i> @video.fetchAcademyVideoData().generateDurationString()
     </i:block>
     <i:block name="actions">
         <i:if test="video.getOnboardingVideoData().isRecommended()">
@@ -29,13 +29,13 @@
 
     <i:block name="footer">
         <i:if test="video.getOnboardingVideoData().isRecommended()">
-            <t:dot color="green">Empfohlen</t:dot>
+            <t:dot color="green">@i18n('OnboardingController.recommended')</t:dot>
         </i:if>
         <i:if test="video.getOnboardingVideoData().isWatched()">
-            <t:dot color="gray">Bereits angesehen</t:dot>
+            <t:dot color="gray">@i18n('OnboardingController.watched')</t:dot>
         </i:if>
         <i:if test="video.getOnboardingVideoData().isSkipped()">
-            <t:dot color="violet">Übersprungen</t:dot>
+            <t:dot color="violet">@i18n('OnboardingController.skipped')</t:dot>
         </i:if>
     </i:block>
 </t:datacard>

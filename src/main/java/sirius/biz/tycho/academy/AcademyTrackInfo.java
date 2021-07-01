@@ -71,7 +71,7 @@ public class AcademyTrackInfo {
         return totalDuration;
     }
 
-    public String getTotalDurationAsString() {
+    public String generateDurationString() {
         long minutes = totalDuration / 60;
         long seconds = totalDuration % 60;
 

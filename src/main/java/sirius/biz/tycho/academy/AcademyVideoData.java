@@ -164,7 +164,7 @@ public class AcademyVideoData extends Composite {
         this.syncToken = other.syncToken;
     }
 
-    public String getDurationAsString() {
+    public String generateDurationString() {
         long minutes = duration / 60;
         long seconds = duration % 60;
 
