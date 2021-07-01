@@ -25,6 +25,7 @@ public class LookupValues extends StringList {
     private LookupTable table;
 
     private final LookupValue.Display display;
+    private final LookupValue.Display extendedDisplay;
     private final LookupValue.Export export;
     private final LookupValue.CustomValues customValues;
 
@@ -41,7 +42,9 @@ public class LookupValues extends StringList {
      * @param customValues    determines if custom values are supported
      * @param display         determines how values are rendered in the UI
      * @param export          determines how values are rendered in exports
+     * @deprecated use the new constructor with all fields instead
      */
+    @Deprecated(forRemoval = true)
     public LookupValues(String lookupTableName,
                         LookupValue.CustomValues customValues,
                         LookupValue.Display display,
@@ -49,6 +52,31 @@ public class LookupValues extends StringList {
         this.lookupTableName = lookupTableName;
         this.customValues = customValues;
         this.display = display;
+        this.extendedDisplay = display;
+        this.export = export;
+    }
+
+    /**
+     * Creates a new list with the given settings.
+     * <p>
+     * Note that when using the list in database entities, the field has to be final, as the actual values
+     * is stored internally.
+     *
+     * @param lookupTableName the lookup table used to draw metadata from
+     * @param customValues    determines if custom values are supported
+     * @param display         determines how values are rendered in the UI
+     * @param extendedDisplay determines how values are rendered in the UI in cases where we want to be more verbose
+     * @param export          determines how values are rendered in exports
+     */
+    public LookupValues(String lookupTableName,
+                        LookupValue.CustomValues customValues,
+                        LookupValue.Display display,
+                        LookupValue.Display extendedDisplay,
+                        LookupValue.Export export) {
+        this.lookupTableName = lookupTableName;
+        this.customValues = customValues;
+        this.display = display;
+        this.extendedDisplay = extendedDisplay;
         this.export = export;
     }
 
@@ -64,7 +92,11 @@ public class LookupValues extends StringList {
      * @param lookupTableName the lookup table used to draw metadata from
      */
     public LookupValues(String lookupTableName) {
-        this(lookupTableName, LookupValue.CustomValues.REJECT, LookupValue.Display.NAME, LookupValue.Export.CODE);
+        this(lookupTableName,
+             LookupValue.CustomValues.REJECT,
+             LookupValue.Display.NAME,
+             LookupValue.Display.NAME,
+             LookupValue.Export.CODE);
     }
 
     /**
@@ -102,6 +134,10 @@ public class LookupValues extends StringList {
 
     public LookupValue.Display getDisplay() {
         return display;
+    }
+
+    public LookupValue.Display getExtendedDisplay() {
+        return extendedDisplay;
     }
 
     public LookupValue.Export getExport() {

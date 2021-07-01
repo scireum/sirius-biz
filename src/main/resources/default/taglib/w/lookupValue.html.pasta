@@ -41,10 +41,12 @@
             selectMode: SelectModes.SINGLE,
             allowCustomEntries: @value.acceptsCustomValues(),
             optional: @optional,
+            readonly: @readonly,
+            enableTabulator: false,
             selector: '#@id',
             noMatchesText: '@i18n("template.html.selects.noMatches")',
             placeholderText: '@i18n("template.html.selects.selection")',
-            suggestionsUri: '/autocomplete/lookuptable/@value.getTableName()/@value.getDisplay()'
+            suggestionsUri: '/autocomplete/lookuptable/@value.getTableName()/@value.getDisplay()/@value.getExtendedDisplay()'
         });
     });
 </script>

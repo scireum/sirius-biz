@@ -28,6 +28,7 @@ public class LookupValue {
     private LookupTable table;
 
     private final Display display;
+    private final Display extendedDisplay;
     private final Export export;
     private final CustomValues customValues;
     private String value;
@@ -87,7 +88,7 @@ public class LookupValue {
 
         @Nonnull
         private String buildCodeAndNameString(String name, String code) {
-            return name + "(" + code + ")";
+            return name + " (" + code + ")";
         }
     }
 
@@ -104,11 +105,38 @@ public class LookupValue {
      * @param customValues    determines if custom values are supported
      * @param display         determines how values are rendered in the UI
      * @param export          determines how values are rendered in exports
+     * @deprecated use the new constructor with all fields instead
      */
+    @Deprecated(forRemoval = true)
     public LookupValue(String lookupTableName, CustomValues customValues, Display display, Export export) {
         this.lookupTableName = lookupTableName;
         this.customValues = customValues;
         this.display = display;
+        this.extendedDisplay = display;
+        this.export = export;
+    }
+
+    /**
+     * Creates a new value with the given settings.
+     * <p>
+     * Note that when using the value in database entities, the field has to be final, as the actual value
+     * is stored internally.
+     *
+     * @param lookupTableName the lookup table used to draw metadata from
+     * @param customValues    determines if custom values are supported
+     * @param display         determines how values are rendered in the UI in most cases
+     * @param extendedDisplay determines how values are rendered in the UI in cases where we want to be more verbose
+     * @param export          determines how values are rendered in exports
+     */
+    public LookupValue(String lookupTableName,
+                       CustomValues customValues,
+                       Display display,
+                       Display extendedDisplay,
+                       Export export) {
+        this.lookupTableName = lookupTableName;
+        this.customValues = customValues;
+        this.display = display;
+        this.extendedDisplay = extendedDisplay;
         this.export = export;
     }
 
@@ -124,7 +152,7 @@ public class LookupValue {
      * @param lookupTableName the lookup table used to draw metadata from
      */
     public LookupValue(String lookupTableName) {
-        this(lookupTableName, CustomValues.REJECT, Display.NAME, Export.CODE);
+        this(lookupTableName, CustomValues.REJECT, Display.NAME, Display.NAME, Export.CODE);
     }
 
     /**
@@ -214,6 +242,18 @@ public class LookupValue {
     }
 
     /**
+     * Resolves a string to present to the user for this value according to {@link #extendedDisplay}.
+     * <p>
+     * This is more verbose than {@link #resolveDisplayString()}.
+     *
+     * @return a string to represent this value, its name or code or a combination
+     * @see Display#resolveDisplayString()
+     */
+    public String resolveExtendedDisplayString() {
+        return extendedDisplay.resolveDisplayString(getTable(), getValue());
+    }
+
+    /**
      * Provides access to {@link #customValues} as a simple boolean.
      *
      * @return true if the field {@link CustomValues#ACCEPT accepts} custom values, false otherwise
@@ -241,6 +281,10 @@ public class LookupValue {
 
     public Display getDisplay() {
         return display;
+    }
+
+    public Display getExtendedDisplay() {
+        return extendedDisplay;
     }
 
     public Export getExport() {
