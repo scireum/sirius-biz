@@ -23,7 +23,7 @@ import java.util.function.Consumer;
  * <p>
  * Permits searching in {@link KnowledgeBaseEntry knowledge base articles} using the open search facility.
  */
-@Register
+@Register(framework = KnowledgeBase.FRAMEWORK_KNOWLEDGE_BASE)
 public class KnowledgeBaseSearchProvider implements OpenSearchProvider {
 
     @Part
