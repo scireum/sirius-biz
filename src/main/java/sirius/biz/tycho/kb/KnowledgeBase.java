@@ -188,8 +188,7 @@ public class KnowledgeBase {
                .data()
                .stream()
                .map(articleId -> resolve(article.getLanguage(), articleId, false))
-               .filter(Optional::isPresent)
-               .map(Optional::get)
+               .flatMap(Optional::stream)
                .forEach(result::add);
 
         elastic.select(KnowledgeBaseEntry.class)
