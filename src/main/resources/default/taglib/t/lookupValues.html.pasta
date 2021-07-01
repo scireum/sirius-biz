@@ -6,13 +6,15 @@
 <i:arg name="help" type="String" default="@i18n(helpKey)"/>
 <i:arg name="readonly" type="boolean" default="false"/>
 <i:arg name="id" type="String" default="@generateId('singleselect-%s')"/>
+<i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the field."/>
+
 
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders a multiselect dropdown field for LookupValues field"/>
 
 
 <t:multiSelect name="@name" label="@label" help="@help" readonly="@readonly" id="@id"
-               allowCustomEntries="@values.acceptsCustomValues()"
+               allowCustomEntries="@values.acceptsCustomValues()" class="@class"
                suggestionUri="@apply('/autocomplete/lookuptable/%s/%s/%s', values.getTableName(), values.getDisplay(), values.getExtendedDisplay())">
     <i:for var="tuple"
            type="Tuple"

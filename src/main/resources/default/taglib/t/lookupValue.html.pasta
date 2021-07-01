@@ -7,13 +7,14 @@
 <i:arg name="optional" type="boolean" default="false"/>
 <i:arg name="readonly" type="boolean" default="false"/>
 <i:arg name="id" type="String" default="@generateId('singleselect-%s')"/>
+<i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the field."/>
 
 <i:pragma name="inline" value="true"/>
 <i:pragma name="description" value="Renders a dropdown field for a LookupValue field"/>
 
 
 <t:singleSelect name="@name" label="@label" help="@help" optional="@optional" readonly="@readonly" id="@id"
-                allowCustomEntries="@value.acceptsCustomValues()"
+                allowCustomEntries="@value.acceptsCustomValues()" class="@class"
                 suggestionUri="@apply('/autocomplete/lookuptable/%s/%s/%s', value.getTableName(), value.getDisplay(), value.getExtendedDisplay())">
     <option value="@value.getValue()" selected>
         @value.resolveDisplayString()
