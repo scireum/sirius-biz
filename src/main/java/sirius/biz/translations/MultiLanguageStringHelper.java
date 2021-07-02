@@ -139,7 +139,21 @@ public class MultiLanguageStringHelper extends ImportHelper {
     }
 
     /**
-     * Overwrites all previously available translations when importing data into a multilanguage string.
+     * Creates a new value builder just like {@link #createUpdate()} which is filled with the given
+     * {@link MultiLanguageString}.
+     *
+     * @param multiLanguageString the new {@link MultiLanguageString} to set
+     * @return a new builder which can be directly put into the {@link sirius.biz.importer.ImportContext} to update
+     * a multi language string field.
+     */
+    public static MultiLanguageStringValue createUpdate(MultiLanguageString multiLanguageString) {
+        MultiLanguageStringValue value = new MultiLanguageStringValue(false);
+        multiLanguageString.data().forEach(value::withText);
+        return value;
+    }
+
+    /**
+     * Overwrites all previously available translations when importing data into a multi language string.
      *
      * @return the object itself for fluent calls
      */
