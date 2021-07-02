@@ -8,44 +8,39 @@
 
 package sirius.biz.tycho.updates;
 
+import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.web.BizController;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
-import sirius.tagliatelle.Tagliatelle;
-import sirius.tagliatelle.compiler.CompileException;
-import sirius.web.controller.Controller;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
-@Register(classes = Controller.class)
+/**
+ * Provides a minimal API which creates a {@link UpdateClickEvent} if a user clicks on the "read more" link for an
+ * {@link UpdateInfo update}.
+ */
+@Register
 public class UpdatesController extends BizController {
 
     @Part
-    private UpdateManager updateManager;
+    private EventRecorder eventRecorder;
 
-@Part
-private Tagliatelle tagliatelle;
-
-    @Routed(value = "/tycho/updates", jsonCall = true)
-    public void checkForUpdates(WebContext webContext, JSONStructuredOutput output) throws CompileException {
-        tagliatelle.resolve("/kb/IKGVF.html.pasta").get().getPragma("tag");
-        output.property("hasUpdates", getUser().isLoggedIn() && updateManager.hasUpdates(getUser().getUserId()));
-        output.beginArray("updates");
-        for (UpdateInfo update : updateManager.getUpdates()) {
-            output.beginObject("update");
-            output.property("label", update.getLabel());
-            output.property("description", update.getDescription());
-            output.property("link", update.getLink());
-            output.endObject();
-        }
-        output.endArray();
-    }
-
-    @Routed(value = "/tycho/updates/markAsSeen", jsonCall = true)
+    /**
+     * Records a click event for the given update and current user (if present).
+     *
+     * @param webContext the request to respond to
+     * @param output     the JSON response - which is empty in this case, as this is a fire and forget operation for the
+     *                   client
+     */
+    @InternalService
+    @Routed("/tycho/updates/markAsSeen")
     public void markUpdatesAsSeen(WebContext webContext, JSONStructuredOutput output) {
-        if (getUser().isLoggedIn()) {
-            updateManager.markUpdatesAsShown(getUser().getUserId());
+        String updateId = webContext.require("updateId").asString();
+        if (Strings.isFilled(updateId)) {
+            eventRecorder.record(new UpdateClickEvent().forUpdateGuid(updateId));
         }
     }
 }
