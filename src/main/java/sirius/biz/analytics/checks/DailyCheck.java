@@ -33,6 +33,11 @@ public abstract class DailyCheck<E extends BaseEntity<?>> implements AnalyticalT
         execute(entity);
     }
 
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
+
     /**
      * Executes the check on the given entity.
      *

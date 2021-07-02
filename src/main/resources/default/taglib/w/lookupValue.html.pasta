@@ -7,6 +7,7 @@
 <i:arg name="helpKey" type="String" default=""/>
 <i:arg name="help" type="String" default="@i18n(helpKey)"/>
 <i:arg name="required" type="boolean" default="false"/>
+<i:arg name="optional" type="boolean" default="false"/>
 <i:arg name="readonly" type="boolean" default="false"/>
 <i:arg name="adminOnly" type="boolean" default="false"/>
 <i:arg name="id" type="String" default="@generateId('multiselect-%s')"/>
@@ -39,10 +40,13 @@
             name: '@name',
             selectMode: SelectModes.SINGLE,
             allowCustomEntries: @value.acceptsCustomValues(),
+            optional: @optional,
+            readonly: @readonly,
+            enableTabulator: false,
             selector: '#@id',
             noMatchesText: '@i18n("template.html.selects.noMatches")',
             placeholderText: '@i18n("template.html.selects.selection")',
-            suggestionsUri: '/autocomplete/lookuptable/@value.getTableName()/@value.getDisplay()'
+            suggestionsUri: '/autocomplete/lookuptable/@value.getTableName()/@value.getDisplay()/@value.getExtendedDisplay()'
         });
     });
 </script>

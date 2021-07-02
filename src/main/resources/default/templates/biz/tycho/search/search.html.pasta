@@ -22,7 +22,7 @@
                                value="@query"
                                placeholder="@i18n('NLS.searchkey')"/>
                         <div class="input-group-append">
-                            <a id="searchBtn" class="btn btn-outline-secondary" href="#">
+                            <a id="searchBtn" class="btn btn-outline-secondary cursor-pointer">
                                 <i class="fa fa-search"></i>
                             </a>
                         </div>
@@ -52,17 +52,20 @@
 
             oboe("/open-search/api?query=" + encodeURIComponent(query))
                 .start(function () {
-                   let searchBtnIcon = document.querySelector('#searchBtn svg');
-                   searchBtnIcon.classList.add('fa-spin');
-                    searchBtnIcon.classList.add('fa-spinner');
-                    searchBtnIcon.classList.remove('fa-search');
+                    const _searchBtnIcon = document.querySelector('#searchBtn svg');
+                    _searchBtnIcon.classList.add('fa-spin');
+                    _searchBtnIcon.classList.add('fa-spinner');
+                    _searchBtnIcon.classList.remove('fa-search');
                 })
                 .node('!', function (node) {
                     if (node.completed) {
-                        let searchBtnIcon = document.querySelector('#searchBtn svg');
-                        searchBtnIcon.classList.remove('fa-spin');
-                        searchBtnIcon.classList.add('fa-search');
-                        searchBtnIcon.classList.remove('fa-spinner');
+                        // We need to perform this async somehow...
+                        setTimeout(function () {
+                            const _searchBtnIcon = document.querySelector('#searchBtn svg');
+                            _searchBtnIcon.classList.remove('fa-spin');
+                            _searchBtnIcon.classList.add('fa-search');
+                            _searchBtnIcon.classList.remove('fa-spinner');
+                        }, 0);
                         return;
                     }
 
@@ -74,7 +77,7 @@
                                 '   <div><h2>{{category}}</h2>  </div>' +
                                 '   <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 items"></div>'
                                 , node));
-                            var inserted = false;
+                            let inserted = false;
                             $('#results .category').each(function () {
                                 if ($(this).data('priority') > node.priority) {
                                     category.insertBefore($(this));
@@ -97,7 +100,7 @@
                             '        </div>' +
                             '    </div>' +
                             '</div>', node)));
-                    } catch(e) {
+                    } catch (e) {
                         console.log(e);
                     }
                 });

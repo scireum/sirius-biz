@@ -1,0 +1,67 @@
+<i:arg type="sirius.biz.tycho.academy.OnboardingVideo" name="video"/>
+<i:arg type="List" name="otherRecommendations"/>
+<i:arg type="String" name="owner"/>
+<i:arg type="String" name="accessToken"/>
+<i:arg type="sirius.kernel.settings.Extension" name="providerConfig"/>
+<i:arg type="sirius.biz.tycho.academy.AcademyProvider" name="provider"/>
+
+<t:page title="@video.fetchAcademyVideoData().getTitle()">
+
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/academy/@owner/@accessToken">@i18n("OnboardingController.academy")</a>
+        </li>
+        <li>
+            <a href="/academy/@owner/@accessToken/track/@video.fetchAcademyVideoData().getTrackId()">@video.fetchAcademyVideoData().getTrackName()</a>
+        </li>
+        <li>
+            <a href="/academy/@owner/@accessToken/video/@video.getIdAsString()">@video.fetchAcademyVideoData().getTitle()</a>
+        </li>
+    </i:block>
+    <i:block name="page-header">
+        <t:pageHeader>
+            <i:block name="title">@video.fetchAcademyVideoData().getTitle()</i:block>
+        </t:pageHeader>
+    </i:block>
+
+
+    <div class="row mb-4">
+        <div class="col-12 col-lg-10 offset-lg-1 col-xl-8 offset-xl-2">
+            <div id="video-target">
+                <div class="d-none d-lg-block" style="min-height: 500px; background: black;"></div>
+                <div class="d-none d-md-block d-lg-none" style="min-height: 300px; background: black;"></div>
+            </div>
+        </div>
+    </div>
+
+    <i:if test="isFilled(video.fetchAcademyVideoData().getDescription())">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>@i18n('NLS.description')</h5>
+                @video.fetchAcademyVideoData().getDescription()
+
+            </div>
+        </div>
+    </i:if>
+    <i:if test="!otherRecommendations.isEmpty()">
+        <t:heading titleKey="OnboardingController.moreVideos"/>
+        <t:datacards size="small">
+            <i:for type="sirius.biz.tycho.academy.OnboardingVideo" var="video" items="otherRecommendations">
+                <i:invoke template="/templates/biz/tycho/academy/video-card.html.pasta"
+                          video="@video"
+                          owner="@owner"
+                          accessToken="@accessToken"/>
+            </i:for>
+        </t:datacards>
+    </i:if>
+
+    <t:formBar btnLabel="" />
+
+    <i:dynamicInvoke template="@provider.getVideoTemplate()"
+                     video="@video"
+                     owner="@owner"
+                     accessToken="@accessToken"
+                     provider="@provider"
+                     providerConfig="@providerConfig"/>
+
+</t:page>

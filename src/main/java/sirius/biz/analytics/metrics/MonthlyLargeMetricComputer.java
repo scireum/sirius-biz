@@ -32,4 +32,9 @@ public abstract class MonthlyLargeMetricComputer<E extends BaseEntity<?>> implem
     @Part
     @Nullable
     protected Metrics metrics;
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }
