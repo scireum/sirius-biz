@@ -2,7 +2,7 @@
 
 Provides a computation and storage framework for aggregated metrics.
 In most systems, metrics will be initially recorded as [events](../events).
-Using the underlying timeseries database **Clickhouse** this can be efficiently queried
+Using the underlying time-series database **Clickhouse** this can be efficiently queried
 and used for intense computations.
 
 It is still advisable to compute and store some aggregations (number of X per month per entity)
@@ -21,7 +21,7 @@ To compute (aggregate) metrics for entities, [DailyMetricComputer](DailyMetricCo
 can be subclassed. Note that monthly metric computers are scheduled in a *best effort* manner
 on a daily basis for the current month so that these aggregations are also available if possible.
 
-Additionally global metrics can be computed by subclassing [DailyGlobalMetricComputer](DailyGlobalMetricComputer.java)
+Additionally, global metrics can be computed by subclassing [DailyGlobalMetricComputer](DailyGlobalMetricComputer.java)
 or [MonthlyGlobalMetricComputer](MonthlyGlobalMetricComputer.java). 
 
 Note that these schedulers are managed by the scheduling system found in the [scheduler](../scheduler/) package.
