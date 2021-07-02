@@ -58,7 +58,9 @@ public class MultiLanguageStringExtender implements EntityImportHandlerExtender 
             if (multiLanguageStringValue.replace) {
                 multiLanguageString.clear();
             }
-            multiLanguageStringValue.data.forEach(multiLanguageString::addText);
+            if (multiLanguageStringValue.data != null) {
+                multiLanguageStringValue.data.forEach(multiLanguageString::addText);
+            }
             return;
         }
 
