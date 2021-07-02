@@ -12,7 +12,7 @@
     </i:block>
     <i:block name="actions">
         <i:if test="video.getOnboardingVideoData().isRecommended()">
-            <t:menuItem title="Überspringen" url="@apply('javascript:skipVideo%s()', video.getIdAsString())" />
+            <t:menuItem titleKey="OnboardingController.skip" url="@apply('javascript:skipVideo%s()', video.getIdAsString())" />
             <script type="text/javascript">
                 function skipVideo@(video.getIdAsString())(videoId) {
                     sirius.postJSON('/academy/@owner/@accessToken/update/@video.getIdAsString()', {
