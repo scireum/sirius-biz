@@ -55,7 +55,7 @@
                 <td/>
                 <td>
                     <div>
-                        <pre class="plain" style="white-space: pre-wrap">@log.getMessage()</pre>
+                        <pre class="plain" style="white-space: break-spaces">@log.getMessage()</pre>
                     </div>
                     <div>
                         <i:for type="sirius.biz.process.logs.ProcessLogAction" var="action" items="log.getActions()">

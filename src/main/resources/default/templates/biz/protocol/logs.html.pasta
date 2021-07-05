@@ -48,7 +48,7 @@
                             </div>
                             <div class="row">
                                 <div class="col-md-12">
-                                    <pre class="plain" style="white-space: pre-wrap; padding-top: 8px">@msg.getMessage()</pre>
+                                    <pre class="plain" style="white-space: break-spaces; padding-top: 8px">@msg.getMessage()</pre>
                                 </div>
                             </div>
                         </td>

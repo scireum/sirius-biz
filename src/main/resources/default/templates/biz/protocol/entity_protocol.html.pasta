@@ -51,7 +51,7 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <p/>
-                                    <pre class="plain" style="white-space: pre-wrap">@msg.getChanges()</pre>
+                                    <pre class="plain" style="white-space: break-spaces">@msg.getChanges()</pre>
                                 </div>
                             </div>
                         </td>
