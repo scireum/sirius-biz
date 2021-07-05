@@ -189,7 +189,6 @@ public class QueryController extends BizController {
 
     private AutocompleteHelper.Completion createCompletion(EntityDescriptor descriptor) {
         return AutocompleteHelper.suggest(descriptor.getName())
-                                 .withFieldLabel(descriptor.getType().getSimpleName())
-                                 .withCompletionLabel(descriptor.getType().getSimpleName());
+                                 .withFieldLabel(descriptor.getType().getSimpleName());
     }
 }

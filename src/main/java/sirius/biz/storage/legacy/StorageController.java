@@ -143,7 +143,6 @@ public class StorageController extends BizController {
         for (VirtualObject object : baseQuery.queryList()) {
             result.accept(AutocompleteHelper.suggest(object.getObjectKey())
                                             .withFieldLabel(object.getFilename())
-                                            .withCompletionLabel(object.getFilename())
                                             .withCompletionDescription(object.getPath()));
         }
     }

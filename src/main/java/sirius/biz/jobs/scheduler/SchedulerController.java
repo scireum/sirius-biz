@@ -170,7 +170,6 @@ public abstract class SchedulerController<J extends BaseEntity<?> & SchedulerEnt
                 .filter(JobFactory::canStartInBackground)
                 .forEach(factory -> result.accept(AutocompleteHelper.suggest(factory.getName())
                                                                     .withFieldLabel(factory.getLabel())
-                                                                    .withCompletionLabel(factory.getLabel())
                                                                     .withCompletionDescription(factory.getDescription())));
         });
     }

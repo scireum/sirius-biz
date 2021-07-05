@@ -461,7 +461,6 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
                                               .format();
                 result.accept(AutocompleteHelper.suggest(tenant.getIdAsString())
                                                 .withFieldLabel(tenant.toString())
-                                                .withCompletionLabel(tenant.toString())
                                                 .withCompletionDescription(description));
             });
         });

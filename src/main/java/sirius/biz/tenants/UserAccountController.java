@@ -583,8 +583,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
             Page<U> accounts = getUsersAsPage(webContext).asPage();
             accounts.getItems().forEach(userAccount -> {
                 result.accept(AutocompleteHelper.suggest(userAccount.getUniqueName())
-                                                .withFieldLabel(userAccount.toString())
-                                                .withCompletionLabel(userAccount.toString()));
+                                                .withFieldLabel(userAccount.toString()));
             });
         });
     }

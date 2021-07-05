@@ -207,7 +207,6 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
                                         .smartFormat();
                 result.accept(AutocompleteHelper.suggest(codeListData.getCode())
                                                 .withFieldLabel(label)
-                                                .withCompletionLabel(label)
                                                 .withCompletionDescription(codeListData.getDescription()));
             });
         });
