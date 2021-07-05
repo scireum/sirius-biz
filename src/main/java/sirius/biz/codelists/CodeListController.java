@@ -119,7 +119,7 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
     /**
      * Provides an editor for a code list entry.
      *
-     * @param webContext        the current request
+     * @param webContext the current request
      * @param codeListId the code list of the entry
      */
     @LoginRequired
@@ -207,6 +207,7 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
                                         .smartFormat();
                 result.accept(AutocompleteHelper.suggest(codeListData.getCode())
                                                 .withFieldLabel(label)
+                                                .withCompletionLabel(label)
                                                 .withCompletionDescription(codeListData.getDescription()));
             });
         });

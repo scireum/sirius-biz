@@ -80,7 +80,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
     /**
      * Returns all available features which can be assigned to a tenant.
      *
-     * @return an unmodifyable list of all features available.
+     * @return an unmodifiable list of all features available.
      */
     public List<String> getPermissions() {
         return Collections.unmodifiableList(permissions);
@@ -394,7 +394,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
      * The user is will keep the permissions tied to its user,
      * but the permissions granted by his tenant will change to the new tenant.
      * Exception to this is {@link Tenant#PERMISSION_SYSTEM_TENANT}, this will be kept if the user originally belonged to the system tenant.
-     * Additionatly, the permission {@link TenantUserManager#PERMISSION_SPY_USER} is given, so the system can identify the tenant switch.
+     * Additionally, the permission {@link TenantUserManager#PERMISSION_SPY_USER} is given, so the system can identify the tenant switch.
      *
      * @param webContext the current request
      * @param tenantId   the id of the tenant to switch to
@@ -423,7 +423,8 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
 
         Optional<T> tenant = resolveAccessibleTenant(tenantId, determineCurrentTenant(webContext));
         if (tenant.isEmpty()) {
-            UserContext.get().addMessage(Message.error().withTextMessage(NLS.get("TenantController.cannotBecomeTenant")));
+            UserContext.get()
+                       .addMessage(Message.error().withTextMessage(NLS.get("TenantController.cannotBecomeTenant")));
             selectTenants(webContext);
             return;
         }
@@ -460,6 +461,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
                                               .format();
                 result.accept(AutocompleteHelper.suggest(tenant.getIdAsString())
                                                 .withFieldLabel(tenant.toString())
+                                                .withCompletionLabel(tenant.toString())
                                                 .withCompletionDescription(description));
             });
         });
