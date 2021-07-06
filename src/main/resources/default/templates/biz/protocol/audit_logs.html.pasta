@@ -51,7 +51,7 @@
                                     @msg.getIp()
                                 </div>
                             </div>
-                            <pre class="plain" style="white-space: pre-wrap">@i18n(msg.getMessage())</pre>
+                            <pre class="plain" style="white-space: break-spaces">@i18n(msg.getMessage())</pre>
                         </td>
                     </tr>
                 </i:for>

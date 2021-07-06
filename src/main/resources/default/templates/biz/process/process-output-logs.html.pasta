@@ -41,7 +41,7 @@
             <tr class="@log.getRowClass()">
                 <td/>
                 <td>
-                    <pre class="plain" style="white-space: pre-wrap">@log.getMessage()</pre>
+                    <pre class="plain" style="white-space: break-spaces">@log.getMessage()</pre>
                 </td>
                 <td class="align-right">
                     @log.getTimestampAsString()<br>
