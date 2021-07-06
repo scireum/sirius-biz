@@ -110,10 +110,11 @@ public class QueryController extends BizController {
                 Watch watch = Watch.start();
                 baseQuery.limit(limit).iterateAll(result::add);
 
-                UserContext.message(Message.info().withTextMessage(Strings.apply("Showing %s of %s results - Query took %sms",
-                                                               result.size(),
-                                                               numberOfEntities,
-                                                               watch.elapsedMillis())));
+                UserContext.message(Message.info()
+                                           .withTextMessage(Strings.apply("Showing %s of %s results - Query took %sms",
+                                                                          result.size(),
+                                                                          numberOfEntities,
+                                                                          watch.elapsedMillis())));
             }
 
             return result;
@@ -135,7 +136,8 @@ public class QueryController extends BizController {
             if (count.isPresent()) {
                 return count.get();
             }
-            UserContext.message(Message.warn().withTextMessage(Strings.apply("Fetching total result count timed out.")));
+            UserContext.message(Message.warn()
+                                       .withTextMessage(Strings.apply("Fetching total result count timed out.")));
             return limit;
         }
 
@@ -186,7 +188,7 @@ public class QueryController extends BizController {
     }
 
     private AutocompleteHelper.Completion createCompletion(EntityDescriptor descriptor) {
-        return AutocompleteHelper.suggest(descriptor.getName()).withFieldLabel(descriptor.getType().getSimpleName());
+        return AutocompleteHelper.suggest(descriptor.getName())
+                                 .withFieldLabel(descriptor.getType().getSimpleName());
     }
-
 }
