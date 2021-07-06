@@ -632,7 +632,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
      * and he will have the roles the given user has.
      * The only permissions kept from the original user may be {@link TenantUserManager#PERMISSION_SYSTEM_TENANT_AFFILIATE},
      * and {@link TenantUserManager#PERMISSION_SELECT_USER_ACCOUNT} (to switch back).
-     * Additionatly, the permission {@link TenantUserManager#PERMISSION_SPY_USER} is given, so the system can identify the user switch.
+     * Additionally, the permission {@link TenantUserManager#PERMISSION_SPY_USER} is given, so the system can identify the user switch.
      *
      * @param webContext the current request
      * @param accountId  the id of the user to switch to
