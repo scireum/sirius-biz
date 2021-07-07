@@ -27,6 +27,7 @@ import sirius.db.mixing.annotations.NullAllowed;
 import sirius.db.mixing.annotations.Transient;
 import sirius.db.mixing.annotations.Unique;
 import sirius.db.mixing.types.BaseEntityRef;
+import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
@@ -240,7 +241,7 @@ public class SQLBlob extends SQLEntity implements Blob, OptimisticCreate {
             this.filename = filename.trim();
             if (Strings.isFilled(filename)) {
                 this.normalizedFilename = filename.toLowerCase();
-                this.fileExtension = Strings.splitAtLast(normalizedFilename, ".").getSecond();
+                this.fileExtension = Files.getFileExtension(normalizedFilename);
             } else {
                 this.filename = null;
                 this.normalizedFilename = null;
