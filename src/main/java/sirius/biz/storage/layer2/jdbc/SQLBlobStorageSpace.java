@@ -480,7 +480,9 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                 // Also update in-memory to avoid an additional database fetch...
                 String previousPhysicalObjectKey = blob.getPhysicalObjectKey();
                 blob.setPhysicalObjectKey(nextPhysicalId);
-                blob.setFilename(filename);
+                if (Strings.isFilled(filename)) {
+                    blob.setFilename(filename);
+                }
                 blob.updateFilenameFields();
                 blob.setSize(size);
                 blob.setLastModified(LocalDateTime.now());
