@@ -28,14 +28,19 @@
     @video.fetchAcademyVideoData().getDescription()
 
     <i:block name="footer">
-        <i:if test="video.getOnboardingVideoData().isRecommended()">
-            <t:dot color="green">@i18n('OnboardingController.recommended')</t:dot>
-        </i:if>
-        <i:if test="video.getOnboardingVideoData().isWatched()">
-            <t:dot color="gray">@i18n('OnboardingController.watched')</t:dot>
-        </i:if>
-        <i:if test="video.getOnboardingVideoData().isSkipped()">
-            <t:dot color="violet">@i18n('OnboardingController.skipped')</t:dot>
-        </i:if>
+        <i:render name="footer">
+            <i:if test="video.getOnboardingVideoData().isRecommended()">
+                <t:dot color="green">@i18n('OnboardingController.recommended')</t:dot>
+            </i:if>
+            <i:if test="video.getOnboardingVideoData().isWatched()">
+                <t:dot color="gray">@i18n('OnboardingController.watched')</t:dot>
+            </i:if>
+            <i:if test="video.getOnboardingVideoData().isSkipped()">
+                <t:dot color="violet">@i18n('OnboardingController.skipped')</t:dot>
+            </i:if>
+        </i:render>
+    </i:block>
+    <i:block name="footer-navbox">
+        <i:render name="footer-navbox" />
     </i:block>
 </t:datacard>

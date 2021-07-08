@@ -1,0 +1,26 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="110"/>
+
+<i:switch test="@point">
+    <i:block name="sidebar-upper-content">
+        <i:local name="onboardingEngine" value="Injector.context().getPart(sirius.biz.tycho.academy.OnboardingEngine.class)" />
+        <i:if test="onboardingEngine != null">
+            <i:if test="isFrameworkEnabled('biz.tenants') && sirius.biz.tenants.UserAccountVideosCheck.isTenantOnboardingEnabled()">
+                <i:local name="video" value="onboardingEngine.fetchSomeVideo(user().getUserId()).orElse(null)" />
+                <i:if test="video != null">
+                    <t:heading titleKey="OnboardingController.currentRecommendation" />
+                    <div class="row">
+                        <i:invoke template="/templates/biz/tycho/academy/video-card.html.pasta"
+                                  video="@video"
+                                  owner="@user().getUserId()"
+                                  accessToken="@computeAuthSignature(apply('/academy/%s', user().getUserId()))">
+                            <i:block name="footer-navbox">
+                                <t:navboxLink labelKey="OnboardingController.showAllVideos" url="/academy" icon="fa-video"/>
+                            </i:block>
+                        </i:invoke>
+                    </div>
+                </i:if>
+            </i:if>
+        </i:if>
+    </i:block>
+</i:switch>

@@ -1,0 +1,12 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="110"/>
+
+<i:switch test="@point">
+    <i:block name="help-navbox">
+        <i:if test="isFrameworkEnabled('biz.tenants')">
+            <i:if test="sirius.biz.tenants.UserAccountVideosCheck.isTenantOnboardingEnabled()">
+                <t:navboxLink labelKey="OnboardingController.academy" url="/academy" icon="fa-video"/>
+            </i:if>
+        </i:if>
+    </i:block>
+</i:switch>
