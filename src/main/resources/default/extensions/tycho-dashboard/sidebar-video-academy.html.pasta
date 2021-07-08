@@ -3,7 +3,7 @@
 
 <i:switch test="@point">
     <i:block name="sidebar-upper-content">
-        <i:local name="onboardingEngine" value="Injector.context().getPart(sirius.biz.tycho.academy.OnboardingEngine.class))" />
+        <i:local name="onboardingEngine" value="Injector.context().getPart(sirius.biz.tycho.academy.OnboardingEngine.class)" />
         <i:if test="onboardingEngine != null">
             <i:if test="isFrameworkEnabled('biz.tenants') && sirius.biz.tenants.UserAccountVideosCheck.isTenantOnboardingEnabled()">
                 <i:local name="video" value="onboardingEngine.fetchSomeVideo(user().getUserId()).orElse(null)" />
