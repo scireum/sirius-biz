@@ -92,8 +92,11 @@ public class ErrorContext implements SubContext {
      */
     public ErrorContext inContext(String label, Object value, UnitOfWork task) throws Exception {
         withContext(label, value);
-        task.execute();
-        removeContext(label);
+        try {
+           task.execute();
+        } finally {
+           removeContext(label);
+        }
 
         return this;
     }

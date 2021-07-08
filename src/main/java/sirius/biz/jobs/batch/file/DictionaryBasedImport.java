@@ -129,7 +129,7 @@ public class DictionaryBasedImport {
                 try {
                     rowHandler.invoke(Tuple.create(index, context));
                 } catch (Exception exception) {
-                    process.incCounter(NLS.get("LineBasedJob.erroneousRow"));
+                    process.incCounter("LineBasedJob.erroneousRow");
                     throw exception;
                 }
             });

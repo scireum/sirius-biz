@@ -106,7 +106,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
         E entity = findAndLoad(context);
         errorContext.performImport(entity::toString, () -> {
             if (shouldSkip(entity)) {
-                process.incCounter(NLS.get("EntityImportJob.rowIgnored"));
+                process.incCounter("EntityImportJob.rowIgnored");
                 return;
             }
 
@@ -122,7 +122,7 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
             if (isNew) {
                 process.addTiming(NLS.get("EntityImportJob.entityCreated"), watch.elapsedMillis());
             } else {
-                process.addTiming(NLS.get("EntityImportJob.entityUpdated"), watch.elapsedMillis());
+                process.addTiming("EntityImportJob.entityUpdated", watch.elapsedMillis());
             }
         });
     }
