@@ -36,7 +36,7 @@ public class ErrorContext implements SubContext {
     /**
      * Marks an error as enhanced.
      * <p>
-     * We need to perform this, as most probably several layers wrap an <tt>perform</tt> block around
+     * We need to perform this, as most probably several layers wrap a <tt>perform</tt> block around
      * a piece of code. Still, we only want to enhance the error once with the most detailed context. Otherwise,
      * the context would be appended several times.
      */
@@ -87,7 +87,7 @@ public class ErrorContext implements SubContext {
      * @param value the value to store
      * @param task  the task to perform while the value is set
      * @return the context for fluent method calls
-     * @throws Exception any error as thrown by the given task. Note that the exceptions and not handlend and also
+     * @throws Exception any error as thrown by the given task. Note that the exceptions are not handled and also
      *                   not automatically {@link #enhanceMessage(String) enhanced}.
      */
     public ErrorContext inContext(String label, Object value, UnitOfWork task) throws Exception {
@@ -163,7 +163,7 @@ public class ErrorContext implements SubContext {
     }
 
     /**
-     * Performs the given task and directly reports any error which occurs.
+     * Performs the given task and directly reports any occurring error.
      * <p>
      * Most probably, using {@link #perform(UnaryOperator, UnitOfWork)} is a better idea, as it permits to provide
      * more context to what actually went wrong.
