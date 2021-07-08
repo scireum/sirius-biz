@@ -8,6 +8,7 @@
 
 package sirius.biz.jobs.batch;
 
+import sirius.biz.process.ErrorContext;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.storage.layer1.FileHandle;
 import sirius.biz.storage.layer3.VirtualFile;
@@ -27,6 +28,8 @@ import java.io.OutputStream;
 public abstract class BatchJob implements Closeable {
 
     protected ProcessContext process;
+    protected final ErrorContext errorContext;
+
 
     /**
      * Creates a new batch job for the given batch process.
@@ -38,6 +41,7 @@ public abstract class BatchJob implements Closeable {
      */
     protected BatchJob(ProcessContext process) {
         this.process = process;
+        this.errorContext = ErrorContext.get();
     }
 
     /**
