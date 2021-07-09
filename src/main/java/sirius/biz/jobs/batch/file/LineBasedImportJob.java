@@ -31,6 +31,8 @@ public abstract class LineBasedImportJob extends FileImportJob implements RowPro
             new BooleanParameter("importAllSheets", "$LineBasedImportJobFactory.importAllSheets").withDescription(
                     "$LineBasedImportJobFactory.importAllSheets.help").build();
 
+    private static final String ERROR_CONTEXT_ROW = "$LineBasedJob.row";
+
     /**
      * Creates a new job for the given factory, name and process.
      *
@@ -44,8 +46,14 @@ public abstract class LineBasedImportJob extends FileImportJob implements RowPro
     protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
         try (InputStream in = inputSupplier.create()) {
             LineBasedProcessor.create(filename, in, process.getParameter(IMPORT_ALL_SHEETS_PARAMETER).orElse(false))
-                              .run(this, error -> {
+                              .run((rowNumber, row) -> {
+                                  errorContext.withContext(ERROR_CONTEXT_ROW, rowNumber);
+                                  this.handleRow(rowNumber, row);
+                                  errorContext.removeContext(ERROR_CONTEXT_ROW);
+                              }, error -> {
                                   process.handle(error);
+                                  errorContext.removeContext(ERROR_CONTEXT_ROW);
+
                                   return true;
                               });
         }

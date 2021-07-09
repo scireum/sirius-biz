@@ -163,7 +163,9 @@ public abstract class FileImportJob extends ImportJob {
 
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
-                executeForStream(file.name(), fileHandle::getInputStream);
+                errorContext.inContext("$FileImportJobFactory.file",
+                                       file.name(),
+                                       () -> executeForStream(file.name(), fileHandle::getInputStream));
             }
         } else if (extractor.isArchiveFile(file.fileExtension())) {
             process.log(ProcessLog.info()
@@ -227,7 +229,9 @@ public abstract class FileImportJob extends ImportJob {
             process.log(ProcessLog.info()
                                   .withNLSKey("FileImportJob.importingZippedFile")
                                   .withContext("filename", extractedFile.getFilePath()));
-            executeForStream(extractedFile.getFilePath(), extractedFile::openInputStream);
+            errorContext.inContext("$FileImportJobFactory.file",
+                                   extractedFile.getFilePath(),
+                                   () -> executeForStream(extractedFile.getFilePath(), extractedFile::openInputStream));
             return true;
         } else if (auxiliaryFileMode != AuxiliaryFileMode.IGNORE) {
             return handleAuxiliaryFile(extractedFile);
@@ -310,7 +314,7 @@ public abstract class FileImportJob extends ImportJob {
      * These are files which reside in a ZIP archive next to the files which are actually being processed by this
      * job.
      *
-     * @return the path where to store auxillary files or <tt>null</tt> to ignore them
+     * @return the path where to store auxiliary files or <tt>null</tt> to ignore them
      */
     protected String determineAuxiliaryFilesDirectory() {
         return null;
