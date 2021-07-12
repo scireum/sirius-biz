@@ -48,7 +48,6 @@ class IDBLookupTable extends LookupTable {
     private static final String CACHE_PREFIX_NORMALIZE_WITH_MAPPING = "normalize-with-mapping";
     private static final String CACHE_PREFIX_REVERSE_LOOKUP = "reverse-lookup-";
     private static final String CACHE_PREFIX_FETCH_OBJECT = "fetch-object-";
-    private static final String CACHE_PREFIX_LOOKUP_SCAN = "lookup-scan-";
 
     private static final String CONFIG_CODE_FIELD = "codeField";
     private static final String CONFIG_NAME_FIELD = "nameField";
