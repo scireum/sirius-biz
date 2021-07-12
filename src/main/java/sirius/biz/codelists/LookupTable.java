@@ -636,8 +636,7 @@ public abstract class LookupTable {
                                              .stream()
                                              .filter(entry -> entry.getValue() instanceof JSONArray)
                                              .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                       entry -> transformArrayToStringList((JSONArray) entry
-                                                                               .getValue())));
+                                                                       entry -> transformArrayToStringList((JSONArray) entry.getValue())));
         } else {
             return Collections.emptyMap();
         }
@@ -720,7 +719,7 @@ public abstract class LookupTable {
      * Enumerates all entries in the table using the given language.
      *
      * @param lang the language to translate the name and description to
-     * @return a stream of all entries in this table or an empty stream is scanning isn't supported
+     * @return a stream of all entries in this table or an empty stream if scanning isn't supported
      */
     public Stream<LookupTableEntry> scan(String lang) {
         if (!canScan()) {
@@ -731,4 +730,22 @@ public abstract class LookupTable {
     }
 
     protected abstract Stream<LookupTableEntry> performScan(String lang);
+
+    /**
+     * Enumerates all entries matching the given lookup in the table using the given language.
+     *
+     * @param lang        the language to translate the name and description to
+     * @param lookupPath  the field to search in
+     * @param lookupValue the value to search for
+     * @return a stream of all entries matching the lookup or an empty stream if scanning isn't supported
+     */
+    public Stream<LookupTableEntry> lookupScan(String lang, String lookupPath, String lookupValue) {
+        if (!canScan()) {
+            return Stream.empty();
+        }
+
+        return performLookupScan(lang, lookupPath, lookupValue);
+    }
+
+    protected abstract Stream<LookupTableEntry> performLookupScan(String lang, String lookupPath, String lookupValue);
 }

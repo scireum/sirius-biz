@@ -131,4 +131,9 @@ class CodeListLookupTable extends LookupTable {
     protected Stream<LookupTableEntry> performScan(String lang) {
         return codeLists.getEntries(codeList).stream().map(entry -> extractEntryData(entry, lang));
     }
+
+    @Override
+    protected Stream<LookupTableEntry> performLookupScan(String lang, String lookupPath, String lookupValue) {
+        throw new UnsupportedOperationException();
+    }
 }

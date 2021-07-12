@@ -99,4 +99,10 @@ class CustomLookupTable extends LookupTable {
     protected Stream<LookupTableEntry> performScan(String lang) {
         return Stream.concat(customTable.performScan(lang), baseTable.performScan(lang));
     }
+
+    @Override
+    protected Stream<LookupTableEntry> performLookupScan(String lang, String lookupPath, String lookupValue) {
+        return Stream.concat(customTable.performLookupScan(lang, lookupPath, lookupValue),
+                             baseTable.performLookupScan(lang, lookupPath, lookupValue));
+    }
 }

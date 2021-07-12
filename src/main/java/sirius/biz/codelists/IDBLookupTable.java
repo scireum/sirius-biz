@@ -306,4 +306,26 @@ class IDBLookupTable extends LookupTable {
             return Stream.empty();
         }
     }
+
+    @Override
+    protected Stream<LookupTableEntry> performLookupScan(String lang, String lookupPath, String lookupValue) {
+        try {
+            return table.query()
+                        .translate(lang)
+                        .lookupPaths(lookupPath)
+                        .searchValue(lookupValue)
+                        .allRows(codeField, nameField, descriptionField, COL_DEPRECATED)
+                        .filter(row -> !row.at(3).asBoolean())
+                        .map(row -> new LookupTableEntry(row.at(0).asString(),
+                                                         row.at(1).asString(),
+                                                         row.at(2).getString()));
+        } catch (Exception e) {
+            Exceptions.createHandled()
+                      .to(Jupiter.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Error scanning lang '%s' table '%s': %s (%s)", lang, table.getName())
+                      .handle();
+            return Stream.empty();
+        }
+    }
 }
