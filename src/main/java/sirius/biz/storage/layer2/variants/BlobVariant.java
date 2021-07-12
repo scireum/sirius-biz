@@ -57,7 +57,7 @@ public interface BlobVariant {
     long getSize();
 
     /**
-     * Provides a on-disk copy of the data associated with this blob
+     * Provides an on-disk copy of the data associated with this blob
      *
      * @return a handle to the data of this blob
      */
