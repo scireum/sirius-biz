@@ -133,7 +133,7 @@ class CodeListLookupTable extends LookupTable {
     }
 
     @Override
-    protected Stream<LookupTableEntry> performLookupScan(String lang, String lookupPath, String lookupValue) {
+    protected Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue) {
         throw new UnsupportedOperationException();
     }
 }

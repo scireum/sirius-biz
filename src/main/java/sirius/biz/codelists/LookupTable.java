@@ -739,9 +739,9 @@ public abstract class LookupTable {
      * @param lookupValue the value to search for
      * @return a stream of all entries matching the lookup or an empty stream if scanning isn't supported
      */
-    public Stream<LookupTableEntry> lookupScan(String lang, String lookupPath, String lookupValue) {
-        return performLookupScan(lang, lookupPath, lookupValue);
+    public Stream<LookupTableEntry> query(String lang, String lookupPath, String lookupValue) {
+        return performQuery(lang, lookupPath, lookupValue);
     }
 
-    protected abstract Stream<LookupTableEntry> performLookupScan(String lang, String lookupPath, String lookupValue);
+    protected abstract Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue);
 }
