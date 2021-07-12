@@ -134,6 +134,8 @@ class CodeListLookupTable extends LookupTable {
 
     @Override
     protected Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue) {
+        // This would need a complex caching strategy as always fetching the DB would be too expensive.
+        // Could be implemented when needed.
         throw new UnsupportedOperationException();
     }
 }
