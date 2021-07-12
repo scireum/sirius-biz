@@ -740,10 +740,6 @@ public abstract class LookupTable {
      * @return a stream of all entries matching the lookup or an empty stream if scanning isn't supported
      */
     public Stream<LookupTableEntry> lookupScan(String lang, String lookupPath, String lookupValue) {
-        if (!canScan()) {
-            return Stream.empty();
-        }
-
         return performLookupScan(lang, lookupPath, lookupValue);
     }
 
