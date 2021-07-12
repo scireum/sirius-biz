@@ -323,7 +323,12 @@ class IDBLookupTable extends LookupTable {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
                       .error(e)
-                      .withSystemErrorMessage("Error scanning lang '%s' table '%s': %s (%s)", lang, table.getName())
+                      .withSystemErrorMessage(
+                              "Error on lookup scan lang '%s' lookupPath '%s' lookupValue '%s' table '%s': %s (%s)",
+                              lang,
+                              lookupPath,
+                              lookupValue,
+                              table.getName())
                       .handle();
             return Stream.empty();
         }
