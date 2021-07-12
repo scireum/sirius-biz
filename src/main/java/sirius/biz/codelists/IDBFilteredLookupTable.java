@@ -112,4 +112,9 @@ class IDBFilteredLookupTable extends LookupTable {
     protected Stream<LookupTableEntry> performScan(String lang) {
         return baseTable.scan(lang).filter(pair -> contains(pair.getCode()));
     }
+
+    @Override
+    protected Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue) {
+        return baseTable.query(lang, lookupPath, lookupValue).filter(pair -> contains(pair.getCode()));
+    }
 }
