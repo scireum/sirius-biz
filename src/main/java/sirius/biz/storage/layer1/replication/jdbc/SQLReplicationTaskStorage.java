@@ -9,7 +9,6 @@
 package sirius.biz.storage.layer1.replication.jdbc;
 
 import com.alibaba.fastjson.JSONObject;
-import sirius.biz.analytics.scheduler.SQLEntityBatchEmitter;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.layer1.replication.ReplicationTaskExecutor;
@@ -17,9 +16,9 @@ import sirius.biz.storage.layer1.replication.ReplicationTaskStorage;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.Operator;
-import sirius.db.jdbc.SQLEntity;
 import sirius.db.jdbc.SmartQuery;
 import sirius.db.mixing.Mixing;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -28,6 +27,7 @@ import sirius.kernel.health.Exceptions;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -41,6 +41,8 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
      * replication layer via JDBC entities.
      */
     public static final String FRAMEWORK_JDBC_REPLICATION = "biz.storage-replication-jdbc";
+
+    private static final String TXN_ID = "txnId";
 
     @ConfigValue("storage.layer1.replication.batchSize")
     private int batchSize;
@@ -59,9 +61,6 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
 
     @ConfigValue("storage.layer1.replication.maxReplicationAttempts")
     private int maxReplicationAttempts;
-
-    @Part
-    private SQLEntityBatchEmitter emitter;
 
     @Part
     private OMA oma;
@@ -110,52 +109,67 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
     public int emitBatches() {
         AtomicInteger numberOfBatches = new AtomicInteger(maxBatches);
         AtomicInteger scheduledTasks = new AtomicInteger(0);
-        emitter.computeBatches(SQLReplicationTask.class,
-                               query -> filterOnExecutableTasks(query, true),
-                               batchSize,
-                               batch -> {
-                                   distributedTasks.submitFIFOTask(ReplicationTaskExecutor.class, batch);
-                                   scheduledTasks.addAndGet(batchSize);
 
-                                   markTasksAsScheduled(batch);
+        while (numberOfBatches.decrementAndGet() > 0) {
+            String txnId = Strings.generateCode(32);
+            AtomicBoolean tasksFound = new AtomicBoolean();
+            queryExecutableTasks().limit(batchSize).iterateAll(task -> {
+                markTaskAsScheduled(task, txnId);
+                tasksFound.set(true);
+                scheduledTasks.incrementAndGet();
+            });
 
-                                   return numberOfBatches.decrementAndGet() > 0;
-                               });
+            if (tasksFound.get()) {
+                distributedTasks.submitFIFOTask(ReplicationTaskExecutor.class,
+                                                new JSONObject().fluentPut(TXN_ID, txnId));
+            } else {
+                return scheduledTasks.get();
+            }
+        }
 
         return scheduledTasks.get();
     }
 
-    private void markTasksAsScheduled(JSONObject batch) {
+    private SmartQuery<SQLReplicationTask> queryExecutableTasks() {
+        SmartQuery<SQLReplicationTask> query = oma.select(SQLReplicationTask.class);
+        query.eq(SQLReplicationTask.FAILED, false);
+        query.where(OMA.FILTERS.lt(SQLReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()));
+        query.eq(SQLReplicationTask.TXN_IN, null);
+        query.eq(SQLReplicationTask.SCHEDULED, null);
+
+        query.orderAsc(SQLReplicationTask.EARLIEST_EXECUTION);
+
+        return query;
+    }
+
+    private void markTaskAsScheduled(SQLReplicationTask task, String txnId) {
         try {
             oma.updateStatement(SQLReplicationTask.class)
+               .set(SQLReplicationTask.TXN_IN, txnId)
                .setToNow(SQLReplicationTask.SCHEDULED)
                .where(SQLReplicationTask.EARLIEST_EXECUTION, Operator.LT, LocalDateTime.now())
-               .where(SQLReplicationTask.ID, Operator.GT_EQ, batch.getLongValue(SQLEntityBatchEmitter.START_ID))
-               .where(SQLReplicationTask.ID, Operator.LT_EQ, batch.getLongValue(SQLEntityBatchEmitter.END_ID))
+               .where(SQLReplicationTask.ID, task.getId())
                .executeUpdate();
         } catch (SQLException e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
                       .error(e)
                       .withSystemErrorMessage(
-                              "Layer 1/replication: Failed to mark SQL replication tasks as scheduled: %s (%s)")
+                              "Layer 1/replication: Failed to mark SQL replication task %s as scheduled: %s (%s)",
+                              task.getId())
                       .handle();
-        }
-    }
-
-    private void filterOnExecutableTasks(SmartQuery<SQLEntity> query, boolean forScheduling) {
-        query.eq(SQLReplicationTask.FAILED, false);
-        query.where(OMA.FILTERS.lt(SQLReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()));
-        if (forScheduling) {
-            query.eq(SQLReplicationTask.SCHEDULED, null);
-        } else {
-            query.ne(SQLReplicationTask.SCHEDULED, null);
         }
     }
 
     @Override
     public void executeBatch(JSONObject batch) {
-        emitter.evaluateBatch(batch, query -> filterOnExecutableTasks(query, false), this::executeTask);
+        String txnId = batch.getString(TXN_ID);
+        if (Strings.isFilled(txnId)) {
+            SmartQuery<SQLReplicationTask> query = oma.select(SQLReplicationTask.class);
+            query.eq(SQLReplicationTask.FAILED, false);
+            query.eq(SQLReplicationTask.TXN_IN, txnId);
+            query.iterateAll(this::executeTask);
+        }
     }
 
     @Override

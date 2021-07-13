@@ -220,7 +220,7 @@ public interface Blob {
     /**
      * Creates an input stream which can be used to read the contents of this blob.
      * <p>
-     * Note that this might required to download the blob from an external storage device into a local buffer. When
+     * Note that this might require downloading the blob from an external storage device into a local buffer. When
      * responding to a HTTP request use {@link #deliver(Response)} which might be more efficient in this case. Use
      * {@link #download()} to have full control over the downloaded file handle.
      *
@@ -246,7 +246,7 @@ public interface Blob {
      * an empty optional is returned.
      *
      * @param name the name of the variant to lookup
-     * @return the variant with the given name or an empty optional if none was found
+     * @return the variant with the given name, or an empty optional if none was found
      */
     Optional<BlobVariant> findVariant(String name);
 

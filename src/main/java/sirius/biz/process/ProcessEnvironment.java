@@ -57,8 +57,9 @@ class ProcessEnvironment implements ProcessContext {
 
     private final RateLimit logLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
     private final RateLimit timingLimiter = RateLimit.timeInterval(10, TimeUnit.SECONDS);
-    private final CombinedFuture barrier = new CombinedFuture();
     private final RateLimit stateUpdate = RateLimit.timeInterval(5, TimeUnit.SECONDS);
+
+    private final CombinedFuture barrier = new CombinedFuture();
     private Map<String, Average> timings;
     private Map<String, Average> adminTimings;
 

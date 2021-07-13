@@ -9,7 +9,6 @@
 package sirius.biz.storage.layer1.replication.mongo;
 
 import com.alibaba.fastjson.JSONObject;
-import sirius.biz.analytics.scheduler.MongoEntityBatchEmitter;
 import sirius.biz.cluster.work.DistributedTasks;
 import sirius.biz.storage.layer1.replication.ReplicationManager;
 import sirius.biz.storage.layer1.replication.ReplicationTaskExecutor;
@@ -22,6 +21,7 @@ import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.MongoQuery;
 import sirius.db.mongo.QueryBuilder;
 import sirius.db.mongo.Updater;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
@@ -29,6 +29,7 @@ import sirius.kernel.health.Exceptions;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -42,6 +43,8 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
      * replication layer via MongoDB entities.
      */
     public static final String FRAMEWORK_MONGO_REPLICATION = "biz.storage-replication-mongo";
+
+    private static final String TXN_ID = "txnId";
 
     @ConfigValue("storage.layer1.replication.batchSize")
     private int batchSize;
@@ -60,9 +63,6 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
 
     @ConfigValue("storage.layer1.replication.maxReplicationAttempts")
     private int maxReplicationAttempts;
-
-    @Part
-    private MongoEntityBatchEmitter emitter;
 
     @Part
     private Mango mango;
@@ -114,56 +114,69 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
     public int emitBatches() {
         AtomicInteger numberOfBatches = new AtomicInteger(maxBatches);
         AtomicInteger scheduledTasks = new AtomicInteger(0);
-        emitter.computeBatches(MongoReplicationTask.class,
-                               qry -> filterOnExecutableTasks(qry, true),
-                               batchSize,
-                               batch -> {
-                                   distributedTasks.submitFIFOTask(ReplicationTaskExecutor.class, batch);
-                                   scheduledTasks.addAndGet(batchSize);
 
-                                   markTasksAsScheduled(batch);
+        while (numberOfBatches.decrementAndGet() > 0) {
+            String txnId = Strings.generateCode(32);
+            AtomicBoolean tasksFound = new AtomicBoolean();
+            queryExecutableTasks().limit(batchSize).iterateAll(task -> {
+                markTaskAsScheduled(task, txnId);
+                tasksFound.set(true);
+                scheduledTasks.incrementAndGet();
+            });
 
-                                   return numberOfBatches.decrementAndGet() > 0;
-                               });
+            if (tasksFound.get()) {
+                distributedTasks.submitFIFOTask(ReplicationTaskExecutor.class,
+                                                new JSONObject().fluentPut(TXN_ID, txnId));
+            } else {
+                return scheduledTasks.get();
+            }
+        }
 
         return scheduledTasks.get();
     }
 
-    private void markTasksAsScheduled(JSONObject batch) {
+    private MongoQuery<MongoReplicationTask> queryExecutableTasks() {
+        MongoQuery<MongoReplicationTask> query = mango.select(MongoReplicationTask.class);
+        query.eq(MongoReplicationTask.FAILED, false);
+        query.where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()));
+        query.eq(MongoReplicationTask.TXN_IN, null);
+        query.eq(MongoReplicationTask.SCHEDULED, null);
+
+        query.orderAsc(MongoReplicationTask.EARLIEST_EXECUTION);
+
+        return query;
+    }
+
+    private void markTaskAsScheduled(MongoReplicationTask task, String txnId) {
         try {
             mongo.update()
                  .set(MongoReplicationTask.SCHEDULED, LocalDateTime.now())
+                 .set(MongoReplicationTask.TXN_IN, txnId)
                  .where(MongoReplicationTask.FAILED, false)
                  .where(MongoReplicationTask.SCHEDULED, null)
                  .where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
-                 .where(QueryBuilder.FILTERS.gte(MongoReplicationTask.ID,
-                                                 batch.getString(MongoEntityBatchEmitter.START_ID)))
-                 .where(QueryBuilder.FILTERS.lte(MongoReplicationTask.ID,
-                                                 batch.getString(MongoEntityBatchEmitter.END_ID)))
+                 .where(MongoReplicationTask.ID, task.getId())
                  .executeForMany(MongoReplicationTask.class);
         } catch (Exception e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
                       .error(e)
                       .withSystemErrorMessage(
-                              "Layer 1/replication: Failed to mark MongoDB replication tasks as scheduled: %s (%s)")
+                              "Layer 1/replication: Failed to mark MongoDB replication task %s as scheduled: %s (%s)",
+                              task.getId())
                       .handle();
-        }
-    }
-
-    private void filterOnExecutableTasks(MongoQuery<MongoEntity> query, boolean forScheduling) {
-        query.eq(MongoReplicationTask.FAILED, false);
-        query.where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()));
-        if (forScheduling) {
-            query.eq(MongoReplicationTask.SCHEDULED, null);
-        } else {
-            query.ne(MongoReplicationTask.SCHEDULED, null);
         }
     }
 
     @Override
     public void executeBatch(JSONObject batch) {
-        emitter.evaluateBatch(batch, query -> filterOnExecutableTasks(query, false), this::executeTask);
+        String txnId = batch.getString(TXN_ID);
+        if (Strings.isFilled(txnId)) {
+            MongoQuery<MongoReplicationTask> query = mango.select(MongoReplicationTask.class);
+            query.eq(MongoReplicationTask.FAILED, false);
+            query.eq(MongoReplicationTask.TXN_IN, txnId);
+            query.iterateAll(this::executeTask);
+        }
     }
 
     @Override

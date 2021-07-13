@@ -73,6 +73,14 @@ public class SQLReplicationTask extends SQLEntity {
     private LocalDateTime scheduled;
 
     /**
+     * Contains the batch or transaction identifier used to schedule this task.
+     */
+    public static final Mapping TXN_IN = Mapping.named("txnId");
+    @Length(50)
+    @NullAllowed
+    private String txnId;
+
+    /**
      * Determines if a delete or an update should be performed.
      */
     public static final Mapping PERFORM_DELETE = Mapping.named("performDelete");
@@ -154,5 +162,13 @@ public class SQLReplicationTask extends SQLEntity {
 
     public void setContentLength(long contentLength) {
         this.contentLength = contentLength;
+    }
+
+    public String getTxnId() {
+        return txnId;
+    }
+
+    public void setTxnId(String txnId) {
+        this.txnId = txnId;
     }
 }
