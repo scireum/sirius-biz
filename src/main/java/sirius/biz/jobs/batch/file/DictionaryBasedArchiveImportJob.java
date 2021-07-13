@@ -173,10 +173,12 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
                 errorContext.removeContext(ERROR_CONTEXT_ROW);
             }, error -> {
                 process.handle(error);
+                errorContext.removeContext(ERROR_CONTEXT_ROW);
                 return true;
             });
+        } finally {
+            errorContext.removeContext(ERROR_CONTEXT_FILE_PATH);
         }
-        errorContext.removeContext(ERROR_CONTEXT_FILE_PATH);
 
         if (importFile.completionHandler != null) {
             importFile.completionHandler.execute();
