@@ -23,6 +23,8 @@ import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
+
 /**
  * Stores an {@link OnboardingVideoData onboarding video} in MongoDB.
  */
@@ -36,6 +38,7 @@ import sirius.kernel.di.std.Part;
 public class MongoOnboardingVideo extends MongoEntity implements OnboardingVideo {
 
     @Part
+    @Nullable
     private static OnboardingEngine onboardingEngine;
 
     public static final Mapping ACADEMY_VIDEO = Mapping.named("academyVideo");
