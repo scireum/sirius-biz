@@ -8,8 +8,10 @@
 
 package sirius.biz.process;
 
+import sirius.biz.process.logs.ProcessLog;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.SubContext;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.UnitOfWork;
 import sirius.kernel.health.ExceptionHint;
@@ -93,9 +95,9 @@ public class ErrorContext implements SubContext {
     public ErrorContext inContext(String label, Object value, UnitOfWork task) throws Exception {
         withContext(label, value);
         try {
-           task.execute();
+            task.execute();
         } finally {
-           removeContext(label);
+            removeContext(label);
         }
 
         return this;
@@ -125,25 +127,30 @@ public class ErrorContext implements SubContext {
         try {
             task.execute();
         } catch (HandledException exception) {
-            if (exception.getHint(MESSAGE_ENHANCED).asBoolean()) {
-                throw exception;
-            }
-
-            throw Exceptions.createHandled()
-                            .error((exception.getCause() instanceof HandledException) ? null : exception.getCause())
-                            .withDirectMessage(enhanceMessage(failureDescription.apply(exception.getMessage())))
-                            .hint(MESSAGE_ENHANCED, true)
-                            .handle();
+            logException(failureDescription, exception);
         } catch (Exception exception) {
-            throw Exceptions.handle()
-                            .to(Log.BACKGROUND)
-                            .error(exception)
-                            .withDirectMessage(enhanceMessage(failureDescription.apply(exception.getMessage()
-                                                                                       + " ("
-                                                                                       + exception.getClass().getName()
-                                                                                       + ")")))
-                            .hint(MESSAGE_ENHANCED, true)
-                            .handle();
+            HandledException handledException = Exceptions.handle()
+                                                          .to(Log.BACKGROUND)
+                                                          .error(exception)
+                                                          .withDirectMessage(enhanceMessage(failureDescription.apply(
+                                                                  exception.getMessage()
+                                                                  + " ("
+                                                                  + exception.getClass()
+                                                                             .getName()
+                                                                  + ")")))
+                                                          .hint(MESSAGE_ENHANCED, true)
+                                                          .handle();
+            logException(failureDescription, handledException);
+        }
+    }
+
+    private void logException(UnaryOperator<String> failureDescription, HandledException exception) {
+        if (TaskContext.get().getAdapter() instanceof ProcessContext) {
+            ((ProcessContext) TaskContext.get().getAdapter()).log(ProcessLog.error()
+                                                                            .withMessage(enhanceMessage(
+                                                                                    failureDescription.apply(exception.getMessage()))));
+        } else {
+            TaskContext.get().log(enhanceMessage(failureDescription.apply(exception.getMessage())));
         }
     }
 
