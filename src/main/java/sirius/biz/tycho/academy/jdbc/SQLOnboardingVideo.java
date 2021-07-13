@@ -22,6 +22,8 @@ import sirius.db.mixing.types.BaseEntityRef;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
 
+import javax.annotation.Nullable;
+
 /**
  * Stores an {@link OnboardingVideoData onboarding video} in a JDBC/SQL database.
  */
@@ -31,6 +33,7 @@ import sirius.kernel.di.std.Part;
 public class SQLOnboardingVideo extends SQLEntity implements OnboardingVideo {
 
     @Part
+    @Nullable
     private static OnboardingEngine onboardingEngine;
 
     public static final Mapping ACADEMY_VIDEO = Mapping.named("academyVideo");
