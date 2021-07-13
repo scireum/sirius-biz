@@ -63,6 +63,9 @@ public class ErrorContext implements SubContext {
      * @return the extended context for fluent method calls
      */
     public ErrorContext withContext(String label, Object value) {
+        if (Strings.isEmpty(label)) {
+            return this;
+        }
         if (Strings.isEmpty(value)) {
             this.context.remove(label);
         } else {
