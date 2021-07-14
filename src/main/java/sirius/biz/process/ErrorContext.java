@@ -12,6 +12,7 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.SubContext;
 import sirius.kernel.async.TaskContext;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.UnitOfWork;
 import sirius.kernel.health.ExceptionHint;
@@ -150,12 +151,12 @@ public class ErrorContext implements SubContext {
      * @param failureDescription annotates a given error message so that the user is notified what task actually went
      *                           wrong. This should be in "negative form" like "Cannot perform x because: message" as
      *                           it is only used for error reporting.
-     * @param supplier           the supplier to execute
+     * @param producer           the producer to execute
      * @return an optional containing the object returned by the supplier or an empty optional if exceptions happened during execution
      */
-    public <T> Optional<T> performAndGet(UnaryOperator<String> failureDescription, Supplier<T> supplier) {
+    public <T> Optional<T> performAndGet(UnaryOperator<String> failureDescription, Producer<T> producer) {
         try {
-            return Optional.ofNullable(supplier.get());
+            return Optional.ofNullable(producer.create());
         } catch (HandledException exception) {
             logException(failureDescription, exception);
         } catch (Exception exception) {
@@ -211,14 +212,14 @@ public class ErrorContext implements SubContext {
     /**
      * Executes the given supplier and directly reports any occurring error.
      * <p>
-     * Most probably, using {@link #performAndGet(UnaryOperator, Supplier)} is a better idea, as it permits to provide
+     * Most probably, using {@link #performAndGet(UnaryOperator, Producer)} is a better idea, as it permits to provide
      * more context to what actually went wrong.
      *
-     * @param supplier the supplier to execute
+     * @param producer the producer to execute
      * @return an optional containing the object returned by the supplier or an empty optional if exceptions happened during execution
      */
-    public <T> Optional<T> performAndGet(Supplier<T> supplier) {
-        return performAndGet(UnaryOperator.identity(), supplier);
+    public <T> Optional<T> performAndGet(Producer<T> producer) {
+        return performAndGet(UnaryOperator.identity(), producer);
     }
 
     /**
