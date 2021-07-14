@@ -135,12 +135,11 @@ public class ErrorContext implements SubContext {
             HandledException handledException = Exceptions.handle()
                                                           .to(Log.BACKGROUND)
                                                           .error(exception)
-                                                          .withDirectMessage(enhanceMessage(failureDescription.apply(
-                                                                  exception.getMessage()
-                                                                  + " ("
-                                                                  + exception.getClass()
-                                                                             .getName()
-                                                                  + ")")))
+                                                          .withDirectMessage(failureDescription.apply(exception.getMessage()
+                                                                                                      + " ("
+                                                                                                      + exception.getClass()
+                                                                                                                 .getName()
+                                                                                                      + ")"))
                                                           .hint(MESSAGE_ENHANCED, true)
                                                           .handle();
             logException(failureDescription, handledException);
