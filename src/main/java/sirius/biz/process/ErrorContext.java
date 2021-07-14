@@ -22,6 +22,7 @@ import sirius.kernel.nls.NLS;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -143,6 +144,33 @@ public class ErrorContext implements SubContext {
         }
     }
 
+    /**
+     * Executes the given supplied and handles / {@link #enhanceMessage(String) enhances} all thrown errors.
+     *
+     * @param failureDescription annotates a given error message so that the user is notified what task actually went
+     *                           wrong. This should be in "negative form" like "Cannot perform x because: message" as
+     *                           it is only used for error reporting.
+     * @param supplier           the supplier to execute
+     * @return an optional containing the object returned by the supplier or an empty optional if exceptions happened during execution
+     */
+    public <T> Optional<T> performAndGet(UnaryOperator<String> failureDescription, Supplier<T> supplier) {
+        try {
+            return Optional.of(supplier.get());
+        } catch (HandledException exception) {
+            logException(failureDescription, exception);
+        } catch (Exception exception) {
+            String message = exception.getMessage() + " (" + exception.getClass().getName() + ")";
+            logException(failureDescription,
+                         Exceptions.handle()
+                                   .to(Log.BACKGROUND)
+                                   .error(exception)
+                                   .withDirectMessage(failureDescription.apply(message))
+                                   .hint(MESSAGE_ENHANCED, true)
+                                   .handle());
+        }
+        return Optional.empty();
+    }
+
     private void logException(UnaryOperator<String> failureDescription, HandledException exception) {
         if (TaskContext.get().getAdapter() instanceof ProcessContext) {
             ((ProcessContext) TaskContext.get().getAdapter()).log(ProcessLog.error()
@@ -169,7 +197,7 @@ public class ErrorContext implements SubContext {
     }
 
     /**
-     * Performs the given task and directly reports any occurring error.
+     * Performs the given task and directly logs any occurring error.
      * <p>
      * Most probably, using {@link #perform(UnaryOperator, UnitOfWork)} is a better idea, as it permits to provide
      * more context to what actually went wrong.
@@ -178,6 +206,19 @@ public class ErrorContext implements SubContext {
      */
     public void perform(UnitOfWork task) {
         perform(UnaryOperator.identity(), task);
+    }
+
+    /**
+     * Executes the given supplier and directly reports any occurring error.
+     * <p>
+     * Most probably, using {@link #performAndGet(UnaryOperator, Supplier)} is a better idea, as it permits to provide
+     * more context to what actually went wrong.
+     *
+     * @param supplier the supplier to execute
+     * @return an optional containing the object returned by the supplier or an empty optional if exceptions happened during execution
+     */
+    public <T> Optional<T> performAndGet(Supplier<T> supplier) {
+        return performAndGet(UnaryOperator.identity(), supplier);
     }
 
     /**
