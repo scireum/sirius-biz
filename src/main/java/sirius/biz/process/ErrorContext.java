@@ -12,9 +12,9 @@ import sirius.biz.process.logs.ProcessLog;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.async.SubContext;
 import sirius.kernel.async.TaskContext;
+import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.UnitOfWork;
-import sirius.kernel.health.ExceptionHint;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
@@ -22,6 +22,7 @@ import sirius.kernel.nls.NLS;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -34,15 +35,6 @@ import java.util.stream.Collectors;
  * and which actual action as been attempted.
  */
 public class ErrorContext implements SubContext {
-
-    /**
-     * Marks an error as enhanced.
-     * <p>
-     * We need to perform this, as most probably several layers wrap a <tt>perform</tt> block around
-     * a piece of code. Still, we only want to enhance the error once with the most detailed context. Otherwise,
-     * the context would be appended several times.
-     */
-    private static final ExceptionHint MESSAGE_ENHANCED = new ExceptionHint("error-context-message-enhanced");
 
     private final Map<String, String> context = new LinkedHashMap<>();
 
@@ -119,16 +111,17 @@ public class ErrorContext implements SubContext {
     }
 
     /**
-     * Performs the given task and handles / {@link #enhanceMessage(String) enhances} all thrown errors.
+     * Executes the given supplied and handles / {@link #enhanceMessage(String) enhances} all thrown errors.
      *
      * @param failureDescription annotates a given error message so that the user is notified what task actually went
      *                           wrong. This should be in "negative form" like "Cannot perform x because: message" as
      *                           it is only used for error reporting.
-     * @param task               the task to actually perform
+     * @param producer           the producer to execute
+     * @return an optional containing the object returned by the supplier or an empty optional if exceptions happened during execution
      */
-    public void perform(UnaryOperator<String> failureDescription, UnitOfWork task) {
+    public <T> Optional<T> performAndGet(UnaryOperator<String> failureDescription, Producer<T> producer) {
         try {
-            task.execute();
+            return Optional.ofNullable(producer.create());
         } catch (HandledException exception) {
             logException(failureDescription, exception);
         } catch (Exception exception) {
@@ -138,9 +131,9 @@ public class ErrorContext implements SubContext {
                                    .to(Log.BACKGROUND)
                                    .error(exception)
                                    .withDirectMessage(failureDescription.apply(message))
-                                   .hint(MESSAGE_ENHANCED, true)
                                    .handle());
         }
+        return Optional.empty();
     }
 
     private void logException(UnaryOperator<String> failureDescription, HandledException exception) {
@@ -169,7 +162,22 @@ public class ErrorContext implements SubContext {
     }
 
     /**
-     * Performs the given task and directly reports any occurring error.
+     * Performs the given task and handles / {@link #enhanceMessage(String) enhances} all thrown errors.
+     *
+     * @param failureDescription annotates a given error message so that the user is notified what task actually went
+     *                           wrong. This should be in "negative form" like "Cannot perform x because: message" as
+     *                           it is only used for error reporting.
+     * @param task               the task to actually perform
+     */
+    public void perform(UnaryOperator<String> failureDescription, UnitOfWork task) {
+        performAndGet(failureDescription, () -> {
+            task.execute();
+            return null;
+        });
+    }
+
+    /**
+     * Performs the given task and directly logs any occurring error.
      * <p>
      * Most probably, using {@link #perform(UnaryOperator, UnitOfWork)} is a better idea, as it permits to provide
      * more context to what actually went wrong.
@@ -178,6 +186,19 @@ public class ErrorContext implements SubContext {
      */
     public void perform(UnitOfWork task) {
         perform(UnaryOperator.identity(), task);
+    }
+
+    /**
+     * Executes the given supplier and directly reports any occurring error.
+     * <p>
+     * Most probably, using {@link #performAndGet(UnaryOperator, Producer)} is a better idea, as it permits to provide
+     * more context to what actually went wrong.
+     *
+     * @param producer the producer to execute
+     * @return an optional containing the object returned by the supplier or an empty optional if exceptions happened during execution
+     */
+    public <T> Optional<T> performAndGet(Producer<T> producer) {
+        return performAndGet(UnaryOperator.identity(), producer);
     }
 
     /**
