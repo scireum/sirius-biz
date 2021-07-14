@@ -155,7 +155,7 @@ public class ErrorContext implements SubContext {
      */
     public <T> Optional<T> performAndGet(UnaryOperator<String> failureDescription, Supplier<T> supplier) {
         try {
-            return Optional.of(supplier.get());
+            return Optional.ofNullable(supplier.get());
         } catch (HandledException exception) {
             logException(failureDescription, exception);
         } catch (Exception exception) {
