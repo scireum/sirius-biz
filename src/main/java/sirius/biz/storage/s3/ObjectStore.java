@@ -307,7 +307,7 @@ public class ObjectStore {
         TaskContext taskContext = CallContext.getCurrent().get(TaskContext.class);
 
         do {
-            try (Operation op = new Operation(() -> Strings.apply("S3: Fetching objects from %s (prefix: %s)",
+            try (Operation operation = new Operation(() -> Strings.apply("S3: Fetching objects from %s (prefix: %s)",
                                                                   bucket.getName(),
                                                                   prefix), Duration.ofSeconds(10))) {
                 if (objectListing != null) {
@@ -332,7 +332,7 @@ public class ObjectStore {
      * @param objectId the object to delete
      */
     public void deleteObject(BucketName bucket, String objectId) {
-        try (Operation op = new Operation(() -> Strings.apply("S3: Deleting object % from %s", objectId, bucket),
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting object % from %s", objectId, bucket),
                                           Duration.ofMinutes(1))) {
             getClient().deleteObject(bucket.getName(), objectId);
         } catch (Exception e) {
@@ -354,7 +354,7 @@ public class ObjectStore {
      * @param bucket the bucket to delete
      */
     public void deleteBucket(BucketName bucket) {
-        try (Operation op = new Operation(() -> Strings.apply("S3: Deleting bucket %s", bucket),
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting bucket %s", bucket),
                                           Duration.ofMinutes(1))) {
             getClient().deleteBucket(bucket.getName());
             stores.bucketCache.remove(Tuple.create(name, bucket.getName()));
@@ -420,7 +420,7 @@ public class ObjectStore {
      */
     public File download(BucketName bucket, String objectId) throws FileNotFoundException {
         File dest = null;
-        try (Operation op = new Operation(() -> Strings.apply("S3: Downloading object % from %s", objectId, bucket),
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object % from %s", objectId, bucket),
                                           Duration.ofHours(4))) {
             dest = File.createTempFile("AMZS3", null);
             ensureBucketExists(bucket);
@@ -551,7 +551,7 @@ public class ObjectStore {
      * @param metadata the metadata for the object
      */
     public void upload(BucketName bucket, String objectId, File data, @Nullable ObjectMetadata metadata) {
-        try (Operation op = new Operation(() -> Strings.apply("S3: Uploading object % to %s", objectId, bucket),
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Uploading object % to %s", objectId, bucket),
                                           Duration.ofHours(4))) {
             uploadAsync(bucket, objectId, data, metadata).waitForUploadResult();
         } catch (InterruptedException e) {
@@ -645,7 +645,7 @@ public class ObjectStore {
         if (contentLength == 0 || contentLength >= MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE) {
             upload(bucket, objectId, inputStream);
         } else {
-            try (Operation op = new Operation(() -> Strings.apply("S3: Uploading object % to %s", objectId, bucket),
+            try (Operation operation = new Operation(() -> Strings.apply("S3: Uploading object % to %s", objectId, bucket),
                                               Duration.ofMinutes(30))) {
                 uploadAsync(bucket, objectId, inputStream, contentLength, metadata).waitForUploadResult();
             } catch (InterruptedException e) {
@@ -677,7 +677,7 @@ public class ObjectStore {
         ensureBucketExists(bucket);
         InitiateMultipartUploadResult multipartUpload =
                 getClient().initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket.getName(), objectId));
-        try (Operation op = new Operation(() -> Strings.apply("S3: Multipart upload of object % to %s",
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Multipart upload of object % to %s",
                                                               objectId,
                                                               bucket), Duration.ofHours(4))) {
             List<PartETag> eTags = uploadInChunks(bucket, objectId, inputStream, multipartUpload.getUploadId());

@@ -111,17 +111,17 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
         AtomicInteger scheduledTasks = new AtomicInteger(0);
 
         while (numberOfBatches.decrementAndGet() > 0) {
-            String txnId = Strings.generateCode(32);
+            String transactionId = Strings.generateCode(32);
             AtomicBoolean tasksFound = new AtomicBoolean();
             queryExecutableTasks().limit(batchSize).iterateAll(task -> {
-                markTaskAsScheduled(task, txnId);
+                markTaskAsScheduled(task, transactionId);
                 tasksFound.set(true);
                 scheduledTasks.incrementAndGet();
             });
 
             if (tasksFound.get()) {
                 distributedTasks.submitFIFOTask(ReplicationTaskExecutor.class,
-                                                new JSONObject().fluentPut(TXN_ID, txnId));
+                                                new JSONObject().fluentPut(TXN_ID, transactionId));
             } else {
                 return scheduledTasks.get();
             }
@@ -134,7 +134,7 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
         SmartQuery<SQLReplicationTask> query = oma.select(SQLReplicationTask.class);
         query.eq(SQLReplicationTask.FAILED, false);
         query.where(OMA.FILTERS.lt(SQLReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()));
-        query.eq(SQLReplicationTask.TXN_IN, null);
+        query.eq(SQLReplicationTask.TRANSACTION_ID, null);
         query.eq(SQLReplicationTask.SCHEDULED, null);
 
         query.orderAsc(SQLReplicationTask.EARLIEST_EXECUTION);
@@ -145,7 +145,7 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
     private void markTaskAsScheduled(SQLReplicationTask task, String txnId) {
         try {
             oma.updateStatement(SQLReplicationTask.class)
-               .set(SQLReplicationTask.TXN_IN, txnId)
+               .set(SQLReplicationTask.TRANSACTION_ID, txnId)
                .setToNow(SQLReplicationTask.SCHEDULED)
                .where(SQLReplicationTask.EARLIEST_EXECUTION, Operator.LT, LocalDateTime.now())
                .where(SQLReplicationTask.ID, task.getId())
@@ -167,7 +167,7 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
         if (Strings.isFilled(txnId)) {
             SmartQuery<SQLReplicationTask> query = oma.select(SQLReplicationTask.class);
             query.eq(SQLReplicationTask.FAILED, false);
-            query.eq(SQLReplicationTask.TXN_IN, txnId);
+            query.eq(SQLReplicationTask.TRANSACTION_ID, txnId);
             query.iterateAll(this::executeTask);
         }
     }

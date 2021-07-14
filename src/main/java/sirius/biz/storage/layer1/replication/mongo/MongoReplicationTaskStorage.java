@@ -17,7 +17,6 @@ import sirius.biz.storage.util.StorageUtils;
 import sirius.db.mixing.Mixing;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.Mongo;
-import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.MongoQuery;
 import sirius.db.mongo.QueryBuilder;
 import sirius.db.mongo.Updater;
@@ -116,17 +115,17 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
         AtomicInteger scheduledTasks = new AtomicInteger(0);
 
         while (numberOfBatches.decrementAndGet() > 0) {
-            String txnId = Strings.generateCode(32);
+            String transactionId = Strings.generateCode(32);
             AtomicBoolean tasksFound = new AtomicBoolean();
             queryExecutableTasks().limit(batchSize).iterateAll(task -> {
-                markTaskAsScheduled(task, txnId);
+                markTaskAsScheduled(task, transactionId);
                 tasksFound.set(true);
                 scheduledTasks.incrementAndGet();
             });
 
             if (tasksFound.get()) {
                 distributedTasks.submitFIFOTask(ReplicationTaskExecutor.class,
-                                                new JSONObject().fluentPut(TXN_ID, txnId));
+                                                new JSONObject().fluentPut(TXN_ID, transactionId));
             } else {
                 return scheduledTasks.get();
             }
@@ -139,7 +138,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
         MongoQuery<MongoReplicationTask> query = mango.select(MongoReplicationTask.class);
         query.eq(MongoReplicationTask.FAILED, false);
         query.where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()));
-        query.eq(MongoReplicationTask.TXN_IN, null);
+        query.eq(MongoReplicationTask.TRANSACTION_ID, null);
         query.eq(MongoReplicationTask.SCHEDULED, null);
 
         query.orderAsc(MongoReplicationTask.EARLIEST_EXECUTION);
@@ -151,7 +150,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
         try {
             mongo.update()
                  .set(MongoReplicationTask.SCHEDULED, LocalDateTime.now())
-                 .set(MongoReplicationTask.TXN_IN, txnId)
+                 .set(MongoReplicationTask.TRANSACTION_ID, txnId)
                  .where(MongoReplicationTask.FAILED, false)
                  .where(MongoReplicationTask.SCHEDULED, null)
                  .where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
@@ -174,7 +173,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
         if (Strings.isFilled(txnId)) {
             MongoQuery<MongoReplicationTask> query = mango.select(MongoReplicationTask.class);
             query.eq(MongoReplicationTask.FAILED, false);
-            query.eq(MongoReplicationTask.TXN_IN, txnId);
+            query.eq(MongoReplicationTask.TRANSACTION_ID, txnId);
             query.iterateAll(this::executeTask);
         }
     }

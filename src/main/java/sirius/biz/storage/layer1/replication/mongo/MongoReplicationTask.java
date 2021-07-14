@@ -75,10 +75,10 @@ public class MongoReplicationTask extends MongoEntity {
     /**
      * Contains the batch or transaction identifier used to schedule this task.
      */
-    public static final Mapping TXN_IN = Mapping.named("txnId");
+    public static final Mapping TRANSACTION_ID = Mapping.named("transactionId");
     @Length(50)
     @NullAllowed
-    private String txnId;
+    private String transactionId;
 
     /**
      * Contains when the task was scheduled for execution.
@@ -171,11 +171,11 @@ public class MongoReplicationTask extends MongoEntity {
         this.contentLength = contentLength;
     }
 
-    public String getTxnId() {
-        return txnId;
+    public String getTransactionId() {
+        return transactionId;
     }
 
-    public void setTxnId(String txnId) {
-        this.txnId = txnId;
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
     }
 }
