@@ -829,7 +829,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
     @Override
     @SuppressWarnings({"squid:S1126", "RedundantIfStatement"})
-    @Explain("Using explicit abort conditions and a final true makes all checks obvious")
+    @Explain("Using explicit abort conditions, and a final true makes all checks obvious")
     protected boolean isUserStillValid(String userId, WebContext ctx) {
         U user = fetchAccount(userId);
 

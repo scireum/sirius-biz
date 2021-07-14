@@ -153,7 +153,7 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
     /**
      * Returns the actual entity class used to represent users.
      *
-     * @return the entity class represeting users
+     * @return the entity class representing users
      */
     @SuppressWarnings("unchecked")
     protected Class<U> getUserClass() {
