@@ -132,17 +132,14 @@ public class ErrorContext implements SubContext {
         } catch (HandledException exception) {
             logException(failureDescription, exception);
         } catch (Exception exception) {
-            HandledException handledException = Exceptions.handle()
-                                                          .to(Log.BACKGROUND)
-                                                          .error(exception)
-                                                          .withDirectMessage(failureDescription.apply(exception.getMessage()
-                                                                                                      + " ("
-                                                                                                      + exception.getClass()
-                                                                                                                 .getName()
-                                                                                                      + ")"))
-                                                          .hint(MESSAGE_ENHANCED, true)
-                                                          .handle();
-            logException(failureDescription, handledException);
+            String message = exception.getMessage() + " (" + exception.getClass().getName() + ")";
+            logException(failureDescription,
+                         Exceptions.handle()
+                                   .to(Log.BACKGROUND)
+                                   .error(exception)
+                                   .withDirectMessage(failureDescription.apply(message))
+                                   .hint(MESSAGE_ENHANCED, true)
+                                   .handle());
         }
     }
 
