@@ -121,31 +121,6 @@ public class ErrorContext implements SubContext {
     }
 
     /**
-     * Performs the given task and handles / {@link #enhanceMessage(String) enhances} all thrown errors.
-     *
-     * @param failureDescription annotates a given error message so that the user is notified what task actually went
-     *                           wrong. This should be in "negative form" like "Cannot perform x because: message" as
-     *                           it is only used for error reporting.
-     * @param task               the task to actually perform
-     */
-    public void perform(UnaryOperator<String> failureDescription, UnitOfWork task) {
-        try {
-            task.execute();
-        } catch (HandledException exception) {
-            logException(failureDescription, exception);
-        } catch (Exception exception) {
-            String message = exception.getMessage() + " (" + exception.getClass().getName() + ")";
-            logException(failureDescription,
-                         Exceptions.handle()
-                                   .to(Log.BACKGROUND)
-                                   .error(exception)
-                                   .withDirectMessage(failureDescription.apply(message))
-                                   .hint(MESSAGE_ENHANCED, true)
-                                   .handle());
-        }
-    }
-
-    /**
      * Executes the given supplied and handles / {@link #enhanceMessage(String) enhances} all thrown errors.
      *
      * @param failureDescription annotates a given error message so that the user is notified what task actually went
@@ -195,6 +170,21 @@ public class ErrorContext implements SubContext {
         } else {
             return errorMessage;
         }
+    }
+
+    /**
+     * Performs the given task and handles / {@link #enhanceMessage(String) enhances} all thrown errors.
+     *
+     * @param failureDescription annotates a given error message so that the user is notified what task actually went
+     *                           wrong. This should be in "negative form" like "Cannot perform x because: message" as
+     *                           it is only used for error reporting.
+     * @param task               the task to actually perform
+     */
+    public void perform(UnaryOperator<String> failureDescription, UnitOfWork task) {
+        performAndGet(failureDescription, () -> {
+            task.execute();
+            return null;
+        });
     }
 
     /**
