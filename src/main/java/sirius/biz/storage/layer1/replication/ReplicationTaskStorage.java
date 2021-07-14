@@ -9,6 +9,7 @@
 package sirius.biz.storage.layer1.replication;
 
 import com.alibaba.fastjson.JSONObject;
+import sirius.kernel.di.std.AutoRegister;
 
 /**
  * Defines the database dependent storage repository.
@@ -22,6 +23,7 @@ import com.alibaba.fastjson.JSONObject;
  * {@link ReplicationTaskExecutor} and submitted back to {@link #executeBatch(JSONObject)} which will then invoke
  * {@link ReplicationManager#executeReplicationTask(String, String, long, boolean)} for each task in the batch.
  */
+@AutoRegister
 public interface ReplicationTaskStorage {
 
     /**

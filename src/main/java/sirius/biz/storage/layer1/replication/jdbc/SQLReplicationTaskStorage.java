@@ -9,32 +9,25 @@
 package sirius.biz.storage.layer1.replication.jdbc;
 
 import com.alibaba.fastjson.JSONObject;
-import sirius.biz.cluster.work.DistributedTasks;
-import sirius.biz.storage.layer1.replication.ReplicationManager;
-import sirius.biz.storage.layer1.replication.ReplicationTaskExecutor;
-import sirius.biz.storage.layer1.replication.ReplicationTaskStorage;
+import sirius.biz.storage.layer1.replication.BaseReplicationTaskStorage;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.db.jdbc.OMA;
 import sirius.db.jdbc.Operator;
 import sirius.db.jdbc.SmartQuery;
-import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Strings;
-import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 
 import java.sql.SQLException;
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Provides a replication task storage based on the underlying JDBC database.
  */
 @Register(framework = SQLReplicationTaskStorage.FRAMEWORK_JDBC_REPLICATION)
-public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
+public class SQLReplicationTaskStorage
+        extends BaseReplicationTaskStorage<SQLReplicationTask, SmartQuery<SQLReplicationTask>> {
 
     /**
      * Contains the name of the framework which has to be enabled to support the coordination of the
@@ -42,37 +35,8 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
      */
     public static final String FRAMEWORK_JDBC_REPLICATION = "biz.storage-replication-jdbc";
 
-    private static final String TXN_ID = "txnId";
-
-    @ConfigValue("storage.layer1.replication.batchSize")
-    private int batchSize;
-
-    @ConfigValue("storage.layer1.replication.maxBatches")
-    private int maxBatches;
-
-    @ConfigValue("storage.layer1.replication.replicateDeleteDelay")
-    private Duration replicateDeleteDelay;
-
-    @ConfigValue("storage.layer1.replication.replicateUpdateDelay")
-    private Duration replicateUpdateDelay;
-
-    @ConfigValue("storage.layer1.replication.retryReplicationDelay")
-    private Duration retryReplicationDelay;
-
-    @ConfigValue("storage.layer1.replication.maxReplicationAttempts")
-    private int maxReplicationAttempts;
-
     @Part
     private OMA oma;
-
-    @Part
-    private Mixing mixing;
-
-    @Part
-    private ReplicationManager replicationManager;
-
-    @Part
-    private DistributedTasks distributedTasks;
 
     @Override
     public void notifyAboutDelete(String primarySpace, String objectId) {
@@ -106,31 +70,7 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
     }
 
     @Override
-    public int emitBatches() {
-        AtomicInteger numberOfBatches = new AtomicInteger(maxBatches);
-        AtomicInteger scheduledTasks = new AtomicInteger(0);
-
-        while (numberOfBatches.decrementAndGet() > 0) {
-            String transactionId = Strings.generateCode(32);
-            AtomicBoolean tasksFound = new AtomicBoolean();
-            queryExecutableTasks().limit(batchSize).iterateAll(task -> {
-                markTaskAsScheduled(task, transactionId);
-                tasksFound.set(true);
-                scheduledTasks.incrementAndGet();
-            });
-
-            if (tasksFound.get()) {
-                distributedTasks.submitFIFOTask(ReplicationTaskExecutor.class,
-                                                new JSONObject().fluentPut(TXN_ID, transactionId));
-            } else {
-                return scheduledTasks.get();
-            }
-        }
-
-        return scheduledTasks.get();
-    }
-
-    private SmartQuery<SQLReplicationTask> queryExecutableTasks() {
+    protected SmartQuery<SQLReplicationTask> queryExecutableTasks() {
         SmartQuery<SQLReplicationTask> query = oma.select(SQLReplicationTask.class);
         query.eq(SQLReplicationTask.FAILED, false);
         query.where(OMA.FILTERS.lt(SQLReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()));
@@ -142,7 +82,8 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
         return query;
     }
 
-    private void markTaskAsScheduled(SQLReplicationTask task, String txnId) {
+    @Override
+    protected void markTaskAsScheduled(SQLReplicationTask task, String txnId) {
         try {
             oma.updateStatement(SQLReplicationTask.class)
                .set(SQLReplicationTask.TRANSACTION_ID, txnId)
@@ -163,7 +104,7 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
 
     @Override
     public void executeBatch(JSONObject batch) {
-        String txnId = batch.getString(TXN_ID);
+        String txnId = batch.getString(TRANSACTION_ID);
         if (Strings.isFilled(txnId)) {
             SmartQuery<SQLReplicationTask> query = oma.select(SQLReplicationTask.class);
             query.eq(SQLReplicationTask.FAILED, false);
@@ -183,11 +124,6 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
                         .eq(SQLReplicationTask.FAILED, false)
                         .where(OMA.FILTERS.lt(SQLReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
                         .count();
-    }
-
-    @Override
-    public int countNumberOfScheduledTasks() {
-        return distributedTasks.getQueueLength(ReplicationTaskExecutor.REPLICATION_TASK_QUEUE) * batchSize;
     }
 
     private void executeTask(SQLReplicationTask task) {
@@ -210,7 +146,7 @@ public class SQLReplicationTaskStorage implements ReplicationTaskStorage {
                               .to(StorageUtils.LOG)
                               .error(ex)
                               .withSystemErrorMessage(
-                                      "Layer 1/replication: A storage replication task (%s) ultimatively failed: Primary space: %s, object: %s - %s (%s)",
+                                      "Layer 1/replication: A storage replication task (%s) ultimately failed: Primary space: %s, object: %s - %s (%s)",
                                       task.getIdAsString(),
                                       task.getPrimarySpace(),
                                       task.getObjectKey())
