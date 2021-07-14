@@ -54,11 +54,11 @@ public abstract class LookupTable {
 
     private static final int MAX_SUGGESTIONS = 25;
     private static final String CONFIG_KEY_SUPPORTS_SCAN = "supportsScan";
-    private static final String CONFIG_KEY_CODE_CASE_MODE = "codeCase";
+    protected static final String CONFIG_KEY_CODE_CASE_MODE = "codeCase";
     public static final String CONFIG_KEY_MAPPING_FIELD = "mappingsField";
     private final boolean supportsScan;
-    private final CodeCase codeCase;
     private final String mappingsField;
+    protected CodeCase codeCase;
 
     enum CodeCase {
         LOWER, UPPER, VERBATIM
@@ -88,14 +88,11 @@ public abstract class LookupTable {
             return null;
         }
 
-        switch (codeCase) {
-            case LOWER:
-                return code.toLowerCase();
-            case UPPER:
-                return code.toUpperCase();
-            default:
-                return code;
-        }
+        return switch (codeCase) {
+            case LOWER -> code.toLowerCase();
+            case UPPER -> code.toUpperCase();
+            default -> code;
+        };
     }
 
     /**

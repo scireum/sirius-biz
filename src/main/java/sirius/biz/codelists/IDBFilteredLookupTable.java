@@ -36,6 +36,10 @@ class IDBFilteredLookupTable extends LookupTable {
         super(extension);
         this.baseTable = baseTable;
         this.filterSet = filterSet;
+        this.codeCase = extension.get(LookupTable.CONFIG_KEY_CODE_CASE_MODE)
+                                 .upperCase()
+                                 .getEnum(CodeCase.class)
+                                 .orElse(baseTable.codeCase);
     }
 
     protected boolean contains(String code) {
