@@ -15,7 +15,6 @@ import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.UnitOfWork;
-import sirius.kernel.health.ExceptionHint;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.health.Log;
@@ -36,15 +35,6 @@ import java.util.stream.Collectors;
  * and which actual action as been attempted.
  */
 public class ErrorContext implements SubContext {
-
-    /**
-     * Marks an error as enhanced.
-     * <p>
-     * We need to perform this, as most probably several layers wrap a <tt>perform</tt> block around
-     * a piece of code. Still, we only want to enhance the error once with the most detailed context. Otherwise,
-     * the context would be appended several times.
-     */
-    private static final ExceptionHint MESSAGE_ENHANCED = new ExceptionHint("error-context-message-enhanced");
 
     private final Map<String, String> context = new LinkedHashMap<>();
 
@@ -141,7 +131,6 @@ public class ErrorContext implements SubContext {
                                    .to(Log.BACKGROUND)
                                    .error(exception)
                                    .withDirectMessage(failureDescription.apply(message))
-                                   .hint(MESSAGE_ENHANCED, true)
                                    .handle());
         }
         return Optional.empty();
