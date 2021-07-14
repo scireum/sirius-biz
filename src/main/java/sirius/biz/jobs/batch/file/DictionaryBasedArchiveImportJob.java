@@ -32,6 +32,9 @@ import java.util.function.Consumer;
  */
 public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
 
+    private static final String ERROR_CONTEXT_FILE_PATH = "$DictionaryBasedArchiveImportJob.file";
+    private static final String ERROR_CONTEXT_ROW = "$LineBasedJob.row";
+
     /**
      * Describes a file to be imported from an archive.
      */
@@ -162,12 +165,19 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
                                                                                 importFile.rowHandler).withIgnoreEmptyValues(
                 importFile.ignoreEmptyFields).withRowCounterName(importFile.rowCounterName);
 
+        errorContext.withContext(ERROR_CONTEXT_FILE_PATH, extractedFile.getFilePath());
         try (InputStream stream = extractedFile.openInputStream()) {
-            LineBasedProcessor.create(importFile.filename, stream, false)
-                              .run(dictionaryBasedImport::handleRow, error -> {
-                                  process.handle(error);
-                                  return true;
-                              });
+            LineBasedProcessor.create(importFile.filename, stream, false).run((lineNumber, row) -> {
+                errorContext.withContext(ERROR_CONTEXT_ROW, lineNumber);
+                dictionaryBasedImport.handleRow(lineNumber, row);
+                errorContext.removeContext(ERROR_CONTEXT_ROW);
+            }, error -> {
+                process.handle(error);
+                errorContext.removeContext(ERROR_CONTEXT_ROW);
+                return true;
+            });
+        } finally {
+            errorContext.removeContext(ERROR_CONTEXT_FILE_PATH);
         }
 
         if (importFile.completionHandler != null) {

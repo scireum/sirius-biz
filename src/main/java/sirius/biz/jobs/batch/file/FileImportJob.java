@@ -42,6 +42,8 @@ import java.util.function.Consumer;
  */
 public abstract class FileImportJob extends ImportJob {
 
+    public static final String FILE_LABEL = "$FileImportJobFactory.file";
+
     /**
      * Contains the parameter which selects the file to import.
      * <p>
@@ -79,6 +81,7 @@ public abstract class FileImportJob extends ImportJob {
     protected ValueHolder<VirtualFile> auxFilesDestination;
     protected AuxiliaryFileMode auxiliaryFileMode;
     protected boolean flattenAuxiliaryFileDirs;
+    protected boolean suppressFileNameInContext;
 
     /**
      * Defines the modes in which an auxiliary file in an archive can be handled.
@@ -142,7 +145,7 @@ public abstract class FileImportJob extends ImportJob {
      * @return the parameter used to select the import file
      */
     public static Parameter<VirtualFile> createFileParameter(@Nullable List<String> acceptedFileExtensions) {
-        FileParameter result = new FileParameter("file", "$FileImportJobFactory.file").withBasePath("/work");
+        FileParameter result = new FileParameter("file", FILE_LABEL).withBasePath("/work");
         if (acceptedFileExtensions != null && !acceptedFileExtensions.isEmpty()) {
             result.withAcceptedExtensionsList(acceptedFileExtensions);
         }
@@ -163,7 +166,7 @@ public abstract class FileImportJob extends ImportJob {
 
             try (FileHandle fileHandle = file.download()) {
                 backupInputFile(file.name(), fileHandle);
-                errorContext.inContext("$FileImportJobFactory.file",
+                errorContext.inContext(suppressFileNameInContext ? "" : FILE_LABEL,
                                        file.name(),
                                        () -> executeForStream(file.name(), fileHandle::getInputStream));
             }
@@ -229,7 +232,7 @@ public abstract class FileImportJob extends ImportJob {
             process.log(ProcessLog.info()
                                   .withNLSKey("FileImportJob.importingZippedFile")
                                   .withContext("filename", extractedFile.getFilePath()));
-            errorContext.inContext("$FileImportJobFactory.file",
+            errorContext.inContext(suppressFileNameInContext ? "" : FILE_LABEL,
                                    extractedFile.getFilePath(),
                                    () -> executeForStream(extractedFile.getFilePath(), extractedFile::openInputStream));
             return true;
@@ -244,7 +247,7 @@ public abstract class FileImportJob extends ImportJob {
      * Gets invoked for every entry in a given ZIP archive which cannot be processed by this job itself.
      * <p>
      * This might be used e.g. if an XML file is being processed which is accompanied with some media files to
-     * move them into the proper direcotry in the {@link sirius.biz.storage.layer3.VirtualFileSystem}.
+     * move them into the proper directory in the {@link sirius.biz.storage.layer3.VirtualFileSystem}.
      * <p>
      * By default this is attempted if the {@link #determineAuxiliaryFilesDirectory()} returns a non-null result.
      * Otherwise these files are simply ignored.
@@ -336,4 +339,13 @@ public abstract class FileImportJob extends ImportJob {
      * @return <tt>true</tt> if it can be handled, <tt>false</tt> otherwise
      */
     protected abstract boolean canHandleFileExtension(@Nullable String fileExtension);
+
+    /**
+     * Permits to suppress the file name to be added in the {@link sirius.biz.process.ErrorContext}.
+     * <p>
+     * This is useful in jobs processing a single file, where the file name would be printed in every single error message
+     */
+    protected void suppressFileNameInContext() {
+        this.suppressFileNameInContext = true;
+    }
 }
