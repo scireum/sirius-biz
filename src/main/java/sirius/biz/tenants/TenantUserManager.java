@@ -434,7 +434,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
         Optional<U> optionalAccount = loadAccountByName(user.toLowerCase());
 
-        if (!optionalAccount.isPresent()) {
+        if (optionalAccount.isEmpty()) {
             return null;
         }
 
@@ -897,7 +897,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         Set<String> transformedRoles = transformRoles(roles);
-        transformedRoles.removeAll(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
+        tenant.getTenantData().getPackageData().getRevokedPermissions().data().forEach(transformedRoles::remove);
 
         return transformedRoles;
     }
@@ -923,7 +923,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
         // also apply profiles and revokes to additional roles
         Permissions.applyProfiles(result);
-        result.removeAll(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
+        tenant.getTenantData().getPackageData().getRevokedPermissions().data().forEach(result::remove);
 
         return result;
     }
