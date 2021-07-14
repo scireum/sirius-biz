@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import com.google.common.collect.Streams;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Lambdas;
@@ -222,14 +223,14 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
 
     private void updateAccount(SAMLResponse response, U account) {
         account.getUserAccountData().getPermissions().getPermissions().clear();
-        response.getAttribute(SAMLResponse.ATTRIBUTE_GROUP)
-                .stream()
-                .filter(Strings::isFilled)
-                .flatMap(value -> Arrays.stream(value.split(",")))
-                .map(String::trim)
-                .filter(Strings::isFilled)
-                .filter(role -> roles.contains(role))
-                .collect(Lambdas.into(account.getUserAccountData().getPermissions().getPermissions().modify()));
+        Streams.concat(response.getAttribute(SAMLResponse.ATTRIBUTE_GROUP).stream(),
+                       response.getAttribute(SAMLResponse.ATTRIBUTE_ROLE).stream())
+               .filter(Strings::isFilled)
+               .flatMap(value -> Arrays.stream(value.split(",")))
+               .map(String::trim)
+               .filter(Strings::isFilled)
+               .filter(role -> roles.contains(role))
+               .collect(Lambdas.into(account.getUserAccountData().getPermissions().getPermissions().modify()));
 
         if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_GIVEN_NAME))) {
             account.getUserAccountData()
