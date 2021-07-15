@@ -761,4 +761,9 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
             mongo.update().set(MongoBlob.LAST_TOUCHED, LocalDateTime.now()).where(MongoBlob.BLOB_KEY, blobKey);
         });
     }
+
+    @Override
+    protected void purgeVariantFromCache(MongoBlob blob, String variantName) {
+        blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), variantName));
+    }
 }
