@@ -63,8 +63,8 @@ public class LookupTables {
             return new CodeListLookupTable(extension, extension.get(CONFIG_KEY_CODE_LIST).asString(name));
         }
 
-        // Directly access the given IDB table..
-        LookupTable result = new IDBLookupTable(extension, jupiter.getDefault().idb().table(table));
+        // Directly access the given IDB table...
+        LookupTable result = determineIDBLookupTable(extension, name, table);
 
         // ...if a custom table is also given, we use both tables together, there the custom table is always
         // "in front" of the normal table...
@@ -83,5 +83,15 @@ public class LookupTables {
         }
 
         return result;
+    }
+
+    private LookupTable determineIDBLookupTable(Extension extension, String name, String baseTable) {
+        if (!Strings.areEqual(name, baseTable)) {
+            Extension baseTableExtension = Sirius.getSettings().getExtension(CONFIG_BLOCK_LOOKUP_TABLES, baseTable);
+            if (baseTableExtension != null) {
+                return new IDBLookupTable(baseTableExtension, jupiter.getDefault().idb().table(baseTable));
+            }
+        }
+        return new IDBLookupTable(extension, jupiter.getDefault().idb().table(baseTable));
     }
 }
