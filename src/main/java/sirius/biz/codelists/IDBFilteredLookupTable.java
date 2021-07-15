@@ -25,6 +25,7 @@ import java.util.stream.Stream;
  */
 class IDBFilteredLookupTable extends LookupTable {
 
+    private final LookupTable baseTable;
     private final IDBSet filterSet;
 
     @Part
@@ -32,7 +33,8 @@ class IDBFilteredLookupTable extends LookupTable {
     private static Jupiter jupiter;
 
     IDBFilteredLookupTable(Extension extension, LookupTable baseTable, IDBSet filterSet) {
-        super(extension, baseTable);
+        super(extension, baseTable.codeCase);
+        this.baseTable = baseTable;
         this.filterSet = filterSet;
     }
 

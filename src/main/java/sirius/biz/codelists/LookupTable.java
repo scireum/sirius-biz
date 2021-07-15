@@ -54,35 +54,28 @@ public abstract class LookupTable {
 
     private static final int MAX_SUGGESTIONS = 25;
     private static final String CONFIG_KEY_SUPPORTS_SCAN = "supportsScan";
-    private static final String CONFIG_KEY_CODE_CASE_MODE = "codeCase";
+    protected static final String CONFIG_KEY_CODE_CASE_MODE = "codeCase";
     public static final String CONFIG_KEY_MAPPING_FIELD = "mappingsField";
     private final boolean supportsScan;
-    private final CodeCase codeCase;
     private final String mappingsField;
 
     enum CodeCase {
         LOWER, UPPER, VERBATIM
     }
 
-    protected final LookupTable baseTable;
+    protected final CodeCase codeCase;
     protected final Extension extension;
 
     protected LookupTable(Extension extension) {
-        this.baseTable = null;
-        this.extension = extension;
-        this.supportsScan = extension.get(CONFIG_KEY_SUPPORTS_SCAN).asBoolean();
-        this.mappingsField = extension.get(CONFIG_KEY_MAPPING_FIELD).asString();
-        this.codeCase =
-                extension.get(CONFIG_KEY_CODE_CASE_MODE).upperCase().getEnum(CodeCase.class).orElse(CodeCase.VERBATIM);
+        this(extension, CodeCase.VERBATIM);
     }
 
-    protected LookupTable(Extension extension, LookupTable baseTable) {
-        this.baseTable = baseTable;
+    protected LookupTable(Extension extension, CodeCase fallbackCodeCase) {
         this.extension = extension;
         this.supportsScan = extension.get(CONFIG_KEY_SUPPORTS_SCAN).asBoolean();
         this.mappingsField = extension.get(CONFIG_KEY_MAPPING_FIELD).asString();
         this.codeCase =
-                extension.get(CONFIG_KEY_CODE_CASE_MODE).upperCase().getEnum(CodeCase.class).orElse(baseTable.codeCase);
+                extension.get(CONFIG_KEY_CODE_CASE_MODE).upperCase().getEnum(CodeCase.class).orElse(fallbackCodeCase);
     }
 
     /**
