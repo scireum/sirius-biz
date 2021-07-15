@@ -34,8 +34,10 @@
                              active="part(sirius.biz.process.Processes.class).hasActiveProcesses()"
                              link="/ps"/>
 
+            <i:local name="userName"
+                     value="user().is(sirius.biz.tenants.UserAccount.class) ? user().as(sirius.biz.tenants.UserAccount.class).getUserAccountData().getShortName() : user().getUserName()"/>
             <t:menuImageDropdownItem icon="@user().tryAs(sirius.biz.web.UserIconProvider.class).flatMap(|provider| provider.getUserIcon()).orElse('/images/icons/user_avatar_d.png')"
-                                     title="@format('<b>${user}</b>[<br>${tenant}]').set('user', user().getUserName()).set('tenant', user().getTenantName()).smartFormat()"
+                                     title="@format('<b>${user}</b>[<br>${tenant}]').set('user', userName).set('tenant', user().getTenantName()).smartFormat()"
                                      smallLabel="@user().getUserName()"
                                      class="right-large-menu-icon">
                 <i:extensions target="biz-tycho-menu" point="user"/>
