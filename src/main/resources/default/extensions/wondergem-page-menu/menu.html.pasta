@@ -9,23 +9,17 @@
     </i:block>
     <i:block name="right">
         <t:permission permission="flag-logged-in">
-            <i:local name="currentUser"
-                     value="user()"/>
-            <i:local name="userName"
-                     value="currentUser.is(sirius.biz.tenants.UserAccount.class) ? currentUser.as(sirius.biz.tenants.UserAccount.class).getUserAccountData().getShortName() : currentUser.getUserName()"/>
-            <i:local name="tenantName" value="currentUser.getTenantName()"/>
-
             <i:if test="isFrameworkEnabled('tycho.open-search')">
-            <li class="nav-item dropdown right-menu-icon d-none d-xl-inline">
-                <form class="form-inline menu-search-form" method="POST" action="/open-search">
-                    <span><i class="fa fa-search"></i></span>
-                    <input name="query"
-                           class="form-control autofocus"
-                           type="search"
-                           placeholder="@i18n('OpenSearchController.label')"
-                           aria-label="Search">
-                </form>
-            </li>
+                <li class="nav-item dropdown right-menu-icon d-none d-xl-inline">
+                    <form class="form-inline menu-search-form" method="POST" action="/open-search">
+                        <span><i class="fa fa-search"></i></span>
+                        <input name="query"
+                               class="form-control autofocus"
+                               type="search"
+                               placeholder="@i18n('OpenSearchController.label')"
+                               aria-label="Search">
+                    </form>
+                </li>
             </i:if>
             <t:menuImageItem framework="biz.processes"
                              icon="/images/icons/ps.png"
@@ -33,9 +27,10 @@
                              active="part(sirius.biz.process.Processes.class).hasActiveProcesses()"
                              link="/ps"/>
 
-            <w:menuImageDropdownItem icon="@user().tryAs(sirius.biz.web.UserIconProvider.class).flatMap(|provider| provider.getUserIcon()).orElse('/images/icons/user_avatar_d.png')"
-                                     title="@format('${user}[ ${tenant}]').set('user', userName).set('tenant', tenantName).smartFormat()"
-                                     class="right-large-menu-icon">
+            <w:menuImageDropdownItem
+                    icon="@user().tryAs(sirius.biz.web.UserIconProvider.class).flatMap(|provider| provider.getUserIcon()).orElse('/images/icons/user_avatar_d.png')"
+                    title="@format('${user}[ ${tenant}]').set('user', currentUserName()).set('tenant', user().getTenantName()).smartFormat()"
+                    class="right-large-menu-icon">
                 <i:extensions target="biz-menu" point="user"/>
             </w:menuImageDropdownItem>
             <w:menuImageDropdownItem icon="/images/icons/server.png"
