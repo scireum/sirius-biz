@@ -204,7 +204,7 @@ class IDBLookupTable extends LookupTable {
         try {
             return jupiter.fetchFromSmallCache(CACHE_PREFIX_REVERSE_LOOKUP + table.getName() + "-" + name,
                                                () -> table.query()
-                                                          .searchPaths(nameField)
+                                                          .lookupPaths(nameField)
                                                           .searchValue(name.toLowerCase())
                                                           .singleRow(codeField)
                                                           .map(row -> row.at(0).asString())
