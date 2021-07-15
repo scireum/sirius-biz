@@ -85,14 +85,15 @@ public class LookupTables {
         return result;
     }
 
-    private LookupTable loadIDBLookupTable(Extension extension, String name, String baseTable) {
-        if (!Strings.areEqual(name, baseTable)) {
-            // load the base table under the base table's configuration, if present.
-            Extension baseTableExtension = Sirius.getSettings().getExtension(CONFIG_BLOCK_LOOKUP_TABLES, baseTable);
+    private LookupTable loadIDBLookupTable(Extension extension, String currentTable, String tableToLoad) {
+        // Checks, if the table to load is a base table currently created table and loads it with the
+        // correct configuration.
+        if (!Strings.areEqual(currentTable, tableToLoad)) {
+            Extension baseTableExtension = Sirius.getSettings().getExtension(CONFIG_BLOCK_LOOKUP_TABLES, tableToLoad);
             if (baseTableExtension != null) {
-                return new IDBLookupTable(baseTableExtension, jupiter.getDefault().idb().table(baseTable));
+                return new IDBLookupTable(baseTableExtension, jupiter.getDefault().idb().table(tableToLoad));
             }
         }
-        return new IDBLookupTable(extension, jupiter.getDefault().idb().table(baseTable));
+        return new IDBLookupTable(extension, jupiter.getDefault().idb().table(tableToLoad));
     }
 }
