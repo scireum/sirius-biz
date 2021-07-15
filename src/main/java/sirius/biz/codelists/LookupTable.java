@@ -99,14 +99,11 @@ public abstract class LookupTable {
             return null;
         }
 
-        switch (codeCase) {
-            case LOWER:
-                return code.toLowerCase();
-            case UPPER:
-                return code.toUpperCase();
-            default:
-                return code;
-        }
+        return switch (codeCase) {
+            case LOWER -> code.toLowerCase();
+            case UPPER -> code.toUpperCase();
+            default -> code;
+        };
     }
 
     /**
@@ -647,7 +644,8 @@ public abstract class LookupTable {
                                              .stream()
                                              .filter(entry -> entry.getValue() instanceof JSONArray)
                                              .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                       entry -> transformArrayToStringList((JSONArray) entry.getValue())));
+                                                                       entry -> transformArrayToStringList((JSONArray) entry
+                                                                               .getValue())));
         } else {
             return Collections.emptyMap();
         }
