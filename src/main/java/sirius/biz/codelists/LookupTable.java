@@ -67,15 +67,15 @@ public abstract class LookupTable {
     protected final Extension extension;
 
     protected LookupTable(Extension extension) {
-        this(extension, CodeCase.VERBATIM);
+        this(extension,
+             extension.get(CONFIG_KEY_CODE_CASE_MODE).upperCase().getEnum(CodeCase.class).orElse(CodeCase.VERBATIM));
     }
 
-    protected LookupTable(Extension extension, CodeCase fallbackCodeCase) {
+    protected LookupTable(Extension extension, CodeCase codeCase) {
         this.extension = extension;
         this.supportsScan = extension.get(CONFIG_KEY_SUPPORTS_SCAN).asBoolean();
         this.mappingsField = extension.get(CONFIG_KEY_MAPPING_FIELD).asString();
-        this.codeCase =
-                extension.get(CONFIG_KEY_CODE_CASE_MODE).upperCase().getEnum(CodeCase.class).orElse(fallbackCodeCase);
+        this.codeCase = codeCase;
     }
 
     /**

@@ -64,7 +64,7 @@ public class LookupTables {
         }
 
         // Directly access the given IDB table...
-        LookupTable result = determineIDBLookupTable(extension, name, table);
+        LookupTable result = loadIDBLookupTable(extension, name, table);
 
         // ...if a custom table is also given, we use both tables together, there the custom table is always
         // "in front" of the normal table...
@@ -85,8 +85,9 @@ public class LookupTables {
         return result;
     }
 
-    private LookupTable determineIDBLookupTable(Extension extension, String name, String baseTable) {
+    private LookupTable loadIDBLookupTable(Extension extension, String name, String baseTable) {
         if (!Strings.areEqual(name, baseTable)) {
+            // load the base table under the base table's configuration, if present.
             Extension baseTableExtension = Sirius.getSettings().getExtension(CONFIG_BLOCK_LOOKUP_TABLES, baseTable);
             if (baseTableExtension != null) {
                 return new IDBLookupTable(baseTableExtension, jupiter.getDefault().idb().table(baseTable));
