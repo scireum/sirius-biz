@@ -4,7 +4,7 @@
 <i:switch test="@point">
     <i:block name="nav-right">
         <div class="overflow-hidden text-nowrap">
-            <t:permission permission="flag-logged-in">
+            <t:permission permission="flag-logged-in+flag-spy-user">
                 <a href="/user-accounts/select/main" class="badge text-white bg-sirius-orange-light">
                     @(user().is(sirius.biz.tenants.UserAccount.class) ? user().as(sirius.biz.tenants.UserAccount.class).getUserAccountData().getShortName() : user().getUserName())
                    <i:if test="isFilled(user().getTenantName())">(@user().getTenantName())</i:if>
