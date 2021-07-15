@@ -25,12 +25,10 @@ import java.util.stream.Stream;
 class CustomLookupTable extends LookupTable {
 
     private final LookupTable customTable;
-    private final LookupTable baseTable;
 
     CustomLookupTable(Extension extension, LookupTable customTable, LookupTable baseTable) {
-        super(extension);
+        super(extension, baseTable);
         this.customTable = customTable;
-        this.baseTable = baseTable;
     }
 
     private static <T> Optional<T> or(Optional<T> main, Supplier<Optional<T>> alternative) {
