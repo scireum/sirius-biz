@@ -641,6 +641,14 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
     @Routed("/user-accounts/select/:1")
     public void selectUserAccount(final WebContext webContext, String accountId) {
         if ("main".equals(accountId)) {
+            // If we try to switch back to the main user - without being different user in the first place,
+            // then this action was most probably triggered by the "tenant info badge" in the UI, and meant to
+            // actually reset the tenant not the user - therefore we redirect to there.
+            if (!isCurrentlySpying(webContext)) {
+                webContext.respondWith().redirectToGet("/tenants/select/main");
+                return;
+            }
+
             String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
             UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
             auditLog.neutral("AuditLog.switchedToMainUser")

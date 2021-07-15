@@ -1,0 +1,16 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="100"/>
+
+<i:switch test="@point">
+    <i:block name="nav-right">
+        <div class="overflow-hidden text-nowrap">
+            <t:permission permission="flag-logged-in">
+                <a href="/user-accounts/select/main" class="badge text-white bg-sirius-orange-light">
+                    @(user().is(sirius.biz.tenants.UserAccount.class) ? user().as(sirius.biz.tenants.UserAccount.class).getUserAccountData().getShortName() : user().getUserName())
+                   <i:if test="isFilled(user().getTenantName())">(@user().getTenantName())</i:if>
+                    <i class="ml-1 fa fa-times"></i>
+                </a>
+            </t:permission>
+        </div>
+    </i:block>
+</i:switch>
