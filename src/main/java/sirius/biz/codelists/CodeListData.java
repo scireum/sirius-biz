@@ -87,7 +87,7 @@ public class CodeListData extends Composite {
     private static CodeLists<?, ?, ?> codeLists;
 
     @Transient
-    private BaseEntity<?> codeList;
+    private final BaseEntity<?> codeList;
 
     /**
      * Creates a new instance referenced by the given entity.

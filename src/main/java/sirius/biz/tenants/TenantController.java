@@ -32,6 +32,7 @@ import sirius.web.security.LoginRequired;
 import sirius.web.security.Permission;
 import sirius.web.security.Permissions;
 import sirius.web.security.UserContext;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 import sirius.web.util.LinkBuilder;
 
@@ -247,7 +248,8 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
      * @param jsonOutput the JSON response being generated
      * @param tenantId   the id of the tenant whose config should be updated
      */
-    @Routed(value = "/tenant/:1/config/update", jsonCall = true)
+    @Routed("/tenant/:1/config/update")
+    @InternalService
     @Permission(PERMISSION_MANAGE_TENANTS)
     public void updateTenantConfig(WebContext webContext, JSONStructuredOutput jsonOutput, String tenantId) {
         T tenant = find(getTenantClass(), tenantId);

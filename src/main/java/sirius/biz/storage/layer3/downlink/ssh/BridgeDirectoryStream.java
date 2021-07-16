@@ -23,8 +23,8 @@ import java.util.List;
  */
 public class BridgeDirectoryStream implements DirectoryStream<Path> {
 
-    private VirtualFile virtualFile;
-    private BridgeFileSystem fileSystem;
+    private final VirtualFile virtualFile;
+    private final BridgeFileSystem fileSystem;
 
     /**
      * Generates a wrapper for the given directory and file system.

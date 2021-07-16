@@ -31,8 +31,8 @@ class RedisPrioritizedQueue implements PrioritizedQueue {
     private static final int MAX_ATTEMPTS_TO_GENERATE_UNIQUE_TASK_ID = 3;
     private static final int MAX_ATTEMPTS_TO_POLL = 5;
 
-    private Redis redis;
-    private String queueName;
+    private final Redis redis;
+    private final String queueName;
 
     @Part
     private static KeyGenerator keyGen;

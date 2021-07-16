@@ -14,7 +14,6 @@ import sirius.db.mixing.BaseEntity;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.web.http.QueryString;
-import sirius.web.security.Permission;
 
 import javax.annotation.Nonnull;
 

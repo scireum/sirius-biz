@@ -19,19 +19,13 @@ public class BizLegacyGlobalsHandler extends LegacyGlobalsHandler {
 
     @Override
     protected String determineReplacement(String name) {
-        switch (name) {
-            case "codeLists":
-                return "part(CodeLists.class)";
-            case "jobsService":
-                return "part(Jobs.class)";
-            case "tenantsHelper":
-                return "part(Tenants.class)";
-            case "isenguard":
-                return "part(Isenguard.class)";
-            case "appBaseUrl":
-                return "BizController.getBaseUrl()";
-            default:
-                return null;
-        }
+        return switch (name) {
+            case "codeLists" -> "part(CodeLists.class)";
+            case "jobsService" -> "part(Jobs.class)";
+            case "tenantsHelper" -> "part(Tenants.class)";
+            case "isenguard" -> "part(Isenguard.class)";
+            case "appBaseUrl" -> "BizController.getBaseUrl()";
+            default -> null;
+        };
     }
 }

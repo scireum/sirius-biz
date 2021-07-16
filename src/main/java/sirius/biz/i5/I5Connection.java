@@ -149,10 +149,18 @@ public class I5Connection implements Closeable {
             }
         } catch (HandledException t) {
             throw t;
-        } catch (Exception t) {
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
             throw Exceptions.handle()
                             .to(I5Connector.LOG)
-                            .error(t)
+                            .error(exception)
+                            .withSystemErrorMessage("The thread was interrupted while executing '%s': %s (%s)",
+                                                    currentJob)
+                            .handle();
+        } catch (Exception exception) {
+            throw Exceptions.handle()
+                            .to(I5Connector.LOG)
+                            .error(exception)
                             .withSystemErrorMessage("Error while executing '%s': %s (%s)", currentJob)
                             .handle();
         }
@@ -166,10 +174,17 @@ public class I5Connection implements Closeable {
                 I5Connector.LOG.FINE("JOB-NAME: " + p.getServerJob().getName());
             }
             return pgm + "/" + p.getServerJob() + " / " + p.getServerJob().getName();
-        } catch (Exception e) {
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
             throw Exceptions.handle()
                             .to(I5Connector.LOG)
-                            .error(e)
+                            .error(exception)
+                            .withSystemErrorMessage("Got interrupted while calling i5: %s (%s)")
+                            .handle();
+        } catch (Exception exception) {
+            throw Exceptions.handle()
+                            .to(I5Connector.LOG)
+                            .error(exception)
                             .withSystemErrorMessage("Error while calling i5: %s (%s)")
                             .handle();
         }
@@ -178,10 +193,17 @@ public class I5Connection implements Closeable {
     private void collectCPUUsed(ProgramCall p, String currentJob) {
         try {
             pool.i5Connector.callUtilization.addValue(p.getServerJob().getCPUUsed());
-        } catch (Exception e) {
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
             throw Exceptions.handle()
                             .to(I5Connector.LOG)
-                            .error(e)
+                            .error(exception)
+                            .withSystemErrorMessage("Got interrupted while executing '%s': %s (%s)", currentJob)
+                            .handle();
+        } catch (Exception exception) {
+            throw Exceptions.handle()
+                            .to(I5Connector.LOG)
+                            .error(exception)
                             .withSystemErrorMessage("Error while executing '%s': %s (%s)", currentJob)
                             .handle();
         }

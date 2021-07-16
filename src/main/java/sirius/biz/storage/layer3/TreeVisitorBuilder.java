@@ -27,7 +27,7 @@ public class TreeVisitorBuilder {
     protected boolean excludeDirectories = false;
     protected boolean excludeFiles = false;
     protected Predicate<VirtualFile> directoryFilter;
-    private VirtualFile file;
+    private final VirtualFile file;
 
     protected TreeVisitorBuilder(VirtualFile file) {
         this.file = file;

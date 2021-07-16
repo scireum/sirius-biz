@@ -34,7 +34,7 @@ import java.util.function.Consumer;
 public class SQLCodeListExportJobFactory
         extends EntityExportJobFactory<SQLCodeListEntry, SmartQuery<SQLCodeListEntry>> {
 
-    private Parameter<CodeList> codeListParameter =
+    private final Parameter<CodeList> codeListParameter =
             new CodeListParameter("codeList", "$CodeList").markRequired().build();
 
     @Nonnull

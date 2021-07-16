@@ -14,6 +14,7 @@ import sirius.db.redis.Redis;
 import sirius.kernel.Sirius;
 import sirius.kernel.async.AsyncExecutor;
 import sirius.kernel.async.Tasks;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.GlobalContext;
 import sirius.kernel.di.std.Part;
@@ -27,7 +28,6 @@ import sirius.kernel.settings.Extension;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -203,14 +203,16 @@ public class DistributedTasks implements MetricProvider {
      *
      * @return a list of all known queues.
      */
+    @SuppressWarnings("java:S3958")
+    @Explain("toList is a terminal operation")
     public List<DistributedQueueInfo> getQueues() {
         if (sortedTaskQueues == null) {
-            sortedTaskQueues = Collections.unmodifiableList(ctx.getParts(DistributedTaskExecutor.class)
-                                                               .stream()
-                                                               .map(DistributedTaskExecutor::queueName)
-                                                               .distinct()
-                                                               .map(this::loadQueueInfo)
-                                                               .collect(Collectors.toList()));
+            sortedTaskQueues = ctx.getParts(DistributedTaskExecutor.class)
+                                  .stream()
+                                  .map(DistributedTaskExecutor::queueName)
+                                  .distinct()
+                                  .map(this::loadQueueInfo)
+                                  .toList();
             taskQueues = sortedTaskQueues.stream()
                                          .collect(Collectors.toMap(DistributedQueueInfo::getName, Function.identity()));
         }

@@ -17,6 +17,7 @@ import sirius.web.controller.Page;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.util.Collection;
@@ -78,7 +79,8 @@ public class JobsController extends BizController {
      * @param out     the output to write the JSON response to
      * @param jobType the name of the job to launch
      */
-    @Routed(value = "/jobs/api/:1", jsonCall = true)
+    @Routed("/jobs/api/:1")
+    @InternalService
     public void json(WebContext ctx, JSONStructuredOutput out, String jobType) {
         jobs.findFactory(jobType, JobFactory.class).startInBackground(ctx::get);
     }

@@ -29,9 +29,9 @@ import java.util.stream.Collectors;
  */
 public class TableOutput {
 
-    private String name;
-    private ProcessContext process;
-    private List<String> columns;
+    private final String name;
+    private final ProcessContext process;
+    private final List<String> columns;
 
     /**
      * Creates a new table output for the given output name and process.
@@ -119,7 +119,7 @@ public class TableOutput {
      * Builder pattern to add {@link Cell} to {@link TableOutput}
      */
     public class RowBuilder {
-        private List<Cell> cells;
+        private final List<Cell> cells;
 
         private RowBuilder() {
             cells = new ArrayList<>();
@@ -161,10 +161,10 @@ public class TableOutput {
      * Builder pattern to add columns to a {@link TableOutput}
      */
     public static class ColumnBuilder {
-        private String name;
-        private String label;
-        private ProcessContext process;
-        private List<Tuple<String, String>> columns;
+        private final String name;
+        private final String label;
+        private final ProcessContext process;
+        private final List<Tuple<String, String>> columns;
 
         /**
          * Creates a new ColumnBuilder to store the artefacts necessary to generate a new {@link TableOutput}

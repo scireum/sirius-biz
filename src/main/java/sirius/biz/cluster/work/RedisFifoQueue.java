@@ -20,8 +20,8 @@ import javax.annotation.Nullable;
  */
 class RedisFifoQueue implements FifoQueue {
 
-    private Redis redis;
-    private String queueName;
+    private final Redis redis;
+    private final String queueName;
 
     RedisFifoQueue(Redis redis, String queueName) {
         this.redis = redis;

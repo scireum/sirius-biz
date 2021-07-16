@@ -35,7 +35,7 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
 
     private static final String METRIC_NLS_PREFIX = "Metric.";
 
-    private Cache<String, Integer> metricCache = CacheManager.createCoherentCache("metrics");
+    private final Cache<String, Integer> metricCache = CacheManager.createCoherentCache("metrics");
 
     /**
      * Returns the entity type used to store facts.
@@ -358,6 +358,7 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
      * @param day        the day of the metric to query
      * @return the value available for the given parameters
      */
+    @SuppressWarnings("java:S1151")
     protected Optional<Integer> executeQuery(MetricQuery.Interval interval,
                                              String targetType,
                                              String targetId,
@@ -365,27 +366,37 @@ public abstract class BasicMetrics<E extends BaseEntity<?>> implements Metrics {
                                              Integer year,
                                              Integer month,
                                              Integer day) {
-        switch (interval) {
-            case YEARLY:
-                return queryCachedMetric(interval, getYearlyMetricType(), targetType, targetId, name, year, null, null);
-            case MONTHLY:
-                return queryCachedMetric(interval,
-                                         getMonthlyMetricType(),
-                                         targetType,
-                                         targetId,
-                                         name,
-                                         year,
-                                         month,
-                                         null);
-            case DAILY:
-                return queryCachedMetric(interval, getDailyMetricType(), targetType, targetId, name, year, month, day);
-            case FACT:
-                return queryCachedMetric(interval, getFactType(), targetType, targetId, name, null, null, null);
-            default:
-                throw new IllegalArgumentException("Unknown interval: " + interval);
-        }
+        return switch (interval) {
+            case YEARLY -> queryCachedMetric(interval,
+                                             getYearlyMetricType(),
+                                             targetType,
+                                             targetId,
+                                             name,
+                                             year,
+                                             null,
+                                             null);
+            case MONTHLY -> queryCachedMetric(interval,
+                                              getMonthlyMetricType(),
+                                              targetType,
+                                              targetId,
+                                              name,
+                                              year,
+                                              month,
+                                              null);
+            case DAILY -> queryCachedMetric(interval,
+                                            getDailyMetricType(),
+                                            targetType,
+                                            targetId,
+                                            name,
+                                            year,
+                                            month,
+                                            day);
+            case FACT -> queryCachedMetric(interval, getFactType(), targetType, targetId, name, null, null, null);
+        };
     }
 
+    @SuppressWarnings("java:S107")
+    @Explain("The simplest way seems to have that many parameters.")
     private Optional<Integer> queryCachedMetric(MetricQuery.Interval interval,
                                                 Class<? extends E> table,
                                                 String targetType,

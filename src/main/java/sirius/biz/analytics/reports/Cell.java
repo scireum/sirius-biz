@@ -19,7 +19,7 @@ import sirius.kernel.di.std.Part;
  */
 public class Cell {
 
-    private Object value;
+    private final Object value;
 
     @Part
     private static Cells cells;

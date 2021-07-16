@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
  * <p>
  * Note that this dispatcher itself doesn't do more than decoding and verifying the URL. All the heavy lifting is
  * either done by {@link sirius.biz.storage.layer1.ObjectStorageSpace#deliver(Response, String)} for physical URLs
- * or {@link BlobStorageSpace#deliver(String, String, Response)} for virtual URLs.
+ * or {@link BlobStorageSpace#deliver(String, String, Response, Runnable)} for virtual URLs.
  */
 @Register(framework = StorageUtils.FRAMEWORK_STORAGE)
 public class BlobDispatcher implements WebDispatcher {

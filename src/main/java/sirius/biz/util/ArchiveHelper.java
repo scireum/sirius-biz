@@ -16,6 +16,7 @@ import net.sf.sevenzipjbinding.SevenZip;
 import net.sf.sevenzipjbinding.SevenZipException;
 import net.sf.sevenzipjbinding.SevenZipNativeInitializationException;
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 
@@ -25,11 +26,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Utility to handle and extract archive files like zip, 7z, tar, ...
@@ -46,10 +45,12 @@ public class ArchiveHelper {
      *
      * @return list of supported file extensions that can be extracted.
      */
+    @SuppressWarnings("java:S3958")
+    @Explain("toList is a terminal operation")
     public static List<String> getSupportedFileExtensions() {
-        return Collections.unmodifiableList(Arrays.stream(ArchiveFormat.values())
-                                                  .map(archiveFormat -> archiveFormat.getMethodName().toLowerCase())
-                                                  .collect(Collectors.toList()));
+        return Arrays.stream(ArchiveFormat.values())
+                     .map(archiveFormat -> archiveFormat.getMethodName().toLowerCase())
+                     .toList();
     }
 
     /**

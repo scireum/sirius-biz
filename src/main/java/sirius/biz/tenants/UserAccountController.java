@@ -36,6 +36,7 @@ import sirius.web.security.Permission;
 import sirius.web.security.Permissions;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.io.Serializable;
@@ -260,7 +261,8 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
      * @param jsonOutput the JSON response being generated
      * @param accountId  the id of the account to update
      */
-    @Routed(value = "/user-account/:1/config/update", jsonCall = true)
+    @Routed("/user-account/:1/config/update")
+    @InternalService
     @LoginRequired
     @Permission(FEATURE_USER_ACCOUNT_CONFIG)
     public void updateAccountConfig(WebContext webContext, JSONStructuredOutput jsonOutput, String accountId) {
@@ -423,7 +425,8 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
      * @param webContext the current request
      * @param jsonOutput the JSON response being generated
      */
-    @Routed(value = "/forgotPassword", jsonCall = true)
+    @Routed("/forgotPassword")
+    @InternalService
     public void forgotPassword(final WebContext webContext, JSONStructuredOutput jsonOutput) {
         List<U> accounts = findUserAccountsWithEmail(webContext.get(PARAM_EMAIL).asString().toLowerCase());
         if (accounts.isEmpty()) {

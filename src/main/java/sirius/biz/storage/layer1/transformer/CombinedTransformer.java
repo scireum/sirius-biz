@@ -20,8 +20,8 @@ import java.util.Optional;
  */
 public class CombinedTransformer implements ByteBlockTransformer {
 
-    private ByteBlockTransformer first;
-    private ByteBlockTransformer second;
+    private final ByteBlockTransformer first;
+    private final ByteBlockTransformer second;
 
     /**
      * Creates a new instance which applies the <tt>first</tt> transformer and then the <tt>second</tt>.

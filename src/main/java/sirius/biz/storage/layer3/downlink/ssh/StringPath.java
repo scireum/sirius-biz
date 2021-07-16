@@ -18,6 +18,7 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Iterator;
+import java.util.Objects;
 
 /**
  * Provides a minimal implementation of {@link Path} which only relies on a string.
@@ -26,7 +27,7 @@ import java.util.Iterator;
  */
 public class StringPath implements Path {
 
-    private String value;
+    private final String value;
 
     /**
      * Creates a new path wrapping the given value.
@@ -170,5 +171,22 @@ public class StringPath implements Path {
     @Override
     public int compareTo(Path other) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        StringPath paths = (StringPath) o;
+        return Objects.equals(value, paths.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
     }
 }

@@ -16,6 +16,7 @@ import sirius.kernel.nls.NLS;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Defines a parameter which queries a value for a {@link JobFactory} as parameter.
@@ -156,7 +157,7 @@ public class Parameter<V> extends Composable {
     }
 
     /**
-     * Returns a {@link Parameter.LogVisibility} value which indicates in which log this parameter should be logged.
+     * Returns a {@link LogVisibility} value which indicates in which log this parameter should be logged.
      *
      * @return an enum value indicating the log behavior of this parameter
      */

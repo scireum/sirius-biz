@@ -76,7 +76,7 @@ public class Isenguard {
      */
     public static final String REALM_TYPE_USER = "user";
 
-    private Map<String, Tuple<Integer, Integer>> limits = new ConcurrentHashMap<>();
+    private final Map<String, Tuple<Integer, Integer>> limits = new ConcurrentHashMap<>();
 
     @Part(configPath = "isenguard.limiter")
     private Limiter limiter;

@@ -176,7 +176,7 @@ public class MultiLanguageStringProperty extends BaseMapProperty
                            .stream()
                            .filter(entry -> !Strings.areEqual(entry.getKey(), MultiLanguageString.FALLBACK_KEY))
                            .filter(entry -> !multiLanguageString.getValidLanguages().contains(entry.getKey()))
-                           .filter(entry -> lookupTable == null || !lookupTable.normalize(entry.getKey()).isPresent())
+                           .filter(entry -> lookupTable == null || lookupTable.normalize(entry.getKey()).isEmpty())
                            .findAny()
                            .ifPresent(entry -> {
                                throw Exceptions.createHandled()

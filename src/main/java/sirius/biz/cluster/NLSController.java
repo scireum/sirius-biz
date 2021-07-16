@@ -17,6 +17,7 @@ import sirius.kernel.nls.Translation;
 import sirius.web.controller.BasicController;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
 /**
@@ -44,10 +45,11 @@ public class NLSController extends BasicController {
      * Reports all unused NLS keys.
      *
      * @param webContext the request to handle
-     * @param out the output to write the JSON to
-     * @param token the cluster authentication token
+     * @param out        the output to write the JSON to
+     * @param token      the cluster authentication token
      */
-    @Routed(value = "/system/nls/unused/:1", jsonCall = true)
+    @Routed("/system/nls/unused/:1")
+    @InternalService
     public void unused(WebContext webContext, JSONStructuredOutput out, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
             webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
@@ -65,11 +67,12 @@ public class NLSController extends BasicController {
     /**
      * Reports all autocreated NLS keys.
      *
-     * @param webContext   the request to handle
-     * @param out   the output to write the JSON to
-     * @param token the cluster authentication token
+     * @param webContext the request to handle
+     * @param out        the output to write the JSON to
+     * @param token      the cluster authentication token
      */
-    @Routed(value = "/system/nls/autocreated/:1", jsonCall = true)
+    @Routed("/system/nls/autocreated/:1")
+    @InternalService
     public void autocreated(WebContext webContext, JSONStructuredOutput out, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
             webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
