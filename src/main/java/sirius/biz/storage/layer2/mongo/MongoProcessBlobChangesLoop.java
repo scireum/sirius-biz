@@ -60,7 +60,7 @@ public class MongoProcessBlobChangesLoop extends ProcessBlobChangesLoop {
     @Override
     protected void processCreatedOrRenamedBlobs(Runnable counter) {
         mango.select(MongoBlob.class).eq(MongoBlob.CREATED_OR_RENAMED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
-            invokeChangedOrDeletedHandlers(blob);
+            invokeCreatedOrRenamedHandlers(blob);
             mongo.update()
                  .set(MongoBlob.CREATED_OR_RENAMED, false)
                  .where(MongoBlob.ID, blob.getId())
