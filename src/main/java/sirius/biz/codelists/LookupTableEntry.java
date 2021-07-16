@@ -8,7 +8,6 @@
 
 package sirius.biz.codelists;
 
-import sirius.kernel.nls.Formatter;
 import sirius.web.controller.AutocompleteHelper;
 
 /**
@@ -55,14 +54,15 @@ public class LookupTableEntry {
     /**
      * Transforms this entry into a completion to be supplied to a {@link AutocompleteHelper}.
      *
+     * @param fieldDisplay      the  {@link sirius.biz.codelists.LookupValue.Display display mode} for the field label
+     * @param completionDisplay the  {@link sirius.biz.codelists.LookupValue.Display display mode} for the completion label
      * @return the completion which represents this entry
      */
-    public AutocompleteHelper.Completion toAutocompletion() {
-        return new AutocompleteHelper.Completion(code,
-                                                 Formatter.create("${code}[ (${name})]")
-                                                          .set("code", code)
-                                                          .set("name", name)
-                                                          .smartFormat(),
-                                                 description);
+    public AutocompleteHelper.Completion toAutocompletion(LookupValue.Display fieldDisplay,
+                                                          LookupValue.Display completionDisplay) {
+        return AutocompleteHelper.suggest(code)
+                                 .withFieldLabel(fieldDisplay.makeDisplayString(this))
+                                 .withCompletionLabel(completionDisplay.makeDisplayString(this))
+                                 .withCompletionDescription(description);
     }
 }

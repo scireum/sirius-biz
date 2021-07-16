@@ -520,14 +520,20 @@ MultiLanguageField.prototype.renderFlag = function (langCode) {
         const _globe = document.createElement('img');
         _globe.classList.add('mls-language-flag');
         _globe.classList.add('mls-language-globe');
-        _globe.src = '/assets/images/flags/globe.png';
+        _globe.src = '/assets/images/flags/languages/globe.png';
         return _globe;
     } else {
         const _flag = document.createElement('img');
         _flag.classList.add('mls-language-flag');
-        _flag.src = '/assets/images/flags/' + langCode + '.png';
+        _flag.src = '/assets/images/flags/languages/' + langCode + '.png';
         _flag.alt = langCode;
         _flag.title = langCode;
+        // renders the question mark icon ('rest of world') if the requested flag can't be found
+        _flag.onerror = function imgError() {
+            this.onerror = '';
+            this.src = '/assets/images/flags/languages/row.png';
+            return true;
+        }
         return _flag;
     }
 }

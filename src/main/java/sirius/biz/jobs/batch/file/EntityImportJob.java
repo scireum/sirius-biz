@@ -20,8 +20,6 @@ import sirius.db.mixing.Mixing;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
-import sirius.kernel.health.Exceptions;
-import sirius.kernel.health.HandledException;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nullable;
@@ -106,9 +104,9 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
         }
 
         E entity = findAndLoad(context);
-        try {
+        errorContext.performImport(entity::toString, () -> {
             if (shouldSkip(entity)) {
-                process.incCounter(NLS.get("EntityImportJob.rowIgnored"));
+                process.incCounter("EntityImportJob.rowIgnored");
                 return;
             }
 
@@ -124,15 +122,9 @@ public class EntityImportJob<E extends BaseEntity<?>> extends DictionaryBasedImp
             if (isNew) {
                 process.addTiming(NLS.get("EntityImportJob.entityCreated"), watch.elapsedMillis());
             } else {
-                process.addTiming(NLS.get("EntityImportJob.entityUpdated"), watch.elapsedMillis());
+                process.addTiming("EntityImportJob.entityUpdated", watch.elapsedMillis());
             }
-        } catch (HandledException e) {
-            throw Exceptions.createHandled()
-                            .withNLSKey("EntityImportJob.cannotHandleEntity")
-                            .set("entity", entity.toString())
-                            .set("message", e.getMessage())
-                            .handle();
-        }
+        });
     }
 
     /**

@@ -9,9 +9,11 @@
 package sirius.biz.codelists;
 
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.nls.NLS;
 
+import javax.annotation.Nonnull;
 import java.util.Optional;
 
 /**
@@ -26,6 +28,7 @@ public class LookupValue {
     private LookupTable table;
 
     private final Display display;
+    private final Display extendedDisplay;
     private final Export export;
     private final CustomValues customValues;
     private String value;
@@ -38,7 +41,7 @@ public class LookupValue {
     }
 
     /**
-     * Determines if the code itself or the (potentially translated) name are put into export files.
+     * Determines if the code itself, or the (potentially translated) name are put into export files.
      */
     public enum Export {
         CODE, NAME
@@ -48,7 +51,45 @@ public class LookupValue {
      * Controls what is shown in the UI when rendering a value.
      */
     public enum Display {
-        CODE, NAME, CODE_AND_NAME
+        CODE, NAME, CODE_AND_NAME;
+
+        /**
+         * Resolves the correct display string for the given table and code using this display mode.
+         *
+         * @param table the table from where to fetch the name from
+         * @param code  the code of the value
+         * @return a display string for the given code in the given table
+         */
+        public String resolveDisplayString(LookupTable table, String code) {
+            return switch (this) {
+                case NAME -> table.resolveName(code).orElse(code);
+                case CODE -> code;
+                case CODE_AND_NAME -> table.resolveName(code)
+                                           .map(name -> buildCodeAndNameString(name, code))
+                                           .orElse(code);
+            };
+        }
+
+        /**
+         * Makes the correct display string for the given table entry using this display mode.
+         *
+         * @param entry the tableentry to be displayed
+         * @return a display string for the given table entry
+         */
+        public String makeDisplayString(LookupTableEntry entry) {
+            return switch (this) {
+                case NAME -> Value.of(entry.getName()).asString(entry.getCode());
+                case CODE -> entry.getCode();
+                case CODE_AND_NAME -> Value.of(entry.getName())
+                                           .map(name -> buildCodeAndNameString(name.asString(), entry.getCode()))
+                                           .orElse(entry.getCode());
+            };
+        }
+
+        @Nonnull
+        private String buildCodeAndNameString(String name, String code) {
+            return name + " (" + code + ")";
+        }
     }
 
     @Part
@@ -64,11 +105,38 @@ public class LookupValue {
      * @param customValues    determines if custom values are supported
      * @param display         determines how values are rendered in the UI
      * @param export          determines how values are rendered in exports
+     * @deprecated use the new constructor with all fields instead
      */
+    @Deprecated(forRemoval = true)
     public LookupValue(String lookupTableName, CustomValues customValues, Display display, Export export) {
         this.lookupTableName = lookupTableName;
         this.customValues = customValues;
         this.display = display;
+        this.extendedDisplay = display;
+        this.export = export;
+    }
+
+    /**
+     * Creates a new value with the given settings.
+     * <p>
+     * Note that when using the value in database entities, the field has to be final, as the actual value
+     * is stored internally.
+     *
+     * @param lookupTableName the lookup table used to draw metadata from
+     * @param customValues    determines if custom values are supported
+     * @param display         determines how values are rendered in the UI in most cases
+     * @param extendedDisplay determines how values are rendered in the UI in cases where we want to be more verbose
+     * @param export          determines how values are rendered in exports
+     */
+    public LookupValue(String lookupTableName,
+                       CustomValues customValues,
+                       Display display,
+                       Display extendedDisplay,
+                       Export export) {
+        this.lookupTableName = lookupTableName;
+        this.customValues = customValues;
+        this.display = display;
+        this.extendedDisplay = extendedDisplay;
         this.export = export;
     }
 
@@ -84,7 +152,7 @@ public class LookupValue {
      * @param lookupTableName the lookup table used to draw metadata from
      */
     public LookupValue(String lookupTableName) {
-        this(lookupTableName, CustomValues.REJECT, Display.NAME, Export.CODE);
+        this(lookupTableName, CustomValues.REJECT, Display.NAME, Display.NAME, Export.CODE);
     }
 
     /**
@@ -93,7 +161,7 @@ public class LookupValue {
      * @throws IllegalArgumentException if the currently stored code is invalid
      */
     public void verifyValue() {
-        if (Strings.isFilled(value) && !getTable().normalize(value).isPresent()) {
+        if (Strings.isFilled(value) && getTable().normalize(value).isEmpty()) {
             throw new IllegalArgumentException(NLS.fmtr("LookupValue.invalidValue").set("value", value).format());
         }
     }
@@ -156,10 +224,51 @@ public class LookupValue {
 
     /**
      * Determines if no value is present.
+     *
      * @return <tt>true</tt> if the value is null or empty, <tt>false otherwise</tt>
      */
     public boolean isEmpty() {
         return !isFilled();
+    }
+
+    /**
+     * Resolves a string to present to the user for this value according to {@link #display}.
+     *
+     * @return a string to represent this value, its name or code or a combination
+     * @see Display#resolveDisplayString()
+     */
+    public String resolveDisplayString() {
+        return display.resolveDisplayString(getTable(), getValue());
+    }
+
+    /**
+     * Resolves a string to present to the user for this value according to {@link #extendedDisplay}.
+     * <p>
+     * This is more verbose than {@link #resolveDisplayString()}.
+     *
+     * @return a string to represent this value, its name or code or a combination
+     * @see Display#resolveDisplayString()
+     */
+    public String resolveExtendedDisplayString() {
+        return extendedDisplay.resolveDisplayString(getTable(), getValue());
+    }
+
+    /**
+     * Provides access to {@link #customValues} as a simple boolean.
+     *
+     * @return true if the field {@link CustomValues#ACCEPT accepts} custom values, false otherwise
+     */
+    public boolean acceptsCustomValues() {
+        return customValues == CustomValues.ACCEPT;
+    }
+
+    @Override
+    public String toString() {
+        if (Strings.isEmpty(value)) {
+            return lookupTableName + ": empty";
+        } else {
+            return Strings.apply("%s: %s (%s)", lookupTableName, value, fetchName().orElse("unknown"));
+        }
     }
 
     public String getValue() {
@@ -174,6 +283,10 @@ public class LookupValue {
         return display;
     }
 
+    public Display getExtendedDisplay() {
+        return extendedDisplay;
+    }
+
     public Export getExport() {
         return export;
     }
@@ -182,12 +295,7 @@ public class LookupValue {
         return customValues;
     }
 
-    @Override
-    public String toString() {
-        if (Strings.isEmpty(value)) {
-            return lookupTableName + ": empty";
-        } else {
-            return Strings.apply("%s: %s (%s)", lookupTableName, value, fetchName().orElse("unknown"));
-        }
+    public String getTableName() {
+        return lookupTableName;
     }
 }

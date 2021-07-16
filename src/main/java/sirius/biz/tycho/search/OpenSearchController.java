@@ -53,8 +53,13 @@ import java.util.List;
  * On the client side we use the <tt>oboe</tt> library which handles this kind of incoming JSON objects and renders
  * any incoming results as fast as possible.
  */
-@Register
+@Register(framework = OpenSearchController.FRAMEWORK_TYCHO_OPEN_SEARCH)
 public class OpenSearchController extends BizController {
+
+    /**
+     * Contains the framework which controls of the system wide search / open search is pvoided or not.
+     */
+    public static final String FRAMEWORK_TYCHO_OPEN_SEARCH = "tycho.open-search";
 
     /**
      * Contains a readily built byte array to separate messages.
@@ -114,11 +119,11 @@ public class OpenSearchController extends BizController {
      *
      * @param webContext the request to handle.
      */
-    @Routed("/tycho/search")
+    @Routed("/open-search")
     @LoginRequired
     public void search(WebContext webContext) {
-        // Note that for now this is only a rough and temporary UI used as a proof of concept.
-        webContext.respondWith().template("/templates/biz/tycho/search/search.html.pasta");
+        webContext.respondWith()
+                  .template("/templates/biz/tycho/search/search.html.pasta", webContext.get(PARAM_QUERY).asString());
     }
 
     /**
@@ -127,7 +132,7 @@ public class OpenSearchController extends BizController {
      * @param webContext the request to handle.
      * @return a future so that the framework know when to release the underlying connection and resources
      */
-    @Routed("/tycho/search/api")
+    @Routed("/open-search/api")
     @LoginRequired
     public Future searchAPI(WebContext webContext) {
         webContext.markAsLongCall();

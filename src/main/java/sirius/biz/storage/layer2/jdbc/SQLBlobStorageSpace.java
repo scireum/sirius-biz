@@ -480,7 +480,9 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                 // Also update in-memory to avoid an additional database fetch...
                 String previousPhysicalObjectKey = blob.getPhysicalObjectKey();
                 blob.setPhysicalObjectKey(nextPhysicalId);
-                blob.setFilename(filename);
+                if (Strings.isFilled(filename)) {
+                    blob.setFilename(filename);
+                }
                 blob.updateFilenameFields();
                 blob.setSize(size);
                 blob.setLastModified(LocalDateTime.now());
@@ -835,5 +837,10 @@ public class SQLBlobStorageSpace extends BasicBlobStorageSpace<SQLBlob, SQLDirec
                       .withSystemErrorMessage("Layer 2/SQL: Failed to mark blobs in %s as touched: %s (%s)", spaceName)
                       .handle();
         }
+    }
+
+    @Override
+    protected void purgeVariantFromCache(SQLBlob blob, String variantName) {
+        blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), variantName));
     }
 }

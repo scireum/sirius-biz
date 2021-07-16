@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Provides a framework to map string values (<tt>codes</tt>) to values defined by the user.
@@ -64,7 +65,7 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
 
     protected static final Log LOG = Log.get("codelists");
 
-    protected Map<String, Boolean> codeListGlobalFlag = new HashMap<>();
+    protected Map<String, Boolean> codeListGlobalFlag = new ConcurrentHashMap<>();
 
     @Part
     private Tenants<?, ?, ?> tenants;

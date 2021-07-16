@@ -30,6 +30,18 @@ public interface AnalyticalTask<E extends BaseEntity<?>> {
     Class<E> getType();
 
     /**
+     * Checks if this task is enabled at all.
+     * <p>
+     * Note that this is only checked once at framework startup. This can be used to disable some tasks which
+     * are known to be unused. This will save the scheduler from creating lots of batches which are then
+     * skipped anyway.
+     *
+     * @return <tt>true</tt> if the task is enabled, <tt>false</tt> if the task is statically disabled for the runtime
+     * of the system
+     */
+    boolean isEnabled();
+
+    /**
      * Executes the analytical task for the given entity and reference date.
      *
      * @param date   the data for which the task is to be executed

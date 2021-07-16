@@ -127,7 +127,7 @@ public class StorageController extends BizController {
         }
 
         if (query.toLowerCase().startsWith("http")) {
-            result.accept(new AutocompleteHelper.Completion(query, query, query));
+            result.accept(AutocompleteHelper.suggest(query));
             return;
         }
 
@@ -141,9 +141,9 @@ public class StorageController extends BizController {
 
         applyQuery(query, baseQuery, bucket.isAlwaysUseLikeSearch(), true);
         for (VirtualObject object : baseQuery.queryList()) {
-            result.accept(new AutocompleteHelper.Completion(object.getObjectKey(),
-                                                            object.getFilename(),
-                                                            object.getPath()));
+            result.accept(AutocompleteHelper.suggest(object.getObjectKey())
+                                            .withFieldLabel(object.getFilename())
+                                            .withCompletionDescription(object.getPath()));
         }
     }
 
@@ -154,7 +154,7 @@ public class StorageController extends BizController {
      *
      * @param query               the query string to apply
      * @param baseQuery           the query to expand
-     * @param alwaysUseLikeSearch determines wheter we always use a like on for matching
+     * @param alwaysUseLikeSearch determines whether we always use a like on for matching
      * @param autocomplete        determines if the query is for an autocomplete request
      */
     private void applyQuery(String query,
@@ -188,9 +188,9 @@ public class StorageController extends BizController {
     }
 
     /**
-     * Provides a detai view for an object within a bucket.
+     * Provides a detail view for an object within a bucket.
      *
-     * @param ctx        the reuqest to handle
+     * @param ctx        the request to handle
      * @param bucketName the name of the bucket in which the object resides
      * @param objectKey  the key of the object
      */
@@ -219,7 +219,7 @@ public class StorageController extends BizController {
     /**
      * Uploads a new file / object to a bucket
      *
-     * @param ctx        the reqest to handle
+     * @param ctx        the request to handle
      * @param out        the response to the AJAX call
      * @param bucketName the name of the bucket to upload to
      * @param upload     the data being uploaded
@@ -270,7 +270,7 @@ public class StorageController extends BizController {
     /**
      * Uploads new contents for the given file.
      *
-     * @param ctx        the reqest to handle
+     * @param ctx        the request to handle
      * @param out        the response to the AJAX call
      * @param bucketName the name of the bucket to upload to
      * @param objectId   the id of the object for replace

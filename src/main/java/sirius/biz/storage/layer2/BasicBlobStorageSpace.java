@@ -1052,7 +1052,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, file.length(), filename);
             if (previousPhysicalId.isPresent()) {
-                purgeBlobVariants(blob);
+                deleteBlobVariants(blob);
                 getPhysicalSpace().delete(previousPhysicalId.get());
             }
 
@@ -1107,7 +1107,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
             blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), URLBuilder.VARIANT_RAW));
             Optional<String> previousPhysicalId = updateBlob(blob, nextPhysicalId, contentLength, filename);
             if (previousPhysicalId.isPresent()) {
-                purgeBlobVariants(blob);
+                deleteBlobVariants(blob);
                 getPhysicalSpace().delete(previousPhysicalId.get());
             }
 
@@ -1131,12 +1131,17 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
     }
 
-    private void purgeBlobVariants(B blob) {
-        blob.fetchVariants().forEach(blobVariant -> {
-            blobVariant.delete();
-            blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), blobVariant.getVariantName()));
-        });
+    private void deleteBlobVariants(B blob) {
+        blob.fetchVariants().forEach(BlobVariant::delete);
     }
+
+    /**
+     * Removes the given variant from physical key cache
+     *
+     * @param blob        the parent blob of the variant
+     * @param variantName the variant name of the variant
+     */
+    protected abstract void purgeVariantFromCache(B blob, String variantName);
 
     /**
      * Creates a local buffer and provides an {@link OutputStream} which can be used to update the contents of the given blob.
@@ -1253,7 +1258,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
         }
     }
 
-    private String buildPhysicalKey(String blobKey, String variantName) {
+    protected String buildPhysicalKey(String blobKey, String variantName) {
         return spaceName + "-" + blobKey + "-" + variantName;
     }
 

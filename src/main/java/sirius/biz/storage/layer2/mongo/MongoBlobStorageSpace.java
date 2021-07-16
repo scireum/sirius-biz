@@ -409,7 +409,9 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
                 // Also update in-memory to avoid an additional database fetch...
                 String previousPhysicalObjectKey = blob.getPhysicalObjectKey();
                 blob.setPhysicalObjectKey(nextPhysicalId);
-                blob.setFilename(filename);
+                if (Strings.isFilled(filename)) {
+                    blob.setFilename(filename);
+                }
                 blob.updateFilenameFields();
                 blob.setSize(size);
                 blob.setLastModified(LocalDateTime.now());
@@ -758,5 +760,10 @@ public class MongoBlobStorageSpace extends BasicBlobStorageSpace<MongoBlob, Mong
         blobKeys.forEach(blobKey -> {
             mongo.update().set(MongoBlob.LAST_TOUCHED, LocalDateTime.now()).where(MongoBlob.BLOB_KEY, blobKey);
         });
+    }
+
+    @Override
+    protected void purgeVariantFromCache(MongoBlob blob, String variantName) {
+        blobKeyToPhysicalCache.remove(buildPhysicalKey(blob.getBlobKey(), variantName));
     }
 }

@@ -27,5 +27,11 @@
             <t:dropdownItem titleKey="UserAccount.select" url="/user-accounts/select"
                         permission="permission-select-user-account"/>
         </t:dropdownSection>
+        <i:if test="sirius.biz.tenants.UserAccountVideosCheck.isTenantOnboardingEnabled()">
+            <t:dropdownSection framework="biz.tenants">
+                <t:dropdownItem titleKey="OnboardingController.academy"
+                                url="/academy" />
+            </t:dropdownSection>
+        </i:if>
     </i:block>
 </i:switch>

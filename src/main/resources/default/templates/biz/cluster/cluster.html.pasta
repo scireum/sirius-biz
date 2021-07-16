@@ -29,7 +29,7 @@
                     @node.getUptime()
                 </td>
                 <td>
-                    @node.getVersion()
+                    <span class="cycle" data-cycle="@node.getDetailedVersion()">@node.getVersion()</span>
                 </td>
                 <td>
                     <i:if test="node.isBleeding()">

@@ -1,0 +1,42 @@
+<i:arg type="String" name="framework" default=""/>
+<i:arg type="String" name="permission" default=""/>
+<i:arg type="String" name="class" default=""/>
+<i:arg type="boolean" name="active" default="false"/>
+<i:arg type="String" name="icon"/>
+<i:arg type="String" name="title" default=""/>
+<i:arg type="String" name="activeIcon" default=""/>
+<i:arg type="String" name="smallLabel" default=""/>
+
+<i:local name="contents" value="@renderToString('body')"/>
+<i:if test="isFrameworkEnabled(framework) && isFilled(contents)">
+    <w:permission permission="@permission">
+        <li class="dropdown right-menu-icon @class">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                <i:if test="@active">
+                    <img src="@staticAssetUri()@activeIcon"
+                         @if (isFilled(title)) {
+                         data-toggle="tooltip"
+                         data-placement="left"
+                         data-html="true"
+                         title="@title"
+                         }
+                    />
+                    <i:else>
+                        <img src="@staticAssetUri()@icon"
+                             @if (isFilled(title)) {
+                             data-toggle="tooltip"
+                             data-placement="left"
+                             data-html="true"
+                             title="@title"
+                             }
+                        />
+                    </i:else>
+                </i:if>
+            </a>
+
+            <ul class="dropdown-menu dropdown-menu-right">
+                <i:raw>@contents</i:raw>
+            </ul>
+        </li>
+    </w:permission>
+</i:if>

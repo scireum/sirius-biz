@@ -14,7 +14,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 
 /**
- * Provides a helper class to query the <tt>countries</tt> {@link LookupTable}.
+ * Provides a helper class to query the <tt>languages</tt> {@link LookupTable}.
  * <p>
  * Note that the table can be backed by either a {@link sirius.biz.codelists.CodeLists code list} or a
  * {@link sirius.biz.jupiter.Jupiter IDB table}. For most of the additional fields to work properly,
@@ -26,7 +26,7 @@ public class Languages {
     /**
      * Contains the name of the main lookup table which contains all known languages.
      */
-    private static final String LOOKUP_TABLE_ALL_LANGUAGES = "languages";
+    public static final String LOOKUP_TABLE_ALL_LANGUAGES = "languages";
 
     /**
      * Contains the name of the lookup table which contains all languages which are "active" / "shown to the user".
@@ -35,7 +35,7 @@ public class Languages {
      * be provided in select lists etc. Note that applications can also define their own sub sets for custom purposes
      * and still use the helper methods provided here.
      */
-    private static final String LOOKUP_TABLE_ACTIVE_LANGUAGES = "active-languages";
+    public static final String LOOKUP_TABLE_ACTIVE_LANGUAGES = "active-languages";
 
     /**
      * Contains the ISO 639-1 code to be used with {@link LookupTable#fetchMapping(String, String)} etc.
@@ -52,13 +52,18 @@ public class Languages {
      */
     public static final String MAPPING_ISO_639_2T = "iso639-2T";
 
+    /**
+     * Provides the name of a mapping used to migrate legacy language codes
+     */
+    public static final String MAPPING_LEGACY = "legacy";
+
     @Part
     private LookupTables lookupTables;
 
     /**
      * Provides access to the underlying lookup table for all languages
      *
-     * @return the lookup table for all langauges
+     * @return the lookup table for all languages
      */
     public LookupTable all() {
         return lookupTables.fetchTable(LOOKUP_TABLE_ALL_LANGUAGES);

@@ -341,7 +341,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         U userAccount = findForTenant(getUserClass(), accountId);
 
         generateNewPassword(userAccount);
-        UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
+        UserContext.message(Message.info().withTextMessage(NLS.get("UserAccountConroller.passwordGenerated")));
 
         webContext.respondWith().redirectToGet(LIST_ROUTE);
     }
@@ -362,9 +362,11 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         generateNewPassword(userAccount);
 
         if (userAccount.getUserAccountData().canSendGeneratedPassword()) {
-            UserContext.message(Message.info(NLS.fmtr("UserAccountConroller.passwordGeneratedAndSent")
-                                                .set(PARAM_EMAIL, userAccount.getUserAccountData().getEmail())
-                                                .format()));
+            UserContext.message(Message.info()
+                                       .withTextMessage(NLS.fmtr("UserAccountConroller.passwordGeneratedAndSent")
+                                                           .set(PARAM_EMAIL,
+                                                                userAccount.getUserAccountData().getEmail())
+                                                           .format()));
             UserContext userContext = UserContext.get();
             userContext.runAs(userContext.getUserManager().findUserByUserId(userAccount.getUniqueName()), () -> {
                 Context mailContext = Context.create();
@@ -389,7 +391,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
                      .send();
             });
         } else {
-            UserContext.message(Message.info(NLS.get("UserAccountConroller.passwordGenerated")));
+            UserContext.message(Message.info().withTextMessage(NLS.get("UserAccountConroller.passwordGenerated")));
         }
 
         webContext.respondWith().redirectToGet(LIST_ROUTE);
@@ -580,9 +582,8 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         AutocompleteHelper.handle(webContext, (query, result) -> {
             Page<U> accounts = getUsersAsPage(webContext).asPage();
             accounts.getItems().forEach(userAccount -> {
-                result.accept(new AutocompleteHelper.Completion(userAccount.getUniqueName(),
-                                                                userAccount.toString(),
-                                                                userAccount.toString()));
+                result.accept(AutocompleteHelper.suggest(userAccount.getUniqueName())
+                                                .withFieldLabel(userAccount.toString()));
             });
         });
     }
@@ -631,7 +632,7 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
      * and he will have the roles the given user has.
      * The only permissions kept from the original user may be {@link TenantUserManager#PERMISSION_SYSTEM_TENANT_AFFILIATE},
      * and {@link TenantUserManager#PERMISSION_SELECT_USER_ACCOUNT} (to switch back).
-     * Additionatly, the permission {@link TenantUserManager#PERMISSION_SPY_USER} is given, so the system can identify the user switch.
+     * Additionally, the permission {@link TenantUserManager#PERMISSION_SPY_USER} is given, so the system can identify the user switch.
      *
      * @param webContext the current request
      * @param accountId  the id of the user to switch to
@@ -640,6 +641,14 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
     @Routed("/user-accounts/select/:1")
     public void selectUserAccount(final WebContext webContext, String accountId) {
         if ("main".equals(accountId)) {
+            // If we try to switch back to the main user - without being different user in the first place,
+            // then this action was most probably triggered by the "tenant info badge" in the UI, and meant to
+            // actually reset the tenant not the user - therefore we redirect to there.
+            if (!isCurrentlySpying(webContext)) {
+                webContext.respondWith().redirectToGet("/tenants/select/main");
+                return;
+            }
+
             String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
             UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
             auditLog.neutral("AuditLog.switchedToMainUser")
@@ -659,7 +668,8 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
 
         U user = mixing.getDescriptor(getUserClass()).getMapper().find(getUserClass(), accountId).orElse(null);
         if (user == null) {
-            UserContext.get().addMessage(Message.error(NLS.get("UserAccountController.cannotBecomeUser")));
+            UserContext.get()
+                       .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
             selectUserAccounts(webContext);
             return;
         }
@@ -669,7 +679,8 @@ public abstract class UserAccountController<I extends Serializable, T extends Ba
         // access rights - right up to the system management level...)
         if (Strings.areEqual(tenants.getTenantUserManager().getSystemTenantId(), user.getTenant().getIdAsString())
             && !getUser().hasPermission(PERMISSION_MANAGE_SYSTEM_USERS)) {
-            UserContext.get().addMessage(Message.error(NLS.get("UserAccountController.cannotBecomeUser")));
+            UserContext.get()
+                       .addMessage(Message.error().withTextMessage(NLS.get("UserAccountController.cannotBecomeUser")));
             selectUserAccounts(webContext);
             return;
         }

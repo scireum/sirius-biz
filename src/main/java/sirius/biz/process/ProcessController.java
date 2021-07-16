@@ -78,20 +78,7 @@ public class ProcessController extends BizController {
     @Routed("/ps")
     @LoginRequired
     public void processes(WebContext ctx) {
-        ElasticQuery<Process> query = elastic.select(Process.class).orderDesc(Process.STARTED);
-
-        UserInfo user = UserContext.getCurrentUser();
-        if (!user.hasPermission(PERMISSION_MANAGE_ALL_PROCESSES)) {
-            query.eq(Process.TENANT_ID, user.getTenantId());
-        }
-
-        if (!user.hasPermission(PERMISSION_MANAGE_PROCESSES)) {
-            query.eq(Process.USER_ID, user.getUserId());
-        }
-
-        query.where(Elastic.FILTERS.oneInField(Process.REQUIRED_PERMISSION, new ArrayList<>(user.getPermissions()))
-                                   .orEmpty()
-                                   .build());
+        ElasticQuery<Process> query = processes.queryProcessesForCurrentUser();
 
         ElasticPageHelper<Process> pageHelper = ElasticPageHelper.withQuery(query);
         pageHelper.withContext(ctx);
@@ -284,7 +271,7 @@ public class ProcessController extends BizController {
     }
 
     private void updateStateAndReturn(WebContext ctx, ProcessLog log, ProcessLogState state, String returnUrl) {
-        UserContext.message(Message.info(NLS.get("ProcessController.logUpdated")));
+        UserContext.message(Message.info().withTextMessage(NLS.get("ProcessController.logUpdated")));
         processes.updateProcessLogStateAndReturn(log, state, ctx, returnUrl);
     }
 
@@ -322,9 +309,10 @@ public class ProcessController extends BizController {
                 }
             }
 
-            UserContext.message(Message.error(NLS.fmtr("ProcessController.unknownOutput")
-                                                 .set("output", name)
-                                                 .format()));
+            UserContext.message(Message.error()
+                                       .withTextMessage(NLS.fmtr("ProcessController.unknownOutput")
+                                                           .set("output", name)
+                                                           .format()));
         } catch (Exception e) {
             UserContext.handle(e);
         }
@@ -363,7 +351,7 @@ public class ProcessController extends BizController {
                                                UserContext.getCurrentUser().getTenantId(),
                                                exportSpec);
 
-        UserContext.message(Message.info(NLS.get("ProcessController.exportStarted")));
+        UserContext.message(Message.info().withTextMessage(NLS.get("ProcessController.exportStarted")));
         ctx.respondWith().redirectToGet("/ps/" + process.getId());
     }
 

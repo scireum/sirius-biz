@@ -12,6 +12,7 @@ import sirius.kernel.commons.Lambdas;
 import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
 import sirius.kernel.nls.NLS;
+import sirius.web.security.UserContext;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -324,16 +325,16 @@ public class FieldDefinition {
             return this;
         }
 
-        NLS.getSupportedLanguages()
-           .stream()
-           .map(lang -> NLS.smartGet(alias, lang))
-           .filter(text -> !text.equals(getLabel()))
-           .filter(text -> !aliases.stream()
-                                   .map(String::toLowerCase)
-                                   .collect(Collectors.toSet())
-                                   .contains(text.toLowerCase()))
-           .distinct()
-           .forEach(aliases::add);
+        UserContext.getCurrentScope().getDisplayLanguages()
+                   .stream()
+                   .map(lang -> NLS.smartGet(alias, lang))
+                   .filter(text -> !text.equals(getLabel()))
+                   .filter(text -> !aliases.stream()
+                                           .map(String::toLowerCase)
+                                           .collect(Collectors.toSet())
+                                           .contains(text.toLowerCase()))
+                   .distinct()
+                   .forEach(aliases::add);
 
         return this;
     }

@@ -40,10 +40,6 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
     public static final String PERMISSION_MANAGE_CODELISTS = "permission-manage-code-lists";
 
     private static final String PARAM_CODE = "code";
-    private static final String PARAM_PRIORITY = "priority";
-    private static final String PARAM_VALUE = "value";
-    private static final String PARAM_ADDITIONAL_VALUE = "additionalValue";
-    private static final String PARAM_DESCRIPTION = "description";
 
     @Part
     private CodeLists<I, L, E> codeLists;
@@ -123,7 +119,7 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
     /**
      * Provides an editor for a code list entry.
      *
-     * @param ctx        the current request
+     * @param webContext the current request
      * @param codeListId the code list of the entry
      */
     @LoginRequired
@@ -205,17 +201,13 @@ public abstract class CodeListController<I extends Serializable, L extends BaseE
 
             pageHelper.asPage().getItems().forEach(codeList -> {
                 CodeListData codeListData = codeList.getCodeListData();
-                result.accept(new AutocompleteHelper.Completion(codeListData.getCode(),
-                                                                Formatter.create("${code}[ (${name})]")
-                                                                         .set(PARAM_CODE, codeListData.getCode())
-                                                                         .set("name", codeListData.getName())
-                                                                         .smartFormat(),
-                                                                Formatter.create("${code}[ (${name})] - ${description}")
-                                                                         .set(PARAM_CODE, codeListData.getCode())
-                                                                         .set("name", codeListData.getName())
-                                                                         .set(PARAM_DESCRIPTION,
-                                                                              codeListData.getDescription())
-                                                                         .smartFormat()));
+                String label = Formatter.create("${code}[ (${name})]")
+                                        .set(PARAM_CODE, codeListData.getCode())
+                                        .set("name", codeListData.getName())
+                                        .smartFormat();
+                result.accept(AutocompleteHelper.suggest(codeListData.getCode())
+                                                .withFieldLabel(label)
+                                                .withCompletionDescription(codeListData.getDescription()));
             });
         });
     }

@@ -94,9 +94,7 @@ public class ClickhouseSizeChartJobFactory extends LinearChartJobFactory {
                                               + " GROUP BY toYear(max_date), toMonth(max_date)"
                                               + " ORDER BY toYear(max_date), toMonth(max_date)");
 
-        entityDescriptorParameter.get(context).ifPresent(descriptor -> {
-            query.set("table", descriptor.getRelationName());
-        });
+        query.set("table", entityDescriptorParameter.get(context).map(EntityDescriptor::getRelationName).orElse(null));
 
         List<String> labels = new ArrayList<>();
         Dataset rows = new Dataset("Rows");

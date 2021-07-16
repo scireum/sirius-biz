@@ -30,4 +30,9 @@ public abstract class DailyMetricComputer<E extends BaseEntity<?>> implements An
     @Part
     @Nullable
     protected Metrics metrics;
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }

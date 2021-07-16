@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.scireum</groupId>
         <artifactId>sirius-parent</artifactId>
-        <version>7.1</version>
+        <version>8.0.1</version>
     </parent>
     <artifactId>sirius-biz</artifactId>
     <version>DEVELOPMENT-SNAPSHOT</version>
@@ -17,9 +17,9 @@
     <url>http://www.sirius-lib.net</url>
 
     <properties>
-        <sirius.kernel>ga-2.0.0</sirius.kernel>
-        <sirius.web>ga-2.0.0</sirius.web>
-        <sirius.db>ga-2.0.1</sirius.db>
+        <sirius.kernel>ga-3.0.1</sirius.kernel>
+        <sirius.web>ga-3.0.1</sirius.web>
+        <sirius.db>ga-3.0.1</sirius.db>
     </properties>
 
     <repositories>
@@ -119,7 +119,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.10</version>
+            <version>4.5.13</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -150,7 +150,7 @@
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>1.23</version>
+            <version>1.26</version>
         </dependency>
     </dependencies>
 

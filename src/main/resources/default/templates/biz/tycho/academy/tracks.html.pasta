@@ -1,0 +1,74 @@
+<i:arg type="java.util.Collection" name="tracks"/>
+<i:arg type="String" name="owner"/>
+<i:arg type="String" name="accessToken"/>
+<i:arg type="sirius.biz.tycho.academy.OnboardingVideo" name="recommendedVideo"/>
+
+<t:page titleKey="OnboardingController.academy">
+    <i:block name="breadcrumbs">
+        <li>
+            <a href="/academy/@owner/@accessToken">@i18n("OnboardingController.academy")</a>
+        </li>
+    </i:block>
+    <i:block name="page-header">
+        <t:pageHeader titleKey="OnboardingController.academy"/>
+    </i:block>
+
+    <i:if test="recommendedVideo != null">
+        <div class="row">
+            <div class="col-12 col-lg-6">
+                <t:heading titleKey="OnboardingController.currentRecommendation"/>
+
+                <div class="row">
+                    <i:invoke template="/templates/biz/tycho/academy/video-card.html.pasta"
+                              video="@recommendedVideo"
+                              owner="@owner"
+                              accessToken="@accessToken"/>
+                </div>
+            </div>
+            <div class="col-12 col-lg-6">
+                <t:heading titleKey="OnboardingController.allTracks"/>
+                <t:datacards size="large">
+                    <i:for type="sirius.biz.tycho.academy.AcademyTrackInfo" var="track" items="tracks">
+                        <t:datacard title="@track.getTrackName()"
+                                    link="@apply('/academy/%s/%s/track/%s',  owner, accessToken, track.getTrackId())">
+                            <i:block name="subtitle">
+                                @track.getNumberOfVideos() @i18n('OnboardingController.videos') (@track.generateDurationString() @i18n('OnboardingController.duration'))
+                            </i:block>
+
+                            @track.getTrackDescription()
+
+                            <i:block name="footer">
+                                <i:if test="track.getNumberOfRecommendedVideos() > 0">
+                                    <t:dot color="green">@i18n('OnboardingController.recommendedVideos', track.getNumberOfRecommendedVideos())</t:dot>
+                                </i:if>
+                            </i:block>
+                        </t:datacard>
+                    </i:for>
+                </t:datacards>
+            </div>
+
+        </div>
+        <i:else>
+            <t:datacards>
+                <i:for type="sirius.biz.tycho.academy.AcademyTrackInfo" var="track" items="tracks">
+                    <t:datacard title="@track.getTrackName()"
+                                link="@apply('/academy/%s/%s/track/%s',  owner, accessToken, track.getTrackId())">
+                        <i:block name="subtitle">
+                            @track.getNumberOfVideos() @i18n('OnboardingController.videos') (@track.generateDurationString() @i18n('OnboardingController.duration'))
+                        </i:block>
+
+                        @track.getTrackDescription()
+
+                        <i:block name="footer">
+                            <i:if test="track.getNumberOfRecommendedVideos() > 0">
+                                <t:dot color="green">@i18n('OnboardingController.recommendedVideos', track.getNumberOfRecommendedVideos())</t:dot>
+                            </i:if>
+                        </i:block>
+                    </t:datacard>
+                </i:for>
+            </t:datacards>
+        </i:else>
+    </i:if>
+
+
+</t:page>

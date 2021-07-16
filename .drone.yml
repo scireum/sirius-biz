@@ -17,7 +17,7 @@ clone:
 
 steps:
   - name: compile
-    image: hub.scireum.com/scireum/sirius-build:latest
+    image: hub.scireum.com/scireum/sirius-build-jdk16:latest
     commands:
       - mvn clean compile
     volumes: *scireum_volumes
@@ -28,16 +28,16 @@ steps:
         - push
 
   - name: cron_unit_tests
-    image: hub.scireum.com/scireum/sirius-build:latest
+    image: hub.scireum.com/scireum/sirius-build-jdk16:latest
     commands:
-      - mvn clean test -Dtests.nightly=true
+      - mvn clean test -Dtest.nightly=true
     volumes: *scireum_volumes
     when:
       event:
       - cron
 
   - name: test
-    image: hub.scireum.com/scireum/sirius-build:latest
+    image: hub.scireum.com/scireum/sirius-build-jdk16:latest
     commands:
       - mvn -U clean test
     volumes: *scireum_volumes
@@ -45,8 +45,21 @@ steps:
       event:
       - pull_request
 
+  - name: memoio
+    image: plugins/slack
+    settings:
+      webhook: https://memoio.com/endpoint/hook/4b17b22e54124c53ab2e550cf3311461cba7c66a1e3756fa8d17e7dc17a48dbb
+      channel: scireum-dev
+    when:
+      status:
+        - failure
+      event:
+        include:
+        - tag
+        - cron
+
   - name: deploy
-    image: hub.scireum.com/scireum/sirius-build:latest
+    image: hub.scireum.com/scireum/sirius-build-jdk16:latest
     commands:
       - sed -i 's/DEVELOPMENT-SNAPSHOT/${DRONE_TAG}/g' pom.xml
       - mvn clean deploy -DskipTests
@@ -56,7 +69,7 @@ steps:
         - tag
 
   - name: sonar
-    image: hub.scireum.com/scireum/sirius-build:latest
+    image: hub.scireum.com/scireum/sirius-build-jdk16:latest
     commands:
       - sed -i 's/DEVELOPMENT-SNAPSHOT/${DRONE_TAG}/g' pom.xml
       - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent test org.jacoco:jacoco-maven-plugin:report sonar:sonar -Dsonar.projectKey=${DRONE_REPO_NAME}

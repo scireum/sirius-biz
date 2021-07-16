@@ -20,6 +20,7 @@ import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
+import sirius.kernel.nls.Formatter;
 import sirius.kernel.nls.NLS;
 import sirius.web.controller.AutocompleteHelper;
 import sirius.web.controller.DefaultRoute;
@@ -79,7 +80,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
     /**
      * Returns all available features which can be assigned to a tenant.
      *
-     * @return an unmodifyable list of all features available.
+     * @return an unmodifiable list of all features available.
      */
     public List<String> getPermissions() {
         return Collections.unmodifiableList(permissions);
@@ -393,7 +394,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
      * The user is will keep the permissions tied to its user,
      * but the permissions granted by his tenant will change to the new tenant.
      * Exception to this is {@link Tenant#PERMISSION_SYSTEM_TENANT}, this will be kept if the user originally belonged to the system tenant.
-     * Additionatly, the permission {@link TenantUserManager#PERMISSION_SPY_USER} is given, so the system can identify the tenant switch.
+     * Additionally, the permission {@link TenantUserManager#PERMISSION_SPY_USER} is given, so the system can identify the tenant switch.
      *
      * @param webContext the current request
      * @param tenantId   the id of the tenant to switch to
@@ -402,27 +403,31 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
     @Routed("/tenants/select/:1")
     public void selectTenant(final WebContext webContext, String tenantId) {
         if ("main".equals(tenantId) || Strings.areEqual(determineOriginalTenantId(webContext), tenantId)) {
-            String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
-            UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
-            auditLog.neutral("AuditLog.switchedToMainTenant")
-                    .hideFromUser()
-                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forTenant(account.getTenant().getIdAsString(),
-                               account.getTenant().fetchValue().getTenantData().getName())
-                    .log();
+            if (isCurrentlySpying(webContext)) {
+                String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
+                UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
+                auditLog.neutral("AuditLog.switchedToMainTenant")
+                        .hideFromUser()
+                        .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                        .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                        .forTenant(account.getTenant().getIdAsString(),
+                                   account.getTenant().fetchValue().getTenantData().getName())
+                        .log();
 
-            webContext.setSessionValue(UserContext.getCurrentScope().getScopeId()
-                                       + TenantUserManager.TENANT_SPY_ID_SUFFIX, null);
-            webContext.respondWith().redirectTemporarily(webContext.get("goto").asString(wondergemRoot));
+                webContext.setSessionValue(UserContext.getCurrentScope().getScopeId()
+                                           + TenantUserManager.TENANT_SPY_ID_SUFFIX, null);
+            }
+
+            webContext.respondWith().redirectTemporarily("/tenants/select");
             return;
         }
 
         assertPermission(TenantUserManager.PERMISSION_SELECT_TENANT);
 
         Optional<T> tenant = resolveAccessibleTenant(tenantId, determineCurrentTenant(webContext));
-        if (!tenant.isPresent()) {
-            UserContext.get().addMessage(Message.error(NLS.get("TenantController.cannotBecomeTenant")));
+        if (tenant.isEmpty()) {
+            UserContext.get()
+                       .addMessage(Message.error().withTextMessage(NLS.get("TenantController.cannotBecomeTenant")));
             selectTenants(webContext);
             return;
         }
@@ -453,9 +458,13 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
             Page<T> tenants = getSelectableTenantsAsPage(webContext, determineCurrentTenant(webContext)).asPage();
 
             tenants.getItems().forEach(tenant -> {
-                result.accept(new AutocompleteHelper.Completion(tenant.getIdAsString(),
-                                                                tenant.toString(),
-                                                                tenant.toString()));
+                String description = Formatter.create("[${zip}][ ${city}]")
+                                              .set("zip", tenant.getTenantData().getAddress().getZip())
+                                              .set("city", tenant.getTenantData().getAddress().getCity())
+                                              .format();
+                result.accept(AutocompleteHelper.suggest(tenant.getIdAsString())
+                                                .withFieldLabel(tenant.toString())
+                                                .withCompletionDescription(description));
             });
         });
     }
