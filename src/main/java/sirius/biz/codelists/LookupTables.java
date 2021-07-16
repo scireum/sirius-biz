@@ -86,7 +86,7 @@ public class LookupTables {
     }
 
     private LookupTable loadIDBLookupTable(Extension extension, String currentTable, String tableToLoad) {
-        // Checks, if the table to load is a base table currently created table and loads it with the
+        // Checks, if the table to load is a base table of the currently created table and loads it with the
         // correct configuration.
         if (!Strings.areEqual(currentTable, tableToLoad)) {
             Extension baseTableExtension = Sirius.getSettings().getExtension(CONFIG_BLOCK_LOOKUP_TABLES, tableToLoad);
