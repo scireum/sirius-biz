@@ -403,19 +403,22 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
     @Routed("/tenants/select/:1")
     public void selectTenant(final WebContext webContext, String tenantId) {
         if ("main".equals(tenantId) || Strings.areEqual(determineOriginalTenantId(webContext), tenantId)) {
-            String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
-            UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
-            auditLog.neutral("AuditLog.switchedToMainTenant")
-                    .hideFromUser()
-                    .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
-                    .forTenant(account.getTenant().getIdAsString(),
-                               account.getTenant().fetchValue().getTenantData().getName())
-                    .log();
+            if (isCurrentlySpying(webContext)) {
+                String originalUserId = tenants.getTenantUserManager().getOriginalUserId();
+                UserAccount<?, ?> account = tenants.getTenantUserManager().fetchAccount(originalUserId);
+                auditLog.neutral("AuditLog.switchedToMainTenant")
+                        .hideFromUser()
+                        .causedByUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                        .forUser(account.getUniqueName(), account.getUserAccountData().getLogin().getUsername())
+                        .forTenant(account.getTenant().getIdAsString(),
+                                   account.getTenant().fetchValue().getTenantData().getName())
+                        .log();
 
-            webContext.setSessionValue(UserContext.getCurrentScope().getScopeId()
-                                       + TenantUserManager.TENANT_SPY_ID_SUFFIX, null);
-            webContext.respondWith().redirectTemporarily(webContext.get("goto").asString(wondergemRoot));
+                webContext.setSessionValue(UserContext.getCurrentScope().getScopeId()
+                                           + TenantUserManager.TENANT_SPY_ID_SUFFIX, null);
+            }
+
+            webContext.respondWith().redirectTemporarily("/tenants/select");
             return;
         }
 

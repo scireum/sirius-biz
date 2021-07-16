@@ -73,6 +73,14 @@ public class MongoReplicationTask extends MongoEntity {
     private LocalDateTime lastExecution;
 
     /**
+     * Contains the batch or transaction identifier used to schedule this task.
+     */
+    public static final Mapping TRANSACTION_ID = Mapping.named("transactionId");
+    @Length(50)
+    @NullAllowed
+    private String transactionId;
+
+    /**
      * Contains when the task was scheduled for execution.
      */
     public static final Mapping SCHEDULED = Mapping.named("scheduled");
@@ -161,5 +169,13 @@ public class MongoReplicationTask extends MongoEntity {
 
     public void setContentLength(long contentLength) {
         this.contentLength = contentLength;
+    }
+
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
     }
 }

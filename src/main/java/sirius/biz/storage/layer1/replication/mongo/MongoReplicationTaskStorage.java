@@ -9,33 +9,26 @@
 package sirius.biz.storage.layer1.replication.mongo;
 
 import com.alibaba.fastjson.JSONObject;
-import sirius.biz.analytics.scheduler.MongoEntityBatchEmitter;
-import sirius.biz.cluster.work.DistributedTasks;
-import sirius.biz.storage.layer1.replication.ReplicationManager;
-import sirius.biz.storage.layer1.replication.ReplicationTaskExecutor;
-import sirius.biz.storage.layer1.replication.ReplicationTaskStorage;
+import sirius.biz.storage.layer1.replication.BaseReplicationTaskStorage;
 import sirius.biz.storage.util.StorageUtils;
-import sirius.db.mixing.Mixing;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.Mongo;
-import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.MongoQuery;
 import sirius.db.mongo.QueryBuilder;
 import sirius.db.mongo.Updater;
-import sirius.kernel.di.std.ConfigValue;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.std.Register;
 import sirius.kernel.health.Exceptions;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Provides a replication task storage based on the underlying MongoDB.
  */
 @Register(framework = MongoReplicationTaskStorage.FRAMEWORK_MONGO_REPLICATION)
-public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
+public class MongoReplicationTaskStorage
+        extends BaseReplicationTaskStorage<MongoReplicationTask, MongoQuery<MongoReplicationTask>> {
 
     /**
      * Contains the name of the framework which has to be enabled to support the coordination of the
@@ -43,41 +36,11 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
      */
     public static final String FRAMEWORK_MONGO_REPLICATION = "biz.storage-replication-mongo";
 
-    @ConfigValue("storage.layer1.replication.batchSize")
-    private int batchSize;
-
-    @ConfigValue("storage.layer1.replication.maxBatches")
-    private int maxBatches;
-
-    @ConfigValue("storage.layer1.replication.replicateDeleteDelay")
-    private Duration replicateDeleteDelay;
-
-    @ConfigValue("storage.layer1.replication.replicateUpdateDelay")
-    private Duration replicateUpdateDelay;
-
-    @ConfigValue("storage.layer1.replication.retryReplicationDelay")
-    private Duration retryReplicationDelay;
-
-    @ConfigValue("storage.layer1.replication.maxReplicationAttempts")
-    private int maxReplicationAttempts;
-
-    @Part
-    private MongoEntityBatchEmitter emitter;
-
     @Part
     private Mango mango;
 
     @Part
     private Mongo mongo;
-
-    @Part
-    private Mixing mixing;
-
-    @Part
-    private ReplicationManager replicationManager;
-
-    @Part
-    private DistributedTasks distributedTasks;
 
     @Override
     public void notifyAboutDelete(String primarySpace, String objectId) {
@@ -111,59 +74,49 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
     }
 
     @Override
-    public int emitBatches() {
-        AtomicInteger numberOfBatches = new AtomicInteger(maxBatches);
-        AtomicInteger scheduledTasks = new AtomicInteger(0);
-        emitter.computeBatches(MongoReplicationTask.class,
-                               qry -> filterOnExecutableTasks(qry, true),
-                               batchSize,
-                               batch -> {
-                                   distributedTasks.submitFIFOTask(ReplicationTaskExecutor.class, batch);
-                                   scheduledTasks.addAndGet(batchSize);
+    protected MongoQuery<MongoReplicationTask> queryExecutableTasks() {
+        MongoQuery<MongoReplicationTask> query = mango.select(MongoReplicationTask.class);
+        query.eq(MongoReplicationTask.FAILED, false);
+        query.where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()));
+        query.eq(MongoReplicationTask.TRANSACTION_ID, null);
+        query.eq(MongoReplicationTask.SCHEDULED, null);
 
-                                   markTasksAsScheduled(batch);
+        query.orderAsc(MongoReplicationTask.EARLIEST_EXECUTION);
 
-                                   return numberOfBatches.decrementAndGet() > 0;
-                               });
-
-        return scheduledTasks.get();
+        return query;
     }
 
-    private void markTasksAsScheduled(JSONObject batch) {
+    @Override
+    protected void markTaskAsScheduled(MongoReplicationTask task, String txnId) {
         try {
             mongo.update()
                  .set(MongoReplicationTask.SCHEDULED, LocalDateTime.now())
+                 .set(MongoReplicationTask.TRANSACTION_ID, txnId)
                  .where(MongoReplicationTask.FAILED, false)
                  .where(MongoReplicationTask.SCHEDULED, null)
                  .where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
-                 .where(QueryBuilder.FILTERS.gte(MongoReplicationTask.ID,
-                                                 batch.getString(MongoEntityBatchEmitter.START_ID)))
-                 .where(QueryBuilder.FILTERS.lte(MongoReplicationTask.ID,
-                                                 batch.getString(MongoEntityBatchEmitter.END_ID)))
+                 .where(MongoReplicationTask.ID, task.getId())
                  .executeForMany(MongoReplicationTask.class);
         } catch (Exception e) {
             Exceptions.handle()
                       .to(StorageUtils.LOG)
                       .error(e)
                       .withSystemErrorMessage(
-                              "Layer 1/replication: Failed to mark MongoDB replication tasks as scheduled: %s (%s)")
+                              "Layer 1/replication: Failed to mark MongoDB replication task %s as scheduled: %s (%s)",
+                              task.getId())
                       .handle();
-        }
-    }
-
-    private void filterOnExecutableTasks(MongoQuery<MongoEntity> query, boolean forScheduling) {
-        query.eq(MongoReplicationTask.FAILED, false);
-        query.where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()));
-        if (forScheduling) {
-            query.eq(MongoReplicationTask.SCHEDULED, null);
-        } else {
-            query.ne(MongoReplicationTask.SCHEDULED, null);
         }
     }
 
     @Override
     public void executeBatch(JSONObject batch) {
-        emitter.evaluateBatch(batch, query -> filterOnExecutableTasks(query, false), this::executeTask);
+        String txnId = batch.getString(TRANSACTION_ID);
+        if (Strings.isFilled(txnId)) {
+            MongoQuery<MongoReplicationTask> query = mango.select(MongoReplicationTask.class);
+            query.eq(MongoReplicationTask.FAILED, false);
+            query.eq(MongoReplicationTask.TRANSACTION_ID, txnId);
+            query.iterateAll(this::executeTask);
+        }
     }
 
     @Override
@@ -177,11 +130,6 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
                           .eq(MongoReplicationTask.FAILED, false)
                           .where(QueryBuilder.FILTERS.lt(MongoReplicationTask.EARLIEST_EXECUTION, LocalDateTime.now()))
                           .count();
-    }
-
-    @Override
-    public int countNumberOfScheduledTasks() {
-        return distributedTasks.getQueueLength(ReplicationTaskExecutor.REPLICATION_TASK_QUEUE) * batchSize;
     }
 
     private void executeTask(MongoReplicationTask task) {
@@ -206,7 +154,7 @@ public class MongoReplicationTaskStorage implements ReplicationTaskStorage {
                               .to(StorageUtils.LOG)
                               .error(ex)
                               .withSystemErrorMessage(
-                                      "Layer 1/replication: A storage replication task (%s) ultimatively failed: Primary space: %s, object: %s - %s (%s)",
+                                      "Layer 1/replication: A storage replication task (%s) ultimately failed: Primary space: %s, object: %s - %s (%s)",
                                       task.getIdAsString(),
                                       task.getPrimarySpace(),
                                       task.getObjectKey())

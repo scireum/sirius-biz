@@ -58,11 +58,10 @@ public class BucketName {
         if (obj == this) {
             return true;
         }
-        if (!(obj instanceof BucketName)) {
+        if (!(obj instanceof BucketName other)) {
             return false;
         }
 
-        BucketName other = (BucketName) obj;
         return Objects.equals(name, other.name);
     }
 
