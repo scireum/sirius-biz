@@ -24,8 +24,8 @@ import java.io.InputStream;
  */
 public class FileHandle implements Closeable {
 
-    private File file;
-    private boolean deleteOnClose;
+    private final File file;
+    private final boolean deleteOnClose;
 
     protected FileHandle(File file, boolean deleteOnClose) {
         this.file = file;

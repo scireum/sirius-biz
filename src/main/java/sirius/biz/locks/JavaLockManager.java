@@ -29,7 +29,7 @@ public class JavaLockManager extends BasicLockManager {
      */
     public static final String NAME = "java";
 
-    private Map<String, LockInfo> locks = new HashMap<>();
+    private final Map<String, LockInfo> locks = new HashMap<>();
 
     @Nonnull
     @Override

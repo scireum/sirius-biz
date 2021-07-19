@@ -22,7 +22,7 @@ import java.util.Optional;
  */
 public class CipherTransformer implements ByteBlockTransformer {
 
-    private Cipher cipher;
+    private final Cipher cipher;
 
     /**
      * Creates a new transformer for the given cipher.

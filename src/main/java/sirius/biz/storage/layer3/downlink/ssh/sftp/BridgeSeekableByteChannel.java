@@ -28,10 +28,10 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 class BridgeSeekableByteChannel implements SeekableByteChannel {
 
-    private VirtualFile virtualFile;
+    private final VirtualFile virtualFile;
     private InputStream in;
     private OutputStream out;
-    private AtomicLong position = new AtomicLong(0);
+    private final AtomicLong position = new AtomicLong(0);
 
     protected BridgeSeekableByteChannel(VirtualFile virtualFile) {
         this.virtualFile = virtualFile;

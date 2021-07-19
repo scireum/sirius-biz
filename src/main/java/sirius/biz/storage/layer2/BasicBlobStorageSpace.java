@@ -116,8 +116,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Contains the name of the config key used to determine if normalized blob and directory names are used.
      * <p>
-     * Setting this to true makes the file system effectively case insensitive. Where as using false
-     * makes it case sensitive.
+     * Setting this to true makes the file system effectively case-insensitive. Whereas using false
+     * makes it case-sensitive.
      */
     private static final String CONFIG_KEY_USE_NORMALIZED_NAMES = "useNormalizedNames";
 
@@ -991,7 +991,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private Optional<FileHandle> tryDelegateDownload(String blobKey, String variant) throws IOException {
         Optional<URL> url = determineDelegateConversionUrl(blobKey, variant);
 
-        if (!url.isPresent()) {
+        if (url.isEmpty()) {
             return Optional.empty();
         }
 
@@ -1649,7 +1649,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     private void delegateConversion(String blobKey, String variant, Response response) {
         Optional<URL> url = determineDelegateConversionUrl(blobKey, variant);
 
-        if (!url.isPresent()) {
+        if (url.isEmpty()) {
             response.error(HttpResponseStatus.NOT_FOUND);
             return;
         }
@@ -1670,6 +1670,8 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
      * @param variant the variant of the blob to deliver
      * @return the URL for requesting the variant from one of our conversion servers
      */
+    @SuppressWarnings("HttpUrlsUsage")
+    @Explain("These are cluster internal URLs and thus http is acceptable.")
     private Optional<URL> determineDelegateConversionUrl(String blobKey, String variant) {
         if (conversionEnabled || conversionHosts.isEmpty()) {
             return Optional.empty();
@@ -1699,7 +1701,7 @@ public abstract class BasicBlobStorageSpace<B extends Blob & OptimisticCreate, D
     /**
      * Returns the base URL to use for this space.
      *
-     * @return the base URL wrapped as optional or an empty optional if the default base URL should be used.
+     * @return the base URL wrapped as optional, or an empty optional if the default base URL should be used.
      */
     public Optional<String> getBaseURL() {
         return Optional.ofNullable(baseUrl);

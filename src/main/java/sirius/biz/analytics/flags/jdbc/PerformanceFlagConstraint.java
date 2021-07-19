@@ -22,8 +22,8 @@ import sirius.db.jdbc.constraints.SQLConstraint;
  */
 class PerformanceFlagConstraint extends SQLConstraint {
 
-    private PerformanceFlag flag;
-    private boolean expectedState;
+    private final PerformanceFlag flag;
+    private final boolean expectedState;
 
     /**
      * Generates a new constraint for the given flag and expected state.

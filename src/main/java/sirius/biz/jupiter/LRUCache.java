@@ -89,7 +89,7 @@ public class LRUCache {
      */
     public String computeIfAbsent(String key, Supplier<String> valueComputer) {
         Optional<String> result = get(key);
-        if (!result.isPresent()) {
+        if (result.isEmpty()) {
             String value = valueComputer.get();
             put(key, value);
 

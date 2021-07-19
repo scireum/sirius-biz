@@ -19,6 +19,7 @@ import sirius.web.controller.Routed;
 import sirius.web.http.InputStreamHandler;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.io.IOException;
@@ -56,7 +57,8 @@ public class BlobController extends BizController {
      * @param spaceName the {@link BlobStorageSpace} to store the object in
      * @param upload    the content of the upload
      */
-    @Routed(value = "/dasd/upload-file/:1", preDispatchable = true, jsonCall = true)
+    @Routed(value = "/dasd/upload-file/:1", preDispatchable = true)
+    @InternalService
     @LoginRequired
     public void uploadFile(final WebContext ctx,
                            JSONStructuredOutput out,
@@ -64,7 +66,7 @@ public class BlobController extends BizController {
                            InputStreamHandler upload) {
         Blob blob = blobStorage.getSpace(spaceName).createTemporaryBlob();
         try {
-            try {
+            try (upload) {
                 ctx.markAsLongCall();
                 //TODO SIRI-96 remove legacy qqfile once library is updated...
                 String name = ctx.get(KEY_FILENAME).asString(ctx.get(KEY_FILE).asString());
@@ -79,8 +81,6 @@ public class BlobController extends BizController {
                 out.property(KEY_FILENAME, blob.getFilename());
                 out.property(KEY_SIZE, blob.getSize());
                 out.property(KEY_FORMATTED_SIZE, NLS.formatSize(blob.getSize()));
-            } finally {
-                upload.close();
             }
         } catch (IOException e) {
             blob.delete();
@@ -102,7 +102,8 @@ public class BlobController extends BizController {
      * @param out        the response to the AJAX call
      * @param spaceName  the {@link BlobStorageSpace} to find the object in
      */
-    @Routed(value = "/dasd/blob-info-for-path/:1", jsonCall = true)
+    @Routed("/dasd/blob-info-for-path/:1")
+    @InternalService
     @LoginRequired
     public void blobInfoForPath(final WebContext webContext, JSONStructuredOutput out, String spaceName) {
         String path = webContext.getParameter(KEY_PATH);

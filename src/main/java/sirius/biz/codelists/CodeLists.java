@@ -34,7 +34,6 @@ import sirius.web.security.UserContext;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -506,8 +505,8 @@ public abstract class CodeLists<I extends Serializable, L extends BaseEntity<I> 
      * @throws sirius.kernel.health.HandledException if no entry exists for the given code or code list
      */
     public void verifyValue(@Nonnull String codeListName, @Nullable String code) {
-        if (Strings.isFilled(code) && getCurrentTenant(codeListName).isPresent() && !tryGetValue(codeListName,
-                                                                                                 code).isPresent()) {
+        if (Strings.isFilled(code) && getCurrentTenant(codeListName).isPresent() && tryGetValue(codeListName,
+                                                                                                code).isEmpty()) {
             throw createMissingCodeError(codeListName, code);
         }
     }

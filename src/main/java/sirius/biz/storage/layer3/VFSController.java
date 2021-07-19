@@ -24,6 +24,7 @@ import sirius.web.http.InputStreamHandler;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.UserContext;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 import sirius.web.util.LinkBuilder;
 
@@ -68,7 +69,10 @@ public class VFSController extends BizController {
         VirtualFile file = vfs.resolve(path);
         if (!file.exists()) {
             UserContext.get()
-                       .addMessage(Message.error().withTextMessage(NLS.fmtr("VFSController.unknownPath").set("path", path).format()));
+                       .addMessage(Message.error()
+                                          .withTextMessage(NLS.fmtr("VFSController.unknownPath")
+                                                              .set("path", path)
+                                                              .format()));
 
             while (file != null && !file.exists()) {
                 file = file.parent();
@@ -102,7 +106,8 @@ public class VFSController extends BizController {
      * @throws Exception in case of an error
      */
     @LoginRequired
-    @Routed(value = "/fs/upload", preDispatchable = true, jsonCall = true)
+    @Routed(value = "/fs/upload", preDispatchable = true)
+    @InternalService
     public void upload(WebContext ctx, JSONStructuredOutput out, InputStreamHandler inputStream) throws Exception {
         VirtualFile parent = vfs.resolve(ctx.get("path").asString());
         parent.assertExistingDirectory();
@@ -121,11 +126,9 @@ public class VFSController extends BizController {
             if (size > 0) {
                 file.consumeStream(inputStream, size);
             } else {
-                try (OutputStream outputStream = file.createOutputStream()) {
+                try (inputStream; OutputStream outputStream = file.createOutputStream()) {
                     ctx.markAsLongCall();
                     Streams.transfer(inputStream, outputStream);
-                } finally {
-                    inputStream.close();
                 }
             }
 
@@ -264,7 +267,8 @@ public class VFSController extends BizController {
      * @param out        the JSON response to populate
      */
     @LoginRequired
-    @Routed(value = "/fs/list", jsonCall = true)
+    @Routed("/fs/list")
+    @InternalService
     public void listAPI(WebContext webContext, JSONStructuredOutput out) {
         VirtualFile parent = vfs.resolve(webContext.get("path").asString("/"));
         if (parent.exists() && !parent.isDirectory()) {

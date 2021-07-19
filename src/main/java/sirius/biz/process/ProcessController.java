@@ -37,9 +37,8 @@ import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
 import sirius.web.security.UserContext;
 import sirius.web.security.UserInfo;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
-
-import java.util.ArrayList;
 
 /**
  * Provides the management UI for {@link java.lang.Process processes}.
@@ -362,7 +361,8 @@ public class ProcessController extends BizController {
      * @param out       the output to write the JSON data to
      * @param processId the process to output
      */
-    @Routed(value = "/ps/:1/api", jsonCall = true)
+    @Routed("/ps/:1/api")
+    @InternalService
     public void processAPI(WebContext ctx, JSONStructuredOutput out, String processId) {
         processes.outputAsJSON(processId, out);
     }

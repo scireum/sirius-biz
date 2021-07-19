@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  * Supports extracting attributes from a given {@link VirtualFile}.
  */
 public class BridgePosixFileAttributes implements PosixFileAttributes {
-    private VirtualFile virtualFile;
+    private final VirtualFile virtualFile;
 
     /**
      * Creates a new wrapper which extracts the attributes of the given file.

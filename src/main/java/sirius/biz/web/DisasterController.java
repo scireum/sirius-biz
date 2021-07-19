@@ -63,14 +63,12 @@ public class DisasterController extends BizController {
     @Permission(PERMISSION_CONTROL_DISASTER_MODE)
     public void disaster(WebContext webContext) {
         MaintenanceInfo maintenanceInfo = UserContext.getCurrentScope().tryAs(MaintenanceInfo.class).orElse(null);
-        if (!(maintenanceInfo instanceof DisasterModeInfo)) {
+        if (!(maintenanceInfo instanceof DisasterModeInfo disasterModeInfo)) {
             throw Exceptions.createHandled()
                             .withSystemErrorMessage(
                                     "A different MaintenanceInfo is active - cannot show or change settings.")
                             .handle();
         }
-
-        DisasterModeInfo disasterModeInfo = (DisasterModeInfo) maintenanceInfo;
 
         if (webContext.isSafePOST()) {
             try {

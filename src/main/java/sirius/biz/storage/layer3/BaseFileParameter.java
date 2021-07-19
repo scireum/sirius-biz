@@ -88,7 +88,7 @@ public abstract class BaseFileParameter<P extends ParameterBuilder<VirtualFile, 
         }
 
         Optional<VirtualFile> virtualFile = resolveFromString(input);
-        if (!virtualFile.isPresent()) {
+        if (virtualFile.isEmpty()) {
             throw new IllegalArgumentException(NLS.fmtr(getErrorMessageKey()).set("path", input.asString()).format());
         }
         verifyExtensions(virtualFile.get());

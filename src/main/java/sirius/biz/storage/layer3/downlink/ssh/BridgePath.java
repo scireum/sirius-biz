@@ -175,7 +175,7 @@ public class BridgePath implements Path {
 
     @Override
     public Path relativize(Path other) {
-        String thisPath = toString() + "/";
+        String thisPath = this + "/";
         String otherPath = other.toString();
         if (otherPath.startsWith(thisPath)) {
             return new StringPath(otherPath.substring(thisPath.length()));
