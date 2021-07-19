@@ -204,7 +204,7 @@ class IDBLookupTable extends LookupTable {
         try {
             return jupiter.fetchFromSmallCache(CACHE_PREFIX_REVERSE_LOOKUP + table.getName() + "-" + name,
                                                () -> table.query()
-                                                          .searchPaths(nameField)
+                                                          .lookupPaths(nameField)
                                                           .searchValue(name.toLowerCase())
                                                           .singleRow(codeField)
                                                           .map(row -> row.at(0).asString())
@@ -302,6 +302,33 @@ class IDBLookupTable extends LookupTable {
                       .to(Jupiter.LOG)
                       .error(e)
                       .withSystemErrorMessage("Error scanning lang '%s' table '%s': %s (%s)", lang, table.getName())
+                      .handle();
+            return Stream.empty();
+        }
+    }
+
+    @Override
+    protected Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue) {
+        try {
+            return table.query()
+                        .translate(lang)
+                        .lookupPaths(lookupPath)
+                        .searchValue(lookupValue)
+                        .allRows(codeField, nameField, descriptionField, COL_DEPRECATED)
+                        .filter(row -> !row.at(3).asBoolean())
+                        .map(row -> new LookupTableEntry(row.at(0).asString(),
+                                                         row.at(1).asString(),
+                                                         row.at(2).getString()));
+        } catch (Exception e) {
+            Exceptions.createHandled()
+                      .to(Jupiter.LOG)
+                      .error(e)
+                      .withSystemErrorMessage(
+                              "Error on lookup scan lang '%s' lookupPath '%s' lookupValue '%s' table '%s': %s (%s)",
+                              lang,
+                              lookupPath,
+                              lookupValue,
+                              table.getName())
                       .handle();
             return Stream.empty();
         }

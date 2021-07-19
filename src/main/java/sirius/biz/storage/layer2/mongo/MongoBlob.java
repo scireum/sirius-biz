@@ -27,6 +27,7 @@ import sirius.db.mixing.types.BaseEntityRef;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.MongoEntity;
 import sirius.db.mongo.types.MongoRef;
+import sirius.kernel.commons.Files;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Framework;
 import sirius.kernel.di.std.Part;
@@ -245,7 +246,7 @@ public class MongoBlob extends MongoEntity implements Blob, OptimisticCreate {
             this.filename = filename.trim();
             if (Strings.isFilled(filename)) {
                 this.normalizedFilename = filename.toLowerCase();
-                this.fileExtension = Strings.splitAtLast(normalizedFilename, ".").getSecond();
+                this.fileExtension = Files.getFileExtension(normalizedFilename);
             } else {
                 this.filename = null;
                 this.normalizedFilename = null;

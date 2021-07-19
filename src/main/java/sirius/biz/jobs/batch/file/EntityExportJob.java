@@ -30,9 +30,6 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Values;
 import sirius.kernel.commons.Watch;
 import sirius.kernel.di.std.Part;
-import sirius.kernel.health.Exceptions;
-import sirius.kernel.health.HandledException;
-import sirius.kernel.health.Log;
 import sirius.web.data.LineBasedProcessor;
 
 import javax.annotation.Nullable;
@@ -74,6 +71,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
                                                                                      .withAcceptedExtensionsList(
                                                                                              LineBasedImportJobFactory.SUPPORTED_FILE_EXTENSIONS)
                                                                                      .build();
+    private static final String ERROR_CONTEXT_ROW = "$LineBasedJob.row";
 
     @Part
     private static Mixing mixing;
@@ -206,16 +204,22 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
                 return;
             }
 
+            errorContext.withContext(ERROR_CONTEXT_ROW, rowNumber);
+
             if (!dictionary.hasMappings()) {
                 determineMappingsFromRow(rowNumber, row);
             } else {
                 if (seenTemplateRow.firstCall()) {
                     process.log(ProcessLog.info().withNLSKey("EntityExportJob.startingTemplateBasedExport"));
                 }
-                handleTemplateRow(rowNumber, row);
+                handleTemplateRow(row);
             }
+
+            errorContext.removeContext(ERROR_CONTEXT_ROW);
         }, error -> {
             process.handle(error);
+            errorContext.removeContext(ERROR_CONTEXT_ROW);
+
             return true;
         });
 
@@ -235,16 +239,7 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
         dictionary.determineMappingFromHeadings(row, false);
         process.log(ProcessLog.info().withMessage(dictionary.getMappingAsString()));
         setupExtractors();
-        try {
-            export.addRow(row.asList());
-        } catch (Exception e) {
-            process.handle(Exceptions.handle()
-                                     .to(Log.BACKGROUND)
-                                     .error(e)
-                                     .withNLSKey("LineBasedJob.failureInRow")
-                                     .set("row", rowNumber)
-                                     .handle());
-        }
+        errorContext.perform(() -> export.addRow(row.asList()));
     }
 
     /**
@@ -278,12 +273,12 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
     /**
      * Enhances a data row read from the template.
      *
-     * @param rowNumber the number of the row being handled
-     * @param row       the row data to process
+     * @param row the row data to process
      */
-    private void handleTemplateRow(int rowNumber, Values row) {
+    private void handleTemplateRow(Values row) {
         Watch w = Watch.start();
-        try {
+
+        errorContext.perform(() -> {
             Context data = dictionary.load(row, false);
 
             if (contextExtender != null) {
@@ -296,22 +291,9 @@ public class EntityExportJob<E extends BaseEntity<?>, Q extends Query<Q, E, ?>> 
             } else {
                 export.addRow(row.asList());
             }
-        } catch (HandledException e) {
-            process.handle(Exceptions.createHandled()
-                                     .withNLSKey("LineBasedJob.errorInRow")
-                                     .set("row", rowNumber)
-                                     .set("message", e.getMessage())
-                                     .handle());
-        } catch (Exception e) {
-            process.handle(Exceptions.handle()
-                                     .to(Log.BACKGROUND)
-                                     .error(e)
-                                     .withNLSKey("LineBasedJob.failureInRow")
-                                     .set("row", rowNumber)
-                                     .handle());
-        } finally {
-            process.addTiming(descriptor.getPluralLabel(), w.elapsedMillis());
-        }
+        });
+
+        process.addTiming(descriptor.getPluralLabel(), w.elapsedMillis());
     }
 
     /**

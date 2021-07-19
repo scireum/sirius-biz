@@ -67,9 +67,7 @@ public class MutableVirtualFile extends VirtualFile {
      * @throws IllegalArgumentException if the given name is empty or contains an illegal char
      */
     public static MutableVirtualFile checkedCreate(@Nonnull VirtualFile parent, @Nonnull String name) {
-        if (Strings.isEmpty(name)
-            || StorageUtils.SANITIZE_ILLEGAL_FILE_CHARS.split(name).length > 1
-            || StorageUtils.SANITIZE_SLASHES.split(name).length > 1) {
+        if (storageUtils.containsIllegalFileChars(name)) {
             throw new IllegalArgumentException("A filename must be filled and must not contain illegal characters.");
         }
         return new MutableVirtualFile(parent, name);

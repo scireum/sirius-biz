@@ -210,6 +210,19 @@ public class StorageUtils {
     }
 
     /**
+     * Validates whether the given file name is empty or contains chars that might be reserved by the file system.
+     *
+     * @param name the file name to check
+     * @return <tt>true</tt> when the given name is empty or contains unwanted chars
+     */
+    public boolean containsIllegalFileChars(String name) {
+        if (Strings.isEmpty(name)) {
+            return true;
+        }
+        return SANITIZE_ILLEGAL_FILE_CHARS.split(name).length > 1 || SANITIZE_SLASHES.split(name).length > 1;
+    }
+
+    /**
      * Creates an output stream which writes into a local buffer and invokes the given consumer once the stream is closed.
      * <p>
      * Note that the local buffer is automatically deleted once the consumer has completed.

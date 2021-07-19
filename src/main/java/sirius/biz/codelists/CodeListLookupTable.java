@@ -131,4 +131,11 @@ class CodeListLookupTable extends LookupTable {
     protected Stream<LookupTableEntry> performScan(String lang) {
         return codeLists.getEntries(codeList).stream().map(entry -> extractEntryData(entry, lang));
     }
+
+    @Override
+    protected Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue) {
+        // This would need a complex caching strategy as always fetching the DB would be too expensive.
+        // Could be implemented when needed.
+        throw new UnsupportedOperationException();
+    }
 }
