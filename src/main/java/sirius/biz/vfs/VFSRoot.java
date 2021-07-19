@@ -11,7 +11,7 @@ package sirius.biz.vfs;
 import java.util.function.Consumer;
 
 /**
- * Represents a root withing the {@link VirtualFileSystem}.
+ * Represents a root withing the {@link sirius.biz.storage.layer3.VirtualFileSystem}.
  * <p>
  * This can contribute one of more top-level files for the VFS. Implementing classes must wear a {@link
  * sirius.kernel.di.std.Register} to become visible to the injector and the VFS framework.

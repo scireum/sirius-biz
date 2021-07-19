@@ -21,9 +21,9 @@ import java.util.Set;
 
 class BridgePosixFileAttributesView implements PosixFileAttributeView {
 
-    private Path path;
-    private BridgeFileSystemProvider fs;
-    private LinkOption[] options;
+    private final Path path;
+    private final BridgeFileSystemProvider fs;
+    private final LinkOption[] options;
 
     BridgePosixFileAttributesView(Path path, BridgeFileSystemProvider fs, LinkOption[] options) {
         this.path = path;

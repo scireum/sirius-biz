@@ -50,7 +50,7 @@ public class IDBSet {
     }
 
     private String containsOp() {
-        return CMD_CONTAINS.toString() + " " + name;
+        return CMD_CONTAINS + " " + name;
     }
 
     /**
@@ -102,7 +102,7 @@ public class IDBSet {
     }
 
     private String indexOfOp() {
-        return CMD_INDEX_OF.toString() + " " + name;
+        return CMD_INDEX_OF + " " + name;
     }
 
     /**

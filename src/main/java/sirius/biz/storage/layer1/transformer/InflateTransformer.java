@@ -21,14 +21,14 @@ import java.util.zip.Inflater;
  */
 public class InflateTransformer implements ByteBlockTransformer {
 
-    private Inflater inflater = new Inflater();
+    private final Inflater inflater = new Inflater();
 
     /**
      * This is a shared buffer which is only used to transfer data from the inflater into the effective output buffer.
      * Being only used within a method call, we can keep a reusable instance around instead of re-creating one
      * each time.
      */
-    private byte[] inflateBuffer = new byte[TransformingInputStream.DEFAULT_BUFFER_SIZE];
+    private final byte[] inflateBuffer = new byte[TransformingInputStream.DEFAULT_BUFFER_SIZE];
 
     @Override
     public Optional<ByteBuf> apply(ByteBuf input) throws IOException {

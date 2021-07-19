@@ -19,8 +19,8 @@ import javax.crypto.SecretKey;
  */
 public class SecretKeyCipherProvider implements CipherProvider {
 
-    private SecretKey secretKey;
-    private String algorithm;
+    private final SecretKey secretKey;
+    private final String algorithm;
 
     /**
      * Creates a new instance of an algorithm for the given key.

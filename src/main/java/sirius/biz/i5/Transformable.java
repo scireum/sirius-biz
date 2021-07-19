@@ -23,7 +23,7 @@ import static sirius.kernel.health.Exceptions.handle;
  */
 public abstract class Transformable {
 
-    private static Map<Class<?>, Transformer> transformers = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, Transformer> transformers = new ConcurrentHashMap<>();
 
     private static <T> Transformer getTransformer(@Nonnull Class<T> type) {
         return transformers.computeIfAbsent(type, k -> new Transformer(type));

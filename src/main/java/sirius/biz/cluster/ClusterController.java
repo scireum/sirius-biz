@@ -27,6 +27,7 @@ import sirius.web.controller.Routed;
 import sirius.web.health.Cluster;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
@@ -107,7 +108,8 @@ public class ClusterController extends BasicController {
      * @param out        the output to write the JSON to
      * @param token      the cluster authentication token
      */
-    @Routed(value = "/system/cluster/state/:1", jsonCall = true)
+    @Routed( "/system/cluster/state/:1")
+    @InternalService
     public void nodeInfo(WebContext webContext, JSONStructuredOutput out, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
             webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
@@ -138,7 +140,8 @@ public class ClusterController extends BasicController {
      * @param out        the output to write the JSON to
      * @param token      the cluster authentication token
      */
-    @Routed(value = "/system/cluster/background/:1", jsonCall = true)
+    @Routed("/system/cluster/background/:1")
+    @InternalService
     public void backgroundInfo(WebContext webContext, JSONStructuredOutput out, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
             webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);

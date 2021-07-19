@@ -106,11 +106,9 @@ public abstract class UplinkConnectorConfig<C> {
             return false;
         }
 
-        if (!(obj instanceof UplinkConnectorConfig)) {
+        if (!(obj instanceof UplinkConnectorConfig<?> other)) {
             return false;
         }
-
-        UplinkConnectorConfig<?> other = (UplinkConnectorConfig<?>) obj;
 
         return Objects.equals(host, other.host)
                && Objects.equals(port, other.port)

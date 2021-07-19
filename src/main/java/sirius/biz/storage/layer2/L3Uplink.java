@@ -182,7 +182,7 @@ public class L3Uplink implements VFSRoot {
          * @return the first non empty optional produced by the lookups or an empty optional if all lokkups failed
          */
         @SafeVarargs
-        private final VirtualFile priorizedLookup(Supplier<VirtualFile>... lookups) {
+        private VirtualFile priorizedLookup(Supplier<VirtualFile>... lookups) {
             for (Supplier<VirtualFile> lookup : lookups) {
                 VirtualFile result = lookup.get();
                 if (result != null) {
@@ -422,7 +422,7 @@ public class L3Uplink implements VFSRoot {
 
     private boolean canFastMoveHandler(VirtualFile file, VirtualFile newParent) {
         Optional<Directory> destDirectory = newParent.tryAs(Directory.class);
-        if (!destDirectory.isPresent()) {
+        if (destDirectory.isEmpty()) {
             return false;
         }
 

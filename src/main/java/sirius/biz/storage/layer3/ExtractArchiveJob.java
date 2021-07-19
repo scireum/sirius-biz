@@ -169,17 +169,10 @@ public class ExtractArchiveJob extends SimpleBatchProcessJobFactory {
         VirtualFile targetFile = targetDirectory.resolve(targetPath);
         ArchiveExtractor.UpdateResult result = extractor.updateFile(extractedFile, targetFile, overrideMode);
         switch (result) {
-            case CREATED:
-                process.addTiming(NLS.get("ExtractArchiveJob.fileCreated"), watch.elapsedMillis());
-                break;
-            case UPDATED:
-                process.addTiming(NLS.get("ExtractArchiveJob.fileOverwritten"), watch.elapsedMillis());
-                break;
-            case SKIPPED:
-                process.addTiming(NLS.get("ExtractArchiveJob.fileSkipped"), watch.elapsedMillis());
-                break;
-            default:
-                throw new IllegalArgumentException(result.name());
+            case CREATED -> process.addTiming(NLS.get("ExtractArchiveJob.fileCreated"), watch.elapsedMillis());
+            case UPDATED -> process.addTiming(NLS.get("ExtractArchiveJob.fileOverwritten"), watch.elapsedMillis());
+            case SKIPPED -> process.addTiming(NLS.get("ExtractArchiveJob.fileSkipped"), watch.elapsedMillis());
+            default -> throw new IllegalArgumentException(result.name());
         }
 
         log(process, extractedFile, targetFile, result.name());

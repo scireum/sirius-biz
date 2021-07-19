@@ -21,7 +21,7 @@ import java.util.function.BiConsumer;
  */
 public class EnumerateOnlyProvider implements ChildProvider {
 
-    private BiConsumer<VirtualFile, FileSearch> listProvider;
+    private final BiConsumer<VirtualFile, FileSearch> listProvider;
 
     /**
      * Creates a new provider which delegates the enumeration call to the given provider.

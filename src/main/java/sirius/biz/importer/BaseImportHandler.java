@@ -74,7 +74,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     protected ImporterContext context;
     protected Mapping exportRepresentationMapping;
     protected Map<Mapping, BiConsumer<Context, Object>> loaders = new HashMap<>();
-    private Extension aliases;
+    private final Extension aliases;
 
     /**
      * Creates a new instance for the given type of entities and import context.

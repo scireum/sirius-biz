@@ -8,6 +8,7 @@
 
 package sirius.biz.tenants;
 
+import com.google.common.collect.Streams;
 import sirius.biz.web.BizController;
 import sirius.db.mixing.BaseEntity;
 import sirius.kernel.commons.Lambdas;
@@ -103,10 +104,14 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
         } else {
             verifyUser(response, user);
         }
-
-        UserContext userContext = UserContext.get();
-        userContext.setCurrentUser(user);
         manager.onExternalLogin(ctx, user);
+
+        // Re-resolve and install the newly created or updated user in the session.
+        // This also flushes all caches again, as we updated some internal data within
+        // "onExternalLogin" above...
+        UserContext userContext = UserContext.get();
+        userContext.setCurrentUser(manager.findUserByName(ctx, response.getNameId()));
+
 
         ctx.respondWith().template("/templates/biz/tenants/saml-complete.html.pasta", response);
     }
@@ -148,7 +153,7 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
     /**
      * Returns the actual entity class used to represent users.
      *
-     * @return the entity class represeting users
+     * @return the entity class representing users
      */
     @SuppressWarnings("unchecked")
     protected Class<U> getUserClass() {
@@ -222,14 +227,14 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
 
     private void updateAccount(SAMLResponse response, U account) {
         account.getUserAccountData().getPermissions().getPermissions().clear();
-        response.getAttribute(SAMLResponse.ATTRIBUTE_GROUP)
-                .stream()
-                .filter(Strings::isFilled)
-                .flatMap(value -> Arrays.stream(value.split(",")))
-                .map(String::trim)
-                .filter(Strings::isFilled)
-                .filter(role -> roles.contains(role))
-                .collect(Lambdas.into(account.getUserAccountData().getPermissions().getPermissions().modify()));
+        Streams.concat(response.getAttribute(SAMLResponse.ATTRIBUTE_GROUP).stream(),
+                       response.getAttribute(SAMLResponse.ATTRIBUTE_ROLE).stream())
+               .filter(Strings::isFilled)
+               .flatMap(value -> Arrays.stream(value.split(",")))
+               .map(String::trim)
+               .filter(Strings::isFilled)
+               .filter(role -> roles.contains(role))
+               .collect(Lambdas.into(account.getUserAccountData().getPermissions().getPermissions().modify()));
 
         if (Strings.isFilled(response.getAttributeValue(SAMLResponse.ATTRIBUTE_GIVEN_NAME))) {
             account.getUserAccountData()

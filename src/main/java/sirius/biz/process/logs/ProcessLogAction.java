@@ -20,9 +20,9 @@ import javax.annotation.Nonnull;
  */
 public class ProcessLogAction {
 
-    private ProcessLog logEntry;
+    private final ProcessLog logEntry;
     private String icon;
-    private String action;
+    private final String action;
     private String label;
 
     /**

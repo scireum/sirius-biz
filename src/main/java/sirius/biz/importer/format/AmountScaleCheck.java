@@ -28,8 +28,8 @@ public class AmountScaleCheck implements ValueCheck {
     private static final String PARAM_PRECISION = "precision";
     private static final String PARAM_SCALE = "scale";
 
-    private int precision;
-    private int scale;
+    private final int precision;
+    private final int scale;
 
     /**
      * Creates a new check using the given precision and scale.

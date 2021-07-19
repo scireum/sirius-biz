@@ -12,12 +12,12 @@ package sirius.biz.cluster;
  * Describes a background job or process running on a node.
  */
 public class BackgroundJobInfo {
-    private String name;
-    private String description;
-    private SynchronizeType synchronizeType;
-    private boolean localOverwrite;
-    private boolean globallyEnabled;
-    private String executionInfo;
+    private final String name;
+    private final String description;
+    private final SynchronizeType synchronizeType;
+    private final boolean localOverwrite;
+    private final boolean globallyEnabled;
+    private final String executionInfo;
 
     protected BackgroundJobInfo(String name,
                                 String description,

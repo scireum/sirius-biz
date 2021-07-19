@@ -50,7 +50,7 @@ public abstract class MongoBizEntity extends PrefixSearchableEntity implements T
         return getDescriptor().getProperties()
                               .stream()
                               .anyMatch(property -> getDescriptor().isChanged(this, property)
-                                                    && !property.getAnnotation(NoJournal.class).isPresent());
+                                                    && property.getAnnotation(NoJournal.class).isEmpty());
     }
 
     /**

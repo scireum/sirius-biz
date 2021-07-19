@@ -26,8 +26,8 @@ class RedisNamedCounters implements NamedCounters {
 
     private static final int MAX_RETRIES_FOR_DECREMENT = 15;
 
-    private Redis redis;
-    private String name;
+    private final Redis redis;
+    private final String name;
 
     protected RedisNamedCounters(String name, Redis redis) {
         this.name = name;
@@ -92,7 +92,7 @@ class RedisNamedCounters implements NamedCounters {
     private Long tryToDecrement(String counter, Jedis db) {
         db.watch(name);
         Optional<Long> counterValue = readCounter(db, counter);
-        if (!counterValue.isPresent()) {
+        if (counterValue.isEmpty()) {
             db.unwatch();
             return 0L;
         }

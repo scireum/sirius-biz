@@ -15,7 +15,7 @@ import java.util.Optional;
  */
 class ExternalURLBuilder extends URLBuilder {
 
-    private String fixedUrl;
+    private final String fixedUrl;
 
     protected ExternalURLBuilder(String fixedUrl) {
         super(null, "");

@@ -65,7 +65,7 @@ public class ObjectStores {
     private static final String NAME_SYSTEM_STORE = "system";
 
     private ObjectStore store;
-    private ConcurrentHashMap<String, ObjectStore> stores = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ObjectStore> stores = new ConcurrentHashMap<>();
 
     protected Cache<Tuple<String, String>, Boolean> bucketCache = CacheManager.createLocalCache("objectstores-buckets");
 

@@ -36,8 +36,7 @@ public class LookupValueExtender implements EntityImportHandlerExtender {
         Property property = descriptor.findProperty(fieldToExport);
 
         // Takes care of LookupValue fields...
-        if (property instanceof LookupValueProperty) {
-            LookupValueProperty lookupValueProperty = (LookupValueProperty) property;
+        if (property instanceof LookupValueProperty lookupValueProperty) {
             LookupValue referenceValue = lookupValueProperty.getReferenceValue();
             if (referenceValue.getExport() == LookupValue.Export.NAME) {
                 return entity -> {
@@ -48,8 +47,7 @@ public class LookupValueExtender implements EntityImportHandlerExtender {
         }
 
         // Takes care of LookupValues fields...
-        if (property instanceof LookupValuesProperty) {
-            LookupValuesProperty lookupValuesProperty = (LookupValuesProperty) property;
+        if (property instanceof LookupValuesProperty lookupValuesProperty) {
             LookupValues referenceValue = lookupValuesProperty.getReferenceValues();
             if (referenceValue.getExport() == LookupValue.Export.NAME) {
                 return entity -> {

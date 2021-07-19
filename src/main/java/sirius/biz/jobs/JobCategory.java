@@ -54,10 +54,10 @@ public class JobCategory {
      */
     public static final String CATEGORY_MISC = "misc";
 
-    private String name;
-    private String label;
-    private String icon;
-    private int priority;
+    private final String name;
+    private final String label;
+    private final String icon;
+    private final int priority;
 
     protected JobCategory(String name, String label, String icon, int priority) {
         this.name = name;

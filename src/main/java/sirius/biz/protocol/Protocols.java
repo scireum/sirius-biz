@@ -75,7 +75,7 @@ public class Protocols implements LogTap, ExceptionHandler, MailLog {
      * To prevent overrunning Elasticsearch by logging messages, we limit the number of logged messages
      * to 100/min.
      */
-    private RateLimit loggedMessageLimit = RateLimit.nTimesPerInterval(1, TimeUnit.MINUTES, 100);
+    private final RateLimit loggedMessageLimit = RateLimit.nTimesPerInterval(1, TimeUnit.MINUTES, 100);
 
     private AtomicLong disabledUntil;
 

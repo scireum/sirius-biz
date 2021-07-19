@@ -28,9 +28,9 @@ import java.util.regex.Pattern;
  */
 public class RegexCheck extends StringCheck {
 
-    private String remark;
-    private Pattern pattern;
-    private String errorMessage;
+    private final String remark;
+    private final Pattern pattern;
+    private final String errorMessage;
 
     /**
      * Creates a new check using the given pattern, remark and error for non matching inputs.

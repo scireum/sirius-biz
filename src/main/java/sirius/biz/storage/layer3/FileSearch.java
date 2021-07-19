@@ -13,6 +13,7 @@ import sirius.kernel.commons.Strings;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -32,7 +33,7 @@ public class FileSearch {
     private String prefixFilter;
     private Set<String> fileExtensionFilters;
     private Limit limit = Limit.UNLIMITED;
-    private Predicate<VirtualFile> resultProcessor;
+    private final Predicate<VirtualFile> resultProcessor;
 
     protected FileSearch(Predicate<VirtualFile> resultProcessor) {
         this.resultProcessor = resultProcessor;
@@ -158,11 +159,7 @@ public class FileSearch {
      * @return the search itself for fluent method calls
      */
     public FileSearch withLimit(Limit limit) {
-        if (limit == null) {
-            this.limit = Limit.UNLIMITED;
-        } else {
-            this.limit = limit;
-        }
+        this.limit = Objects.requireNonNullElse(limit, Limit.UNLIMITED);
 
         return this;
     }

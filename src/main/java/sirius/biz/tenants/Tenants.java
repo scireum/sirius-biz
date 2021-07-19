@@ -492,7 +492,9 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
      * Like {@link UserInfo#NOBODY} this is an artificial user which belongs to the given tenant. Note that
      * this user has no proper user id but rather only supplies a tenant id and name.
      *
-     * @param task the task to execute
+     * @param tenantId   the id of the tenant to execute the task for
+     * @param tenantName the name of the tenant to execute the task for
+     * @param task       the task to execute
      * @throws Exception any exception which is thrown within the task will be propagated to the outside
      * @see #runAsAdmin(UnitOfWork)
      * @see #asAdminOfTenant(String, String, Producer)
@@ -507,7 +509,9 @@ public abstract class Tenants<I extends Serializable, T extends BaseEntity<I> & 
     /**
      * Executes the given code as (Tenant-)"Administrator" and permits to return a value.
      *
-     * @param task the task to execute
+     * @param tenantId   the id of the tenant to execute the task for
+     * @param tenantName the name of the tenant to execute the task for
+     * @param task       the task to execute
      * @return the value as returned by the given task
      * @throws Exception any exception which is thrown within the task will be propagated to the outside
      * @see #runAsAdminOfTenant(String, String, UnitOfWork)

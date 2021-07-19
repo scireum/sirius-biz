@@ -28,7 +28,7 @@ public class AmountRangeCheck implements ValueCheck {
     private boolean includeMin;
     private Amount max = Amount.NOTHING;
     private boolean includeMax;
-    private NumberFormat numberFormat;
+    private final NumberFormat numberFormat;
 
     /**
      * Creates a new check.

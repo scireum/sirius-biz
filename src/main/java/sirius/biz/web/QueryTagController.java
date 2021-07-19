@@ -19,6 +19,7 @@ import sirius.web.controller.BasicController;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.LoginRequired;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.util.Collection;
@@ -46,7 +47,8 @@ public class QueryTagController extends BasicController {
      */
     @LoginRequired
     @SuppressWarnings("unchecked")
-    @Routed(value = "/system/search/suggestions/:1", jsonCall = true)
+    @Routed("/system/search/suggestions/:1")
+    @InternalService
     public void suggestions(WebContext ctx, JSONStructuredOutput out, String type) {
         String query = ctx.get("query").asString();
         out.beginArray("suggestions");
