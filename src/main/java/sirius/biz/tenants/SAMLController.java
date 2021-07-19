@@ -107,7 +107,7 @@ public class SAMLController<I extends Serializable, T extends BaseEntity<I> & Te
         manager.onExternalLogin(ctx, user);
 
         // Re-resolve and install the newly created or updated user in the session.
-        // This also flushes all cached again, as we updated some internal data within
+        // This also flushes all caches again, as we updated some internal data within
         // "onExternalLogin" above...
         UserContext userContext = UserContext.get();
         userContext.setCurrentUser(manager.findUserByName(ctx, response.getNameId()));
