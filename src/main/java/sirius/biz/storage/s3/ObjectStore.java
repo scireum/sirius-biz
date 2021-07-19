@@ -307,7 +307,7 @@ public class ObjectStore {
         TaskContext taskContext = CallContext.getCurrent().get(TaskContext.class);
 
         do {
-            try (Operation op = new Operation(() -> Strings.apply("Fetching S3 objects from %s (prefix: %s)",
+            try (Operation operation = new Operation(() -> Strings.apply("S3: Fetching objects from %s (prefix: %s)",
                                                                   bucket.getName(),
                                                                   prefix), Duration.ofSeconds(10))) {
                 if (objectListing != null) {
@@ -332,7 +332,8 @@ public class ObjectStore {
      * @param objectId the object to delete
      */
     public void deleteObject(BucketName bucket, String objectId) {
-        try {
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting object % from %s", objectId, bucket),
+                                          Duration.ofMinutes(1))) {
             getClient().deleteObject(bucket.getName(), objectId);
         } catch (Exception e) {
             throw Exceptions.handle()
@@ -353,7 +354,8 @@ public class ObjectStore {
      * @param bucket the bucket to delete
      */
     public void deleteBucket(BucketName bucket) {
-        try {
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Deleting bucket %s", bucket),
+                                          Duration.ofMinutes(1))) {
             getClient().deleteBucket(bucket.getName());
             stores.bucketCache.remove(Tuple.create(name, bucket.getName()));
         } catch (Exception e) {
@@ -418,7 +420,8 @@ public class ObjectStore {
      */
     public File download(BucketName bucket, String objectId) throws FileNotFoundException {
         File dest = null;
-        try {
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Downloading object % from %s", objectId, bucket),
+                                          Duration.ofHours(4))) {
             dest = File.createTempFile("AMZS3", null);
             ensureBucketExists(bucket);
             transferManager.download(new GetObjectRequest(bucket.getName(), objectId),
@@ -548,7 +551,8 @@ public class ObjectStore {
      * @param metadata the metadata for the object
      */
     public void upload(BucketName bucket, String objectId, File data, @Nullable ObjectMetadata metadata) {
-        try {
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Uploading object % to %s", objectId, bucket),
+                                          Duration.ofHours(4))) {
             uploadAsync(bucket, objectId, data, metadata).waitForUploadResult();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -638,22 +642,23 @@ public class ObjectStore {
                        InputStream inputStream,
                        long contentLength,
                        @Nullable ObjectMetadata metadata) {
-        try {
-            if (contentLength == 0 || contentLength >= MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE) {
-                upload(bucket, objectId, inputStream);
-            } else {
+        if (contentLength == 0 || contentLength >= MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE) {
+            upload(bucket, objectId, inputStream);
+        } else {
+            try (Operation operation = new Operation(() -> Strings.apply("S3: Uploading object % to %s", objectId, bucket),
+                                              Duration.ofMinutes(30))) {
                 uploadAsync(bucket, objectId, inputStream, contentLength, metadata).waitForUploadResult();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw Exceptions.handle()
+                                .to(ObjectStores.LOG)
+                                .error(e)
+                                .withSystemErrorMessage(
+                                        "Got interrupted while waiting for an upload to complete: %s/%s - %s (%s)",
+                                        bucket,
+                                        objectId)
+                                .handle();
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw Exceptions.handle()
-                            .to(ObjectStores.LOG)
-                            .error(e)
-                            .withSystemErrorMessage(
-                                    "Got interrupted while waiting for an upload to complete: %s/%s - %s (%s)",
-                                    bucket,
-                                    objectId)
-                            .handle();
         }
     }
 
@@ -672,13 +677,22 @@ public class ObjectStore {
         ensureBucketExists(bucket);
         InitiateMultipartUploadResult multipartUpload =
                 getClient().initiateMultipartUpload(new InitiateMultipartUploadRequest(bucket.getName(), objectId));
-        try {
-            List<PartETag> etags = uploadInChunks(bucket, objectId, inputStream, multipartUpload.getUploadId());
+        try (Operation operation = new Operation(() -> Strings.apply("S3: Multipart upload of object % to %s",
+                                                              objectId,
+                                                              bucket), Duration.ofHours(4))) {
+            List<PartETag> eTags = uploadInChunks(bucket, objectId, inputStream, multipartUpload.getUploadId());
+
+            if (ObjectStores.LOG.isFINE()) {
+                ObjectStores.LOG.FINE("Completing upload of %s to %s using %s parts...",
+                                      objectId,
+                                      bucket,
+                                      eTags.size());
+            }
 
             getClient().completeMultipartUpload(new CompleteMultipartUploadRequest(bucket.getName(),
                                                                                    objectId,
                                                                                    multipartUpload.getUploadId(),
-                                                                                   etags));
+                                                                                   eTags));
         } catch (Exception e) {
             getClient().abortMultipartUpload(new AbortMultipartUploadRequest(bucket.getName(),
                                                                              objectId,
@@ -698,7 +712,11 @@ public class ObjectStore {
                                             String objectId,
                                             InputStream inputStream,
                                             String multipartUploadId) throws IOException {
-        List<PartETag> etags = new ArrayList<>();
+        if (ObjectStores.LOG.isFINE()) {
+            ObjectStores.LOG.FINE("Uploading %s to %s", objectId, bucket);
+        }
+
+        List<PartETag> eTags = new ArrayList<>();
         int partNumber = 1;
 
         ByteBuf localAggregationBuffer = Unpooled.buffer(INITIAL_LOCAL_AGGREGATION_BUFFER_SIZE);
@@ -708,7 +726,7 @@ public class ObjectStore {
             while (bytesRead > 0) {
                 localAggregationBuffer.writeBytes(transferBuffer, 0, bytesRead);
                 if (localAggregationBuffer.readableBytes() > MAXIMAL_LOCAL_AGGREGATION_BUFFER_SIZE) {
-                    etags.add(uploadChunk(bucket, objectId, multipartUploadId, localAggregationBuffer, partNumber++));
+                    eTags.add(uploadChunk(bucket, objectId, multipartUploadId, localAggregationBuffer, partNumber++));
                     localAggregationBuffer.clear();
                 }
 
@@ -716,27 +734,34 @@ public class ObjectStore {
             }
 
             if (localAggregationBuffer.isReadable()) {
-                etags.add(uploadChunk(bucket, objectId, multipartUploadId, localAggregationBuffer, partNumber++));
+                eTags.add(uploadChunk(bucket, objectId, multipartUploadId, localAggregationBuffer, partNumber++));
             }
         } finally {
             localAggregationBuffer.release();
         }
 
-        return etags;
+        return eTags;
     }
 
     protected PartETag uploadChunk(BucketName bucket,
                                    String objectId,
                                    String multipartUploadId,
-                                   ByteBuf localAggregationBuffer,
+                                   ByteBuf buffer,
                                    int partNumber) {
+        if (ObjectStores.LOG.isFINE()) {
+            ObjectStores.LOG.FINE("Uploading %s bytes (part %s) for %s to %s",
+                                  buffer.readableBytes(),
+                                  partNumber,
+                                  objectId,
+                                  bucket);
+        }
+
         UploadPartRequest request = new UploadPartRequest().withBucketName(bucket.getName())
                                                            .withKey(objectId)
                                                            .withUploadId(multipartUploadId)
                                                            .withPartNumber(partNumber)
-                                                           .withPartSize(localAggregationBuffer.readableBytes())
-                                                           .withInputStream(new ByteBufInputStream(
-                                                                   localAggregationBuffer));
+                                                           .withPartSize(buffer.readableBytes())
+                                                           .withInputStream(new ByteBufInputStream(buffer));
         return getClient().uploadPart(request).getPartETag();
     }
 }

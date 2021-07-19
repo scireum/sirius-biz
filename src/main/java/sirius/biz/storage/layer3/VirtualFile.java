@@ -405,6 +405,12 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
      * @throws HandledException if the file cannot be renamed
      */
     public void rename(String newName) {
+        if (utils.containsIllegalFileChars(newName)) {
+            throw Exceptions.createHandled()
+                            .withNLSKey("VirtualFile.cannotRename.invalidName")
+                            .set("file", path())
+                            .handle();
+        }
         if (!tryRename(newName)) {
             throw Exceptions.createHandled().withNLSKey("VirtualFile.cannotRename").set("file", path()).handle();
         }

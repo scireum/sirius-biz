@@ -107,7 +107,9 @@ public class SQLVariant extends SQLEntity implements BlobVariant {
     @AfterDelete
     protected void onDelete() {
         if (Strings.isFilled(physicalObjectKey)) {
-            sourceBlob.fetchValue().getStorageSpace().getPhysicalSpace().delete(physicalObjectKey);
+            SQLBlob sqlBlob = sourceBlob.fetchValue();
+            sqlBlob.getStorageSpace().getPhysicalSpace().delete(physicalObjectKey);
+            sqlBlob.getStorageSpace().purgeVariantFromCache(sqlBlob, variantName);
         }
     }
 

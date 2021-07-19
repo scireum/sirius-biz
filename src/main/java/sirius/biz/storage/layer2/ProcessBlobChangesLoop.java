@@ -86,7 +86,7 @@ public abstract class ProcessBlobChangesLoop extends BackgroundLoop {
         }
     }
 
-    protected void invokeChangedOrDeletedHandlers(Blob blob) {
+    protected void invokeCreatedOrRenamedHandlers(Blob blob) {
         createdOrRenamedHandlers.forEach(handler -> {
             try {
                 handler.execute(blob);
