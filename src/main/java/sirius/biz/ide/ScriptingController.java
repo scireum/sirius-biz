@@ -25,6 +25,7 @@ import sirius.web.health.Cluster;
 import sirius.web.health.NodeInfo;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.time.Instant;
@@ -84,7 +85,8 @@ public class ScriptingController extends BizController {
      * @param webContext the request to handle
      * @param output     the output to write to
      */
-    @Routed(value = "/system/scripting/api/transcript", jsonCall = true)
+    @Routed("/system/scripting/api/transcript")
+    @InternalService
     @Permission(PERMISSION_SCRIPTING)
     public void transcript(WebContext webContext, JSONStructuredOutput output) {
         long minTimestamp = webContext.get(PARAM_MIN_TIMESTAMP).asLong(0);
@@ -110,7 +112,8 @@ public class ScriptingController extends BizController {
      * @param output     the output to write to
      * @throws Exception in case of a compilation error
      */
-    @Routed(value = "/system/scripting/api/submit", jsonCall = true)
+    @Routed("/system/scripting/api/submit")
+    @InternalService
     @Permission(PERMISSION_SCRIPTING)
     public void submit(WebContext webContext, JSONStructuredOutput output) throws Exception {
         try {
@@ -123,7 +126,8 @@ public class ScriptingController extends BizController {
             compilationContext.processCollectedErrors();
 
             String jobNumber = scripting.submitScript(script, targetNode);
-            output.property(RESPONSE_JOB_MESSAGE, NLS.fmtr("ScriptingController.jobMessage").set(RESPONSE_JOB, jobNumber).format());
+            output.property(RESPONSE_JOB_MESSAGE,
+                            NLS.fmtr("ScriptingController.jobMessage").set(RESPONSE_JOB, jobNumber).format());
         } catch (CompileException e) {
             throw Exceptions.createHandled().withDirectMessage(e.getMessage()).handle();
         }
@@ -135,7 +139,8 @@ public class ScriptingController extends BizController {
      * @param webContext the request to handle
      * @param output     the output to write to
      */
-    @Routed(value = "/system/scripting/api/compile", jsonCall = true)
+    @Routed("/system/scripting/api/compile")
+    @InternalService
     @Permission(PERMISSION_SCRIPTING)
     public void compile(WebContext webContext, JSONStructuredOutput output) {
         String script = webContext.get(PARAM_SCRIPT).asString();

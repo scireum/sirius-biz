@@ -65,12 +65,11 @@ class BridgeUserManager implements UserManager {
         if (StorageUtils.LOG.isFINE()) {
             StorageUtils.LOG.FINE("Layer 3/FTP: Incoming auth-request: " + authentication);
         }
-        if (!(authentication instanceof UsernamePasswordAuthentication)) {
+        if (!(authentication instanceof UsernamePasswordAuthentication auth)) {
             StorageUtils.LOG.FINE("Layer 3/FTP: Not a UsernamePasswordAuthentication...aborting");
             throw new AuthenticationFailedException("Please use username/password to authenticate.");
         }
 
-        UsernamePasswordAuthentication auth = (UsernamePasswordAuthentication) authentication;
         StorageUtils.LOG.FINE("Layer 3/FTP: Trying to authenticate user: " + auth.getUsername());
 
         String username = auth.getUsername();

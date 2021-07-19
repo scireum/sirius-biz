@@ -66,7 +66,7 @@ public class FTPUplink extends ConfigBasedUplink {
 
     private final FTPUplinkConnectorConfig ftpConfig;
     private ValueHolder<Boolean> supportsMLSD;
-    private RemotePath basePath;
+    private final RemotePath basePath;
 
     @Part
     private static UplinkConnectorPool connectorPool;

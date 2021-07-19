@@ -28,9 +28,9 @@ public class Report {
 
     private static final int MAX_ROWS = 1000;
 
-    private List<String> labels = new ArrayList<>();
-    private List<String> columns = new ArrayList<>();
-    private List<Map<String, Cell>> rows = new ArrayList<>();
+    private final List<String> labels = new ArrayList<>();
+    private final List<String> columns = new ArrayList<>();
+    private final List<Map<String, Cell>> rows = new ArrayList<>();
 
     /**
      * Adds a column to the report.

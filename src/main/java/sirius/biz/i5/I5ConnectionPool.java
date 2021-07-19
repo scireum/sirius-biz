@@ -29,10 +29,10 @@ import java.util.function.Consumer;
  */
 class I5ConnectionPool implements PooledObjectFactory<I5Connection> {
 
-    private String name;
-    private String host;
-    private String username;
-    private String password;
+    private final String name;
+    private final String host;
+    private final String username;
+    private final String password;
     protected I5Connector i5Connector;
     private final Consumer<I5Connection> initializer;
 
@@ -74,7 +74,7 @@ class I5ConnectionPool implements PooledObjectFactory<I5Connection> {
             result.i5 = new AS400(host, username, password);
             result.initialize();
             w.submitMicroTiming("UPOS", "I5ConnectionPool.makeObject");
-            openConnections.add(new WeakReference<I5Connection>(result));
+            openConnections.add(new WeakReference<>(result));
             return new DefaultPooledObject<>(result);
         } catch (Exception e) {
             throw Exceptions.handle()

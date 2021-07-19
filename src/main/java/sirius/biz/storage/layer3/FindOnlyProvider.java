@@ -18,7 +18,7 @@ import java.util.function.BiFunction;
  */
 public class FindOnlyProvider implements ChildProvider {
 
-    private BiFunction<VirtualFile, String, VirtualFile> resolver;
+    private final BiFunction<VirtualFile, String, VirtualFile> resolver;
 
     /**
      * Creates a new provider which delegates the find call to the given resolver.

@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Transformer {
 
-    private Map<Field, Transform> transforms = new LinkedHashMap<>();
+    private final Map<Field, Transform> transforms = new LinkedHashMap<>();
 
     Transformer(Class<?> target) {
         List<Field> result = new ArrayList<>();

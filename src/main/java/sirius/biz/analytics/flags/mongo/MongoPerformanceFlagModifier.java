@@ -25,9 +25,9 @@ import java.util.Set;
  */
 public class MongoPerformanceFlagModifier implements PerformanceFlagModifier {
 
-    private MongoPerformanceData target;
-    private Set<String> flagsToAdd = new HashSet<>();
-    private Set<String> flagsToRemove = new HashSet<>();
+    private final MongoPerformanceData target;
+    private final Set<String> flagsToAdd = new HashSet<>();
+    private final Set<String> flagsToRemove = new HashSet<>();
 
     @Part
     private static Mongo mongo;

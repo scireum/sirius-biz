@@ -35,8 +35,8 @@ public class ChartOutput {
     private static final String TYPE_POLAR_AREA = "polarArea";
     private static final String TYPE_DOUGNUT = "dougnut";
 
-    private String name;
-    private ProcessContext process;
+    private final String name;
+    private final ProcessContext process;
 
     /**
      * Creates a new chart output for the given output name and process.

@@ -24,8 +24,8 @@ import java.sql.SQLException;
  */
 public class SQLPerformanceFlagModifier implements PerformanceFlagModifier {
 
-    private SQLPerformanceData target;
-    private long originalFlags;
+    private final SQLPerformanceData target;
+    private final long originalFlags;
 
     @Part
     private static OMA oma;

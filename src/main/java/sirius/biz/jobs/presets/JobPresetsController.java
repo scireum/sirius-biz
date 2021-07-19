@@ -15,11 +15,9 @@ import sirius.biz.web.TenantAware;
 import sirius.db.mixing.BaseEntity;
 import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -34,12 +32,8 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
     private static final String PARAM_PRESET_NAME = "presetName";
     private static final String PARAM_CUSTOM_PERSISTENCE_PERIOD = "customPersistencePeriod";
 
-    private static final Set<String> IGNORED_PARAMETERS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-            PARAM_JOB_FACTORY,
-            PARAM_PRESET_NAME,
-            PARAM_CUSTOM_PERSISTENCE_PERIOD,
-            "CSRFToken",
-            "updateOnly")));
+    private static final Set<String> IGNORED_PARAMETERS =
+            Set.of(PARAM_JOB_FACTORY, PARAM_PRESET_NAME, PARAM_CUSTOM_PERSISTENCE_PERIOD, "CSRFToken", "updateOnly");
 
     private static final String RESPONSE_PARAMS = "params";
     private static final String RESPONSE_PARAM = "param";
@@ -63,7 +57,8 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
      * @throws Exception in case of an error when populating the entity
      */
     @SuppressWarnings("unchecked")
-    @Routed(value = "/jobs/preset/create", jsonCall = true)
+    @Routed("/jobs/preset/create")
+    @InternalService
     public void create(WebContext ctx, JSONStructuredOutput out) throws Exception {
         P preset = (P) mixing.getDescriptor(getPresetType())
                              .getMapper()
@@ -103,7 +98,8 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
      * @param ctx the request to handle
      * @param out the JSON response to populate
      */
-    @Routed(value = "/jobs/preset/load", jsonCall = true)
+    @Routed("/jobs/preset/load")
+    @InternalService
     public void load(WebContext ctx, JSONStructuredOutput out) {
         out.beginArray(RESPONSE_PARAMS);
         P preset = mixing.getDescriptor(getPresetType())
@@ -128,7 +124,8 @@ public abstract class JobPresetsController<P extends BaseEntity<?> & JobPreset> 
      * @param ctx the request to handle
      * @param out the JSON response to populate (in this case no actual output is expected)
      */
-    @Routed(value = "/jobs/preset/delete", jsonCall = true)
+    @Routed("/jobs/preset/delete")
+    @InternalService
     public void delete(WebContext ctx, JSONStructuredOutput out) {
         if (ctx.isSafePOST()) {
             P preset = mixing.getDescriptor(getPresetType())

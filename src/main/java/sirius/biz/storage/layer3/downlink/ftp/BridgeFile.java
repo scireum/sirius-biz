@@ -151,8 +151,7 @@ class BridgeFile implements FtpFile {
 
     @Override
     public boolean move(FtpFile destination) {
-        if (destination instanceof BridgeFile) {
-            BridgeFile other = (BridgeFile) destination;
+        if (destination instanceof BridgeFile other) {
             // Detect and optimize renames...
             if (Objects.equals(file.parent(), other.parent)) {
                 file.rename(other.childName);

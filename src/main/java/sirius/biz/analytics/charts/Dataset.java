@@ -29,8 +29,8 @@ public class Dataset {
     public static final String AXIS_RIGHT = "right";
 
     private String axis;
-    private String label;
-    private List<Number> values = new ArrayList<>();
+    private final String label;
+    private final List<Number> values = new ArrayList<>();
 
     /**
      * Creates a new dataset with the given label.

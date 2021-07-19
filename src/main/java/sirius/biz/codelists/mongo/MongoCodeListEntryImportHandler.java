@@ -8,7 +8,6 @@
 
 package sirius.biz.codelists.mongo;
 
-import sirius.biz.codelists.CodeListEntry;
 import sirius.biz.codelists.CodeListEntryData;
 import sirius.biz.importer.ImportHandler;
 import sirius.biz.importer.ImportHandlerFactory;
@@ -21,7 +20,6 @@ import sirius.kernel.di.std.Register;
 
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 /**
  * Provides an import handler for {@link MongoCodeListEntry code list entries}.

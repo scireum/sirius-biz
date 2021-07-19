@@ -30,7 +30,7 @@ public class JobInfoCollector {
     @Part
     private static Cells cells;
 
-    private List<JobInfo> infos = new ArrayList<>();
+    private final List<JobInfo> infos = new ArrayList<>();
 
     /**
      * Adds a custom info.

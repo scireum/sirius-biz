@@ -240,48 +240,37 @@ public class MetricQuery {
     }
 
     private LocalDate increment(LocalDate date, Interval interval) {
-        switch (interval) {
-            case DAILY:
-                return date.plusDays(1);
-            case MONTHLY:
-                return date.plusMonths(1);
-            case YEARLY:
-                return date.plusYears(1);
-            default:
-                // In case of a fact, there is no point in changing the date. However, to be 100% sure that
-                // any loop etc will terminate we output the extreme here...
-                return LocalDate.MAX;
-        }
+        return switch (interval) {
+            case DAILY -> date.plusDays(1);
+            case MONTHLY -> date.plusMonths(1);
+            case YEARLY -> date.plusYears(1);
+            default ->
+                    // In case of a fact, there is no point in changing the date. However, to be 100% sure that
+                    // any loop etc will terminate we output the extreme here...
+                    LocalDate.MAX;
+        };
     }
 
     private LocalDate decrement(LocalDate date, Interval interval) {
-        switch (interval) {
-            case DAILY:
-                return date.minusDays(1);
-            case MONTHLY:
-                return date.minusMonths(1);
-            case YEARLY:
-                return date.minusYears(1);
-            default:
-                // In case of a fact, there is no point in changing the date. However, to be 100% sure that
-                // any loop etc will terminate we output the extreme here...
-                return LocalDate.MIN;
-        }
+        return switch (interval) {
+            case DAILY -> date.minusDays(1);
+            case MONTHLY -> date.minusMonths(1);
+            case YEARLY -> date.minusYears(1);
+            default ->
+                    // In case of a fact, there is no point in changing the date. However, to be 100% sure that
+                    // any loop etc will terminate we output the extreme here...
+                    LocalDate.MIN;
+        };
     }
 
     private int determineLimit(Interval interval) {
-        switch (interval) {
-            case DAILY:
-                return MAX_DAILY_METRICS;
-            case MONTHLY:
-                return MAX_MONTHLY_METRICS;
-            case YEARLY:
-                return MAX_YEARLY_METRICS;
-            case FACT:
-                return 1;
-            default:
-                throw new IllegalStateException("No interval is specified!");
-        }
+        return switch (interval) {
+            case DAILY -> MAX_DAILY_METRICS;
+            case MONTHLY -> MAX_MONTHLY_METRICS;
+            case YEARLY -> MAX_YEARLY_METRICS;
+            case FACT -> 1;
+            default -> throw new IllegalStateException("No interval is specified!");
+        };
     }
 
     /**

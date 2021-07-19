@@ -23,6 +23,7 @@ import sirius.web.controller.Routed;
 import sirius.web.health.console.CommandParser;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
 import java.util.List;
@@ -55,7 +56,8 @@ public class RedisController extends BizController {
      * @param out the JSON response
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
-    @Routed(value = "/system/redis/api/execute", jsonCall = true)
+    @Routed( "/system/redis/api/execute")
+    @InternalService
     public void executeQuery(WebContext webContext, JSONStructuredOutput out) {
         Watch watch = Watch.start();
 
@@ -82,8 +84,7 @@ public class RedisController extends BizController {
     }
 
     private void renderResult(Object result, String offset, StringBuilder resultBuilder) {
-        if (result instanceof List) {
-            List<?> results = (List<?>) result;
+        if (result instanceof List<?> results) {
             for (int i = 0; i < results.size(); i++) {
                 if (i > 0) {
                     resultBuilder.append(offset);

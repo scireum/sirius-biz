@@ -15,7 +15,7 @@ import sirius.biz.analytics.reports.Report;
  */
 public class ReportInfo implements JobInfo {
 
-    private Report report = new Report();
+    private final Report report = new Report();
 
     /**
      * Provides access to the report.

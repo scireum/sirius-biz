@@ -25,6 +25,7 @@ import sirius.kernel.health.Exceptions;
 import sirius.kernel.nls.NLS;
 
 import javax.annotation.Nonnull;
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -168,20 +169,12 @@ public class DelegateJournalData extends Composite {
 
     @AfterSave
     protected void onSave() {
-        if (changeMessageSupplier != null) {
-            createJournalEntry(changeMessageSupplier);
-        } else {
-            createJournalEntry(this::buildChangeJournal);
-        }
+        createJournalEntry(Objects.requireNonNullElseGet(changeMessageSupplier, () -> this::buildChangeJournal));
     }
 
     @AfterDelete
     protected void onDelete() {
-        if (deleteMessageSupplier != null) {
-            createJournalEntry(deleteMessageSupplier);
-        } else {
-            createJournalEntry(this::buildDeleteJournal);
-        }
+        createJournalEntry(Objects.requireNonNullElseGet(deleteMessageSupplier, () -> this::buildDeleteJournal));
     }
 
     private void createJournalEntry(Supplier<String> messageSupplier) {
@@ -207,7 +200,7 @@ public class DelegateJournalData extends Composite {
         return owner.getDescriptor()
                     .getProperties()
                     .stream()
-                    .filter(property -> !property.getAnnotation(NoJournal.class).isPresent());
+                    .filter(property -> property.getAnnotation(NoJournal.class).isEmpty());
     }
 
     private String buildChangeJournal() {

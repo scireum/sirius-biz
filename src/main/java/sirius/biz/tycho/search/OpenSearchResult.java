@@ -22,7 +22,7 @@ public class OpenSearchResult {
     private String label;
     private String description;
     private String url;
-    private List<QuickAction> actions = new ArrayList<>();
+    private final List<QuickAction> actions = new ArrayList<>();
 
     /**
      * Specifies the label which will be the clickable main action.

@@ -173,7 +173,7 @@ public interface ProcessContext extends TaskContextAdapter {
      * @param state the new state message to show
      * @deprecated Use either {@link #tryUpdateState(String)} or {@link #forceUpdateState(String)}.
      */
-    @Deprecated
+    @Deprecated(since = "2021/07/01")
     void setCurrentStateMessage(String state);
 
     /**

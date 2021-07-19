@@ -52,7 +52,7 @@ public class Locks implements MetricProvider {
     /**
      * Contains a map of locally held locks (name to thread id).
      */
-    private Map<String, Tuple<Long, AtomicInteger>> localLocks = new ConcurrentHashMap<>();
+    private final Map<String, Tuple<Long, AtomicInteger>> localLocks = new ConcurrentHashMap<>();
 
     /**
      * Tries to acquire the given lock in the given timeslot.
