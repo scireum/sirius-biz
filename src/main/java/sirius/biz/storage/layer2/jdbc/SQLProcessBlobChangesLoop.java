@@ -54,7 +54,7 @@ public class SQLProcessBlobChangesLoop extends ProcessBlobChangesLoop {
     @Override
     protected void processCreatedOrRenamedBlobs(Runnable counter) {
         oma.select(SQLBlob.class).eq(SQLBlob.CREATED_OR_RENAMED, true).limit(CURSOR_LIMIT).iterateAll(blob -> {
-            invokeChangedOrDeletedHandlers(blob);
+            invokeCreatedOrRenamedHandlers(blob);
             try {
                 oma.updateStatement(SQLBlob.class)
                    .set(SQLBlob.CREATED_OR_RENAMED, false)
