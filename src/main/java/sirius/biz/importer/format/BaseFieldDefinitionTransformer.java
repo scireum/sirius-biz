@@ -8,7 +8,9 @@
 
 package sirius.biz.importer.format;
 
+import sirius.biz.importer.AutoImport;
 import sirius.db.mixing.Property;
+import sirius.kernel.commons.Strings;
 import sirius.kernel.di.transformers.Transformer;
 
 import javax.annotation.Nonnull;
@@ -34,14 +36,28 @@ public abstract class BaseFieldDefinitionTransformer<S extends Property>
             FieldDefinition field = new FieldDefinition(property.getName(), determineType(property));
             field.addAlias(property.getName());
             field.withLabel(property::getLabel);
-            if (!property.isNullable()) {
-                field.withCheck(new RequiredCheck());
-            }
 
+            markRequiredIfNecessary(property, field);
             customizeField(property, field);
 
             return field;
         };
+    }
+
+    protected void markRequiredIfNecessary(S property, FieldDefinition field) {
+        property.getAnnotation(AutoImport.class).ifPresent(autoImport -> {
+            if (autoImport.value() == AutoImport.RequiredStatus.REQUIRED) {
+                field.markRequired();
+            } else if (autoImport.value() == AutoImport.RequiredStatus.OPTIONAL) {
+                // optional is default, so no action required
+            } else {
+                // try to auto-detect
+                Object referenceInstance = property.getDescriptor().getReferenceInstance();
+                if (!property.isNullable() && Strings.isEmpty(property.getValue(referenceInstance))) {
+                    field.markRequired();
+                }
+            }
+        });
     }
 
     /**
