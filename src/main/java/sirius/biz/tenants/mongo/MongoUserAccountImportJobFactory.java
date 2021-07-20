@@ -16,6 +16,7 @@ import sirius.kernel.di.std.Register;
 import sirius.web.http.QueryString;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 
 /**
  * Provides an import job for {@link MongoUserAccount user accounts} stored in MongoDB.
@@ -33,8 +34,10 @@ public class MongoUserAccountImportJobFactory extends EntityImportJobFactory {
     }
 
     @Override
-    protected void checkPermissions() {
-        UserAccountController.assertProperUserManagementPermission();
+    public List<String> getRequiredPermissions() {
+        List<String> requiredPermissions = super.getRequiredPermissions();
+        requiredPermissions.add(UserAccountController.getUserManagementPermission());
+        return requiredPermissions;
     }
 
     @Override
