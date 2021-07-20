@@ -28,4 +28,11 @@ public @interface AutoImport {
      * @return the list of permissions required to be able to import the annotated field
      */
     String[] permissions() default {};
+
+    /**
+     * Hides the field in the job documentation
+     *
+     * @return whether the field is hidden in the job documentation
+     */
+    boolean hidden() default false;
 }
