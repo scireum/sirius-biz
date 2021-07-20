@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -335,8 +336,9 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         return descriptor.getProperties()
                          .stream()
                          .filter(property -> property.getAnnotation(AutoImport.class)
-                                                     .map(annotation -> currentUser.hasPermissions(annotation.permissions())
-                                                                        && !annotation.hidden())
+                                                     .filter(Predicate.not(AutoImport::hidden))
+                                                     .map(AutoImport::permissions)
+                                                     .map(currentUser::hasPermissions)
                                                      .orElse(false))
                          .map(Property::getName)
                          .map(Mapping::named)
