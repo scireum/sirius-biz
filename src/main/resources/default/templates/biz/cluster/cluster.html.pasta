@@ -1,137 +1,264 @@
 <i:arg type="List" name="keys"/>
 <i:arg type="Map" name="descriptions"/>
 <i:arg type="List" name="nodes"/>
+<i:arg type="boolean" name="groupByNodes"/>
 <i:arg type="sirius.biz.locks.Locks" name="locks"/>
 
-<w:page title="Cluster State">
+<t:page title="Cluster State">
     <i:block name="breadcrumbs">
         <li><a href="/system/cluster">Cluster State</a></li>
     </i:block>
 
-    <w:pageHeader title="Cluster State"/>
+    <i:block name="page-header">
+        <t:pageHeader title="Cluster State">
 
-    <w:heading>Nodes</w:heading>
-    <table class="table table-striped">
-        <tr>
-            <th>Node</th>
-            <th>Uptime</th>
-            <th>Version</th>
-            <th>Bleeding</th>
-            <th/>
-        </tr>
-        <i:for type="sirius.biz.cluster.BackgroundInfo" var="node" items="nodes">
-            <tr>
-                <td>
-                    <b>@node.getNodeName()</b>
+            <t:inlineInfo label="Number of Nodes">@nodes.size()</t:inlineInfo>
+            <t:inlineInfo label="Number of Jobs">@keys.size()</t:inlineInfo>
 
-                </td>
-                <td>
-                    @node.getUptime()
-                </td>
-                <td>
-                    <span class="cycle" data-cycle="@node.getDetailedVersion()">@node.getVersion()</span>
-                </td>
-                <td>
-                    <i:if test="node.isBleeding()">
-                        <span class="label label-warning">Yes</span>
-                        <small><a href="/system/cluster/bleed/disable/@node.getNodeName()" class="link">Stop</a></small>
-                        <i:else>
-                            <span class="label label-info">No</span>
-                            <small><a href="/system/cluster/bleed/enable/@node.getNodeName()" class="link">Start</a>
-                            </small>
-                        </i:else>
-                    </i:if>
-                </td>
-                <td>
-                    <small>
-                        <a href="/system/cluster/kill/@node.getNodeName()" class="link link-danger"
-                           title="Remove as Cluster Member">
-                            Kill
+            <i:block name="actions">
+                <i:if test="groupByNodes">
+                    <a href="/system/cluster" class="btn btn-link">
+                        <i class="fa fa-solid fa-cogs"></i> <span class="d-none d-lg-inline-block">Group By Jobs</span>
+                    </a>
+                    <i:else>
+                        <a href="/system/cluster?groupByNode=true" class="btn btn-link">
+                            <i class="fa fa-server"></i> <span class="d-none d-lg-inline-block">Group By Nodes</span>
                         </a>
-                    </small>
-                </td>
-            </tr>
-        </i:for>
-    </table>
+                    </i:else>
+                </i:if>
+            </i:block>
+        </t:pageHeader>
+    </i:block>
 
-    <w:heading>Background Jobs</w:heading>
-    <i:for type="String" var="job" items="keys">
-        <w:subHeading>
-            @job
-            <small class="muted">(@descriptions.get(job))</small>
-        </w:subHeading>
-        <table class="table table-striped">
-            <tr>
-                <th class="col-md-2">Node</th>
-                <th class="col-md-2">Globally Enabled</th>
-                <th class="col-md-2">Synchronizer</th>
-                <th class="col-md-2">Locally Enabled</th>
-                <th class="col-md-4">Execution Info</th>
-            </tr>
+    <i:if test="groupByNodes">
+        <t:heading>Nodes</t:heading>
+        <t:datacards size="large">
             <i:for type="sirius.biz.cluster.BackgroundInfo" var="node" items="nodes">
-                <tr>
-                    <td>
-                        <b>@node.getNodeName()</b>
-                    </td>
-                    <i:local name="jobInfo"
-                             value="@node.getJobs().get(job)"/>
-                    <i:if test="jobInfo != null">
-                        <td>
-                            <i:if test="jobInfo.isGloballyEnabled()">
-                                <span class="label label-success">Yes</span>
-                                <small><a href="/system/cluster/global/disable/@job" class="link">Disable</a></small>
+                <t:datacard title="@node.getNodeName()" subTitle="@apply('Uptime %s',  node.getUptime())">
+                    <i:block name="actions">
+                        <t:dropdownSection>
+                            <i:if test="node.isBleeding()">
+                                <t:dropdownItem title="Stop Bleeding"
+                                                url="@apply('/system/cluster/bleed/disable/%s', node.getNodeName())"/>
                                 <i:else>
-                                    <span class="label label-warning">No</span>
-                                    <small><a href="/system/cluster/global/enable/@job" class="link">Enable</a></small>
+                                    <t:dropdownItem title="Start Bleeding"
+                                                    url="@apply('/system/cluster/bleed/enable/%s', node.getNodeName())"/>
                                 </i:else>
                             </i:if>
-                        </td>
-                        <td><span class="label label-default">@jobInfo.getSynchronizeType()</span></td>
-                        <td>
-                            <i:if test="jobInfo.isLocalOverwrite()">
-                                <span class="label label-warning">No</span>
-                                <small>
-                                    <a href="/system/cluster/local/enable/@node.getNodeName()/@job"
-                                       class="link">Enable</a>
-                                </small>
-                                <i:else>
-                                    <span class="label label-success">Yes</span>
-                                    <small>
-                                        <a href="/system/cluster/local/disable/@node.getNodeName()/@job" class="link">Disable</a>
-                                    </small>
-                                </i:else>
-                            </i:if>
-                        </td>
-                        <td>@jobInfo.getExecutionInfo()</td>
-                        <i:else>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </i:else>
-                    </i:if>
-                </tr>
-            </i:for>
-        </table>
-    </i:for>
+                        </t:dropdownSection>
+                        <t:dropdownSection>
+                            <t:dropdownItem class="text-sirius-red" title="Remove From Cluster"
+                                            url="@apply('/system/cluster/kill/%s', node.getNodeName())"/>
+                        </t:dropdownSection>
+                    </i:block>
 
-    <i:if test="locks != null">
-        <w:heading>Locks</w:heading>
-        <w:table data="locks.getLocks()">
-            <i:for type="sirius.biz.locks.LockInfo" var="lock" items="locks.getLocks()">
-                <tr>
-                    <th><b>Name</b></th>
-                    <th>Owner</th>
-                    <th>Thread</th>
-                    <th>Acquired</th>
-                </tr>
-                <tr>
-                    <td><b>@lock.getName()</b></td>
-                    <td>@lock.getOwner()</td>
-                    <td>@lock.getThread()</td>
-                    <td>@toUserString(lock.getAcquired())</td>
-                </tr>
+                    <i:if test="node.getActiveBackgroundTasks() > 0">
+                        <t:inlineInfo label="Active Tasks" value="@toUserString(node.getActiveBackgroundTasks())"/>
+                    </i:if>
+                    <t:inlineInfo label="Version" class="mb-4">
+                        <span class="cycle cursor-pointer"
+                              data-cycle="@node.getDetailedVersion()">@node.getVersion()</span>
+                    </t:inlineInfo>
+
+
+                    <i:for type="String" var="job" items="keys">
+                        <i:local name="jobInfo"
+                                 value="@nodes.stream()
+                                  .map(| node | node.as(sirius.biz.cluster.BackgroundInfo.class).getJobs().get(job))
+                                  .filter(|job| job != null)
+                                  .findFirst().orElse(null).as(sirius.biz.cluster.BackgroundJobInfo.class)"/>
+                        <i:if test="jobInfo != null">
+                            <div class="mb-4 d-flex flex-row">
+                                <div class="mr-auto">
+                                    <div class="d-flex flex-row">
+                                        <t:dot color="@jobInfo.isLocalOverwrite() ? 'red' : 'green'"><b>@job</b>
+                                        </t:dot>
+                                        <i:switch test="@jobInfo.getSynchronizeType().toString()">
+                                            <i:block name="LOCAL">
+                                                <t:tag color="blue">@jobInfo.getSynchronizeType()</t:tag>
+                                            </i:block>
+                                            <i:block name="CLUSTER">
+                                                <t:tag color="violet">@jobInfo.getSynchronizeType()</t:tag>
+                                            </i:block>
+                                            <i:block name="DISABLED">
+                                                <t:tag color="yellow">@jobInfo.getSynchronizeType()</t:tag>
+                                            </i:block>
+                                        </i:switch>
+                                    </div>
+                                    <div class="muted small">@jobInfo.getExecutionInfo()</div>
+                                </div>
+                                <div>
+                                    <i:if test="jobInfo.isLocalOverwrite()">
+                                        <a href="/system/cluster/local/enable/@node.getNodeName()/@job"
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fa fa-check"></i><span
+                                                class="d-none d-xl-inline"> Enable</span>
+                                        </a>
+                                        <i:else>
+                                            <a href="/system/cluster/local/disable/@node.getNodeName()/@job"
+                                               class="btn btn-outline-secondary btn-sm">
+                                                <i class="fa fa-power-off"></i><span
+                                                    class="d-none d-xl-inline"> Disable</span>
+                                            </a>
+                                        </i:else>
+                                    </i:if>
+                                </div>
+                            </div>
+                        </i:if>
+                    </i:for>
+
+                    <i:block name="footer">
+                        <i:if test="node.isBleeding()">
+                            <t:dot color="red">Bleeding</t:dot>
+                            <i:else>
+                                <t:dot color="green">Norminal</t:dot>
+                            </i:else>
+                        </i:if>
+                    </i:block>
+                </t:datacard>
             </i:for>
-        </w:table>
+        </t:datacards>
     </i:if>
-</w:page>
+    <i:if test="!groupByNodes">
+        <t:heading>Nodes</t:heading>
+        <t:datacards>
+            <i:for type="sirius.biz.cluster.BackgroundInfo" var="node" items="nodes">
+                <t:datacard title="@node.getNodeName()" subTitle="@apply('Uptime %s',  node.getUptime())">
+                    <i:block name="actions">
+                        <t:dropdownSection>
+                            <i:if test="node.isBleeding()">
+                                <t:dropdownItem title="Stop Bleeding"
+                                                url="@apply('/system/cluster/bleed/disable/%s', node.getNodeName())"/>
+                                <i:else>
+                                    <t:dropdownItem title="Start Bleeding"
+                                                    url="@apply('/system/cluster/bleed/enable/%s', node.getNodeName())"/>
+                                </i:else>
+                            </i:if>
+                        </t:dropdownSection>
+                        <t:dropdownSection>
+                            <t:dropdownItem class="text-sirius-red" title="Remove From Cluster"
+                                            url="@apply('/system/cluster/kill/%s', node.getNodeName())"/>
+                        </t:dropdownSection>
+                    </i:block>
+
+                    <i:if test="node.getActiveBackgroundTasks() > 0">
+                        <t:inlineInfo label="Active Tasks" value="@toUserString(node.getActiveBackgroundTasks())"/>
+                    </i:if>
+                    <t:inlineInfo label="Version" class="mb-4">
+                        <span class="cycle cursor-pointer"
+                              data-cycle="@node.getDetailedVersion()">@node.getVersion()</span>
+                    </t:inlineInfo>
+
+                    <i:block name="footer">
+                        <i:if test="node.isBleeding()">
+                            <t:dot color="red">Bleeding</t:dot>
+                            <i:else>
+                                <t:dot color="green">Norminal</t:dot>
+                            </i:else>
+                        </i:if>
+                    </i:block>
+                </t:datacard>
+            </i:for>
+        </t:datacards>
+
+        <t:heading>Background Jobs</t:heading>
+        <t:datacards size="large">
+            <i:for type="String" var="job" items="keys">
+                <i:local name="referenceInfo"
+                         value="@nodes.stream()
+                                  .map(| node | node.as(sirius.biz.cluster.BackgroundInfo.class).getJobs().get(job))
+                                  .filter(|job| job != null)
+                                  .findFirst().orElse(null).as(sirius.biz.cluster.BackgroundJobInfo.class)"/>
+                <i:if test="referenceInfo != null">
+                    <t:datacard title="@job" subTitle="@toUserString(descriptions.get(job))">
+                        <i:block name="actions">
+                            <i:if test="referenceInfo.isGloballyEnabled()">
+                                <t:dropdownItem title="Disable Globally"
+                                                url="@apply('/system/cluster/global/disable/%s', job)"/>
+                                <i:else>
+                                    <t:dropdownItem title="Enable Globally"
+                                                    url="@apply('/system/cluster/global/enable/%s', job)"/>
+                                </i:else>
+                            </i:if>
+                        </i:block>
+
+                        <i:for type="sirius.biz.cluster.BackgroundInfo" var="node" items="nodes">
+                            <i:local name="jobInfo"
+                                     value="@node.getJobs().get(job)"/>
+                            <i:if test="jobInfo != null">
+                                <div class="mb-4 d-flex flex-row">
+                                    <div class="mr-auto">
+                                        <div class="d-flex flex-row">
+                                            <t:dot color="@jobInfo.isLocalOverwrite() ? 'red' : 'green'"><b>@node.getNodeName()</b>
+                                            </t:dot>
+                                            <i:switch test="@jobInfo.getSynchronizeType().toString()">
+                                                <i:block name="LOCAL">
+                                                    <t:tag color="blue">@jobInfo.getSynchronizeType()</t:tag>
+                                                </i:block>
+                                                <i:block name="CLUSTER">
+                                                    <t:tag color="violet">@jobInfo.getSynchronizeType()</t:tag>
+                                                </i:block>
+                                                <i:block name="DISABLED">
+                                                    <t:tag color="yellow">@jobInfo.getSynchronizeType()</t:tag>
+                                                </i:block>
+                                            </i:switch>
+                                        </div>
+                                        <div class="muted small">@jobInfo.getExecutionInfo()</div>
+                                    </div>
+                                    <div>
+                                        <i:if test="jobInfo.isLocalOverwrite()">
+                                            <a href="/system/cluster/local/enable/@node.getNodeName()/@job"
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fa fa-check"></i><span
+                                                    class="d-none d-xl-inline"> Enable</span>
+                                            </a>
+                                            <i:else>
+                                                <a href="/system/cluster/local/disable/@node.getNodeName()/@job"
+                                                   class="btn btn-outline-secondary btn-sm">
+                                                    <i class="fa fa-power-off"></i><span
+                                                        class="d-none d-xl-inline"> Disable</span>
+                                                </a>
+                                            </i:else>
+                                        </i:if>
+                                    </div>
+                                </div>
+                            </i:if>
+                        </i:for>
+
+                        <i:block name="footer">
+                            <i:if test="referenceInfo.isGloballyEnabled()">
+                                <t:dot color="green">Globally Enabled</t:dot>
+                                <i:else>
+                                    <t:dot color="red">Globally Disabled</t:dot>
+                                </i:else>
+                            </i:if>
+                        </i:block>
+                    </t:datacard>
+                </i:if>
+            </i:for>
+        </t:datacards>
+    </i:if>
+    <i:if test="locks != null">
+        <t:heading title="Locks"/>
+        <t:emptyCheck data="locks.getLocks()">
+            <t:datacard>
+                <table class="table mt-4">
+                    <tr>
+                        <th><b>Name</b></th>
+                        <th>Owner</th>
+                        <th>Thread</th>
+                        <th>Acquired</th>
+                    </tr>
+                    <i:for type="sirius.biz.locks.LockInfo" var="lock" items="locks.getLocks()">
+                        <tr>
+                            <td><b>@lock.getName()</b></td>
+                            <td>@lock.getOwner()</td>
+                            <td>@lock.getThread()</td>
+                            <td>@toUserString(lock.getAcquired())</td>
+                        </tr>
+                    </i:for>
+                </table>
+            </t:datacard>
+        </t:emptyCheck>
+    </i:if>
+</t:page>
