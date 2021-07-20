@@ -40,6 +40,6 @@ public abstract class BizEntity extends SQLEntity implements Traced {
         return getDescriptor().getProperties()
                               .stream()
                               .anyMatch(property -> getDescriptor().isChanged(this, property)
-                                                    && !property.getAnnotation(NoJournal.class).isPresent());
+                                                    && property.getAnnotation(NoJournal.class).isEmpty());
     }
 }

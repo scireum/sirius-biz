@@ -37,8 +37,8 @@ import java.util.stream.Collectors;
 @Register(classes = {TouchWritebackLoop.class, BackgroundLoop.class}, framework = StorageUtils.FRAMEWORK_STORAGE)
 public class TouchWritebackLoop extends BackgroundLoop {
 
-    private BlockingQueue<Tuple<String, String>> touchedBlobs = new LinkedBlockingQueue<>(32768);
-    private RateLimit logLimit = RateLimit.timeInterval(10, TimeUnit.MINUTES);
+    private final BlockingQueue<Tuple<String, String>> touchedBlobs = new LinkedBlockingQueue<>(32768);
+    private final RateLimit logLimit = RateLimit.timeInterval(10, TimeUnit.MINUTES);
 
     @Part
     private BlobStorage blobStorage;

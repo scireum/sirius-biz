@@ -16,9 +16,9 @@ import java.time.Duration;
  */
 public class DistributedQueueInfo {
 
-    private String name;
-    private String concurrencyToken;
-    private Duration penaltyTime;
+    private final String name;
+    private final String concurrencyToken;
+    private final Duration penaltyTime;
 
     protected DistributedQueueInfo(String queueName, String concurrencyToken, Duration penaltyTime) {
         this.name = queueName;

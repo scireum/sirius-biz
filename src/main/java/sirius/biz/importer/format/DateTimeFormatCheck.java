@@ -27,8 +27,8 @@ import java.time.format.ResolverStyle;
  */
 public class DateTimeFormatCheck implements ValueCheck {
 
-    private String format;
-    private DateTimeFormatter formatter;
+    private final String format;
+    private final DateTimeFormatter formatter;
 
     /**
      * Creates a new check using the given date format.

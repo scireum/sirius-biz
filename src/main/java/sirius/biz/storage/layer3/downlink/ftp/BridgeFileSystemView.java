@@ -22,7 +22,7 @@ import sirius.kernel.di.std.Part;
 class BridgeFileSystemView implements FileSystemView {
 
     public static final String PATH_SEPARATOR = "/";
-    private VirtualFile root;
+    private final VirtualFile root;
     private VirtualFile cwd;
 
     @Part

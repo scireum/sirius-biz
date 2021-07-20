@@ -42,7 +42,7 @@ public class ElasticPageHelper<E extends ElasticEntity>
 
     private static final ValueComputer<String, String> IDENTITY = key -> key;
 
-    private List<Tuple<Facet, ValueComputer<String, String>>> aggregatingFacets = new ArrayList<>();
+    private final List<Tuple<Facet, ValueComputer<String, String>>> aggregatingFacets = new ArrayList<>();
 
     protected ElasticPageHelper(ElasticQuery<E> query) {
         super(query);

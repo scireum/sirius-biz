@@ -33,7 +33,7 @@ import java.util.function.Supplier;
 @Deprecated
 public class VirtualFile {
 
-    private String name;
+    private final String name;
     private VirtualFile parent;
     private BiConsumer<VirtualFile, Consumer<VirtualFile>> childProvider;
     private long lastModified;

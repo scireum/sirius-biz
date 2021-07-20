@@ -33,6 +33,7 @@ public class OnboardingController extends BizController {
     private static final String PARAM_SEEN_IN_PERCENT = "seenInPercent";
     private static final String PARAM_STARTED = "started";
     private static final String PARAM_SKIP = "skip";
+    private static final String AUTH_TOKEN_PREFIX = "/academy/";
 
     @Part
     @Nullable
@@ -51,10 +52,8 @@ public class OnboardingController extends BizController {
     @Routed(value = "/academy", priority = 999)
     public void tenantAcademy(WebContext webContext) {
         webContext.respondWith()
-                  .redirectToGet("/academy/"
-                                 + getUser().getUserId()
-                                 + "/"
-                                 + computeURISignature(getUser().getUserId()));
+                  .redirectToGet(AUTH_TOKEN_PREFIX + getUser().getUserId() + "/" + computeURISignature(AUTH_TOKEN_PREFIX
+                                                                                                       + getUser().getUserId()));
     }
 
     /**
@@ -66,7 +65,7 @@ public class OnboardingController extends BizController {
      */
     @Routed(value = "/academy/:1/:2", priority = 999)
     public void academy(WebContext webContext, String target, String accessToken) {
-        if (!verifyURISignature(webContext, target, accessToken)) {
+        if (!verifyURISignature(webContext, AUTH_TOKEN_PREFIX + target, accessToken)) {
             return;
         }
 
@@ -76,7 +75,7 @@ public class OnboardingController extends BizController {
                   .template("/templates/biz/tycho/academy/tracks.html.pasta",
                             onboardingEngine.fetchTracks(target),
                             target,
-                            computeURISignature(target),
+                            accessToken,
                             onboardingEngine.fetchSomeVideo(target).orElse(null));
     }
 
@@ -90,7 +89,7 @@ public class OnboardingController extends BizController {
      */
     @Routed(value = "/academy/:1/:2/track/:3", priority = 999)
     public void track(WebContext webContext, String target, String accessToken, String track) {
-        if (!verifyURISignature(webContext, target, accessToken)) {
+        if (!verifyURISignature(webContext, AUTH_TOKEN_PREFIX + target, accessToken)) {
             return;
         }
 
@@ -104,7 +103,7 @@ public class OnboardingController extends BizController {
                             onboardingEngine.fetchVideos(target, track),
                             trackInfo,
                             target,
-                            computeURISignature(target));
+                            computeURISignature(AUTH_TOKEN_PREFIX + target));
     }
 
     /**
@@ -117,7 +116,7 @@ public class OnboardingController extends BizController {
      */
     @Routed(value = "/academy/:1/:2/video/:3", priority = 999)
     public void video(WebContext webContext, String target, String accessToken, String videoId) {
-        if (!verifyURISignature(webContext, target, accessToken)) {
+        if (!verifyURISignature(webContext, AUTH_TOKEN_PREFIX + target, accessToken)) {
             return;
         }
 
@@ -158,7 +157,7 @@ public class OnboardingController extends BizController {
                             String target,
                             String accessToken,
                             String videoId) {
-        if (!verifyURISignature(webContext, target, accessToken)) {
+        if (!verifyURISignature(webContext, AUTH_TOKEN_PREFIX + target, accessToken)) {
             return;
         }
         assertNotNull(onboardingEngine);

@@ -40,7 +40,7 @@ public interface DeleteTenantTask extends Priorized {
      * This will <b>not</b> be called in a simulation run.
      * <p>
      * Note that this method should invoke {@link ProcessContext#addTiming(String, long)} or
-     * {@link sirius.kernel.async.TaskContext#setState(String, Object...)} and {@link TaskContext#shouldUpdateState()}
+     * {@link sirius.kernel.async.TaskContext#tryUpdateState(String, Object...)}
      * in regular intervals whe processing large lists or data objects.
      *
      * @param process the process to log to

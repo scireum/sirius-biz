@@ -67,15 +67,15 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
         }
     }
 
-    private Parameter<VirtualFile> sourceParameter =
+    private final Parameter<VirtualFile> sourceParameter =
             new FileOrDirectoryParameter(SOURCE_PARAMETER_NAME, "$TransferFilesJob.source").markRequired().build();
-    private Parameter<VirtualFile> destinationParameter =
+    private final Parameter<VirtualFile> destinationParameter =
             new FileOrDirectoryParameter(DESTINATION_PARAMETER_NAME, "$TransferFilesJob.destination").markRequired()
                                                                                                      .build();
-    private Parameter<TransferMode> modeParameter =
+    private final Parameter<TransferMode> modeParameter =
             new EnumParameter<>(MODE_PARAMETER_NAME, "$TransferFilesJob.mode", TransferMode.class).withDefault(
                     TransferMode.COPY).markRequired().build();
-    private Parameter<Boolean> smartTransferParameter =
+    private final Parameter<Boolean> smartTransferParameter =
             new BooleanParameter(SMART_TRANSFER_PARAMETER_NAME, "$TransferFilesJob.smartTransfer").withDefaultTrue()
                                                                                                   .build();
 
@@ -110,17 +110,10 @@ public class TransferFilesJob extends SimpleBatchProcessJobFactory {
         }
 
         switch (mode) {
-            case COPY:
-                transfer.copy();
-                return;
-            case MOVE:
-                transfer.move();
-                return;
-            case COPY_CONTENTS:
-                transfer.copyContents();
-                return;
-            case MOVE_CONTENTS:
-                transfer.moveContents();
+            case COPY -> transfer.copy();
+            case MOVE -> transfer.move();
+            case COPY_CONTENTS -> transfer.copyContents();
+            case MOVE_CONTENTS -> transfer.moveContents();
         }
     }
 

@@ -164,6 +164,11 @@ public class AcademyVideoData extends Composite {
         this.syncToken = other.syncToken;
     }
 
+    /**
+     * Provides a human-readable representation of the duration.
+     *
+     * @return a nicely formatted string representing the duration of the video
+     */
     public String generateDurationString() {
         long minutes = duration / 60;
         long seconds = duration % 60;

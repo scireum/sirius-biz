@@ -71,6 +71,11 @@ public class AcademyTrackInfo {
         return totalDuration;
     }
 
+    /**
+     * Provides a human-readable representation of the duration.
+     *
+     * @return a nicely formatted string representing the duration of the video
+     */
     public String generateDurationString() {
         long minutes = totalDuration / 60;
         long seconds = totalDuration % 60;

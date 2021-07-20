@@ -88,7 +88,7 @@ public class JournalData extends Composite {
         return owner.getDescriptor()
                     .getProperties()
                     .stream()
-                    .filter(p -> !p.getAnnotation(NoJournal.class).isPresent());
+                    .filter(p -> p.getAnnotation(NoJournal.class).isEmpty());
     }
 
     /**

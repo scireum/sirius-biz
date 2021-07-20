@@ -381,7 +381,7 @@ public class Process extends SearchableEntity {
             return "info";
         }
 
-        if (state == ProcessState.CANCELED || (state == ProcessState.RUNNING && errorneous)) {
+        if (state == ProcessState.CANCELED || state == ProcessState.RUNNING) {
             return "warning";
         }
 
@@ -410,7 +410,7 @@ public class Process extends SearchableEntity {
             return "label-info";
         }
 
-        if (state == ProcessState.CANCELED || (state == ProcessState.RUNNING && errorneous)) {
+        if (state == ProcessState.CANCELED || state == ProcessState.RUNNING) {
             return "label-warning";
         }
 

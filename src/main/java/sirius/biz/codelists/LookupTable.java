@@ -88,14 +88,11 @@ public abstract class LookupTable {
             return null;
         }
 
-        switch (codeCase) {
-            case LOWER:
-                return code.toLowerCase();
-            case UPPER:
-                return code.toUpperCase();
-            default:
-                return code;
-        }
+        return switch (codeCase) {
+            case LOWER -> code.toLowerCase();
+            case UPPER -> code.toUpperCase();
+            default -> code;
+        };
     }
 
     /**

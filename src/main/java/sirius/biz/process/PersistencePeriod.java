@@ -31,28 +31,17 @@ public enum PersistencePeriod {
      * @return the date incremented by this period
      */
     public LocalDate plus(LocalDate input) {
-        switch (this) {
-            case ONE_DAY:
-                return input.plusDays(1);
-            case THREE_DAYS:
-                return input.plusDays(3);
-            case FOURTEEN_DAYS:
-                return input.plusDays(14);
-            case ONE_MONTH:
-                return input.plusMonths(1);
-            case THREE_MONTHS:
-                return input.plusMonths(3);
-            case ONE_YEAR:
-                return input.plusYears(1);
-            case THREE_YEARS:
-                return input.plusYears(3);
-            case SIX_YEARS:
-                return input.plusYears(6);
-            case TEN_YEARS:
-                return input.plusYears(10);
-        }
-
-        throw new IllegalArgumentException(name());
+        return switch (this) {
+            case ONE_DAY -> input.plusDays(1);
+            case THREE_DAYS -> input.plusDays(3);
+            case FOURTEEN_DAYS -> input.plusDays(14);
+            case ONE_MONTH -> input.plusMonths(1);
+            case THREE_MONTHS -> input.plusMonths(3);
+            case ONE_YEAR -> input.plusYears(1);
+            case THREE_YEARS -> input.plusYears(3);
+            case SIX_YEARS -> input.plusYears(6);
+            case TEN_YEARS -> input.plusYears(10);
+        };
     }
 
     /**
@@ -62,27 +51,16 @@ public enum PersistencePeriod {
      * @return the date decremented by this period
      */
     public LocalDate minus(LocalDate input) {
-        switch (this) {
-            case ONE_DAY:
-                return input.minusDays(1);
-            case THREE_DAYS:
-                return input.minusDays(3);
-            case FOURTEEN_DAYS:
-                return input.minusDays(14);
-            case ONE_MONTH:
-                return input.minusMonths(1);
-            case THREE_MONTHS:
-                return input.minusMonths(3);
-            case ONE_YEAR:
-                return input.minusYears(1);
-            case THREE_YEARS:
-                return input.minusYears(3);
-            case SIX_YEARS:
-                return input.minusYears(6);
-            case TEN_YEARS:
-                return input.minusYears(10);
-        }
-
-        throw new IllegalArgumentException(name());
+        return switch (this) {
+            case ONE_DAY -> input.minusDays(1);
+            case THREE_DAYS -> input.minusDays(3);
+            case FOURTEEN_DAYS -> input.minusDays(14);
+            case ONE_MONTH -> input.minusMonths(1);
+            case THREE_MONTHS -> input.minusMonths(3);
+            case ONE_YEAR -> input.minusYears(1);
+            case THREE_YEARS -> input.minusYears(3);
+            case SIX_YEARS -> input.minusYears(6);
+            case TEN_YEARS -> input.minusYears(10);
+        };
     }
 }

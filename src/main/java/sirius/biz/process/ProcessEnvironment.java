@@ -248,7 +248,7 @@ class ProcessEnvironment implements ProcessContext {
      * @deprecated Use either {@link #forceUpdateState(String)} or {@link #tryUpdateState(String)}
      */
     @Override
-    @Deprecated
+    @Deprecated(since = "2021/07/01")
     public void setState(String message) {
         processes.setStateMessage(processId, message);
     }
@@ -263,7 +263,7 @@ class ProcessEnvironment implements ProcessContext {
      * @deprecated Use either {@link #tryUpdateState(String)} or {@link #forceUpdateState(String)}.
      */
     @Override
-    @Deprecated
+    @Deprecated(since = "2021/07/01")
     public void setCurrentStateMessage(String state) {
         processes.setStateMessage(processId, state);
     }

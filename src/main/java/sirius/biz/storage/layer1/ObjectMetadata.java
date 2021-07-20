@@ -14,9 +14,9 @@ import java.time.LocalDateTime;
  * Represents metadata about a stored object.
  */
 public class ObjectMetadata {
-    private String key;
-    private LocalDateTime lastModified;
-    private long size;
+    private final String key;
+    private final LocalDateTime lastModified;
+    private final long size;
 
     /**
      * Creates new metadata for the given key.

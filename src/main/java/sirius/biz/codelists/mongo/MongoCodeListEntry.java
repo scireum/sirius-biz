@@ -17,7 +17,6 @@ import sirius.db.mixing.annotations.TranslationSource;
 import sirius.db.mongo.Mango;
 import sirius.db.mongo.types.MongoRef;
 import sirius.kernel.di.std.Framework;
-import sirius.kernel.nls.NLS;
 
 /**
  * Provides the MongoDB implementation of {@link CodeListEntry}.

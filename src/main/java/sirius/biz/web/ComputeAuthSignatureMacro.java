@@ -13,6 +13,7 @@ import sirius.kernel.commons.Strings;
 import sirius.kernel.di.std.Register;
 import sirius.pasta.noodle.Environment;
 import sirius.pasta.noodle.compiler.CompilationContext;
+import sirius.pasta.noodle.compiler.ir.Node;
 import sirius.pasta.noodle.macros.BasicMacro;
 
 import javax.annotation.Nonnull;
@@ -57,5 +58,10 @@ public class ComputeAuthSignatureMacro extends BasicMacro {
     @Override
     public String getName() {
         return "computeAuthSignature";
+    }
+
+    @Override
+    public boolean isConstant(CompilationContext context, List<Node> args) {
+        return false;
     }
 }

@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 class LocalFifoQueue implements FifoQueue {
 
-    private ConcurrentLinkedQueue<JSONObject> queue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<JSONObject> queue = new ConcurrentLinkedQueue<>();
 
     @Override
     public void offer(@Nonnull JSONObject task) {

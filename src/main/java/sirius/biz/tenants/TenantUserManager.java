@@ -434,7 +434,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
         Optional<U> optionalAccount = loadAccountByName(user.toLowerCase());
 
-        if (!optionalAccount.isPresent()) {
+        if (optionalAccount.isEmpty()) {
             return null;
         }
 
@@ -829,7 +829,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
     @Override
     @SuppressWarnings({"squid:S1126", "RedundantIfStatement"})
-    @Explain("Using explicit abort conditions and a final true makes all checks obvious")
+    @Explain("Using explicit abort conditions, and a final true makes all checks obvious")
     protected boolean isUserStillValid(String userId, WebContext ctx) {
         U user = fetchAccount(userId);
 
@@ -897,7 +897,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
         }
 
         Set<String> transformedRoles = transformRoles(roles);
-        transformedRoles.removeAll(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
+        tenant.getTenantData().getPackageData().getRevokedPermissions().data().forEach(transformedRoles::remove);
 
         return transformedRoles;
     }
@@ -923,7 +923,7 @@ public abstract class TenantUserManager<I extends Serializable, T extends BaseEn
 
         // also apply profiles and revokes to additional roles
         Permissions.applyProfiles(result);
-        result.removeAll(tenant.getTenantData().getPackageData().getRevokedPermissions().data());
+        tenant.getTenantData().getPackageData().getRevokedPermissions().data().forEach(result::remove);
 
         return result;
     }

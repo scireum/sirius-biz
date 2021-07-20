@@ -30,12 +30,12 @@ import java.util.stream.Collectors;
  */
 public class Timeseries {
 
-    private LocalDateTime requestedStart;
-    private LocalDateTime requestedEnd;
-    private Unit requestedUnit;
-    private Unit effectiveUnit;
-    private List<Interval> intervals;
-    private int limit;
+    private final LocalDateTime requestedStart;
+    private final LocalDateTime requestedEnd;
+    private final Unit requestedUnit;
+    private final Unit effectiveUnit;
+    private final List<Interval> intervals;
+    private final int limit;
 
     /**
      * Computes a timeseries for the given start and end date using the given unit.
@@ -119,20 +119,14 @@ public class Timeseries {
     }
 
     private LocalDateTime increment(LocalDateTime timestamp) {
-        switch (effectiveUnit) {
-            case HOUR:
-                return timestamp.plusHours(1);
-            case DAY:
-                return timestamp.plusDays(1);
-            case WEEK:
-                return timestamp.plusWeeks(1);
-            case MONTH:
-                return timestamp.plusMonths(1);
-            case YEAR:
-                return timestamp.plusYears(1);
-            default:
-                throw new IllegalStateException("unreachable");
-        }
+        return switch (effectiveUnit) {
+            case HOUR -> timestamp.plusHours(1);
+            case DAY -> timestamp.plusDays(1);
+            case WEEK -> timestamp.plusWeeks(1);
+            case MONTH -> timestamp.plusMonths(1);
+            case YEAR -> timestamp.plusYears(1);
+            default -> throw new IllegalStateException("unreachable");
+        };
     }
 
     /**
@@ -193,22 +187,15 @@ public class Timeseries {
     @SuppressWarnings("squid:SwitchLastCaseIsDefaultCheck")
     @Explain("Not required as we fully handle all enum cases.")
     private String formatTimestamp(LocalDateTime timestamp) {
-        switch (effectiveUnit) {
-            case YEAR:
-                return String.valueOf(timestamp.getYear());
-            case MONTH:
-                return NLS.getMonthName(timestamp.getMonthValue()) + " " + timestamp.getYear();
-            case WEEK:
-                return timestamp.get(WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear())
-                       + " / "
-                       + timestamp.getYear();
-            case DAY:
-                return timestamp.getDayOfMonth() + " " + NLS.getMonthNameShort(timestamp.getMonthValue());
-            case HOUR:
-                return String.valueOf(timestamp.getHour());
-        }
-
-        return NLS.toUserString(timestamp);
+        return switch (effectiveUnit) {
+            case YEAR -> String.valueOf(timestamp.getYear());
+            case MONTH -> NLS.getMonthName(timestamp.getMonthValue()) + " " + timestamp.getYear();
+            case WEEK -> timestamp.get(WeekFields.of(Locale.getDefault()).weekOfWeekBasedYear())
+                         + " / "
+                         + timestamp.getYear();
+            case DAY -> timestamp.getDayOfMonth() + " " + NLS.getMonthNameShort(timestamp.getMonthValue());
+            case HOUR -> String.valueOf(timestamp.getHour());
+        };
     }
 
     /**
@@ -218,18 +205,13 @@ public class Timeseries {
      * @return the series representing the requested comparison period
      */
     public Timeseries computeComparisonPeriod(ComparisonPeriod period) {
-        switch (period) {
-            case PREVIOUS_DAY:
-                return copy(date -> date.minusDays(1));
-            case PREVIOUS_WEEK:
-                return copy(date -> date.minusWeeks(1));
-            case PREVIOUS_MONTH:
-                return copy(date -> date.minusMonths(1));
-            case PREVIOUS_YEAR:
-                return copy(date -> date.minusYears(1));
-            default:
-                throw new IllegalStateException("unreachable");
-        }
+        return switch (period) {
+            case PREVIOUS_DAY -> copy(date -> date.minusDays(1));
+            case PREVIOUS_WEEK -> copy(date -> date.minusWeeks(1));
+            case PREVIOUS_MONTH -> copy(date -> date.minusMonths(1));
+            case PREVIOUS_YEAR -> copy(date -> date.minusYears(1));
+            default -> throw new IllegalStateException("unreachable");
+        };
     }
 
     private Timeseries copy(UnaryOperator<LocalDateTime> modifier) {

@@ -24,7 +24,7 @@ import java.time.Duration;
  */
 class UplinkConnectorFactory implements PooledObjectFactory<UplinkConnector<?>> {
 
-    private UplinkConnectorConfig<?> config;
+    private final UplinkConnectorConfig<?> config;
     private GenericObjectPool<UplinkConnector<?>> pool;
 
     UplinkConnectorFactory(UplinkConnectorConfig<?> uplinkConnectorConfig) {
