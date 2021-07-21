@@ -27,7 +27,6 @@ public class ImportTransactionData extends Composite {
      * Represents the last import transaction id which was used to modify the owning entity.
      */
     public static final Mapping TXN_ID = Mapping.named("txnId");
-    @AutoImport
     @NoJournal
     private long txnId = 0;
 
