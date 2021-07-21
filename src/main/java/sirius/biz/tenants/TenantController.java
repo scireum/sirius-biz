@@ -420,7 +420,7 @@ public abstract class TenantController<I extends Serializable, T extends BaseEnt
                                            + TenantUserManager.TENANT_SPY_ID_SUFFIX, null);
             }
 
-            webContext.respondWith().redirectTemporarily("/tenants/select");
+            webContext.respondWith().redirectTemporarily(webContext.get("goto").asString(wondergemRoot));
             return;
         }
 
