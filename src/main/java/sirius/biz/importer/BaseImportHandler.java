@@ -336,7 +336,6 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         return descriptor.getProperties()
                          .stream()
                          .filter(property -> property.getAnnotation(AutoImport.class)
-                                                     .filter(Predicate.not(AutoImport::hidden))
                                                      .map(AutoImport::permissions)
                                                      .map(currentUser::hasPermissions)
                                                      .orElse(false))

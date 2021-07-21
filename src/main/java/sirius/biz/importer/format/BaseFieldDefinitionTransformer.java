@@ -57,6 +57,10 @@ public abstract class BaseFieldDefinitionTransformer<S extends Property>
                     field.markRequired();
                 }
             }
+
+            if (autoImport.hidden()) {
+                field.hide();
+            }
         });
     }
 
