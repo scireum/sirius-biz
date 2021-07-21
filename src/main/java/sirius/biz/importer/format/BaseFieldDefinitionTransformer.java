@@ -37,14 +37,14 @@ public abstract class BaseFieldDefinitionTransformer<S extends Property>
             field.addAlias(property.getName());
             field.withLabel(property::getLabel);
 
-            markRequiredIfNecessary(property, field);
+            processAutoImportSettings(property, field);
             customizeField(property, field);
 
             return field;
         };
     }
 
-    protected void markRequiredIfNecessary(S property, FieldDefinition field) {
+    protected void processAutoImportSettings(S property, FieldDefinition field) {
         property.getAnnotation(AutoImport.class).ifPresent(autoImport -> {
             if (autoImport.value() == AutoImport.RequiredStatus.REQUIRED) {
                 field.markRequired();
@@ -56,6 +56,10 @@ public abstract class BaseFieldDefinitionTransformer<S extends Property>
                 if (!property.isNullable() && Strings.isEmpty(property.getValue(referenceInstance))) {
                     field.markRequired();
                 }
+            }
+
+            if (autoImport.hidden()) {
+                field.hide();
             }
         });
     }
