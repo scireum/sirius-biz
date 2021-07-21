@@ -124,7 +124,8 @@ public class ClickhousePartsReportJobFactory extends ReportJobFactory {
             tableNameToType = mixing.getDescriptors()
                                     .stream()
                                     .collect(Collectors.toMap(EntityDescriptor::getRelationName,
-                                                              descriptor -> Mixing.getNameForType(descriptor.getType())));
+                                                              descriptor -> Mixing.getNameForType(descriptor.getType()),
+                                                              (mapValue, encounteredValue) -> mapValue));
         }
 
         return Optional.ofNullable(tableNameToType.get(tableName))
