@@ -262,8 +262,11 @@ public abstract class BasicJobFactory implements JobFactory {
 
     /**
      * Enforces the permissions sepcified by this job.
+     *
+     * You cannot override this method, because it should behave consistently with {@link #getRequiredPermissions()}.
+     * Please add all required permissions there.
      */
-    protected void checkPermissions() {
+    protected final void checkPermissions() {
         UserInfo currentUser = UserContext.getCurrentUser();
         getRequiredPermissions().forEach(currentUser::assertPermission);
     }
