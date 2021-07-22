@@ -55,7 +55,7 @@ public class ProcessOutput extends Nested {
     /**
      * Contains an inline cache which keeps the icon for each known {@link ProcessOutputType} to prevent some lookups.
      */
-    private static Map<String, String> typeToIcons = new ConcurrentHashMap<>();
+    private static final Map<String, String> typeToIcons = new ConcurrentHashMap<>();
 
     public String getIcon() {
         return typeToIcons.computeIfAbsent(type, this::computeIcon);

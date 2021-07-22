@@ -63,7 +63,7 @@ public class SFTPUplink extends ConfigBasedUplink {
     private static UplinkConnectorPool connectorPool;
 
     private final SFTPUplinkConnectorConfig sftpConfig;
-    private RemotePath basePath;
+    private final RemotePath basePath;
 
     private SFTPUplink(Extension config) {
         super(config);

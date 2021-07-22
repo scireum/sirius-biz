@@ -35,7 +35,7 @@ public class BridgeFileSystem extends FileSystem {
     @Part
     private static VirtualFileSystem virtualFileSystem;
 
-    private BridgeFileSystemProvider provider = new BridgeFileSystemProvider();
+    private final BridgeFileSystemProvider provider = new BridgeFileSystemProvider();
 
     @Override
     public FileSystemProvider provider() {

@@ -19,7 +19,7 @@ import sirius.kernel.nls.NLS;
  */
 public class LengthCheck extends StringCheck {
 
-    private int maxLength;
+    private final int maxLength;
 
     /**
      * Creates a new check which enforces the given length.

@@ -15,10 +15,10 @@ import java.time.LocalDateTime;
  */
 public class LockInfo {
 
-    private String name;
-    private String owner;
-    private String thread;
-    private LocalDateTime acquired;
+    private final String name;
+    private final String owner;
+    private final String thread;
+    private final LocalDateTime acquired;
 
     /**
      * Creates a new lock info.

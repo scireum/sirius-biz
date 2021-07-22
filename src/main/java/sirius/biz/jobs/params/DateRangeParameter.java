@@ -22,7 +22,7 @@ import java.util.Optional;
  */
 public class DateRangeParameter extends ParameterBuilder<DateRange, DateRangeParameter> {
 
-    private List<DateRange> dateRanges;
+    private final List<DateRange> dateRanges;
     private DateRange defaultValue;
 
     /**
@@ -96,7 +96,7 @@ public class DateRangeParameter extends ParameterBuilder<DateRange, DateRangePar
             return defaultValue != null ? defaultValue.getKey() : null;
         }
 
-        if (!resolveFromString(input).isPresent()) {
+        if (resolveFromString(input).isEmpty()) {
             return null;
         }
         return input.asString();

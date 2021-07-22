@@ -276,18 +276,13 @@ public class Transfer {
 
     private Function<String, Value> determineParameterValue(TransferFilesJob.TransferMode mode) {
         return param -> {
-            switch (param) {
-                case TransferFilesJob.SOURCE_PARAMETER_NAME:
-                    return Value.of(source.path());
-                case TransferFilesJob.DESTINATION_PARAMETER_NAME:
-                    return Value.of(destination.path());
-                case TransferFilesJob.MODE_PARAMETER_NAME:
-                    return Value.of(mode.name());
-                case TransferFilesJob.SMART_TRANSFER_PARAMETER_NAME:
-                    return Value.of(!forceWrite);
-                default:
-                    return Value.EMPTY;
-            }
+            return switch (param) {
+                case TransferFilesJob.SOURCE_PARAMETER_NAME -> Value.of(source.path());
+                case TransferFilesJob.DESTINATION_PARAMETER_NAME -> Value.of(destination.path());
+                case TransferFilesJob.MODE_PARAMETER_NAME -> Value.of(mode.name());
+                case TransferFilesJob.SMART_TRANSFER_PARAMETER_NAME -> Value.of(!forceWrite);
+                default -> Value.EMPTY;
+            };
         };
     }
 

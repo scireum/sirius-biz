@@ -145,6 +145,7 @@ public class MongoReplicationTaskStorage
                                        .where(MongoReplicationTask.ID, task.getId())
                                        .set(MongoReplicationTask.LAST_EXECUTION, LocalDateTime.now())
                                        .set(MongoReplicationTask.SCHEDULED, null)
+                                       .set(MongoReplicationTask.TRANSACTION_ID, null)
                                        .set(MongoReplicationTask.EARLIEST_EXECUTION,
                                             LocalDateTime.now().plus(retryReplicationDelay))
                                        .inc(MongoReplicationTask.FAILURE_COUNTER, 1);

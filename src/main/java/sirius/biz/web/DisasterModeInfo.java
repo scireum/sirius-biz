@@ -95,13 +95,13 @@ public class DisasterModeInfo implements MaintenanceInfo {
     /**
      * Caches the effective lock flag for ten seconds to avoid frequent recomputations.
      */
-    private InlineCache<Boolean> locked =
+    private final InlineCache<Boolean> locked =
             CacheManager.createInlineCache(Duration.ofSeconds(10), this::determineIfLocked);
 
     /**
      * Caches the effective message for ten seconds to avoid frequent recomputations.
      */
-    private InlineCache<String> disasterMessage =
+    private final InlineCache<String> disasterMessage =
             CacheManager.createInlineCache(Duration.ofSeconds(10), this::fetchDisasterMessage);
 
     /**

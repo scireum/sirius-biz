@@ -21,8 +21,8 @@ import java.util.List;
  */
 class BridgeUser implements User {
 
-    private UserInfo authUser;
-    private String scopeId;
+    private final UserInfo authUser;
+    private final String scopeId;
 
     BridgeUser(UserInfo authUser, String scopeId) {
         this.authUser = authUser;

@@ -34,6 +34,7 @@ import sirius.web.controller.Routed;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
 import sirius.web.security.UserContext;
+import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
 
 import javax.annotation.Nullable;
@@ -103,7 +104,8 @@ public class DatabaseController extends BasicController {
      * @throws SQLException in case of a database error
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
-    @Routed(value = "/system/sql/api/execute", jsonCall = true)
+    @Routed("/system/sql/api/execute")
+    @InternalService
     public void executeQuery(WebContext webContext, JSONStructuredOutput out) throws SQLException {
         Watch w = Watch.start();
 
@@ -164,7 +166,7 @@ public class DatabaseController extends BasicController {
 
         if (isDDLStatement(sqlStatement)) {
             throw Exceptions.createHandled().withDirectMessage("A DDL statement cannot be exported.").handle();
-        } else  if (isModifyStatement(sqlStatement)) {
+        } else if (isModifyStatement(sqlStatement)) {
             throw Exceptions.createHandled().withDirectMessage("A modifying statement cannot be exported.").handle();
         } else {
             ExportQueryResultJobFactory jobFactory =
@@ -183,14 +185,11 @@ public class DatabaseController extends BasicController {
      */
     private Function<String, Value> createJobParameterSupplier(String database, String sqlStatement) {
         return parameterName -> {
-            switch (parameterName) {
-                case PARAM_DATABASE:
-                    return Value.of(database);
-                case PARAM_QUERY:
-                    return Value.of(sqlStatement);
-                default:
-                    return Value.EMPTY;
-            }
+            return switch (parameterName) {
+                case PARAM_DATABASE -> Value.of(database);
+                case PARAM_QUERY -> Value.of(sqlStatement);
+                default -> Value.EMPTY;
+            };
         };
     }
 
@@ -203,14 +202,16 @@ public class DatabaseController extends BasicController {
 
     private boolean isModifyStatement(String query) {
         String lowerCaseQuery = query.toLowerCase().trim();
-        return lowerCaseQuery.startsWith(KEYWORD_UPDATE) || lowerCaseQuery.startsWith(KEYWORD_INSERT) || lowerCaseQuery.startsWith(
-                KEYWORD_DELETE);
+        return lowerCaseQuery.startsWith(KEYWORD_UPDATE)
+               || lowerCaseQuery.startsWith(KEYWORD_INSERT)
+               || lowerCaseQuery.startsWith(KEYWORD_DELETE);
     }
 
     private boolean isDDLStatement(String qry) {
         String lowerCaseQuery = qry.toLowerCase().trim();
-        return lowerCaseQuery.startsWith(KEYWORD_ALTER) || lowerCaseQuery.startsWith(KEYWORD_DROP) || lowerCaseQuery.startsWith(
-                KEYWORD_CREATE);
+        return lowerCaseQuery.startsWith(KEYWORD_ALTER)
+               || lowerCaseQuery.startsWith(KEYWORD_DROP)
+               || lowerCaseQuery.startsWith(KEYWORD_CREATE);
     }
 
     private void outputRow(JSONStructuredOutput out, Monoflop monoflop, Row row) {
@@ -259,7 +260,8 @@ public class DatabaseController extends BasicController {
      * @param out the JSON response
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
-    @Routed(value = "/system/schema/api/list", jsonCall = true)
+    @Routed("/system/schema/api/list")
+    @InternalService
     public void changesList(WebContext ctx, JSONStructuredOutput out) {
         schema.computeRequiredSchemaChanges();
         out.beginArray("changes");
@@ -285,7 +287,8 @@ public class DatabaseController extends BasicController {
      * @param out the JSON response
      */
     @Permission(TenantUserManager.PERMISSION_SYSTEM_ADMINISTRATOR)
-    @Routed(value = "/system/schema/api/execute", jsonCall = true)
+    @Routed("/system/schema/api/execute")
+    @InternalService
     public void execute(WebContext ctx, JSONStructuredOutput out) {
         SchemaUpdateAction result = schema.executeSchemaUpdateAction(ctx.get("id").asString());
 

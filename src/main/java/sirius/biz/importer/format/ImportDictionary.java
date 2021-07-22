@@ -59,10 +59,10 @@ public class ImportDictionary {
     private static final String PARAM_LABEL = "label";
     private static final String PARAM_MESSAGE = "message";
 
-    private Map<String, FieldDefinition> fields = new LinkedHashMap<>();
-    private Map<String, String> aliases = new LinkedHashMap<>();
+    private final Map<String, FieldDefinition> fields = new LinkedHashMap<>();
+    private final Map<String, String> aliases = new LinkedHashMap<>();
     private List<String> mappingFunction;
-    private List<Function<String, FieldDefinition>> computedFieldLookups = new ArrayList<>();
+    private final List<Function<String, FieldDefinition>> computedFieldLookups = new ArrayList<>();
     private boolean hasIdentityMapping;
 
     /**
@@ -132,7 +132,7 @@ public class ImportDictionary {
      * @return the fields in this dictionary
      */
     public List<FieldDefinition> getFields() {
-        return Collections.unmodifiableList(new ArrayList<>(fields.values()));
+        return List.copyOf(fields.values());
     }
 
     /**
@@ -649,7 +649,7 @@ public class ImportDictionary {
             report.addColumn("type", NLS.get("FieldDefinition.type"));
             report.addColumn("remarks", NLS.get("FieldDefinition.remarks"));
 
-            getFields().forEach(field -> {
+            getFields().stream().filter(field -> !field.isHidden()).forEach(field -> {
                 report.addCells(cells.of(field.getLabel()), cells.of(field.getType()), cells.list(field.getRemarks()));
             });
         });

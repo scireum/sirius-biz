@@ -11,8 +11,6 @@ package sirius.biz.jobs.batch.file;
 import sirius.biz.jobs.params.Parameter;
 import sirius.biz.process.ProcessContext;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -24,8 +22,7 @@ public abstract class LineBasedImportJobFactory extends FileImportJobFactory {
     /**
      * Specifies the file extensions supported by this factory.
      */
-    protected static final List<String> SUPPORTED_FILE_EXTENSIONS =
-            Collections.unmodifiableList(Arrays.asList("xls", "xlsx", "csv"));
+    protected static final List<String> SUPPORTED_FILE_EXTENSIONS = List.of("xls", "xlsx", "csv");
 
     @Override
     protected abstract LineBasedImportJob createJob(ProcessContext process);

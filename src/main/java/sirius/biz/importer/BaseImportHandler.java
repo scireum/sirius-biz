@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -74,7 +75,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
     protected ImporterContext context;
     protected Mapping exportRepresentationMapping;
     protected Map<Mapping, BiConsumer<Context, Object>> loaders = new HashMap<>();
-    private Extension aliases;
+    private final Extension aliases;
 
     /**
      * Creates a new instance for the given type of entities and import context.
@@ -335,6 +336,7 @@ public abstract class BaseImportHandler<E extends BaseEntity<?>> implements Impo
         return descriptor.getProperties()
                          .stream()
                          .filter(property -> property.getAnnotation(AutoImport.class)
+                                                     .filter(Predicate.not(AutoImport::hidden))
                                                      .map(AutoImport::permissions)
                                                      .map(currentUser::hasPermissions)
                                                      .orElse(false))

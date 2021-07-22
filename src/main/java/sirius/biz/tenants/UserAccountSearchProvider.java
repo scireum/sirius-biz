@@ -86,9 +86,9 @@ public abstract class UserAccountSearchProvider<I extends Serializable, T extend
                 openSearchResult.withDescription(userAccount.toString())
                                 .withURL("/user-account/" + userAccount.getIdAsString());
             } else {
-                openSearchResult.withDescription(userAccount.toString() + " (" + userAccount.getTenant()
-                                                                                            .fetchValue()
-                                                                                            .toString() + ")")
+                openSearchResult.withDescription(userAccount + " (" + userAccount.getTenant()
+                                                                                 .fetchValue()
+                                                                                 .toString() + ")")
                                 .withURL("/tenants/select/"
                                          + userAccount.getTenant().getIdAsString()
                                          + "?goto="

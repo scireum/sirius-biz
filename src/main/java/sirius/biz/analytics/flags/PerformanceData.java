@@ -57,7 +57,6 @@ public abstract class PerformanceData extends Composite {
      *
      * @return a stream of active flags for the underlying entity
      */
-    @SuppressWarnings("unchecked")
     public Stream<PerformanceFlag> activeFlags() {
         return PerformanceFlag.flagsOfType(owner.getClass()).filter(this::isSet);
     }

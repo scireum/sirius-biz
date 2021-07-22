@@ -81,7 +81,7 @@ public class PackageData extends Composite {
     private Set<String> directPermissions;
 
     @Transient
-    private String scope;
+    private final String scope;
 
     /**
      * Creates a new instance for the given owner.
@@ -224,7 +224,7 @@ public class PackageData extends Composite {
         permissions.addAll(getUpgrades().data());
         permissions.addAll(getAdditionalPermissions().data());
         Permissions.applyProfiles(permissions);
-        permissions.removeAll(getRevokedPermissions().data());
+        getRevokedPermissions().data().forEach(permissions::remove);
 
         return permissions;
     }

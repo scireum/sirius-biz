@@ -13,7 +13,7 @@ package sirius.biz.jobs.infos;
  */
 public class TextInfo implements JobInfo {
 
-    private String text;
+    private final String text;
 
     /**
      * Creates a new text block.

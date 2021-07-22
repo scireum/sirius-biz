@@ -16,7 +16,7 @@ import sirius.kernel.commons.Strings;
  */
 public class RemotePath {
 
-    private String path;
+    private final String path;
 
     /**
      * Generates a new wrapper for the given path.

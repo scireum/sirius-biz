@@ -1340,7 +1340,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
 
         VirtualFile file = resolve(path);
 
-        if (force || !file.exists() || file.lastModifiedDate() == null || !lastModifiedHeader.isPresent()) {
+        if (force || !file.exists() || file.lastModifiedDate() == null || lastModifiedHeader.isEmpty()) {
             // We haven't checked last modified, use original logic to send if-modfied-since header
             downloaded = file.loadFromUrl(url, force);
         } else {

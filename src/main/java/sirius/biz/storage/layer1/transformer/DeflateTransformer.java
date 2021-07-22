@@ -20,14 +20,14 @@ import java.util.zip.Deflater;
  */
 public class DeflateTransformer implements ByteBlockTransformer {
 
-    private Deflater deflater;
+    private final Deflater deflater;
 
     /**
      * This is a shared buffer which is only used to transfer data from the deflater into the effective output buffer.
      * Being oly used within a method call, we can keep a reusable instance around instead of re-creating one
      * each time.
      */
-    private byte[] deflateBuffer = new byte[TransformingInputStream.DEFAULT_BUFFER_SIZE];
+    private final byte[] deflateBuffer = new byte[TransformingInputStream.DEFAULT_BUFFER_SIZE];
 
     /**
      * Creates a new trasformer using the given compression level.

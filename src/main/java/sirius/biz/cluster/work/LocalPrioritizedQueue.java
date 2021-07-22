@@ -22,8 +22,8 @@ import java.util.concurrent.PriorityBlockingQueue;
  */
 class LocalPrioritizedQueue implements PrioritizedQueue {
 
-    private String queueName;
-    private PriorityBlockingQueue<ComparableTuple<Long, JSONObject>> queue = new PriorityBlockingQueue<>();
+    private final String queueName;
+    private final PriorityBlockingQueue<ComparableTuple<Long, JSONObject>> queue = new PriorityBlockingQueue<>();
 
     LocalPrioritizedQueue(String queueName) {
         this.queueName = queueName;

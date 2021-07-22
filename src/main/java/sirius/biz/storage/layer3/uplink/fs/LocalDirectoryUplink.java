@@ -57,7 +57,7 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
     private static final Comparator<File> SORT_BY_DIRECTORY = Comparator.comparing(file -> file.isDirectory() ? 0 : 1);
     private static final Comparator<File> SORT_BY_NAME = Comparator.comparing(file -> file.getName().toLowerCase());
 
-    private File root;
+    private final File root;
 
     protected LocalDirectoryUplink(Extension extension, File root) {
         super(extension);

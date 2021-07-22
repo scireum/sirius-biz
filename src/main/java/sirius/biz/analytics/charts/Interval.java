@@ -17,8 +17,8 @@ import java.time.LocalDateTime;
 @Immutable
 public class Interval {
 
-    private LocalDateTime start;
-    private LocalDateTime end;
+    private final LocalDateTime start;
+    private final LocalDateTime end;
 
     /**
      * Creates an interval with the given start and end.
