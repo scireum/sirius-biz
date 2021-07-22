@@ -140,6 +140,7 @@ public class SQLReplicationTaskStorage
                 task.setEarliestExecution(LocalDateTime.now().plus(retryReplicationDelay));
                 task.setFailureCounter(task.getFailureCounter() + 1);
                 task.setScheduled(null);
+                task.setTransactionId(null);
                 if (task.getFailureCounter() > maxReplicationAttempts) {
                     task.setFailed(true);
                     Exceptions.handle()
