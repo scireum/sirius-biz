@@ -56,11 +56,13 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     public static final Parameter<SyncMode> SYNC_MODE_PARAMETER = new EnumParameter<>("syncMode",
                                                                                       "$EntityImportSyncJobFactory.syncMode",
                                                                                       SyncMode.class).withDefault(
-            SyncMode.NEW_AND_UPDATE_ONLY)
+                                                                                                             SyncMode.NEW_AND_UPDATE_ONLY)
                                                                                                      .markRequired()
                                                                                                      .withDescription(
                                                                                                              "$EntityImportSyncJobFactory.syncMode.help")
                                                                                                      .build();
+
+    private static final String ERROR_CONTEXT_ROW = "$LineBasedJob.row";
 
     @Part
     private static Mixing mixing;
@@ -124,8 +126,14 @@ public class RelationalEntityImportJob<E extends BaseEntity<?> & ImportTransacti
     protected void executeForStream(String filename, Producer<InputStream> inputSupplier) throws Exception {
         importTransactionHelper.start();
         try (InputStream in = inputSupplier.create()) {
-            LineBasedProcessor.create(filename, in).run(this, error -> {
+            LineBasedProcessor.create(filename, in).run((rowNumber, row) -> {
+                errorContext.withContext(ERROR_CONTEXT_ROW, rowNumber);
+                this.handleRow(rowNumber, row);
+                errorContext.removeContext(ERROR_CONTEXT_ROW);
+            }, error -> {
                 process.handle(error);
+                errorContext.removeContext(ERROR_CONTEXT_ROW);
+
                 return true;
             });
         }

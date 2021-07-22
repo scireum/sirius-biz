@@ -16,6 +16,7 @@ import sirius.kernel.di.std.Register;
 import sirius.web.http.QueryString;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 
 /**
  * Provides an export for {@link MongoUserAccount user accounts}.
@@ -34,8 +35,10 @@ public class MongoUserAccountExportJobFactory
     }
 
     @Override
-    protected void checkPermissions() {
-        UserAccountController.assertProperUserManagementPermission();
+    public List<String> getRequiredPermissions() {
+        List<String> requiredPermissions = super.getRequiredPermissions();
+        requiredPermissions.add(UserAccountController.getUserManagementPermission());
+        return requiredPermissions;
     }
 
     @Override
