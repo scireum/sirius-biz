@@ -1,10 +1,15 @@
 <i:arg type="String" name="lang" />
 <i:arg type="boolean" name="short" default="false" />
 
-<t:langFlag lang="@lang" />
-<i:if test="short">
-    @lang.toUpperCase()
-    <i:else>
-        @part(sirius.biz.util.Languages.class).all().resolveName(lang).orElse(lang)
-    </i:else>
-</i:if>
+<span class="d-inline-flex flex-row overflow-hidden align-items-center"
+      @if (short) { data-toggle="tooltip" title="@part(sirius.biz.util.Languages.class).all().resolveName(lang).orElse(lang)" }>
+    <t:langFlag lang="@lang" class="pr-1" />
+    <span>
+        <i:if test="short">
+            @lang.toUpperCase()
+            <i:else>
+                @part(sirius.biz.util.Languages.class).all().resolveName(lang).orElse(lang)
+            </i:else>
+        </i:if>
+    </span>
+</span>
