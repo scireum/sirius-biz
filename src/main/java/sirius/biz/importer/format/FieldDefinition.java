@@ -36,6 +36,7 @@ public class FieldDefinition {
     protected String name;
     protected String type;
     protected Supplier<String> label;
+    protected boolean hidden;
     protected Set<String> aliases = new HashSet<>();
     protected List<ValueCheck> checks = new ArrayList<>();
     protected boolean appendContextInErrorMessage;
@@ -325,7 +326,8 @@ public class FieldDefinition {
             return this;
         }
 
-        UserContext.getCurrentScope().getDisplayLanguages()
+        UserContext.getCurrentScope()
+                   .getDisplayLanguages()
                    .stream()
                    .map(lang -> NLS.smartGet(alias, lang))
                    .filter(text -> !text.equals(getLabel()))
@@ -404,5 +406,21 @@ public class FieldDefinition {
      */
     public String getType() {
         return type;
+    }
+
+    /**
+     * Hides this field from the documentation.
+     */
+    public void hide() {
+        this.hidden = true;
+    }
+
+    /**
+     * Determines if the field is hidden from the documentation.
+     *
+     * @return <tt>true</tt> if the field is hidden, <tt>false</tt> othewise
+     */
+    public boolean isHidden() {
+        return hidden;
     }
 }

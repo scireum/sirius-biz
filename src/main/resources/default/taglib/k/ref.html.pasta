@@ -1,17 +1,27 @@
-<i:arg type="String" name="code" />
-<i:arg type="String" name="format" default="%2$s" />
+<i:arg type="String" name="code"/>
+<i:arg type="String" name="class" default=""/>
 
-<i:local name="pattern" value="@renderToString('body')" />
+<i:pragma name="description">Provides a link which points to the given knowledge base article.</i:pragma>
+
 <i:local name="currentArticle" value="@helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
-<i:local name="referencedArticle" value="@part(sirius.biz.tycho.kb.KnowledgeBase.class).resolve(currentArticle != null ? currentArticle.getLanguage() : NLS.getCurrentLang(), code, true).orElse(null.as(sirius.biz.tycho.kb.KnowledgeBaseArticle.class))"/>
+<i:local name="referencedArticle"
+         value="@part(sirius.biz.tycho.kb.KnowledgeBase.class).resolve(currentArticle != null ? currentArticle.getLanguage() : NLS.getCurrentLang(), code, true).orElse(null)"/>
 <i:if test="referencedArticle != null">
-    <i:local name="label" value="@apply(format, code, referencedArticle.getTitle())" />
-    <i:local name="url" value="currentArticle != null ? apply('/kba/%s/%s', currentArticle.getLanguage(), code) : apply('/kba/%s', code)" />
-    <i:local name="link" value="apply('<a href=\"%s\" title=\"[%s] %s\">%s</a>', url, code, referencedArticle.getTitle(), label)"/>
-    <i:if test="isFilled(pattern)">
-        <i:raw>@apply(pattern, link)</i:raw>
-        <i:else>
-            <i:raw>@link</i:raw>
-        </i:else>
-    </i:if>
+    <a class="@class"
+       target="_blank"
+       href="/kba/@referencedArticle.getLanguage()/@code"
+       data-toggle="tooltip"
+       data-placement="top"
+       title="@referencedArticle.getDescription()">
+        <i:if test="referencedArticle.isChapter()">
+            <i class="fa fa-book"></i>
+            <i:else>
+                <i class="fa fa-file-alt"></i>
+            </i:else>
+        </i:if>
+        @referencedArticle.getTitle()
+    </a>
+    <i:else>
+        <i>Missing KnowledgeBase article.</i>
+    </i:else>
 </i:if>

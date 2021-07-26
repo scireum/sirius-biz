@@ -1,2 +1,3 @@
 <i:arg type="String" name="lang" />
-<img src="/assets/images/flags/languages/@(lang.toLowerCase()).png" />
+<i:arg type="String" name="class" default="" />
+<img class="@class" src="/assets/images/flags/languages/@(lang.toLowerCase()).png" />

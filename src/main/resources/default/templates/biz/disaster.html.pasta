@@ -1,53 +1,52 @@
 <i:arg type="sirius.biz.web.DisasterModeInfo" name="disasterInfo"/>
 
-<w:page titleKey="DisasterController.title">
+<t:page titleKey="DisasterController.title">
     <i:block name="breadcrumbs">
         <li>
             <a href="@CallContext.getCurrent().get(WebContext.class).getRequestedURI()">@i18n("DisasterController.title")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="DisasterController.title"/>
-    <w:editForm url="@CallContext.getCurrent().get(WebContext.class).getRequestedURI()">
-        <w:subHeading labelKey="DisasterController.maintenanceMessage"/>
+    <i:block name="page-header">
+        <t:pageHeader titleKey="DisasterController.title"/>
+    </i:block>
+
+    <t:editForm url="@CallContext.getCurrent().get(WebContext.class).getRequestedURI()">
+        <t:heading titleKey="DisasterController.maintenanceMessage"/>
+        <t:textfield name="previewMessage"
+                     helpKey="DisasterController.previewMessageHelp"
+                     labelKey="DisasterController.message"
+                     value="@disasterInfo.getRawPreviewMessage()"/>
         <div class="row">
-            <w:textfield name="previewMessage"
-                         helpKey="DisasterController.previewMessageHelp"
-                         labelKey="DisasterController.message"
-                         value="@disasterInfo.getRawPreviewMessage()"
-                         span="12"/>
-        </div>
-        <div class="row">
-            <w:datefield name="messageDate"
+            <t:datefield name="messageDate"
                          labelKey="DisasterController.date"
-                         value="@toUserString(disasterInfo.getRawDisplayMessageStartDate())"/>
-            <w:timefield name="messageTime"
+                         value="@toUserString(disasterInfo.getRawDisplayMessageStartDate())"
+                         class="col-12 col-lg-6"/>
+            <t:textfield name="messageTime"
                          labelKey="DisasterController.time"
-                         value="disasterInfo.getRawDisplayMessageStartTime()"/>
+                         value="@toUserString(disasterInfo.getRawDisplayMessageStartTime())"
+                         class="col-12 col-lg-6"/>
         </div>
 
-        <w:subHeading labelKey="DisasterController.lock"/>
+        <t:heading titleKey="DisasterController.lock"/>
+        <t:textfield name="lockMessage"
+                     labelKey="DisasterController.message"
+                     helpKey="DisasterController.lockMessageHelp"
+                     value="@disasterInfo.getRawLockMessage()"/>
         <div class="row">
-            <w:textfield name="lockMessage"
-                         labelKey="DisasterController.message"
-                         helpKey="DisasterController.lockMessageHelp"
-                         value="@disasterInfo.getRawLockMessage()"
-                         span="12"/>
-        </div>
-        <div class="row">
-            <w:booleanSelect name="locked"
+            <t:booleanSelect name="locked"
                              labelKey="DisasterController.locked"
                              value="@disasterInfo.isRawLocked()"
-                             span="4"/>
-            <w:datefield name="lockDate"
+                             class="col-12 col-lg-4"/>
+            <t:datefield name="lockDate"
                          labelKey="DisasterController.date"
                          value="@toUserString(disasterInfo.getRawLockStartDate())"
-                         span="4"/>
-            <w:timefield name="lockTime"
+                         class="col-12 col-lg-4"/>
+            <t:textfield name="lockTime"
                          labelKey="DisasterController.time"
-                         value="disasterInfo.getRawLockStartTime()"
-                         span="4"/>
+                         value="@toUserString(disasterInfo.getRawLockStartTime())"
+                         class="col-12 col-lg-4"/>
         </div>
-    </w:editForm>
-    <w:formBar/>
-</w:page>
+        <t:formBar/>
+    </t:editForm>
+</t:page>
