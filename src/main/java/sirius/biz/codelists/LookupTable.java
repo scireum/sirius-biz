@@ -54,7 +54,7 @@ public abstract class LookupTable {
 
     private static final int MAX_SUGGESTIONS = 25;
     private static final String CONFIG_KEY_SUPPORTS_SCAN = "supportsScan";
-    protected static final String CONFIG_KEY_CODE_CASE_MODE = "codeCase";
+    private static final String CONFIG_KEY_CODE_CASE_MODE = "codeCase";
     public static final String CONFIG_KEY_MAPPING_FIELD = "mappingsField";
     private final boolean supportsScan;
     private final String mappingsField;
