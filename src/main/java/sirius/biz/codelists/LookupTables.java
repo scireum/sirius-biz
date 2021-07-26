@@ -17,6 +17,7 @@ import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -44,7 +45,7 @@ public class LookupTables {
     private final Map<String, LookupTable> tables = new ConcurrentHashMap<>();
 
     /**
-     * Fetches the lookup with the given name.
+     * Fetches the lookup table with the given name.
      *
      * @param lookupTableName the name of the lookup table
      * @return the table for the given name. If no matching configuration is found, we simply redirect to the
@@ -56,44 +57,44 @@ public class LookupTables {
 
     private LookupTable makeTable(String name) {
         Extension extension = Sirius.getSettings().getExtension(CONFIG_BLOCK_LOOKUP_TABLES, name);
-        String table = extension.get(CONFIG_KEY_TABLE).asString();
+        String baseTable = extension.get(CONFIG_KEY_TABLE).asString();
 
-        // If no IDB config is present, or Jupiter is disabled, we resort to code list based tables...
-        if (Strings.isEmpty(table) || jupiter == null) {
+        // If no IDB config is present, or Jupiter is disabled, we resort to code list based tables
+        if (Strings.isEmpty(baseTable) || jupiter == null) {
             return new CodeListLookupTable(extension, extension.get(CONFIG_KEY_CODE_LIST).asString(name));
         }
 
-        // Directly access the given IDB table...
-        LookupTable result = loadIDBLookupTable(extension, name, table);
-
-        // ...if a custom table is also given, we use both tables together, there the custom table is always
-        // "in front" of the normal table...
-        String customTable = extension.get(CONFIG_KEY_CUSTOM_TABLE).asString();
-        if (Strings.isFilled(customTable)) {
-            LookupTable customLookupTable =
-                    new IDBLookupTable(extension, jupiter.getDefault().idb().table(customTable));
-            result = new CustomLookupTable(extension, customLookupTable, result);
-        }
-
-        // ...if a filter set is given, we apply this on the current intermediate result (which is either the table
-        // or the table + custom table combined)...
-        String filterSet = extension.get(CONFIG_KEY_FILTER_SET).asString();
-        if (Strings.isFilled(filterSet)) {
-            result = new IDBFilteredLookupTable(extension, result, jupiter.getDefault().idb().set(filterSet));
-        }
-
-        return result;
+        // Note: to ensure the configured tables are loaded in the correct order, the base table needs to be resolved
+        //       individually in each of the following steps.
+        // 1. If a custom table is given, combine it with the base table
+        Optional<LookupTable> customLookupTable =
+                loadAsCustomTable(extension, extension.get(CONFIG_KEY_CUSTOM_TABLE).asString(), baseTable);
+        // 2. Apply the filter set, if given
+        Optional<LookupTable> filteredLookupTable = loadAsFilteredTable(extension,
+                                                                        extension.get(CONFIG_KEY_FILTER_SET).asString(),
+                                                                        customLookupTable,
+                                                                        baseTable);
+        // 3. return the (filtered) (custom) lookup table
+        return filteredLookupTable.or(() -> customLookupTable)
+                                  .orElse(new IDBLookupTable(extension, jupiter.getDefault().idb().table(baseTable)));
     }
 
-    private LookupTable loadIDBLookupTable(Extension extension, String currentTable, String tableToLoad) {
-        // Checks, if the table to load is a base table of the currently created table and loads it with the
-        // correct configuration.
-        if (!Strings.areEqual(currentTable, tableToLoad)) {
-            Extension baseTableExtension = Sirius.getSettings().getExtension(CONFIG_BLOCK_LOOKUP_TABLES, tableToLoad);
-            if (baseTableExtension != null) {
-                return new IDBLookupTable(baseTableExtension, jupiter.getDefault().idb().table(tableToLoad));
-            }
+    private Optional<LookupTable> loadAsCustomTable(Extension extension, String customTable, String baseTable) {
+        if (Strings.isFilled(customTable)) {
+            return Optional.of(new CustomLookupTable(extension, fetchTable(customTable), fetchTable(baseTable)));
         }
-        return new IDBLookupTable(extension, jupiter.getDefault().idb().table(tableToLoad));
+        return Optional.empty();
+    }
+
+    private Optional<LookupTable> loadAsFilteredTable(Extension extension,
+                                                      String filterSet,
+                                                      Optional<LookupTable> customTable,
+                                                      String baseTable) {
+        if (Strings.isFilled(filterSet)) {
+            return Optional.of(new IDBFilteredLookupTable(extension,
+                                                          customTable.orElse(fetchTable(baseTable)),
+                                                          jupiter.getDefault().idb().set(filterSet)));
+        }
+        return Optional.empty();
     }
 }
