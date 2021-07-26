@@ -1,149 +1,160 @@
 <i:arg type="List" name="dbs"/>
 <i:arg type="String" name="defaultDB"/>
-<w:page titleKey="DatabaseController.sql">
+<t:page titleKey="DatabaseController.sql">
     <i:block name="breadcrumbs">
         <li>
             <a href="/system/sql">@i18n("DatabaseController.sql")</a>
         </li>
     </i:block>
 
-    <w:pageHeader>
-        <div class="row">
-            <div class="col-md-8">
-                @i18n("DatabaseController.sql")
-            </div>
-            <div class="col-md-4 align-right">
-                <a id="exportBtn" class="btn btn-default" style="display: none" href="#">
-                    <i class="fa fa-save"></i> @i18n("DatabaseController.export")
+    <i:block name="page-header">
+        <t:pageHeader titleKey="DatabaseController.sql">
+            <i:block name="actions">
+                <a id="exportBtn" class="btn btn-link d-none cursor-pointer" onclick="exportData()">
+                    <i class="fa fa-save"></i>
+                    <span class="d-none d-lg-inline">@i18n("DatabaseController.export")</span>
                 </a>
-            </div>
-        </div>
-    </w:pageHeader>
-
-    <div class="well">
-        <form id="exportForm" action="/system/sql/export" method="post">
+            </i:block>
+        </t:pageHeader>
+    </i:block>
+    <div class="card mb-4">
+        <div class="card-body">
             <div class="row">
-                <div class="col-md-10">
+                <div class="col-10">
                     <div class="input-group">
-                        <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
-                               type="hidden"/>
-                        <input type="hidden" id="exportQuery" name="exportQuery"/>
-                        <input type="text" id="query" name="query" class="form-control"
+                        <input type="text" id="query" name="query"
+                               class="form-control primary-autofocus"
                                placeholder="@i18n('NLS.searchkey')" autofocus/>
-                        <span class="input-group-addon" onclick="execute()"><i class="fa fa-search"></i></span>
+                        <div class="input-group-append">
+                            <a class="btn btn-outline-secondary" onclick="execute()">
+                                <i class="fa fa-search"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
-                <w:singleSelect name="database" id="db" span="2">
+                <t:singleSelect name="database" id="db" class="col-2">
                     <i:for type="String" var="db" items="dbs">
                         <option value="@db" @selected="defaultDB == db">@db</option>
                     </i:for>
-                </w:singleSelect>
+                </t:singleSelect>
             </div>
-        </form>
+        </div>
     </div>
 
-    <table class="table table-striped">
-        <thead id="columns">
-        </thead>
-        <tbody id="rows">
-        </tbody>
-    </table>
+    <div class="card mb-2">
+        <div class="card-body">
+            <div class="overflow-auto">
+                <table class="table table-bordered mb-4">
+                    <thead id="columns">
+                    </thead>
+                    <tbody id="rows">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-    <p>
-        <small id="info"></small>
-    </p>
+    <div class="small mb-4" id="info"></div>
+
+    <form id="exportForm" action="/system/sql/export" method="post">
+        <input name="CSRFToken" value="@part(sirius.web.http.CSRFHelper.class).getCSRFToken()"
+               type="hidden"/>
+        <input type="hidden" id="exportQuery" name="exportQuery"/>
+    </form>
 
     <script type="text/javascript">
         function execute() {
             clearMessages();
-            var $columns = $('#columns');
-            var $rows = $('#rows');
-            var $info = $('#info');
-            var exportBtn = $('#exportBtn');
 
-            exportBtn.hide();
-            $info.html('');
-            $rows.html('<tr><td class="align-center"><i class="fa fa-spin fa-spinner"></i></td></tr>');
-            $.getJSON('/system/sql/api/execute',
+            const _columns = document.getElementById('columns');
+            const _rows = document.getElementById('rows');
+            const _info = document.getElementById('info');
+            const _exportBtn = document.getElementById('exportBtn');
+
+            _exportBtn.classList.add("d-none");
+            _exportBtn.classList.remove("d-inline");
+            _info.innerHTML = ('');
+            _rows.innerHTML = '<tr><td class="align-center"><i class="fa fa-spin fa-spinner"></i></td></tr>';
+            sirius.postJSON('/system/sql/api/execute',
                 {
-                    query: $('#query').val(),
-                    database: $('[name=database]').val()
-                },
-                function (data) {
-                    $columns.html('');
-                    $rows.html('');
-                    $info.text(data.duration);
+                    query: document.getElementById("query").value,
+                    database: document.getElementById("db").tokenAutocomplete.val()[0]
+                })
+                .then(function (data) {
+                    _columns.innerHTML = '';
+                    _rows.innerHTML = '';
+                    _info.textContent = data.duration;
                     if (data.error) {
-                        addError(data.message);
+                        addErrorMessage(data.message);
                         return;
                     }
                     if (data.rows.length > 0) {
-                        $('#exportQuery').val($('#query').val());
-                        exportBtn.show();
+                        document.getElementById('exportQuery').value = document.getElementById('query').value;
+                        _exportBtn.classList.remove("d-none");
+                        _exportBtn.classList.add("d-inline");
                     }
 
                     if (data.rows !== null && data.rows.length === 1 && data.columns !== null) {
-                        outputDetails($rows, data);
+                        outputDetails(_rows, data);
                     } else {
-                        outputTable($columns, $rows, data);
+                        outputTable(_columns, _rows, data);
                     }
-                }
-            );
+                });
         }
 
-        function outputTable($columns, $rows, data) {
+        function outputTable(_columns, _rows, data) {
             if (data.columns !== null) {
-                var row = $('<tr />');
+                const _row = document.createElement("tr");
 
-                for (var j = 0; j < data.columns.length; j++) {
-                    row.append($('<th></th>').text(data.columns[j]));
+                for (let j = 0; j < data.columns.length; j++) {
+                    const _col = document.createElement("th");
+                    _col.textContent = data.columns[j];
+                    _row.appendChild(_col);
                 }
-                row.appendTo($columns);
+                _columns.appendChild(_row);
             }
             if (data.rows !== null) {
-                for (var i = 0; i < data.rows.length; i++) {
-                    var dataRow = data.rows[i];
-                    var row = $('<tr />');
+                for (let i = 0; i < data.rows.length; i++) {
+                    const dataRow = data.rows[i];
+                    const _row = document.createElement("tr");
 
-                    for (var j = 0; j < dataRow.length; j++) {
-                        row.append($('<td></td>').text(dataRow[j]));
+                    for (let j = 0; j < dataRow.length; j++) {
+                        const _col = document.createElement("td");
+                        _col.textContent = dataRow[j];
+                        _row.appendChild(_col);
                     }
-                    row.appendTo($rows);
+                    _rows.appendChild(_row);
                 }
             }
         }
 
-        function outputDetails($rows, data) {
-            var row = data.rows[0];
+        function outputDetails(_rows, data) {
+            const row = data.rows[0];
 
-            for (var j = 0; j < data.columns.length; j++) {
-                var $tr = $('<tr></tr>');
-                $tr.append($('<th></th>').text(data.columns[j]));
+            for (let j = 0; j < data.columns.length; j++) {
+                const _row = document.createElement("tr");
+                const _head = document.createElement("th");
+                _head.textContent = data.columns[j];
+                _row.appendChild(_head);
+                const _value = document.createElement("td");
                 if (j < row.length) {
-                    $tr.append($('<td></td>').text(row[j]));
-                } else {
-                    $tr.append($('<td></td>'));
+                    _value.textContent = row[j]
                 }
 
-                $tr.appendTo($rows);
+                _rows.appendChild(_row);
             }
         }
 
-        $(document).ready(function () {
-            $('#query').keydown(function (e) {
-                if (e.keyCode === 13) {
-                    execute();
-                    return false;
-                }
-            });
+        function exportData() {
+            if (sirius.isEmpty(document.getElementById('exportQuery').value)) {
+                addErrorMessage("Cannot export empty query");
+            } else {
+                document.getElementById('exportForm').submit();
+            }
+        }
 
-            $('#exportBtn').click(function () {
-                if ($('#exportQuery').val() === "") {
-                    addError("Cannot export empty query");
-                } else {
-                    $('#exportForm').submit();
-                }
-            });
+        sirius.ready(function () {
+            sirius.addEnterListener(document.getElementById('query'), execute);
         });
     </script>
-</w:page>
+</t:page>

@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Contains infomation about all background jobs or processes running on a node.
+ * Contains information about all background jobs or processes running on a node.
  */
 public class BackgroundInfo {
     private final String nodeName;
@@ -21,14 +21,21 @@ public class BackgroundInfo {
     private final String uptime;
     private final String version;
     private final String detailedVersion;
+    private final int activeBackgroundTasks;
     protected final Map<String, BackgroundJobInfo> jobs = new HashMap<>();
 
-    protected BackgroundInfo(String nodeName, boolean bleeding, String uptime, String version, String detailedVersion) {
+    protected BackgroundInfo(String nodeName,
+                             boolean bleeding,
+                             int activeBackgroundTasks,
+                             String uptime,
+                             String version,
+                             String detailedVersion) {
         this.nodeName = nodeName;
         this.bleeding = bleeding;
         this.uptime = uptime;
         this.version = version;
         this.detailedVersion = detailedVersion;
+        this.activeBackgroundTasks = activeBackgroundTasks;
     }
 
     /**
@@ -59,6 +66,11 @@ public class BackgroundInfo {
 
     public String getDetailedVersion() {
         return detailedVersion;
+    }
+
+
+    public int getActiveBackgroundTasks() {
+        return activeBackgroundTasks;
     }
 
     /**

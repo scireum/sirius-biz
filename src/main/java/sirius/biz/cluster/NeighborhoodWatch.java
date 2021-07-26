@@ -52,9 +52,9 @@ import java.util.concurrent.TimeUnit;
  * This is used to distribute background tasks ({@link BackgroundLoop}, {@link EveryDay}) across all
  * cluster members while still ensuring that a single job only runs on one node concurrently.
  * <p>
- * Also the provides a possibility to globally or locally disable a centrain background activity.
+ * Also the provides a possibility to globally or locally disable a certain background activity.
  * <p>
- * Locally the synchronization of background jobs can be controller via the system configuration
+ * Locally the synchronization of background jobs can be controlled via the system configuration
  * providing a key like <tt>orchestration.job-name = SYNC-TYPE</tt> - use a name of {@link SynchronizeType} to specify
  * how to synchronize a job across the cluster.
  */
@@ -455,6 +455,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
     public BackgroundInfo getLocalBackgroundInfo() {
         BackgroundInfo result = new BackgroundInfo(CallContext.getNodeName(),
                                                    isBleeding(),
+                                                   getActiveBackgroundTasks(),
                                                    NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false),
                                                    Product.getProduct().getVersion(),
                                                    Product.getProduct().getDetails());
@@ -475,6 +476,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
         if (jsonObject.getBooleanValue(InterconnectClusterManager.RESPONSE_ERROR)) {
             return new BackgroundInfo(jsonObject.getString(InterconnectClusterManager.RESPONSE_NODE_NAME),
                                       false,
+                                      0,
                                       "-",
                                       "-",
                                       "-");
@@ -482,6 +484,7 @@ public class NeighborhoodWatch implements Orchestration, Initializable, Intercon
 
         BackgroundInfo result = new BackgroundInfo(jsonObject.getString(InterconnectClusterManager.RESPONSE_NODE_NAME),
                                                    jsonObject.getBooleanValue(ClusterController.RESPONSE_BLEEDING),
+                                                   jsonObject.getIntValue(ClusterController.RESPONSE_ACTIVE_BACKGROUND_TASKS),
                                                    jsonObject.getString(ClusterController.RESPONSE_UPTIME),
                                                    jsonObject.getString(ClusterController.RESPONSE_VERSION),
                                                    jsonObject.getString(ClusterController.RESPONSE_DETAILED_VERSION));

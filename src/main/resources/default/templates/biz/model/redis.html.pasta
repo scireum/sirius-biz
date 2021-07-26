@@ -1,71 +1,79 @@
-<i:arg type="List" name="pools" />
-<i:arg type="String" name="defaultPool" />
-<w:page titleKey="RedisController.redis">
+<i:arg type="List" name="pools"/>
+<i:arg type="String" name="defaultPool"/>
+<t:page titleKey="RedisController.redis">
     <i:block name="breadcrumbs">
         <li>
             <a href="/system/redis">@i18n("RedisController.redis")</a>
         </li>
     </i:block>
 
-    <w:pageHeader titleKey="RedisController.redis"/>
+    <i:block name="page-header">
+        <t:pageHeader titleKey="RedisController.redis"/>
+    </i:block>
 
-    <div class="well">
-        <div class="row">
-            <div class="col-md-10">
-                <div class="input-group">
-                    <input type="text" id="query" class="form-control" placeholder="@i18n('NLS.searchkey')" autofocus />
-                    <span class="input-group-addon" onclick="execute()"><i class="fa fa-search"></i></span>
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-10">
+                    <div class="input-group">
+                        <input type="text" id="query" name="query"
+                               class="form-control primary-autofocus"
+                               placeholder="@i18n('NLS.searchkey')" autofocus/>
+                        <div class="input-group-append">
+                            <a class="btn btn-outline-secondary" onclick="execute()">
+                                <i class="fa fa-search"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
+                <t:singleSelect name="pool" id="pool" class="col-2">
+                    <i:for type="String" var="pool" items="pools">
+                        <option value="@pool" @selected="defaultPool == pool">@pool</option>
+                    </i:for>
+                </t:singleSelect>
             </div>
-            <w:singleSelect name="pool" id="pool" span="2">
-                <i:for type="String" var="pool" items="pools">
-                    <option value="@pool" @selected="defaultPool == pool">@pool</option>
-                </i:for>
-            </w:singleSelect>
         </div>
     </div>
 
-    <div id="resultBox" class="well" style="display: none">
-        <div id="result" style="white-space: pre-wrap; font-family: monospace;"></div>
+
+    <div class="card mb-2 d-none" id="resultBox">
+        <div class="card-body">
+            <div class="overflow-auto">
+                <div id="result" class="whitespace-pre-wrap text-monospace"></div>
+            </div>
+        </div>
     </div>
 
-    <p>
-        <small id="info"></small>
-    </p>
+    <div class="small mb-4" id="info"></div>
 
     <script type="text/javascript">
         function execute() {
             clearMessages();
-            var $result = $('#result');
-            var $resultBox = $('#resultBox');
-            var $info = $('#info');
-            $info.html('');
-            $resultBox.show();
-            $result.text('Running...');
-            $.getJSON('/system/redis/api/execute',
+            const _result = document.getElementById('result');
+            const _resultBox = document.getElementById('resultBox');
+            const _info = document.getElementById('info');
+
+            _info.innerHTML = '';
+            _resultBox.classList.remove('d-none');
+            _result.textContent = 'Running...';
+            sirius.postJSON('/system/redis/api/execute',
                 {
-                    query: $('#query').val(),
-                    pool: $('[name=pool]').val()
-                },
+                    query: document.getElementById("query").value,
+                    pool: document.getElementById("pool").tokenAutocomplete.val()[0]
+                }).then(
                 function (data) {
-                    $info.text(data.duration);
+                    _info.textContent = data.duration;
                     if (data.error) {
-                        $resultBox.hide();
-                        addError(data.message);
-                        return;
+                        _resultBox.classList.add('d-none');
+                        addErrorMessage(data.message);
+                    } else {
+                        _result.textContent = data.result;
                     }
-                    $result.text(data.result);
-                }
-            );
+                });
         }
 
-        $(document).ready(function () {
-            $('#query').keydown(function (e) {
-                if (e.keyCode === 13) {
-                    execute();
-                    return false;
-                }
-            });
+        sirius.ready(function () {
+            sirius.addEnterListener(document.getElementById('query'), execute);
         });
     </script>
-</w:page>
+</t:page>

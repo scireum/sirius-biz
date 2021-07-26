@@ -60,6 +60,7 @@ public class ClusterController extends BasicController {
     public static final String RESPONSE_DETAILED_VERSION = "detailedVersion";
     public static final String RESPONSE_UPTIME = "uptime";
     public static final String RESPONSE_BLEEDING = "bleeding";
+    public static final String RESPONSE_ACTIVE_BACKGROUND_TASKS = "activeBackgroundTasks";
     public static final String RESPONSE_METRICS = "metrics";
     public static final String RESPONSE_METRIC = "metric";
     public static final String RESPONSE_VALUE = "value";
@@ -108,7 +109,7 @@ public class ClusterController extends BasicController {
      * @param out        the output to write the JSON to
      * @param token      the cluster authentication token
      */
-    @Routed( "/system/cluster/state/:1")
+    @Routed("/system/cluster/state/:1")
     @InternalService
     public void nodeInfo(WebContext webContext, JSONStructuredOutput out, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
@@ -154,6 +155,7 @@ public class ClusterController extends BasicController {
         out.property(RESPONSE_DETAILED_VERSION, Product.getProduct().getDetails());
         out.property(RESPONSE_UPTIME, NLS.convertDuration(Sirius.getUptimeInMilliseconds(), true, false));
         out.property(RESPONSE_BLEEDING, neighborhoodWatch.isBleeding());
+        out.property(RESPONSE_ACTIVE_BACKGROUND_TASKS, neighborhoodWatch.getActiveBackgroundTasks());
 
         out.beginArray(RESPONSE_JOBS);
         for (BackgroundJobInfo job : neighborhoodWatch.getLocalBackgroundInfo().getJobs().values()) {
@@ -189,7 +191,12 @@ public class ClusterController extends BasicController {
                                                                                 e -> e.getValue().getDescription(),
                                                                                 (a, b) -> a));
         webContext.respondWith()
-                  .template("/templates/biz/cluster/cluster.html.pasta", jobKeys, descriptions, clusterInfo, locks);
+                  .template("/templates/biz/cluster/cluster.html.pasta",
+                            jobKeys,
+                            descriptions,
+                            clusterInfo,
+                            webContext.get("groupByNode").asBoolean(),
+                            locks);
     }
 
     /**
@@ -271,7 +278,7 @@ public class ClusterController extends BasicController {
     /**
      * Determines if the system is fully bled out and can be stopped.
      * <p>
-     * Returns a 200 OK if the system can (most probably) be restarted or a 417 EXPECTATION FAILED otherwise.
+     * Returns a 200 OK if the system can (most probably) be restarted, or a 417 EXPECTATION FAILED otherwise.
      *
      * @param webContext the request to handle
      * @see NeighborhoodWatch#changeBleeding(String, boolean)
