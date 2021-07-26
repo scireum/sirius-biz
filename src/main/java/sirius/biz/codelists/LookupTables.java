@@ -52,7 +52,11 @@ public class LookupTables {
      * code list with the same name
      */
     public LookupTable fetchTable(String lookupTableName) {
-        return tables.computeIfAbsent(lookupTableName, this::makeTable);
+        if (!tables.containsKey(lookupTableName)) {
+            LookupTable table = makeTable(lookupTableName);
+            tables.put(lookupTableName, table);
+        }
+        return tables.get(lookupTableName);
     }
 
     private LookupTable makeTable(String name) {
