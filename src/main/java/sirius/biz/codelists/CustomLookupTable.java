@@ -28,7 +28,7 @@ class CustomLookupTable extends LookupTable {
     private final LookupTable baseTable;
 
     CustomLookupTable(Extension extension, LookupTable customTable, LookupTable baseTable) {
-        super(extension);
+        super(extension, baseTable.codeCase);
         this.customTable = customTable;
         this.baseTable = baseTable;
     }

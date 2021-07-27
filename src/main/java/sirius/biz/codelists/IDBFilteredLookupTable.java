@@ -33,7 +33,7 @@ class IDBFilteredLookupTable extends LookupTable {
     private static Jupiter jupiter;
 
     IDBFilteredLookupTable(Extension extension, LookupTable baseTable, IDBSet filterSet) {
-        super(extension);
+        super(extension, baseTable.codeCase);
         this.baseTable = baseTable;
         this.filterSet = filterSet;
     }

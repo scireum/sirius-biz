@@ -57,21 +57,25 @@ public abstract class LookupTable {
     private static final String CONFIG_KEY_CODE_CASE_MODE = "codeCase";
     public static final String CONFIG_KEY_MAPPING_FIELD = "mappingsField";
     private final boolean supportsScan;
-    private final CodeCase codeCase;
     private final String mappingsField;
 
     enum CodeCase {
         LOWER, UPPER, VERBATIM
     }
 
+    protected final CodeCase codeCase;
     protected final Extension extension;
 
     protected LookupTable(Extension extension) {
+        this(extension,
+             extension.get(CONFIG_KEY_CODE_CASE_MODE).upperCase().getEnum(CodeCase.class).orElse(CodeCase.VERBATIM));
+    }
+
+    protected LookupTable(Extension extension, CodeCase codeCase) {
         this.extension = extension;
         this.supportsScan = extension.get(CONFIG_KEY_SUPPORTS_SCAN).asBoolean();
         this.mappingsField = extension.get(CONFIG_KEY_MAPPING_FIELD).asString();
-        this.codeCase =
-                extension.get(CONFIG_KEY_CODE_CASE_MODE).upperCase().getEnum(CodeCase.class).orElse(CodeCase.VERBATIM);
+        this.codeCase = codeCase;
     }
 
     /**
@@ -633,7 +637,8 @@ public abstract class LookupTable {
                                              .stream()
                                              .filter(entry -> entry.getValue() instanceof JSONArray)
                                              .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                       entry -> transformArrayToStringList((JSONArray) entry.getValue())));
+                                                                       entry -> transformArrayToStringList((JSONArray) entry
+                                                                               .getValue())));
         } else {
             return Collections.emptyMap();
         }
