@@ -1,0 +1,44 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="1000"/>
+
+<i:switch test="@point">
+    <i:block name="footer-right-start">
+        <w:permission permission="flag-logged-in">
+            <small>
+               <b>@currentUserName()</b>
+               <i:if test="isFilled(user().getTenantName())">(@user().getTenantName())</i:if>
+            </small>
+        </w:permission>
+    </i:block>
+    <i:block name="footer-right-end">
+        <w:permission permission="flag-logged-in">
+            <i:if test="user().is(sirius.biz.tenants.Tenant.class)">
+                <small>
+                    <a id="supportLink" class="text-sirius-gray-dark cursor-pointer"><i class="fa fa-link"></i></a>
+                <script type="text/javascript">
+                    function copyToClipboard(value) {
+                        if (!navigator.clipboard) {
+                            const fakeElem = document.createElement('textarea');
+                            fakeElem.value = value;
+                            document.body.appendChild(fakeElem);
+                            fakeElem.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(fakeElem);
+                        } else {
+                            navigator.clipboard.writeText(value)
+                        }
+                    }
+
+                    $(document).ready(function() {
+                        document.querySelector('#supportLink').addEventListener('click', function() {
+                            copyToClipboard(window.location.protocol + window.location.host + '/tenants/select/@user().getTenantId()?goto=' + encodeURI(window.location.href));
+
+                            document.querySelector('#messageBox').innerHTML = '<div class="alert alert-success">@i18n("footer.html.supportLinkCopiedSuccessfully")</div>';
+                        });
+                    });
+                </script>
+                </small>
+            </i:if>
+        </w:permission>
+    </i:block>
+</i:switch>
