@@ -27,7 +27,7 @@
             <t:dropdownItem title="Cluster" icon="fa-sitemap" url="/system/cluster"
                         permission="permission-system-cluster"/>
             <t:dropdownItem title="Scripting" icon="fa-terminal" url="/system/scripting"
-                        permission="permission-sytem-scripting"/>
+                        permission="permission-system-scripting"/>
         </t:dropdownSection>
     </i:block>
 </i:switch>

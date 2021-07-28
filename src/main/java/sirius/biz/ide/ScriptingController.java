@@ -41,7 +41,7 @@ public class ScriptingController extends BizController {
     /**
      * Specifies the permission which is required to execute scripts.
      */
-    public static final String PERMISSION_SCRIPTING = "permission-sytem-scripting";
+    public static final String PERMISSION_SCRIPTING = "permission-system-scripting";
 
     private static final String PARAM_SCRIPT = "script";
     private static final String PARAM_NODE = "node";
