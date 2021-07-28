@@ -8,6 +8,7 @@
 
 package sirius.biz.tycho;
 
+import io.netty.handler.codec.http.QueryStringDecoder;
 import sirius.biz.analytics.events.EventRecorder;
 import sirius.biz.analytics.events.PageImpressionEvent;
 import sirius.biz.web.BizController;
@@ -31,18 +32,6 @@ public class DashboardController extends BizController {
     private EventRecorder eventRecorder;
 
     /**
-     * Provides the main entry point for "/".
-     *
-     * @param webContext the request to respond to
-     */
-    @LoginRequired
-    @Routed(value = "/", priority = 999)
-    public void mainEntryPoint(WebContext webContext) {
-        eventRecorder.record(new PageImpressionEvent().withAggregationUrl("/"));
-        webContext.respondWith().template("/templates/biz/tycho/dashboard.html.pasta");
-    }
-
-    /**
      * Provides an alternative entry point via "/admin".
      *
      * @param webContext the request to respond to
@@ -50,7 +39,9 @@ public class DashboardController extends BizController {
     @LoginRequired
     @Routed(value = "/admin", priority = 999)
     public void admin(WebContext webContext) {
-        mainEntryPoint(webContext);
+        String path = new QueryStringDecoder(webContext.getRequest().uri()).path();
+        eventRecorder.record(new PageImpressionEvent().withAggregationUrl(path));
+        webContext.respondWith().template("/templates/biz/tycho/dashboard.html.pasta",path);
     }
 
     /**
@@ -61,6 +52,6 @@ public class DashboardController extends BizController {
     @LoginRequired
     @Routed(value = "/dashboard", priority = 999)
     public void dashboard(WebContext webContext) {
-        mainEntryPoint(webContext);
+        admin(webContext);
     }
 }
