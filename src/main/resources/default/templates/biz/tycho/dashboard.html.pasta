@@ -1,7 +1,8 @@
+<i:arg type="String" name="path" />
 <t:page title="Dashboard">
     <i:block name="breadcrumbs">
         <li>
-            <a href="@CallContext.getCurrent().get(WebContext.class).getRequestedURI()">Dashboard</a>
+            <a href="@path">Dashboard</a>
         </li>
     </i:block>
 

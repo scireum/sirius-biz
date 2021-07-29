@@ -41,7 +41,7 @@ public class ScriptingController extends BizController {
     /**
      * Specifies the permission which is required to execute scripts.
      */
-    public static final String PERMISSION_SCRIPTING = "permission-sytem-scripting";
+    public static final String PERMISSION_SCRIPTING = "permission-system-scripting";
 
     private static final String PARAM_SCRIPT = "script";
     private static final String PARAM_NODE = "node";
@@ -117,17 +117,19 @@ public class ScriptingController extends BizController {
     @Permission(PERMISSION_SCRIPTING)
     public void submit(WebContext webContext, JSONStructuredOutput output) throws Exception {
         try {
-            String script = webContext.get(PARAM_SCRIPT).asString();
-            String targetNode = webContext.get(PARAM_NODE).asString();
+            if (webContext.isSafePOST()) {
+                String script = webContext.get(PARAM_SCRIPT).asString();
+                String targetNode = webContext.get(PARAM_NODE).asString();
 
-            CompilationContext compilationContext = new CompilationContext(SourceCodeInfo.forInlineCode(script));
-            NoodleCompiler compiler = new NoodleCompiler(compilationContext);
-            compiler.compileScript();
-            compilationContext.processCollectedErrors();
+                CompilationContext compilationContext = new CompilationContext(SourceCodeInfo.forInlineCode(script));
+                NoodleCompiler compiler = new NoodleCompiler(compilationContext);
+                compiler.compileScript();
+                compilationContext.processCollectedErrors();
 
-            String jobNumber = scripting.submitScript(script, targetNode);
-            output.property(RESPONSE_JOB_MESSAGE,
-                            NLS.fmtr("ScriptingController.jobMessage").set(RESPONSE_JOB, jobNumber).format());
+                String jobNumber = scripting.submitScript(script, targetNode);
+                output.property(RESPONSE_JOB_MESSAGE,
+                                NLS.fmtr("ScriptingController.jobMessage").set(RESPONSE_JOB, jobNumber).format());
+            }
         } catch (CompileException e) {
             throw Exceptions.createHandled().withDirectMessage(e.getMessage()).handle();
         }
@@ -143,10 +145,12 @@ public class ScriptingController extends BizController {
     @InternalService
     @Permission(PERMISSION_SCRIPTING)
     public void compile(WebContext webContext, JSONStructuredOutput output) {
-        String script = webContext.get(PARAM_SCRIPT).asString();
-        CompilationContext compilationContext = new CompilationContext(SourceCodeInfo.forInlineCode(script));
-        NoodleCompiler compiler = new NoodleCompiler(compilationContext);
-        compiler.compileScript();
-        TemplateCompiler.reportAsJson(compilationContext.getErrors(), output);
+        if (webContext.isSafePOST()) {
+            String script = webContext.get(PARAM_SCRIPT).asString();
+            CompilationContext compilationContext = new CompilationContext(SourceCodeInfo.forInlineCode(script));
+            NoodleCompiler compiler = new NoodleCompiler(compilationContext);
+            compiler.compileScript();
+            TemplateCompiler.reportAsJson(compilationContext.getErrors(), output);
+        }
     }
 }
