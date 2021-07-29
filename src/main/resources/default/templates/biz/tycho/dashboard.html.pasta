@@ -1,4 +1,4 @@
-<i:arg name="path" />
+<i:arg type="String" name="path" />
 <t:page title="Dashboard">
     <i:block name="breadcrumbs">
         <li>
