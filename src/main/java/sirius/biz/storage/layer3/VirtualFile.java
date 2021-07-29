@@ -1321,22 +1321,26 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         Optional<LocalDateTime> lastModifiedHeader = Optional.empty();
 
         if (Strings.isEmpty(path)) {
-            Outcall outcall = new Outcall(url);
-            outcall.markAsHeadRequest();
-            Optional<String> contentDispositionPath = outcall.parseFileNameFromContentDisposition();
-            lastModifiedHeader = outcall.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString());
+            Outcall headRequest = new Outcall(url);
+            headRequest.markAsHeadRequest();
+            Optional<String> contentDispositionPath = headRequest.parseFileNameFromContentDisposition();
+            lastModifiedHeader = headRequest.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString());
 
             if (contentDispositionPath.isPresent() && fileExtensionVerifier.test(Files.getFileExtension(
                     contentDispositionPath.get()))) {
                 path = contentDispositionPath.get();
-            } else if (outcall.getResponseCode() == HttpResponseStatus.NOT_IMPLEMENTED.code()
-                       || outcall.getResponseCode() == HttpResponseStatus.SERVICE_UNAVAILABLE.code()) {
+            } else if (headRequest.getResponseCode() == HttpResponseStatus.NOT_IMPLEMENTED.code()
+                       || headRequest.getResponseCode() == HttpResponseStatus.SERVICE_UNAVAILABLE.code()) {
                 // some servers will respond with errors on head request, retry with a get request
-                outcall = new Outcall(url);
-                contentDispositionPath = outcall.parseFileNameFromContentDisposition();
-                lastModifiedHeader = outcall.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString());
-                // input has been opened by reading the header and as we don't read the body, close it to free resources
-                outcall.getInput().close();
+                Outcall getRequest = new Outcall(url);
+                contentDispositionPath = getRequest.parseFileNameFromContentDisposition();
+                lastModifiedHeader = getRequest.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString());
+                try {
+                    // input has been opened by reading the header and as we don't read the body, close it to free resources
+                    getRequest.getInput().close();
+                } catch (IOException e) {
+                    Exceptions.ignore(e);
+                }
                 if (contentDispositionPath.isPresent() && fileExtensionVerifier.test(Files.getFileExtension(
                         contentDispositionPath.get()))) {
                     path = contentDispositionPath.get();
