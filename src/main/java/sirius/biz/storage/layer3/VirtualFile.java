@@ -1323,6 +1323,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         if (Strings.isEmpty(path)) {
             Tuple<Optional<String>, Optional<LocalDateTime>> pathAndModifiedHeaders = requestHeaders(url);
             Optional<String> pathFromContentDisposition = pathAndModifiedHeaders.getFirst();
+            lastModifiedHeader = pathAndModifiedHeaders.getSecond();
             if (pathFromContentDisposition.isPresent() && fileExtensionVerifier.test(Files.getFileExtension(
                     pathFromContentDisposition.get()))) {
                 path = pathFromContentDisposition.get();
