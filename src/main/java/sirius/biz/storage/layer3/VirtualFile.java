@@ -1364,8 +1364,8 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
     }
 
     private boolean shouldRetryWithGet(Outcall headRequest) throws IOException {
-        if (headRequest.getResponseCode() == HttpResponseStatus.METHOD_NOT_ALLOWED.code() && headRequest.getHeaderField(
-                HttpHeaderNames.ALLOW.toString()).toUpperCase().contains("GET")) {
+        if (headRequest.getResponseCode() == HttpResponseStatus.METHOD_NOT_ALLOWED.code()
+            && Value.of(headRequest.getHeaderField(HttpHeaderNames.ALLOW.toString())).toUpperCase().contains("GET")) {
             // server disallows head request and indicates GET is allowed
             return true;
         }
