@@ -16,6 +16,8 @@ import sirius.db.mixing.BaseEntity;
 import sirius.db.mixing.EntityDescriptor;
 import sirius.db.mixing.Mapping;
 import sirius.kernel.async.TaskContext;
+import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Tuple;
 import sirius.kernel.di.std.Framework;
 
 import java.time.LocalDateTime;
@@ -89,6 +91,19 @@ public class JournalEntry extends SearchableEntity {
     @SearchContent
     @IndexMode(indexed = ESOption.FALSE, docValues = ESOption.FALSE)
     private String changes;
+
+    /**
+     * Splits the {@link #CONTENT_IDENTIFIER} into its two original parts.
+     * <p>
+     * This can be used for entities {@link DelegateJournalData} as the {@link #TARGET_TYPE} and {@link #TARGET_ID} contain
+     * the type and ID of the parent entity in those cases. So this method returns the actual type and ID of the entity
+     * using {@link DelegateJournalData} instead, the same as for entities using {@link JournalData}.
+     *
+     * @return a <tt>Tuple</tt> containing the type and ID of the changed entity
+     */
+    public Tuple<String, String> splitContentIdentifierParts() {
+        return Strings.split(contentIdentifier, "-");
+    }
 
     public LocalDateTime getTod() {
         return tod;
