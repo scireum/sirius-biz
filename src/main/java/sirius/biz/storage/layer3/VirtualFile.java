@@ -1348,9 +1348,7 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             return Tuple.create(contentDispositionPath, lastModifiedHeader);
         }
 
-        if (headRequest.getResponseCode() == HttpResponseStatus.NOT_IMPLEMENTED.code()
-            || headRequest.getResponseCode() == HttpResponseStatus.SERVICE_UNAVAILABLE.code()) {
-            // some servers will respond with errors on head request, retry with a get request
+        if (shouldRetryWithGet(headRequest)) {
             Outcall getRequest = new Outcall(url);
             contentDispositionPath = getRequest.parseFileNameFromContentDisposition();
             lastModifiedHeader = getRequest.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString());
@@ -1363,6 +1361,18 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         }
 
         return Tuple.create(contentDispositionPath, lastModifiedHeader);
+    }
+
+    private boolean shouldRetryWithGet(Outcall headRequest) throws IOException {
+        if (headRequest.getResponseCode() == HttpResponseStatus.METHOD_NOT_ALLOWED.code()
+            && Value.of(headRequest.getHeaderField(HttpHeaderNames.ALLOW.toString())).toUpperCase().contains("GET")) {
+            // server disallows head request and indicates GET is allowed
+            return true;
+        }
+
+        // some servers will improperly respond with 503 or 501 if HEAD requests are not allowed - we want to retry anyway
+        return headRequest.getResponseCode() == HttpResponseStatus.NOT_IMPLEMENTED.code()
+               || headRequest.getResponseCode() == HttpResponseStatus.SERVICE_UNAVAILABLE.code();
     }
 
     private VirtualFile doDownload(URL url,
