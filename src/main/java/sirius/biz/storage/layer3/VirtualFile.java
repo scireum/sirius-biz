@@ -1318,26 +1318,59 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
             throws IOException {
         Watch watch = Watch.start();
         String path = parsePathFromUrl(url, fileExtensionVerifier);
-        boolean downloaded;
         Optional<LocalDateTime> lastModifiedHeader = Optional.empty();
 
         if (Strings.isEmpty(path)) {
-            Outcall outcall = new Outcall(url);
-            outcall.markAsHeadRequest();
-            Optional<String> contentDispositionPath = outcall.parseFileNameFromContentDisposition();
-            lastModifiedHeader = outcall.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString());
-
-            if (contentDispositionPath.isPresent() && fileExtensionVerifier.test(Files.getFileExtension(
-                    contentDispositionPath.get()))) {
-                path = contentDispositionPath.get();
-            } else {
-                throw Exceptions.createHandled()
-                                .withNLSKey("VirtualFile.loadFromUrl.noValidPath")
-                                .set("url", url)
-                                .handle();
+            Tuple<Optional<String>, Optional<LocalDateTime>> pathAndModifiedHeaders = requestHeaders(url);
+            Optional<String> pathFromContentDisposition = pathAndModifiedHeaders.getFirst();
+            lastModifiedHeader = pathAndModifiedHeaders.getSecond();
+            if (pathFromContentDisposition.isPresent() && fileExtensionVerifier.test(Files.getFileExtension(
+                    pathFromContentDisposition.get()))) {
+                path = pathFromContentDisposition.get();
             }
         }
 
+        if (Strings.isEmpty(path)) {
+            throw Exceptions.createHandled().withNLSKey("VirtualFile.loadFromUrl.noValidPath").set("url", url).handle();
+        }
+
+        return doDownload(url, force, watch, path, lastModifiedHeader);
+    }
+
+    private Tuple<Optional<String>, Optional<LocalDateTime>> requestHeaders(URL url) throws IOException {
+        Outcall headRequest = new Outcall(url);
+        headRequest.markAsHeadRequest();
+        Optional<String> contentDispositionPath = headRequest.parseFileNameFromContentDisposition();
+        Optional<LocalDateTime> lastModifiedHeader =
+                headRequest.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString());
+
+        if (contentDispositionPath.isPresent()) {
+            return Tuple.create(contentDispositionPath, lastModifiedHeader);
+        }
+
+        if (headRequest.getResponseCode() == HttpResponseStatus.NOT_IMPLEMENTED.code()
+            || headRequest.getResponseCode() == HttpResponseStatus.SERVICE_UNAVAILABLE.code()) {
+            // some servers will respond with errors on head request, retry with a get request
+            Outcall getRequest = new Outcall(url);
+            contentDispositionPath = getRequest.parseFileNameFromContentDisposition();
+            lastModifiedHeader = getRequest.getHeaderFieldDate(HttpHeaderNames.LAST_MODIFIED.toString());
+            try {
+                // input has been opened by reading the header and as we don't read the body, close it to free resources
+                getRequest.getInput().close();
+            } catch (IOException e) {
+                Exceptions.ignore(e);
+            }
+        }
+
+        return Tuple.create(contentDispositionPath, lastModifiedHeader);
+    }
+
+    private VirtualFile doDownload(URL url,
+                                   boolean force,
+                                   Watch watch,
+                                   String path,
+                                   Optional<LocalDateTime> lastModifiedHeader) throws IOException {
+        boolean downloaded;
         VirtualFile file = resolve(path);
 
         if (force || !file.exists() || file.lastModifiedDate() == null || lastModifiedHeader.isEmpty()) {
@@ -1359,7 +1392,6 @@ public abstract class VirtualFile extends Composable implements Comparable<Virtu
         } else {
             TaskContext.get().addTiming(NLS.get("VirtualFile.fileDownloadSkipped"), watch.elapsedMillis());
         }
-
         return file;
     }
 
