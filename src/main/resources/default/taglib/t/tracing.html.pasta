@@ -1,0 +1,45 @@
+<i:arg name="trace" type="sirius.biz.protocol.TraceData"/>
+<i:arg name="journal" type="sirius.biz.protocol.JournalData" default=""/>
+<i:pragma name="inline" value="true"/>
+<i:pragma name="description" value="Renders a trace button and the trace information for a TracedEntity"/>
+
+<i:if test="trace.getCreatedAt() != null && (journal == null || isFilled(journal.getProtocolUri()))">
+    <btn data-toggle="collapse" data-target=".tracing" class="btn btn-outline-info float-right">
+        <i class="fa fa-info"></i>
+    </btn>
+
+    <div class="tracing collapse">
+
+        <t:datacard class="col-lg-8 col-xl-6 ml-auto mt-4" title="@i18n('TraceData.infos')">
+            <i:render name="body"/>
+            <t:infoLine class="tracing-info"labelKey="TraceData.created">
+                <div>@toUserString(trace.getCreatedAt())</div>
+                <div>@trace.getCreatedBy()</div>
+                <div class="muted">@trace.getCreatedOn()</div>
+                <div class="muted">@trace.getCreatedIn()</div>
+            </t:infoLine>
+
+            <hr/>
+
+            <t:infoLine class="tracing-info" labelKey="TraceData.changed">
+                <div>@toUserString(trace.getChangedAt())</div>
+                <div>@trace.getChangedBy()</div>
+                <div class="muted">@trace.getChangedOn()</div>
+                <div class="muted">@trace.getChangedIn()</div>
+            </t:infoLine>
+
+            <hr/>
+
+            <i block="actions">
+                <i:if test="journal != null">
+                    <a href="@journal.getProtocolUri()" class="link">
+                        <i class="fa fa-angle-double-right"></i> @i18n("JournalEntry.plural")
+                    </a>
+                </i:if>
+            </i>
+        </t:datacard>
+
+    </div>
+</i:if>
+
+
