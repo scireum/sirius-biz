@@ -24,8 +24,8 @@
             <t:infoLine class="tracing-info" labelKey="TraceData.changed">
                 <div>@toUserString(trace.getChangedAt())</div>
                 <div>@trace.getChangedBy()</div>
-                <div class="muted">@trace.getChangedOn()</div>
-                <div class="muted">@trace.getChangedIn()</div>
+                <div class="text-muted">@trace.getChangedOn()</div>
+                <div class="text-muted">@trace.getChangedIn()</div>
             </t:infoLine>
 
             <hr/>
