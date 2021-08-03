@@ -330,9 +330,13 @@ public class MultiLanguageString extends SafeMap<String, String> {
      * @param key   the key used to store the value
      * @param value the value to store
      * @return the map itself for fluent method calls
+     * @throws IllegalArgumentException if the given key is empty. Missing translations should be handled via {@link MultiLanguageString#setFallback(String)}.
      */
     @Override
     public MultiLanguageString put(@Nonnull String key, String value) {
+        if (Strings.isEmpty(key)) {
+            throw new IllegalArgumentException("Can not add a value for an empty language to a MultiLanguageString.");
+        }
         if (Strings.isFilled(value)) {
             super.modify().put(key, value);
         } else {
@@ -341,11 +345,21 @@ public class MultiLanguageString extends SafeMap<String, String> {
         return this;
     }
 
+    /**
+     * Replaces the current data of this MultiLanguageString with the given {@link Map}.
+     *
+     * @param newData the map holding the new key-value pairs
+     * @throws IllegalArgumentException if the map contains an empty key. Missing translations should be handled via {@link MultiLanguageString#setFallback(String)}.
+     */
     @Override
     public void setData(Map<String, String> newData) {
         if (newData == null) {
             this.clear();
             return;
+        }
+
+        if (newData.keySet().stream().anyMatch(Strings::isEmpty)) {
+            throw new IllegalArgumentException("Can not add a value for an empty language to a MultiLanguageString.");
         }
 
         // remove keys with null values first
