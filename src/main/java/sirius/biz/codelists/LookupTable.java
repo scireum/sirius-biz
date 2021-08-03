@@ -19,6 +19,7 @@ import sirius.web.util.JSONPath;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -239,7 +240,16 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        return performFetchField(normalizeCodeValue(code), mappingsField + "." + mapping).asOptionalString();
+        return pullFirstValue(performFetchField(normalizeCodeValue(code),
+                                                mappingsField + "." + mapping)).asOptionalString();
+    }
+
+    private Value pullFirstValue(Value possibleCollection) {
+        if ((possibleCollection instanceof Collection values) && (!values.isEmpty())) {
+            return Value.of(values.iterator().next());
+        } else {
+            return possibleCollection;
+        }
     }
 
     /**
@@ -276,13 +286,16 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        Optional<String> result =
-                performFetchField(normalizeCodeValue(code), mappingsField + "." + primaryMapping).asOptionalString();
+        Optional<String> result = pullFirstValue(performFetchField(normalizeCodeValue(code),
+                                                                   mappingsField
+                                                                   + "."
+                                                                   + primaryMapping)).asOptionalString();
         if (result.isPresent()) {
             return result;
         }
 
-        return performFetchField(normalizeCodeValue(code), mappingsField + "." + secondaryMapping).asOptionalString();
+        return pullFirstValue(performFetchField(normalizeCodeValue(code),
+                                                mappingsField + "." + secondaryMapping)).asOptionalString();
     }
 
     /**
@@ -637,8 +650,7 @@ public abstract class LookupTable {
                                              .stream()
                                              .filter(entry -> entry.getValue() instanceof JSONArray)
                                              .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                       entry -> transformArrayToStringList((JSONArray) entry
-                                                                               .getValue())));
+                                                                       entry -> transformArrayToStringList((JSONArray) entry.getValue())));
         } else {
             return Collections.emptyMap();
         }
