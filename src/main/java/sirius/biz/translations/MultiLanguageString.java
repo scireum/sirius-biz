@@ -196,7 +196,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
     public MultiLanguageString setFallback(String text) {
         if (!withFallback && Strings.isFilled(text)) {
             throw new IllegalStateException(
-                    "Can not call addFallback on a MultiLanguageString without fallback enabled.");
+                    "Can not call setFallback on a MultiLanguageString without fallback enabled.");
         }
         return addText(FALLBACK_KEY, text);
     }
