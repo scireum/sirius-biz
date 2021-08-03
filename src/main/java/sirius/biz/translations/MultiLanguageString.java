@@ -304,6 +304,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
      *
      * @param language the language code
      * @return the text found under <tt>language</tt>, if none found the one from {@link #FALLBACK_KEY} is returned
+     * @throws IllegalStateException if this field does not support fallbacks.
      */
     @Nullable
     public String fetchTextOrFallback(String language) {
@@ -382,7 +383,7 @@ public class MultiLanguageString extends SafeMap<String, String> {
      *     <li>{@link MultiLanguageString#clear()}
      * </ul>
      *
-     * @return throws an {@link UnsupportedOperationException}
+     * @throws UnsupportedOperationException direct modifications of the underlying map are not allowed.
      */
     @Override
     public Map<String, String> modify() {
