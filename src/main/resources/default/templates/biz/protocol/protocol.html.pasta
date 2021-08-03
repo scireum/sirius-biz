@@ -47,7 +47,16 @@
                                 </div>
                                 <div class="col-md-4">
                                     <small>
-                                        @msg.getContentIdentifier() (@msg.getTargetId())
+                                        <i:if test="user().hasPermission('flag-system-administrator')">
+                                            <i:local name="identifierParts" value="@msg.splitContentIdentifierParts()"/>
+                                            <a href="/system/query?class=@identifierParts.getFirst()&query=id:@identifierParts.getSecond()"
+                                               target="_blank">
+                                                <b>@msg.getContentIdentifier() (@msg.getTargetId())</b>
+                                            </a>
+                                            <i:else>
+                                                @msg.getContentIdentifier() (@msg.getTargetId())
+                                            </i:else>
+                                        </i:if>
                                         <br>@msg.getTargetType()
                                     </small>
                                 </div>
