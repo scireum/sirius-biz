@@ -12,6 +12,16 @@ import sirius.kernel.BaseSpecification
 
 class MultiLanguageStringSpec extends BaseSpecification {
 
+    def "adding a text works"() {
+        given:
+        MultiLanguageString mls = new MultiLanguageString()
+        when:
+        mls.addText("en", "adding text works")
+        then:
+        noExceptionThrown()
+        mls.fetchText("en") == "adding text works"
+    }
+
     def "adding a text with null as language key throws IllegalArgumentException"() {
         given:
         MultiLanguageString mls = new MultiLanguageString()
@@ -30,7 +40,23 @@ class MultiLanguageStringSpec extends BaseSpecification {
         thrown(IllegalArgumentException)
     }
 
-    def "adding a value set with null as language key throws IllegalArgumentException"() {
+    def "adding a map of values with valid language keys works"() {
+        given:
+        MultiLanguageString mls = new MultiLanguageString()
+        when:
+        mls.addText("en", "some text")
+        mls.addText("de", "irgendein text")
+        Map<String, String> map = new HashMap<>()
+        map.put("fr", "en français")
+        map.put("sv", "på svensk")
+        mls.setData(map)
+        then:
+        noExceptionThrown()
+        mls.data.keySet().size() == 2
+        mls.data().keySet().containsAll(Arrays.asList("fr", "sv"))
+    }
+
+    def "adding a map of values with null as language key throws IllegalArgumentException"() {
         given:
         MultiLanguageString mls = new MultiLanguageString()
         when:
@@ -44,7 +70,7 @@ class MultiLanguageStringSpec extends BaseSpecification {
         thrown(IllegalArgumentException)
     }
 
-    def "adding a value set with an empty String as language key throws IllegalArgumentException"() {
+    def "adding a map of values with an empty String as language key throws IllegalArgumentException"() {
         given:
         MultiLanguageString mls = new MultiLanguageString()
         when:
