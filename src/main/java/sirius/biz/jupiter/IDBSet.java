@@ -9,6 +9,7 @@
 package sirius.biz.jupiter;
 
 import sirius.kernel.commons.Tuple;
+import sirius.kernel.commons.Value;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ public class IDBSet {
 
     private static final JupiterCommand CMD_CONTAINS = new JupiterCommand("IDB.CONTAINS");
     private static final JupiterCommand CMD_INDEX_OF = new JupiterCommand("IDB.INDEX_OF");
+    private static final JupiterCommand CMD_CARDINALITY = new JupiterCommand("IDB.CARDINALITY");
 
     private final JupiterConnector jupiter;
     private final String name;
@@ -132,5 +134,18 @@ public class IDBSet {
     @Override
     public String toString() {
         return "IDB Set: " + name + " in: " + jupiter;
+    }
+
+    /**
+     * Counts the number of items in this set.
+     *
+     * @return the size / element count of this set
+     */
+    public int size() {
+        return jupiter.query(() -> CMD_CARDINALITY + " " + name, redis -> {
+            redis.sendCommand(CMD_CARDINALITY, name);
+
+            return Value.of(redis.getIntegerReply()).asInt(0);
+        });
     }
 }

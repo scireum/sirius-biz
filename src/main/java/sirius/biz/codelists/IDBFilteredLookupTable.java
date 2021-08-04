@@ -13,6 +13,7 @@ import sirius.biz.jupiter.Jupiter;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
@@ -24,6 +25,8 @@ import java.util.stream.Stream;
  * Uses a {@link LookupTable lookup table} and filters its entries using a given {@link IDBSet}.
  */
 class IDBFilteredLookupTable extends LookupTable {
+
+    private static final String CACHE_PREFIX_CARDINALITY = "cardinality-";
 
     private final LookupTable baseTable;
     private final IDBSet filterSet;
@@ -123,5 +126,19 @@ class IDBFilteredLookupTable extends LookupTable {
     @Override
     protected Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue) {
         return baseTable.query(lang, lookupPath, lookupValue).filter(pair -> performContains(pair.getCode()));
+    }
+
+    @Override
+    public int count() {
+        try {
+            return jupiter.fetchFromSmallCache(CACHE_PREFIX_CARDINALITY + filterSet.getName(), filterSet::size);
+        } catch (Exception e) {
+            Exceptions.createHandled()
+                      .to(Jupiter.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Failed to fetch entry count of set '%s': %s (%s)", filterSet.getName())
+                      .handle();
+            return 0;
+        }
     }
 }

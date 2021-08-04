@@ -19,6 +19,7 @@ import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
 import java.util.Optional;
@@ -43,6 +44,7 @@ class IDBLookupTable extends LookupTable {
     private static final String COL_DEPRECATED = "deprecated";
 
     private static final String CACHE_PREFIX_FETCH_FIELD = "fetch-field-";
+    private static final String CACHE_PREFIX_COUNT = "count-";
     private static final String CACHE_PREFIX_FETCH_TRANSLATED_FIELD = "fetch-field-";
     private static final String CACHE_PREFIX_NORMALIZE = "normalize-";
     private static final String CACHE_PREFIX_NORMALIZE_WITH_MAPPING = "normalize-with-mapping";
@@ -309,6 +311,20 @@ class IDBLookupTable extends LookupTable {
                       .withSystemErrorMessage("Error scanning lang '%s' table '%s': %s (%s)", lang, table.getName())
                       .handle();
             return Stream.empty();
+        }
+    }
+
+    @Override
+    public int count() {
+        try {
+            return jupiter.fetchFromSmallCache(CACHE_PREFIX_COUNT + table.getName(), table::size);
+        } catch (Exception e) {
+            Exceptions.createHandled()
+                      .to(Jupiter.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Failed to fetch entry count of table '%s': %s (%s)", table.getName())
+                      .handle();
+            return 0;
         }
     }
 

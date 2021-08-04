@@ -14,6 +14,7 @@ import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
@@ -148,5 +149,10 @@ class CodeListLookupTable extends LookupTable {
         // This would need a complex caching strategy as always fetching the DB would be too expensive.
         // Could be implemented when needed.
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int count() {
+        return codeLists.getEntries(codeList).size();
     }
 }

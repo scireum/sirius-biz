@@ -106,6 +106,10 @@ class CustomLookupTable extends LookupTable {
                      .skip(limit.getItemsToSkip())
                      .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
+
+    @Override
+    public int count() {
+        return customTable.count() + baseTable.count();
     }
 
     @Override
