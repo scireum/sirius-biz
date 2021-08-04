@@ -39,6 +39,11 @@ class CodeListLookupTable extends LookupTable {
     }
 
     @Override
+    protected boolean performContains(@Nonnull String code) {
+        return codeLists.hasValue(codeList, code);
+    }
+
+    @Override
     protected Optional<String> performResolveName(String code, String lang) {
         return Optional.ofNullable(codeLists.getTranslatedValue(codeList, code, lang));
     }

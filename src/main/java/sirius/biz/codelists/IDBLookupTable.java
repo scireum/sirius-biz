@@ -77,6 +77,11 @@ class IDBLookupTable extends LookupTable {
     }
 
     @Override
+    protected boolean performContains(@Nonnull String code) {
+        return performFetchField(code, codeField).isFilled();
+    }
+
+    @Override
     protected Optional<String> performResolveName(String code, String lang) {
         return performFetchTranslatedField(code, nameField, lang);
     }

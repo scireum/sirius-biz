@@ -39,6 +39,9 @@ class CustomLookupTable extends LookupTable {
         }
 
         return alternative.get();
+    @Override
+    protected boolean performContains(@Nonnull String code) {
+        return customTable.performContains(code) || baseTable.performContains(code);
     }
 
     @Override
