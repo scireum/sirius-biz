@@ -9,6 +9,7 @@
 package sirius.biz.codelists;
 
 import sirius.biz.web.BizController;
+import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
@@ -65,7 +66,7 @@ public class LookupValueSuggestionController extends BizController {
                                 Consumer<AutocompleteHelper.Completion> result) {
         Stream<LookupTableEntry> entryStream;
         if (Strings.isEmpty(query)) {
-            entryStream = lookupTables.fetchTable(tableName).scan();
+            entryStream = lookupTables.fetchTable(tableName).scan(new Limit(0, MAX_SUGGESTIONS_ITEMS));
         } else {
             entryStream = lookupTables.fetchTable(tableName).suggest(query);
         }
