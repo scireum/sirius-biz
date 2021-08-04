@@ -1,0 +1,92 @@
+<i:arg name="id" type="String" default="@generateId()"/>
+<i:arg name="class" type="String" default="" description="Lists additional CSS classes to apply to the component."/>
+<i:arg name="fieldClass" type="String" default="" description="Lists additional CSS classes to apply to the field."/>
+<i:arg name="rows" type="int" default="3"/>
+<i:arg name="name" type="String"/>
+<i:arg name="value" type="sirius.biz.translations.MultiLanguageString"/>
+<i:arg name="labelKey" type="String" default=""/>
+<i:arg name="label" type="String" default="@i18n(labelKey)"/>
+<i:arg name="helpKey" type="String" default=""/>
+<i:arg name="help" type="String" default="@i18n(helpKey)"/>
+<i:arg name="defaultLanguage" type="String" default="@NLS.getCurrentLang()"/>
+<i:arg name="validLanguages" type="List" default="@value.getValidLanguages()"/>
+<i:arg name="languageManagementEnabled"
+       type="boolean"
+       default="false"
+       description="Determines if the user can decide which languages to edit (true) or if all should be shown (false)"/>
+
+<i:pragma name="description" value="Renders a multi language text input field within a Tycho template"/>
+
+
+<i:local name="idPart" value="generateId()"/>
+<i:local name="wrapperId" value="@('mls-field-' + idPart)"/>
+<i:local name="modalId" value="@('mls-modal-' + idPart)"/>
+
+<i:if test="value.isEnabled()">
+
+    <div id="@wrapperId" class="form-group @UserContext.get().signalFieldError(name) @class">
+        <div class="w-100  d-inline-flex flex-row-reverse justify-content-between align-items-end">
+            <ul class="nav nav-tabs mls-tab-list" role="tablist">
+                <li class="nav-item dropdown mls-toggle-language-button d-none" role="presentation">
+                    <a class="nav-link dropdown-toggle mls-language-label" data-toggle="dropdown" href="#">Dropdown</a>
+                    <ul class="dropdown-menu toggle-language-data"></ul>
+                </li>
+
+                <li class="dropdown mls-add-language-button d-none" role="presentation">
+                    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button"
+                       aria-haspopup="true" aria-expanded="false" title="@i18n('MultiLanguageEditor.addLanguage')">
+                        <i class="fa fa-plus"></i>
+                    </a>
+                    <ul class="dropdown-menu add-language-data"></ul>
+                </li>
+            </ul>
+            <i:if test="isFilled(label)">
+                <label><span>@label</span></label>
+            </i:if>
+        </div>
+
+        <div @id="@id" class="tab-content mls-tab-content @fieldClass">
+        </div>
+
+        <i:if test="isFilled(help)">
+            <small class="form-text text-muted">
+                <i:raw>@expandMessage(help)</i:raw>
+            </small>
+        </i:if>
+        <i:if test="UserContext.get().hasError(name)">
+            <small class="error-block form-text">@UserContext.get().getFieldErrorMessage(name)</small>
+        </i:if>
+    </div>
+
+    <script>
+        sirius.ready(function () {
+            let validLanguages = {};
+            <i:for type="List" var="lang" items="validLanguages">
+                validLanguages['@lang'] = '@i18n("Language." + lang)';
+            </i:for>
+
+            let field = new MultiLanguageField({
+                fieldName: '___name',
+                hasFallback: ___value.isWithFallback(),
+                fallbackLabel: '@i18n("Language.fallback")',
+                wrapperId: '___wrapperId',
+                values: <i:raw>@value.getAsJSON()</i:raw>,
+                defaultLanguage: '___defaultLanguage',
+                validLanguages: validLanguages,
+                languageManagementEnabled: ___languageManagementEnabled,
+                rows: ___rows,
+                multiline: true
+            });
+        });
+    </script>
+    <i:else>
+        <t:textarea id="@id"
+                    class="@class"
+                    fieldClass="@fieldClass"
+                    rows="@rows"
+                    name="@name"
+                    value="@value.fetchTextOrFallback()"
+                    label="@label"
+                    help="@help"/>
+    </i:else>
+</i:if>

@@ -9,21 +9,6 @@ input.form-control.mls-input {
     overflow: auto;
   }
 
-  .dropdown-menu > li > a:hover,
-  .dropdown-menu > li > a:focus {
-    color: #fff;
-    text-decoration: none;
-    background-color: $primary-color;
-  }
-
-  .dropdown-menu > .active > a,
-  .dropdown-menu > .active > a:hover,
-  .dropdown-menu > .active > a:focus {
-    color: #fff;
-    text-decoration: none;
-    background-color: $primary-color;
-  }
-
   .mls-add-language-button .dropdown-menu {
     max-height: 140px;
     overflow: auto;
@@ -46,72 +31,39 @@ input.form-control.mls-input {
   }
 }
 
-.mls-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  flex-direction: row-reverse;
 
-  // We supress a border/separation between tab and textarea input
-  margin-bottom: -1px;
-}
+.mls-tab-list {
 
-.mls-tab-header {
-  .nav-tabs {
-    border-bottom: none;
+  .mls-toggle-language-button::after,
+  > li > a.active:not(.dropdown-toggle)::after {
+    // overlap textarea border so active tab flows into textarea
+    content: '';
+    width: 100%;
+    border-bottom: 4px solid #fff;
+    position: absolute;
+    bottom: -3px;
+    left: 0;
   }
 
-  .nav-tabs > li > a {
-    color: #5e6468;
-    margin-right: 0;
-    margin-left: 2px;
-  }
-
-  .nav-tabs > li {
-    // We supress a border/separation between tab and textarea input
-    border-bottom: 1px solid #ffffff;
-  }
-
-  .dropdown-menu > li > a:hover,
-  .dropdown-menu > li > a:focus {
-    color: #fff;
-    text-decoration: none;
-    background-color: $primary-color;
-  }
-
-  .dropdown-menu > .active > a,
-  .dropdown-menu > .active > a:hover,
-  .dropdown-menu > .active > a:focus,
-  .dropdown-menu > .language-selected > a,
-  .dropdown-menu > .language-selected > a:hover,
-  .dropdown-menu > .language-selected > a:focus {
-    color: #fff;
-    text-decoration: none;
-    background-color: $primary-color;
-  }
-
-  .caret {
-    margin-left: 8px;
-  }
-
-  .mls-add-language-button .dropdown-menu {
-    max-height: 140x;
-    overflow: auto;
+  > li > a {
+    color: #212529;
+    position: relative;
   }
 
   .mls-toggle-language-button {
-    a {
-      color: #5e6468;
-    }
-
-    .dropdown-menu {
-      max-height: 140px;
-      overflow: auto;
+    .nav-link {
+      color: #495057;
+      background-color: #fff;
+      border-color: #dee2e6 #dee2e6 #fff;
     }
   }
 
-  .mls-tab-list .mls-language-label,
-  .mls-tab-list .dropdown-toggle {
+  .dropdown-item a {
+    color: #495057;
+  }
+
+  .mls-language-label,
+  .dropdown-toggle {
     display: flex;
     height: 34px;
     align-items: center;
