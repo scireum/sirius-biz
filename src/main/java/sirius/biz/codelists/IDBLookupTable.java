@@ -288,11 +288,11 @@ class IDBLookupTable extends LookupTable {
     }
 
     @Override
-    protected Stream<LookupTableEntry> performScan(String lang) {
+    public Stream<LookupTableEntry> scan(String lang, Limit limit) {
         try {
             return table.query()
                         .translate(lang)
-                        .allRows(codeField, nameField, descriptionField, COL_DEPRECATED)
+                        .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED)
                         .filter(row -> !row.at(3).asBoolean())
                         .map(row -> new LookupTableEntry(row.at(0).asString(),
                                                          row.at(1).asString(),

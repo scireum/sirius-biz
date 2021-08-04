@@ -130,8 +130,12 @@ class CodeListLookupTable extends LookupTable {
     }
 
     @Override
-    protected Stream<LookupTableEntry> performScan(String lang) {
-        return codeLists.getEntries(codeList).stream().map(entry -> extractEntryData(entry, lang));
+    public Stream<LookupTableEntry> scan(String lang, Limit limit) {
+        return codeLists.getEntries(codeList)
+                        .stream()
+                        .skip(limit.getItemsToSkip())
+                        .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
+                        .map(entry -> extractEntryData(entry, lang));
     }
 
     @Override

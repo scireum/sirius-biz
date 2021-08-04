@@ -54,10 +54,8 @@ import java.util.stream.Stream;
 public abstract class LookupTable {
 
     private static final int MAX_SUGGESTIONS = 25;
-    private static final String CONFIG_KEY_SUPPORTS_SCAN = "supportsScan";
     private static final String CONFIG_KEY_CODE_CASE_MODE = "codeCase";
     public static final String CONFIG_KEY_MAPPING_FIELD = "mappingsField";
-    private final boolean supportsScan;
     private final String mappingsField;
 
     enum CodeCase {
@@ -74,7 +72,6 @@ public abstract class LookupTable {
 
     protected LookupTable(Extension extension, CodeCase codeCase) {
         this.extension = extension;
-        this.supportsScan = extension.get(CONFIG_KEY_SUPPORTS_SCAN).asBoolean();
         this.mappingsField = extension.get(CONFIG_KEY_MAPPING_FIELD).asString();
         this.codeCase = codeCase;
     }
@@ -715,35 +712,54 @@ public abstract class LookupTable {
      * Determines if this list is short enough to properly support {@link #scan()} or {@link #scan(String)}.
      *
      * @return <tt>true</tt> if scanning (listing all entries) is supported, <tt>false</tt> otherwise
+     * @deprecated Unused as we now apply a limit to each scan call
      */
+    @Deprecated(forRemoval = true)
     public boolean canScan() {
-        return supportsScan;
+        return false;
     }
 
     /**
      * Enumerates all entries in the table using the current language.
      *
-     * @return a stream of all entries in this table or an empty stream is scanning isn't supported
+     * @return a stream of all entries in this table, or an empty stream is scanning isn't supported
+     * @deprecated Use {@link #scan(Limit)} instead.
      */
+    @Deprecated(forRemoval = true)
     public Stream<LookupTableEntry> scan() {
         return scan(NLS.getCurrentLang());
+    }
+
+    /**
+     * Enumerates all entries in the table using the current language.
+     *
+     * @param limit the limit to apply to fetch a sane number of entries
+     * @return a stream of all entries in this table, or an empty stream is scanning isn't supported
+     */
+    public Stream<LookupTableEntry> scan(Limit limit) {
+        return scan(NLS.getCurrentLang(), limit);
     }
 
     /**
      * Enumerates all entries in the table using the given language.
      *
      * @param lang the language to translate the name and description to
-     * @return a stream of all entries in this table or an empty stream if scanning isn't supported
+     * @return a stream of all entries in this table, or an empty stream if scanning isn't supported
+     * @deprecated Use {@link #scan(String, Limit)} instead.
      */
+    @Deprecated(forRemoval = true)
     public Stream<LookupTableEntry> scan(String lang) {
-        if (!canScan()) {
-            return Stream.empty();
-        }
-
-        return performScan(lang);
+        return scan(lang, Limit.UNLIMITED);
     }
 
-    protected abstract Stream<LookupTableEntry> performScan(String lang);
+    /**
+     * Enumerates all entries in the table using the given language.
+     *
+     * @param lang  the language to translate the name and description to
+     * @param limit the limit to apply to fetch a sane number of entries
+     * @return a stream of the selected amount of entries in this table
+     */
+    public abstract Stream<LookupTableEntry> scan(String lang, Limit limit);
 
     /**
      * Enumerates all entries matching the given lookup in the table using the given language.

@@ -112,8 +112,11 @@ class IDBFilteredLookupTable extends LookupTable {
     }
 
     @Override
-    protected Stream<LookupTableEntry> performScan(String lang) {
-        return baseTable.scan(lang).filter(pair -> contains(pair.getCode()));
+    public Stream<LookupTableEntry> scan(String lang, Limit limit) {
+        return baseTable.scan(lang, Limit.UNLIMITED)
+                        .filter(pair -> performContains(pair.getCode()))
+                        .skip(limit.getItemsToSkip())
+                        .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
     @Override
