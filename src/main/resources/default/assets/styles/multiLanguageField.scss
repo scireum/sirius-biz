@@ -12,6 +12,14 @@ input.form-control.mls-input {
   .mls-add-language-button .dropdown-menu {
     max-height: 140px;
     overflow: auto;
+
+    .dropdown-item a {
+      color: #495057;
+    }
+
+    .dropdown-item:active a {
+      color: #fff;
+    }
   }
 
   .mls-modal-inputs .mls-language-label {
@@ -60,6 +68,10 @@ input.form-control.mls-input {
 
   .dropdown-item a {
     color: #495057;
+  }
+
+  .dropdown-item:active a {
+    color: #fff;
   }
 
   .mls-language-label,

@@ -201,6 +201,7 @@ MultiLanguageField.prototype.renderModalBody = function () {
 
         this.forEachValidLanguage(function (langCode) {
             const _language = document.createElement('li');
+            _language.classList.add('dropdown-item');
             _language.classList.add('cursor-pointer');
             _language.dataset.lang = langCode;
 
