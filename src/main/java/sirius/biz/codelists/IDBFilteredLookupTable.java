@@ -105,7 +105,10 @@ class IDBFilteredLookupTable extends LookupTable {
 
     @Override
     protected Stream<LookupTableEntry> performSuggest(Limit limit, String searchTerm, String lang) {
-        return baseTable.performSuggest(limit, searchTerm, lang).filter(pair -> contains(pair.getCode()));
+        return baseTable.performSuggest(Limit.UNLIMITED, searchTerm, lang)
+                        .filter(pair -> performContains(pair.getCode()))
+                        .skip(limit.getItemsToSkip())
+                        .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
     @Override

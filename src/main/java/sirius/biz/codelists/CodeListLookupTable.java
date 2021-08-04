@@ -92,10 +92,10 @@ class CodeListLookupTable extends LookupTable {
     }
 
     private String performReverseLookupScan(String name) {
-        return scan().filter(pair -> Strings.equalIgnoreCase(name, pair.getName()))
-                     .findFirst()
-                     .map(LookupTableEntry::getCode)
-                     .orElse(null);
+        return scan(NLS.getCurrentLang(), Limit.UNLIMITED).filter(pair -> Strings.equalIgnoreCase(name, pair.getName()))
+                                                          .findFirst()
+                                                          .map(LookupTableEntry::getCode)
+                                                          .orElse(null);
     }
 
     @Override
@@ -108,7 +108,9 @@ class CodeListLookupTable extends LookupTable {
         return codeLists.getEntries(codeList)
                         .stream()
                         .filter(entry -> filter(entry, searchTerm, lang))
-                        .map(entry -> extractEntryData(entry, lang));
+                        .map(entry -> extractEntryData(entry, lang))
+                        .skip(limit.getItemsToSkip())
+                        .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
     private LookupTableEntry extractEntryData(CodeListEntry<?, ?> entry, String lang) {
