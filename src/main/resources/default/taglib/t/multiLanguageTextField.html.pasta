@@ -1,4 +1,4 @@
-<i:arg name="id" type="String" default="@generateId()"/>
+<i:arg name="id" type="String" default=""/>
 <i:arg name="class" type="String" default="Lists additional CSS classes to apply to the field."/>
 <i:arg name="fieldClass" type="String" default="" description="Lists additional CSS classes to apply to the field."/>
 <i:arg name="name" type="String" default=""/>
@@ -18,18 +18,19 @@
        default="false"
        description="Determines if the user can decide which languages to edit (true) or if all should be shown (false)"/>
 
-<i:pragma name="description" value="Renders a multi language text input field within a Wondergem template"/>
+<i:pragma name="description" value="Renders a multi language text input field within a Tycho template"/>
 
-<i:local name="fieldId" value="@('mls-field-' + id)"/>
-<i:local name="modalId" value="@('mls-modal-' + id)"/>
+<i:local name="idPart" value="generateId()"/>
+<i:local name="wrapperId" value="@('mls-field-' + idPart)"/>
+<i:local name="modalId" value="@('mls-modal-' + idPart)"/>
 
 <i:if test="value.isEnabled()">
-    <div id="@id" class="form-group @UserContext.get().signalFieldError(name) @class">
+    <div id="@wrapperId" class="form-group @UserContext.get().signalFieldError(name) @class">
         <i:if test="isFilled(label) || forceLabel">
             <label><span>@label</span></label>
         </i:if>
         <div class="input-group" data-toggle="modal" data-target="#___modalId">
-            <input id="@fieldId"
+            <input id="@id"
                    type="text"
                    class="form-control input-block-level mls-input pointer"
                    readonly
@@ -85,13 +86,13 @@
                 fieldName: '___fieldName',
                 hasFallback: ___value.isWithFallback(),
                 fallbackLabel: '@i18n("Language.fallback")',
-                wrapperId: '___id',
+                wrapperId: '___wrapperId',
                 modalId: '___modalId',
                 values: <i:raw>@value.getAsJSON()</i:raw>,
-            defaultLanguage: '___defaultLanguage',
+                defaultLanguage: '___defaultLanguage',
                 validLanguages: validLanguages,
                 languageManagementEnabled: ___languageManagementEnabled,
-        });
+            });
         });
     </script>
 
