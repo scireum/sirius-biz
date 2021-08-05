@@ -42,6 +42,8 @@ input.form-control.mls-input {
 
 .mls-tab-list {
 
+  border-bottom: 0;
+
   .mls-toggle-language-button::after,
   > li > a.active:not(.dropdown-toggle)::after {
     // overlap textarea border so active tab flows into textarea
@@ -75,9 +77,9 @@ input.form-control.mls-input {
   }
 
   .mls-language-label,
-  .dropdown-toggle {
+  .mls-add-language-link {
     display: flex;
-    height: 34px;
+    height: 32px;
     align-items: center;
   }
 

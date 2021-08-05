@@ -33,7 +33,7 @@
                 </li>
 
                 <li class="dropdown mls-add-language-button d-none" role="presentation">
-                    <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button"
+                    <a class="nav-link mls-add-language-link" data-toggle="dropdown" href="#" role="button"
                        aria-haspopup="true" aria-expanded="false" title="@i18n('MultiLanguageEditor.addLanguage')">
                         <i class="fa fa-plus"></i>
                     </a>
