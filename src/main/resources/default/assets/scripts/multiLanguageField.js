@@ -371,27 +371,28 @@ MultiLanguageField.prototype.renderMultilineHeaderAndContent = function () {
 
 MultiLanguageField.prototype.buildLanguageEntry = function (langCode) {
     const _link = document.createElement('a');
+    _link.classList.add('dropdown-item');
     _link.href = '#' + this.fieldName + '-' + langCode;
     _link.dataset.toggle = 'tab';
 
-    const _flag = this.renderFlag(langCode);
-    _link.appendChild(_flag);
-    const _text = document.createTextNode(this.getLanguageName(langCode));
-    _link.appendChild(_text);
     const _languageLi = document.createElement('li');
-    _languageLi.classList.add('dropdown-item');
-    _languageLi.classList.add('cursor-pointer');
+
+    const _flag = this.renderFlag(langCode);
+    _languageLi.appendChild(_flag);
+    const _text = document.createTextNode(this.getLanguageName(langCode));
+    _languageLi.appendChild(_text);
+
     _languageLi.dataset.lang = langCode;
-    _languageLi.appendChild(_link);
+    _link.appendChild(_languageLi);
 
     const me = this;
-    _languageLi.addEventListener('click', function () {
+    _link.addEventListener('click', function () {
         me.updateLanguageSwitcherLabel(langCode);
         // Mark the element as selected in the list of language entries
         me.markLanguageItemAsSelected(langCode);
     });
 
-    return _languageLi;
+    return _link;
 }
 
 MultiLanguageField.prototype.buildAddLanguageEntry = function (langCode) {
