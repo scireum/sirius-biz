@@ -60,7 +60,7 @@ MultiLanguageField.prototype.buildSingleline = function () {
     this._addLanguageButton.addEventListener('click', function () {
         const langOptionCount = me._addLanguageOptions.querySelectorAll('li:not(.d-none)').length;
         // 12px are reserved for border and padding of the language selection menu
-        const totalRowsHeight = (langOptionCount * 27) + 12;
+        const totalRowsHeight = (langOptionCount * 48) + 12;
 
         if (totalRowsHeight > me._modalBody.clientHeight) {
             me._addLanguageOptions.style.maxHeight = me._modalBody.clientHeight + 'px';
