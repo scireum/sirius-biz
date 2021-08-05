@@ -11,7 +11,7 @@ package sirius.biz.storage.layer3.downlink.ssh;
 import org.apache.sshd.common.file.FileSystemFactory;
 import org.apache.sshd.common.io.IoSession;
 import org.apache.sshd.common.session.SessionContext;
-import org.apache.sshd.server.ServerFactoryManager;
+import org.apache.sshd.core.CoreModuleProperties;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
 import org.apache.sshd.server.session.ServerSession;
@@ -86,8 +86,8 @@ public class SSHServer implements Startable, Stoppable, Killable {
             disableLogging();
 
             server = SshServer.setUpDefaultServer();
-            server.getProperties().put(ServerFactoryManager.IDLE_TIMEOUT, idleTimeout.toMillis());
-            server.getProperties().put(ServerFactoryManager.NIO2_READ_TIMEOUT, readTimeout.toMillis());
+            server.getProperties().put(CoreModuleProperties.IDLE_TIMEOUT.getName(), idleTimeout.toMillis());
+            server.getProperties().put(CoreModuleProperties.NIO2_READ_TIMEOUT.getName(), readTimeout.toMillis());
             server.setPort(port);
             server.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(new File(hostKeyFile).toPath()));
 

@@ -8,9 +8,9 @@
 
 package sirius.biz.storage.layer3.downlink.ssh.scp;
 
-import org.apache.sshd.common.scp.ScpSourceStreamResolver;
-import org.apache.sshd.common.scp.ScpTimestamp;
 import org.apache.sshd.common.session.Session;
+import org.apache.sshd.scp.common.ScpSourceStreamResolver;
+import org.apache.sshd.scp.common.helpers.ScpTimestampCommandDetails;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.downlink.ssh.BridgePosixFileAttributes;
 
@@ -51,8 +51,8 @@ class BridgeScpSourceStreamResolver implements ScpSourceStreamResolver {
     }
 
     @Override
-    public ScpTimestamp getTimestamp() throws IOException {
-        return new ScpTimestamp(virtualFile.lastModified(), virtualFile.lastModified());
+    public ScpTimestampCommandDetails getTimestamp() throws IOException {
+        return new ScpTimestampCommandDetails(virtualFile.lastModified(), virtualFile.lastModified());
     }
 
     @Override
