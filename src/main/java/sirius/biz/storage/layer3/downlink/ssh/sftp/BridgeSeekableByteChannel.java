@@ -44,6 +44,13 @@ class BridgeSeekableByteChannel implements SeekableByteChannel {
         }
 
         int read = in.read(dst.array(), dst.arrayOffset() + dst.position(), dst.remaining());
+
+        int lastRead = read;
+        while (lastRead > 0 && read < dst.remaining()) {
+            lastRead = in.read(dst.array(), dst.arrayOffset() + dst.position() + read, dst.remaining() - read);
+            read += lastRead;
+        }
+
         if (read > 0) {
             position.addAndGet(read);
         }
