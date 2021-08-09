@@ -37,24 +37,6 @@ input.form-control.mls-input {
   }
 }
 
-<<<<<<< Updated upstream
-=======
-.mls-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  flex-direction: row-reverse;
-
-  // We suppress a border/separation between tab and textarea input
-  margin-bottom: -1px;
-}
-
-.mls-tab-header {
-  .nav-tabs {
-    border-bottom: none;
-  }
->>>>>>> Stashed changes
-
 .mls-tab-list {
 
   border-bottom: 0;
