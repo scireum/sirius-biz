@@ -3,7 +3,7 @@
         title="@i18n('KnowledgeBase.kb')"
         parent=""
         priority="0"
-        permissions="flag-logged-in"
+        permissions=""
         chapter="true">
 
     <i:local name="article" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>

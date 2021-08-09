@@ -34,7 +34,6 @@ public class KnowledgeBaseController extends BizController {
      * @param webContext the current request to respond to
      */
     @Routed("/kb")
-    @LoginRequired
     public void kb(WebContext webContext) {
         langArticle(webContext, NLS.getCurrentLang(), KnowledgeBase.ROOT_CHAPTER_ID);
     }
@@ -46,7 +45,6 @@ public class KnowledgeBaseController extends BizController {
      * @param lang the language top open the knowledge base in
      */
     @Routed("/kb/:1")
-    @LoginRequired
     public void langKb(WebContext webContext, String lang) {
         langArticle(webContext, lang, KnowledgeBase.ROOT_CHAPTER_ID);
     }
@@ -59,7 +57,6 @@ public class KnowledgeBaseController extends BizController {
      * @param articleId  the id or code of the article to render
      */
     @Routed("/kba/:1/:2")
-    @LoginRequired
     public void langArticle(WebContext webContext, String lang, String articleId) {
         KnowledgeBaseArticle article = knowledgeBase.resolve(lang, articleId, false).orElse(null);
         if (article != null) {
