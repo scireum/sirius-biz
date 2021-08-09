@@ -12,8 +12,7 @@
         <t:pageHeader title="Scripting Console"/>
     </i:block>
     <div style="height:350px">
-        <t:codeEditor id="editor" mode="javascript">log('Good Morning Dave');
-        </t:codeEditor>
+        <t:codeEditor id="editor" mode="text">log('Good Morning Dave');</t:codeEditor>
     </div>
 
     <div class="bt-gray mt-4 pt-3 mb-4">

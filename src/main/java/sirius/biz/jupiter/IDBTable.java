@@ -12,6 +12,7 @@ import redis.clients.jedis.Client;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.PullBasedSpliterator;
 import sirius.kernel.commons.Strings;
+import sirius.kernel.commons.Value;
 import sirius.kernel.commons.Values;
 import sirius.kernel.nls.NLS;
 
@@ -38,6 +39,7 @@ public class IDBTable {
     private static final JupiterCommand CMD_ISEARCH = new JupiterCommand("IDB.ISEARCH");
     private static final JupiterCommand CMD_SCAN = new JupiterCommand("IDB.SCAN");
     private static final JupiterCommand CMD_ISCAN = new JupiterCommand("IDB.ISCAN");
+    private static final JupiterCommand CMD_LEN = new JupiterCommand("IDB.LEN");
 
     private static final int FETCH_PAGE_SIZE = 250;
 
@@ -562,6 +564,19 @@ public class IDBTable {
             redis.sendCommand(CMD_ISCAN, args);
 
             return parseQueryResult(redis);
+        });
+    }
+
+    /**
+     * Counts the number of entries in the table.
+     *
+     * @return the number of entries in this table
+     */
+    public int size() {
+        return jupiter.query(() -> CMD_LEN + " " + name, redis -> {
+            redis.sendCommand(CMD_LEN, name);
+
+            return Value.of(redis.getIntegerReply()).asInt(0);
         });
     }
 

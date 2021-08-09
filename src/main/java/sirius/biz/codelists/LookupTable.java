@@ -19,6 +19,7 @@ import sirius.web.util.JSONPath;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -53,10 +54,8 @@ import java.util.stream.Stream;
 public abstract class LookupTable {
 
     private static final int MAX_SUGGESTIONS = 25;
-    private static final String CONFIG_KEY_SUPPORTS_SCAN = "supportsScan";
     private static final String CONFIG_KEY_CODE_CASE_MODE = "codeCase";
     public static final String CONFIG_KEY_MAPPING_FIELD = "mappingsField";
-    private final boolean supportsScan;
     private final String mappingsField;
 
     enum CodeCase {
@@ -73,7 +72,6 @@ public abstract class LookupTable {
 
     protected LookupTable(Extension extension, CodeCase codeCase) {
         this.extension = extension;
-        this.supportsScan = extension.get(CONFIG_KEY_SUPPORTS_SCAN).asBoolean();
         this.mappingsField = extension.get(CONFIG_KEY_MAPPING_FIELD).asString();
         this.codeCase = codeCase;
     }
@@ -131,6 +129,24 @@ public abstract class LookupTable {
     protected abstract Optional<String> performResolveName(@Nonnull String code, String lang);
 
     /**
+     * Determines if the table contains the given code.
+     *
+     * @param code the code to check
+     * @return <tt>true</tt> if the code is contained in the table, <tt>false</tt> otherwise
+     * Note that this will only resolve the main code. When in doubt, the code must be normalized via
+     * {@link #normalize(String)} before invoking this method.
+     */
+    public boolean contains(String code) {
+        if (Strings.isEmpty(code)) {
+            return false;
+        }
+
+        return performContains(normalizeCodeValue(code));
+    }
+
+    protected abstract boolean performContains(@Nonnull String code);
+
+    /**
      * Resolves the description for the given code.
      *
      * @param code the code to resolve the description for
@@ -170,7 +186,7 @@ public abstract class LookupTable {
      *
      * @param code        the code to fetch the field for
      * @param targetField the field to fetch
-     * @return the value of the field or an empty optional if the code is unknown. Note that this will only resolve the
+     * @return the value of the field, or an empty optional if the code is unknown. Note that this will only resolve the
      * main code. When in doubt, the code must be normalized via {@link #normalize(String)} before invoking this method.
      */
     public Optional<String> fetchField(String code, String targetField) {
@@ -186,7 +202,7 @@ public abstract class LookupTable {
      *
      * @param code        the code to fetch the field for
      * @param targetField the field to fetch
-     * @return the value of the field or an empty value if the code is unknown. Note that this will only resolve the
+     * @return the value of the field, or an empty value if the code is unknown. Note that this will only resolve the
      * main code. When in doubt, the code must be normalized via {@link #normalize(String)} before invoking this method.
      */
     public Value fetchFieldValue(String code, String targetField) {
@@ -205,7 +221,7 @@ public abstract class LookupTable {
      *
      * @param code        the code to fetch the field for
      * @param targetField the field to fetch
-     * @return the boolean value of the field or an empty optional if the code is unknown. Note that this will only
+     * @return the boolean value of the field, or an empty optional if the code is unknown. Note that this will only
      * resolve the main code. When in doubt, the code must be normalized via {@link #normalize(String)} before invoking
      * this method.
      */
@@ -231,7 +247,7 @@ public abstract class LookupTable {
      *
      * @param code    the code to fetch the mapping for
      * @param mapping the name of the mapping to fetch
-     * @return the value to use or an empty optional if either no mapping is present or the code is unknown
+     * @return the value to use, or an empty optional if either no mapping is present, or the code is unknown
      * @see #fetchMappingOrCode(String, String)
      */
     public Optional<String> fetchMapping(String code, String mapping) {
@@ -239,7 +255,16 @@ public abstract class LookupTable {
             return Optional.empty();
         }
 
-        return performFetchField(normalizeCodeValue(code), mappingsField + "." + mapping).asOptionalString();
+        return pullFirstValue(performFetchField(normalizeCodeValue(code),
+                                                mappingsField + "." + mapping)).asOptionalString();
+    }
+
+    private Value pullFirstValue(Value possibleCollection) {
+        if ((possibleCollection instanceof Collection values) && (!values.isEmpty())) {
+            return Value.of(values.iterator().next());
+        } else {
+            return possibleCollection;
+        }
     }
 
     /**
@@ -247,7 +272,7 @@ public abstract class LookupTable {
      *
      * @param code    the code to fetch the mapping for
      * @param mapping the name of the mapping to fetch
-     * @return either the mapping or the code itself if no mapping is present
+     * @return either the mapping, or the code itself if no mapping is present
      * @see #fetchMapping(String, String)
      */
     @Nullable
@@ -264,25 +289,28 @@ public abstract class LookupTable {
      * <p>
      * This can be used to perform a two stage lookup. E.g. if an <tt>acme 1.0</tt> standard is requested, one could
      * query <tt>acme-10</tt> as primary mapping and <tt>acme</tt> as secondary. This way, if a version dependent
-     * mapping is present, this will be used. Otherwise the base value from the standard is returned (if present).
+     * mapping is present, this will be used. Otherwise, the base value from the standard is returned (if present).
      *
      * @param code             the code to fetch the mapping for
      * @param primaryMapping   the more specific mapping to attempt to fetch
      * @param secondaryMapping the more general mapping to fetch
-     * @return either the mapping for the first or second mapping to use or an empty optional if neither is present
+     * @return either the mapping for the first or second mapping to use or, an empty optional if neither is present
      */
     public Optional<String> fetchMappings(String code, String primaryMapping, String secondaryMapping) {
         if (Strings.isEmpty(code)) {
             return Optional.empty();
         }
 
-        Optional<String> result =
-                performFetchField(normalizeCodeValue(code), mappingsField + "." + primaryMapping).asOptionalString();
+        Optional<String> result = pullFirstValue(performFetchField(normalizeCodeValue(code),
+                                                                   mappingsField
+                                                                   + "."
+                                                                   + primaryMapping)).asOptionalString();
         if (result.isPresent()) {
             return result;
         }
 
-        return performFetchField(normalizeCodeValue(code), mappingsField + "." + secondaryMapping).asOptionalString();
+        return pullFirstValue(performFetchField(normalizeCodeValue(code),
+                                                mappingsField + "." + secondaryMapping)).asOptionalString();
     }
 
     /**
@@ -310,7 +338,7 @@ public abstract class LookupTable {
      *
      * @param code        the code to fetch the field for
      * @param targetField the field to fetch
-     * @return the translated value of the field using the current language or an empty optional if the code is unknown.
+     * @return the translated value of the field using the current language, or an empty optional if the code is unknown.
      * Note that this will only resolve the main code. When in doubt, the code must be normalized via
      * {@link #normalize(String)} before invoking this method.
      */
@@ -324,7 +352,7 @@ public abstract class LookupTable {
      * @param code        the code to fetch the field for
      * @param targetField the field to fetch
      * @param lang        the language used to translate the resulting value
-     * @return the translated value of the field using the given language or an empty optional if the code is unknown.
+     * @return the translated value of the field using the given language, or an empty optional if the code is unknown.
      * Note that this will only resolve the main code. When in doubt, the code must be normalized via
      * {@link #normalize(String)} before invoking this method.
      */
@@ -344,7 +372,7 @@ public abstract class LookupTable {
      * Normalizes the given code into the main code used by this table.
      * <p>
      * Lookup tables will most often provide multiple codes for the same entry (e.g. two letter and three letter ISO
-     * codes for countries). This method checks all code and alias fields and resoves the given code into the leading
+     * codes for countries). This method checks all code and alias fields and resolves the given code into the leading
      * code used by this table so it can be used in the other methods provided.
      * <p>
      * Note that this method can also be used to verify if a code is valid at all.
@@ -366,7 +394,7 @@ public abstract class LookupTable {
      * Attempts to normalize the given code or returns the input itself.
      *
      * @param code the code to normalize
-     * @return the normalized code or the original input which has been adjusted using
+     * @return the normalized code, or the original input which has been adjusted using
      * {@link #normalizeCodeValue(String)}
      */
     public String forceNormalize(String code) {
@@ -381,7 +409,7 @@ public abstract class LookupTable {
      *
      * @param code    the code to normalize / resolve
      * @param mapping the mapping to use as a first step when normalizing
-     * @return the normalized code or an empty optional if the given code is unknown
+     * @return the normalized code, or an empty optional if the given code is unknown
      */
     public Optional<String> normalizeWithMapping(String code, String mapping) {
         if (Strings.isEmpty(code)) {
@@ -404,7 +432,7 @@ public abstract class LookupTable {
      *
      * @param code    the code to normalize
      * @param mapping the mapping to use as a first step when normalizing
-     * @return the normalized code or the original input which has been adjusted using
+     * @return the normalized code, or the original input which has been adjusted using
      * {@link #normalizeCodeValue(String)}
      * @see #normalizeWithMapping(String, String)
      */
@@ -484,7 +512,7 @@ public abstract class LookupTable {
      * case a used re-imports data which has previously been exported using the name instead of the actual code.
      *
      * @param codeOrName the code or name to resolve into a leading code
-     * @return the leading code for the given code or name or an empty optional if the value is unknown
+     * @return the leading code for the given code or name, or an empty optional if the value is unknown
      */
     public Optional<String> normalizeInput(String codeOrName) {
         Optional<String> normalizedCode = normalize(codeOrName);
@@ -503,7 +531,7 @@ public abstract class LookupTable {
      * @param type the type of value to instantiate (Must accept a JSONObject in its constructor)
      * @param code the leading code used to determine which value to load
      * @param <T>  the generic type of the object to fetch
-     * @return the object for the given code or an empty optional if the code is unknown
+     * @return the object for the given code, or an empty optional if the code is unknown
      * @see #fetchObjectDirect(Class, String)
      */
     public <T> Optional<T> fetchObject(Class<T> type, String code) {
@@ -520,7 +548,7 @@ public abstract class LookupTable {
      * @param type the type of value to instantiate (Must accept a JSONObject in its constructor)
      * @param code the leading code used to determine which value to load
      * @param <T>  the generic type of the object to fetch
-     * @return the object for the given code or an empty optional if the code is unknown
+     * @return the object for the given code, or an empty optional if the code is unknown
      * @see #fetchObject(Class, String)
      */
     public <T> Optional<T> fetchObjectDirect(Class<T> type, String code) {
@@ -542,7 +570,7 @@ public abstract class LookupTable {
      *
      * @param root the JSON object to query
      * @param path the path to the field to query
-     * @return the parsed translation map. Note that this also gracefully handles sindle string values
+     * @return the parsed translation map. Note that this also gracefully handles simple string values
      */
     public static Map<String, String> parseTranslationTable(JSONObject root, String path) {
         Value translations = JSONPath.queryValue(root, path);
@@ -673,7 +701,7 @@ public abstract class LookupTable {
      * @return a stream of suggestions for the given term. Note that most probably {@link Stream#limit(long)} should
      * be used on the result as this might yield quite a bunch of suggestions in order to optimize internal queries.
      */
-    public Stream<LookupTableEntry> suggest(String searchTerm) {
+    public Stream<LookupTableEntry> suggest(@Nullable String searchTerm) {
         return suggest(searchTerm, NLS.getCurrentLang());
     }
 
@@ -685,7 +713,10 @@ public abstract class LookupTable {
      * @return a stream of suggestions for the given term. Note that most probably {@link Stream#limit(long)} should
      * be used on the result as this might yield quite a bunch of suggestions in order to optimize internal queries.
      */
-    public Stream<LookupTableEntry> suggest(String searchTerm, String lang) {
+    public Stream<LookupTableEntry> suggest(@Nullable String searchTerm, String lang) {
+        if (Strings.isEmpty(searchTerm)) {
+            return scan(lang, new Limit(0, MAX_SUGGESTIONS));
+        }
         return performSuggest(new Limit(0, MAX_SUGGESTIONS), searchTerm, lang);
     }
 
@@ -703,35 +734,97 @@ public abstract class LookupTable {
      * Determines if this list is short enough to properly support {@link #scan()} or {@link #scan(String)}.
      *
      * @return <tt>true</tt> if scanning (listing all entries) is supported, <tt>false</tt> otherwise
+     * @deprecated Unused as we now apply a limit to each scan call
      */
+    @Deprecated(forRemoval = true)
     public boolean canScan() {
-        return supportsScan;
+        return false;
     }
 
     /**
      * Enumerates all entries in the table using the current language.
      *
-     * @return a stream of all entries in this table or an empty stream is scanning isn't supported
+     * @return a stream of all entries in this table, or an empty stream is scanning isn't supported
+     * @deprecated Use {@link #scan(Limit)} instead.
      */
+    @Deprecated(forRemoval = true)
     public Stream<LookupTableEntry> scan() {
         return scan(NLS.getCurrentLang());
+    }
+
+    /**
+     * Enumerates all entries in the table using the current language.
+     *
+     * @param limit the limit to apply to fetch a sane number of entries
+     * @return a stream of all entries in this table, or an empty stream is scanning isn't supported
+     */
+    public Stream<LookupTableEntry> scan(Limit limit) {
+        return scan(NLS.getCurrentLang(), limit);
     }
 
     /**
      * Enumerates all entries in the table using the given language.
      *
      * @param lang the language to translate the name and description to
-     * @return a stream of all entries in this table or an empty stream if scanning isn't supported
+     * @return a stream of all entries in this table, or an empty stream if scanning isn't supported
+     * @deprecated Use {@link #scan(String, Limit)} instead.
      */
+    @Deprecated(forRemoval = true)
     public Stream<LookupTableEntry> scan(String lang) {
-        if (!canScan()) {
-            return Stream.empty();
-        }
-
-        return performScan(lang);
+        return scan(lang, Limit.UNLIMITED);
     }
 
-    protected abstract Stream<LookupTableEntry> performScan(String lang);
+    /**
+     * Enumerates all entries in the table using the given language.
+     *
+     * @param lang  the language to translate the name and description to
+     * @param limit the limit to apply to fetch a sane number of entries
+     * @return a stream of the selected amount of entries in this table
+     */
+    public abstract Stream<LookupTableEntry> scan(String lang, Limit limit);
+
+    /**
+     * Executes a search for the given (optional) search term.
+     * <p>
+     * In contrast to {@link #suggest(String, String)}, this provides support for pagination and will also contain
+     * {@link LookupTableEntry#isDeprecated() deprecated} entries. Also, {@link LookupTableEntry#getSource()}
+     * will be populated.
+     *
+     * @param searchTerm the term used to filter the suggestions
+     * @param limit      the limit to apply to fetch a sane number of entries
+     * @return a stream of matches for the given term
+     */
+    public Stream<LookupTableEntry> search(@Nullable String searchTerm, Limit limit) {
+        return search(searchTerm, limit, NLS.getCurrentLang());
+    }
+
+    /**
+     * Executes a search for the given (optional) search term.
+     * <p>
+     * In contrast to {@link #suggest(String, String)}, this provides support for pagination and will also contain
+     * {@link LookupTableEntry#isDeprecated() deprecated} entries. Also, {@link LookupTableEntry#getSource()}
+     * will be populated.
+     *
+     * @param searchTerm the term used to filter the suggestions
+     * @param lang       the language to translate the name and description to
+     * @return a stream of matches for the given term
+     */
+    public Stream<LookupTableEntry> search(@Nullable String searchTerm, Limit limit, String lang) {
+        if (Strings.isEmpty(searchTerm)) {
+            return scan(lang, limit);
+        } else {
+            return performSearch(searchTerm, limit, lang);
+        }
+    }
+
+    protected abstract Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String lang);
+
+    /**
+     * Returns the number of entries in this table.
+     *
+     * @return the number of entries in this table
+     */
+    public abstract int count();
 
     /**
      * Enumerates all entries matching the given lookup in the table using the given language.
@@ -739,11 +832,25 @@ public abstract class LookupTable {
      * @param lang        the language to translate the name and description to
      * @param lookupPath  the field to search in
      * @param lookupValue the value to search for
-     * @return a stream of all entries matching the lookup or an empty stream if scanning isn't supported
+     * @return a stream of all entries matching the lookup, or an empty stream if scanning isn't supported
      */
     public Stream<LookupTableEntry> query(String lang, String lookupPath, String lookupValue) {
         return performQuery(lang, lookupPath, lookupValue);
     }
 
     protected abstract Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue);
+
+    public String getTitle() {
+        return extension.get("title")
+                        .asOptionalString()
+                        .or(() -> NLS.getIfExists("LookupTable." + extension.getId(), null))
+                        .orElse(extension.getId());
+    }
+
+    public String getDescription() {
+        return extension.get("description")
+                        .asOptionalString()
+                        .or(() -> NLS.getIfExists("LookupTable." + extension.getId() + ".description", null))
+                        .orElse(extension.getId());
+    }
 }

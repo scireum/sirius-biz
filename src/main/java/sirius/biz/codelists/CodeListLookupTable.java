@@ -14,6 +14,7 @@ import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
 import sirius.kernel.di.std.Part;
+import sirius.kernel.nls.NLS;
 import sirius.kernel.settings.Extension;
 
 import javax.annotation.Nonnull;
@@ -36,6 +37,11 @@ class CodeListLookupTable extends LookupTable {
     CodeListLookupTable(Extension extension, String codeList) {
         super(extension);
         this.codeList = codeList;
+    }
+
+    @Override
+    protected boolean performContains(@Nonnull String code) {
+        return codeLists.hasValue(codeList, code);
     }
 
     @Override
@@ -92,10 +98,10 @@ class CodeListLookupTable extends LookupTable {
     }
 
     private String performReverseLookupScan(String name) {
-        return scan().filter(pair -> Strings.equalIgnoreCase(name, pair.getName()))
-                     .findFirst()
-                     .map(LookupTableEntry::getCode)
-                     .orElse(null);
+        return scan(NLS.getCurrentLang(), Limit.UNLIMITED).filter(pair -> Strings.equalIgnoreCase(name, pair.getName()))
+                                                          .findFirst()
+                                                          .map(LookupTableEntry::getCode)
+                                                          .orElse(null);
     }
 
     @Override
@@ -108,7 +114,16 @@ class CodeListLookupTable extends LookupTable {
         return codeLists.getEntries(codeList)
                         .stream()
                         .filter(entry -> filter(entry, searchTerm, lang))
-                        .map(entry -> extractEntryData(entry, lang));
+                        .map(entry -> extractEntryData(entry, lang))
+                        .skip(limit.getItemsToSkip())
+                        .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
+    }
+
+    @Override
+    protected Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String lang) {
+        // As plain code lists don't support deprecations or source data, we can re-use the same
+        // method..
+        return performSuggest(limit, searchTerm, lang);
     }
 
     private LookupTableEntry extractEntryData(CodeListEntry<?, ?> entry, String lang) {
@@ -128,8 +143,12 @@ class CodeListLookupTable extends LookupTable {
     }
 
     @Override
-    protected Stream<LookupTableEntry> performScan(String lang) {
-        return codeLists.getEntries(codeList).stream().map(entry -> extractEntryData(entry, lang));
+    public Stream<LookupTableEntry> scan(String lang, Limit limit) {
+        return codeLists.getEntries(codeList)
+                        .stream()
+                        .skip(limit.getItemsToSkip())
+                        .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems())
+                        .map(entry -> extractEntryData(entry, lang));
     }
 
     @Override
@@ -137,5 +156,10 @@ class CodeListLookupTable extends LookupTable {
         // This would need a complex caching strategy as always fetching the DB would be too expensive.
         // Could be implemented when needed.
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int count() {
+        return codeLists.getEntries(codeList).size();
     }
 }
