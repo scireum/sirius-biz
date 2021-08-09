@@ -8,9 +8,9 @@
 
 package sirius.biz.storage.layer3.downlink.ssh.scp;
 
-import org.apache.sshd.common.scp.ScpTargetStreamResolver;
-import org.apache.sshd.common.scp.ScpTimestamp;
 import org.apache.sshd.common.session.Session;
+import org.apache.sshd.scp.common.ScpTargetStreamResolver;
+import org.apache.sshd.scp.common.helpers.ScpTimestampCommandDetails;
 import sirius.biz.storage.layer3.VirtualFile;
 
 import java.io.IOException;
@@ -51,7 +51,7 @@ class BridgeScpTargetStreamResolver implements ScpTargetStreamResolver {
     public void postProcessReceivedData(String name,
                                         boolean preserve,
                                         Set<PosixFilePermission> perms,
-                                        ScpTimestamp time) throws IOException {
+                                        ScpTimestampCommandDetails scpTimestampCommandDetails) throws IOException {
         // Nothing to do here...
     }
 }

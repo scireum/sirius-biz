@@ -38,12 +38,23 @@ class BridgeSeekableByteChannel implements SeekableByteChannel {
     }
 
     @Override
-    public int read(ByteBuffer dst) throws IOException {
+    public int read(ByteBuffer destination) throws IOException {
         if (in == null) {
             in = virtualFile.createInputStream();
         }
 
-        int read = in.read(dst.array(), dst.arrayOffset() + dst.position(), dst.remaining());
+        int read = in.read(destination.array(),
+                           destination.arrayOffset() + destination.position(),
+                           destination.remaining());
+
+        int lastRead = read;
+        while (lastRead > 0 && read < destination.remaining()) {
+            lastRead = in.read(destination.array(),
+                               destination.arrayOffset() + destination.position() + read,
+                               destination.remaining() - read);
+            read += lastRead;
+        }
+
         if (read > 0) {
             position.addAndGet(read);
         }

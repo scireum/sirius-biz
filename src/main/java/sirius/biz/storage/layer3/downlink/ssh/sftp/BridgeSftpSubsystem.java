@@ -8,11 +8,9 @@
 
 package sirius.biz.storage.layer3.downlink.ssh.sftp;
 
-import org.apache.sshd.common.util.threads.CloseableExecutorService;
-import org.apache.sshd.server.subsystem.sftp.SftpErrorStatusDataHandler;
-import org.apache.sshd.server.subsystem.sftp.SftpFileSystemAccessor;
-import org.apache.sshd.server.subsystem.sftp.SftpSubsystem;
-import org.apache.sshd.server.subsystem.sftp.UnsupportedAttributePolicy;
+import org.apache.sshd.server.channel.ChannelSession;
+import org.apache.sshd.sftp.server.SftpSubsystem;
+import org.apache.sshd.sftp.server.SftpSubsystemConfigurator;
 import sirius.biz.storage.layer3.downlink.ssh.BridgeSession;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
@@ -34,11 +32,8 @@ class BridgeSftpSubsystem extends SftpSubsystem {
     @Nullable
     private static ScopeDetector detector;
 
-    protected BridgeSftpSubsystem(CloseableExecutorService executorService,
-                                  UnsupportedAttributePolicy policy,
-                                  SftpFileSystemAccessor accessor,
-                                  SftpErrorStatusDataHandler errorStatusDataHandler) {
-        super(executorService, policy, accessor, errorStatusDataHandler);
+    protected BridgeSftpSubsystem(ChannelSession channel, SftpSubsystemConfigurator configurator) {
+        super(channel, configurator);
     }
 
     @Override
