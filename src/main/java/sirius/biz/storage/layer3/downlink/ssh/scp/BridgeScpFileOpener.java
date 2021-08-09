@@ -8,18 +8,18 @@
 
 package sirius.biz.storage.layer3.downlink.ssh.scp;
 
-import org.apache.sshd.common.scp.ScpFileOpener;
-import org.apache.sshd.common.scp.ScpSourceStreamResolver;
-import org.apache.sshd.common.scp.ScpTargetStreamResolver;
-import org.apache.sshd.common.scp.ScpTimestamp;
 import org.apache.sshd.common.session.Session;
+import org.apache.sshd.scp.common.ScpFileOpener;
+import org.apache.sshd.scp.common.ScpSourceStreamResolver;
+import org.apache.sshd.scp.common.ScpTargetStreamResolver;
+import org.apache.sshd.scp.common.helpers.ScpTimestampCommandDetails;
 import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.VirtualFile;
 import sirius.biz.storage.layer3.VirtualFileSystem;
-import sirius.biz.storage.layer3.downlink.ssh.BridgePosixFileAttributes;
 import sirius.biz.storage.layer3.downlink.ssh.BridgeDirectoryStream;
 import sirius.biz.storage.layer3.downlink.ssh.BridgeFileSystem;
 import sirius.biz.storage.layer3.downlink.ssh.BridgePath;
+import sirius.biz.storage.layer3.downlink.ssh.BridgePosixFileAttributes;
 import sirius.kernel.di.std.Part;
 
 import java.io.IOException;
@@ -53,7 +53,7 @@ class BridgeScpFileOpener implements ScpFileOpener {
                                         String name,
                                         boolean preserve,
                                         Set<PosixFilePermission> permissions,
-                                        ScpTimestamp time) throws IOException {
+                                        ScpTimestampCommandDetails time) throws IOException {
         if (!((BridgePath) localPath).getVirtualFile().exists()) {
             throw new IOException(localPath + ": no such file or directory");
         }

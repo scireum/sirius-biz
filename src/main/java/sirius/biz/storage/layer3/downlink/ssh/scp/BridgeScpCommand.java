@@ -8,10 +8,11 @@
 
 package sirius.biz.storage.layer3.downlink.ssh.scp;
 
-import org.apache.sshd.common.scp.ScpFileOpener;
-import org.apache.sshd.common.scp.ScpTransferEventListener;
 import org.apache.sshd.common.util.threads.CloseableExecutorService;
-import org.apache.sshd.server.scp.ScpCommand;
+import org.apache.sshd.scp.common.ScpFileOpener;
+import org.apache.sshd.scp.common.ScpTransferEventListener;
+import org.apache.sshd.scp.server.ScpCommand;
+import org.apache.sshd.server.channel.ChannelSession;
 import sirius.biz.storage.layer3.downlink.ssh.BridgeSession;
 import sirius.biz.storage.util.StorageUtils;
 import sirius.kernel.commons.Strings;
@@ -32,13 +33,14 @@ class BridgeScpCommand extends ScpCommand {
     @Nullable
     private static ScopeDetector detector;
 
-    protected BridgeScpCommand(String command,
+    protected BridgeScpCommand(ChannelSession channelSession,
+                               String command,
                                CloseableExecutorService executorService,
                                int sendSize,
                                int receiveSize,
                                ScpFileOpener fileOpener,
                                ScpTransferEventListener eventListener) {
-        super(command, executorService, sendSize, receiveSize, fileOpener, eventListener);
+        super(channelSession, command, executorService, sendSize, receiveSize, fileOpener, eventListener);
     }
 
     @Override

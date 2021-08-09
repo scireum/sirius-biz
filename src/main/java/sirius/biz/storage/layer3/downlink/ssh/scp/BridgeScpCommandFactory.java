@@ -8,9 +8,10 @@
 
 package sirius.biz.storage.layer3.downlink.ssh.scp;
 
-import org.apache.sshd.common.scp.ScpTransferEventListener;
+import org.apache.sshd.scp.common.ScpTransferEventListener;
+import org.apache.sshd.scp.server.ScpCommandFactory;
+import org.apache.sshd.server.channel.ChannelSession;
 import org.apache.sshd.server.command.Command;
-import org.apache.sshd.server.scp.ScpCommandFactory;
 
 /**
  * Provides the effective SCP command to use.
@@ -27,8 +28,9 @@ public class BridgeScpCommandFactory extends ScpCommandFactory implements ScpTra
     }
 
     @Override
-    protected Command executeSupportedCommand(String command) {
-        return new BridgeScpCommand(command,
+    protected Command executeSupportedCommand(ChannelSession channel, String command) {
+        return new BridgeScpCommand(channel,
+                                    command,
                                     resolveExecutorService(),
                                     getSendBufferSize(),
                                     getReceiveBufferSize(),

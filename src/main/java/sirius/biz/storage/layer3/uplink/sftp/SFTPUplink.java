@@ -8,9 +8,9 @@
 
 package sirius.biz.storage.layer3.uplink.sftp;
 
-import org.apache.sshd.client.subsystem.sftp.SftpClient;
-import org.apache.sshd.common.subsystem.sftp.SftpConstants;
-import org.apache.sshd.common.subsystem.sftp.SftpException;
+import org.apache.sshd.sftp.client.SftpClient;
+import org.apache.sshd.sftp.common.SftpConstants;
+import org.apache.sshd.sftp.common.SftpException;
 import sirius.biz.storage.layer3.FileSearch;
 import sirius.biz.storage.layer3.MutableVirtualFile;
 import sirius.biz.storage.layer3.VirtualFile;

@@ -11,8 +11,8 @@ package sirius.biz.storage.layer3.downlink.ssh.sftp;
 import org.apache.sshd.common.util.GenericUtils;
 import org.apache.sshd.server.channel.ChannelSession;
 import org.apache.sshd.server.command.Command;
-import org.apache.sshd.server.subsystem.sftp.SftpSubsystem;
-import org.apache.sshd.server.subsystem.sftp.SftpSubsystemFactory;
+import org.apache.sshd.sftp.server.SftpSubsystem;
+import org.apache.sshd.sftp.server.SftpSubsystemFactory;
 
 import java.io.IOException;
 
@@ -31,10 +31,7 @@ public class BridgeSftpSubsystemFactory extends SftpSubsystemFactory {
 
     @Override
     public Command createSubsystem(ChannelSession channel) throws IOException {
-        SftpSubsystem subsystem = new BridgeSftpSubsystem(resolveExecutorService(),
-                                                          getUnsupportedAttributePolicy(),
-                                                          getFileSystemAccessor(),
-                                                          getErrorStatusDataHandler());
+        SftpSubsystem subsystem = new BridgeSftpSubsystem(channel, this);
         GenericUtils.forEach(getRegisteredListeners(), subsystem::addSftpEventListener);
         return subsystem;
     }
