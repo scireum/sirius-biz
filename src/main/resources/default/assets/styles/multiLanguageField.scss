@@ -4,9 +4,7 @@ input.form-control.mls-input {
 
 .mls-modal {
   .modal-body {
-    max-height: calc(100vh - 200px);
     min-height: 250px;
-    overflow: auto;
   }
 
   .mls-add-language-button .dropdown-menu {
@@ -39,6 +37,23 @@ input.form-control.mls-input {
   }
 }
 
+<<<<<<< Updated upstream
+=======
+.mls-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-direction: row-reverse;
+
+  // We suppress a border/separation between tab and textarea input
+  margin-bottom: -1px;
+}
+
+.mls-tab-header {
+  .nav-tabs {
+    border-bottom: none;
+  }
+>>>>>>> Stashed changes
 
 .mls-tab-list {
 
