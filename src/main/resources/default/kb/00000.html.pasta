@@ -3,7 +3,7 @@
         title="@i18n('KnowledgeBase.kb')"
         parent=""
         priority="0"
-        permissions="flag-logged-in"
+        permissions=""
         chapter="true">
 
     <i:local name="article" value="helper(sirius.biz.tycho.kb.KBHelper.class).currentArticle()"/>
@@ -24,7 +24,7 @@
             <i:if test="!childChapters.isEmpty()">
                 <k:section heading="Kapitel">
                     <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="chapter" items="childChapters">
-                        <div class="pb-1">
+                        <div class="pb-2">
                             <div>
                                 <a href="/kba/@chapter.getLanguage()/@chapter.getArticleId()">
                                     <i class="fa fa-book"></i> @chapter.getTitle()

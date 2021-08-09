@@ -6,18 +6,13 @@
 <i:local name="referencedArticle"
          value="@part(sirius.biz.tycho.kb.KnowledgeBase.class).resolve(NLS.getCurrentLang(), code, true).orElse(null)"/>
 <i:if test="referencedArticle != null">
-    <a class="btn btn-link ml-2 @class"
+    <a class="btn btn-info ml-2 @class"
        target="_blank"
        href="/kba/@referencedArticle.getLanguage()/@code"
        data-toggle="tooltip"
        data-placement="top"
        title="@referencedArticle.getTitle()">
-        <i:if test="referencedArticle.isChapter()">
-            <i class="fa fa-book"></i>
-            <i:else>
-                <i class="fa fa-file-alt"></i>
-            </i:else>
-        </i:if>
+        <i class="fa fa-lightbulb"></i>
         <span class="d-none d-xl-inline"> @i18n('KnowledgeBase.helpBtn')</span>
     </a>
 </i:if>

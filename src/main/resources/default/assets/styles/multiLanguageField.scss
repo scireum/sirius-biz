@@ -4,9 +4,7 @@ input.form-control.mls-input {
 
 .mls-modal {
   .modal-body {
-    max-height: calc(100vh - 200px);
     min-height: 250px;
-    overflow: auto;
   }
 
   .mls-add-language-button .dropdown-menu {
@@ -38,7 +36,6 @@ input.form-control.mls-input {
     object-fit: cover;
   }
 }
-
 
 .mls-tab-list {
 

@@ -35,7 +35,7 @@
     <i:if test="!childChapters.isEmpty()">
         <k:section heading="@i18n('KnowledgeBase.chaptersLabel')">
             <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="chapter" items="childChapters">
-                <div class="pb-1">
+                <div class="pb-2">
                     <div>
                         <a href="/kba/@chapter.getLanguage()/@chapter.getArticleId()">
                             <i class="fa fa-book"></i> @chapter.getTitle()
@@ -53,7 +53,7 @@
     <i:if test="!children.isEmpty()">
         <k:section heading="@i18n('KnowledgeBase.articlesLabel')">
             <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="child" items="children">
-                <div class="pb-1">
+                <div class="pb-2">
                     <div>
                         <a href="/kba/@child.getLanguage()/@child.getArticleId()">
                             <i class="fa fa-file-alt"></i> @child.getTitle()

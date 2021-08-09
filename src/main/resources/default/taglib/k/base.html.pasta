@@ -108,7 +108,7 @@
                 <i:if test="!references.isEmpty()">
                     <k:section heading="@i18n('KnowledgeBase.crossReferencesLabel')">
                         <i:for type="sirius.biz.tycho.kb.KnowledgeBaseArticle" var="reference" items="references">
-                            <div class="pb-1">
+                            <div class="pb-2">
                                 <div>
                                     <a href="/kba/@reference.getLanguage()/@reference.getArticleId()">
                                         <i:if test="reference.isChapter()">

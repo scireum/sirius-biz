@@ -48,7 +48,7 @@ public class UpdateManager {
     private static final String ATOM_ITEM_LINK = "link";
     private static final String ATOM_ITEM_CATEGORY = "category";
 
-    private static final int FEED_FETCH_INTERVAL_DAYS = 1;
+    private static final int FEED_FETCH_INTERVAL_HOURS = 1;
     private static final int FEED_FETCH_RETRY_MINUTES = 15;
     private static final int MAX_FEED_ITEMS_TO_FETCH = 3;
     private static final long MAX_AGE_MONTHS = 3;
@@ -84,7 +84,7 @@ public class UpdateManager {
             return Collections.emptyList();
         }
 
-        LocalDateTime fetchLimit = LocalDateTime.now().minusDays(FEED_FETCH_INTERVAL_DAYS);
+        LocalDateTime fetchLimit = LocalDateTime.now().minusHours(FEED_FETCH_INTERVAL_HOURS);
         LocalDateTime retryLimit = LocalDateTime.now().minusMinutes(FEED_FETCH_RETRY_MINUTES);
         if ((lastFetch == null || lastFetch.isBefore(fetchLimit)) && (lastAttempt == null || lastAttempt.isBefore(
                 retryLimit))) {
@@ -143,6 +143,17 @@ public class UpdateManager {
             updateInfo.markImportant();
         }
         return updateInfo;
+    }
+
+    /**
+     * Forces the feed to be reloaded on the next call to {@link #fetchUpdates()}.
+     * <p>
+     * This can be used to forcefully refresh the feed data without waiting for the natural reload. This method is
+     * intended to be called via <tt>/system/scripting</tt> when needed.
+     */
+    public void purgeFeed() {
+        this.lastAttempt = null;
+        this.lastFetch = null;
     }
 
     /**
