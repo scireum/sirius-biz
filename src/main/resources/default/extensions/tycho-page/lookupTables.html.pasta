@@ -1,0 +1,27 @@
+<i:arg type="String" name="point"/>
+<i:pragma name="priority" value="100"/>
+
+<i:switch test="@point">
+    <i:block name="footer">
+        <t:modal class="modal-lg modal-full-height" name="lookup-modal" title="placeholder">
+            <div class="mb-3 text-small text-muted lookuptable-description"></div>
+            <div class="input-group mb-3">
+                <input class="form-control query-input" type="text" autocomplete="off"/>
+                <div class="input-group-append">
+                    <a class="btn btn-outline-secondary">
+                        <i class="fa fa-search"></i>
+                    </a>
+                </div>
+            </div>
+            <table class="table table-striped entries mb-3"></table>
+            <i:block name="footer">
+                <div class="mr-auto d-flex flex-row align-items-center">
+                    <a class="btn btn-outline-secondary pagination-left"><i class="fa fa-chevron-left"></i></a>
+                    <div class="pagination-info pl-2 pr-2 text-center" style="min-width: 125px"></div>
+                    <a class="btn btn-outline-secondary pagination-right"><i class="fa fa-chevron-right"></i></a>
+                </div>
+                <button class="btn btn-secondary" data-dismiss="modal">@i18n("NLS.close")</button>
+            </i:block>
+        </t:modal>
+    </i:block>
+</i:switch>
