@@ -15,6 +15,7 @@ import sirius.biz.jupiter.Jupiter;
 import sirius.kernel.commons.Limit;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
+import sirius.kernel.commons.Values;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.settings.Extension;
@@ -42,6 +43,7 @@ import java.util.stream.Stream;
 class IDBLookupTable extends LookupTable {
 
     private static final String COL_DEPRECATED = "deprecated";
+    private static final String COL_SOURCE = ".";
 
     private static final String CACHE_PREFIX_FETCH_FIELD = "fetch-field-";
     private static final String CACHE_PREFIX_COUNT = "count-";
@@ -240,10 +242,7 @@ class IDBLookupTable extends LookupTable {
 
     private <T> Optional<T> fetchObjectFromIDB(Class<T> type, String code) {
         try {
-            return table.query()
-                        .lookupPaths(codeField)
-                        .searchValue(code)
-                        .singleRow(".")
+            return table.query().lookupPaths(codeField).searchValue(code).singleRow(COL_SOURCE)
                         .map(row -> makeObject(type, JSON.parseObject(row.at(0).asString())));
         } catch (Exception e) {
             Exceptions.createHandled()
@@ -299,11 +298,8 @@ class IDBLookupTable extends LookupTable {
         try {
             return table.query()
                         .translate(lang)
-                        .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED)
-                        .filter(row -> !row.at(3).asBoolean())
-                        .map(row -> new LookupTableEntry(row.at(0).asString(),
-                                                         row.at(1).asString(),
-                                                         row.at(2).getString()));
+                        .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED, COL_SOURCE)
+                        .map(this::processSearchOrScanRow);
         } catch (Exception e) {
             Exceptions.createHandled()
                       .to(Jupiter.LOG)
@@ -312,6 +308,42 @@ class IDBLookupTable extends LookupTable {
                       .handle();
             return Stream.empty();
         }
+    }
+
+    @Override
+    public Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String lang) {
+        try {
+            return table.query()
+                        .searchInAllFields()
+                        .searchValue(searchTerm)
+                        .translate(lang)
+                        .manyRows(limit, codeField, nameField, descriptionField, COL_DEPRECATED, COL_SOURCE)
+                        .map(this::processSearchOrScanRow);
+        } catch (Exception e) {
+            Exceptions.createHandled()
+                      .to(Jupiter.LOG)
+                      .error(e)
+                      .withSystemErrorMessage("Error scanning lang '%s' table '%s': %s (%s)", lang, table.getName())
+                      .handle();
+            return Stream.empty();
+        }
+    }
+
+    private LookupTableEntry processSearchOrScanRow(Values row) {
+        LookupTableEntry entry =
+                new LookupTableEntry(row.at(0).asString(), row.at(1).asString(), row.at(2).getString());
+        if (row.at(3).asBoolean()) {
+            entry.markDeprecated();
+        }
+        if (row.at(4).isFilled()) {
+            try {
+                entry.withSource(JSON.parseObject(row.at(4).asString()));
+            } catch (Exception e) {
+                Exceptions.ignore(e);
+            }
+        }
+
+        return entry;
     }
 
     @Override

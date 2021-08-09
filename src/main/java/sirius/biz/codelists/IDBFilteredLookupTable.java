@@ -124,6 +124,14 @@ class IDBFilteredLookupTable extends LookupTable {
     }
 
     @Override
+    protected Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String lang) {
+        return baseTable.performSearch(searchTerm, Limit.UNLIMITED, lang)
+                        .filter(pair -> performContains(pair.getCode()))
+                        .skip(limit.getItemsToSkip())
+                        .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
+    }
+
+    @Override
     protected Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue) {
         return baseTable.query(lang, lookupPath, lookupValue).filter(pair -> performContains(pair.getCode()));
     }

@@ -665,7 +665,8 @@ public abstract class LookupTable {
                                              .stream()
                                              .filter(entry -> entry.getValue() instanceof JSONArray)
                                              .collect(Collectors.toMap(Map.Entry::getKey,
-                                                                       entry -> transformArrayToStringList((JSONArray) entry.getValue())));
+                                                                       entry -> transformArrayToStringList((JSONArray) entry
+                                                                               .getValue())));
         } else {
             return Collections.emptyMap();
         }
@@ -700,7 +701,7 @@ public abstract class LookupTable {
      * @return a stream of suggestions for the given term. Note that most probably {@link Stream#limit(long)} should
      * be used on the result as this might yield quite a bunch of suggestions in order to optimize internal queries.
      */
-    public Stream<LookupTableEntry> suggest(String searchTerm) {
+    public Stream<LookupTableEntry> suggest(@Nullable String searchTerm) {
         return suggest(searchTerm, NLS.getCurrentLang());
     }
 
@@ -712,7 +713,10 @@ public abstract class LookupTable {
      * @return a stream of suggestions for the given term. Note that most probably {@link Stream#limit(long)} should
      * be used on the result as this might yield quite a bunch of suggestions in order to optimize internal queries.
      */
-    public Stream<LookupTableEntry> suggest(String searchTerm, String lang) {
+    public Stream<LookupTableEntry> suggest(@Nullable String searchTerm, String lang) {
+        if (Strings.isEmpty(searchTerm)) {
+            return scan(lang, new Limit(0, MAX_SUGGESTIONS));
+        }
         return performSuggest(new Limit(0, MAX_SUGGESTIONS), searchTerm, lang);
     }
 
@@ -780,6 +784,42 @@ public abstract class LookupTable {
     public abstract Stream<LookupTableEntry> scan(String lang, Limit limit);
 
     /**
+     * Executes a search for the given (optional) search term.
+     * <p>
+     * In contrast to {@link #suggest(String, String)}, this provides support for pagination and will also contain
+     * {@link LookupTableEntry#isDeprecated() deprecated} entries. Also, {@link LookupTableEntry#getSource()}
+     * will be populated.
+     *
+     * @param searchTerm the term used to filter the suggestions
+     * @param limit      the limit to apply to fetch a sane number of entries
+     * @return a stream of matches for the given term
+     */
+    public Stream<LookupTableEntry> search(@Nullable String searchTerm, Limit limit) {
+        return search(searchTerm, limit, NLS.getCurrentLang());
+    }
+
+    /**
+     * Executes a search for the given (optional) search term.
+     * <p>
+     * In contrast to {@link #suggest(String, String)}, this provides support for pagination and will also contain
+     * {@link LookupTableEntry#isDeprecated() deprecated} entries. Also, {@link LookupTableEntry#getSource()}
+     * will be populated.
+     *
+     * @param searchTerm the term used to filter the suggestions
+     * @param lang       the language to translate the name and description to
+     * @return a stream of matches for the given term
+     */
+    public Stream<LookupTableEntry> search(@Nullable String searchTerm, Limit limit, String lang) {
+        if (Strings.isEmpty(searchTerm)) {
+            return scan(lang, limit);
+        } else {
+            return performSearch(searchTerm, limit, lang);
+        }
+    }
+
+    protected abstract Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String lang);
+
+    /**
      * Returns the number of entries in this table.
      *
      * @return the number of entries in this table
@@ -799,4 +839,18 @@ public abstract class LookupTable {
     }
 
     protected abstract Stream<LookupTableEntry> performQuery(String lang, String lookupPath, String lookupValue);
+
+    public String getTitle() {
+        return extension.get("title")
+                        .asOptionalString()
+                        .or(() -> NLS.getIfExists("LookupTable." + extension.getId(), null))
+                        .orElse(extension.getId());
+    }
+
+    public String getDescription() {
+        return extension.get("description")
+                        .asOptionalString()
+                        .or(() -> NLS.getIfExists("LookupTable." + extension.getId() + ".description", null))
+                        .orElse(extension.getId());
+    }
 }

@@ -94,6 +94,14 @@ class CustomLookupTable extends LookupTable {
     }
 
     @Override
+    protected Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String lang) {
+        return Stream.concat(customTable.performSearch(searchTerm, Limit.UNLIMITED, lang),
+                             baseTable.performSearch(searchTerm, Limit.UNLIMITED, lang))
+                     .skip(limit.getItemsToSkip())
+                     .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
+    }
+
+    @Override
     public Stream<LookupTableEntry> scan(String lang, Limit limit) {
         return Stream.concat(customTable.scan(lang, Limit.UNLIMITED), baseTable.scan(lang, Limit.UNLIMITED))
                      .skip(limit.getItemsToSkip())

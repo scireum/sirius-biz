@@ -8,18 +8,24 @@
 
 package sirius.biz.codelists;
 
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
+import sirius.kernel.commons.Limit;
 import sirius.web.controller.AutocompleteHelper;
 
 /**
  * Represents an entry within a {@link LookupTable}.
  * <p>
- * This is mainly used by {@link LookupTable#suggest(String)} and {@link LookupTable#scan(String)}.
+ * This is mainly used by {@link LookupTable#suggest(String)}, {@link LookupTable#search(String, Limit)} and
+ * {@link LookupTable#scan(String, Limit)}.
  */
 public class LookupTableEntry {
 
     private final String code;
     private final String name;
     private final String description;
+    private boolean deprecated;
+    private String source;
 
     /**
      * Creates a new entry.
@@ -34,6 +40,21 @@ public class LookupTableEntry {
         this.description = description;
     }
 
+    public LookupTableEntry markDeprecated() {
+        this.deprecated = true;
+        return this;
+    }
+
+    public LookupTableEntry withSource(Object source) {
+        DumperOptions options = new DumperOptions();
+        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        options.setPrettyFlow(true);
+        Yaml yaml = new Yaml(options);
+        this.source = yaml.dump(source);
+
+        return this;
+    }
+
     public String getCode() {
         return code;
     }
@@ -44,6 +65,14 @@ public class LookupTableEntry {
 
     public String getDescription() {
         return description;
+    }
+
+    public boolean isDeprecated() {
+        return deprecated;
+    }
+
+    public String getSource() {
+        return source;
     }
 
     @Override

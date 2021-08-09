@@ -119,6 +119,13 @@ class CodeListLookupTable extends LookupTable {
                         .limit(limit.getMaxItems() == 0 ? Long.MAX_VALUE : limit.getMaxItems());
     }
 
+    @Override
+    protected Stream<LookupTableEntry> performSearch(String searchTerm, Limit limit, String lang) {
+        // As plain code lists don't support deprecations or source data, we can re-use the same
+        // method..
+        return performSuggest(limit, searchTerm, lang);
+    }
+
     private LookupTableEntry extractEntryData(CodeListEntry<?, ?> entry, String lang) {
         return new LookupTableEntry(entry.getCodeListEntryData().getCode(),
                                     entry.getCodeListEntryData().getTranslatedValue(lang),
