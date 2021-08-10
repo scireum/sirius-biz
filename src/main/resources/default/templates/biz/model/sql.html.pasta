@@ -139,6 +139,7 @@
                 const _value = document.createElement("td");
                 if (j < row.length) {
                     _value.textContent = row[j]
+                    _row.appendChild(_value)
                 }
 
                 _rows.appendChild(_row);
