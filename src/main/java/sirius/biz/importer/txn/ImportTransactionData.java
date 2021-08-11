@@ -28,7 +28,7 @@ public class ImportTransactionData extends Composite {
      */
     public static final Mapping TXN_ID = Mapping.named("txnId");
     @NoJournal
-    @AutoImport
+    @AutoImport(hidden = true)
     private long txnId = 0;
 
     public long getTxnId() {
