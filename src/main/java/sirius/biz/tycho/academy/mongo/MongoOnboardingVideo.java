@@ -43,7 +43,7 @@ public class MongoOnboardingVideo extends MongoEntity implements OnboardingVideo
 
     public static final Mapping ACADEMY_VIDEO = Mapping.named("academyVideo");
     private final MongoRef<MongoAcademyVideo> academyVideo =
-            MongoRef.on(MongoAcademyVideo.class, BaseEntityRef.OnDelete.REJECT);
+            MongoRef.on(MongoAcademyVideo.class, BaseEntityRef.OnDelete.IGNORE);
 
     private final OnboardingVideoData onboardingVideoData = new OnboardingVideoData();
 
