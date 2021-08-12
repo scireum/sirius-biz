@@ -95,6 +95,11 @@ class ProcessEnvironment implements ProcessContext {
 
     @Override
     public void addTiming(String counter, long millis, boolean adminOnly) {
+        // Drops the dollar sign used in NLS.smartGet, because the counters are always translated.
+        if (counter.startsWith("$")) {
+            counter = counter.substring(1);
+        }
+
         if (adminOnly) {
             getAdminTimings().computeIfAbsent(counter, ignored -> new Average()).addValue(millis);
         } else {
