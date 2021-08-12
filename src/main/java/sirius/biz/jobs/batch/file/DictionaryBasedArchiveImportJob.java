@@ -12,6 +12,7 @@ import sirius.biz.importer.format.ImportDictionary;
 import sirius.biz.process.ProcessContext;
 import sirius.biz.process.logs.ProcessLog;
 import sirius.biz.util.ExtractedFile;
+import sirius.kernel.async.TaskContext;
 import sirius.kernel.commons.Callback;
 import sirius.kernel.commons.Context;
 import sirius.kernel.commons.Tuple;
@@ -138,6 +139,9 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
         handledFiles.clear();
 
         for (ImportFile importFile : importFiles) {
+            if (!TaskContext.get().isActive()) {
+                break;
+            }
             Optional<ExtractedFile> extractedFile = fetchEntry(importFile.filename);
             if (extractedFile.isPresent()) {
                 handleFile(importFile, extractedFile.get());
@@ -148,6 +152,9 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
             handledFiles.add(importFile.filename);
         }
 
+        if (!TaskContext.get().isActive()) {
+            return;
+        }
         extractAllFiles(file -> {
             if (!handledFiles.contains(file.getFilePath())) {
                 handleAuxiliaryFile(file);
