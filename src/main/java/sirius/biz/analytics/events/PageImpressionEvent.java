@@ -107,7 +107,7 @@ public class PageImpressionEvent extends Event {
         }
 
         if (Strings.isEmpty(uri)) {
-            throw new IllegalArgumentException("Please provide an URI");
+            throw new IllegalArgumentException("Please provide a URI");
         }
         if (Strings.isEmpty(aggregationUri)) {
             throw new IllegalArgumentException("Please provide an aggregation URI");

@@ -42,7 +42,7 @@ public class KnowledgeBaseController extends BizController {
      * Renders the entry point of the knowledge base in the given language.
      *
      * @param webContext the current request to respond to
-     * @param lang the language top open the knowledge base in
+     * @param lang       the language top open the knowledge base in
      */
     @Routed("/kb/:1")
     public void langKb(WebContext webContext, String lang) {
