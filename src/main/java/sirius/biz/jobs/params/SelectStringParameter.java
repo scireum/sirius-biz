@@ -33,11 +33,11 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
      * Adds an entry to the list.
      *
      * @param key   the entry key
-     * @param value the display value, which will be {@link NLS#smartGet(String) auto translated}
+     * @param value the display value, which will be {@link NLS#smartGet(String) auto translated before display}
      * @return the parameter itself for fluent method calls
      */
     public SelectStringParameter withEntry(String key, String value) {
-        this.entries.put(key, NLS.smartGet(value));
+        this.entries.put(key, value);
         return self();
     }
 
@@ -50,7 +50,7 @@ public class SelectStringParameter extends SelectParameter<String, SelectStringP
     public List<Tuple<String, String>> getValues() {
         return entries.keySet()
                       .stream()
-                      .map(entry -> Tuple.create(entry, entries.get(entry)))
+                      .map(entry -> Tuple.create(entry, NLS.smartGet(entries.get(entry))))
                       .collect(Collectors.toList());
     }
 
