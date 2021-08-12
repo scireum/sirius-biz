@@ -50,6 +50,17 @@ public class KnowledgeBaseController extends BizController {
     }
 
     /**
+     * Renders the requested article in the current language of the user.
+     *
+     * @param webContext the current request to respond to
+     * @param articleId  the id or code of the article to render
+     */
+    @Routed("/kba/:1")
+    public void article(WebContext webContext, String articleId) {
+        langArticle(webContext, NLS.getCurrentLang(), articleId);
+    }
+
+    /**
      * Renders the requested article in the given language.
      *
      * @param webContext the current request to respond to
