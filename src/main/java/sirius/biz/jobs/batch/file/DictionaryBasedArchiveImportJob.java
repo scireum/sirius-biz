@@ -140,7 +140,7 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
 
         for (ImportFile importFile : importFiles) {
             if (!TaskContext.get().isActive()) {
-                return;
+                break;
             }
             Optional<ExtractedFile> extractedFile = fetchEntry(importFile.filename);
             if (extractedFile.isPresent()) {
@@ -152,6 +152,9 @@ public abstract class DictionaryBasedArchiveImportJob extends ArchiveImportJob {
             handledFiles.add(importFile.filename);
         }
 
+        if (!TaskContext.get().isActive()) {
+            return;
+        }
         extractAllFiles(file -> {
             if (!handledFiles.contains(file.getFilePath())) {
                 handleAuxiliaryFile(file);
