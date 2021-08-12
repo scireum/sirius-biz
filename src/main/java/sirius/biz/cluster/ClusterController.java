@@ -27,8 +27,10 @@ import sirius.web.controller.Routed;
 import sirius.web.health.Cluster;
 import sirius.web.http.WebContext;
 import sirius.web.security.Permission;
+import sirius.web.services.Format;
 import sirius.web.services.InternalService;
 import sirius.web.services.JSONStructuredOutput;
+import sirius.web.services.PublicService;
 
 import javax.annotation.Nullable;
 import java.util.Comparator;
@@ -245,6 +247,11 @@ public class ClusterController extends BasicController {
      * @see NeighborhoodWatch#changeBleeding(String, boolean)
      */
     @Routed("/system/cluster/bleed/:1/:2/:3")
+    @PublicService(apiName = "cluster", priority = 100, format = Format.RAW, label = "Node bleeding", description = """
+            Starts or stops the bleeding process of a node. Use "/system/cluster/bleed/enable/my-node/security-token"
+            to enable bleeding or "/system/cluster/bleed/disable/my-node/security-token" to abort bleeding.
+            Note that the security token is specified in the system configuration via "sirius.clusterToken".
+            """, exampleResponse = "OK")
     public void apiBleed(WebContext webContext, String setting, String node, String token) {
         if (!clusterManager.isClusterAPIToken(token)) {
             webContext.respondWith().error(HttpResponseStatus.UNAUTHORIZED);
@@ -252,7 +259,7 @@ public class ClusterController extends BasicController {
         }
 
         neighborhoodWatch.changeBleeding(node, FLAG_ENABLE.equals(setting));
-        waitAndRedirectToClusterUI(webContext);
+        webContext.respondWith().direct(HttpResponseStatus.OK, "OK");
     }
 
     /**
@@ -262,16 +269,21 @@ public class ClusterController extends BasicController {
      * as the node has fully started up and start failing (with a 503 SERVICE UNAVAILABLE) as soon as bleeding out
      * is started.
      *
-     * @param ctx the request to handle
+     * @param webContext the request to handle
      * @see NeighborhoodWatch#changeBleeding(String, boolean)
      */
     @Routed("/system/cluster/ready")
-    public void ready(WebContext ctx) {
+    @PublicService(apiName = "cluster", priority = 200, format = Format.RAW, label = "Node readiness", description = """
+            Determines if the node is ready and fully operational. This means that the node is fully initialized and no
+            bleeding has been started. This will respond with a HTTP 200 OK if the node is ready, or with a HTTP 503
+            SERVICE UNAVAILABLE otherwise.
+            """, exampleResponse = "OK")
+    public void ready(WebContext webContext) {
         if (Sirius.isRunning() && !neighborhoodWatch.isBleeding()) {
-            ctx.respondWith().direct(HttpResponseStatus.OK, "OK");
+            webContext.respondWith().direct(HttpResponseStatus.OK, "OK");
         } else {
-            ctx.respondWith()
-               .error(HttpResponseStatus.SERVICE_UNAVAILABLE, "Service not fully started or bleeding out...");
+            webContext.respondWith()
+                      .error(HttpResponseStatus.SERVICE_UNAVAILABLE, "Service not fully started or bleeding out...");
         }
     }
 
@@ -284,6 +296,12 @@ public class ClusterController extends BasicController {
      * @see NeighborhoodWatch#changeBleeding(String, boolean)
      */
     @Routed("/system/cluster/halted")
+    @PublicService(apiName = "cluster", priority = 200, format = Format.RAW, label = "Node halted", description = """
+            Determines if the node is the node has fully halted after a bleeding has been requested. This ensures that
+            all background tasks have been completed and therefore the node can be restarted in a safe manner.
+            Returns an HTTP 200 OK if the node has halted or HTTP 417 EXPECTATION FAILED, if the node is still running
+            background tasks.
+            """, exampleResponse = "OK")
     public void halted(WebContext webContext) {
         if (!Sirius.isRunning() || (neighborhoodWatch.isBleeding() && distributedTasks.getNumberOfActiveTasks() == 0)) {
             webContext.respondWith().direct(HttpResponseStatus.OK, "OK");
