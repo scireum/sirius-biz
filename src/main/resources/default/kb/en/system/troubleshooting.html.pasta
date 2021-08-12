@@ -9,16 +9,14 @@
     </i:block>
 
     <k:section heading="Monitoring">
-        <p>
-            Each node provides a distinct endpoint, which can be used by external monitoring tools:
-            <k:inlineCode>/system/monitor</k:inlineCode>. (See: <a href="/system/api/health" target="_blank">System Health API</a>).
-            For upstream load-balancers (which want to ensure to only forward request to healthy nodes), either
-            <k:inlineCode>/system/ok</k:inlineCode> or <k:inlineCode>/system/cluster/ready</k:inlineCode> can be used.
-            (<a href="/system/api/cluster" target="_blank">Cluster Health API</a>).
-            Metric aggregation tools can pull all internally recorded metrics via <k:inlineCode>/system/metrics</k:inlineCode>.
-            This will output a <b>Prometheus</b> compatible format. Note that one might want to block outside access to
-            this URI.
-        </p>
+        Each node provides a distinct endpoint, which can be used by external monitoring tools:
+        <k:inlineCode>/system/monitor</k:inlineCode>. (See: <a href="/system/api/health" target="_blank">System Health API</a>).
+        For upstream load-balancers (which want to ensure to only forward request to healthy nodes), either
+        <k:inlineCode>/system/ok</k:inlineCode> or <k:inlineCode>/system/cluster/ready</k:inlineCode> can be used.
+        (<a href="/system/api/cluster" target="_blank">Cluster Health API</a>).
+        Metric aggregation tools can pull all internally recorded metrics via <k:inlineCode>/system/metrics</k:inlineCode>.
+        This will output a <b>Prometheus</b> compatible format. Note that one might want to block outside access to
+        this URI.
     </k:section>
 
     <k:section heading="Measuring System Performance">

@@ -20,9 +20,9 @@
     </k:section>
     <k:section heading="Anatomy of a tag">
         <p>
-        Tags are organized in <b>tag libraries</b>. Each library has a prefix assigned, e.g. <b>k</b>. All templates for
-        this tag library are then placed in <k:inlineCode>tags/k/tagName.html.pasta</k:inlineCode> and can be referenced
-        using <k:inlineCode>&lt;k:tagName&gt;</k:inlineCode>.
+            Tags are organized in <b>tag libraries</b>. Each library has a prefix assigned, e.g. <b>k</b>. All templates for
+            this tag library are then placed in <k:inlineCode>tags/k/tagName.html.pasta</k:inlineCode> and can be referenced
+            using <k:inlineCode>&lt;k:tagName&gt;</k:inlineCode>.
         </p>
         <p>
             If a tag supports custom attributes, these are defined in the template via

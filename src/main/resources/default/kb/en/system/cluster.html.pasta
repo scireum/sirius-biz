@@ -13,11 +13,11 @@
     </k:section>
     <k:section heading="Nodes">
         <p>
-        The node list shows the software version and uptime of each node. This also permits to remove a stale node from
-        the cluster (Note: If the node is still physically present, it will re-appear quickly). It also permits to
-        start "bleeding" of a node. <b>Bleeding</b> means, that the node is still continuing to operate but it will
-        signal to a loadbalancer that it will shutdown soon and won't take any new requests. The same goes for
-        background tasks - running tasks will be finished, but the node will not pickup any new work.
+            The node list shows the software version and uptime of each node. This also permits to remove a stale node from
+            the cluster (Note: If the node is still physically present, it will re-appear quickly). It also permits to
+            start "bleeding" of a node. <b>Bleeding</b> means, that the node is still continuing to operate but it will
+            signal to a loadbalancer that it will shutdown soon and won't take any new requests. The same goes for
+            background tasks - running tasks will be finished, but the node will not pickup any new work.
         </p>
         <p>
             Bleeding as well as the node state can also be started and observed via the
@@ -43,6 +43,7 @@
             are intended for system maintenance and ad-hoc management tasks, the synchronization pattern should
             be setup permanently. Either via a global config or by using a local <b>instance.conf</b> per node.
             This can be used to setup the cluster topology so that specific jobs only run on chosen nodes.
+        </p>
     </k:section>
     <k:section heading="Locks">
         Show all system-wide obtained locks. Note that the <a href="/system/console" target="_blank">console</a> command
