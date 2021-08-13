@@ -171,7 +171,11 @@ public class LocalDirectoryUplink extends ConfigBasedUplink {
 
     private boolean deleteHandler(VirtualFile file) {
         try {
-            sirius.kernel.commons.Files.delete(file.as(File.class));
+            if (file.isDirectory()) {
+                sirius.kernel.commons.Files.delete(file.as(File.class).toPath());
+            } else {
+                sirius.kernel.commons.Files.delete(file.as(File.class));
+            }
             return true;
         } catch (Exception e) {
             throw Exceptions.handle()
