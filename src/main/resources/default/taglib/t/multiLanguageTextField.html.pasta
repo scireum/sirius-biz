@@ -29,10 +29,10 @@
         <i:if test="isFilled(label) || forceLabel">
             <label><span>@label</span></label>
         </i:if>
-        <div class="input-group" data-toggle="modal" data-target="#___modalId">
+        <div class="input-group cursor-pointer" data-toggle="modal" data-target="#___modalId">
             <input id="@id"
                    type="text"
-                   class="form-control input-block-level mls-input pointer"
+                   class="form-control input-block-level mls-input cursor-pointer"
                    readonly
                    @if (isFilled(placeholder)) { placeholder="@placeholder" }
                    @if (isFilled(tabIndex)) { tabindex="@tabIndex" }/>
@@ -63,15 +63,15 @@
 
         </div>
         <i:block name="footer">
-            <div class="mls-add-language-button btn-group dropup mr-auto d-none">
-                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+            <div class="mls-add-language-button dropup mr-auto d-none">
+                <button type="button" class="btn btn-link text-decoration-none" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">
                     <i class="fa fa-plus"></i> @i18n("MultiLanguageEditor.addLanguage")
                 </button>
                 <ul class="dropdown-menu w-100"></ul>
             </div>
 
-            <a class="btn btn-primary" data-dismiss="modal">@i18n("NLS.close")</a>
+            <a class="btn btn-primary" data-dismiss="modal">@i18n("MultiLanguageEditor.apply")</a>
         </i:block>
     </t:modal>
 

@@ -8,32 +8,33 @@
         <i class="fa fa-info"></i>
     </btn>
 
-    <div class="tracing collapse">
-
-        <t:datacard class="col-lg-8 col-xl-6 ml-auto mt-4" title="@i18n('TraceData.infos')">
+    <div class="row tracing collapse">
+        <t:datacard class="mt-4" title="@i18n('TraceData.infos')">
             <i:render name="body"/>
-            <t:infoLine class="tracing-info"labelKey="TraceData.created">
-                <div>@toUserString(trace.getCreatedAt())</div>
-                <div>@trace.getCreatedBy()</div>
-                <div class="muted">@trace.getCreatedOn()</div>
-                <div class="muted">@trace.getCreatedIn()</div>
-            </t:infoLine>
+            <div class="row">
+                <div class="col-lg">
+                    <t:infoLine class="tracing-info" labelKey="TraceData.created">
+                        <div>@toUserString(trace.getCreatedAt())</div>
+                        <div>@trace.getCreatedBy()</div>
+                        <div class="muted">@trace.getCreatedOn()</div>
+                        <div class="muted">@trace.getCreatedIn()</div>
+                    </t:infoLine>
+                </div>
 
-            <hr/>
-
-            <t:infoLine class="tracing-info" labelKey="TraceData.changed">
-                <div>@toUserString(trace.getChangedAt())</div>
-                <div>@trace.getChangedBy()</div>
-                <div class="text-muted">@trace.getChangedOn()</div>
-                <div class="text-muted">@trace.getChangedIn()</div>
-            </t:infoLine>
-
-            <hr/>
+                <div class="col-lg">
+                    <t:infoLine class="tracing-info" labelKey="TraceData.changed">
+                        <div>@toUserString(trace.getChangedAt())</div>
+                        <div>@trace.getChangedBy()</div>
+                        <div class="text-muted">@trace.getChangedOn()</div>
+                        <div class="text-muted">@trace.getChangedIn()</div>
+                    </t:infoLine>
+                </div>
+            </div>
 
             <i block="actions">
                 <i:if test="journal != null">
-                    <a href="@journal.getProtocolUri()" class="link">
-                        <i class="fa fa-angle-double-right"></i> @i18n("JournalEntry.plural")
+                    <a href="@journal.getProtocolUri()"  role="button" class="btn btn-link">
+                        <i class="fa fa-external-link-alt"></i> @i18n("JournalEntry.plural")
                     </a>
                 </i:if>
             </i>
