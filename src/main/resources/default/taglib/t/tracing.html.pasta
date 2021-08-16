@@ -33,8 +33,8 @@
 
             <i block="actions">
                 <i:if test="journal != null">
-                    <a href="@journal.getProtocolUri()" class="link">
-                        <i class="fa fa-angle-double-right"></i> @i18n("JournalEntry.plural")
+                    <a href="@journal.getProtocolUri()"  role="button" class="btn btn-link">
+                        <i class="fa fa-external-link-alt"></i> @i18n("JournalEntry.plural")
                     </a>
                 </i:if>
             </i>
