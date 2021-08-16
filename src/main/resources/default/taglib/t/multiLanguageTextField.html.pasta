@@ -63,8 +63,8 @@
 
         </div>
         <i:block name="footer">
-            <div class="mls-add-language-button btn-group dropup mr-auto d-none">
-                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+            <div class="mls-add-language-button dropup mr-auto d-none">
+                <button type="button" class="btn btn-link text-decoration-none" data-toggle="dropdown"
                         aria-haspopup="true" aria-expanded="false">
                     <i class="fa fa-plus"></i> @i18n("MultiLanguageEditor.addLanguage")
                 </button>
