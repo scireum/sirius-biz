@@ -29,10 +29,10 @@
         <i:if test="isFilled(label) || forceLabel">
             <label><span>@label</span></label>
         </i:if>
-        <div class="input-group" data-toggle="modal" data-target="#___modalId">
+        <div class="input-group cursor-pointer" data-toggle="modal" data-target="#___modalId">
             <input id="@id"
                    type="text"
-                   class="form-control input-block-level mls-input pointer"
+                   class="form-control input-block-level mls-input cursor-pointer"
                    readonly
                    @if (isFilled(placeholder)) { placeholder="@placeholder" }
                    @if (isFilled(tabIndex)) { tabindex="@tabIndex" }/>
