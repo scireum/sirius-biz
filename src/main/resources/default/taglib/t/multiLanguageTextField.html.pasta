@@ -71,7 +71,7 @@
                 <ul class="dropdown-menu w-100"></ul>
             </div>
 
-            <a class="btn btn-primary" data-dismiss="modal">@i18n("NLS.close")</a>
+            <a class="btn btn-primary" data-dismiss="modal">@i18n("MultiLanguageEditor.apply")</a>
         </i:block>
     </t:modal>
 
