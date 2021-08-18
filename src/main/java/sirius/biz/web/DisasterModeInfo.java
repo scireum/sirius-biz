@@ -13,8 +13,10 @@ import sirius.db.redis.Redis;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.cache.InlineCache;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.transformers.AutoTransform;
 import sirius.kernel.health.Exceptions;
@@ -93,7 +95,15 @@ public class DisasterModeInfo implements MaintenanceInfo {
     private String maintenanceLockMessage;
 
     /**
-     * Caches the effective lock flag for ten seconds to avoid frequent recomputations.
+     * Fetches the default maintenance message as specified in the system config.
+     * <p>
+     * See component-biz.conf for an in-depth description of the purpose of this setting.
+     */
+    @ConfigValue("product.defaultMaintenanceMessage")
+    private static String defaultLockMessage;
+
+    /**
+     * Caches the effective lock flag for ten seconds to avoid frequent re-computations.
      */
     private final InlineCache<Boolean> locked =
             CacheManager.createInlineCache(Duration.ofSeconds(10), this::determineIfLocked);
@@ -121,12 +131,17 @@ public class DisasterModeInfo implements MaintenanceInfo {
     private void updateFromRedis() {
         redis.exec(() -> "Update local disaster infos", db -> {
             try {
-                displayMessageStartTime =
-                        NLS.parseMachineString(LocalDateTime.class, db.get(REDIS_DISASTER_MESSAGE_START));
-                maintenancePreviewMessage = db.get(REDIS_DISASTER_PREVIEW_MESSAGE);
-                lockScope = Value.of(db.get(REDIS_DISASTER_LOCKED)).asBoolean();
-                lockStartTime = NLS.parseMachineString(LocalDateTime.class, db.get(REDIS_DISASTER_LOCK_START));
-                maintenanceLockMessage = db.get(REDIS_DISASTER_LOCK_MESSAGE);
+                // We always write all keys, therefore, we can check for any single key here, withing needing to
+                // check any other. As soon as a setting in redis is present, this will win over the default specified
+                // in the system config...
+                if (Boolean.TRUE.equals(db.exists(REDIS_DISASTER_LOCKED))) {
+                    displayMessageStartTime =
+                            NLS.parseMachineString(LocalDateTime.class, db.get(REDIS_DISASTER_MESSAGE_START));
+                    maintenancePreviewMessage = db.get(REDIS_DISASTER_PREVIEW_MESSAGE);
+                    lockScope = Value.of(db.get(REDIS_DISASTER_LOCKED)).asBoolean();
+                    lockStartTime = NLS.parseMachineString(LocalDateTime.class, db.get(REDIS_DISASTER_LOCK_START));
+                    maintenanceLockMessage = db.get(REDIS_DISASTER_LOCK_MESSAGE);
+                }
             } catch (Exception e) {
                 Exceptions.handle()
                           .to(Log.SYSTEM)
@@ -137,7 +152,18 @@ public class DisasterModeInfo implements MaintenanceInfo {
         });
     }
 
+    @SuppressWarnings("java:S2696")
+    @Explain("We actually want to modify the global state here, so that the system default is only applied once.")
     private boolean determineIfLocked() {
+        // Enforce the "default locked" state if given in the system config. Note that this will only trigger once
+        // and can be overwritten by a global redis setting anyway.
+        if (Strings.isEmpty(maintenanceLockMessage) && Strings.isFilled(defaultLockMessage)) {
+            maintenanceLockMessage = defaultLockMessage;
+            lockScope = true;
+            // Clear the default, so that the maintenance can be manually be disabled, even when no redis is present..
+            DisasterModeInfo.defaultLockMessage = "";
+        }
+
         if (redis.isConfigured()) {
             updateFromRedis();
         }
