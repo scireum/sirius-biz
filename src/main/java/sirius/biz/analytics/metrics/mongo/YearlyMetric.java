@@ -28,13 +28,13 @@ public class YearlyMetric extends Fact {
      * Contains the year for the month for which this metric is recorded.
      */
     public static final Mapping YEAR = Mapping.named("year");
-    private int year;
+    private Integer year;
 
-    public int getYear() {
+    public Integer getYear() {
         return year;
     }
 
-    public void setYear(int year) {
+    public void setYear(Integer year) {
         this.year = year;
     }
 }

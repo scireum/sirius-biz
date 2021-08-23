@@ -86,7 +86,7 @@ public class ProcessLog extends SearchableEntity {
      * Contains the timestamp as plain long (with millisecond resolution).
      */
     public static final Mapping SORT_KEY = Mapping.named("sortKey");
-    private long sortKey;
+    private Long sortKey;
 
     /**
      * Contains the node on which this log entry was recorded.
@@ -502,11 +502,11 @@ public class ProcessLog extends SearchableEntity {
         return context;
     }
 
-    public void setSortKey(long sortKey) {
+    public void setSortKey(Long sortKey) {
         this.sortKey = sortKey;
     }
 
-    public long getSortKey() {
+    public Long getSortKey() {
         return sortKey;
     }
 

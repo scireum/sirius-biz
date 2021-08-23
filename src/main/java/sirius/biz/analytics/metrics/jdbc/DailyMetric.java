@@ -25,13 +25,13 @@ public class DailyMetric extends MonthlyMetric {
      * Contains the day of the month for which this metric is recorded
      */
     public static final Mapping DAY = Mapping.named("day");
-    private int day;
+    private Integer day;
 
-    public int getDay() {
+    public Integer getDay() {
         return day;
     }
 
-    public void setDay(int day) {
+    public void setDay(Integer day) {
         this.day = day;
     }
 }

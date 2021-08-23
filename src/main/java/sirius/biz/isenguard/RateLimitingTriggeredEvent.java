@@ -35,14 +35,14 @@ public class RateLimitingTriggeredEvent extends Event {
      */
     public static final Mapping LIMIT = Mapping.named("limit");
     @Length(4)
-    private int limit;
+    private Integer limit;
 
     /**
      * Contains the interval (in seconds) in which the limit was reached.
      */
     public static final Mapping INTERVAL = Mapping.named("interval");
     @Length(4)
-    private int interval;
+    private Integer interval;
 
     /**
      * Contains the IP address (if available) which caused the event.
@@ -81,19 +81,19 @@ public class RateLimitingTriggeredEvent extends Event {
         this.scope = scope;
     }
 
-    public int getLimit() {
+    public Integer getLimit() {
         return limit;
     }
 
-    public void setLimit(int limit) {
+    public void setLimit(Integer limit) {
         this.limit = limit;
     }
 
-    public int getInterval() {
+    public Integer getInterval() {
         return interval;
     }
 
-    public void setInterval(int interval) {
+    public void setInterval(Integer interval) {
         this.interval = interval;
     }
 
