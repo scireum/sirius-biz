@@ -13,8 +13,10 @@ import sirius.db.redis.Redis;
 import sirius.kernel.async.CallContext;
 import sirius.kernel.cache.CacheManager;
 import sirius.kernel.cache.InlineCache;
+import sirius.kernel.commons.Explain;
 import sirius.kernel.commons.Strings;
 import sirius.kernel.commons.Value;
+import sirius.kernel.di.std.ConfigValue;
 import sirius.kernel.di.std.Part;
 import sirius.kernel.di.transformers.AutoTransform;
 import sirius.kernel.health.Exceptions;
@@ -64,7 +66,7 @@ public class DisasterModeInfo implements MaintenanceInfo {
     /**
      * Contains the timestamp when to start showing the maintenance message.
      * <p>
-     * If left empty, this will be shown immediatelly.
+     * If left empty, this will be shown immediately.
      */
     private LocalDateTime displayMessageStartTime;
 
@@ -81,7 +83,7 @@ public class DisasterModeInfo implements MaintenanceInfo {
     /**
      * Contains the timestamp when to enable the lock.
      * <p>
-     * If left empty, this will be immediatelly.
+     * If left empty, this will be immediately.
      */
     private LocalDateTime lockStartTime;
 
@@ -93,13 +95,21 @@ public class DisasterModeInfo implements MaintenanceInfo {
     private String maintenanceLockMessage;
 
     /**
-     * Caches the effective lock flag for ten seconds to avoid frequent recomputations.
+     * Fetches the default maintenance message as specified in the system config.
+     * <p>
+     * See component-biz.conf for an in-depth description of the purpose of this setting.
+     */
+    @ConfigValue("product.defaultMaintenanceMessage")
+    private static String defaultLockMessage;
+
+    /**
+     * Caches the effective lock flag for ten seconds to avoid frequent re-computations.
      */
     private final InlineCache<Boolean> locked =
             CacheManager.createInlineCache(Duration.ofSeconds(10), this::determineIfLocked);
 
     /**
-     * Caches the effective message for ten seconds to avoid frequent recomputations.
+     * Caches the effective message for ten seconds to avoid frequent re-computations.
      */
     private final InlineCache<String> disasterMessage =
             CacheManager.createInlineCache(Duration.ofSeconds(10), this::fetchDisasterMessage);
@@ -121,23 +131,39 @@ public class DisasterModeInfo implements MaintenanceInfo {
     private void updateFromRedis() {
         redis.exec(() -> "Update local disaster infos", db -> {
             try {
-                displayMessageStartTime =
-                        NLS.parseMachineString(LocalDateTime.class, db.get(REDIS_DISASTER_MESSAGE_START));
-                maintenancePreviewMessage = db.get(REDIS_DISASTER_PREVIEW_MESSAGE);
-                lockScope = Value.of(db.get(REDIS_DISASTER_LOCKED)).asBoolean();
-                lockStartTime = NLS.parseMachineString(LocalDateTime.class, db.get(REDIS_DISASTER_LOCK_START));
-                maintenanceLockMessage = db.get(REDIS_DISASTER_LOCK_MESSAGE);
+                // We always write all keys, therefore, we can check for any single key here, withing needing to
+                // check any other. As soon as a setting in redis is present, this will win over the default specified
+                // in the system config...
+                if (Boolean.TRUE.equals(db.exists(REDIS_DISASTER_LOCKED))) {
+                    displayMessageStartTime =
+                            NLS.parseMachineString(LocalDateTime.class, db.get(REDIS_DISASTER_MESSAGE_START));
+                    maintenancePreviewMessage = db.get(REDIS_DISASTER_PREVIEW_MESSAGE);
+                    lockScope = Value.of(db.get(REDIS_DISASTER_LOCKED)).asBoolean();
+                    lockStartTime = NLS.parseMachineString(LocalDateTime.class, db.get(REDIS_DISASTER_LOCK_START));
+                    maintenanceLockMessage = db.get(REDIS_DISASTER_LOCK_MESSAGE);
+                }
             } catch (Exception e) {
                 Exceptions.handle()
                           .to(Log.SYSTEM)
                           .error(e)
-                          .withSystemErrorMessage("Failed to parse diaster mode settings from redis: %s (%s)")
+                          .withSystemErrorMessage("Failed to parse disaster mode settings from redis: %s (%s)")
                           .handle();
             }
         });
     }
 
+    @SuppressWarnings("java:S2696")
+    @Explain("We actually want to modify the global state here, so that the system default is only applied once.")
     private boolean determineIfLocked() {
+        // Enforce the "default locked" state if given in the system config. Note that this will only trigger once
+        // and can be overwritten by a global redis setting anyway.
+        if (Strings.isEmpty(maintenanceLockMessage) && Strings.isFilled(defaultLockMessage)) {
+            maintenanceLockMessage = defaultLockMessage;
+            lockScope = true;
+            // Clear the default, so that the maintenance can be manually be disabled, even when no redis is present..
+            DisasterModeInfo.defaultLockMessage = "";
+        }
+
         if (redis.isConfigured()) {
             updateFromRedis();
         }
@@ -190,16 +216,18 @@ public class DisasterModeInfo implements MaintenanceInfo {
      * administrator can log-in and disable locking.
      *
      * @param uri the currently requested URI
-     * @return <tt>true</tt> if the uri can be accessed despite of an active lock, <tt>false</tt> otherwise
+     * @return <tt>true</tt> if the uri can be accessed in spite of an active lock, <tt>false</tt> otherwise
      */
     private boolean isWhitelistedURI(String uri) {
-        return DisasterController.URI_DISASTER.equals(uri) || DisasterController.URI_SYSTEM_DISASTER.equals(uri) || uri.startsWith(SAMLController.SAML_URI_PREFIX);
+        return DisasterController.URI_DISASTER.equals(uri)
+               || DisasterController.URI_SYSTEM_DISASTER.equals(uri)
+               || uri.startsWith(SAMLController.SAML_URI_PREFIX);
     }
 
     /**
      * Determines if the current user is an administrator.
      * <p>
-     * An administrator can always login (espectially in order to disable the locking).
+     * An administrator can always perform a login (especially in order to disable the locking).
      *
      * @return <tt>true</tt> if the current user is a system administrator (even if disguised as normal user).
      */
@@ -226,7 +254,7 @@ public class DisasterModeInfo implements MaintenanceInfo {
      * @param lock                    determines if the scope should be locked
      * @param lockStartTime           determines the beginning of the lock
      * @param displayMessageStartTime determine when to start displaying the maintenance message
-     * @param previewMessage          constains the maintenance message
+     * @param previewMessage          contains the maintenance message
      * @param lockMessage             contains the message to show as the system is locked
      */
     public void updateMode(boolean lock,
