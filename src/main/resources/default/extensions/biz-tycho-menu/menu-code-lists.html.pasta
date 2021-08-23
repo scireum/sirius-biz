@@ -4,10 +4,10 @@
 <i:switch test="@point">
     <i:block name="settings">
         <t:dropdownSection>
-            <t:dropdownItem titleKey="CodeList.plural" url="/code-lists"
+            <t:dropdownItem labelKey="CodeList.plural" url="/code-lists"
                         permission="permission-manage-code-lists"
                         framework="biz.code-lists-jdbc"/>
-            <t:dropdownItem titleKey="CodeList.plural" url="/code-lists"
+            <t:dropdownItem labelKey="CodeList.plural" url="/code-lists"
                         permission="permission-manage-code-lists"
                         framework="biz.code-lists-mongo"/>
         </t:dropdownSection>

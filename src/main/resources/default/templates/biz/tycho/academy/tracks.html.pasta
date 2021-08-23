@@ -16,7 +16,7 @@
     <i:if test="recommendedVideo != null">
         <div class="row">
             <div class="col-12 col-lg-6">
-                <t:heading titleKey="OnboardingController.currentRecommendation"/>
+                <t:heading labelKey="OnboardingController.currentRecommendation"/>
 
                 <div class="row">
                     <i:invoke template="/templates/biz/tycho/academy/video-card.html.pasta"
@@ -26,7 +26,7 @@
                 </div>
             </div>
             <div class="col-12 col-lg-6">
-                <t:heading titleKey="OnboardingController.allTracks"/>
+                <t:heading labelKey="OnboardingController.allTracks"/>
                 <t:datacards size="large">
                     <i:for type="sirius.biz.tycho.academy.AcademyTrackInfo" var="track" items="tracks">
                         <t:datacard title="@track.getTrackName()"

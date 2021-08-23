@@ -8,14 +8,14 @@
             <i:if test="isFrameworkEnabled('biz.tenants') && sirius.biz.tenants.UserAccountVideosCheck.isTenantOnboardingEnabled()">
                 <i:local name="video" value="onboardingEngine.fetchSomeVideo(user().getUserId()).orElse(null)" />
                 <i:if test="video != null">
-                    <t:heading titleKey="OnboardingController.currentRecommendation" />
+                    <t:heading labelKey="OnboardingController.currentRecommendation" />
                     <div class="row">
                         <i:invoke template="/templates/biz/tycho/academy/video-card.html.pasta"
                                   video="@video"
                                   owner="@user().getUserId()"
                                   accessToken="@computeAuthSignature(apply('/academy/%s', user().getUserId()))">
                             <i:block name="footer-navbox">
-                                <t:navboxLink labelKey="OnboardingController.showAllVideos" url="/academy" icon="fa-video"/>
+                                <t:navboxLink labelKey="OnboardingController.showAllVideos" url="/academy" icon="fa fa-video"/>
                             </i:block>
                         </i:invoke>
                     </div>

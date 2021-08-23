@@ -3,7 +3,7 @@
 
 <i:switch test="@point">
     <i:block name="left">
-        <t:menuDropdown titleKey="Menu.settings" permission="flag-logged-in">
+        <t:menuDropdown labelKey="Menu.settings" permission="flag-logged-in">
             <i:extensions target="biz-tycho-menu" point="settings"/>
         </t:menuDropdown>
     </i:block>

@@ -44,7 +44,7 @@
         </div>
     </i:if>
     <i:if test="!otherRecommendations.isEmpty()">
-        <t:heading titleKey="OnboardingController.moreVideos"/>
+        <t:heading labelKey="OnboardingController.moreVideos"/>
         <t:datacards size="small">
             <i:for type="sirius.biz.tycho.academy.OnboardingVideo" var="video" items="otherRecommendations">
                 <i:invoke template="/templates/biz/tycho/academy/video-card.html.pasta"

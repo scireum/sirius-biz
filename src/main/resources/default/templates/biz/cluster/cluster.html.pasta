@@ -38,10 +38,10 @@
                     <i:block name="actions">
                         <t:dropdownSection>
                             <i:if test="node.isBleeding()">
-                                <t:dropdownItem title="Stop Bleeding"
+                                <t:dropdownItem label="Stop Bleeding"
                                                 url="@apply('/system/cluster/bleed/disable/%s', node.getNodeName())"/>
                                 <i:else>
-                                    <t:dropdownItem title="Start Bleeding"
+                                    <t:dropdownItem label="Start Bleeding"
                                                     url="@apply('/system/cluster/bleed/enable/%s', node.getNodeName())"/>
                                 </i:else>
                             </i:if>
@@ -127,10 +127,10 @@
                     <i:block name="actions">
                         <t:dropdownSection>
                             <i:if test="node.isBleeding()">
-                                <t:dropdownItem title="Stop Bleeding"
+                                <t:dropdownItem label="Stop Bleeding"
                                                 url="@apply('/system/cluster/bleed/disable/%s', node.getNodeName())"/>
                                 <i:else>
-                                    <t:dropdownItem title="Start Bleeding"
+                                    <t:dropdownItem label="Start Bleeding"
                                                     url="@apply('/system/cluster/bleed/enable/%s', node.getNodeName())"/>
                                 </i:else>
                             </i:if>
@@ -173,10 +173,10 @@
                     <t:datacard title="@job" subTitle="@toUserString(descriptions.get(job))">
                         <i:block name="actions">
                             <i:if test="referenceInfo.isGloballyEnabled()">
-                                <t:dropdownItem title="Disable Globally"
+                                <t:dropdownItem label="Disable Globally"
                                                 url="@apply('/system/cluster/global/disable/%s', job)"/>
                                 <i:else>
-                                    <t:dropdownItem title="Enable Globally"
+                                    <t:dropdownItem label="Enable Globally"
                                                     url="@apply('/system/cluster/global/enable/%s', job)"/>
                                 </i:else>
                             </i:if>
