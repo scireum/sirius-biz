@@ -42,7 +42,7 @@ class SevenZipAdapter implements IArchiveExtractCallback {
     private final TaskContext taskContext;
     private final Processor<ExtractedFile, Boolean> extractCallback;
     private final int totalFiles;
-    private int filesExtracted = 0;
+    private int filesExtracted;
 
     private boolean stop;
     private ExtractedFileBuffer currentBuffer;

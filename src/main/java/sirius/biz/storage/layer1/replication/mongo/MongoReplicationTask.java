@@ -51,7 +51,7 @@ public class MongoReplicationTask extends MongoEntity {
      * This will be set to 0 if the length is unknown (if a transformer is used).
      */
     public static final Mapping CONTENT_LENGTH = Mapping.named("contentLength");
-    private long contentLength = 0;
+    private long contentLength;
 
     /**
      * Determines the earliest expected execution of this task.

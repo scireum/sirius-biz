@@ -77,7 +77,7 @@ public class StoredIncident extends SearchableEntity {
      * Contains the number of occurrences between the <tt>firstOccurrence</tt> and <tt>lastOccurrence</tt>.
      */
     public static final Mapping NUMBER_OF_OCCURRENCES = Mapping.named("numberOfOccurrences");
-    private int numberOfOccurrences = 0;
+    private int numberOfOccurrences;
 
     /**
      * Contains the <tt>mapped diagnostic context</tt>, providing some insight how and why the error occured.

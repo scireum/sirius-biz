@@ -24,7 +24,7 @@ public class ConversionProcess {
     private final Blob blobToConvert;
     private final String variantName;
     private FileHandle fileHandle;
-    private long queueDuration = 0;
+    private long queueDuration;
     private long transferDuration;
     private long conversionDuration;
 

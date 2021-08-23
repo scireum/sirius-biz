@@ -80,7 +80,7 @@ public class ConversionEvent extends Event {
      * Contains how long the conversion took in milliseconds.
      */
     public static final Mapping DURATION = Mapping.named("duration");
-    private long duration = 0;
+    private long duration;
 
     /**
      * Contains the ID of the tenant owning the source and target files being converted.

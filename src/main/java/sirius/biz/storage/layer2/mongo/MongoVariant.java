@@ -55,7 +55,7 @@ public class MongoVariant extends MongoEntity implements BlobVariant {
      * Contains the file size of the converted file.
      */
     public static final Mapping SIZE = Mapping.named("size");
-    private long size = 0;
+    private long size;
 
     /**
      * Contains the timestamp when the last conversion was attempted.

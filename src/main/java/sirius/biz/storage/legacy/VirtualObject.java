@@ -68,7 +68,7 @@ public class VirtualObject extends SQLTenantAware implements StoredObject {
      * Contains the size in bytes of this object.
      */
     public static final Mapping FILE_SIZE = Mapping.named("fileSize");
-    private long fileSize = 0;
+    private long fileSize;
 
     /**
      * Contains the MD5 checksum of the stored data.

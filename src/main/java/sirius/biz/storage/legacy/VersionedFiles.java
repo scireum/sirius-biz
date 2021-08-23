@@ -53,7 +53,7 @@ public class VersionedFiles {
     public static final String VERSIONED_FILES = "versioned-files";
 
     @ConfigValue("storage.buckets.versioned-files.maxNumberOfVersions")
-    private int maxNumberOfVersions = 0;
+    private int maxNumberOfVersions;
 
     /**
      * Retrieves all versions of a versioned file.

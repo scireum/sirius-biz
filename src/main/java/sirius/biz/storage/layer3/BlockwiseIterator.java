@@ -26,7 +26,7 @@ class BlockwiseIterator implements Iterator<VirtualFile> {
     private static final int BLOCK_SIZE = 1000;
 
     private final VirtualFile virtualFile;
-    private int nextStart = 0;
+    private int nextStart;
     private Iterator<VirtualFile> currentBlock;
 
     protected BlockwiseIterator(VirtualFile virtualFile) {
