@@ -408,8 +408,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
     }
 
     protected void enforcePaging(Page<E> result, List<E> items) {
-        int originalSize = items.size();
-        if (originalSize > pageSize) {
+        if (items.size() > pageSize) {
             result.withHasMore(true);
             items.remove(items.size() - 1);
             if (withTotalCount) {
@@ -417,7 +416,7 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
             }
         } else if (withTotalCount) {
             // we don't have any more items, so total items is end of the current page
-            result.withTotalItems(result.getEnd());
+            result.withTotalItems(result.getStart() - 1 + items.size());
         }
     }
 
