@@ -3,7 +3,7 @@
 <i:arg type="String" name="class" default=""/>
 <i:arg type="boolean" name="active" default="false"/>
 <i:arg type="String" name="icon"/>
-<i:arg type="String" name="title" default=""/>
+<i:arg type="String" name="label" default=""/>
 <i:arg type="String" name="activeIcon" default=""/>
 <i:arg type="String" name="smallLabel" default=""/>
 
@@ -23,16 +23,16 @@
                             data-toggle="tooltip"
                             data-placement="left"
                             data-html="true"
-                            title="@title"
+                            title="@label"
                          }
                     />
                     <i:else>
                         <img src="@staticAssetUri()@icon"
-                             @if (isFilled(title)) {
+                             @if (isFilled(label)) {
                                 data-toggle="tooltip"
                                 data-placement="left"
                                 data-html="true"
-                                title="@title"
+                                title="@label"
                              }
                         />
                     </i:else>

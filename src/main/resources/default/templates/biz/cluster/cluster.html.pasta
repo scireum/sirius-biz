@@ -47,7 +47,7 @@
                             </i:if>
                         </t:dropdownSection>
                         <t:dropdownSection>
-                            <t:dropdownItem class="text-sirius-red" title="Remove From Cluster"
+                            <t:dropdownItem class="text-sirius-red" label="Remove From Cluster"
                                             url="@apply('/system/cluster/kill/%s', node.getNodeName())"/>
                         </t:dropdownSection>
                     </i:block>
@@ -136,7 +136,7 @@
                             </i:if>
                         </t:dropdownSection>
                         <t:dropdownSection>
-                            <t:dropdownItem class="text-sirius-red" title="Remove From Cluster"
+                            <t:dropdownItem class="text-sirius-red" label="Remove From Cluster"
                                             url="@apply('/system/cluster/kill/%s', node.getNodeName())"/>
                         </t:dropdownSection>
                     </i:block>
@@ -239,7 +239,7 @@
         </t:datacards>
     </i:if>
     <i:if test="locks != null">
-        <t:heading title="Locks"/>
+        <t:heading label="Locks"/>
         <t:emptyCheck data="locks.getLocks()">
             <t:datacard>
                 <table class="table mt-4">
