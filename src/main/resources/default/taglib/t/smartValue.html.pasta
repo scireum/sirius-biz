@@ -1,0 +1,12 @@
+<i:arg type="String" name="type" />
+<i:arg type="String" name="payload" default="" />
+<i:arg type="String" name="label" default="" />
+
+<i:if test="isFilled(payload)">
+    <i:local name="signature" value="@computeAuthSignature(apply('%s/%s', type, payload))" />
+    <i:local name="id" value="@generateId()" />
+    <a id="@id" class="text-black link" href="javascript:openSmartValues('@id', '@type','@payload', '@signature')">@label</a>
+    <i:else>
+        <i:if test="isFilled(label)">@label</i:if>
+    </i:else>
+</i:if>
