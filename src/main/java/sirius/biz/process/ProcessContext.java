@@ -21,6 +21,7 @@ import sirius.kernel.commons.Producer;
 import sirius.kernel.commons.Tuple;
 import sirius.kernel.commons.UnitOfWork;
 import sirius.kernel.commons.Value;
+import sirius.kernel.health.ExceptionHint;
 import sirius.kernel.health.Exceptions;
 import sirius.kernel.health.HandledException;
 
@@ -38,12 +39,24 @@ import java.util.function.Supplier;
 /**
  * Declares the client API of a process.
  * <p>
- * {@link Processes} will instantiate and provide an instace of this to caller while executing a process. Also it will
+ * {@link Processes} will instantiate and provide an instance of this to caller while executing a process. Also, it will
  * install this using {@link sirius.kernel.async.TaskContext#setAdapter(TaskContextAdapter)} so that calls to
- * {@link sirius.kernel.async.TaskContext} will be delegated to the processes framework.
+ * {@link sirius.kernel.async.TaskContext} will be delegated to the "processes" framework.
  */
 @ThreadSafe
 public interface ProcessContext extends TaskContextAdapter {
+
+    /**
+     * Hints the {@link ProcessLog#withMessageType(String)} to be used when handling an exception via
+     * {@link ProcessContext#handle(Exception)}.
+     */
+    ExceptionHint HINT_MESSAGE_TYPE = new ExceptionHint("messageType");
+
+    /**
+     * Hints the limit to be used for {@link ProcessLog#withLimitedMessageType(String, int)} to be used when handling
+     * an exception via {@link ProcessContext#handle(Exception)}.
+     */
+    ExceptionHint HINT_MESSAGE_COUNT = new ExceptionHint("messageCount");
 
     /**
      * Returns the id of the process context.
