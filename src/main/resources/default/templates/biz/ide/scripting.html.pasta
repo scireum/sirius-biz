@@ -34,7 +34,7 @@
         </div>
     </div>
 
-    <t:heading title="Transcript"/>
+    <t:heading label="Transcript"/>
     <div id="transcript" style="height: 400px" class="mb-4 p-2 text-white bg-dark text-monospace whitespace-pre-wrap overflow-auto"></div>
 
     <script type="text/javascript">
