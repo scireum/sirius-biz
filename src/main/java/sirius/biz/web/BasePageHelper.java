@@ -359,10 +359,12 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
             fillPage(w, result, items);
 
             if (debugging) {
-                UserContext.message(Message.info().withTextMessage(Strings.apply("Effective Query: %s (Matches: %s, Duration: %s ms)",
-                                                               baseQuery,
-                                                               baseQuery.count(),
-                                                               w.elapsedMillis())));
+                UserContext.message(Message.info()
+                                           .withTextMessage(Strings.apply(
+                                                   "Effective Query: %s (Matches: %s, Duration: %s ms)",
+                                                   baseQuery,
+                                                   baseQuery.count(),
+                                                   w.elapsedMillis())));
             }
         } catch (Exception e) {
             UserContext.handle(e);
@@ -412,10 +414,12 @@ public abstract class BasePageHelper<E extends BaseEntity<?>, C extends Constrai
             result.withHasMore(true);
             items.remove(items.size() - 1);
         }
-        if (fetchTotalCount && (originalSize > pageSize || result.getStart() > pageSize)) {
-            result.withTotalItems((int) baseQuery.count());
-        } else {
-            result.withTotalItems(items.size());
+        if (fetchTotalCount) {
+            if (originalSize <= pageSize) {
+                result.withTotalItems(result.getStart() - 1 + items.size());
+            } else {
+                result.withTotalItems((int) baseQuery.count());
+            }
         }
     }
 
