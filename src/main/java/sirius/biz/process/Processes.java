@@ -461,7 +461,24 @@ public class Processes {
     protected boolean markErrorneous(String processId) {
         return modify(processId,
                       process -> !process.isErrorneous() && process.getState() == ProcessState.RUNNING,
-                      process -> process.setErrorneous(true));
+                      process -> {
+                          process.setErrorneous(true);
+                          process.setWarnings(false);
+                      });
+    }
+
+    /**
+     * Records, that a process has warnings.
+     *
+     * @param processId the process to update
+     * @return <tt>true</tt> if the process was successfully modified, <tt>false</tt> otherwise
+     */
+    protected boolean markWarnings(String processId) {
+        return modify(processId,
+                      process -> !process.isErrorneous()
+                                 && !process.isWarnings()
+                                 && process.getState() == ProcessState.RUNNING,
+                      process -> process.setWarnings(true));
     }
 
     /**
@@ -679,6 +696,8 @@ public class Processes {
         try {
             if (logEntry.getType() == ProcessLogType.ERROR) {
                 markErrorneous(processId);
+            } else if (logEntry.getType() == ProcessLogType.WARNING) {
+                markWarnings(processId);
             }
 
             logEntry.setNode(CallContext.getNodeName());
